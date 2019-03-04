@@ -44,7 +44,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                         startDescription=None, endDescription=None,
                         context=None, baseURL=None, verbose=False, **kwargs):
         token = yield self.renderSecrets(token)
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
 
         self.setDefaults(context, startDescription, endDescription)
         if baseURL is None:

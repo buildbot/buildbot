@@ -2495,7 +2495,7 @@ class FakeDBConnector(service.AsyncMultiService):
     """
 
     def __init__(self, testcase):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         # reset the id generator, for stable id's
         Row._next_id = 1000
         self.t = testcase

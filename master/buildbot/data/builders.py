@@ -87,9 +87,6 @@ class Builder(base.ResourceType):
         tags = types.List(of=types.String())
     entityType = EntityType(name)
 
-    def __init__(self, master):
-        base.ResourceType.__init__(self, master)
-
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         builder = yield self.master.data.get(('builders', str(_id)))

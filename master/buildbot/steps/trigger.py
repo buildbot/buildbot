@@ -98,7 +98,7 @@ class Trigger(BuildStep):
         self.brids = []
         self.triggeredNames = None
         self.waitForFinishDeferred = None
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def interrupt(self, reason):
         # We cancel the buildrequests, as the data api handles

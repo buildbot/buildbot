@@ -30,9 +30,6 @@ from buildbot.util import toJson
 class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     NAMESPACE = "org.buildbot.mq"
 
-    def __init__(self):
-        base.MQBase.__init__(self)
-
     def produce(self, routingKey, data):
         d = self._produce(routingKey, data)
         d.addErrback(
@@ -74,7 +71,7 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 class QueueRef(base.QueueRef):
 
     def __init__(self, callback):
-        base.QueueRef.__init__(self, callback)
+        super().__init__(callback)
         self.unreg = None
 
     @defer.inlineCallbacks
@@ -97,7 +94,7 @@ class QueueRef(base.QueueRef):
         else:
             # in the case of an exact match, then we can use our own topic
             topic = self.filter
-        return base.QueueRef.invoke(self, topic, msg)
+        return super().invoke(topic, msg)
 
     @defer.inlineCallbacks
     def stopConsuming(self):

@@ -86,8 +86,13 @@ def maybeColorize(text, color, useColors):
 
 class UsageError(ValueError):
 
+    # pylint: disable=useless-super-delegation
     def __init__(self, string="Invalid usage", *more):
-        ValueError.__init__(self, string, *more)
+        # This is not useless as we change the default value of an argument.
+        # This bug is reported as "fixed" but apparently, it is not.
+        # https://github.com/PyCQA/pylint/issues/1085
+        # (Maybe there is a problem with builtin exceptions).
+        super().__init__(string, *more)
 
 
 class ForceOptions(usage.Options):
@@ -171,7 +176,7 @@ class Contact(service.AsyncService):
             self.name = "Contact(channel=%s)" % (channel,)
         elif user:
             self.name = "Contact(name=%s)" % (user,)
-        service.AsyncService.__init__(self)
+        super().__init__()
         self.bot = bot
         self.notify_events = {}
         self.subscribed = []
@@ -199,7 +204,7 @@ class Contact(service.AsyncService):
     def startService(self):
         if self.channel and not self.user:
             self.add_notification_events(self.bot.notify_events)
-        return service.AsyncService.startService(self)
+        return super().startService()
 
     def stopService(self):
         self.remove_all_notification_events()
@@ -1032,7 +1037,7 @@ class StatusBot(service.AsyncMultiService):
                  useRevisions=False, showBlameList=False, useColors=True,
                  categories=None  # deprecated
                  ):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.tags = tags or categories
         self.notify_events = notify_events
         self.useColors = useColors

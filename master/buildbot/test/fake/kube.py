@@ -27,8 +27,7 @@ class KubeClientService(fakehttpclientservice.HTTPClientService):
 
     def __init__(self, kube_config=None, *args, **kwargs):
         c = kube_config.getConfig()
-        fakehttpclientservice.HTTPClientService.__init__(
-            self, c['master_url'], *args, **kwargs)
+        super().__init__(c['master_url'], *args, **kwargs)
         self.namespace = c['namespace']
         self.addService(kube_config)
         self.pods = {}

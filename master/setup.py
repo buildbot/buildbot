@@ -66,10 +66,10 @@ class install_data_twisted(install_data):
         self.set_undefined_options('install',
                                    ('install_lib', 'install_dir'),
                                    )
-        install_data.finalize_options(self)
+        super().finalize_options()
 
     def run(self):
-        install_data.run(self)
+        super().run()
         # ensure there's a buildbot/VERSION file
         fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
         open(fn, 'w').write(version)

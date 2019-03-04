@@ -934,7 +934,7 @@ class LoggingBuildStep(BuildStep):
 
     def __init__(self, logfiles=None, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
-        BuildStep.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if logfiles is None:
             logfiles = {}

@@ -50,7 +50,7 @@ class CompositeStepMixinMasterPb(CompositeStepMixinMaster):
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 
     def __init__(self, *args, **kwargs):
-        BuildStep.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.logEnviron = False
 
     @defer.inlineCallbacks

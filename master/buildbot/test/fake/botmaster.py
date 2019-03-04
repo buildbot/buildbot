@@ -22,7 +22,7 @@ from buildbot.util import service
 class FakeBotMaster(service.AsyncMultiService):
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setName("fake-botmaster")
         self.locks = {}
         self.builders = {}  # dictionary mapping worker names to builders

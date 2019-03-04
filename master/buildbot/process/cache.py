@@ -64,8 +64,7 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
             cache.set_max_size(new_config.caches.get(name,
                                                      self.DEFAULT_CACHE_SIZE))
 
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def get_metrics(self):
         return {

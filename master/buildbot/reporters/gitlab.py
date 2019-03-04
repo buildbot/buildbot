@@ -44,7 +44,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                         context=None, baseURL=None, verbose=False, **kwargs):
 
         token = yield self.renderSecrets(token)
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
 
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
         self.startDescription = startDescription or 'Build started.'

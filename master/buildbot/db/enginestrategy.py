@@ -273,8 +273,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             max_conns = kwargs.get(
                 'pool_size', 5) + kwargs.get('max_overflow', 10)
         strategy = self.get_drivers_strategy(u.drivername)
-        engine = strategies.ThreadLocalEngineStrategy.create(self,
-                                                             u, **kwargs)
+        engine = super().create(u, **kwargs)
         strategy.set_up(u, engine)
         engine.should_retry = strategy.should_retry
         # annotate the engine with the optimal thread pool size; this is used

@@ -41,7 +41,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
     descriptionDone = ['Set']
 
     def __init__(self, variables, source="WorkerEnvironment", **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.variables = variables
         self.source = source
 
@@ -83,7 +83,7 @@ class FileExists(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, file, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.file = file
 
     def start(self):
@@ -122,7 +122,7 @@ class CopyDirectory(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, src, dest, timeout=None, maxTime=None, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.src = src
         self.dest = dest
         self.timeout = timeout
@@ -177,7 +177,7 @@ class RemoveDirectory(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, dir, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.dir = dir
 
     def start(self):
@@ -210,7 +210,7 @@ class MakeDirectory(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, dir, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.dir = dir
 
     def start(self):

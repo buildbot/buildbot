@@ -53,7 +53,7 @@ class ControllableBuildStep(BuildStep):
     name = "controllableStep"
 
     def __init__(self, controller):
-        BuildStep.__init__(self)
+        super().__init__()
         self._controller = controller
 
     def run(self):

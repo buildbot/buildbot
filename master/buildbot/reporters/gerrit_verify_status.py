@@ -61,7 +61,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                         verbose=False,
                         **kwargs):
         auth = yield self.renderSecrets(auth)
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
 
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]

@@ -95,11 +95,12 @@ class MessageFormatter(MessageFormatterBase):
         if template_name is not None:
             config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
             template_filename = template_name
-        MessageFormatterBase.__init__(self,
-                                      template_dir=template_dir,
-                                      template_filename=template_filename, template=template,
-                                      subject_filename=subject_filename, subject=subject,
-                                      template_type=template_type, ctx=ctx)
+        super().__init__(template_dir=template_dir,
+                         template_filename=template_filename,
+                         template=template,
+                         subject_filename=subject_filename,
+                         subject=subject,
+                         template_type=template_type, ctx=ctx)
         self.wantProperties = wantProperties
         self.wantSteps = wantSteps
         self.wantLogs = wantLogs

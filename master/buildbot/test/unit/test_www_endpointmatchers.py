@@ -134,7 +134,7 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
         return endpointmatchers.ForceBuildEndpointMatcher(builder="builder", role="owner")
 
     def insertData(self):
-        EndpointBase.insertData(self)
+        super().insertData()
         self.master.allSchedulers = lambda: [
             ForceScheduler(name="sched1", builderNames=["builder"])]
 

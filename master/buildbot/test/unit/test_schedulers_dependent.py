@@ -80,11 +80,13 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         self.assertEqual(
             sorted([q.filter for q in sched.master.mq.qrefs]),
-            [('buildsets', None, 'complete',), ('buildsets', None, 'new',)])
+            [('buildsets', None, 'complete',), ('buildsets', None, 'new',),
+             ('schedulers', '133', 'updated')])
 
         yield sched.deactivate()
 
-        self.assertEqual([q.filter for q in sched.master.mq.qrefs], [])
+        self.assertEqual([q.filter for q in sched.master.mq.qrefs],
+                         [('schedulers', '133', 'updated')])
 
     def sendBuildsetMessage(self, scheduler_name=None, results=-1,
                             complete=False):

@@ -65,12 +65,12 @@ class ReconnectingPBClientFactory(PBClientFactory,
     """
 
     def __init__(self):
-        PBClientFactory.__init__(self)
+        super().__init__()
         self._doingLogin = False
         self._doingGetPerspective = False
 
     def clientConnectionFailed(self, connector, reason):
-        PBClientFactory.clientConnectionFailed(self, connector, reason)
+        super().clientConnectionFailed(connector, reason)
         # Twisted-1.3 erroneously abandons the connection on non-UserErrors.
         # To avoid this bug, don't upcall, and implement the correct version
         # of the method here.
@@ -79,14 +79,13 @@ class ReconnectingPBClientFactory(PBClientFactory,
             self.retry()
 
     def clientConnectionLost(self, connector, reason):
-        PBClientFactory.clientConnectionLost(self, connector, reason,
-                                             reconnecting=True)
+        super().clientConnectionLost(connector, reason, reconnecting=True)
         RCF = protocol.ReconnectingClientFactory
         RCF.clientConnectionLost(self, connector, reason)
 
     def clientConnectionMade(self, broker):
         self.resetDelay()
-        PBClientFactory.clientConnectionMade(self, broker)
+        super().clientConnectionMade(broker)
         if self._doingLogin:
             self.doLogin(self._root)
         if self._doingGetPerspective:

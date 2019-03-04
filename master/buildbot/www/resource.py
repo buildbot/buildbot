@@ -33,7 +33,7 @@ def protect_redirect_url(url):
 
 class Redirect(Error):
     def __init__(self, url):
-        Error.__init__(self, 302, "redirect")
+        super().__init__(302, "redirect")
         self.url = protect_redirect_url(unicode2bytes(url))
 
 
@@ -52,7 +52,7 @@ class Resource(resource.Resource):
         return self.master.config.buildbotURL
 
     def __init__(self, master):
-        resource.Resource.__init__(self)
+        super().__init__()
         self.master = master
         if self.needsReconfig and master is not None:
             master.www.resourceNeedsReconfigs(self)
@@ -115,7 +115,7 @@ class Resource(resource.Resource):
 class RedirectResource(Resource):
 
     def __init__(self, master, basepath):
-        Resource.__init__(self, master)
+        super().__init__(master)
         self.basepath = basepath
 
     def render(self, request):

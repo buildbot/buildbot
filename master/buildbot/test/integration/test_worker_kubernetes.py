@@ -78,7 +78,7 @@ class KubernetesMaster(RunMasterBase):
 
 class KubernetesMasterTReq(KubernetesMaster):
     def setup(self):
-        KubernetesMaster.setUp(self)
+        super().setUp()
         self.patch(kubernetes.KubeClientService, 'PREFER_TREQ', True)
 
 

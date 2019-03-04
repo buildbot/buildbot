@@ -44,6 +44,7 @@ class CoreReactor:
     """
 
     def __init__(self):
+        super().__init__()
         self._triggers = {}
 
     def addSystemEventTrigger(self, phase, eventType, f, *args, **kw):
@@ -118,8 +119,7 @@ class NonReactor:
 class TestReactor(NonReactor, CoreReactor, Clock):
 
     def __init__(self):
-        Clock.__init__(self)
-        CoreReactor.__init__(self)
+        super().__init__()
 
         # whether there are calls that should run right now
         self._pendingCurrentCalls = False
@@ -160,8 +160,8 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         if when <= 0 and not self._pendingCurrentCalls:
             reactor.callLater(0, self._executeCurrentDelayedCalls)
 
-        return Clock.callLater(self, when, self._catchPrintExceptions,
-                               what, *a, **kw)
+        return super().callLater(when, self._catchPrintExceptions,
+                                 what, *a, **kw)
 
     def stop(self):
         # first fire pending calls until the current time. Note that the real

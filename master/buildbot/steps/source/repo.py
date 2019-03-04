@@ -169,7 +169,7 @@ class Repo(Source):
         self.repoDownloads = repoDownloads
         self.depth = depth
         self.syncQuietly = syncQuietly
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         assert self.manifestURL is not None
 

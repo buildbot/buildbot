@@ -50,7 +50,7 @@ class RpmLint(Test):
         @type kwargs: dict
         @param fileloc: all other keyword arguments.
         """
-        Test.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if fileloc:
             self.fileloc = fileloc
         if config:

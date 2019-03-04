@@ -47,7 +47,7 @@ DEFAULT_PORT = os.environ.get("BUILDBOT_TEST_DEFAULT_PORT", "0")
 class FakeBuilder(builder.Builder):
 
     def __init__(self, name):
-        builder.Builder.__init__(self, name)
+        super().__init__(name)
         self.builder_status = mock.Mock()
 
     def attached(self, worker, commands):
@@ -69,10 +69,10 @@ class MasterSideWorker(worker.Worker):
 
     def attached(self, conn):
         self.detach_d = defer.Deferred()
-        return worker.Worker.attached(self, conn)
+        return super().attached(conn)
 
     def detached(self):
-        worker.Worker.detached(self)
+        super().detached()
         self.detach_d, d = None, self.detach_d
         d.callback(None)
 

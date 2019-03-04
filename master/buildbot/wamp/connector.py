@@ -33,6 +33,8 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
     """
 
     def __init__(self, config):
+        # Cannot use super() here.
+        # We must explicitly call both parent constructors.
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
         self.config = config
@@ -83,7 +85,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
     name = "wamp"
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.app = self.router_url = None
         self.serviceDeferred = defer.Deferred()
         self.service = None
@@ -103,7 +105,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         if self.service is not None:
             self.service.leaving = True
 
-        service.AsyncMultiService.stopService(self)
+        super().stopService()
 
     @defer.inlineCallbacks
     def publish(self, topic, data, options=None):
@@ -147,5 +149,4 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         wamp_debug_level = wamp.get('wamp_debug_level', 'error')
         txaio.set_global_log_level(wamp_debug_level)
         yield self.app.setServiceParent(self)
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)

@@ -44,8 +44,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
     def setupStep(self, step, args=None, patch=None, **kwargs):
         if args is None:
             args = {}
-        step = sourcesteps.SourceStepMixin.setupStep(
-            self, step, args={}, patch=None, **kwargs)
+        step = super().setupStep(step, args={}, patch=None, **kwargs)
         self.build.getSourceStamp().revision = args.get('revision', None)
 
         # builddir property used to create absolute path required in perforce

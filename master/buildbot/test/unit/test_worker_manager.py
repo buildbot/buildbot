@@ -32,7 +32,7 @@ class FakeWorker(service.BuildbotService):
     reconfig_count = 0
 
     def __init__(self, workername):
-        service.BuildbotService.__init__(self, name=workername)
+        super().__init__(name=workername)
 
     def reconfigService(self):
         self.reconfig_count += 1

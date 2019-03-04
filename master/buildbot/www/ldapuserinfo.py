@@ -50,8 +50,6 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                  avatarPattern=None,
                  avatarData=None,
                  accountExtraFields=None):
-        avatar.AvatarBase.__init__(self)
-        auth.UserInfoProviderBase.__init__(self)
         self.uri = uri
         self.bindUser = bindUser
         self.bindPw = bindPw

@@ -31,7 +31,7 @@ from buildbot.util import unicode2bytes
 class WsProtocol(WebSocketServerProtocol):
 
     def __init__(self, master):
-        WebSocketServerProtocol.__init__(self)
+        super().__init__()
         self.master = master
         self.qrefs = {}
         self.debug = self.master.config.www.get('debug', False)
@@ -129,7 +129,7 @@ class WsProtocol(WebSocketServerProtocol):
 class WsProtocolFactory(WebSocketServerFactory):
 
     def __init__(self, master):
-        WebSocketServerFactory.__init__(self)
+        super().__init__()
         self.master = master
 
     def buildProtocol(self, addr):
@@ -141,4 +141,4 @@ class WsProtocolFactory(WebSocketServerFactory):
 class WsResource(WebSocketResource):
 
     def __init__(self, master):
-        WebSocketResource.__init__(self, WsProtocolFactory(master))
+        super().__init__(WsProtocolFactory(master))

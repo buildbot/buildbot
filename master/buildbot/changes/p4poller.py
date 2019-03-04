@@ -132,9 +132,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = "P4Source:%s:%s" % (p4port, p4base)
 
-        base.PollingChangeSource.__init__(self, name=name,
-                                          pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch)
+        super().__init__(name=name,
+                         pollInterval=pollInterval,
+                         pollAtLaunch=pollAtLaunch)
 
         if project is None:
             project = ''

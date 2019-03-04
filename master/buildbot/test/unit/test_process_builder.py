@@ -99,8 +99,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
-        yield BuilderMixin.makeBuilder(
-            self, patch_random=patch_random, **config_kwargs)
+        yield super().makeBuilder(patch_random=patch_random, **config_kwargs)
 
         # patch into the _startBuildsFor method
         self.builds_started = []

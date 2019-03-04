@@ -34,7 +34,7 @@ class HipChatStatusPush(HttpStatusPushBase):
                         builder_room_map=None, builder_user_map=None,
                         event_messages=None, **kwargs):
         auth_token = yield self.renderSecrets(auth_token)
-        yield HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, endpoint,
             debug=self.debug, verify=self.verify)

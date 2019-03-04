@@ -39,7 +39,7 @@ class Bzr(Source):
         self.branch = defaultBranch
         self.mode = mode
         self.method = method
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")

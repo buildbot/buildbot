@@ -44,9 +44,10 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
 
     compare_attrs = ("basedir", "pollinterval", "prefix")
+    name = 'MaildirSource'
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
-        MaildirService.__init__(self, maildir)
+        super().__init__(maildir)
         self.prefix = prefix
         self.category = category
         self.repository = repository
@@ -89,7 +90,7 @@ class CVSMaildirSource(MaildirSource):
 
     def __init__(self, maildir, prefix=None, category='',
                  repository='', properties=None):
-        MaildirSource.__init__(self, maildir, prefix, category, repository)
+        super().__init__(maildir, prefix, category, repository)
         if properties is None:
             properties = {}
         self.properties = properties
@@ -426,7 +427,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap
         self.defaultBranch = defaultBranch
-        MaildirSource.__init__(self, maildir, prefix, **kwargs)
+        super().__init__(maildir, prefix, **kwargs)
 
     def parse(self, m, prefix=None):
         """Parse branch notification messages sent by Launchpad.

@@ -84,7 +84,7 @@ class DebPbuilder(WarningCountingShellCommand):
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
-        WarningCountingShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         if architecture:
             self.architecture = architecture
@@ -187,7 +187,7 @@ class DebPbuilder(WarningCountingShellCommand):
             log.msg("Failure when running %s." % cmd)
             self.finished(FAILURE)
         else:
-            return WarningCountingShellCommand.start(self)
+            return super().start()
 
     def logConsumer(self):
         r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")

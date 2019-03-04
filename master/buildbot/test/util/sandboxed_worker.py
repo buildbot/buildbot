@@ -62,7 +62,7 @@ class SandboxedWorker(AsyncService):
             processProtocol, self.sandboxed_worker_path, args=['bbw', 'start', '--nodaemon', self.workerdir])
 
         self.worker = self.master.workers.getWorkerByName(self.workername)
-        return AsyncService.startService(self)
+        return super().startService()
 
     @defer.inlineCallbacks
     def shutdownWorker(self):
@@ -72,6 +72,3 @@ class SandboxedWorker(AsyncService):
         yield self.worker.shutdown()
         # wait for process to disappear
         yield self.processprotocol.waitForFinish()
-
-    def stopService(self):
-        return AsyncService.stopService(self)

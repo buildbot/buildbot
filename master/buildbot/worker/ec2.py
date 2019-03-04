@@ -88,7 +88,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if tags is None:
             tags = {}
 
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+        super().__init__(name, password, **kwargs)
 
         if security_name and subnet_id:
             raise ValueError(

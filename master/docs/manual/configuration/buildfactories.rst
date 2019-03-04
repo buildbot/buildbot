@@ -108,7 +108,7 @@ Each stage is then run in this example using ``./build.sh --run-stage <stage nam
 
         def __init__(self, **kwargs):
             kwargs = self.setupShellMixin(kwargs)
-            steps.BuildStep.__init__(self, **kwargs)
+            super().__init__(**kwargs)
             self.observer = logobserver.BufferLogObserver()
             self.addLogObserver('stdio', self.observer)
 

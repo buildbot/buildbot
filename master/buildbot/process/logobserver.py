@@ -57,6 +57,7 @@ class LogLineObserver(LogObserver):
     headerDelimiter = "\n"
 
     def __init__(self):
+        super().__init__()
         self.max_length = 16384
 
     def setMaxLineLength(self, max_length):
@@ -98,7 +99,7 @@ class LogLineObserver(LogObserver):
 class LineConsumerLogObserver(LogLineObserver):
 
     def __init__(self, consumerFunction):
-        LogLineObserver.__init__(self)
+        super().__init__()
         self.generator = None
         self.consumerFunction = consumerFunction
 
@@ -141,7 +142,7 @@ class OutputProgressObserver(LogObserver):
 class BufferLogObserver(LogObserver):
 
     def __init__(self, wantStdout=True, wantStderr=False):
-        LogObserver.__init__(self)
+        super().__init__()
         self.stdout = [] if wantStdout else None
         self.stderr = [] if wantStderr else None
 

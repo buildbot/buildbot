@@ -157,7 +157,7 @@ class Git(Source, GitStepMixin):
         self.srcdir = 'source'
         self.origin = origin
 
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         self.setupGitStep()
 
@@ -661,7 +661,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.sshHostKey = sshHostKey
         self.config = config
 
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         self.setupGitStep()
 

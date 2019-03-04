@@ -84,8 +84,7 @@ class FakeRequest:
 class FakeBuildStep(BuildStep):
 
     def __init__(self):
-        BuildStep.__init__(
-            self, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=True,
+        super().__init__(haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=True,
             warnOnWarnings=True, warnOnFailure=False, alwaysRun=False, name='fake')
         self._summary = {'step': 'result', 'build': 'build result'}
         self._expected_results = SUCCESS
@@ -162,7 +161,7 @@ class _StepController():
 class _ControllableStep(BuildStep):
 
     def __init__(self):
-        BuildStep.__init__(self)
+        super().__init__()
         self._deferred = defer.Deferred()
 
     def run(self):

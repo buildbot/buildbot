@@ -31,7 +31,7 @@ from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
 
-class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
+class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
     """
     Parent class for timed schedulers.  This takes care of the (surprisingly
@@ -50,7 +50,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
                  createAbsoluteSourceStamps=False, onlyIfChanged=False,
                  branch=NoBranch, change_filter=None, fileIsImportant=None,
                  onlyImportant=False, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
 
         # tracking for when to start the next build
         self.lastActuated = None
@@ -78,7 +78,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     @defer.inlineCallbacks
     def activate(self):
-        yield base.BaseScheduler.activate(self)
+        yield super().activate()
 
         if not self.enabled:
             return None
@@ -102,7 +102,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     @defer.inlineCallbacks
     def deactivate(self):
-        yield base.BaseScheduler.deactivate(self)
+        yield super().deactivate()
 
         if not self.enabled:
             return None
@@ -174,7 +174,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
-            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
+            return super().getCodebaseDict(codebase)
         return self.codebases[codebase]
 
     # Timed methods
@@ -265,7 +265,7 @@ class Periodic(Timed):
     def __init__(self, name, builderNames, periodicBuildTimer,
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        Timed.__init__(self, name, builderNames, reason=reason, **kwargs)
+        super().__init__(name, builderNames, reason=reason, **kwargs)
         if periodicBuildTimer <= 0:
             config.error("periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
@@ -282,7 +282,7 @@ class NightlyBase(Timed):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  **kwargs):
-        Timed.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
 
         self.minute = minute
         self.hour = hour
@@ -339,10 +339,10 @@ class Nightly(NightlyBase):
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        NightlyBase.__init__(self, name=name, builderNames=builderNames,
-                             minute=minute, hour=hour, dayOfMonth=dayOfMonth,
-                             month=month, dayOfWeek=dayOfWeek, reason=reason,
-                             **kwargs)
+        super().__init__(name=name, builderNames=builderNames,
+                         minute=minute, hour=hour, dayOfMonth=dayOfMonth,
+                         month=month, dayOfWeek=dayOfWeek, reason=reason,
+                         **kwargs)
 
 
 @implementer(ITriggerableScheduler)
@@ -352,16 +352,16 @@ class NightlyTriggerable(NightlyBase):
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        NightlyBase.__init__(self, name=name, builderNames=builderNames,
-                             minute=minute, hour=hour, dayOfMonth=dayOfMonth,
-                             month=month, dayOfWeek=dayOfWeek, reason=reason,
-                             **kwargs)
+        super().__init__(name=name, builderNames=builderNames,
+                         minute=minute, hour=hour, dayOfMonth=dayOfMonth,
+                         month=month, dayOfWeek=dayOfWeek, reason=reason,
+                         **kwargs)
 
         self._lastTrigger = None
 
     @defer.inlineCallbacks
     def activate(self):
-        yield NightlyBase.activate(self)
+        yield super().activate()
 
         if not self.enabled:
             return

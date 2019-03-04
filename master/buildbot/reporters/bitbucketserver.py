@@ -45,8 +45,7 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                         statusName=None, startDescription=None,
                         endDescription=None, verbose=False, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield http.HttpStatusPushBase.reconfigService(
-            self, wantProperties=True, **kwargs)
+        yield super().reconfigService(wantProperties=True, **kwargs)
         self.key = key or Interpolate('%(prop:buildername)s')
         self.context = statusName
         self.endDescription = endDescription or 'Build done.'
@@ -131,8 +130,8 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
     def reconfigService(self, base_url, user, password, messageFormatter=None,
                         verbose=False, debug=None, verify=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield notifier.NotifierBase.reconfigService(
-            self, messageFormatter=messageFormatter, watchedWorkers=None,
+        yield super().reconfigService(
+            messageFormatter=messageFormatter, watchedWorkers=None,
             messageFormatterMissingWorker=None, subject='', addLogs=False,
             addPatch=False, **kwargs)
         self.verbose = verbose
@@ -143,18 +142,17 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
     def checkConfig(self, base_url, user, password, messageFormatter=None,
                     verbose=False, debug=None, verify=None, **kwargs):
 
-        notifier.NotifierBase.checkConfig(self,
-                                          messageFormatter=messageFormatter,
-                                          watchedWorkers=None,
-                                          messageFormatterMissingWorker=None,
-                                          subject='',
-                                          addLogs=False,
-                                          addPatch=False,
-                                          **kwargs)
+        super().checkConfig(messageFormatter=messageFormatter,
+                            watchedWorkers=None,
+                            messageFormatterMissingWorker=None,
+                            subject='',
+                            addLogs=False,
+                            addPatch=False,
+                            **kwargs)
 
     def isMessageNeeded(self, build):
         if 'pullrequesturl' in build['properties']:
-            return notifier.NotifierBase.isMessageNeeded(self, build)
+            return super().isMessageNeeded(build)
         return False
 
     def workerMissing(self, key, worker):

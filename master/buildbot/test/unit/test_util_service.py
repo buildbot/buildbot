@@ -742,7 +742,7 @@ class BuildbotServiceManager(unittest.TestCase):
 
 class UnderTestSharedService(service.SharedService):
     def __init__(self, arg1=None):
-        service.SharedService.__init__(self)
+        super().__init__()
 
 
 class UnderTestDependentService(service.AsyncService):

@@ -29,7 +29,7 @@ class Dependent(base.BaseScheduler):
     compare_attrs = ('upstream_name',)
 
     def __init__(self, name, upstream, builderNames, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
         if not interfaces.IScheduler.providedBy(upstream):
             config.error(
                 "upstream must be another Scheduler instance")
@@ -45,7 +45,7 @@ class Dependent(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def activate(self):
-        yield base.BaseScheduler.deactivate(self)
+        yield super().activate()
 
         if not self.enabled:
             return
@@ -65,7 +65,7 @@ class Dependent(base.BaseScheduler):
     @defer.inlineCallbacks
     def deactivate(self):
         # the base deactivate will unsubscribe from new changes
-        yield base.BaseScheduler.deactivate(self)
+        yield super().deactivate()
 
         if not self.enabled:
             return

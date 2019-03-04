@@ -146,7 +146,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     """)
 
     def postOptions(self):
-        base.BasedirMixin.postOptions(self)
+        super().postOptions()
 
         # validate 'log-count' parameter
         if self['log-count'] == 'None':
@@ -226,7 +226,7 @@ class SendChangeOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.sendchange.sendchange"
 
     def __init__(self):
-        base.SubcommandOptions.__init__(self)
+        super().__init__()
         self['properties'] = {}
 
     optParameters = [
@@ -277,7 +277,7 @@ class SendChangeOptions(base.SubcommandOptions):
         self['properties'][name] = value
 
     def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
+        super().postOptions()
 
         if self.get("revision_file"):
             with open(self["revision_file"], "r") as f:
@@ -423,7 +423,7 @@ class TryOptions(base.SubcommandOptions):
     ]
 
     def __init__(self):
-        base.SubcommandOptions.__init__(self)
+        super().__init__()
         self['builders'] = []
         self['properties'] = {}
 
@@ -449,7 +449,7 @@ class TryOptions(base.SubcommandOptions):
         return "Usage:    buildbot try [options]"
 
     def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
+        super().postOptions()
         opts = self.optionsFile
         if not self['builders']:
             self['builders'] = opts.get('try_builders', [])
@@ -545,7 +545,7 @@ class UserOptions(base.SubcommandOptions):
     """)
 
     def __init__(self):
-        base.SubcommandOptions.__init__(self)
+        super().__init__()
         self['ids'] = []
         self['info'] = []
 
@@ -589,7 +589,7 @@ class UserOptions(base.SubcommandOptions):
                         % ', '.join(valid))
 
     def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
+        super().postOptions()
 
         validateMasterOption(self.get('master'))
 
@@ -737,7 +737,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         print("Buildbot version: %s" % buildbot.version)
-        usage.Options.opt_version(self)
+        super().opt_version()
 
     def opt_verbose(self):
         from twisted.python import log

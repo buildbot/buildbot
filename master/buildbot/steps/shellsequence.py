@@ -76,7 +76,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     def __init__(self, commands=None, **kwargs):
         self.commands = commands
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def shouldRunTheCommand(self, cmd):
         return bool(cmd)

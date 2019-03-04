@@ -165,7 +165,7 @@ class FakeMaster(service.MasterService):
     """
 
     def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
-        service.MasterService.__init__(self)
+        super().__init__()
         self._master_id = master_id
         self.reactor = reactor
         self.objectids = {}

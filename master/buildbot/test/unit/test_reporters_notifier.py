@@ -319,7 +319,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         class NoPatchSourcestamp(SourceStamp):
 
             def __init__(self, id, patchid):
-                SourceStamp.__init__(self, id=id)
+                super().__init__(id=id)
         self.patch(fakedb, 'SourceStamp', NoPatchSourcestamp)
         mn, builds = yield self.setupBuildMessage(mode=("change",), addPatch=True)
         self.assertEqual(mn.sendMessage.call_count, 1)

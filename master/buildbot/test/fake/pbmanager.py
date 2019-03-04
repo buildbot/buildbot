@@ -22,7 +22,7 @@ from buildbot.util import service
 class FakePBManager(service.AsyncMultiService):
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setName("fake-pbmanager")
         self._registrations = []
         self._unregistrations = []

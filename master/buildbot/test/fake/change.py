@@ -28,7 +28,7 @@ class Change(State):
     properties = {}
 
     def __init__(self, **kw):
-        State.__init__(self, **kw)
+        super().__init__(**kw)
         # change.properties is a IProperties
         props = Properties()
         props.update(self.properties, "test")

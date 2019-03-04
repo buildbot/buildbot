@@ -47,7 +47,7 @@ class AuthRootResource(resource.Resource):
             return self.master.www.auth.getLoginResource()
         elif path == b'logout':
             return self.master.www.auth.getLogoutResource()
-        return resource.Resource.getChild(self, path, request)
+        return super().getChild(path, request)
 
 
 class AuthBase(config.ConfiguredMixin):
@@ -105,7 +105,7 @@ class RemoteUserAuth(AuthBase):
     headerRegex = re.compile(br"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")
 
     def __init__(self, header=None, headerRegex=None, **kwargs):
-        AuthBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if self.userInfoProvider is None:
             self.userInfoProvider = UserInfoProviderBase()
         if header is not None:
@@ -147,7 +147,7 @@ class AuthRealm:
 class TwistedICredAuthBase(AuthBase):
 
     def __init__(self, credentialFactories, checkers, **kwargs):
-        AuthBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if self.userInfoProvider is None:
             self.userInfoProvider = UserInfoProviderBase()
         self.credentialFactories = credentialFactories
@@ -162,9 +162,7 @@ class TwistedICredAuthBase(AuthBase):
 class HTPasswdAuth(TwistedICredAuthBase):
 
     def __init__(self, passwdFile, **kwargs):
-        TwistedICredAuthBase.__init__(
-            self,
-            [DigestCredentialFactory(b"md5", b"buildbot"),
+        super().__init__([DigestCredentialFactory(b"md5", b"buildbot"),
              BasicCredentialFactory(b"buildbot")],
             [FilePasswordDB(passwdFile)],
             **kwargs)
@@ -177,9 +175,7 @@ class UserPasswordAuth(TwistedICredAuthBase):
             users = {user: unicode2bytes(pw) for user, pw in users.items()}
         elif isinstance(users, list):
             users = [(user, unicode2bytes(pw)) for user, pw in users]
-        TwistedICredAuthBase.__init__(
-            self,
-            [DigestCredentialFactory(b"md5", b"buildbot"),
+        super().__init__([DigestCredentialFactory(b"md5", b"buildbot"),
              BasicCredentialFactory(b"buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
@@ -191,9 +187,7 @@ class CustomAuth(TwistedICredAuthBase):
     credentialInterfaces = [IUsernamePassword]
 
     def __init__(self, **kwargs):
-        TwistedICredAuthBase.__init__(
-            self,
-            [BasicCredentialFactory(b"buildbot")],
+        super().__init__([BasicCredentialFactory(b"buildbot")],
             [self],
             **kwargs)
 
@@ -218,7 +212,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     # HTTPAuthSessionWrapper
 
     def __init__(self, master, username):
-        LoginResource.__init__(self, master)
+        super().__init__(master)
         self.username = username
 
     @defer.inlineCallbacks

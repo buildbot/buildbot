@@ -118,7 +118,7 @@ class AbstractLatentWorker(AbstractWorker):
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
                     **kwargs):
-        AbstractWorker.checkConfig(self, name, password, **kwargs)
+        super().checkConfig(name, password, **kwargs)
 
     def reconfigService(self, name, password,
                         build_wait_timeout=60 * 10,
@@ -126,7 +126,7 @@ class AbstractLatentWorker(AbstractWorker):
         self._substantiation_notifier = Notifier()
         self._insubstantiation_notifier = Notifier()
         self.build_wait_timeout = build_wait_timeout
-        return AbstractWorker.reconfigService(self, name, password, **kwargs)
+        return super().reconfigService(name, password, **kwargs)
 
     def getRandomPass(self):
         """
@@ -254,7 +254,7 @@ class AbstractLatentWorker(AbstractWorker):
             raise RuntimeError(msg)
 
         try:
-            yield AbstractWorker.attached(self, bot)
+            yield super().attached(bot)
         except Exception:
             self._substantiation_failed(failure.Failure())
             return
@@ -297,7 +297,7 @@ class AbstractLatentWorker(AbstractWorker):
         # we were disconnected, but all the builds are not yet cleaned up.
         if self.conn is None and self.building:
             return False
-        return AbstractWorker.canStartBuild(self)
+        return super().canStartBuild()
 
     def buildStarted(self, wfb):
         assert wfb.isBusy()
@@ -317,7 +317,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         # AbstractWorker.buildFinished() will try to start the next build for
         # that worker
-        AbstractWorker.buildFinished(self, wfb)
+        super().buildFinished(wfb)
 
     def _clearBuildWaitTimer(self):
         if self.build_wait_timer is not None:
@@ -391,7 +391,7 @@ class AbstractLatentWorker(AbstractWorker):
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if self.build_wait_timeout < 0:
-            yield AbstractWorker.disconnect(self)
+            yield super().disconnect()
             return
 
         self.stopMissingTimer()
@@ -406,7 +406,7 @@ class AbstractLatentWorker(AbstractWorker):
             log.msg("Substantiation complete, immediately terminating.")
 
         yield defer.DeferredList([
-            AbstractWorker.disconnect(self),
+            super().disconnect(),
             self.insubstantiate(fast)
         ], consumeErrors=True, fireOnOneErrback=True)
 
@@ -428,7 +428,7 @@ class AbstractLatentWorker(AbstractWorker):
                                                    States.SUBSTANTIATED]:
             yield self._soft_disconnect()
         self._clearBuildWaitTimer()
-        res = yield AbstractWorker.stopService(self)
+        res = yield super().stopService()
         return res
 
     def updateWorker(self):
@@ -441,4 +441,4 @@ class AbstractLatentWorker(AbstractWorker):
         for b in self.botmaster.getBuildersForWorker(self.name):
             if b.name not in self.workerforbuilders:
                 b.addLatentWorker(self)
-        return AbstractWorker.updateWorker(self)
+        return super().updateWorker()

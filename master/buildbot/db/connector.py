@@ -68,7 +68,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
     CLEANUP_PERIOD = 3600
 
     def __init__(self, basedir):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setName('db')
         self.basedir = basedir
 
@@ -81,7 +81,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
         self.pool = None  # set up in reconfigService
 
     def setServiceParent(self, p):
-        d = service.AsyncMultiService.setServiceParent(self, p)
+        d = super().setServiceParent(p)
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.changesources = changesources.ChangeSourcesConnectorComponent(
@@ -137,8 +137,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
         # double-check -- the master ensures this in config checks
         assert self.configured_url == new_config.db['db_url']
 
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def _doCleanup(self):
         """

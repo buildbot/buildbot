@@ -70,11 +70,11 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                          'use sshHostKey')
             sshPrivateKey = None
 
-        base.PollingChangeSource.__init__(self, name=name,
-                                          pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch,
-                                          sshPrivateKey=sshPrivateKey,
-                                          sshHostKey=sshHostKey)
+        super().__init__(name=name,
+                         pollInterval=pollInterval,
+                         pollAtLaunch=pollAtLaunch,
+                         sshPrivateKey=sshPrivateKey,
+                         sshHostKey=sshHostKey)
 
         if project is None:
             project = ''
@@ -136,7 +136,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         try:
             self.lastRev = yield self.getState('lastRev', {})
 
-            base.PollingChangeSource.activate(self)
+            super().activate()
         except Exception as e:
             log.err(e, 'while initializing GitPoller repository')
 

@@ -36,8 +36,7 @@ class CollectedValidationError(ValueError):
 
     def __init__(self, errors):
         self.errors = errors
-        ValueError.__init__(
-            self, "\n".join([k + ":" + v for k, v in errors.items()]))
+        super().__init__("\n".join([k + ":" + v for k, v in errors.items()]))
 
 
 class ValidationErrorCollector:
@@ -264,7 +263,7 @@ class UserNameParameter(StringParameter):
     need_email = True
 
     def __init__(self, name="username", label="Your name:", **kw):
-        BaseParameter.__init__(self, name, label, **kw)
+        super().__init__(name, label, **kw)
 
     def parse_from_arg(self, s):
         if not s and not self.required:
@@ -349,14 +348,14 @@ class WorkerChoiceParameter(ChoiceStringParameter):
     strict = False
 
     def __init__(self, name='workername', **kwargs):
-        ChoiceStringParameter.__init__(self, name, **kwargs)
+        super().__init__(name, **kwargs)
 
     def updateFromKwargs(self, kwargs, **unused):
         workername = self.getFromKwargs(kwargs)
         if workername == self.anySentinel:
             # no preference, so don't set a parameter at all
             return
-        ChoiceStringParameter.updateFromKwargs(self, kwargs=kwargs, **unused)
+        super().updateFromKwargs(kwargs=kwargs, **unused)
 
     def getChoices(self, master, scheduler, buildername):
         if buildername is None:
@@ -403,7 +402,7 @@ class NestedParameter(BaseParameter):
     columns = None
 
     def __init__(self, name, fields, **kwargs):
-        BaseParameter.__init__(self, fields=fields, name=name, **kwargs)
+        super().__init__(fields=fields, name=name, **kwargs)
         # reasonable defaults for the number of columns
         if self.columns is None:
             num_visible_fields = len(
@@ -420,7 +419,7 @@ class NestedParameter(BaseParameter):
         self.setParent(None)
 
     def setParent(self, parent):
-        BaseParameter.setParent(self, parent)
+        super().setParent(parent)
         for field in self.fields:  # pylint: disable=not-an-iterable
             field.setParent(self)
 
@@ -456,7 +455,7 @@ class NestedParameter(BaseParameter):
         d.update(kwargs[self.fullName])
 
     def getSpec(self):
-        ret = BaseParameter.getSpec(self)
+        ret = super().getSpec()
         # pylint: disable=not-an-iterable
         ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
@@ -476,7 +475,7 @@ class AnyPropertyParameter(NestedParameter):
             StringParameter(name='name', label="Name:"),
             StringParameter(name='value', label="Value:"),
         ]
-        NestedParameter.__init__(self, name, label='', fields=fields, **kw)
+        super().__init__(name, label='', fields=fields, **kw)
 
     def getFromKwargs(self, kwargs):
         raise ValidationError(
@@ -563,9 +562,9 @@ class CodebaseParameter(NestedParameter):
             if self.columns is None and 'columns' not in kwargs:
                 self.columns = 1
 
-        NestedParameter.__init__(self, name=name, label=label,
-                                 codebase=codebase,
-                                 fields=fields, **kwargs)
+        super().__init__(name=name, label=label,
+                         codebase=codebase,
+                         fields=fields, **kwargs)
 
     def createSourcestamp(self, properties, kwargs):
         # default, just return the things we put together
@@ -612,7 +611,7 @@ class PatchParameter(NestedParameter):
             kwargs.pop(field.name, field)
             for field in default_fields
         ]
-        NestedParameter.__init__(self, name, fields=fields, **kwargs)
+        super().__init__(name, fields=fields, **kwargs)
 
 
 class ForceScheduler(base.BaseScheduler):
@@ -731,11 +730,10 @@ class ForceScheduler(base.BaseScheduler):
             codebase_dict[codebase.codebase] = dict(
                 branch='', repository='', revision='')
 
-        base.BaseScheduler.__init__(self,
-                                    name=name,
-                                    builderNames=builderNames,
-                                    properties={},
-                                    codebases=codebase_dict)
+        super().__init__(name=name,
+                         builderNames=builderNames,
+                         properties={},
+                         codebases=codebase_dict)
 
         if properties:
             self.forcedProperties.extend(properties)

@@ -60,7 +60,7 @@ class StatsService(service.BuildbotService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        yield service.BuildbotService.stopService(self)
+        yield super().stopService()
         self.removeConsumers()
 
     @defer.inlineCallbacks

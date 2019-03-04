@@ -185,7 +185,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
     """
 
     def setUp(self):
-        TestStatsServicesBase.setUp(self)
+        super().setUp()
         self.routingKey = (
             "builders", self.BUILDER_IDS[0], "builds", 1, "finished")
         self.master.mq.verifyMessages = False

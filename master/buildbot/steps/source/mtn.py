@@ -48,7 +48,7 @@ class Monotone(Source):
         self.sourcedata = "%s?%s" % (self.repourl, self.branch)
         self.database = 'db.mtn'
         self.progress = progress
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         errors = []
 
         if not self._hasAttrGroupMember('mode', self.mode):

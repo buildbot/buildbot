@@ -30,7 +30,7 @@ class RolesFromBase:
 class RolesFromGroups(RolesFromBase):
 
     def __init__(self, groupPrefix=""):
-        RolesFromBase.__init__(self)
+        super().__init__()
         self.groupPrefix = groupPrefix
 
     def getRolesFromUser(self, userDetails):
@@ -45,7 +45,7 @@ class RolesFromGroups(RolesFromBase):
 class RolesFromEmails(RolesFromBase):
 
     def __init__(self, **kwargs):
-        RolesFromBase.__init__(self)
+        super().__init__()
         self.roles = {}
         for role, emails in kwargs.items():
             for email in emails:
@@ -60,7 +60,7 @@ class RolesFromEmails(RolesFromBase):
 class RolesFromDomain(RolesFromEmails):
 
     def __init__(self, **kwargs):
-        RolesFromBase.__init__(self)
+        super().__init__()
 
         self.domain_roles = {}
         for role, domains in kwargs.items():
@@ -78,7 +78,7 @@ class RolesFromDomain(RolesFromEmails):
 class RolesFromOwner(RolesFromBase):
 
     def __init__(self, role):
-        RolesFromBase.__init__(self)
+        super().__init__()
         self.role = role
 
     def getRolesFromUser(self, userDetails, owner):

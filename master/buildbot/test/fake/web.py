@@ -45,7 +45,7 @@ class FakeRequest(Mock):
     failure = None
 
     def __init__(self, args=None, content=b''):
-        Mock.__init__(self)
+        super().__init__()
 
         if args is None:
             args = {}

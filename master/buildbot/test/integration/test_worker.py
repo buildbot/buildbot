@@ -54,7 +54,7 @@ class ControllableStep(BuildStep):
         return self._step_deferred
 
     def __init__(self, step_deferred, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self._step_deferred = step_deferred
 
     def interrupt(self, reason):

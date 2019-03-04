@@ -64,6 +64,9 @@ class BuildbotSession(server.Session):
         """
         self.site = site
         assert self.site.session_secret is not None, "site.session_secret is not configured yet!"
+        # Cannot use super() here as it would call server.Session.__init__
+        # which we explicitly want to override. However, we still want to call
+        # server.Session parent class constructor
         components.Componentized.__init__(self)
         if token:
             self._fromToken(token)
@@ -138,7 +141,7 @@ class BuildbotSite(server.Site):
     """
 
     def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
-        server.Site.__init__(self, root, logPath=logPath)
+        super().__init__(root, logPath=logPath)
         self.rotateLength = rotateLength
         self.maxRotatedFiles = maxRotatedFiles
         self.session_secret = None
@@ -173,7 +176,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     name = 'www'
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.port = None
         self.port_service = None
@@ -244,8 +247,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if not self.port_service:
             log.msg("No web server configured on this master")
 
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a

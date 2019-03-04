@@ -282,7 +282,7 @@ class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
     def __init__(self, payload):
         self.payload = payload
         self.logEnviron = False
-        buildstep.LoggingBuildStep.__init__(self)
+        super().__init__()
 
     @defer.inlineCallbacks
     def start(self):

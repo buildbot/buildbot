@@ -64,10 +64,11 @@ class JobdirService(MaildirService):
     # NOTE: tightly coupled with Try_Jobdir, below. We used to track it as a "parent"
     # via the MultiService API, but now we just track it as the member
     # "self.scheduler"
+    name = 'JobdirService'
 
     def __init__(self, scheduler, basedir=None):
         self.scheduler = scheduler
-        MaildirService.__init__(self, basedir)
+        super().__init__(basedir)
 
     def messageReceived(self, filename):
         with self.moveToCurDir(filename) as f:
@@ -80,7 +81,7 @@ class Try_Jobdir(TryBase):
     compare_attrs = ('jobdir',)
 
     def __init__(self, name, builderNames, jobdir, **kwargs):
-        TryBase.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
         self.jobdir = jobdir
         self.watcher = JobdirService(scheduler=self)
 
@@ -98,7 +99,7 @@ class Try_Jobdir(TryBase):
 
     @defer.inlineCallbacks
     def activate(self):
-        yield TryBase.activate(self)
+        yield super().activate()
 
         if not self.enabled:
             return
@@ -116,7 +117,7 @@ class Try_Jobdir(TryBase):
 
     @defer.inlineCallbacks
     def deactivate(self):
-        yield TryBase.deactivate(self)
+        yield super().deactivate()
 
         if not self.enabled:
             return
@@ -430,14 +431,14 @@ class Try_Userpass(TryBase):
     compare_attrs = ('name', 'builderNames', 'port', 'userpass', 'properties')
 
     def __init__(self, name, builderNames, port, userpass, **kwargs):
-        TryBase.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
         self.port = port
         self.userpass = userpass
         self.registrations = []
 
     @defer.inlineCallbacks
     def activate(self):
-        yield TryBase.activate(self)
+        yield super().activate()
 
         if not self.enabled:
             return
@@ -452,7 +453,7 @@ class Try_Userpass(TryBase):
 
     @defer.inlineCallbacks
     def deactivate(self):
-        yield TryBase.deactivate(self)
+        yield super().deactivate()
 
         if not self.enabled:
             return

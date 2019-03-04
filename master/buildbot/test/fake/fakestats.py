@@ -68,7 +68,7 @@ class FakeStatsService(stats_service.StatsService):
     """
 
     def __init__(self, master=None, *args, **kwargs):
-        stats_service.StatsService.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.master = master
 
     @property

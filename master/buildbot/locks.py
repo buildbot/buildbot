@@ -198,7 +198,7 @@ class BaseLock:
 class RealMasterLock(BaseLock):
 
     def __init__(self, lockid):
-        BaseLock.__init__(self, lockid.name, lockid.maxCount)
+        super().__init__(lockid.name, lockid.maxCount)
         self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
 
     def getLock(self, worker):

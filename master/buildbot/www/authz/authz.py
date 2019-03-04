@@ -29,7 +29,7 @@ from buildbot.www.authz.roles import RolesFromOwner
 class Forbidden(Error):
 
     def __init__(self, msg):
-        Error.__init__(self, 403, msg)
+        super().__init__(403, msg)
 
 
 # fnmatch and re.match are reversed API, we cannot just rename them

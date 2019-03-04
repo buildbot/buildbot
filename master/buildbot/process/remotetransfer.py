@@ -109,7 +109,7 @@ class DirectoryWriter(FileWriter):
         self.fd, self.tarname = tempfile.mkstemp()
         os.close(self.fd)
 
-        FileWriter.__init__(self, self.tarname, maxsize, mode)
+        super().__init__(self.tarname, maxsize, mode)
 
     def remote_unpack(self):
         """
@@ -197,4 +197,4 @@ class StringFileReader(FileReader):
 
     def __init__(self, s):
         s = unicode2bytes(s)
-        FileReader.__init__(self, BytesIO(s))
+        super().__init__(BytesIO(s))

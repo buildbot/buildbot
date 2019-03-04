@@ -54,7 +54,7 @@ class _TransferBuildStep(BuildStep):
     flunkOnFailure = True
 
     def __init__(self, workdir=None, **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        super().__init__(**buildstep_kwargs)
         self.workdir = workdir
 
     def runTransferCommand(self, cmd, writer=None):
@@ -103,7 +103,7 @@ class FileUpload(_TransferBuildStep):
         if workersrc is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
-        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+        super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.workersrc = workersrc
         self.masterdest = masterdest
@@ -121,7 +121,7 @@ class FileUpload(_TransferBuildStep):
         log.msg("File '{}' upload finished with results {}".format(
             os.path.basename(self.workersrc), str(results)))
         self.step_status.setText(self.descriptionDone)
-        _TransferBuildStep.finished(self, results)
+        super().finished(results)
 
     def start(self):
         self.checkWorkerHasCommand("uploadFile")
@@ -195,7 +195,7 @@ class DirectoryUpload(_TransferBuildStep):
         if workersrc is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
-        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+        super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.workersrc = workersrc
         self.masterdest = masterdest
@@ -269,7 +269,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         if workersrcs is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
-        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+        super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.workersrcs = workersrcs
         self.masterdest = masterdest
@@ -425,9 +425,6 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
 
         d.addCallback(self.finished).addErrback(self.failed)
 
-    def finished(self, result):
-        return BuildStep.finished(self, result)
-
 
 class FileDownload(_TransferBuildStep):
 
@@ -442,7 +439,7 @@ class FileDownload(_TransferBuildStep):
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
-        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+        super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.mastersrc = mastersrc
         self.workerdest = workerdest
@@ -511,7 +508,7 @@ class StringDownload(_TransferBuildStep):
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
-        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+        super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.s = s
         self.workerdest = workerdest
@@ -571,8 +568,7 @@ class JSONStringDownload(StringDownload):
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
         s = json.dumps(o)
-        StringDownload.__init__(
-            self, s=s, workerdest=workerdest, **buildstep_kwargs)
+        super().__init__(s=s, workerdest=workerdest, **buildstep_kwargs)
 
 
 class JSONPropertiesDownload(StringDownload):
@@ -588,8 +584,7 @@ class JSONPropertiesDownload(StringDownload):
         self.super_class = StringDownload
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
-        StringDownload.__init__(
-            self, s=None, workerdest=workerdest, **buildstep_kwargs)
+        super().__init__(s=None, workerdest=workerdest, **buildstep_kwargs)
 
     def start(self):
         properties = self.build.getProperties()

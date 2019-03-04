@@ -26,7 +26,6 @@ from twisted.python import log
 from buildbot import config
 from buildbot.util.eventual import eventually
 from buildbot.worker import AbstractLatentWorker
-from buildbot.worker import AbstractWorker
 
 try:
     import libvirt
@@ -159,7 +158,7 @@ class LibVirtWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
                  **kwargs):
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+        super().__init__(name, password, **kwargs)
         if not libvirt:
             config.error(
                 "The python module 'libvirt' is needed to use a LibVirtWorker")
@@ -204,7 +203,7 @@ class LibVirtWorker(AbstractLatentWorker):
                 "Not accepting builds as existing domain but worker not connected")
             return False
 
-        return AbstractLatentWorker.canStartBuild(self)
+        return super().canStartBuild()
 
     def _prepare_base_image(self):
         """
@@ -300,7 +299,7 @@ class LibVirtWorker(AbstractLatentWorker):
         def _disconnect(res):
             log.msg("VM destroyed (%s): Forcing its connection closed." %
                     self.workername)
-            return AbstractWorker.disconnect(self)
+            return super().disconnect()
 
         @d.addBoth
         def _disconnected(res):

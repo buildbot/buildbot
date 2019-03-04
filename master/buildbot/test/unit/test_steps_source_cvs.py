@@ -46,7 +46,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.tearDownSourceStep()
 
     def setupStep(self, step, *args, **kwargs):
-        sourcesteps.SourceStepMixin.setupStep(self, step, *args, **kwargs)
+        super().setupStep(step, *args, **kwargs)
 
         # make parseGotRevision return something consistent, patching the class
         # instead of the object since a new object is constructed by runTest.

@@ -74,7 +74,7 @@ class TestLogObserver(unittest.TestCase):
 class MyLogLineObserver(logobserver.LogLineObserver):
 
     def __init__(self):
-        logobserver.LogLineObserver.__init__(self)
+        super().__init__()
         self.obs = []
 
     def outLineReceived(self, data):

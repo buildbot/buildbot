@@ -391,10 +391,10 @@ class RemoteShellCommand(RemoteCommand):
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
-                               collectStderr=collectStderr,
-                               decodeRC=decodeRC,
-                               stdioLogName=stdioLogName)
+        super().__init__("shell", args, collectStdout=collectStdout,
+                         collectStderr=collectStderr,
+                         decodeRC=decodeRC,
+                         stdioLogName=stdioLogName)
 
     def _start(self):
         if self.args['usePTY'] is None:
@@ -417,7 +417,7 @@ class RemoteShellCommand(RemoteCommand):
         what = "command '%s' in dir '%s'" % (self.fake_command,
                                              self.args['workdir'])
         log.msg(what)
-        return RemoteCommand._start(self)
+        return super()._start()
 
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.fake_command)

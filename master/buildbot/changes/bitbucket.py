@@ -52,8 +52,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.owner = owner
         self.slug = slug
         self.branch = branch
-        base.PollingChangeSource.__init__(
-            self, name='/'.join([owner, slug]), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+        super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
         self.encoding = encoding
 
         if hasattr(pullrequest_filter, '__call__'):

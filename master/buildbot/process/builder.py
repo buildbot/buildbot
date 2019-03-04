@@ -57,7 +57,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return None
 
     def __init__(self, name):
-        service.MultiService.__init__(self)
+        super().__init__()
         self.name = name
 
         # this is filled on demand by getBuilderId; don't access it directly

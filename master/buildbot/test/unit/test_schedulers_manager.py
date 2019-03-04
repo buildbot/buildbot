@@ -68,11 +68,11 @@ class SchedulerManager(unittest.TestCase):
             assert self.master is not None
             assert self.objectid is not None
             self.already_started = True
-            return base.BaseScheduler.startService(self)
+            return super().startService()
 
         @defer.inlineCallbacks
         def stopService(self):
-            yield base.BaseScheduler.stopService(self)
+            yield super().stopService()
 
             assert self.master is not None
             assert self.objectid is not None
@@ -85,7 +85,7 @@ class SchedulerManager(unittest.TestCase):
         def reconfigServiceWithSibling(self, new_config):
             self.reconfig_count += 1
             self.attr = new_config.attr
-            return base.BaseScheduler.reconfigServiceWithSibling(self, new_config)
+            return super().reconfigServiceWithSibling(new_config)
 
     class ReconfigSched2(ReconfigSched):
         pass

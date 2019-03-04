@@ -71,7 +71,7 @@ class Mock(ShellCommand):
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if root:
             self.root = root
         if resultdir:
@@ -101,10 +101,12 @@ class Mock(ShellCommand):
                                                     [self.build.path_module.join('build', self.logfiles[l])
                                                      for l in self.mock_logfiles]})
         d = self.runCommand(cmd)
+        # must resolve super() outside of the callback context.
+        super_ = super()
 
         @d.addCallback
         def removeDone(cmd):
-            ShellCommand.start(self)
+            super_.start()
         d.addErrback(self.failed)
 
 
@@ -134,7 +136,7 @@ class MockBuildSRPM(Mock):
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
-        Mock.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if spec:
             self.spec = spec
         if sources:
@@ -179,7 +181,7 @@ class MockRebuild(Mock):
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
-        Mock.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if srpm:
             self.srpm = srpm
 

@@ -43,8 +43,7 @@ class MarathonLatentWorker(DockerBaseWorker,
                     masterFQDN=None,
                     **kwargs):
 
-        DockerBaseWorker.checkConfig(
-            self, name, image=image, masterFQDN=masterFQDN, **kwargs)
+        super().checkConfig(name, image=image, masterFQDN=masterFQDN, **kwargs)
         HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
@@ -63,8 +62,7 @@ class MarathonLatentWorker(DockerBaseWorker,
 
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
-        yield DockerBaseWorker.reconfigService(
-            self, name, image=image, masterFQDN=masterFQDN, **kwargs)
+        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
         self._http = yield HTTPClientService.getService(
             self.master, marathon_url, auth=marathon_auth)

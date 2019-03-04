@@ -48,7 +48,7 @@ class TestLogObserver(buildstep.LogObserver):
 class OldStyleCustomBuildStep(buildstep.BuildStep):
 
     def __init__(self, arg1, arg2, doFail=False, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.arg1 = arg1
         self.arg2 = arg2
         self.doFail = doFail
@@ -104,7 +104,7 @@ class FailingCustomStep(buildstep.LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
-        buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.exception = exception
 
     @defer.inlineCallbacks
