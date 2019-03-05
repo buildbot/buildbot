@@ -151,5 +151,5 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(distro), 2)
         self.assertNotIn("unknown", distro[0])
         # Rolling distributions like Arch Linux (arch) does not have VERSION_ID
-        if distro[0] != "arch":
+        if distro[0] not in ["arch", "gentoo"]:
             self.assertNotIn("unknown", distro[1])
