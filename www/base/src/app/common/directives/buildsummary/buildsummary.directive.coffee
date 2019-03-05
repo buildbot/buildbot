@@ -12,7 +12,7 @@ class Buildsummary extends Directive('common')
         }
 
 class _buildsummary extends Controller('common')
-    constructor: ($scope, dataService, resultsService, buildersService, $urlMatcherFactory, $location, $interval, RESULTS) ->
+    constructor: ($scope, dataService, resultsService, buildersService, $urlMatcherFactory, $location, $interval, RESULTS, bbSettingsService) ->
         self = this
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
@@ -28,6 +28,7 @@ class _buildsummary extends Controller('common')
             @now = moment().unix()
         , 1000
         $scope.$on("$destroy", -> $interval.cancel(stop))
+        $scope.settings = bbSettingsService.getSettingsGroup("LogPreview")
 
         NONE = 0
         ONLY_NOT_SUCCESS = 1
@@ -70,6 +71,9 @@ class _buildsummary extends Controller('common')
 
         @isSummaryLog = (log) -> 
             return log.name.toLowerCase() == "summary"
+
+        @expandByName = (log) ->
+            return log.num_lines > 0 && log.name.toLowerCase() in $scope.settings.expand_logs.value.toLowerCase().split(";")
 
         # Returns the logs, sorted with the "Summary" log first, if it exists in the step's list of logs
         @getLogs = (step) -> 
