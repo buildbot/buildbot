@@ -64,7 +64,6 @@ class HgPoller(base.PollingChangeSource):
         self.category = category if callable(
             category) else bytes2unicode(category)
         self.project = project
-        self.commitInfo = {}
         self.initLock = defer.DeferredLock()
 
         if self.workdir is None:
