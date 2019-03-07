@@ -5,23 +5,34 @@ import urllib.parse
 
 from twisted.internet import defer
 
-from buildbot import config
 from buildbot.util.httpclientservice import HTTPClientService
 from buildbot.util.logger import Logger
-from buildbot.util.service import BuildbotService
 
 log = Logger()
 
-# this is a BuildbotService, so that it can be started and destroyed.
-# this is needed to implement kubectl proxy lifecycle
+
+class GCEError(RuntimeError):
+    def __init__(self, response_json, url=None):
+        message = response_json['error']['message']
+        if url is not None:
+            message = "{0}: {1}".format(url, message)
+
+        RuntimeError.__init__(self, message)
+        self.json = response_json
+        self.reason = response_json.get('error')
+
+
 class GCEClientService(HTTPClientService):
     name = "GCEClientService"
 
-    def __init__(self, scopes, sa_credentials, renderer=None):
+    def __init__(self, scopes, sa_credentials, project=None, zone=None, instance=None, renderer=None):
         HTTPClientService.__init__(self, "https://www.googleapis.com")
         self.sa_credentials = sa_credentials
         self.scopes = scopes
         self.renderer = renderer
+        self.project = project
+        self.zone = zone
+        self.instance = instance
 
         self.token = None
         self.tokenExpiry = 0
@@ -80,3 +91,106 @@ class GCEClientService(HTTPClientService):
             req_kwargs['headers']['Authorization'] = "Bearer {0}".format(token)
 
         return url, req_kwargs
+
+    def zoneEndpoint(self, method=None):
+        base = "/compute/v1/projects/{0}/zones/{1}".format(
+            self.project, self.zone)
+        if method:
+            return "{0}/{1}".format(base, method)
+        else:
+            return base
+
+    def instanceEndpoint(self, method=None):
+        rel = "instances/{0}".format(self.instance)
+        if method:
+            rel = "{0}/{1}".format(rel, method)
+        return self.zoneEndpoint(rel)
+
+    def processRequest(self, deferred):
+        return self.validateRes(deferred)
+
+    @defer.inlineCallbacks
+    def processAsyncRequest(self, deferred):
+        op = yield self.validateRes(deferred)
+        yield self.waitOperationEnd(op)
+
+    def getInstanceState(self, fields=None):
+        if fields is None:
+            return self.get(self.instanceEndpoint())
+        else:
+            return self.get(self.instanceEndpoint(),
+                params={'fields': fields})
+
+    def instanceStart(self):
+        return self.post(self.instanceEndpoint("start"))
+
+    def instanceStop(self):
+        return self.post(self.instanceEndpoint("stop"))
+
+    def createDisk(self, image=None, name=None, type=None):
+        return self.post(self.zoneEndpoint("disks"),
+            json={
+                "sourceImage": image,
+                "name": name,
+                "type": "projects/{0}/zones/{1}/diskTypes/{2}".format(
+                    self.project, self.zone, type)
+            })
+
+    def attachDisk(self, name=None, boot=True, index=0):
+        return self.post(
+            self.instanceEndpoint("attachDisk"),
+            json={
+                "boot": boot,
+                "source": self.zoneEndpoint("disks/{0}".format(name)),
+                "deviceName": name,
+                "index": index
+            }
+        )
+
+    def detachDisk(self, name):
+        return self.post(
+            self.instanceEndpoint("detachDisk"),
+            params={"deviceName": name}
+        )
+
+    def deleteDisk(self, disk_name):
+        return self.delete(
+            "{0}/disks/{1}".format(self.zoneEndpoint(), disk_name))
+
+    def setMetadata(self, fingerprint=None, items=[]):
+        return self.post(self.instanceEndpoint("setMetadata"), json={
+            "fingerprint": fingerprint,
+            "items": items,
+            "kind": "compute#metadata"
+        })
+
+    @defer.inlineCallbacks
+    def waitInstanceState(self, desiredState):
+        state = yield self.processRequest(self.getInstanceState(fields='status'))
+        while state['status'] != desiredState:
+            time.sleep(0.1)
+            state = yield self.processRequest(self.getInstanceState(fields='status'))
+
+    @defer.inlineCallbacks
+    def waitOperationEnd(self, op):
+        while op['status'] != 'DONE':
+            time.sleep(0.1)
+            op = self.get(op['selfLink'])
+            op = yield self.validateRes(op)
+
+        if 'error' in op:
+            raise GCEError(op['error'])
+
+    @defer.inlineCallbacks
+    def validateRes(self, res, url=None):
+        try:
+            res = yield res
+            res_json = yield res.json()
+        except json.decoder.JSONDecodeError:
+            message = yield res.content()
+            res_json = {'error': {'message': message}}
+            raise GCEError(res_json, url=url)
+
+        if res.code not in (200, 201, 202):
+            raise GCEError(res_json, url=url)
+        return defer.returnValue(res_json)

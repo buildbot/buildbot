@@ -1,12 +1,8 @@
-import json
-import jwt
 import socket
-import time
 
 from twisted.internet import defer
 
 from buildbot import config
-from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import gceclientservice
 from buildbot.util.logger import Logger
 from buildbot.worker import AbstractLatentWorker
@@ -21,24 +17,13 @@ GCE_NODE_METADATA_KEYS = (
 
 DISK_NAME_GEN_KEY = "BUILDBOT_DISK_GEN"
 
-class GCEError(RuntimeError):
-    def __init__(self, response_json, url=None):
-        message = response_json['error']['message']
-        if url is not None:
-            message = "{0}: {1}".format(url, message)
-
-        RuntimeError.__init__(self, message)
-        self.json = response_json
-        self.reason = response_json.get('error')
 
 class GCELatentWorker(AbstractLatentWorker):
     name = "GCELatentWorker"
 
-    def checkConfig(self, name,
-        project=None, zone=None, instance=None, image=None,
-        stopInstanceOnStop=True, resetDisk=True, useSSD=True,
-        sa_credentials=None,
-        password=None, masterFQDN=None, **kwargs):
+    def checkConfig(self, name, project=None, zone=None, instance=None, image=None,
+                    stopInstanceOnStop=True, resetDisk=True, useSSD=True,
+                    sa_credentials=None, password=None, masterFQDN=None, **kwargs):
 
         if project is None or zone is None or instance is None:
             config.error("need to provide project, zone and instance name")
@@ -56,11 +41,10 @@ class GCELatentWorker(AbstractLatentWorker):
         AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, password=None,
-        project=None, zone=None, instance=None, image=None,
-        stopInstanceOnStop=True, resetDisk=True, useSSD=True,
-        sa_credentials=None,
-        masterFQDN=None, **kwargs):
+    def reconfigService(self, name, password=None, project=None, zone=None,
+                        instance=None, image=None, stopInstanceOnStop=True,
+                        resetDisk=True, useSSD=True, sa_credentials=None,
+                        masterFQDN=None, **kwargs):
 
         if password is None:
             password = self.getRandomPass()
@@ -75,40 +59,19 @@ class GCELatentWorker(AbstractLatentWorker):
         self.useSSD = useSSD
         self.stopInstanceOnStop = stopInstanceOnStop
         self.sa_credentials = sa_credentials
-        self._gce = yield gceclientservice.GCEClientService.getService(
-            self.master, ['https://www.googleapis.com/auth/compute'],
-            sa_credentials, renderer=self)
+        self._gce = yield self.getGCEService(sa_credentials)
         AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
         return defer.returnValue(True)
 
-    def zoneEndpoint(self, method=None):
-        base = "/compute/v1/projects/{0}/zones/{1}".format(
-            self.project, self.zone)
-        if method:
-            return "{0}/{1}".format(base, method)
-        else:
-            return base
+    def getGCEService(self, sa_credentials):
+        gce = yield gceclientservice.GCEClientService.getService(
+            self.master, ['https://www.googleapis.com/auth/compute'], sa_credentials,
+            project=self.project, zone=self.zone, instance=self.instance,
+            renderer=self)
+        return gce
 
-    def instanceEndpoint(self, method=None):
-        rel = "instances/{0}".format(self.instance)
-        if method:
-            rel = "{0}/{1}".format(rel, method)
-        return self.zoneEndpoint(rel)
-
-    def processRequest(self, deferred):
-        return self.validateRes(deferred)
-
-    @defer.inlineCallbacks
-    def processAsyncRequest(self, deferred):
-        op = yield self.validateRes(deferred)
-        yield self.waitOperationEnd(op)
-
-    def getInstanceState(self, fields=None):
-        if fields is None:
-            return self._gce.get(self.instanceEndpoint())
-        else:
-            return self._gce.get(self.instanceEndpoint(),
-                params={'fields': fields})
+    def resetClientService(self, gce):
+        self._gce = gce
 
     def getMetadataFromState(self, state):
         metadata = state['metadata']
@@ -142,11 +105,8 @@ class GCELatentWorker(AbstractLatentWorker):
         return [{"key": key, "value": metadata[key]} for key in metadata]
 
     def setMetadata(self, fingerprint, metadata):
-        return self._gce.post(self.instanceEndpoint("setMetadata"), json={
-            "fingerprint": fingerprint,
-            "items": self.getMetadataItemsFromDict(metadata),
-            "kind": "compute#metadata"
-        })
+        return self._gce.setMetadata(fingerprint=fingerprint,
+            items=self.getMetadataItemsFromDict(metadata))
 
     def getCurrentDiskName(self, disks):
         for d in disks:
@@ -164,56 +124,12 @@ class GCELatentWorker(AbstractLatentWorker):
         else:
             diskType = "pd-standard"
 
-        return self._gce.post(self.zoneEndpoint("disks"),
-            json={
-                "sourceImage": self.image,
-                "name": disk_name,
-                "type": "projects/{0}/zones/{1}/diskTypes/{2}".format(
-                    self.project, self.zone, diskType)
-            }
-        )
-
-    def attachBootDisk(self, disk_name):
-        return self._gce.post(
-            self.instanceEndpoint("attachDisk"),
-            json={
-                "boot": True,
-                "source": self.zoneEndpoint("disks/{0}".format(disk_name)),
-                "deviceName": disk_name,
-                "index": 0
-            }
-        )
-
-    def detachBootDisk(self, disk_name):
-        return self._gce.post(
-            self.instanceEndpoint("detachDisk"),
-            params={"deviceName": disk_name}
-        )
-
-    def deleteDisk(self, disk_name):
-        return self._gce.delete(
-            "{0}/disks/{1}".format(self.zoneEndpoint(), disk_name))
-
-    @defer.inlineCallbacks
-    def waitInstanceState(self, desiredState):
-        state = yield self.processRequest(self.getInstanceState(fields='status'))
-        while state['status'] != desiredState:
-            time.sleep(0.1)
-            state = yield self.processRequest(self.getInstanceState(fields='status'))
-
-    @defer.inlineCallbacks
-    def waitOperationEnd(self, op):
-        while op['status'] != 'DONE':
-            time.sleep(0.1)
-            op = self._gce.get(op['selfLink'])
-            op = yield self.validateRes(op)
-
-        if 'error' in op:
-            raise GCEError(op['error'])
+        return self._gce.createDisk(image=self.image, name=disk_name, type=diskType)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        instance_state = yield self.processRequest(self.getInstanceState())
+        instance_state = yield self._gce.processRequest(
+            self._gce.getInstanceState())
 
         fingerprint, metadata = self.getMetadataFromState(instance_state)
         updated_metadata = self.updateMetadata(build, metadata)
@@ -222,7 +138,7 @@ class GCELatentWorker(AbstractLatentWorker):
         if instance_state['status'] not in ('STOPPED', 'TERMINATED'):
             log.info("gce: {0} is running, requesting stop".format(
                 self.instance))
-            instance_stop = self._gce.post(self.instanceEndpoint("stop"))
+            instance_stop = self._gce.instanceStop()
 
         if not self.resetDisk:
             metadata['BUILDBOT_CLEAN'] = '1'
@@ -231,39 +147,38 @@ class GCELatentWorker(AbstractLatentWorker):
         if 'BUILDBOT_CLEAN' not in metadata:
             log.info("gce: {0} has not been reset on stop, will do it now".format(
                 self.instance))
-            boot_disk_name   = self.getNewDiskName(updated_metadata)
+            boot_disk_name = self.getNewDiskName(updated_metadata)
             boot_disk_create = self.createBootDisk(boot_disk_name)
 
         metadata_set = self.setMetadata(fingerprint, updated_metadata)
 
         if instance_stop is not None:
             log.info("gce: waiting for {0} to be stopped".format(self.instance))
-            yield self.processRequest(instance_stop)
-            yield self.waitInstanceState('TERMINATED')
+            yield self._gce.processRequest(instance_stop)
+            yield self._gce.waitInstanceState('TERMINATED')
 
         if boot_disk_create is not None:
             current_disk_name = self.getCurrentDiskName(instance_state['disks'])
             if current_disk_name:
                 log.info("gce: detaching {0} from {1}".format(
                     current_disk_name, self.instance))
-                yield self.processAsyncRequest(self.detachBootDisk(current_disk_name))
+                yield self._gce.processAsyncRequest(self._gce.detachDisk(current_disk_name))
                 log.info("gce: deleting {0}".format(current_disk_name))
-                yield self.deleteDisk(current_disk_name)
+                yield self._gce.deleteDisk(current_disk_name)
 
             log.info("gce: waiting for fresh disk {0} to be created for {1}".format(
                 boot_disk_name, self.instance))
-            yield self.processAsyncRequest(boot_disk_create)
+            yield self._gce.processAsyncRequest(boot_disk_create)
 
             log.info("gce: attaching new disk {0} to {1}".format(
                 boot_disk_name, self.instance))
-            yield self.processAsyncRequest(
-                self.attachBootDisk(boot_disk_name))
+            yield self._gce.processAsyncRequest(
+                self._gce.attachDisk(boot_disk_name, index=0, boot=True))
 
         log.info("gce: starting {0}".format(self.instance))
-        yield self.processAsyncRequest(metadata_set)
-        yield self.processRequest(
-            self._gce.post(self.instanceEndpoint("start")))
-        yield self.waitInstanceState('RUNNING')
+        yield self._gce.processAsyncRequest(metadata_set)
+        yield self._gce.processRequest(self._gce.instanceStart())
+        yield self._gce.waitInstanceState('RUNNING')
         return defer.returnValue(True)
 
     @defer.inlineCallbacks
@@ -273,50 +188,39 @@ class GCELatentWorker(AbstractLatentWorker):
                 self.instance))
             return defer.returnValue(None)
 
-        state = yield self.processRequest(self.getInstanceState())
-        if state['status'] not in ('TERMINATED'):
+        state = yield self._gce.processRequest(self._gce.getInstanceState())
+        if state['status'] not in ('TERMINATED',):
             log.info("gce: stopping {0}".format(self.instance))
-            yield self.processRequest(self._gce.post(self.instanceEndpoint("stop")))
-            # We don't use waitOperationEnd here as I'm having ~55s between
-            # the instance state switching to TERMINATED and the operation
-            # reporting to be DONE
-            yield self.waitInstanceState('TERMINATED')
+            yield self._gce.processRequest(self._gce.instanceStop())
+            # We don't use waitOperationEnd here as there is as much as ~55s
+            # between the instance state switching to TERMINATED and the
+            # operation reporting to be DONE
+            #
+            # Since it is possible to manipulate the instance after the
+            # state changed, save 55s each time
+            yield self._gce.waitInstanceState('TERMINATED')
 
         if self.resetDisk:
-            log.info("gce: resetting the boot disk of {0}".format(
-                self.instance))
+            log.info("gce: resetting the boot disk of {0}".format(self.instance))
             fingerprint, metadata = self.getMetadataFromState(state)
-            boot_disk_name    = self.getNewDiskName(metadata)
+            boot_disk_name = self.getNewDiskName(metadata)
             current_disk_name = self.getCurrentDiskName(state['disks'])
-            detach_disk = self.detachBootDisk(current_disk_name)
-            yield self.processAsyncRequest(self.createBootDisk(boot_disk_name))
-            # Update the GEN metadata key so that we can restart even if stop
-            # fails
+            detach_disk = self._gce.detachDisk(current_disk_name)
+            # Update the GEN metadata key right now, so that we can generate
+            # a new boot disk without conflict if something wrong happens
             metadata_set = self.setMetadata(fingerprint, metadata)
+            yield self._gce.processAsyncRequest(self.createBootDisk(boot_disk_name))
 
-            yield self.processAsyncRequest(detach_disk)
-            yield self.deleteDisk(current_disk_name)
-            yield self.processAsyncRequest(self.attachBootDisk(boot_disk_name))
-            yield self.processAsyncRequest(metadata_set)
+            yield self._gce.processAsyncRequest(detach_disk)
+            yield self._gce.deleteDisk(current_disk_name)
+            yield self._gce.processAsyncRequest(
+                self._gce.attachDisk(boot_disk_name, index=0, boot=True))
+            yield self._gce.processAsyncRequest(metadata_set)
 
             # Finally, mark as clean
-            instance_state = yield self.processRequest(self.getInstanceState())
+            instance_state = yield self._gce.processRequest(self._gce.getInstanceState())
             fingerprint, metadata = self.getMetadataFromState(instance_state)
             metadata['BUILDBOT_CLEAN'] = '1'
-            yield self.processAsyncRequest(self.setMetadata(fingerprint, metadata))
+            yield self._gce.processAsyncRequest(self.setMetadata(fingerprint, metadata))
 
         return defer.returnValue(None)
-
-    @defer.inlineCallbacks
-    def validateRes(self, res, url=None):
-        try:
-            res = yield res
-            res_json = yield res.json()
-        except json.decoder.JSONDecodeError:
-            message = yield res.content()
-            res_json = {'error':{'message': message}}
-            raise GCEError(res_json, url=url)
-
-        if res.code not in (200, 201, 202):
-            raise GCEError(res_json, url=url)
-        return defer.returnValue(res_json)

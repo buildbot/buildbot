@@ -58,15 +58,16 @@ class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
         self.base_headers = {}
         self.successResultOf(self.parent.startService())
 
+
 class HTTPClientServiceCommonTests:
     @defer.inlineCallbacks
     def test_fails_if_relative_url_is_given(self):
-        with self.assertRaises(AssertionError) as context:
+        with self.assertRaises(AssertionError):
             yield self._http.get('bar')
 
     @defer.inlineCallbacks
     def test_fails_if_absolute_url_is_given_that_doesnt_match_expected_base_url(self):
-        with self.assertRaises(AssertionError) as context:
+        with self.assertRaises(AssertionError):
             yield self._http.get('http://somewhere/bar')
 
 
@@ -141,8 +142,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase, HTTPClientServic
                                                             })
 
 
-class HTTPClientServiceTestTReq(HTTPClientServiceTestBase,HTTPClientServiceCommonTests):
-
+class HTTPClientServiceTestTReq(HTTPClientServiceTestBase, HTTPClientServiceCommonTests):
     def setUp(self):
         super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
