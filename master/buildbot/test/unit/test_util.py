@@ -280,9 +280,15 @@ class Ascii2Unicode(unittest.TestCase):
     def test_bytes2unicode(self):
         rv1 = util.bytes2unicode(b'abcd')
         rv2 = util.bytes2unicode('efgh')
+        rv3 = util.bytes2unicode({})
+        rv4 = util.bytes2unicode([])
+        rv5 = util.bytes2unicode(None)
 
         self.assertEqual(type(rv1), text_type)
         self.assertEqual(type(rv2), text_type)
+        self.assertEqual((rv3, type(rv3)), ({}, type({})))
+        self.assertEqual((rv4, type(rv4)), ([], type([])))
+        self.assertEqual((rv5, type(rv5)), (None,type(None)))
 
 
 class StringToBoolean(unittest.TestCase):
