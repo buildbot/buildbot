@@ -32,12 +32,12 @@ History and Philosophy
 The Buildbot was inspired by a similar project built for a development team writing a cross-platform embedded system.
 The various components of the project were supposed to compile and run on several flavors of unix (linux, solaris, BSD), but individual developers had their own preferences and tended to stick to a single platform.
 From time to time, incompatibilities would sneak in (some unix platforms want to use :file:`string.h`, some prefer :file:`strings.h`), and then the tree would compile for some developers but not others.
-The buildbot was written to automate the human process of walking into the office, updating a tree, compiling (and discovering the breakage), finding the developer at fault, and complaining to them about the problem they had introduced.
-With multiple platforms it was difficult for developers to do the right thing (compile their potential change on all platforms); the buildbot offered a way to help.
+The Buildbot was written to automate the human process of walking into the office, updating a tree, compiling (and discovering the breakage), finding the developer at fault, and complaining to them about the problem they had introduced.
+With multiple platforms it was difficult for developers to do the right thing (compile their potential change on all platforms); the Buildbot offered a way to help.
 
 Another problem was when programmers would change the behavior of a library without warning its users, or change internal aspects that other code was (unfortunately) depending upon.
 Adding unit tests to the codebase helps here: if an application's unit tests pass despite changes in the libraries it uses, you can have more confidence that the library changes haven't broken anything.
-Many developers complained that the unit tests were inconvenient or took too long to run: having the buildbot run them reduces the developer's workload to a minimum.
+Many developers complained that the unit tests were inconvenient or took too long to run: having the Buildbot run them reduces the developer's workload to a minimum.
 
 In general, having more visibility into the project is always good, and automation makes it easier for developers to do the right thing.
 When everyone can see the status of the project, developers are encouraged to keep the tree in good working order.
@@ -168,7 +168,7 @@ These allow status plugins to report information about upcoming builds, and the 
 Control Flow
 ------------
 
-A day in the life of the buildbot:
+A day in the life of the Buildbot:
 
 * A developer commits some source code changes to the repository.
   A hook script or commit trigger of some sort sends information about this change to the buildmaster through one of its configured Change Sources.

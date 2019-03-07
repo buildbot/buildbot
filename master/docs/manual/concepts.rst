@@ -25,16 +25,16 @@ A *codebase* is a collection of related files and their history tracked as a uni
 A single codebase may appear in multiple repositories which themselves are identified by URLs.
 For example, ``https://github.com/mozilla/mozilla-central`` and ``http://hg.mozilla.org/mozilla-release`` both contain the Firefox codebase, although not exactly the same code.
 
-A *project* is corresponds to a set of one or more codebases that together may be built and produce some end artifact.
+A *project* corresponds to a set of one or more codebases that together may be built and produce some end artifact.
 For example, a company may build several applications based on the same core library.
 The "app" codebase and the "core" codebase are in separate repositories, but are compiled together and constitute a single project.
 Changes to either codebase should cause a rebuild of the application.
 
 A *revision* is an identifier used by most version control systems to uniquely specify a particular version of the source code.
-Sometimes in order to do that a revision may make sense only if used combination with a *branch*.
+Sometimes in order to do that a revision may make sense only if used in combination with a *branch*.
 
 To sum up the above, to build a project, Buildbot needs to know exactly which version of each codebase it should build.
-It uses a *source stamp* to do so for each codebase, each of which assigns informs Buildbot that it should use a specific *revision* from that codebase.
+It uses a *source stamp* to do so for each codebase, each of which informs Buildbot that it should use a specific *revision* from that codebase.
 Collectively these source stamps are called *source stamp set* for each project.
 
 .. image:: _images/changes.*
@@ -64,7 +64,7 @@ Changes
 A :ref:`Change<Change-Attrs>` is an abstract way Buildbot uses to represent a single change to the source files performed by a developer.
 In version control systems that support the notion of atomic check-ins a change represents a changeset or commit.
 
-A :class:`Change` comprises of the following information:
+A :class:`Change` comprises the following information:
 
  - the developer that is responsible for the change
 
@@ -90,7 +90,7 @@ These typically do not run the full test suite, nor do they run on a wide variet
 They also usually do a VC update rather than performing a brand-new checkout each time.
 
 A separate *full* scheduler might run more comprehensive tests, to catch more subtle problems.
-configured to run after the quick scheduler, to give developers time to commit fixes to bugs caught by the quick scheduler before running the comprehensive tests.
+It might be configured to run after the quick scheduler, to give developers time to commit fixes to bugs caught by the quick scheduler before running the comprehensive tests.
 This scheduler would also feed multiple :class:`Builder`\s.
 
 Many schedulers can be configured to wait a while after seeing a source-code change - this is the *tree stable timer*.
@@ -200,7 +200,7 @@ Workers
 -------
 
 A :class:`Worker`\s corresponds to an environment where builds are executed.
-A single physical machine that must run at least one :class:`Worker`\s in order for Buildbot to be able to utilize it for running builds.
+A single physical machine must run at least one :class:`Worker`\s in order for Buildbot to be able to utilize it for running builds.
 Multiple :class:`Worker`\s may run on a single machine to provide different environments that can reuse the same hardware by means of containers or virtual machines.
 
 Each builder is associated with one or more :class:`Worker`\s.

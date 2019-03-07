@@ -36,7 +36,7 @@ By default change hook URL is not protected.
 Some hooks implement their own authentication method.
 Other requires the generic method to be secured.
 
-To protect URL against unauthorized access you you may use ``change_hook_auth`` option.
+To protect URL against unauthorized access you may use ``change_hook_auth`` option.
 
 .. note::
 
@@ -339,7 +339,7 @@ The GitLab hook has the following parameters:
     Secret token to use to validate payloads.
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point GitLab to ``http://builds.example.com/change_hook/gitlab``.
+For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitLab to ``http://builds.example.com/change_hook/gitlab``.
 The project and/or codebase can also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
 These parameters will be passed along to the scheduler.
 

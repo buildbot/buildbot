@@ -384,7 +384,7 @@ MailNotifier mode
 URL to build page
     ``{{ build_url }}``
 
-URL to buildbot main page
+URL to Buildbot main page
     ``{{ buildbot_url }}``
 
 Status of the build as string.
@@ -417,10 +417,10 @@ The constructor to that class takes the same arguments as MessageFormatter, minu
 The default ``ctx`` for the missing worker email is made of:
 
 ``buildbot_title``
-    The buildbot title as per ``c['title']`` from the ``master.cfg``
+    The Buildbot title as per ``c['title']`` from the ``master.cfg``
 
 ``buildbot_url``
-    The buildbot title as per ``c['title']`` from the ``master.cfg``
+    The Buildbot title as per ``c['title']`` from the ``master.cfg``
 
 ``worker``
     The worker object as defined in the REST api plus two attributes:
