@@ -288,7 +288,7 @@ class Ascii2Unicode(unittest.TestCase):
         self.assertEqual(type(rv2), text_type)
         self.assertEqual((rv3, type(rv3)), ({}, type({})))
         self.assertEqual((rv4, type(rv4)), ([], type([])))
-        self.assertEqual((rv5, type(rv5)), (None,type(None)))
+        self.assertEqual((rv5, type(rv5)), (None, type(None)))
 
 
 class StringToBoolean(unittest.TestCase):
