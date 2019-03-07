@@ -111,8 +111,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
     @defer.inlineCallbacks
     def check_current_rev(self, wished):
-        oid_rev = yield self.poller._getCurrentRev()
-        self.assertEqual(oid_rev[1], wished)
+        rev = yield self.poller._getCurrentRev()
+        self.assertEqual(rev, str(wished))
 
     @defer.inlineCallbacks
     def test_poll_several_heads(self):

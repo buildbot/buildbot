@@ -26,9 +26,10 @@ from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
+from buildbot.util.state import StateMixin
 
 
-class HgPoller(base.PollingChangeSource):
+class HgPoller(base.PollingChangeSource, StateMixin):
 
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
@@ -165,48 +166,16 @@ class HgPoller(base.PollingChangeSource):
 
         return d
 
-    def _getStateObjectId(self):
-        """Return a deferred for object id in state db.
-
-        Being unique among pollers, workdir is used with branch as instance
-        name for db.
-        """
-        return self.master.db.state.getObjectId(
-            '#'.join((self.workdir, self.branch)), self.db_class_name)
-
     def _getCurrentRev(self):
-        """Return a deferred for object id in state db and current numeric rev.
+        """Return a deferred for current numeric rev in state db.
 
         If never has been set, current rev is None.
         """
-        d = self._getStateObjectId()
+        return self.getState('current_rev', None)
 
-        @d.addCallback
-        def oid_cb(oid):
-            d = self.master.db.state.getState(oid, 'current_rev', None)
-
-            @d.addCallback
-            def addOid(cur):
-                if cur is not None:
-                    return oid, int(cur)
-                return oid, cur
-            return d
-        return d
-
-    def _setCurrentRev(self, rev, oid=None):
-        """Return a deferred to set current revision in persistent state.
-
-        oid is self's id for state db. It can be passed to avoid a db lookup."""
-        if oid is None:
-            d = self._getStateObjectId()
-        else:
-            d = defer.succeed(oid)
-
-        @d.addCallback
-        def set_in_state(obj_id):
-            return self.master.db.state.setState(obj_id, 'current_rev', rev)
-
-        return d
+    def _setCurrentRev(self, rev):
+        """Return a deferred to set current revision in persistent state."""
+        return self.setState('current_rev', str(rev))
 
     def _getHead(self):
         """Return a deferred for branch head revision or None.
@@ -241,7 +210,7 @@ class HgPoller(base.PollingChangeSource):
 
             # in case of whole reconstruction, are we sure that we'll get the
             # same node -> rev assignations ?
-            return int(heads.strip())
+            return heads.strip().decode(self.encoding)
         return d
 
     @defer.inlineCallbacks
@@ -254,7 +223,7 @@ class HgPoller(base.PollingChangeSource):
         instead, we simply store the current rev number in a file.
         Recall that hg rev numbers are local and incremental.
         """
-        oid, current = yield self._getCurrentRev()
+        current = yield self._getCurrentRev()
         head = yield self._getHead()
         if head is None:
             # Empty branch.
@@ -264,7 +233,7 @@ class HgPoller(base.PollingChangeSource):
             return
         if current == None:
             # First time monitoring; start at the top.
-            yield self._setCurrentRev(str(head), oid=oid)
+            yield self._setCurrentRev(head)
             return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
@@ -297,7 +266,7 @@ class HgPoller(base.PollingChangeSource):
                 src='hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
-            yield self._setCurrentRev(rev, oid=oid)
+            yield self._setCurrentRev(rev)
 
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')
