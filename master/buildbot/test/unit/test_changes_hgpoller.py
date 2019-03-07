@@ -99,42 +99,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(
                 'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"73591"),
-            gpo.Expect('hg', 'log', '-b', 'default', '-r', '73591:73591',  # only fetches that head
-                       '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([b'73591:4423cdb'])),
-            gpo.Expect('hg', 'log', '-r', '4423cdb',
-                       '--template={date|hgdate}' + os.linesep + \
-                       '{author}' + os.linesep + \
-                       "{files % '{file}" + os.pathsep + \
-                       "'}" + os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                b'1273258100.0 -7200',
-                b'Bob Test <bobtest@example.org>',
-                b'file1 with spaces' + PATHSEP_BYTES +
-                os.path.join(b'dir with spaces', b'file2') + PATHSEP_BYTES,
-                b'This is rev 73591',
-                b''])),
         )
 
         # do the poll
         yield self.poller.poll()
 
         # check the results
-        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-
-        change = self.master.data.updates.changesAdded[0]
-        self.assertEqual(change['revision'], '4423cdb')
-        self.assertEqual(change['author'],
-                         'Bob Test <bobtest@example.org>')
-        if self.usetimestamps:
-            self.assertEqual(change['when_timestamp'], 1273258100)
-        else:
-            self.assertEqual(change['when_timestamp'], None)
-        self.assertEqual(
-            change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
-        self.assertEqual(change['src'], 'hg')
-        self.assertEqual(change['branch'], 'default')
-        self.assertEqual(change['comments'], 'This is rev 73591')
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         yield self.check_current_rev(73591)
 
@@ -173,9 +144,12 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(
                 'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
-            gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
+            gpo.Expect('hg', 'log', '-b', 'default', '-r', '4:5',
                        '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(b'5:784bd' + LINESEP_BYTES),
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                        b'4:1aaa5',
+                        b'5:784bd',
+                    ])),
             gpo.Expect('hg', 'log', '-r', '784bd',
                        '--template={date|hgdate}' + os.linesep +
                        '{author}' + os.linesep +

@@ -255,21 +255,20 @@ class HgPoller(base.PollingChangeSource):
         Recall that hg rev numbers are local and incremental.
         """
         oid, current = yield self._getCurrentRev()
-        # hg log on a range of revisions is never empty
-        # also, if a numeric revision does not exist, a node may match.
-        # Therefore, we have to check explicitly that branch head > current.
         head = yield self._getHead()
         if head is None:
+            # Empty branch.
             return
-        elif current is not None and head <= current:
+        if head == current:
+            # Nothing new.
             return
-        if current is None:
-            # we could have used current = -1 convention as well (as hg does)
-            revrange = '%d:%d' % (head, head)
-        else:
-            revrange = '%d:%s' % (current + 1, head)
+        if current == None:
+            # First time monitoring; start at the top.
+            yield self._setCurrentRev(str(head), oid=oid)
+            return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
+        revrange = '{}:{}'.format(current, head)
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
                        r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
@@ -277,6 +276,8 @@ class HgPoller(base.PollingChangeSource):
         results = results.decode(self.encoding)
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
+        # Revsets are inclusive. Strip the already-known "current" changeset.
+        del revNodeList[0]
 
         log.msg('hgpoller: processing %d changes: %r in %r'
                 % (len(revNodeList), revNodeList, self._absWorkdir()))
