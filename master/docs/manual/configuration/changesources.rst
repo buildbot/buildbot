@@ -950,6 +950,9 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     the url that describes the remote repository, e.g. ``http://hg.example.com/projects/myrepo``.
     Any url suitable for ``hg pull`` can be specified.
 
+``bookmarks``
+    a list of the bookmarks to monitor.
+
 ``branches``
     a list of the branches to monitor; defaults to ``['default']``.
 

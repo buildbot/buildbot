@@ -34,13 +34,13 @@ class HgPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ("repourl", "branch", "branches", "workdir",
+    compare_attrs = ("repourl", "branch", "branches", "bookmarks", "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
                      "category", "project", "pollAtLaunch")
 
     db_class_name = 'HgPoller'
 
-    def __init__(self, repourl, branch=None, branches=None,
+    def __init__(self, repourl, branch=None, branches=None, bookmarks=None,
                  workdir=None, pollInterval=10 * 60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='', pollinterval=-2,
@@ -59,9 +59,12 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             config.error("HgPoller: can't specify both branch and branches")
         elif branch:
             self.branches = [branch]
-        elif branches:
-            self.branches = branches
         else:
+            self.branches = branches or []
+
+        self.bookmarks = bookmarks or []
+
+        if not self.branches and not self.bookmarks:
             self.branches = ['default']
 
         super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
@@ -172,6 +175,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         args = ['pull']
         for name in self.branches:
             args += ['-b', name]
+        for name in self.bookmarks:
+            args += ['-B', name]
         args += [self.repourl]
 
         # This command always produces data on stderr, but we actually do not
@@ -243,7 +248,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         instead, we simply store the current rev number in a file.
         Recall that hg rev numbers are local and incremental.
         """
-        for branch in self.branches:
+        for branch in self.branches + self.bookmarks:
             rev = yield self._getHead(branch)
             if rev is None:
                 # Nothing pulled?
