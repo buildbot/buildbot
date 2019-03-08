@@ -27,10 +27,11 @@ LINESEP_BYTES = os.linesep.encode("ascii")
 PATHSEP_BYTES = os.pathsep.encode("ascii")
 
 
-class TestHgPoller(gpo.GetProcessOutputMixin,
-                   changesource.ChangeSourceMixin,
-                   unittest.TestCase):
+class TestHgPollerBase(gpo.GetProcessOutputMixin,
+                       changesource.ChangeSourceMixin,
+                       unittest.TestCase):
     usetimestamps = True
+    branches = None
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -47,12 +48,47 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         self.poller = hgpoller.HgPoller(self.remote_repo,
                                         usetimestamps=self.usetimestamps,
-                                        workdir='/some/dir')
+                                        workdir='/some/dir',
+                                        branches=self.branches)
         self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
         yield self.master.db.setup()
 
+    @defer.inlineCallbacks
+    def check_current_rev(self, wished, branch='default'):
+        rev = yield self.poller._getCurrentRev(branch)
+        self.assertEqual(rev, str(wished))
+
+
+class TestHgPollerBranches(TestHgPollerBase):
+    branches = ['one', 'two']
+
+    @defer.inlineCallbacks
+    def test_poll_initial(self):
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-b', 'one', '-b', 'two',
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b"73591"),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b"22341"),
+        )
+
+        # do the poll
+        yield self.poller.poll()
+
+        # check the results
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+        yield self.check_current_rev(73591, 'one')
+        yield self.check_current_rev(22341, 'two')
+
+
+class TestHgPoller(TestHgPollerBase):
     def tearDown(self):
         del os.environ[ENVIRON_2116_KEY]
         return self.tearDownChangeSource()
@@ -106,11 +142,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         yield self.check_current_rev(73591)
-
-    @defer.inlineCallbacks
-    def check_current_rev(self, wished, branch='default'):
-        rev = yield self.poller._getCurrentRev(branch)
-        self.assertEqual(rev, str(wished))
 
     @defer.inlineCallbacks
     def test_poll_several_heads(self):
@@ -171,30 +202,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         change = self.master.data.updates.changesAdded[0]
         self.assertEqual(change['revision'], '784bd')
         self.assertEqual(change['comments'], 'Comment for rev 5')
-
-    @defer.inlineCallbacks
-    def test_poll_initial_branches(self):
-        self.poller.branches = ['one', 'two']
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-b', 'one', '-b', 'two',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"73591"),
-            gpo.Expect(
-                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"22341"),
-        )
-
-        # do the poll
-        yield self.poller.poll()
-
-        # check the results
-        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
-
-        yield self.check_current_rev(73591, 'one')
-        yield self.check_current_rev(22341, 'two')
 
 
 class HgPollerNoTimestamp(TestHgPoller):
