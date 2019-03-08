@@ -172,6 +172,29 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(change['revision'], '784bd')
         self.assertEqual(change['comments'], 'Comment for rev 5')
 
+    @defer.inlineCallbacks
+    def test_poll_initial_branches(self):
+        self.poller.branches = ['one', 'two']
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-b', 'one', '-b', 'two',
+                       'ssh://example.com/foo/baz')
+                .path('/some/dir'),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+                .path('/some/dir').stdout(b"73591"),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+                .path('/some/dir').stdout(b"22341"),
+        )
+
+        # do the poll
+        yield self.poller.poll()
+
+        # check the results
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+        yield self.check_current_rev(73591, 'one')
+        yield self.check_current_rev(22341, 'two')
 
 class HgPollerNoTimestamp(TestHgPoller):
     """ Test HgPoller() without parsing revision commit timestamp """
