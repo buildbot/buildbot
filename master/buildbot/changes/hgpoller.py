@@ -256,7 +256,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         if newRev == prevRev:
             # Nothing new.
             return
-        if prevRev == None:
+        if prevRev is None:
             # First time monitoring; start at the top.
             yield self._setCurrentRev(newRev, branch)
             return

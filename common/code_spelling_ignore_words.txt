@@ -1160,6 +1160,7 @@ revisionfor
 revlink
 revno
 revnum
+revset
 rewrap
 rewrapped
 rewraps
