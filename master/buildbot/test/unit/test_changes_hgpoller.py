@@ -95,7 +95,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"73591"),
         )
 
@@ -108,8 +108,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         yield self.check_current_rev(73591)
 
     @defer.inlineCallbacks
-    def check_current_rev(self, wished):
-        rev = yield self.poller._getCurrentRev()
+    def check_current_rev(self, wished, branch='default'):
+        rev = yield self.poller._getCurrentRev(branch)
         self.assertEqual(rev, str(wished))
 
     @defer.inlineCallbacks
@@ -122,7 +122,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
         )
 
@@ -140,9 +140,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
-            gpo.Expect('hg', 'log', '-b', 'default', '-r', '4:5',
+            gpo.Expect('hg', 'log', '-r', '4::5',
                        '--template={rev}:{node}\\n')
             .path('/some/dir').stdout(LINESEP_BYTES.join([
                         b'4:1aaa5',

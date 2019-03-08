@@ -34,13 +34,13 @@ class HgPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ("repourl", "branch", "workdir",
+    compare_attrs = ("repourl", "branch", "branches", "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
                      "category", "project", "pollAtLaunch")
 
     db_class_name = 'HgPoller'
 
-    def __init__(self, repourl, branch='default',
+    def __init__(self, repourl, branch=None, branches=None,
                  workdir=None, pollInterval=10 * 60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='', pollinterval=-2,
@@ -54,7 +54,16 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             name = repourl
 
         self.repourl = repourl
-        self.branch = branch
+
+        if branch and branches:
+            config.error("HgPoller: can't specify both branch and branches")
+        elif branch:
+            self.branches = [branch]
+        elif branches:
+            self.branches = branches
+        else:
+            self.branches = ['default']
+
         super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
         self.encoding = encoding
         self.lastChange = time.time()
@@ -81,8 +90,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         if not self.master:
             status = "[STOPPED - check log]"
         return ("HgPoller watching the remote Mercurial repository %r, "
-                "branch: %r, in workdir %r %s") % (self.repourl, self.branch,
-                                                   self.workdir, status)
+                "branches: %r, in workdir %r %s") % (self.repourl,
+                                                     ', '.join(self.branches),
+                                                     self.workdir, status)
 
     @deferredLocked('initLock')
     def poll(self):
@@ -159,7 +169,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             "hgpoller: polling hg repo at %s" % self.repourl))
 
         # get a deferred object that performs the fetch
-        args = ['pull', '-b', self.branch, self.repourl]
+        args = ['pull']
+        for name in self.branches:
+            args += ['-b', name]
+        args += [self.repourl]
 
         # This command always produces data on stderr, but we actually do not
         # care about the stderr or stdout from this command.
@@ -184,7 +197,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.lastRev[branch] = str(rev)
         return self.setState('lastRev', self.lastRev)
 
-    def _getHead(self):
+    def _getHead(self, branch):
         """Return a deferred for branch head revision or None.
 
         We'll get an error if there is no head for this branch, which is
@@ -193,14 +206,14 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         yet, one shouldn't be surprised to get errors)
         """
         d = utils.getProcessOutput(self.hgbin,
-                                   ['heads', self.branch,
+                                   ['heads', '-r', branch,
                                        '--template={rev}' + os.linesep],
                                    path=self._absWorkdir(), env=os.environ, errortoo=False)
 
         @d.addErrback
         def no_head_err(exc):
-            log.err("hgpoller: could not find branch %r in repository %r" % (
-                self.branch, self.repourl))
+            log.err("hgpoller: could not find revision %r in repository %r" % (
+                branch, self.repourl))
 
         @d.addCallback
         def results(heads):
@@ -212,7 +225,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                          "from repository %r. Staying at previous revision"
                          "You should wait until the situation is normal again "
                          "due to a merge or directly strip if remote repo "
-                         "gets stripped later.") % (self.branch, self.repourl))
+                         "gets stripped later.") % (branch, self.repourl))
                 return
 
             # in case of whole reconstruction, are we sure that we'll get the
@@ -230,23 +243,27 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         instead, we simply store the current rev number in a file.
         Recall that hg rev numbers are local and incremental.
         """
-        current = yield self._getCurrentRev()
-        head = yield self._getHead()
-        if head is None:
-            # Empty branch.
-            return
-        if head == current:
+        for branch in self.branches:
+            rev = yield self._getHead(branch)
+            if rev is None:
+                # Nothing pulled?
+                continue
+            yield self._processBranchChanges(rev, branch)
+
+    @defer.inlineCallbacks
+    def _processBranchChanges(self, newRev, branch):
+        prevRev = yield self._getCurrentRev(branch)
+        if newRev == prevRev:
             # Nothing new.
             return
-        if current == None:
+        if prevRev == None:
             # First time monitoring; start at the top.
-            yield self._setCurrentRev(head)
+            yield self._setCurrentRev(newRev, branch)
             return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
-        revrange = '{}:{}'.format(current, head)
-        revListArgs = ['log', '-b', self.branch, '-r', revrange,
-                       r'--template={rev}:{node}\n']
+        revset = '{}::{}'.format(prevRev, newRev)
+        revListArgs = ['log', '-r', revset, r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False)
         results = results.decode(self.encoding)
@@ -255,8 +272,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         # Revsets are inclusive. Strip the already-known "current" changeset.
         del revNodeList[0]
 
-        log.msg('hgpoller: processing %d changes: %r in %r'
-                % (len(revNodeList), revNodeList, self._absWorkdir()))
+        log.msg('hgpoller: processing %d changes in branch %r: %r in %r'
+                % (len(revNodeList), branch, revNodeList, self._absWorkdir()))
         for rev, node in revNodeList:
             timestamp, author, files, comments = yield self._getRevDetails(
                 node)
@@ -266,14 +283,14 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 files=files,
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,
-                branch=bytes2unicode(self.branch),
+                branch=bytes2unicode(branch),
                 category=bytes2unicode(self.category),
                 project=bytes2unicode(self.project),
                 repository=bytes2unicode(self.repourl),
                 src='hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
-            yield self._setCurrentRev(rev)
+            yield self._setCurrentRev(newRev, branch)
 
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')
