@@ -256,18 +256,18 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             yield self._processBranchChanges(rev, branch)
 
     @defer.inlineCallbacks
-    def _processBranchChanges(self, newRev, branch):
-        prevRev = yield self._getCurrentRev(branch)
-        if newRev == prevRev:
+    def _processBranchChanges(self, new_rev, branch):
+        prev_rev = yield self._getCurrentRev(branch)
+        if new_rev == prev_rev:
             # Nothing new.
             return
-        if prevRev is None:
+        if prev_rev is None:
             # First time monitoring; start at the top.
-            yield self._setCurrentRev(newRev, branch)
+            yield self._setCurrentRev(new_rev, branch)
             return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
-        revset = '{}::{}'.format(prevRev, newRev)
+        revset = '{}::{}'.format(prev_rev, new_rev)
         revListArgs = ['log', '-r', revset, r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False)
@@ -295,7 +295,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 src='hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
-            yield self._setCurrentRev(newRev, branch)
+            yield self._setCurrentRev(new_rev, branch)
 
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')
