@@ -89,6 +89,52 @@ class TestHgPollerBranches(TestHgPollerBase):
         yield self.check_current_rev(73591, 'one')
         yield self.check_current_rev(22341, 'two')
 
+    @defer.inlineCallbacks
+    def test_poll_regular(self):
+        # normal operation. There's a previous revision, we get a new one.
+        # Let's say there was an intervening commit on an untracked branch, to
+        # make it more interesting.
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-b', 'one', '-b', 'two',
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b'6' + LINESEP_BYTES),
+            gpo.Expect('hg', 'log', '-r', '4::6',
+                       '--template={rev}:{node}\\n')
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                        b'4:1aaa5',
+                        b'6:784bd',
+                    ])),
+            gpo.Expect('hg', 'log', '-r', '784bd',
+                       '--template={date|hgdate}' + os.linesep +
+                       '{author}' + os.linesep +
+                       "{files % '{file}" +
+                       os.pathsep + "'}" +
+                       os.linesep + '{desc|strip}')
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                b'1273258009.0 -7200',
+                b'Joe Test <joetest@example.org>',
+                b'file1 file2',
+                b'Comment',
+                b''])),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b'3' + LINESEP_BYTES),
+        )
+
+        yield self.poller._setCurrentRev(3, 'two')
+        yield self.poller._setCurrentRev(4, 'one')
+
+        yield self.poller.poll()
+        yield self.check_current_rev(6, 'one')
+
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        change = self.master.data.updates.changesAdded[0]
+        self.assertEqual(change['revision'], '784bd')
+        self.assertEqual(change['comments'], 'Comment')
+
 
 class TestHgPollerBookmarks(TestHgPollerBase):
     bookmarks = ['one', 'two']
@@ -115,6 +161,52 @@ class TestHgPollerBookmarks(TestHgPollerBase):
 
         yield self.check_current_rev(73591, 'one')
         yield self.check_current_rev(22341, 'two')
+
+    @defer.inlineCallbacks
+    def test_poll_regular(self):
+        # normal operation. There's a previous revision, we get a new one.
+        # Let's say there was an intervening commit on an untracked branch, to
+        # make it more interesting.
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-B', 'one', '-B', 'two',
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b'6' + LINESEP_BYTES),
+            gpo.Expect('hg', 'log', '-r', '4::6',
+                       '--template={rev}:{node}\\n')
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                        b'4:1aaa5',
+                        b'6:784bd',
+                    ])),
+            gpo.Expect('hg', 'log', '-r', '784bd',
+                       '--template={date|hgdate}' + os.linesep +
+                       '{author}' + os.linesep +
+                       "{files % '{file}" +
+                       os.pathsep + "'}" +
+                       os.linesep + '{desc|strip}')
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                b'1273258009.0 -7200',
+                b'Joe Test <joetest@example.org>',
+                b'file1 file2',
+                b'Comment',
+                b''])),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b'3' + LINESEP_BYTES),
+        )
+
+        yield self.poller._setCurrentRev(3, 'two')
+        yield self.poller._setCurrentRev(4, 'one')
+
+        yield self.poller.poll()
+        yield self.check_current_rev(6, 'one')
+
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        change = self.master.data.updates.changesAdded[0]
+        self.assertEqual(change['revision'], '784bd')
+        self.assertEqual(change['comments'], 'Comment')
 
 
 class TestHgPoller(TestHgPollerBase):
