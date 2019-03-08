@@ -1161,6 +1161,7 @@ revlink
 revno
 revnum
 revset
+revsets
 rewrap
 rewrapped
 rewraps
