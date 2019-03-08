@@ -66,9 +66,15 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             category) else bytes2unicode(category)
         self.project = project
         self.initLock = defer.DeferredLock()
+        self.lastRev = {}
 
         if self.workdir is None:
             config.error("workdir is mandatory for now in HgPoller")
+
+    @defer.inlineCallbacks
+    def activate(self):
+        self.lastRev = yield self.getState('lastRev', {})
+        super().activate()
 
     def describe(self):
         status = ""
@@ -166,16 +172,17 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
         return d
 
-    def _getCurrentRev(self):
+    def _getCurrentRev(self, branch='default'):
         """Return a deferred for current numeric rev in state db.
 
         If never has been set, current rev is None.
         """
-        return self.getState('current_rev', None)
+        return self.lastRev.get(branch, None)
 
-    def _setCurrentRev(self, rev):
+    def _setCurrentRev(self, rev, branch='default'):
         """Return a deferred to set current revision in persistent state."""
-        return self.setState('current_rev', str(rev))
+        self.lastRev[branch] = str(rev)
+        return self.setState('lastRev', self.lastRev)
 
     def _getHead(self):
         """Return a deferred for branch head revision or None.
