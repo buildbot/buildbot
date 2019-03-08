@@ -27,6 +27,7 @@ from twisted.internet import defer
 from twisted.internet import threads
 
 from buildbot import config
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util.logger import Logger
 from buildbot.www import auth
@@ -106,17 +107,21 @@ class OAuth2Auth(auth.AuthBase):
     def getLoginResource(self):
         return OAuth2LoginResource(self.master, self)
 
+    @defer.inlineCallbacks
     def getLoginURL(self, redirect_url):
         """
         Returns the url to redirect the user to for user consent
         """
+        p = Properties()
+        p.master = self.master
+        clientId = yield p.render(self.clientId)
         oauth_params = {'redirect_uri': self.loginUri,
-                        'client_id': self.clientId, 'response_type': 'code'}
+                        'client_id': clientId, 'response_type': 'code'}
         if redirect_url is not None:
             oauth_params['state'] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
         sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
-        return defer.succeed("%s?%s" % (self.authUri, urlencode(sorted_oauth_params)))
+        return "%s?%s" % (self.authUri, urlencode(sorted_oauth_params))
 
     def createSessionFromToken(self, token):
         s = requests.Session()
@@ -139,18 +144,19 @@ class OAuth2Auth(auth.AuthBase):
     # based on https://github.com/maraujop/requests-oauth
     # from Miguel Araujo, augmented to support header based clientSecret
     # passing
+    @defer.inlineCallbacks
     def verifyCode(self, code):
         # everything in deferToThread is not counted with trial  --coverage :-(
-        def thd():
+        def thd(client_id, client_secret):
             url = self.tokenUri
             data = {'redirect_uri': self.loginUri, 'code': code,
                     'grant_type': self.grantType}
             auth = None
             if self.getTokenUseAuthHeaders:
-                auth = (self.clientId, self.clientSecret)
+                auth = (client_id, client_secret)
             else:
                 data.update(
-                    {'client_id': self.clientId, 'client_secret': self.clientSecret})
+                    {'client_id': client_id, 'client_secret': client_secret})
             data.update(self.tokenUriAdditionalParams)
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
@@ -167,7 +173,12 @@ class OAuth2Auth(auth.AuthBase):
 
             session = self.createSessionFromToken(content)
             return self.getUserInfoFromOAuthClient(session)
-        return threads.deferToThread(thd)
+        p = Properties()
+        p.master = self.master
+        client_id = yield p.render(self.clientId)
+        client_secret = yield p.render(self.clientSecret)
+        result = yield threads.deferToThread(thd, client_id, client_secret)
+        return result
 
     def getUserInfoFromOAuthClient(self, c):
         return {}

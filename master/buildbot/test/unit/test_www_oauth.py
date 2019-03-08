@@ -27,6 +27,9 @@ from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
+from buildbot.process.properties import Secret
+from buildbot.secrets.manager import SecretManager
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import bytes2unicode
@@ -78,6 +81,17 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
             self._master = master = self.make_master(url='h:/a/b/', auth=auth)
             auth.reconfigAuth(master, master.config)
 
+        self.githubAuth_secret = oauth2.GitHubAuth(
+            Secret("client-id"), Secret("client-secret"), apiVersion=4)
+        self._master = master = self.make_master(url='h:/a/b/', auth=auth)
+        fake_storage_service = FakeSecretStorage()
+        fake_storage_service.reconfigService(secretdict={"client-id": "secretClientId",
+                                                         "client-secret": "secretClientSecret"})
+        secret_service = SecretManager()
+        secret_service.services = [fake_storage_service]
+        secret_service.setServiceParent(self._master)
+        self.githubAuth_secret.reconfigAuth(master, master.config)
+
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
         res = yield self.googleAuth.getLoginURL('http://redir')
@@ -105,6 +119,20 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(res, exp)
         res = yield self.githubAuth.getLoginURL(None)
         exp = ("https://github.com/login/oauth/authorize?client_id=ghclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user%3Aemail+read%3Aorg")
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_getGithubLoginURL_with_secret(self):
+        res = yield self.githubAuth_secret.getLoginURL('http://redir')
+        exp = ("https://github.com/login/oauth/authorize?client_id=secretClientId&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user%3Aemail+read%3Aorg&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
+        self.assertEqual(res, exp)
+        res = yield self.githubAuth_secret.getLoginURL(None)
+        exp = ("https://github.com/login/oauth/authorize?client_id=secretClientId&"
                "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
                "scope=user%3Aemail+read%3Aorg")
         self.assertEqual(res, exp)
