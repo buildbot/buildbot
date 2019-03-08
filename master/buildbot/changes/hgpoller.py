@@ -269,7 +269,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         results = results.decode(self.encoding)
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
-        # Revsets are inclusive. Strip the already-known "current" changeset.
+        # revsets are inclusive. Strip the already-known "current" changeset.
         del revNodeList[0]
 
         log.msg('hgpoller: processing %d changes in branch %r: %r in %r'
