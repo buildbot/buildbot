@@ -51,7 +51,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             pollInterval = pollinterval
 
         if name is None:
-            name = "%s[%s]" % (repourl, branch)
+            name = repourl
 
         self.repourl = repourl
         self.branch = branch
