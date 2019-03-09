@@ -62,8 +62,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             self.assertEqual((pid, signal), (1234, exp_sig))
             if isinstance(result, Exception):
                 raise result
-            else:
-                return result
+            return result
         self.patch(os, 'kill', kill)
         rv = stop.stop(config, **kwargs)
         self.assertEqual(kill_sequence, [])

@@ -114,8 +114,7 @@ def _wrapRemoteException():
         if ex.remoteType in (b'twisted.spread.flavors.NoSuchMethod',
                              'twisted.spread.flavors.NoSuchMethod'):
             raise _NoSuchMethod(ex)
-        else:
-            raise
+        raise
 
 
 class Connection(base.Connection, pb.Avatar):

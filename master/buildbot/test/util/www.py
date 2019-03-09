@@ -129,8 +129,7 @@ class RequiresWwwMixin:
         if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
             raise RuntimeError('$BUILDBOT_TEST_REQUIRE_WWW is set but '
                                'buildbot-www is not installed')
-        else:
-            skip = 'buildbot-www not installed'
+        skip = 'buildbot-www not installed'
 
 
 class WwwTestMixin(RequiresWwwMixin):
