@@ -54,22 +54,22 @@ class OAuth2LoginResource(auth.LoginResource):
             url = request.args.get(b"redirect", [None])[0]
             url = yield self.auth.getLoginURL(url)
             raise resource.Redirect(url)
+
+        if not token:
+            details = yield self.auth.verifyCode(code)
         else:
-            if not token:
-                details = yield self.auth.verifyCode(code)
-            else:
-                details = yield self.auth.acceptToken(token)
-            if self.auth.userInfoProvider is not None:
-                infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
-                details.update(infos)
-            session = request.getSession()
-            session.user_info = details
-            session.updateSession(request)
-            state = request.args.get(b"state", [b""])[0]
-            if state:
-                for redirect in parse_qs(state).get('redirect', []):
-                    raise resource.Redirect(self.auth.homeUri + "#" + redirect)
-            raise resource.Redirect(self.auth.homeUri)
+            details = yield self.auth.acceptToken(token)
+        if self.auth.userInfoProvider is not None:
+            infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
+            details.update(infos)
+        session = request.getSession()
+        session.user_info = details
+        session.updateSession(request)
+        state = request.args.get(b"state", [b""])[0]
+        if state:
+            for redirect in parse_qs(state).get('redirect', []):
+                raise resource.Redirect(self.auth.homeUri + "#" + redirect)
+        raise resource.Redirect(self.auth.homeUri)
 
 
 class OAuth2Auth(auth.AuthBase):

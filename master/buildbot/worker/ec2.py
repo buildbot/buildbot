@@ -114,9 +114,8 @@ class EC2LatentWorker(AbstractLatentWorker):
             if not isinstance(valid_ami_location_regex, string_types):
                 raise ValueError(
                     'valid_ami_location_regex should be a string')
-            else:
-                # verify that regex will compile
-                re.compile(valid_ami_location_regex)
+            # pre-compile the regex
+            valid_ami_location_regex = re.compile(valid_ami_location_regex)
         if spot_instance and price_multiplier is None and max_spot_price is None:
             raise ValueError('You must provide either one, or both, of '
                              'price_multiplier or max_spot_price')
@@ -319,7 +318,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if self.valid_ami_location_regex:
             level = 0
             options = []
-            get_match = re.compile(self.valid_ami_location_regex).match
+            get_match = self.valid_ami_location_regex.match
             for image in images:
                 # Image must be available
                 if image.state != 'available':

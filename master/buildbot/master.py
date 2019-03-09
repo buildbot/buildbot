@@ -83,7 +83,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             raise config.ConfigErrors([
                 "Can't specify both `config_loader` and `configFilename`.",
             ])
-        elif config_loader is None:
+        if config_loader is None:
             if configFileName is None:
                 configFileName = 'master.cfg'
             config_loader = config.FileLoader(self.basedir, configFileName)
