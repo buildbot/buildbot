@@ -214,7 +214,8 @@ class V2RootResource(resource.Resource):
 
         def writeError(msg, errcode=399,
                        jsonrpccode=JSONRPC_CODES["internal_error"]):
-            msg = bytes2unicode(msg)
+            if not isinstance(msg, dict):
+                msg = bytes2unicode(msg)
             if self.debug:
                 log.msg("JSONRPC error: %s" % (msg,))
             request.setResponseCode(errcode)
