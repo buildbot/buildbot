@@ -13,18 +13,24 @@ Release Notes
 Buildbot ``2.1.0`` ( ``2019-03-09`` )
 =====================================
 
+Highlights
+----------
+
+- Worker to Master protocol can now be encrypted via TLS.
+
 Bug fixes
 ---------
 
+- To avoid database corruption, the ``upgrade-master`` command now ignores all
+  signals except ``SIGKILL``. It cannot be interrupted with ``ctrl-c``
+  (:issue:`4600`).
 - Fixed incorrect tracking of latent worker states that could sometimes result
   in duplicate ``stop_instance`` calls and so on.
 - Fixed a race condition that could manifest in cancelled substantiations if
   builds were created during insubstantiation of a latent worker.
 - Perforce CLI Rev. 2018.2/1751184 (2019/01/21) is now supported
   (:issue:`4574`).
-- To avoid database corruption, the ``upgrade-master`` command now ignores all
-  signals except ``SIGKILL``. It cannot be interrupted with ``ctrl-c``
-  (:issue:`4600`).
+- Fix encoding issues with Forcescheduler parameters error management code.
 
 Improved Documentation
 ----------------------
@@ -35,7 +41,7 @@ Features
 --------
 
 - :py:class:`~buildbot-worker.buildbot_worker.bot.Worker` now have
-  `connection_string` kw-argument which can be used to connect to an master
+  `connection_string` kw-argument which can be used to connect to a master
   over TLS.
 - Adding 'expand_logs' option for LogPreview related settings.
 - Force schedulers buttons are now sorted by their name. (:issue:`4619`)
