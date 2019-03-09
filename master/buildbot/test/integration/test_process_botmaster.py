@@ -15,47 +15,15 @@
 
 
 from twisted.internet import defer
-from twisted.trial.unittest import TestCase
 
 from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
 from buildbot.process.workerforbuilder import PingException
 from buildbot.test.fake.worker import WorkerController
-from buildbot.test.util.integration import getMaster
-from buildbot.test.util.misc import DebugIntegrationLogsMixin
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
-class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
-
-    def setUp(self):
-        self.setUpTestReactor()
-        self.setupDebugIntegrationLogs()
-
-    def tearDown(self):
-        self.assertFalse(self.master.running, "master is still running!")
-
-    @defer.inlineCallbacks
-    def getMaster(self, config_dict):
-        self.master = master = yield getMaster(self, self.reactor, config_dict)
-        return master
-
-    @defer.inlineCallbacks
-    def createBuildrequest(self, master, builder_ids, properties=None):
-        properties = properties.asDict() if properties is not None else None
-        ret = yield master.data.updates.addBuildset(
-            waited_for=False,
-            builderids=builder_ids,
-            sourcestamps=[
-                {'codebase': '',
-                 'repository': '',
-                 'branch': None,
-                 'revision': None,
-                 'project': ''},
-            ],
-            properties=properties,
-        )
-        return ret
+class Tests(RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def do_terminates_ping_on_shutdown(self, quick_mode):

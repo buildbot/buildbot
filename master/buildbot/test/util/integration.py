@@ -33,7 +33,10 @@ from buildbot.plugins import worker
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
+from buildbot.test.util.misc import DebugIntegrationLogsMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.sandboxed_worker import SandboxedWorker
+from buildbot.worker.local import LocalWorker
 
 try:
     from buildbot_worker.bot import Worker
@@ -76,6 +79,49 @@ def getMaster(case, reactor, config_dict):
     case.addCleanup(master.stopService)
 
     return master
+
+
+class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
+                            DebugIntegrationLogsMixin):
+
+    def setUp(self):
+        self.setUpTestReactor()
+        self.setupDebugIntegrationLogs()
+
+    def tearDown(self):
+        self.assertFalse(self.master.running, "master is still running!")
+
+    @defer.inlineCallbacks
+    def getMaster(self, config_dict):
+        self.master = master = yield getMaster(self, self.reactor, config_dict)
+        defer.returnValue(master)
+
+    def createLocalWorker(self, name, **kwargs):
+        workdir = FilePath(self.mktemp())
+        workdir.createDirectory()
+        return LocalWorker(name, workdir.path, **kwargs)
+
+    @defer.inlineCallbacks
+    def assertBuildResults(self, build_id, result):
+        dbdict = yield self.master.db.builds.getBuild(build_id)
+        self.assertEqual(result, dbdict['results'])
+
+    @defer.inlineCallbacks
+    def createBuildrequest(self, master, builder_ids, properties=None):
+        properties = properties.asDict() if properties is not None else None
+        ret = yield master.data.updates.addBuildset(
+            waited_for=False,
+            builderids=builder_ids,
+            sourcestamps=[
+                {'codebase': '',
+                 'repository': '',
+                 'branch': None,
+                 'revision': None,
+                 'project': ''},
+            ],
+            properties=properties,
+        )
+        return ret
 
 
 class RunMasterBase(unittest.TestCase):

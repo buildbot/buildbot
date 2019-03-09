@@ -147,8 +147,11 @@ If there are any problems during the config-file reload, they will be displayed 
 When reloading the config file, the buildmaster will endeavor to change as little as possible about the running system.
 For example, although old status targets may be shut down and new ones started up, any status targets that were not changed since the last time the config file was read will be left running and untouched.
 Likewise any :class:`Builder`\s which have not been changed will be left running.
-If a :class:`Builder` is modified (say, the build process is changed) while a :class:`Build` is currently running, that :class:`Build` will keep running with the old process until it completes.
-Any previously queued :class:`Build`\s (or :class:`Build`\s which get queued after the reconfig) will use the new process.
+If a :class:`Builder` is modified (say, the build command is changed), this change will apply only for new :class:`Build`\s.
+Any existing build that is currently running or was already queued will be allowed to finish using the old configuration.
+
+Note that if any lock is renamed, old and new instances of the lock will be completely unrelated in the eyes of the buildmaster.
+This means that buildmaster will be able to start new builds that would otherwise have waited for the old lock to be released.
 
 .. warning::
 
