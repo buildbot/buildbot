@@ -1,1 +1,0 @@
-Fixed a race condition that could manifest in cancelled substantiations if builds were created during insubstantiation of a latent worker.
