@@ -154,7 +154,8 @@ class AbstractWorker(service.BuildbotService):
         # convert locks into their real form
         locks = [(self.botmaster.getLockFromLockAccess(a), a)
                  for a in self.access]
-        self.locks = [(l.getLock(self), la) for l, la in locks]
+        self.locks = [(l.getLockForWorker(self.workername), la)
+                      for l, la in locks]
         self.lock_subscriptions = [l.subscribeToReleases(self._lockReleased)
                                    for l, la in self.locks]
 

@@ -54,7 +54,9 @@ class BaseLock:
         self._claimed_excl = 0
 
         # current number of claimed counting locks (0 to self.maxCount), must
-        # match self.owners
+        # match self.owners. Note that self.maxCount is not a strict limit, the
+        # number of claimed counting locks may be higher than self.maxCount if
+        # it was lowered by
         self._claimed_counting = 0
 
         # subscriptions to this lock being released
@@ -63,6 +65,13 @@ class BaseLock:
 
     def __repr__(self):
         return self.description
+
+    def setMaxCount(self, count):
+        old_max_count = self.maxCount
+        self.maxCount = count
+
+        if count > old_max_count:
+            self._tryWakeUp()
 
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
@@ -137,7 +146,12 @@ class BaseLock:
             debuglog("%s already released" % self)
             return
 
-        # who can we wake up?
+        self._tryWakeUp()
+
+        # notify any listeners
+        self.release_subs.deliver()
+
+    def _tryWakeUp(self):
         # After an exclusive access, we may need to wake up several waiting.
         # Break out of the loop when the first waiting client should not be
         # awakened.
@@ -160,9 +174,6 @@ class BaseLock:
             if d:
                 self.waiting[i] = (w_owner, w_access, None)
                 eventually(d.callback, self)
-
-        # notify any listeners
-        self.release_subs.deliver()
 
     def waitUntilMaybeAvailable(self, owner, access):
         """Fire when the lock *might* be available. The caller will need to
@@ -199,10 +210,19 @@ class RealMasterLock(BaseLock):
 
     def __init__(self, lockid):
         super().__init__(lockid.name, lockid.maxCount)
-        self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
+        self._updateDescription()
 
-    def getLock(self, worker):
+    def _updateDescription(self):
+        self.description = "<MasterLock({}, {})>".format(self.name,
+                                                         self.maxCount)
+
+    def getLockForWorker(self, workername):
         return self
+
+    def updateFromLockId(self, lockid):
+        assert self.name == lockid.name
+        self.setMaxCount(lockid.maxCount)
+        self._updateDescription()
 
 
 class RealWorkerLock:
@@ -211,25 +231,43 @@ class RealWorkerLock:
         self.name = lockid.name
         self.maxCount = lockid.maxCount
         self.maxCountForWorker = lockid.maxCountForWorker
-        self.description = "<WorkerLock(%s, %s, %s)>" % (self.name,
-                                                         self.maxCount,
-                                                         self.maxCountForWorker)
+        self._updateDescription()
         self.locks = {}
 
     def __repr__(self):
         return self.description
 
-    def getLock(self, worker):
-        workername = worker.workername
+    def getLockForWorker(self, workername):
         if workername not in self.locks:
             maxCount = self.maxCountForWorker.get(workername,
                                                   self.maxCount)
             lock = self.locks[workername] = BaseLock(self.name, maxCount)
-            desc = "<WorkerLock(%s, %s)[%s] %d>" % (self.name, maxCount,
-                                                    workername, id(lock))
-            lock.description = desc
+            self._updateDescriptionForLock(lock, workername)
             self.locks[workername] = lock
         return self.locks[workername]
+
+    def _updateDescription(self):
+        self.description = \
+            "<WorkerLock({}, {}, {})>".format(self.name, self.maxCount,
+                                              self.maxCountForWorker)
+
+    def _updateDescriptionForLock(self, lock, workername):
+        lock.description = \
+            "<WorkerLock({}, {})[{}] {}>".format(lock.name, lock.maxCount,
+                                                 workername, id(lock))
+
+    def updateFromLockId(self, lockid):
+        assert self.name == lockid.name
+
+        self.maxCount = lockid.maxCount
+        self.maxCountForWorker = lockid.maxCountForWorker
+
+        self._updateDescription()
+
+        for workername, lock in self.locks.items():
+            maxCount = self.maxCountForWorker.get(workername, self.maxCount)
+            lock.setMaxCount(maxCount)
+            self._updateDescriptionForLock(lock, workername)
 
 
 class LockAccess(util.ComparableMixin):

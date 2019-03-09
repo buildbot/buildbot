@@ -304,7 +304,8 @@ class Build(properties.PropertiesMixin):
         self.setupOwnProperties()
 
         # then narrow WorkerLocks down to the right worker
-        self.locks = [(l.getLock(workerforbuilder.worker), a)
+        self.locks = [(l.getLockForWorker(workerforbuilder.worker.workername),
+                       a)
                       for l, a in self.locks]
         metrics.MetricCountEvent.log('active_builds', 1)
 
@@ -408,7 +409,8 @@ class Build(properties.PropertiesMixin):
     @staticmethod
     def _canAcquireLocks(lockList, workerforbuilder):
         for lock, access in lockList:
-            worker_lock = lock.getLock(workerforbuilder.worker)
+            worker_lock = lock.getLockForWorker(
+                workerforbuilder.worker.workername)
             if not worker_lock.isAvailable(None, access):
                 return False
         return True
