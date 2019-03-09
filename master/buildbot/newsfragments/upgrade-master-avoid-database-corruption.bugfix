@@ -1,1 +1,0 @@
-To avoid database corruption, the ``upgrade-master`` command now ignores all signals except ``SIGKILL``. It cannot be interrupted with ``ctrl-c`` (:issue:`4600`).
