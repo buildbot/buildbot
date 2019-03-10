@@ -183,7 +183,7 @@ class Git(Source, GitStepMixin):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         try:
-            gitInstalled = yield self.checkBranchSupport()
+            gitInstalled = yield self.checkFeatureSupport()
 
             if not gitInstalled:
                 raise WorkerTooOldError("git is not installed on worker")
@@ -675,7 +675,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     def run(self):
         self.stdio_log = yield self.addLog("stdio")
         try:
-            gitInstalled = yield self.checkBranchSupport()
+            gitInstalled = yield self.checkFeatureSupport()
 
             if not gitInstalled:
                 raise WorkerTooOldError("git is not installed on worker")
@@ -692,6 +692,81 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     @defer.inlineCallbacks
     def _doPush(self):
         cmd = ['push', self.repourl, self.branch]
+        if self.force:
+            cmd.append('--force')
+
+        ret = yield self._dovccmd(cmd)
+        return ret
+
+
+class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
+
+    description = None
+    descriptionDone = None
+    descriptionSuffix = None
+
+    name = 'gittag'
+    renderables = ['repourl', 'name', 'messages']
+
+    def __init__(self, workdir=None, tagName=None,
+                 annotated=False, messages=None, force=False, env=None,
+                 timeout=20 * 60, logEnviron=True, config=None, **kwargs):
+
+        self.workdir = workdir
+        self.tagName = tagName
+        self.annotated = annotated
+        self.messages = messages
+        self.force = force
+        self.env = env
+        self.timeout = timeout
+        self.logEnviron = logEnviron
+        self.config = config
+
+        # These attributes are required for GitStepMixin but not useful to tag
+        self.repourl = " "
+        self.sshHostKey = None
+        self.sshPrivateKey = None
+
+        super().__init__(**kwargs)
+
+        self.setupGitStep()
+
+        if not self.tagName:
+            bbconfig.error('GitTag: must provide tagName')
+
+        if self.annotated and not self.messages:
+            bbconfig.error('GitTag: must provide messages in case of annotated tag')
+
+        if not self.annotated and self.messages:
+            bbconfig.error('GitTag: messages are required only in case of annotated tag')
+
+        if self.messages and not isinstance(self.messages, list):
+            bbconfig.error('GitTag: messages should be a list')
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.stdio_log = yield self.addLog("stdio")
+        gitInstalled = yield self.checkFeatureSupport()
+
+        if not gitInstalled:
+            raise WorkerTooOldError("git is not installed on worker")
+
+        ret = yield self._doTag()
+        return ret
+
+    @defer.inlineCallbacks
+    def _doTag(self):
+        cmd = ['tag']
+
+        if self.annotated:
+            cmd.append('-a')
+            cmd.append(self.tagName)
+
+            for msg in self.messages:
+                cmd.extend(['-m', msg])
+        else:
+            cmd.append(self.tagName)
+
         if self.force:
             cmd.append('--force')
 

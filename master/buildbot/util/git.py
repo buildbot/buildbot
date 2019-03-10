@@ -238,7 +238,7 @@ class GitStepMixin(GitMixin):
         return cmd.rc
 
     @defer.inlineCallbacks
-    def checkBranchSupport(self):
+    def checkFeatureSupport(self):
         stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
         self.parseGitFeatures(stdout)
