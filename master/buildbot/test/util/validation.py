@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import integer_types
 
 import datetime
 import json
@@ -58,7 +57,7 @@ class InstanceValidator(Validator):
 
 
 class IntValidator(InstanceValidator):
-    types = integer_types
+    types = (int,)
     name = 'integer'
 
 

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import integer_types
-
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
@@ -360,7 +358,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         properties.sourcestamps = []
         properties.changes = []
         for ss in sourcestamps:
-            if isinstance(ss, integer_types):
+            if isinstance(ss, (int,)):
                 # fetch actual sourcestamp and changes from data API
                 properties.sourcestamps.append(
                     (yield self.master.data.get(('sourcestamps', ss))))

@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import integer_types
-
 import datetime
 import json
 import re
@@ -111,7 +109,7 @@ class Instance(Type):
 class Integer(Instance):
 
     name = "integer"
-    types = integer_types
+    types = (int,)
     ramlType = "integer"
 
     def valueFromString(self, arg):
