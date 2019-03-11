@@ -3774,3 +3774,115 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
         self.flushLoggedErrors(WorkerTooOldError)
+
+
+class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
+                    TestReactorMixin,
+                    unittest.TestCase):
+    stepClass = git.GitCommit
+
+    def setUp(self):
+        self.setUpTestReactor()
+        self.message_list = ['my commit', '42']
+        self.path_list = ['file1.txt', 'file2.txt']
+
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_add_fail(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_commit(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'commit', '-m', 'my commit', '-m', '42'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_detached_head(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='')
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_config_no_files_arg(self):
+        with self.assertRaisesConfigError(
+                "GitCommit: must provide paths"):
+            self.stepClass(workdir='wkdir', messages=self.message_list)
+
+    def test_config_files_not_a_list(self):
+        with self.assertRaisesConfigError(
+                "GitCommit: paths must be a list"):
+            self.stepClass(workdir='wkdir', paths="test.txt", messages=self.message_list)
+
+    def test_config_no_messages_arg(self):
+        with self.assertRaisesConfigError(
+                "GitCommit: must provide messages"):
+            self.stepClass(workdir='wkdir', paths=self.path_list)
+
+    def test_config_messages_not_a_list(self):
+        with self.assertRaisesConfigError(
+                "GitCommit: messages must be a list"):
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages="my message")
+
+    def test_raise_no_git(self):
+        @defer.inlineCallbacks
+        def _checkFeatureSupport(self):
+            yield
+            return False
+
+        step = self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list)
+        self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
+        self.setupStep(step)
+        self.expectOutcome(result=EXCEPTION)
+        self.runStep()
+        self.flushLoggedErrors(WorkerTooOldError)

@@ -770,3 +770,88 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         ret = yield self._dovccmd(cmd)
         return ret
+
+
+class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
+
+    description = None
+    descriptionDone = None
+    descriptionSuffix = None
+
+    name = 'gitcommit'
+    renderables = ['paths', 'messages']
+
+    def __init__(self, workdir=None, paths=None, messages=None, env=None,
+                 timeout=20 * 60, logEnviron=True,
+                 config=None, **kwargs):
+
+        self.workdir = workdir
+        self.messages = messages
+        self.paths = paths
+        self.env = env
+        self.timeout = timeout
+        self.logEnviron = logEnviron
+        self.config = config
+        # The repourl, sshPrivateKey and sshHostKey attributes are required by
+        # GitStepMixin, but aren't needed by git add and commit operations
+        self.repourl = " "
+        self.sshPrivateKey = None
+        self.sshHostKey = None
+
+        super().__init__(**kwargs)
+
+        self.setupGitStep()
+
+        if not self.messages:
+            bbconfig.error('GitCommit: must provide messages')
+
+        if not isinstance(self.messages, list):
+            bbconfig.error('GitCommit: messages must be a list')
+
+        if not self.paths:
+            bbconfig.error('GitCommit: must provide paths')
+
+        if not isinstance(self.paths, list):
+            bbconfig.error('GitCommit: paths must be a list')
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.stdio_log = yield self.addLog("stdio")
+        gitInstalled = yield self.checkFeatureSupport()
+
+        if not gitInstalled:
+            raise WorkerTooOldError("git is not installed on worker")
+
+        yield self._checkDetachedHead()
+        yield self._doAdd()
+        yield self._doCommit()
+
+        return RC_SUCCESS
+
+    @defer.inlineCallbacks
+    def _checkDetachedHead(self):
+        cmd = ['symbolic-ref', 'HEAD']
+        rc = yield self._dovccmd(cmd, abandonOnFailure=False)
+
+        if rc != RC_SUCCESS:
+            self.stdio_log.addStderr("You are in detached HEAD")
+            raise buildstep.BuildStepFailed
+
+    @defer.inlineCallbacks
+    def _doCommit(self):
+        cmd = ['commit']
+
+        for message in self.messages:
+            cmd.extend(['-m', message])
+
+        ret = yield self._dovccmd(cmd)
+        return ret
+
+    @defer.inlineCallbacks
+    def _doAdd(self):
+        cmd = ['add']
+
+        cmd.extend(self.paths)
+
+        ret = yield self._dovccmd(cmd)
+        return ret
