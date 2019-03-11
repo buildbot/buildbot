@@ -3637,6 +3637,20 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
+    def test_raise_no_git(self):
+        @defer.inlineCallbacks
+        def _checkFeatureSupport(self):
+            yield
+            return False
+
+        url = 'ssh://github.com/test/test.git'
+        step = self.stepClass(workdir='wkdir', repourl=url, branch='testbranch')
+        self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
+        self.setupStep(step)
+        self.expectOutcome(result=EXCEPTION)
+        self.runStep()
+        self.flushLoggedErrors(WorkerTooOldError)
+
 
 class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
                  unittest.TestCase):
