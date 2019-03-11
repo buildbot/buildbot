@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import re
 
 from buildbot import util
@@ -35,20 +33,20 @@ def isIdentifier(maxLength, obj):
     return True
 
 
-def forceIdentifier(maxLength, str):
-    if not isinstance(str, string_types):
+def forceIdentifier(maxLength, s):
+    if not isinstance(s, (str,)):
         raise TypeError("%r cannot be coerced to an identifier" % (str,))
 
     # usually bytes2unicode can handle it
-    str = util.bytes2unicode(str)
-    if isIdentifier(maxLength, str):
-        return str
+    s = util.bytes2unicode(s)
+    if isIdentifier(maxLength, s):
+        return s
 
     # trim to length and substitute out invalid characters
-    str = str[:maxLength]
-    str = initial_re.sub('_', str)
-    str = subsequent_re.subn('_', str)[0]
-    return str
+    s = s[:maxLength]
+    s = initial_re.sub('_', s)
+    s = subsequent_re.subn('_', s)[0]
+    return s
 
 
 def incrementIdentifier(maxLength, ident):

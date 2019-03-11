@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.worker.latent import AbstractLatentWorker
 from buildbot.worker.base import AbstractWorker
 from buildbot.worker.base import Worker
+from buildbot.worker.latent import AbstractLatentWorker
 
 _hush_pyflakes = [
     AbstractWorker,

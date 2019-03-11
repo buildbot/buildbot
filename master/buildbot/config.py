@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import datetime
 import inspect
 import os
@@ -384,7 +382,7 @@ class MasterConfig(util.ComparableMixin):
 
         def copy_str_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                       check_type=string_types, check_type_name='a string')
+                       check_type=(str,), check_type_name='a string')
 
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')
@@ -392,7 +390,7 @@ class MasterConfig(util.ComparableMixin):
 
         def copy_str_or_callable_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                       check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
+                       check_type=(str,), check_type_name='a string or callable', can_be_callable=True)
 
         if "buildbotNetUsageData" not in config_dict:
             if _in_unit_tests:

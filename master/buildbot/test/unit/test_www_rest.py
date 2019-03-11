@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import json
 import re
 
@@ -672,7 +670,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         exp['error'] = message
 
         # process a regular expression for message, if given
-        if not isinstance(message, string_types):
+        if not isinstance(message, (str,)):
             if message.match(got['error']):
                 exp['error'] = got['error']
             else:
@@ -711,7 +709,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
         exp['error'] = {'code': jsonrpccode, 'message': message}
 
         # process a regular expression for message, if given
-        if not isinstance(message, string_types):
+        if not isinstance(message, (str,)):
             if message.match(got['error']['message']):
                 exp['error']['message'] = got['error']['message']
             else:

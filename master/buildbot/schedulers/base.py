@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import integer_types
-from future.utils import string_types
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -46,7 +45,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             pass
         elif isinstance(builderNames, (list, tuple)):
             for b in builderNames:
-                if not isinstance(b, string_types) and \
+                if not isinstance(b, (str,)) and \
                         not interfaces.IRenderable.providedBy(b):
                     ok = False
         else:

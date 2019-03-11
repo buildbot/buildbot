@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-
-from future.utils import string_types
-
 import calendar
 import datetime
 import itertools
@@ -300,7 +297,7 @@ def human_readable_delta(start, end):
 
 
 def makeList(input):
-    if isinstance(input, string_types):
+    if isinstance(input, (str,)):
         return [input]
     elif input is None:
         return []
@@ -381,7 +378,7 @@ def join_list(maybeList):
 
 def command_to_string(command):
     words = command
-    if isinstance(words, (bytes, string_types)):
+    if isinstance(words, (bytes, (str,))):
         words = words.split()
 
     try:
@@ -399,7 +396,7 @@ def command_to_string(command):
     # description is requested before rendering)
     stringWords = []
     for w in words:
-        if isinstance(w, (bytes, string_types)):
+        if isinstance(w, (bytes, (str,))):
             # If command was bytes, be gentle in
             # trying to covert it.
             w = bytes2unicode(w, errors="replace")

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import raise_with_traceback
-from future.utils import string_types
 
 import re
 
@@ -1273,7 +1272,7 @@ def regex_log_evaluator(cmd, _, regexes):
         # we won't be changing "worst" unless possible_status is worse than it,
         # so we don't even need to check the log if that's the case
         if worst_status(worst, possible_status) == possible_status:
-            if isinstance(err, string_types):
+            if isinstance(err, (str,)):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
             for l in cmd.logs.values():
                 if err.search(l.getText()):

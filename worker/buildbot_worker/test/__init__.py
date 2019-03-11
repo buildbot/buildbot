@@ -16,9 +16,9 @@
 import sys
 
 import twisted
+from twisted.trial import unittest
 
 from buildbot_worker import monkeypatches
-from twisted.trial import unittest
 
 # apply the same patches the worker does when it starts
 monkeypatches.patch_all(for_tests=True)

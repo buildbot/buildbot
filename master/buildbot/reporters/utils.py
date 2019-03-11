@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import lrange
-from future.utils import string_types
 
 from collections import UserList
 
@@ -170,7 +169,7 @@ def getResponsibleUsersForBuild(master, buildid):
     # add owner from properties
     if 'owner' in properties:
         owner = properties['owner'][0]
-        if isinstance(owner, string_types):
+        if isinstance(owner, (str,)):
             blamelist.add(owner)
         else:
             blamelist.update(owner)
