@@ -17,8 +17,6 @@
 Parse various kinds of 'CVS notify' email.
 """
 
-from future.utils import text_type
-
 import calendar
 import datetime
 import re
@@ -73,7 +71,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             if chtuple:
                 src, chdict = chtuple
             if chdict:
-                return self.master.data.updates.addChange(src=text_type(src),
+                return self.master.data.updates.addChange(src=str(src),
                                                           **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
@@ -471,7 +469,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = text_type(lines.pop(0), "utf-8", errors="ignore")
+            line = str(lines.pop(0), "utf-8", errors="ignore")
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)

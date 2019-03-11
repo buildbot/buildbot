@@ -17,8 +17,6 @@
 
 # Many thanks to Dave Peticolas for contributing this module
 
-from future.utils import text_type
-
 import datetime
 import os
 import re
@@ -345,10 +343,10 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                     author=who,
                     files=branch_files[branch],
                     comments=comments,
-                    revision=text_type(num),
+                    revision=str(num),
                     when_timestamp=when,
                     branch=branch,
                     project=self.project,
-                    revlink=self.revlink_callable(branch, text_type(num)))
+                    revlink=self.revlink_callable(branch, str(num)))
 
             self.last_change = num

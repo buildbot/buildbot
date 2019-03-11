@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import random
 
 import mock
@@ -476,7 +474,7 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         fbi.assert_called_once_with('b1')
         # check that the name was unicodified
         arg = fbi.mock_calls[0][1][0]
-        self.assertIsInstance(arg, text_type)
+        self.assertIsInstance(arg, str)
 
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):

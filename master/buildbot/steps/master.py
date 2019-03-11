@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import os
 import pprint
 import re
@@ -80,7 +78,7 @@ class MasterShellCommand(BuildStep):
         # render properties
         command = self.command
         # set up argv
-        if isinstance(command, (text_type, bytes)):
+        if isinstance(command, (str, bytes)):
             if runtime.platformType == 'win32':
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -103,7 +101,7 @@ class MasterShellCommand(BuildStep):
 
         self.stdio_log = stdio_log = self.addLog("stdio")
 
-        if isinstance(command, (text_type, bytes)):
+        if isinstance(command, (str, bytes)):
             stdio_log.addHeader(command.strip() + "\n\n")
         else:
             stdio_log.addHeader(" ".join(command) + "\n\n")
@@ -134,7 +132,7 @@ class MasterShellCommand(BuildStep):
             newenv = {}
             for key, v in env.items():
                 if v is not None:
-                    if not isinstance(v, (text_type, bytes)):
+                    if not isinstance(v, (str, bytes)):
                         raise RuntimeError("'env' values must be strings or "
                                            "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, env[key])

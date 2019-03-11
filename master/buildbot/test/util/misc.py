@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import os
 import sys
 
@@ -109,12 +107,12 @@ def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
     Encode executable and arguments from unicode to bytes.
     This avoids a deprecation warning when calling reactor.spawnProcess()
     """
-    if isinstance(executable, text_type):
+    if isinstance(executable, str):
         executable = executable.encode(encoding)
 
     argsBytes = []
     for arg in args:
-        if isinstance(arg, text_type):
+        if isinstance(arg, str):
             arg = arg.encode(encoding)
         argsBytes.append(arg)
 

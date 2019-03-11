@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import string_types
-from future.utils import text_type
 
 import json
 import re
@@ -257,7 +256,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
-        self.assertFalse(isinstance(self.request.written, text_type))
+        self.assertFalse(isinstance(self.request.written, str))
         got = {}
         got['content'] = json.loads(bytes2unicode(self.request.written))
         got['contentType'] = self.request.headers[b'content-type']

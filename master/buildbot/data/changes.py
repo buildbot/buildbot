@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import copy
 
 from twisted.internet import defer
@@ -175,7 +173,7 @@ class Change(base.ResourceType):
                                                                repository=repository,
                                                                project=project)
             codebase = self.master.config.codebaseGenerator(pre_change)
-            codebase = text_type(codebase)
+            codebase = str(codebase)
         else:
             codebase = codebase or ''
 

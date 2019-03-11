@@ -15,7 +15,6 @@
 
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import integer_types
-from future.utils import text_type
 
 import datetime
 import json
@@ -70,7 +69,7 @@ class BooleanValidator(InstanceValidator):
 
 class StringValidator(InstanceValidator):
     # strings must be unicode
-    types = (text_type,)
+    types = (str,)
     name = 'string'
 
 
@@ -96,7 +95,7 @@ class DateTimeValidator(Validator):
 
 
 class IdentifierValidator(Validator):
-    types = (text_type,)
+    types = (str,)
     name = 'identifier'
     hasArgs = True
 
@@ -106,7 +105,7 @@ class IdentifierValidator(Validator):
         self.len = len
 
     def validate(self, name, object):
-        if not isinstance(object, text_type):
+        if not isinstance(object, str):
             yield "{} - {!r} - is not a unicode string".format(name, object)
         elif not self.ident_re.match(object):
             yield "{} - {!r} - is not an identifier".format(name, object)
@@ -218,13 +217,13 @@ class SourcedPropertiesValidator(Validator):
             yield "{} is not sourced properties (not a dict)".format(name)
             return
         for k, v in object.items():
-            if not isinstance(k, text_type):
+            if not isinstance(k, str):
                 yield "{} property name {!r} is not unicode".format(name, k)
             if not isinstance(v, tuple) or len(v) != 2:
                 yield "{} property value for '{}' is not a 2-tuple".format(name, k)
                 return
             propval, propsrc = v
-            if not isinstance(propsrc, text_type):
+            if not isinstance(propsrc, str):
                 yield "{}[{}] source {!r} is not unicode".format(name, k, propsrc)
             try:
                 json.dumps(propval)

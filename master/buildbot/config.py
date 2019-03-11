@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import string_types
-from future.utils import text_type
 
 import datetime
 import inspect
@@ -916,7 +915,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
                  canStartBuild=None, defaultProperties=None
                  ):
         # name is required, and can't start with '_'
-        if not name or type(name) not in (bytes, text_type):
+        if not name or type(name) not in (bytes, str):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_' and name not in RESERVED_UNDERSCORE_NAMES:

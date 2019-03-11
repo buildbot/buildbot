@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import string_types
-from future.utils import text_type
 
 import os
 import re
@@ -113,9 +112,9 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             self.assertEqual(r, desiredGoodResult)
             # check types
             if isinstance(r, string_types):
-                self.assertIsInstance(r, text_type)
+                self.assertIsInstance(r, str)
             elif isinstance(r, list):
-                [self.assertIsInstance(e, text_type) for e in r]
+                [self.assertIsInstance(e, str) for e in r]
         d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
 

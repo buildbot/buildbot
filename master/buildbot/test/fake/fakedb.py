@@ -19,8 +19,6 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
-from future.utils import text_type
-
 import base64
 import copy
 import hashlib
@@ -97,7 +95,7 @@ class Row:
         # cast to unicode
         for k, v in self.values.items():
             if isinstance(v, str):
-                self.values[k] = text_type(v)
+                self.values[k] = str(v)
         # Binary columns stores either (compressed) binary data or encoded
         # with utf-8 unicode string. We assume that Row constructor receives
         # only unicode strings and encode them to utf-8 here.
@@ -161,7 +159,7 @@ class Row:
         def encode(x):
             if x is None:
                 return b'\xf5'
-            elif isinstance(x, text_type):
+            elif isinstance(x, str):
                 return x.encode('utf-8')
             return str(x).encode('utf-8')
 

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import string_types
-from future.utils import text_type
 
 import re
 
@@ -27,7 +26,7 @@ trailing_digits_re = re.compile('_([0-9]+)$')
 
 
 def isIdentifier(maxLength, obj):
-    if not isinstance(obj, text_type):
+    if not isinstance(obj, str):
         return False
     elif not ident_re.match(obj):
         return False
