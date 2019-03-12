@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import lrange
-
 import gc
 import sys
 
@@ -128,7 +126,7 @@ class TestMetricTimeEvent(TestMetricBase):
         self.assertEqual(report['timers']['foo_time'], 5)
 
     def testAverages(self):
-        data = lrange(10)
+        data = list(range(10))
         for i in data:
             metrics.MetricTimeEvent.log('foo_time', i)
         report = self.observer.asDict()

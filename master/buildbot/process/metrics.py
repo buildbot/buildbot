@@ -32,8 +32,6 @@ Basic architecture:
     MetricWatcher
 """
 
-from future.utils import lrange
-
 import gc
 import os
 import sys
@@ -78,7 +76,7 @@ class MetricTimeEvent(MetricEvent):
         self.elapsed = elapsed
 
 
-ALARM_OK, ALARM_WARN, ALARM_CRIT = lrange(3)
+ALARM_OK, ALARM_WARN, ALARM_CRIT = list(range(3))
 ALARM_TEXT = ["OK", "WARN", "CRIT"]
 
 
