@@ -169,8 +169,8 @@ class TestPeriodicChecks(TestMetricBase):
 
     def testGetRSS(self):
         self.assertTrue(metrics._get_rss() > 0)
-    if sys.platform != 'linux2':
-        testGetRSS.skip = "only available on linux2 platforms"
+    if sys.platform != 'linux':
+        testGetRSS.skip = "only available on linux platforms"
 
 
 class TestReconfig(TestMetricBase):
