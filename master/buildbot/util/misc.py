@@ -26,7 +26,7 @@ def deferredLocked(lock_or_attr):
     def decorator(fn):
         def wrapper(*args, **kwargs):
             lock = lock_or_attr
-            if isinstance(lock, (str,)):
+            if isinstance(lock, str):
                 lock = getattr(args[0], lock)
             return lock.run(fn, *args, **kwargs)
         return wrapper

@@ -465,9 +465,9 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         is no upper bound."""
 
         for fileRe, warnRe, start, end in suppressionList:
-            if fileRe is not None and isinstance(fileRe, (str,)):
+            if fileRe is not None and isinstance(fileRe, str):
                 fileRe = re.compile(fileRe)
-            if warnRe is not None and isinstance(warnRe, (str,)):
+            if warnRe is not None and isinstance(warnRe, str):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
@@ -497,12 +497,12 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
 
         directoryEnterRe = self.directoryEnterPattern
         if (directoryEnterRe is not None and
-                isinstance(directoryEnterRe, (str,))):
+                isinstance(directoryEnterRe, str)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
         if (directoryLeaveRe is not None and
-                isinstance(directoryLeaveRe, (str,))):
+                isinstance(directoryLeaveRe, str)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
         # Check if each line in the output from this command matched our

@@ -90,7 +90,7 @@ class P4(Source):
             config.error(
                 "Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
 
-        if p4viewspec and isinstance(p4viewspec, (str,)):
+        if p4viewspec and isinstance(p4viewspec, str):
             config.error(
                 "p4viewspec must not be a string, and should be a sequence of 2 element sequences")
 

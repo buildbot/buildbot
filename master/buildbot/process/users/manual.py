@@ -53,7 +53,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             # list, alternating ident, uid
             formatted_results += "user(s) added:\n"
             for user in results:
-                if isinstance(user, (str,)):
+                if isinstance(user, str):
                     formatted_results += "identifier: %s\n" % user
                 else:
                     formatted_results += "uid: %d\n\n" % user

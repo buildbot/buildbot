@@ -296,7 +296,7 @@ class NightlyBase(Timed):
                 time = (time + 1) % 7
             return time
 
-        if isinstance(time, (str,)):
+        if isinstance(time, str):
             if isDayOfWeek:
                 # time could be a comma separated list of values, e.g. "5,sun"
                 time_array = str(time).split(',')

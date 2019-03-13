@@ -109,7 +109,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         def cb_desired(r):
             self.assertEqual(r, desiredGoodResult)
             # check types
-            if isinstance(r, (str,)):
+            if isinstance(r, str):
                 self.assertIsInstance(r, str)
             elif isinstance(r, list):
                 [self.assertIsInstance(e, str) for e in r]

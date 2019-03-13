@@ -39,7 +39,7 @@ class NotifierBase(service.BuildbotService):
                       "exception", "cancelled")
 
     def computeShortcutModes(self, mode):
-        if isinstance(mode, (str,)):
+        if isinstance(mode, str):
             if mode == "all":
                 mode = ("failing", "passing", "warnings",
                         "exception", "cancelled")

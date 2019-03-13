@@ -141,7 +141,7 @@ class BaseParameter:
 
         # delete white space for args
         for arg in args:
-            if isinstance(arg, (str,)) and not arg.strip():
+            if isinstance(arg, str) and not arg.strip():
                 args.remove(arg)
 
         if not args:
@@ -547,7 +547,7 @@ class CodebaseParameter(NestedParameter):
         for k, v in fields_dict.items():
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
-            elif isinstance(v, (str,)):
+            elif isinstance(v, str):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
@@ -717,7 +717,7 @@ class ForceScheduler(base.BaseScheduler):
 
         codebase_dict = {}
         for codebase in codebases:
-            if isinstance(codebase, (str,)):
+            if isinstance(codebase, str):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
                 config.error("ForceScheduler '%s': 'codebases' must be a list of strings"

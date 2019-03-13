@@ -167,7 +167,7 @@ def getResponsibleUsersForBuild(master, buildid):
     # add owner from properties
     if 'owner' in properties:
         owner = properties['owner'][0]
-        if isinstance(owner, (str,)):
+        if isinstance(owner, str):
             blamelist.add(owner)
         else:
             blamelist.update(owner)

@@ -348,7 +348,7 @@ def show(x):
             continue
         if k[:2] == '__' and k[-2:] == '__':
             continue
-        if isinstance(v, (str,)):
+        if isinstance(v, str):
             if len(v) > 80 - maxlen - 5:
                 v = repr(v[:80 - maxlen - 5]) + "..."
         elif isinstance(v, (int, type(None))):

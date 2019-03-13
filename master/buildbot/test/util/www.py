@@ -91,7 +91,7 @@ class FakeRequest:
 
     def setResponseCode(self, code, text=None):
         # twisted > 16 started to assert this
-        assert isinstance(code, (int,))
+        assert isinstance(code, int)
         self.responseCode = code
         self.responseText = text
 

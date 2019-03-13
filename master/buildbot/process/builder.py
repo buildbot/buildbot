@@ -37,7 +37,7 @@ from buildbot.util import service as util_service
 def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'workername' in breq.properties:
         workername = breq.properties['workername']
-        if isinstance(workername, (str,)):
+        if isinstance(workername, str):
             return workername == workerforbuilder.worker.workername
 
     return True

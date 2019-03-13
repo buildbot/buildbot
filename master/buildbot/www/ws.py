@@ -69,7 +69,7 @@ class WsProtocol(WebSocketServerProtocol):
         return tuple([str(p) if p != "*" else None for p in path])
 
     def isPath(self, path):
-        if not isinstance(path, (str,)):
+        if not isinstance(path, str):
             return False
         return True
 

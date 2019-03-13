@@ -99,16 +99,16 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'valid_ami_location_regex and valid_ami_owners')
         self.ami = ami
         if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, (int,)):
+            if isinstance(valid_ami_owners, int):
                 valid_ami_owners = (valid_ami_owners,)
             else:
                 for element in valid_ami_owners:
-                    if not isinstance(element, (int,)):
+                    if not isinstance(element, int):
                         raise ValueError(
                             'valid_ami_owners should be int or iterable '
                             'of ints', element)
         if valid_ami_location_regex is not None:
-            if not isinstance(valid_ami_location_regex, (str,)):
+            if not isinstance(valid_ami_location_regex, str):
                 raise ValueError(
                     'valid_ami_location_regex should be a string')
             else:
