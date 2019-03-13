@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import iteritems
 
 import sqlalchemy as sa
 from migrate.changeset.constraint import ForeignKeyConstraint
@@ -40,7 +39,7 @@ def upgrade(migrate_engine):
     # fk name that was put.
     # Mysql and postgres have different naming convention so this is not very
     # easy to have generic code working.
-    for t, keys in iteritems(TABLES_FKEYS_SET_NULL):
+    for t, keys in TABLES_FKEYS_SET_NULL.items():
         table = tables[t]
         for fk in table.constraints:
             if not isinstance(fk, sa.ForeignKeyConstraint):
@@ -65,7 +64,7 @@ def upgrade(migrate_engine):
             pass
         fk.create()
 
-    for t, cols in iteritems(TABLES_COLUMNS_NOT_NULL):
+    for t, cols in TABLES_COLUMNS_NOT_NULL.items():
         table = tables[t]
         if table.dialect_options.get('mysql', {}).get('engine') == 'InnoDB':
             migrate_engine.execute('SET FOREIGN_KEY_CHECKS = 0;')
