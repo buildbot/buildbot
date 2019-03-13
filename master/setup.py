@@ -217,6 +217,8 @@ setup_args = {
         include("buildbot/spec/types", "*.raml"),
         include("buildbot/test/unit/test_templates_dir", "*.html"),
         include("buildbot/test/unit/test_templates_dir/plugin", "*.*"),
+        include("buildbot/test/integration/pki", "*.*"),
+        include("buildbot/test/integration/pki/ca", "*.*"),
     ] + include_statics("buildbot/www/static"),
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
