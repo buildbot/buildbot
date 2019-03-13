@@ -10,7 +10,7 @@
           tr
             td(width='100px') #
             td(width='150px') Submitted At
-            td(width='150px') Owner
+            td(width='150px') Owners
             td Properties
           tr(ng-repeat='br in buildrequests | orderBy:"-submitted_at"', ng-if="br.claimed==false" )
               td
@@ -20,7 +20,7 @@
                 span(title="{{br.submitted_at | dateformat:'LLL'}}")
                   | {{br.submitted_at | timeago }}
               td
-                span {{br.properties.owner[0]}}
+                span(ng-repeat="owner in br.properties.owners[0]") {{owner}}
               td
       uib-tab(heading="Build times")
         line-plot(data="successful_builds", xattr="started_at", yattr="duration", xunit="timestamp", yunit="seconds", width=800, height=200)
