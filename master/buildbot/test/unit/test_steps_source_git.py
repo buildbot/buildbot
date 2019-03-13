@@ -17,8 +17,10 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
 
+from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import remotetransfer
+from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
@@ -3634,3 +3636,132 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
+
+    def test_raise_no_git(self):
+        @defer.inlineCallbacks
+        def _checkFeatureSupport(self):
+            yield
+            return False
+
+        url = 'ssh://github.com/test/test.git'
+        step = self.stepClass(workdir='wkdir', repourl=url, branch='testbranch')
+        self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
+        self.setupStep(step)
+        self.expectOutcome(result=EXCEPTION)
+        self.runStep()
+        self.flushLoggedErrors(WorkerTooOldError)
+
+
+class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
+                 unittest.TestCase):
+    stepClass = git.GitTag
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_tag_annotated(self):
+        messages = ['msg1', 'msg2']
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', tagName='myTag', annotated=True, messages=messages))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'tag', '-a', 'myTag', '-m', 'msg1', '-m', 'msg2'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_tag_simple(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir',
+                           tagName='myTag'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'tag', 'myTag'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_tag_force(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir',
+                           tagName='myTag', force=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'tag', 'myTag', '--force'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_tag_fail_already_exist(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir',
+                           tagName='myTag'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'tag', 'myTag'])
+            + ExpectShell.log('stdio',
+                              stderr="fatal: tag \'%s\' already exist\n")
+            + 1
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_config_annotated_no_messages(self):
+        with self.assertRaises(bbconfig.ConfigErrors):
+            self.setupStep(
+                self.stepClass(workdir='wkdir', tagName='myTag', annotated=True))
+
+    def test_config_no_tag_name(self):
+        with self.assertRaises(bbconfig.ConfigErrors):
+            self.setupStep(
+                self.stepClass(workdir='wkdir'))
+
+    def test_config_not_annotated_but_meessages(self):
+        with self.assertRaises(bbconfig.ConfigErrors):
+            self.setupStep(
+                self.stepClass(workdir='wkdir', tagName='myTag', messages=['msg']))
+
+    def test_config_annotated_message_not_list(self):
+        with self.assertRaises(bbconfig.ConfigErrors):
+            self.setupStep(
+                self.stepClass(workdir='wkdir', tagName='myTag', annotated=True, messages="msg"))
+
+    def test_raise_no_git(self):
+        @defer.inlineCallbacks
+        def _checkFeatureSupport(self):
+            yield
+            return False
+
+        step = self.stepClass(workdir='wdir', tagName='myTag')
+        self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
+        self.setupStep(step)
+        self.expectOutcome(result=EXCEPTION)
+        self.runStep()
+        self.flushLoggedErrors(WorkerTooOldError)
