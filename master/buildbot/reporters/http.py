@@ -110,7 +110,8 @@ class HttpStatusPush(HttpStatusPushBase):
         else:
             self.format_fn = format_fn
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, serverUrl, auth=auth)
+            self.master, serverUrl, auth=auth,
+            debug=self.debug, verify=self.verify)
 
     @defer.inlineCallbacks
     def send(self, build):

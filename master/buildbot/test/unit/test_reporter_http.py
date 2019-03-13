@@ -71,7 +71,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def createReporter(self, auth=("username", "passwd"), **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
-            "serv", auth=auth)
+            "serv", auth=auth,
+            debug=None, verify=None)
 
         interpolated_auth = None
         if auth is not None:
