@@ -465,8 +465,6 @@ setup_args['install_requires'] = [
     'Jinja2 >= 2.1',
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
-    # python-future required for py2/3 compatibility
-    'future',
     'sqlalchemy>=1.1.0',
     'sqlalchemy-migrate>=0.9',
     'python-dateutil>=1.5',

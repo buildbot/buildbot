@@ -13,9 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import raise_with_traceback
-
 import re
+import sys
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -406,7 +405,8 @@ class BuildStep(results.ResultComputingConfigMixin,
                     # python thinks it is actually workdir that is not existing.
                     # python will then swallow the attribute error and call
                     # __getattr__ from worker_transition
-                    raise raise_with_traceback(CallableAttributeError(e))
+                    _, _, traceback = sys.exc_info()
+                    raise CallableAttributeError(e).with_traceback(traceback)
                     # we re-raise the original exception by changing its type,
                     # but keeping its stacktrace
             else:
