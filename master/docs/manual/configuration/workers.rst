@@ -238,6 +238,7 @@ As of time of writing, Buildbot supports the following latent workers:
    workers-libvirt.rst
    workers-openstack.rst
    workers-docker.rst
+   workers-gce.rst
 
 Dangers with Latent Workers
 +++++++++++++++++++++++++++
