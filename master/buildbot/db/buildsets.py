@@ -16,8 +16,6 @@
 Support for buildsets in the database
 """
 
-from future.utils import integer_types
-
 import json
 
 import sqlalchemy as sa
@@ -58,7 +56,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         # convert to sourcestamp IDs first, as necessary
         def toSsid(sourcestamp):
-            if isinstance(sourcestamp, integer_types):
+            if isinstance(sourcestamp, int):
                 return defer.succeed(sourcestamp)
             ssConnector = self.master.db.sourcestamps
             return ssConnector.findSourceStampId(**sourcestamp)

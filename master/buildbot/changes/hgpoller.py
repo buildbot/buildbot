@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import os
 import time
 
@@ -284,7 +282,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 node)
             yield self.master.data.updates.addChange(
                 author=author,
-                revision=text_type(node),
+                revision=str(node),
                 files=files,
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,

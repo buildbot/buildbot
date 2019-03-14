@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import hashlib
 import itertools
 
@@ -105,7 +103,7 @@ class DBConnectorComponent:
         def encode(x):
             if x is None:
                 return b'\xf5'
-            elif isinstance(x, text_type):
+            elif isinstance(x, str):
                 return x.encode('utf-8')
             return str(x).encode('utf-8')
 

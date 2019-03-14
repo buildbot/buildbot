@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 from twisted.internet import defer
 from twisted.python import log
 
@@ -55,7 +53,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             # list, alternating ident, uid
             formatted_results += "user(s) added:\n"
             for user in results:
-                if isinstance(user, string_types):
+                if isinstance(user, str):
                     formatted_results += "identifier: %s\n" % user
                 else:
                     formatted_results += "uid: %d\n\n" % user

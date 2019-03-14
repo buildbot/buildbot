@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 from io import BytesIO
 
 from mock import Mock
@@ -101,7 +99,7 @@ class FakeRequest(Mock):
             self.write(result)
             self.finish()
             return self.deferred
-        elif isinstance(result, text_type):
+        elif isinstance(result, str):
             raise ValueError("{!r} should return bytes, not {}: {!r}".format(
                 resource.render, type(result), result))
         elif result is server.NOT_DONE_YET:

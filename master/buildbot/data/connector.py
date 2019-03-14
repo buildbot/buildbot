@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import inspect
 
 from twisted.internet import defer
@@ -143,7 +141,7 @@ class DataConnector(service.AsyncService):
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
             paths.append(dict(path="/".join(k),
-                              plural=text_type(v.rtype.plural),
-                              type=text_type(v.rtype.entityType.name),
+                              plural=str(v.rtype.plural),
+                              type=str(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))
         return paths

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import warnings
 import weakref
 
@@ -39,7 +37,7 @@ from buildbot.util import service as util_service
 def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'workername' in breq.properties:
         workername = breq.properties['workername']
-        if isinstance(workername, string_types):
+        if isinstance(workername, str):
             return workername == workerforbuilder.worker.workername
 
     return True

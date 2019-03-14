@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -161,11 +159,11 @@ class Git(Source, GitStepMixin):
 
         self.setupGitStep()
 
-        if isinstance(self.mode, string_types):
+        if isinstance(self.mode, str):
             if not self._hasAttrGroupMember('mode', self.mode):
                 bbconfig.error("Git: mode must be %s" %
                                (' or '.join(self._listAttrGroupMembers('mode'))))
-            if isinstance(self.method, string_types):
+            if isinstance(self.method, str):
                 if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):

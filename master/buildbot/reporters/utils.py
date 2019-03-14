@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import lrange
-from future.utils import string_types
-
 from collections import UserList
 
 from twisted.internet import defer
@@ -96,13 +93,13 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
             [master.data.get(("builds", build['buildid'], 'properties'))
              for build in builds])
     else:  # we still need a list for the big zip
-        buildproperties = lrange(len(builds))
+        buildproperties = list(range(len(builds)))
 
     if wantPreviousBuild:
         prev_builds = yield defer.gatherResults(
             [getPreviousBuild(master, build) for build in builds])
     else:  # we still need a list for the big zip
-        prev_builds = lrange(len(builds))
+        prev_builds = list(range(len(builds)))
 
     if wantSteps:
         buildsteps = yield defer.gatherResults(
@@ -116,7 +113,7 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
-        buildsteps = lrange(len(builds))
+        buildsteps = list(range(len(builds)))
 
     # a big zip to connect everything together
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
@@ -170,7 +167,7 @@ def getResponsibleUsersForBuild(master, buildid):
     # add owner from properties
     if 'owner' in properties:
         owner = properties['owner'][0]
-        if isinstance(owner, string_types):
+        if isinstance(owner, str):
             blamelist.add(owner)
         else:
             blamelist.update(owner)

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import integer_types
-from future.utils import string_types
-
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
@@ -46,7 +43,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             pass
         elif isinstance(builderNames, (list, tuple)):
             for b in builderNames:
-                if not isinstance(b, string_types) and \
+                if not isinstance(b, str) and \
                         not interfaces.IRenderable.providedBy(b):
                     ok = False
         else:
@@ -361,7 +358,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         properties.sourcestamps = []
         properties.changes = []
         for ss in sourcestamps:
-            if isinstance(ss, integer_types):
+            if isinstance(ss, int):
                 # fetch actual sourcestamp and changes from data API
                 properties.sourcestamps.append(
                     (yield self.master.data.get(('sourcestamps', ss))))

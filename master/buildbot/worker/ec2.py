@@ -19,9 +19,6 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 Tested with Python boto 1.5c
 """
 
-from future.utils import integer_types
-from future.utils import string_types
-
 import os
 import re
 import time
@@ -102,16 +99,16 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'valid_ami_location_regex and valid_ami_owners')
         self.ami = ami
         if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, integer_types):
+            if isinstance(valid_ami_owners, int):
                 valid_ami_owners = (valid_ami_owners,)
             else:
                 for element in valid_ami_owners:
-                    if not isinstance(element, integer_types):
+                    if not isinstance(element, int):
                         raise ValueError(
                             'valid_ami_owners should be int or iterable '
                             'of ints', element)
         if valid_ami_location_regex is not None:
-            if not isinstance(valid_ami_location_regex, string_types):
+            if not isinstance(valid_ami_location_regex, str):
                 raise ValueError(
                     'valid_ami_location_regex should be a string')
             # pre-compile the regex

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import integer_types
-from future.utils import string_types
-
 import calendar
 
 from twisted.internet import defer
@@ -135,7 +132,7 @@ class TempSourceStamp:
             result['patch_%s' % attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, string_types + integer_types + (type(None),))
+            isinstance(val, (str, int, type(None)))
             for attr, val in result.items()
         ), result
         return result

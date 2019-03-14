@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import lrange
-
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -304,7 +302,7 @@ class RealTests(Tests):
         yield self.insertTestData(self.backgroundData)
 
         # add new builds at *just* the wrong time, repeatedly
-        numbers = lrange(1, 8)
+        numbers = list(range(1, 8))
 
         def raceHook(conn):
             if not numbers:

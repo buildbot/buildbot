@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import util
 from builtins import int
+
+from twisted.python import util
 
 
 def onlyOnce(fn):

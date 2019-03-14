@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import os
 import re
 import sys
@@ -91,7 +89,7 @@ golden_1_12_regex = [
 class _SubprocessProtocol(protocol.ProcessProtocol):
 
     def __init__(self, input, deferred):
-        if isinstance(input, text_type):
+        if isinstance(input, str):
             input = input.encode('utf-8')
         self.input = input
         self.deferred = deferred

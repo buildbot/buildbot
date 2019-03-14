@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import datetime
 import locale
 import os
@@ -122,7 +120,7 @@ class safeTranslate(unittest.TestCase):
         self.assertEqual(util.safeTranslate("full"), b"full")
 
     def test_unicode_bad(self):
-        self.assertEqual(util.safeTranslate(text_type("speed=slow;quality=high")),
+        self.assertEqual(util.safeTranslate(str("speed=slow;quality=high")),
                          b"speed_slow_quality_high")
 
     def test_unicode_pathological(self):
@@ -264,11 +262,11 @@ class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
         rv = util.bytes2unicode('\N{SNOWMAN}', encoding='ascii')
-        self.assertEqual((rv, type(rv)), ('\N{SNOWMAN}', text_type))
+        self.assertEqual((rv, type(rv)), ('\N{SNOWMAN}', str))
 
     def test_ascii(self):
         rv = util.bytes2unicode('abcd', encoding='ascii')
-        self.assertEqual((rv, type(rv)), ('abcd', text_type))
+        self.assertEqual((rv, type(rv)), ('abcd', str))
 
     def test_nonascii(self):
         with self.assertRaises(UnicodeDecodeError):
@@ -281,8 +279,8 @@ class Ascii2Unicode(unittest.TestCase):
         rv1 = util.bytes2unicode(b'abcd')
         rv2 = util.bytes2unicode('efgh')
 
-        self.assertEqual(type(rv1), text_type)
-        self.assertEqual(type(rv2), text_type)
+        self.assertEqual(type(rv1), str)
+        self.assertEqual(type(rv2), str)
 
 
 class StringToBoolean(unittest.TestCase):
@@ -309,7 +307,7 @@ class StringToBoolean(unittest.TestCase):
 
     def test_ascii(self):
         rv = util.bytes2unicode(b'abcd', encoding='ascii')
-        self.assertEqual((rv, type(rv)), ('abcd', text_type))
+        self.assertEqual((rv, type(rv)), ('abcd', str))
 
     def test_nonascii(self):
         with self.assertRaises(UnicodeDecodeError):

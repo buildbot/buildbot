@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import re
 from email import charset
 from email.message import Message
@@ -119,7 +117,7 @@ class MailNotifier(NotifierBase):
                         "extra recipient {} is not a valid email".format(r))
 
         if lookup is not None:
-            if not isinstance(lookup, string_types):
+            if not isinstance(lookup, str):
                 assert interfaces.IEmailLookup.providedBy(lookup)
 
         if extraHeaders:
@@ -154,7 +152,7 @@ class MailNotifier(NotifierBase):
         self.fromaddr = fromaddr
         self.relayhost = relayhost
         if lookup is not None:
-            if isinstance(lookup, string_types):
+            if isinstance(lookup, str):
                 lookup = Domain(str(lookup))
         self.lookup = lookup
         self.extraHeaders = extraHeaders

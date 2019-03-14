@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import cgi
 import datetime
 import fnmatch
@@ -198,9 +196,9 @@ class V2RootResource(resource.Resource):
             if not isinstance(data[name], types):
                 raise BadJsonRpc2("'%s' must be %s" % (name, typename),
                                   JSONRPC_CODES["invalid_request"])
-        check("jsonrpc", (str, text_type), "a string")
-        check("method", (str, text_type), "a string")
-        check("id", (str, text_type, int, type(None)),
+        check("jsonrpc", (str,), "a string")
+        check("method", (str,), "a string")
+        check("id", (str, int, type(None)),
               "a string, number, or null")
         check("params", (dict,), "an object")
         if data['jsonrpc'] != '2.0':
@@ -292,7 +290,7 @@ class V2RootResource(resource.Resource):
                 try:
                     props = []
                     for v in reqArgs[arg]:
-                        if not isinstance(v, (bytes, text_type)):
+                        if not isinstance(v, (bytes, str)):
                             raise TypeError(
                                 "Invalid type {} for {}".format(type(v), v))
                         props.append(bytes2unicode(v))

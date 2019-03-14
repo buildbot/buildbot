@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import inspect
 
 from twisted.internet import defer
@@ -55,7 +53,7 @@ class EndpointMatcherBase:
         # a repr for debugging. displays the class, and string attributes
         args = []
         for k, v in self.__dict__.items():
-            if isinstance(v, string_types):
+            if isinstance(v, str):
                 args.append("%s='%s'" % (k, v))
         return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -298,7 +296,7 @@ class NightlyBase(Timed):
                 time = (time + 1) % 7
             return time
 
-        if isinstance(time, string_types):
+        if isinstance(time, str):
             if isDayOfWeek:
                 # time could be a comma separated list of values, e.g. "5,sun"
                 time_array = str(time).split(',')

@@ -1,5 +1,3 @@
-from future.utils import string_types
-
 from twisted.internet import defer
 
 from buildbot import config
@@ -20,9 +18,9 @@ class HipChatStatusPush(HttpStatusPushBase):
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
                     event_messages=None, **kwargs):
-        if not isinstance(auth_token, string_types):
+        if not isinstance(auth_token, str):
             config.error('auth_token must be a string')
-        if not isinstance(endpoint, string_types):
+        if not isinstance(endpoint, str):
             config.error('endpoint must be a string')
         if builder_room_map and not isinstance(builder_room_map, dict):
             config.error('builder_room_map must be a dict')

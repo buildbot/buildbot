@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import html  # py2: via future
 import time
 
@@ -97,7 +95,7 @@ class Change:
         def none_or_unicode(x):
             if x is None:
                 return x
-            return text_type(x)
+            return str(x)
 
         self.revision = none_or_unicode(revision)
         now = util.now()

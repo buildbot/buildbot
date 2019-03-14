@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import mock
 
 from twisted.internet import defer
@@ -482,8 +480,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
     def checkSummary(self, got, step, build=None):
-        self.assertTrue(all(isinstance(k, text_type) for k in got))
-        self.assertTrue(all(isinstance(k, text_type) for k in got.values()))
+        self.assertTrue(all(isinstance(k, str) for k in got))
+        self.assertTrue(all(isinstance(k, str) for k in got.values()))
         exp = {'step': step}
         if build:
             exp['build'] = build

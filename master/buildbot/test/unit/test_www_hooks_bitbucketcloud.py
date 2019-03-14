@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 # Copyright Mamba Team
 
-from future.utils import text_type
-
 from io import BytesIO
 
 from twisted.internet import defer
@@ -634,7 +632,7 @@ def _prepare_request(payload, headers=None, change_dict=None):
     request = FakeRequest(change_dict)
     request.uri = b"/change_hook/bitbucketcloud"
     request.method = b"POST"
-    if isinstance(payload, text_type):
+    if isinstance(payload, str):
         payload = unicode2bytes(payload)
     request.content = BytesIO(payload)
     request.received_headers[b'Content-Type'] = _CT_JSON

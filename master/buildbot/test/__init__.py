@@ -16,7 +16,6 @@
 import os
 import sys
 import warnings
-
 from distutils.version import LooseVersion
 
 from buildbot import monkeypatches

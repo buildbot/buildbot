@@ -21,14 +21,12 @@
 from __future__ import division
 from __future__ import print_function
 
-
+import datetime
 import os
 import re
-import datetime
-
 from subprocess import PIPE
-from subprocess import Popen
 from subprocess import STDOUT
+from subprocess import Popen
 
 
 def gitDescribeToPep440(version):

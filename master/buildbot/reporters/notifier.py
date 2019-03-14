@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import abc
 
 from twisted.internet import defer
@@ -41,7 +39,7 @@ class NotifierBase(service.BuildbotService):
                       "exception", "cancelled")
 
     def computeShortcutModes(self, mode):
-        if isinstance(mode, string_types):
+        if isinstance(mode, str):
             if mode == "all":
                 mode = ("failing", "passing", "warnings",
                         "exception", "cancelled")

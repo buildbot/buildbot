@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
-
 import inspect
 import re
 
@@ -467,9 +465,9 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         is no upper bound."""
 
         for fileRe, warnRe, start, end in suppressionList:
-            if fileRe is not None and isinstance(fileRe, string_types):
+            if fileRe is not None and isinstance(fileRe, str):
                 fileRe = re.compile(fileRe)
-            if warnRe is not None and isinstance(warnRe, string_types):
+            if warnRe is not None and isinstance(warnRe, str):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
@@ -499,12 +497,12 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
 
         directoryEnterRe = self.directoryEnterPattern
         if (directoryEnterRe is not None and
-                isinstance(directoryEnterRe, string_types)):
+                isinstance(directoryEnterRe, str)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
         if (directoryLeaveRe is not None and
-                isinstance(directoryLeaveRe, string_types)):
+                isinstance(directoryLeaveRe, str)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
         # Check if each line in the output from this command matched our

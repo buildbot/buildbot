@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import mock
 
 from twisted.internet import defer
@@ -146,13 +144,13 @@ class ClusteredBuildbotService(unittest.TestCase):
     def test_name_PreservesUnicodePromotion(self):
         svc = self.makeService(name='n')
 
-        self.assertIsInstance(svc.name, text_type)
+        self.assertIsInstance(svc.name, str)
         self.assertEqual(svc.name, 'n')
 
     def test_name_GetsUnicodePromotion(self):
         svc = self.makeService(name='n')
 
-        self.assertIsInstance(svc.name, text_type)
+        self.assertIsInstance(svc.name, str)
         self.assertEqual(svc.name, 'n')
 
     def test_compare(self):

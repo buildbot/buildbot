@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from future.utils import text_type
-
 import sqlalchemy as sa
 
 from buildbot.util import sautils
@@ -42,7 +40,7 @@ def test_unicode(migrate_engine):
 
     # see if the data is intact
     row = migrate_engine.execute(sa.select([test_unicode])).fetchall()[0]
-    assert isinstance(row['u'], text_type)
+    assert isinstance(row['u'], str)
     assert row['u'] == u
     assert isinstance(row['b'], bytes)
     assert row['b'] == b
