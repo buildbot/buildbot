@@ -95,7 +95,7 @@ class Builder extends Controller
             if $stateParams.numbuilds?
                 $scope.numbuilds = +$stateParams.numbuilds
             $scope.builds = builder.getBuilds
-                property: ["owner", "workername"]
+                property: ["owners", "workername"]
                 limit: $scope.numbuilds
                 order: '-number'
             $scope.buildrequests = builder.getBuildrequests(claimed:false)
