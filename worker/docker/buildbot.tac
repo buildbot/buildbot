@@ -9,7 +9,8 @@ from twisted.python.log import ILogObserver
 from buildbot_worker.bot import Worker
 
 # setup worker
-basedir = os.path.abspath(os.path.dirname(__file__))
+basedir = os.environ.get("BUILDBOT_BASEDIR",
+    os.path.abspath(os.path.dirname(__file__)))
 application = service.Application('buildbot-worker')
 
 
