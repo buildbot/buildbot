@@ -30,6 +30,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
+from buildbot.process.properties import Properties
 
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'
@@ -74,7 +75,7 @@ class GitHubEventHandler(PullRequestMixin):
 
     @defer.inlineCallbacks
     def process(self, request):
-        payload = self._get_payload(request)
+        payload = yield self._get_payload(request)
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
@@ -89,6 +90,7 @@ class GitHubEventHandler(PullRequestMixin):
         result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
         return result
 
+    @defer.inlineCallbacks
     def _get_payload(self, request):
         content = request.content.read()
         content = bytes2unicode(content)
@@ -109,7 +111,11 @@ class GitHubEventHandler(PullRequestMixin):
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: {}'.format(hash_type))
 
-            mac = hmac.new(unicode2bytes(self._secret),
+            p = Properties()
+            p.master = self.master
+            rendered_secret = yield p.render(self._secret)
+
+            mac = hmac.new(unicode2bytes(rendered_secret),
                            msg=unicode2bytes(content),
                            digestmod=sha1)
 
