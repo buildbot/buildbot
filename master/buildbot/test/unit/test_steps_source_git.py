@@ -3293,6 +3293,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self._test_WorkerTooOldError(_dovccmd, step, msg)
 
 
+
 class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                   TestReactorMixin,
                   unittest.TestCase):
@@ -3658,6 +3659,10 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
         self.flushLoggedErrors(WorkerTooOldError)
+
+    def test_config_fail_no_branch(self):
+        with self.assertRaisesConfigError("GitPush: must provide branch"):
+            self.stepClass(workdir='wkdir', repourl="url")
 
 
 class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
