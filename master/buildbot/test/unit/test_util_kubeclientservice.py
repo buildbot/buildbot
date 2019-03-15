@@ -21,7 +21,7 @@ import copy
 import os
 import sys
 import textwrap
-from io import BytesIO
+from io import StringIO
 from unittest.case import SkipTest
 
 import yaml
@@ -51,11 +51,11 @@ class MockFileBase:
     def tearDown(self):
         self.patcher.stop()
 
-    def mock_open(self, filename, mode=None):
+    def mock_open(self, filename, mode=None, encoding='UTF-8'):
         filename_type = os.path.basename(filename)
         file_value = self.file_mock_config[filename_type]
         mock_open = mock.Mock(
-            __enter__=mock.Mock(return_value=BytesIO(file_value)),
+            __enter__=mock.Mock(return_value=StringIO(file_value)),
             __exit__=mock.Mock())
         return mock_open
 
@@ -64,8 +64,8 @@ class KubeClientServiceTestClusterConfig(
         MockFileBase, config.ConfigErrorsMixin, unittest.SynchronousTestCase):
 
     file_mock_config = {
-        'token': 'BASE64_TOKEN'.encode('utf-8'),
-        'namespace': 'buildbot_namespace'.encode('utf-8')
+        'token': 'BASE64_TOKEN',
+        'namespace': 'buildbot_namespace'
     }
 
     def setUp(self):
