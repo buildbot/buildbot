@@ -19,6 +19,7 @@ from twisted.trial import unittest
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.gce import GCERecorder
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
+from buildbot.test.util import config
 from buildbot.worker import gce
 
 
@@ -30,7 +31,7 @@ class Worker(gce.GCELatentWorker):
             renderer=self)
 
 
-class TestKubernetesWorker(unittest.TestCase):
+class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
     worker = None
 
     @defer.inlineCallbacks
@@ -54,6 +55,31 @@ class TestKubernetesWorker(unittest.TestCase):
 
     def tearDown(self):
         self.gce.finalValidation()
+
+    @defer.inlineCallbacks
+    def test_checkConfig_errors_if_no_project_is_given(self):
+        with self.assertRaisesConfigError("need to provide project, zone and instance name"):
+            yield self.createWorker('test', project=None)
+
+    @defer.inlineCallbacks
+    def test_checkConfig_errors_if_no_zone_is_given(self):
+        with self.assertRaisesConfigError("need to provide project, zone and instance name"):
+            yield self.createWorker('test', zone=None)
+
+    @defer.inlineCallbacks
+    def test_checkConfig_errors_if_no_instance_is_given(self):
+        with self.assertRaisesConfigError("need to provide project, zone and instance name"):
+            yield self.createWorker('test', instance=None)
+
+    @defer.inlineCallbacks
+    def test_checkConfig_errors_if_no_credentials_are_given(self):
+        with self.assertRaisesConfigError("need to provide Service Account credentials"):
+            yield self.createWorker('test', sa_credentials=None)
+
+    @defer.inlineCallbacks
+    def test_checkConfig_errors_if_no_image_is_given(self):
+        with self.assertRaisesConfigError("need to provide a base disk image"):
+            yield self.createWorker('test', image=None)
 
     def test_getMetadataFromState_converts_metadata_to_dict(self):
         (f, d) = self.worker.getMetadataFromState({'metadata': {

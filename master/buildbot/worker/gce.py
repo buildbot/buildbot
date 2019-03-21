@@ -44,11 +44,8 @@ class GCELatentWorker(AbstractLatentWorker):
             config.error("need to provide project, zone and instance name")
         if sa_credentials is None:
             config.error("need to provide Service Account credentials")
-        if instance is not None and not isinstance(instance, str):
-            if not hasattr(instance, 'getRenderingFor'):
-                config.error("instance must be a string")
         if image is None:
-            config.error("must provide a base disk image")
+            config.error("need to provide a base disk image")
 
         if password is None:
             password = self.getRandomPass()
