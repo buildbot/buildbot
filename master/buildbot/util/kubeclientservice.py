@@ -190,14 +190,13 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
         self.config['master_url'] = os.environ['KUBERNETES_PORT'].replace(
             'tcp', 'https')
         self.config['verify'] = self.kube_cert_file
-        with open(self.kube_token_file) as token_content:
-            token = token_content.read().decode('utf-8').strip()
+        with open(self.kube_token_file, encoding="utf-8") as token_content:
+            token = token_content.read().strip()
             self.config['headers'] = {
                 'Authorization': 'Bearer {0}'.format(token)
             }
-        with open(self.kube_namespace_file) as namespace_content:
-            self.config['namespace'] = namespace_content.read().decode(
-                'utf-8').strip()
+        with open(self.kube_namespace_file, encoding="utf-8") as namespace_content:
+            self.config['namespace'] = namespace_content.read().strip()
 
     def getConfig(self):
         return self.config
