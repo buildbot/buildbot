@@ -75,9 +75,10 @@ class GCELatentWorker(AbstractLatentWorker):
         self.stopInstanceOnStop = stopInstanceOnStop
         self.sa_credentials = sa_credentials
         self._gce = yield self.getGCEService(sa_credentials)
-        AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
-        return defer.returnValue(True)
+        result = yield AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+        return result
 
+    @defer.inlineCallbacks
     def getGCEService(self, sa_credentials):
         gce = yield gceclientservice.GCEClientService.getService(
             self.master, ['https://www.googleapis.com/auth/compute'], sa_credentials,
@@ -194,14 +195,14 @@ class GCELatentWorker(AbstractLatentWorker):
         yield self._gce.processAsyncRequest(metadata_set)
         yield self._gce.processRequest(self._gce.instanceStart())
         yield self._gce.waitInstanceState('RUNNING')
-        return defer.returnValue(True)
+        return True
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False):
         if not self.stopInstanceOnStop:
             log.info("gce: not stopping {0}: stopInstanceOnStop == False".format(
                 self.instance))
-            return defer.returnValue(None)
+            return None
 
         state = yield self._gce.processRequest(self._gce.getInstanceState())
         if state['status'] not in ('TERMINATED',):
@@ -238,4 +239,4 @@ class GCELatentWorker(AbstractLatentWorker):
             metadata['BUILDBOT_CLEAN'] = '1'
             yield self._gce.processAsyncRequest(self.setMetadata(fingerprint, metadata))
 
-        return defer.returnValue(None)
+        return None

@@ -33,6 +33,7 @@ class Worker(gce.GCELatentWorker):
 class TestKubernetesWorker(unittest.TestCase):
     worker = None
 
+    @defer.inlineCallbacks
     def createWorker(self, *args, project="p", zone="z", instance="i", image='im',
                      sa_credentials={}, password="password",
                      masterFQDN="master:5050", **kwargs):
@@ -40,14 +41,15 @@ class TestKubernetesWorker(unittest.TestCase):
         worker = Worker(*args, project=project, zone=zone,
             instance=instance, image=image, sa_credentials=sa_credentials,
             password=password, masterFQDN=masterFQDN, **kwargs)
-        worker.setServiceParent(master)
-        worker.reconfigService(*args, project=project, zone=zone,
+        yield worker.setServiceParent(master)
+        yield worker.reconfigService(*args, project=project, zone=zone,
             instance=instance, image=image, sa_credentials=sa_credentials,
             password=password, masterFQDN=masterFQDN, **kwargs)
         return worker
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.worker = self.createWorker('test')
+        self.worker = yield self.createWorker('test')
         self.gce = self.worker._gce
 
     def tearDown(self):
@@ -64,14 +66,16 @@ class TestKubernetesWorker(unittest.TestCase):
         self.assertEqual("finger", f)
         self.assertEqual({'k0': 'v0', 'k1': 'v1'}, d)
 
+    @defer.inlineCallbacks
     def test_getDesiredMetadata_extracts_port_from_fqdn(self):
-        worker = self.createWorker('test', masterFQDN="master:5050")
+        worker = yield self.createWorker('test', masterFQDN="master:5050")
         m = worker.getDesiredMetadata(FakeBuild())
         self.assertEqual({'WORKERNAME': 'test', 'WORKERPASS': 'password',
             'BUILDMASTER': 'master', 'BUILDMASTER_PORT': '5050'}, m)
 
+    @defer.inlineCallbacks
     def test_getDesiredMetadata_uses_default_port_if_unspecified(self):
-        worker = self.createWorker('test', masterFQDN="master")
+        worker = yield self.createWorker('test', masterFQDN="master")
         m = worker.getDesiredMetadata(FakeBuild())
         self.assertEqual({'WORKERNAME': 'test', 'WORKERPASS': 'password',
             'BUILDMASTER': 'master', 'BUILDMASTER_PORT': 9989}, m)
