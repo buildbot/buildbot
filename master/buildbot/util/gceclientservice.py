@@ -130,7 +130,8 @@ class GCEClientService(HTTPClientService):
     def createDisk(self, image=None, name=None, type=None):
         return self.post(self.zoneEndpoint("disks"),
             json={
-                "sourceImage": image,
+                "sourceImage": "projects/{0}/global/images/{1}".format(
+                    self.project, image),
                 "name": name,
                 "type": "projects/{0}/zones/{1}/diskTypes/{2}".format(
                     self.project, self.zone, type)

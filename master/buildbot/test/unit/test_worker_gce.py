@@ -232,7 +232,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
         createDisk = self.gce.expectAsyncRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
-                'sourceImage': 'im',
+                'sourceImage': 'projects/p/global/images/im',
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
@@ -288,7 +288,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
         createDisk = self.gce.expectAsyncRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
-                'sourceImage': 'im',
+                'sourceImage': 'projects/p/global/images/im',
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
@@ -351,7 +351,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
         createDisk = self.gce.expectAsyncRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
-                'sourceImage': 'im',
+                'sourceImage': 'projects/p/global/images/im',
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
