@@ -158,7 +158,7 @@ For more information about ``pass``, please visit _`pass`: https://www.passwords
 Arguments:
 
 ``gpgPassphrase``
-  (optional) Passphrase to the GPG decryption key, if any
+  (optional) Pass phrase to the GPG decryption key, if any
 
 ``dirname``
   (optional) Absolute path to the password store directory, defaults to ~/.password-store

@@ -13,11 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import stat
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import PropertyMock
 from unittest.mock import patch
 
 from twisted.internet import defer
@@ -60,8 +58,9 @@ class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
 
     def testCheckConfigDirectoryErrorSecretInPassService(self):
         expected_error_msg = "directory temp2 does not exist"
-        with self.assertRaisesConfigError(expected_error_msg):
-            self.srvpass.checkConfig("password", "temp2")
+        with patch.object(Path, "is_file", return_value=True):
+            with self.assertRaisesConfigError(expected_error_msg):
+                self.srvpass.checkConfig("password", "temp2")
 
     @defer.inlineCallbacks
     def testReconfigSecretInAFileService(self):
@@ -72,7 +71,6 @@ class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
         env = self.srvpass._env
         self.assertEquals(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password2")
         self.assertEquals(env["PASSWORD_STORE_DIR"], otherdir)
-
 
     def testGetSecretInPass(self):
         with patch("subprocess.run") as mock:
