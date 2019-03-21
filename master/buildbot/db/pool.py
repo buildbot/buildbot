@@ -176,7 +176,7 @@ class DBThreadPool:
             if with_engine:
                 arg = self.engine
             else:
-                arg = self.engine.contextual_connect()
+                arg = self.engine.connect()
             try:
                 try:
                     rv = callable(arg, *args, **kwargs)
