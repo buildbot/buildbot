@@ -48,6 +48,7 @@ backported
 balancer
 balancers
 basedir
+basename
 basestring
 Basestring
 basetgz

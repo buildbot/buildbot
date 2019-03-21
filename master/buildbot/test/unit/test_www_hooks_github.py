@@ -803,6 +803,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
+        self.assertEqual(change['properties']['basename'], "master")
         self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
