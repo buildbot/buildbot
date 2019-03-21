@@ -1,1 +1,1 @@
-Added a basename property to the pull request webhook handler.
+Added a ``basename`` property to the pull request webhook handler.
