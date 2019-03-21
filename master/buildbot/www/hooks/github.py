@@ -165,6 +165,7 @@ class GitHubEventHandler(PullRequestMixin):
         changes = []
         number = payload['number']
         refname = 'refs/pull/{}/{}'.format(number, self.pullrequest_ref)
+        basename = payload['pull_request']['base']['ref']
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
@@ -187,6 +188,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
+        properties.update({'basename': basename})
         change = {
             'revision': payload['pull_request']['head']['sha'],
             'when_timestamp': dateparse(payload['pull_request']['created_at']),
