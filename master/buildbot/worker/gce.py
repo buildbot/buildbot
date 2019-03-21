@@ -149,8 +149,13 @@ class GCELatentWorker(AbstractLatentWorker):
 
         instance_stop = None
         if instance_state['status'] not in ('STOPPED', 'TERMINATED'):
-            log.info("gce: {0} is running, requesting stop".format(
-                self.instance))
+            if self.stopInstanceOnStop:
+                # Should not have happened ... warn the user
+                log.warn(("gce: {0} is unexpectedly running. Either buildbot failed to stop it "
+                    "on the last stop, or the node was started externally. Requesting stop").format(self.instance))
+            else:
+                log.info("gce: {0} is running (stopInstanceOnStop=False), requesting stop".format(self.instance))
+
             instance_stop = self._gce.instanceStop()
 
         if not self.resetDisk:
@@ -158,15 +163,22 @@ class GCELatentWorker(AbstractLatentWorker):
 
         boot_disk_create = None
         if 'BUILDBOT_CLEAN' not in metadata:
-            log.info("gce: {0} has not been reset on stop, will do it now".format(
-                self.instance))
+            if self.resetDisk:
+                log.warn("gce: it seems that {0} was not reset after the last build as it should have, will do it now".format(
+                    self.instance))
+            else:
+                log.info("gce: {0} has not been reset on stop (resetDisk=False), will do it now".format(self.instance))
+
             boot_disk_name = self.getNewDiskName(updated_metadata)
             boot_disk_create = self.createBootDisk(boot_disk_name)
 
         metadata_set = self.setMetadata(fingerprint, updated_metadata)
 
         if instance_stop is not None:
-            log.info("gce: waiting for {0} to be stopped".format(self.instance))
+            if self.stopInstanceOnStop:
+                log.info("gce: waiting for {0} to be stopped".format(self.instance))
+            else:
+                log.warn("gce: waiting for {0} to be stopped".format(self.instance))
             yield self._gce.processRequest(instance_stop)
             yield self._gce.waitInstanceState('TERMINATED')
 
