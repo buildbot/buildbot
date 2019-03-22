@@ -30,7 +30,7 @@ class Worker(gce.GCELatentWorker):
             project=self.project, zone=self.zone, instance=self.instance)
 
 
-class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
+class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
     worker = None
 
     @defer.inlineCallbacks
