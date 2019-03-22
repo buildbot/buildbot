@@ -25,7 +25,7 @@ class ExpectedRequest:
     NORMAL = 1
     UNTIL = 2
 
-    def __init__(self, mode, httpMethod, url, params={}, json={}, result={}, resultCode=200, forget=False):
+    def __init__(self, mode, httpMethod, url, params={}, json={}, result={}, resultCode=200):
         self.mode = mode
         self.httpMethod = httpMethod
         self.url = url
@@ -33,7 +33,6 @@ class ExpectedRequest:
         self.json = json
         self.result = result
         self.resultCode = resultCode
-        self.forget = forget
 
 
 class GCERecorder(gceclientservice.GCEClientService):
@@ -53,16 +52,16 @@ class GCERecorder(gceclientservice.GCEClientService):
             ExpectedRequest.NORMAL, method, url, params=params, json=json,
             result=result, resultCode=resultCode))
 
-    def expectAsyncRequest(self, method, url, params={}, json={}, resultCode=200, forget=False):
+    def expectOperationRequest(self, method, url, params={}, json={}, resultCode=200):
         self.asyncId += 1
         selfLink = 'async-{}'.format(self.asyncId)
         self.expectations.append(ExpectedRequest(
             ExpectedRequest.NORMAL, method, url, params=params, json=json,
             result={'selfLink': selfLink, 'status': 'STARTED'},
-            resultCode=resultCode, forget=forget))
+            resultCode=resultCode))
         return selfLink
 
-    def expectAsyncProcess(self, selfLink, status='DONE'):
+    def expectWaitForOperation(self, selfLink, status='DONE'):
         self.expectations.append(ExpectedRequest(
             ExpectedRequest.NORMAL, 'GET', selfLink,
             result={'status': 'DONE'}, resultCode=200))
@@ -135,8 +134,6 @@ class GCERecorder(gceclientservice.GCEClientService):
     def addInFlight(self, method, url, params, json):
         self.record_id += 1
         request = self.validateIsExpected(method, url, params, json)
-        if request.forget:
-            return
 
         self.record.extend([self.record_id, method, url])
         in_flight = GCEAsyncResult(self.record_id)

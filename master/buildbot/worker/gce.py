@@ -141,8 +141,7 @@ class GCELatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        instance_state = yield self._gce.processRequest(
-            self._gce.getInstanceState())
+        instance_state = yield self._gce.getInstanceState()
 
         fingerprint, metadata = self.getMetadataFromState(instance_state)
         updated_metadata = self.updateMetadata(build, metadata)
@@ -179,7 +178,6 @@ class GCELatentWorker(AbstractLatentWorker):
                 log.info("gce: waiting for {0} to be stopped".format(self.instance))
             else:
                 log.warn("gce: waiting for {0} to be stopped".format(self.instance))
-            yield self._gce.processRequest(instance_stop)
             yield self._gce.waitInstanceState('TERMINATED')
 
         if boot_disk_create is not None:
@@ -187,22 +185,22 @@ class GCELatentWorker(AbstractLatentWorker):
             if current_disk_name:
                 log.info("gce: detaching {0} from {1}".format(
                     current_disk_name, self.instance))
-                yield self._gce.processAsyncRequest(self._gce.detachDisk(current_disk_name))
+                yield self._gce.waitForOperation(self._gce.detachDisk(current_disk_name))
                 log.info("gce: deleting {0}".format(current_disk_name))
                 yield self._gce.deleteDisk(current_disk_name)
 
             log.info("gce: waiting for fresh disk {0} to be created for {1}".format(
                 boot_disk_name, self.instance))
-            yield self._gce.processAsyncRequest(boot_disk_create)
+            yield self._gce.waitForOperation(boot_disk_create)
 
             log.info("gce: attaching new disk {0} to {1}".format(
                 boot_disk_name, self.instance))
-            yield self._gce.processAsyncRequest(
+            yield self._gce.waitForOperation(
                 self._gce.attachDisk(boot_disk_name, index=0, boot=True))
 
         log.info("gce: starting {0}".format(self.instance))
-        yield self._gce.processAsyncRequest(metadata_set)
-        yield self._gce.processRequest(self._gce.instanceStart())
+        yield self._gce.waitForOperation(metadata_set)
+        yield self._gce.instanceStart()
         yield self._gce.waitInstanceState('RUNNING')
         return True
 
@@ -213,10 +211,10 @@ class GCELatentWorker(AbstractLatentWorker):
                 self.instance))
             return None
 
-        state = yield self._gce.processRequest(self._gce.getInstanceState())
+        state = yield self._gce.getInstanceState()
         if state['status'] not in ('TERMINATED',):
             log.info("gce: stopping {0}".format(self.instance))
-            yield self._gce.processRequest(self._gce.instanceStop())
+            yield self._gce.instanceStop()
             # We don't use waitOperationEnd here as there is as much as ~55s
             # between the instance state switching to TERMINATED and the
             # operation reporting to be DONE
@@ -234,18 +232,18 @@ class GCELatentWorker(AbstractLatentWorker):
             # Update the GEN metadata key right now, so that we can generate
             # a new boot disk without conflict if something wrong happens
             metadata_set = self.setMetadata(fingerprint, metadata)
-            yield self._gce.processAsyncRequest(self.createBootDisk(boot_disk_name))
+            yield self._gce.waitForOperation(self.createBootDisk(boot_disk_name))
 
-            yield self._gce.processAsyncRequest(detach_disk)
+            yield self._gce.waitForOperation(detach_disk)
             yield self._gce.deleteDisk(current_disk_name)
-            yield self._gce.processAsyncRequest(
+            yield self._gce.waitForOperation(
                 self._gce.attachDisk(boot_disk_name, index=0, boot=True))
-            yield self._gce.processAsyncRequest(metadata_set)
+            yield self._gce.waitForOperation(metadata_set)
 
             # Finally, mark as clean
-            instance_state = yield self._gce.processRequest(self._gce.getInstanceState())
+            instance_state = yield self._gce.getInstanceState()
             fingerprint, metadata = self.getMetadataFromState(instance_state)
             metadata['BUILDBOT_CLEAN'] = '1'
-            yield self._gce.processAsyncRequest(self.setMetadata(fingerprint, metadata))
+            yield self._gce.waitForOperation(self.setMetadata(fingerprint, metadata))
 
         return None

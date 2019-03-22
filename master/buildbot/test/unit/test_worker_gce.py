@@ -160,7 +160,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                     ]
                }
            })
-        setMetadata = self.gce.expectAsyncRequest(
+        setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger',
@@ -173,8 +173,8 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 ],
                 'kind': 'compute#metadata'
            })
-        self.gce.expectAsyncProcess(setMetadata)
-        self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(setMetadata)
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/start')
         self.gce.expectInstanceStateWait('RUNNING')
 
@@ -194,9 +194,9 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                     ]
                }
            })
-        self.gce.expectAsyncRequest(
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/stop')
-        setMetadata = self.gce.expectAsyncRequest(
+        setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger',
@@ -210,8 +210,8 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'kind': 'compute#metadata'
            })
         self.gce.expectInstanceStateWait('TERMINATED')
-        self.gce.expectAsyncProcess(setMetadata)
-        self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(setMetadata)
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/start')
         self.gce.expectInstanceStateWait('RUNNING')
 
@@ -229,14 +229,14 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                },
                 'disks': [{'boot': True, 'deviceName': 'current-boot'}]
            })
-        createDisk = self.gce.expectAsyncRequest(
+        createDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
                 'sourceImage': 'projects/p/global/images/im',
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
-        setMetadata = self.gce.expectAsyncRequest(
+        setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger',
@@ -249,15 +249,14 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 ],
                 'kind': 'compute#metadata'
            })
-        detachDisk = self.gce.expectAsyncRequest(
+        detachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/detachDisk',
             params={'deviceName': 'current-boot'})
-        self.gce.expectAsyncProcess(detachDisk)
-        self.gce.expectAsyncRequest(
-            'DELETE', '/compute/v1/projects/p/zones/z/disks/current-boot',
-            forget=True)
-        self.gce.expectAsyncProcess(createDisk)
-        attachDisk = self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(detachDisk)
+        self.gce.expectOperationRequest(
+            'DELETE', '/compute/v1/projects/p/zones/z/disks/current-boot')
+        self.gce.expectWaitForOperation(createDisk)
+        attachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/attachDisk',
             json={
                 'boot': True,
@@ -265,9 +264,9 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'deviceName': 'i-3',
                 'index': 0
            })
-        self.gce.expectAsyncProcess(attachDisk)
-        self.gce.expectAsyncProcess(setMetadata)
-        self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(attachDisk)
+        self.gce.expectWaitForOperation(setMetadata)
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/start')
         self.gce.expectInstanceStateWait('RUNNING')
 
@@ -285,14 +284,14 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                },
                 'disks': []
            })
-        createDisk = self.gce.expectAsyncRequest(
+        createDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
                 'sourceImage': 'projects/p/global/images/im',
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
-        setMetadata = self.gce.expectAsyncRequest(
+        setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger',
@@ -305,8 +304,8 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 ],
                 'kind': 'compute#metadata'
            })
-        self.gce.expectAsyncProcess(createDisk)
-        attachDisk = self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(createDisk)
+        attachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/attachDisk',
             json={
                 'boot': True,
@@ -314,9 +313,9 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'deviceName': 'i-3',
                 'index': 0
            })
-        self.gce.expectAsyncProcess(attachDisk)
-        self.gce.expectAsyncProcess(setMetadata)
-        self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(attachDisk)
+        self.gce.expectWaitForOperation(setMetadata)
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/start')
         self.gce.expectInstanceStateWait('RUNNING')
 
@@ -334,34 +333,33 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                },
                 'disks': [{'boot': True, 'deviceName': 'current-boot'}]
            })
-        self.gce.expectAsyncRequest(
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/stop')
         self.gce.expectInstanceStateWait('TERMINATED')
 
-        detachDisk = self.gce.expectAsyncRequest(
+        detachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/detachDisk',
             params={'deviceName': 'current-boot'})
-        setMetadata = self.gce.expectAsyncRequest(
+        setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger',
                 'items': [{'key': 'BUILDBOT_DISK_GEN', 'value': '3'}],
                 'kind': 'compute#metadata'
            })
-        createDisk = self.gce.expectAsyncRequest(
+        createDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
                 'sourceImage': 'projects/p/global/images/im',
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
-        self.gce.expectAsyncProcess(createDisk)
+        self.gce.expectWaitForOperation(createDisk)
 
-        self.gce.expectAsyncProcess(detachDisk)
-        self.gce.expectAsyncRequest(
-            'DELETE', '/compute/v1/projects/p/zones/z/disks/current-boot',
-            forget=True)
-        attachDisk = self.gce.expectAsyncRequest(
+        self.gce.expectWaitForOperation(detachDisk)
+        self.gce.expectOperationRequest(
+            'DELETE', '/compute/v1/projects/p/zones/z/disks/current-boot')
+        attachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/attachDisk',
             json={
                 'boot': True,
@@ -369,8 +367,8 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'deviceName': 'i-3',
                 'index': 0
            })
-        self.gce.expectAsyncProcess(attachDisk)
-        self.gce.expectAsyncProcess(setMetadata)
+        self.gce.expectWaitForOperation(attachDisk)
+        self.gce.expectWaitForOperation(setMetadata)
 
         self.gce.expect('GET', '/compute/v1/projects/p/zones/z/instances/i',
             result={
@@ -379,7 +377,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                     'items': [{'key': 'BUILDBOT_DISK_GEN', 'value': '3'}]
                }
            })
-        setMetadata = self.gce.expectAsyncRequest(
+        setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger2',
@@ -389,7 +387,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 ],
                 'kind': 'compute#metadata'
            })
-        self.gce.expectAsyncProcess(setMetadata)
+        self.gce.expectWaitForOperation(setMetadata)
 
         yield self.worker.stop_instance()
 
@@ -411,7 +409,7 @@ class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
                },
                 'disks': [{'boot': True, 'deviceName': 'current-boot'}]
            })
-        self.gce.expectAsyncRequest(
+        self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/stop')
         self.gce.expectInstanceStateWait('TERMINATED')
 

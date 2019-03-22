@@ -45,10 +45,7 @@ class GCEClientService(HTTPClientService):
         now = time.time()
         exp = now + 3600
 
-        if self.renderer is not None:
-            sa_credentials = yield self.renderer.renderSecrets(self.sa_credentials)
-        else:
-            sa_credentials = self.sa_credentials
+        sa_credentials = yield self.render.renderSecrets(self.sa_credentials)
 
         if isinstance(sa_credentials, str):
             sa_credentials = json.loads(sa_credentials)
@@ -106,74 +103,69 @@ class GCEClientService(HTTPClientService):
             rel = "{0}/{1}".format(rel, method)
         return self.zoneEndpoint(rel)
 
-    def processRequest(self, deferred):
-        return self.validateRes(deferred)
-
-    @defer.inlineCallbacks
-    def processAsyncRequest(self, deferred):
-        op = yield self.validateRes(deferred)
-        yield self.waitOperationEnd(op)
-
     def getInstanceState(self, fields=None):
-        if fields is None:
-            return self.get(self.instanceEndpoint())
-        else:
-            return self.get(self.instanceEndpoint(),
-                params={'fields': fields})
+        params = {}
+        if fields is not None:
+            params = {'fields': fields}
+
+        return self.validateRes(
+            self.get(self.instanceEndpoint(), params=params))
 
     def instanceStart(self):
-        return self.post(self.instanceEndpoint("start"))
+        return self.validateRes(self.post(self.instanceEndpoint("start")))
 
     def instanceStop(self):
-        return self.post(self.instanceEndpoint("stop"))
+        return self.validateRes(self.post(self.instanceEndpoint("stop")))
 
     def createDisk(self, image=None, name=None, type=None):
-        return self.post(self.zoneEndpoint("disks"),
+        return self.validateRes(self.post(self.zoneEndpoint("disks"),
             json={
                 "sourceImage": "projects/{0}/global/images/{1}".format(
                     self.project, image),
                 "name": name,
                 "type": "projects/{0}/zones/{1}/diskTypes/{2}".format(
                     self.project, self.zone, type)
-            })
+            }
+        ))
 
     def attachDisk(self, name=None, boot=True, index=0):
-        return self.post(
-            self.instanceEndpoint("attachDisk"),
+        return self.validateRes(self.post(self.instanceEndpoint("attachDisk"),
             json={
                 "boot": boot,
                 "source": self.zoneEndpoint("disks/{0}".format(name)),
                 "deviceName": name,
                 "index": index
             }
-        )
+        ))
 
     def detachDisk(self, name):
-        return self.post(
-            self.instanceEndpoint("detachDisk"),
+        return self.validateRes(self.post(self.instanceEndpoint("detachDisk"),
             params={"deviceName": name}
-        )
+        ))
 
     def deleteDisk(self, disk_name):
-        return self.delete(
-            "{0}/disks/{1}".format(self.zoneEndpoint(), disk_name))
+        return self.validateRes(self.delete(
+            "{0}/disks/{1}".format(self.zoneEndpoint(), disk_name)))
 
     def setMetadata(self, fingerprint=None, items=[]):
-        return self.post(self.instanceEndpoint("setMetadata"), json={
-            "fingerprint": fingerprint,
-            "items": items,
-            "kind": "compute#metadata"
-        })
+        return self.validateRes(self.post(self.instanceEndpoint("setMetadata"),
+            json={
+                "fingerprint": fingerprint,
+                "items": items,
+                "kind": "compute#metadata"
+            }
+        ))
 
     @defer.inlineCallbacks
     def waitInstanceState(self, desiredState):
-        state = yield self.processRequest(self.getInstanceState(fields='status'))
+        state = yield self.getInstanceState(fields='status')
         while state['status'] != desiredState:
             time.sleep(0.1)
-            state = yield self.processRequest(self.getInstanceState(fields='status'))
+            state = yield self.validateRes(self.getInstanceState(fields='status'))
 
     @defer.inlineCallbacks
-    def waitOperationEnd(self, op):
+    def waitForOperation(self, op):
+        op = yield op
         while op['status'] != 'DONE':
             time.sleep(0.1)
             op = self.get(op['selfLink'])
