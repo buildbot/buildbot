@@ -79,8 +79,7 @@ class GCELatentWorker(AbstractLatentWorker):
     def getGCEService(self, sa_credentials):
         gce = yield gceclientservice.GCEClientService.getService(
             self.master, ['https://www.googleapis.com/auth/compute'], sa_credentials,
-            project=self.project, zone=self.zone, instance=self.instance,
-            renderer=self)
+            project=self.project, zone=self.zone, instance=self.instance)
         return gce
 
     def resetClientService(self, gce):

@@ -27,8 +27,7 @@ class Worker(gce.GCELatentWorker):
     def getGCEService(self, sa_credentials):
         return GCERecorder(
             ['https://www.googleapis.com/auth/compute'], sa_credentials,
-            project=self.project, zone=self.zone, instance=self.instance,
-            renderer=self)
+            project=self.project, zone=self.zone, instance=self.instance)
 
 
 class TestKubernetesWorker(unittest.TestCase, config.ConfigErrorsMixin):
