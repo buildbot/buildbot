@@ -27,7 +27,8 @@ class Worker(gce.GCELatentWorker):
     def getGCEService(self, sa_credentials):
         return GCERecorder(
             ['https://www.googleapis.com/auth/compute'], sa_credentials,
-            project=self.project, zone=self.zone, instance=self.instance)
+            project=self.project, zone=self.zone, instance=self.instance,
+            renderer=self)
 
 
 class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):

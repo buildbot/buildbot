@@ -36,7 +36,7 @@ class ExpectedRequest:
 
 
 class GCERecorder(gceclientservice.GCEClientService):
-    def __init__(self, scopes, sa_credentials, project=None, zone=None, instance=None):
+    def __init__(self, scopes, sa_credentials, project=None, zone=None, instance=None, renderer=None):
         self.expectations = []
         self.record_id = 0
         self.record = []
@@ -44,7 +44,8 @@ class GCERecorder(gceclientservice.GCEClientService):
         self.asyncId = 0
 
         gceclientservice.GCEClientService.__init__(
-            self, scopes, sa_credentials, project=project, zone=zone, instance=instance)
+            self, scopes, sa_credentials, project=project, zone=zone, instance=instance,
+            renderer=renderer)
 
         self._doRequest = self.interceptRequest
 

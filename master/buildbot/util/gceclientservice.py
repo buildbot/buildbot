@@ -32,10 +32,11 @@ class GCEError(RuntimeError):
 class GCEClientService(HTTPClientService):
     name = "GCEClientService"
 
-    def __init__(self, scopes, sa_credentials, project=None, zone=None, instance=None):
+    def __init__(self, scopes, sa_credentials, project=None, zone=None, instance=None, renderer=None):
         HTTPClientService.__init__(self, "https://www.googleapis.com")
         self.sa_credentials = sa_credentials
         self.scopes = scopes
+        self.renderer = renderer
         self.project = project
         self.zone = zone
         self.instance = instance
@@ -51,7 +52,7 @@ class GCEClientService(HTTPClientService):
         now = time.time()
         exp = now + 3600
 
-        sa_credentials = yield self.renderSecrets(self.sa_credentials)
+        sa_credentials = yield self.renderer.renderSecrets(self.sa_credentials)
 
         if isinstance(sa_credentials, str):
             sa_credentials = json.loads(sa_credentials)
