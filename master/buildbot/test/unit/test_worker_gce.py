@@ -147,6 +147,12 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
         self.worker.getNewDiskName(metadata)
         self.assertEqual('3', metadata['BUILDBOT_DISK_GEN'])
 
+    def compareMetadata(self, expected, actual):
+        actual = actual.copy()
+        e_items = sorted(expected['items'], key=lambda i: i['key'])
+        a_items = sorted(actual['items'], key=lambda i: i['key'])
+        return e_items == a_items and expected['fingerprint'] == actual['fingerprint']
+
     @defer.inlineCallbacks
     def test_start_instance_nominal_flow(self):
         self.gce.expect('GET', '/compute/v1/projects/p/zones/z/instances/i',
@@ -160,19 +166,22 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
                     ]
                }
            })
+
+        expected_json = {
+            'fingerprint': 'finger',
+            'items': [
+                {'key': 'BUILDBOT_DISK_GEN', 'value': '2'},
+                {'key': 'WORKERNAME', 'value': 'test'},
+                {'key': 'WORKERPASS', 'value': 'password'},
+                {'key': 'BUILDMASTER', 'value': 'master'},
+                {'key': 'BUILDMASTER_PORT', 'value': '5050'}
+            ],
+            'kind': 'compute#metadata'
+        }
+
         setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
-            json={
-                'fingerprint': 'finger',
-                'items': [
-                    {'key': 'BUILDBOT_DISK_GEN', 'value': '2'},
-                    {'key': 'WORKERNAME', 'value': 'test'},
-                    {'key': 'WORKERPASS', 'value': 'password'},
-                    {'key': 'BUILDMASTER', 'value': 'master'},
-                    {'key': 'BUILDMASTER_PORT', 'value': '5050'}
-                ],
-                'kind': 'compute#metadata'
-           })
+            json=lambda j: self.compareMetadata(expected_json, j))
         self.gce.expectWaitForOperation(setMetadata)
         self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/start')
@@ -196,19 +205,10 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
            })
         self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/stop')
+
         setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
-            json={
-                'fingerprint': 'finger',
-                'items': [
-                    {'key': 'BUILDBOT_DISK_GEN', 'value': '2'},
-                    {'key': 'WORKERNAME', 'value': 'test'},
-                    {'key': 'WORKERPASS', 'value': 'password'},
-                    {'key': 'BUILDMASTER', 'value': 'master'},
-                    {'key': 'BUILDMASTER_PORT', 'value': '5050'}
-                ],
-                'kind': 'compute#metadata'
-           })
+            json=GCERecorder.IGNORE)
         self.gce.expectInstanceStateWait('TERMINATED')
         self.gce.expectWaitForOperation(setMetadata)
         self.gce.expectOperationRequest(
@@ -236,19 +236,20 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
+        expected_json = {
+            'fingerprint': 'finger',
+            'items': [
+                {'key': 'BUILDBOT_DISK_GEN', 'value': '3'},
+                {'key': 'WORKERNAME', 'value': 'test'},
+                {'key': 'WORKERPASS', 'value': 'password'},
+                {'key': 'BUILDMASTER', 'value': 'master'},
+                {'key': 'BUILDMASTER_PORT', 'value': '5050'}
+            ],
+            'kind': 'compute#metadata'
+        }
         setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
-            json={
-                'fingerprint': 'finger',
-                'items': [
-                    {'key': 'BUILDBOT_DISK_GEN', 'value': '3'},
-                    {'key': 'WORKERNAME', 'value': 'test'},
-                    {'key': 'WORKERPASS', 'value': 'password'},
-                    {'key': 'BUILDMASTER', 'value': 'master'},
-                    {'key': 'BUILDMASTER_PORT', 'value': '5050'}
-                ],
-                'kind': 'compute#metadata'
-           })
+            json=lambda j: self.compareMetadata(expected_json, j))
         detachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/detachDisk',
             params={'deviceName': 'current-boot'})
@@ -291,19 +292,20 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'name': 'i-3',  # BUILDBOT_DISK_GEN + 1
                 'type': 'projects/p/zones/z/diskTypes/pd-ssd'
            })
+        expected_json = {
+            'fingerprint': 'finger',
+            'items': [
+                {'key': 'BUILDBOT_DISK_GEN', 'value': '3'},
+                {'key': 'WORKERNAME', 'value': 'test'},
+                {'key': 'WORKERPASS', 'value': 'password'},
+                {'key': 'BUILDMASTER', 'value': 'master'},
+                {'key': 'BUILDMASTER_PORT', 'value': '5050'}
+            ],
+            'kind': 'compute#metadata'
+        }
         setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
-            json={
-                'fingerprint': 'finger',
-                'items': [
-                    {'key': 'BUILDBOT_DISK_GEN', 'value': '3'},
-                    {'key': 'WORKERNAME', 'value': 'test'},
-                    {'key': 'WORKERPASS', 'value': 'password'},
-                    {'key': 'BUILDMASTER', 'value': 'master'},
-                    {'key': 'BUILDMASTER_PORT', 'value': '5050'}
-                ],
-                'kind': 'compute#metadata'
-           })
+            json=lambda j: self.compareMetadata(expected_json, j))
         self.gce.expectWaitForOperation(createDisk)
         attachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/attachDisk',
@@ -340,13 +342,14 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
         detachDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/detachDisk',
             params={'deviceName': 'current-boot'})
+
         setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
             json={
                 'fingerprint': 'finger',
                 'items': [{'key': 'BUILDBOT_DISK_GEN', 'value': '3'}],
                 'kind': 'compute#metadata'
-           })
+            })
         createDisk = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/disks',
             json={
@@ -377,16 +380,18 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
                     'items': [{'key': 'BUILDBOT_DISK_GEN', 'value': '3'}]
                }
            })
+
+        expected_json = {
+            'fingerprint': 'finger2',
+            'items': [
+                {'key': 'BUILDBOT_DISK_GEN', 'value': '3'},
+                {'key': 'BUILDBOT_CLEAN', 'value': '1'}
+            ],
+            'kind': 'compute#metadata'
+        }
         setMetadata = self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/setMetadata',
-            json={
-                'fingerprint': 'finger2',
-                'items': [
-                    {'key': 'BUILDBOT_DISK_GEN', 'value': '3'},
-                    {'key': 'BUILDBOT_CLEAN', 'value': '1'}
-                ],
-                'kind': 'compute#metadata'
-           })
+            json=lambda j: self.compareMetadata(expected_json, j))
         self.gce.expectWaitForOperation(setMetadata)
 
         yield self.worker.stop_instance()
@@ -406,9 +411,9 @@ class TestGCEWorker(unittest.TestCase, config.ConfigErrorsMixin):
                 'metadata': {
                     'fingerprint': 'finger',
                     'items': [{'key': 'BUILDBOT_DISK_GEN', 'value': 2}]
-               },
+                },
                 'disks': [{'boot': True, 'deviceName': 'current-boot'}]
-           })
+            })
         self.gce.expectOperationRequest(
             'POST', '/compute/v1/projects/p/zones/z/instances/i/stop')
         self.gce.expectInstanceStateWait('TERMINATED')

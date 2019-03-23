@@ -81,17 +81,25 @@ class GCERecorder(gceclientservice.GCEClientService):
         self.expectations.append(ExpectedRequest(
             ExpectedRequest.UNTIL, method, url))
 
+    def compare(self, expected, actual):
+        if expected == GCERecorder.IGNORE:
+            return True
+        elif callable(expected):
+            return expected(actual)
+        else:
+            return expected == actual
+
     def validateIsExpected(self, method, url, params, json, data):
         if not self.expectations:
             msg = "got {} {} but was not expecting any request".format(method, url)
             assert False, msg
 
         request = self.expectations[0]
-        methodMatches = request.httpMethod == method
-        urlMatches = request.url == GCERecorder.IGNORE or request.url == url
-        paramsMatches = request.params == GCERecorder.IGNORE or request.params == params
-        jsonMatches = request.json == GCERecorder.IGNORE or request.json == json
-        dataMatches = request.data == GCERecorder.IGNORE or request.data == data
+        methodMatches = self.compare(request.httpMethod, method)
+        urlMatches = self.compare(request.url, url)
+        paramsMatches = self.compare(request.params, params)
+        jsonMatches = self.compare(request.json, json)
+        dataMatches = self.compare(request.data, data)
         matches = (methodMatches and urlMatches and paramsMatches and jsonMatches and dataMatches)
 
         if request.mode == ExpectedRequest.NORMAL:
