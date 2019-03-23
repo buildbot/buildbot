@@ -19,12 +19,13 @@ class RateLimitExceeded(RuntimeError):
 
 
 class GCEError(RuntimeError):
-    def __init__(self, response_json, url=None):
+    def __init__(self, response_json, code=None, url=None):
         message = response_json['error']['message']
         if url is not None:
             message = "{0}: {1}".format(url, message)
 
         RuntimeError.__init__(self, message)
+        self.code = code
         self.json = response_json
         self.reason = response_json.get('error')
 
@@ -45,11 +46,10 @@ class GCEClientService(HTTPClientService):
         self.tokenExpiry = 0
 
     @defer.inlineCallbacks
-    def getBearerToken(self):
-        if time.time() < self.tokenExpiry:
+    def getBearerToken(self, now=time.time()):
+        if now < self.tokenExpiry:
             return self.token
 
-        now = time.time()
         exp = now + 3600
 
         sa_credentials = yield self.renderer.renderSecrets(self.sa_credentials)
@@ -65,23 +65,23 @@ class GCEClientService(HTTPClientService):
         }
         jwt_token = jwt.encode(data, key=sa_credentials['private_key'], algorithm="RS256")
 
-        response = yield self.post("/oauth2/v4/token",
-            needToken=False, data=urllib.parse.urlencode({
-                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                "assertion": jwt_token
-            }),
-            headers={'Content-Type': "application/x-www-form-urlencoded"}
-        )
-        if response.code >= 400:
-            raise Exception("Failed to get authorization token (HTTP code {0}".
-                format(response.code))
-
-        token_result = yield response.json()
+        token_result = None
+        try:
+            token_result = yield self.post("/oauth2/v4/token",
+                needToken=False, data=urllib.parse.urlencode({
+                    "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                    "assertion": jwt_token
+                }),
+                headers={'Content-Type': "application/x-www-form-urlencoded"}
+            )
+        except GCEError as e:
+            raise RuntimeError("Failed to get authorization token (HTTP code {0}".
+                format(e.code))
 
         if token_result['token_type'] == 'Bearer':
             self.tokenExpiry = exp - 60
             self.token = token_result['access_token']
-            return defer.returnValue(self.token)
+            return self.token
         else:
             raise "failed to get an access token"
 
@@ -228,6 +228,6 @@ class GCEClientService(HTTPClientService):
                     raise RateLimitExceeded()
 
         if res.code not in (200, 201, 202):
-            raise GCEError(res_json, url=url)
+            raise GCEError(res_json, code=res.code, url=url)
 
         return res_json

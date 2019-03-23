@@ -25,17 +25,20 @@ class ExpectedRequest:
     NORMAL = 1
     UNTIL = 2
 
-    def __init__(self, mode, httpMethod, url, params={}, json={}, result={}, resultCode=200):
+    def __init__(self, mode, httpMethod, url, params={}, json={}, result={}, data=None, resultCode=200):
         self.mode = mode
         self.httpMethod = httpMethod
         self.url = url
         self.params = params
         self.json = json
+        self.data = data
         self.result = result
         self.resultCode = resultCode
 
 
 class GCERecorder(gceclientservice.GCEClientService):
+    IGNORE = object()
+
     def __init__(self, scopes, sa_credentials, project=None, zone=None, instance=None, renderer=None):
         self.expectations = []
         self.record_id = 0
@@ -49,16 +52,16 @@ class GCERecorder(gceclientservice.GCEClientService):
 
         self._doRequest = self.interceptRequest
 
-    def expect(self, method, url, params={}, json={}, result={}, resultCode=200):
+    def expect(self, method, url, params={}, json={}, data=None, result={}, resultCode=200):
         self.expectations.append(ExpectedRequest(
-            ExpectedRequest.NORMAL, method, url, params=params, json=json,
+            ExpectedRequest.NORMAL, method, url, params=params, json=json, data=data,
             result=result, resultCode=resultCode))
 
-    def expectOperationRequest(self, method, url, params={}, json={}, resultCode=200):
+    def expectOperationRequest(self, method, url, params={}, json={}, data=None, resultCode=200):
         self.asyncId += 1
         selfLink = 'async-{}'.format(self.asyncId)
         self.expectations.append(ExpectedRequest(
-            ExpectedRequest.NORMAL, method, url, params=params, json=json,
+            ExpectedRequest.NORMAL, method, url, params=params, json=json, data=data,
             result={'selfLink': selfLink, 'status': 'STARTED'},
             resultCode=resultCode))
         return selfLink
@@ -78,17 +81,18 @@ class GCERecorder(gceclientservice.GCEClientService):
         self.expectations.append(ExpectedRequest(
             ExpectedRequest.UNTIL, method, url))
 
-    def validateIsExpected(self, method, url, params, json):
+    def validateIsExpected(self, method, url, params, json, data):
         if not self.expectations:
             msg = "got {} {} but was not expecting any request".format(method, url)
             assert False, msg
 
         request = self.expectations[0]
         methodMatches = request.httpMethod == method
-        urlMatches = request.url == url
-        paramsMatches = request.params == params
-        jsonMatches = request.json == json
-        matches = (methodMatches and urlMatches and paramsMatches and jsonMatches)
+        urlMatches = request.url == GCERecorder.IGNORE or request.url == url
+        paramsMatches = request.params == GCERecorder.IGNORE or request.params == params
+        jsonMatches = request.json == GCERecorder.IGNORE or request.json == json
+        dataMatches = request.data == GCERecorder.IGNORE or request.data == data
+        matches = (methodMatches and urlMatches and paramsMatches and jsonMatches and dataMatches)
 
         if request.mode == ExpectedRequest.NORMAL:
             if matches:
@@ -101,6 +105,8 @@ class GCERecorder(gceclientservice.GCEClientService):
                 request.httpMethod, request.url, request.params, params)
             assert jsonMatches, "expected {} {} to have json {} but it was {}".format(
                 request.httpMethod, request.url, request.json, json)
+            assert dataMatches, "expected {} {} to have data {} but it was {}".format(
+                request.httpMethod, request.url, request.data, data)
         elif request.mode == ExpectedRequest.UNTIL:
             if matches:
                 self.expectations.pop(0)
@@ -133,9 +139,9 @@ class GCERecorder(gceclientservice.GCEClientService):
         if error_message:
             assert False, error_message
 
-    def addInFlight(self, method, url, params, json):
+    def addInFlight(self, method, url, params, json, data):
         self.record_id += 1
-        request = self.validateIsExpected(method, url, params, json)
+        request = self.validateIsExpected(method, url, params, json, data)
 
         self.record.extend([self.record_id, method, url])
         in_flight = GCEAsyncResult(self.record_id)
