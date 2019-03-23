@@ -46,6 +46,8 @@ class GCERecorder(gceclientservice.GCEClientService):
         gceclientservice.GCEClientService.__init__(
             self, scopes, sa_credentials, project=project, zone=zone, instance=instance)
 
+        self._doRequest = self.interceptRequest
+
     def expect(self, method, url, params={}, json={}, result={}, resultCode=200):
         self.expectations.append(ExpectedRequest(
             ExpectedRequest.NORMAL, method, url, params=params, json=json,
@@ -139,16 +141,10 @@ class GCERecorder(gceclientservice.GCEClientService):
         self.inFlight[self.record_id] = request
         return in_flight
 
-    def post(self, url, *args, params={}, json={}, **kwargs):
-        return self.addInFlight('POST', url, params=params, json=json)
+    def interceptRequest(self, method, url, params={}, json={}, data=None, **kwargs):
+        return self.addInFlight(method.upper(), url, params=params, json=json, data=data)
 
-    def get(self, url, *args, params={}, json={}, **kwargs):
-        return self.addInFlight('GET', url, params=params, json=json)
-
-    def delete(self, url, *args, params={}, json={}, **kwargs):
-        return self.addInFlight('DELETE', url, params=params, json=json)
-
-    def validateRes(self, inFlight):
+    def validateRes(self, inFlight, url=None):
         # Check that the entry exists and delete it
         request = self.inFlight[inFlight.record_id]
         del self.inFlight[inFlight.record_id]
