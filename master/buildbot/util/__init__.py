@@ -260,12 +260,14 @@ def epoch2datetime(epoch):
     """Convert a UNIX epoch time to a datetime object, in the UTC timezone"""
     if epoch is not None:
         return datetime.datetime.fromtimestamp(epoch, tz=UTC)
+    return None
 
 
 def datetime2epoch(dt):
     """Convert a non-naive datetime object to a UNIX epoch timestamp"""
     if dt is not None:
         return calendar.timegm(dt.utctimetuple())
+    return None
 
 
 # TODO: maybe "merge" with formatInterval?
