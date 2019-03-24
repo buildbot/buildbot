@@ -21,6 +21,7 @@ from twisted.trial import unittest
 from buildbot.mq import base
 from buildbot.mq import connector
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 
 
@@ -39,10 +40,11 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
         return defer.succeed(None)
 
 
-class MQConnector(unittest.TestCase):
+class MQConnector(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
         self.conn.setServiceParent(self.master)

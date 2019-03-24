@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.wamp import connector
 
@@ -51,11 +52,12 @@ class TestedWampConnector(connector.WampConnector):
     serviceClass = FakeService
 
 
-class WampConnector(unittest.TestCase):
+class WampConnector(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        master = fakemaster.make_master()
+        self.setUpTestReactor()
+        master = fakemaster.make_master(self.reactor)
         self.connector = TestedWampConnector()
         yield self.connector.setServiceParent(master)
         yield master.startService()
