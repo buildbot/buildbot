@@ -26,16 +26,20 @@ from buildbot.reporters.hipchat import HipChatStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
+class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
+                            ReporterTestMixin, LoggingMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True, wantDb=True,
+                                             wantMq=True)
 
     @defer.inlineCallbacks
     def tearDown(self):

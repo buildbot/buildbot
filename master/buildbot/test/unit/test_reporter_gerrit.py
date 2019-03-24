@@ -36,6 +36,7 @@ from buildbot.reporters.gerrit import defaultReviewCB
 from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 warnings.filterwarnings('error', message='.*Gerrit status')
@@ -136,10 +137,12 @@ def legacyTestSummaryCB(buildInfoList, results, status, arg):
     return (str(buildInfoList), verified, 0)
 
 
-class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
+                           ReporterTestMixin):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks

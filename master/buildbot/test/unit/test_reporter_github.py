@@ -27,18 +27,21 @@ from buildbot.reporters.github import GitHubCommentPush
 from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
+                           ReporterTestMixin):
     # project must be in the form <owner>/<project>
     TEST_PROJECT = 'buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(testcase=self,
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
@@ -113,18 +116,21 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.buildFinished(("build", 20, "finished"), build)
 
 
-class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
+class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
+                              ReporterTestMixin):
     # project must be in the form <owner>/<project>
     TEST_PROJECT = 'buildbot'
     TEST_REPO = 'https://github.com/buildbot1/buildbot1.git'
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
 
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True, wantDb=True,
+                                             wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(

@@ -32,6 +32,7 @@ from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
@@ -40,14 +41,16 @@ py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
 
 
-class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
+class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
+                       unittest.TestCase, NotifierTestMixin):
 
     if not ESMTPSenderFactory:
         skip = ("twisted-mail unavailable, "
                 "see: https://twistedmatrix.com/trac/ticket/8770")
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks

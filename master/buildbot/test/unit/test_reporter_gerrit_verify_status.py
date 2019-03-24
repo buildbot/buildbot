@@ -30,20 +30,27 @@ from buildbot.reporters.gerrit_verify_status import GerritVerifyStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
 
 
-class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.LoggingMixin):
+class TestGerritVerifyStatusPush(TestReactorMixin,
+                                 ReporterTestMixin,
+                                 logging.LoggingMixin,
+                                 unittest.TestCase):
+
     TEST_PROPS = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True, wantDb=True,
+                                             wantMq=True)
 
         yield self.master.startService()
 
