@@ -36,15 +36,18 @@ from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):
+class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
+                         TestReactorMixin, unittest.TestCase):
 
     OBJECTID = 19
     SCHEDULERID = 9
     maxDiff = None
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

@@ -23,6 +23,7 @@ from buildbot import config
 from buildbot.schedulers import basic
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class CommonStuffMixin:
@@ -69,7 +70,9 @@ class CommonStuffMixin:
 
 
 class BaseBasicScheduler(CommonStuffMixin,
-                         scheduler.SchedulerMixin, unittest.TestCase):
+                         scheduler.SchedulerMixin,
+                         TestReactorMixin,
+                         unittest.TestCase):
 
     OBJECTID = 244
     SCHEDULERID = 4
@@ -92,6 +95,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             return self.master.db.schedulers.getChangeClassifications(schedulerid)
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -305,7 +309,9 @@ class BaseBasicScheduler(CommonStuffMixin,
 
 
 class SingleBranchScheduler(CommonStuffMixin,
-                            scheduler.SchedulerMixin, unittest.TestCase):
+                            scheduler.SchedulerMixin,
+                            TestReactorMixin,
+                            unittest.TestCase):
 
     SCHEDULERID = 245
     OBJECTID = 224455
@@ -350,6 +356,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         return ch
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -471,12 +478,15 @@ class SingleBranchScheduler(CommonStuffMixin,
 
 
 class AnyBranchScheduler(CommonStuffMixin,
-                         scheduler.SchedulerMixin, unittest.TestCase):
+                         scheduler.SchedulerMixin,
+                         TestReactorMixin,
+                         unittest.TestCase):
 
     SCHEDULERID = 6
     OBJECTID = 246
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

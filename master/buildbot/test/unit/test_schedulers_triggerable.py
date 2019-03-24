@@ -16,7 +16,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -25,6 +24,7 @@ from buildbot.schedulers import triggerable
 from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
@@ -33,28 +33,27 @@ class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
         self.assertInterfacesImplemented(triggerable.Triggerable)
 
 
-class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
+class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
+                  unittest.TestCase):
 
     OBJECTID = 33
     SCHEDULERID = 13
 
     def setUp(self):
+        self.setUpTestReactor()
         # Necessary to get an assertable submitted_at time.
-        self.now = 946684799
-        self.clock = task.Clock()
-        self.clock.advance(self.now)
-        self.clock_patch = mock.patch(
-            'buildbot.test.fake.fakedb.reactor.seconds', self.clock.seconds)
-        self.clock_patch.start()
+        self.reactor.advance(946684799)
+
+        self.reactor_patch = mock.patch(
+            'buildbot.test.fake.fakedb.reactor.seconds', self.reactor.seconds)
+        self.reactor_patch.start()
 
         self.setUpScheduler()
-        # Patch reactor for sched._updateWaiters debounce
-        self.master.reactor = self.clock
         self.subscription = None
 
     def tearDown(self):
         self.tearDownScheduler()
-        self.clock_patch.stop()
+        self.reactor_patch.stop()
 
     def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):
         self.master.db.insertTestData([fakedb.Builder(id=77, name='b')])
@@ -182,7 +181,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
               'codebase': 'cb'}
         idsDeferred, d = sched.trigger(
             waited_for, sourcestamps=[ss], set_props=set_props)
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
 
         self.assertTriggeredBuildset(
             idsDeferred,
@@ -222,7 +221,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend the matching buildset is complete
         self.sendCompletionMessage(200)
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
 
         # scheduler should have reacted
         self.assertEqual(
@@ -260,7 +259,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # and the second time
         idsDeferred, d = sched.trigger(
             waited_for, [makeSS('myrev2')])  # triggers bsid 201
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
@@ -281,7 +280,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.sendCompletionMessage(201, results=22)
         self.sendCompletionMessage(9, results=3)
         self.sendCompletionMessage(200, results=11)
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled
