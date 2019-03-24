@@ -26,6 +26,7 @@ from buildbot.process import buildrequestdistributor
 from buildbot.process import factory
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
@@ -41,9 +42,10 @@ def nth_worker(n):
     return pick_nth_by_name
 
 
-class TestBRDBase(unittest.TestCase):
+class TestBRDBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
         self.builders = {}
@@ -51,8 +53,9 @@ class TestBRDBase(unittest.TestCase):
         def prioritizeBuilders(master, builders):
             # simple sort-by-name by default
             return sorted(builders, key=lambda b1: b1.name)
-        self.master = self.botmaster.master = fakemaster.make_master(testcase=self,
-                                                                     wantData=True, wantDb=True)
+        self.master = self.botmaster.master = \
+            fakemaster.make_master(self.reactor, testcase=self,
+                                   wantData=True, wantDb=True)
         self.master.caches = fakemaster.FakeCaches()
         self.master.config.prioritizeBuilders = prioritizeBuilders
         self.brd = buildrequestdistributor.BuildRequestDistributor(

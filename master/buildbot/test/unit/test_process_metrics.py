@@ -21,16 +21,18 @@ from twisted.trial import unittest
 
 from buildbot.process import metrics
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMetricBase(unittest.TestCase):
+class TestMetricBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.clock = task.Clock()
+        self.setUpTestReactor()
         self.observer = metrics.MetricLogObserver()
-        self.observer.parent = self.master = fakemaster.make_master()
+        self.observer.parent = self.master = \
+            fakemaster.make_master(self.reactor)
         self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
-        self.observer._reactor = self.clock
+        self.observer._reactor = self.reactor
         self.observer.startService()
         self.observer.reconfigServiceWithBuildbotConfig(self.master.config)
 
@@ -194,7 +196,7 @@ class TestReconfig(TestMetricBase):
         self.assertEqual(observer.log_task, None)
 
         # Make the periodic check run
-        self.clock.pump([0.1])
+        self.reactor.pump([0.1])
 
         # disable the whole listener
         new_config.metrics = None

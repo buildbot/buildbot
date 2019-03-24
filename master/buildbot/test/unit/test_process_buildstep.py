@@ -16,7 +16,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -404,15 +403,13 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertTrue(NewStyleStep().isNewStyle())
 
     def setup_summary_test(self):
-        self.clock = task.Clock()
         self.patch(NewStyleStep, 'getCurrentSummary',
                    lambda self: defer.succeed({'step': 'C'}))
         self.patch(NewStyleStep, 'getResultSummary',
                    lambda self: defer.succeed({'step': 'CS', 'build': 'CB'}))
         step = NewStyleStep()
-        step.master = fakemaster.make_master(testcase=self,
+        step.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantDb=True)
-        step.master.reactor = self.clock
         step.stepid = 13
         step.step_status = mock.Mock()
         step.build = fakebuild.FakeBuild()
@@ -422,7 +419,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = self.setup_summary_test()
         step._running = True
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13], 'C')
 
     def test_updateSummary_running_empty_dict(self):
@@ -430,7 +427,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.getCurrentSummary = lambda: {}
         step._running = True
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13],
                          'finished')
 
@@ -439,7 +436,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.getCurrentSummary = lambda: {'step': b'bytestring'}
         step._running = True
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
     def test_updateSummary_running_not_dict(self):
@@ -447,14 +444,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.getCurrentSummary = lambda: 'foo!'
         step._running = True
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
     def test_updateSummary_finished(self):
         step = self.setup_summary_test()
         step._running = False
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13], 'CS')
 
     def test_updateSummary_finished_empty_dict(self):
@@ -462,7 +459,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.getResultSummary = lambda: {}
         step._running = False
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13],
                          'finished')
 
@@ -471,7 +468,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.getResultSummary = lambda: 'foo!'
         step._running = False
         step.updateSummary()
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
     @defer.inlineCallbacks
