@@ -37,6 +37,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttp
 from buildbot.test.fake import kube as fakekube
 from buildbot.test.util import config
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import kubeclientservice
 
 
@@ -241,7 +242,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
 
 
 # integration tests for KubeClientService
-class RealKubeClientServiceTest(unittest.TestCase):
+class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
     timeout = 200
     POD_SPEC = yaml.safe_load(
         textwrap.dedent("""
@@ -270,7 +271,8 @@ class RealKubeClientServiceTest(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self)
         self.createKube()
         self.kube.setServiceParent(self.master)
         return self.master.startService()
