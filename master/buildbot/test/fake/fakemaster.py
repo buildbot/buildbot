@@ -164,7 +164,8 @@ class FakeMaster(service.MasterService):
     - Non-caching implementation for C{self.caches}
     """
 
-    def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+    def __init__(self, reactor,
+                 master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
         super().__init__()
         self._master_id = master_id
         self.reactor = reactor
@@ -205,9 +206,9 @@ class FakeMaster(service.MasterService):
 # Leave this alias, in case we want to add more behavior later
 
 
-def make_master(wantMq=False, wantDb=False, wantData=False,
+def make_master(_reactor=reactor, wantMq=False, wantDb=False, wantData=False,
                 testcase=None, url=None, **kwargs):
-    master = FakeMaster(**kwargs)
+    master = FakeMaster(_reactor, **kwargs)
     if url:
         master.buildbotURL = url
     if wantData:

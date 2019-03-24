@@ -69,7 +69,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         yield self.setUpRealDatabase(table_names=['masters', 'objects', 'object_state'],
                                      sqlite_memory=False)
 
-        master = fakemaster.FakeMaster()
+        master = fakemaster.FakeMaster(reactor)
 
         master.config.db = dict(db_url=self.db_url)
         master.db = dbconnector.DBConnector('basedir')
