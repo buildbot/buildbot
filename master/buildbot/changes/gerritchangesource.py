@@ -272,7 +272,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.process = None
 
         # if the service is stopped, don't try to restart the process
-        if not self.wantProcess or reactor._stopped:
+        if not self.wantProcess or not self.running:
             return
 
         now = util.now()
