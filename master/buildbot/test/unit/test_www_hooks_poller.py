@@ -22,10 +22,11 @@ from buildbot.changes import base
 from buildbot.changes.manager import ChangeManager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import change_hook
 
 
-class TestPollingChangeHook(unittest.TestCase):
+class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
 
     class Subclass(base.PollingChangeSource):
         pollInterval = None
@@ -34,14 +35,17 @@ class TestPollingChangeHook(unittest.TestCase):
         def poll(self):
             self.called = True
 
+    def setUp(self):
+        self.setUpTestReactor()
+
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True):
         self.request = FakeRequest(args=args)
         self.request.uri = b"/change_hook/poller"
         self.request.method = b"GET"
         www = self.request.site.master.www
-        self.master = master = self.request.site.master = fakemaster.make_master(
-            testcase=self, wantData=True)
+        self.master = master = self.request.site.master = \
+            fakemaster.make_master(self.reactor, testcase=self, wantData=True)
         master.www = www
         yield self.master.startService()
         self.changeHook = change_hook.ChangeHookResource(
