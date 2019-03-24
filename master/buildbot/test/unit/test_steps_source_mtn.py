@@ -27,9 +27,11 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
+                   TestReactorMixin,
                    unittest.TestCase):
 
     # Just some random revision id to test.
@@ -37,6 +39,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
     MTN_VER = 'monotone 1.0 (base revision: UNKNOWN_REV)'
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

@@ -22,11 +22,13 @@ from buildbot.steps.package.rpm import mock
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMock(steps.BuildStepMixin, unittest.TestCase):
+class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -92,9 +94,11 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
+class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -122,9 +126,11 @@ class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMockRebuild(steps.BuildStepMixin, unittest.TestCase):
+class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

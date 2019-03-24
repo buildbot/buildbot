@@ -21,11 +21,14 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import maxq
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
+class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
+                                unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

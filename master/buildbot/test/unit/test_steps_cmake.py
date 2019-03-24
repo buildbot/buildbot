@@ -13,19 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial.unittest import TestCase
+from twisted.trial import unittest
 
 from buildbot.config import ConfigErrors
 from buildbot.process.properties import Property
 from buildbot.process.results import SUCCESS
 from buildbot.steps.cmake import CMake
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.steps import BuildStepMixin
 
 
-class TestCMake(BuildStepMixin, TestCase):
+class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuildStep()
 
     def tearDown(self):

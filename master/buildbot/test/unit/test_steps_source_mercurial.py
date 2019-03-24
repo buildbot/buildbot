@@ -27,11 +27,14 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
+                    unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

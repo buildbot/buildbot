@@ -21,12 +21,16 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
+class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
+                 TestReactorMixin,
+                 unittest.TestCase):
     stepClass = gitlab.GitLab
 
     def setUp(self):
+        self.setUpTestReactor()
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
 

@@ -32,6 +32,7 @@ from buildbot.schedulers.timed import Nightly
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 
@@ -53,10 +54,14 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.expectNoConfigError()
 
 
-class LogChunksJanitorTests(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+class LogChunksJanitorTests(steps.BuildStepMixin,
+                            configmixin.ConfigErrorsMixin,
+                            TestReactorMixin,
+                            unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpBuildStep()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 

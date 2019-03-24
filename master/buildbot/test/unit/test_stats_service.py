@@ -31,15 +31,18 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
 from buildbot.test.util import logging
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestStatsServicesBase(unittest.TestCase):
+class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
 
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [1, 2]
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             testcase=self, wantMq=True,
                                              wantData=True, wantDb=True)
 
         for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):

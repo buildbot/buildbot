@@ -25,6 +25,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import vstudio
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 real_log = r"""
 1>------ Build started: Project: lib1, Configuration: debug Win32 ------
@@ -197,13 +198,14 @@ class VCx(vstudio.VisualStudio):
         return super().start()
 
 
-class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
+class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     """
     Test L{VisualStudio} with a simple subclass, L{VCx}.
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -334,9 +336,10 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
                 ['aa', 'bb', 'cc'])
 
 
-class TestVC6(steps.BuildStepMixin, unittest.TestCase):
+class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -434,9 +437,10 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestVC7(steps.BuildStepMixin, unittest.TestCase):
+class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -576,9 +580,11 @@ class VC8ExpectedEnvMixin:
         )
 
 
-class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -651,9 +657,11 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
 
 
 class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
+                     TestReactorMixin,
                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -708,9 +716,11 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         return self.runStep()
 
 
-class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -732,9 +742,11 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -756,9 +768,11 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -780,9 +794,10 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
+class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

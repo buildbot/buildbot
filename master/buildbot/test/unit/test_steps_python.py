@@ -23,6 +23,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import python
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 log_output_success = '''\
 Making output directory...
@@ -110,9 +111,10 @@ Warning: Unable to extract the base list for
 '''
 
 
-class BuildEPYDoc(steps.BuildStepMixin, unittest.TestCase):
+class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -131,9 +133,10 @@ class BuildEPYDoc(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class PyLint(steps.BuildStepMixin, unittest.TestCase):
+class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -344,9 +347,10 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
+class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -443,9 +447,10 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
+class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

@@ -24,6 +24,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 failureLog = '''\
 buildbot.test.unit.test_steps_python_twisted.Trial.testProperties ... [FAILURE]
@@ -89,9 +90,10 @@ FAILED (failures=8)
 '''  # noqa: max-line-length
 
 
-class Trial(steps.BuildStepMixin, unittest.TestCase):
+class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -275,9 +277,10 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class HLint(steps.BuildStepMixin, unittest.TestCase):
+class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

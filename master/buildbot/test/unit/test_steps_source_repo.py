@@ -23,6 +23,7 @@ from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
 
@@ -55,9 +56,11 @@ class RepoURL(unittest.TestCase):
             {'a': "repo download test/bla 564/12"}, ["test/bla 564/12"])
 
 
-class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
+               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.shouldRetry = False
         self.logEnviron = True
         return self.setUpSourceStep()

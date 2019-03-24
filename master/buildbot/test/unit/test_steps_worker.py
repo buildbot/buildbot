@@ -29,6 +29,7 @@ from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def uploadString(string):
@@ -39,9 +40,11 @@ def uploadString(string):
     return behavior
 
 
-class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
+class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
+                               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -82,9 +85,11 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
+class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
+                     unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -142,9 +147,11 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         self.flushLoggedErrors(WorkerTooOldError)
 
 
-class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
+class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -200,9 +207,11 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
+class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -240,9 +249,11 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
+class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -297,9 +308,11 @@ class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
         self.finished(FAILURE if res else SUCCESS)
 
 
-class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
+class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

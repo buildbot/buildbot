@@ -25,11 +25,14 @@ from buildbot.steps.package.deb import pbuilder
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -244,9 +247,11 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -344,9 +349,11 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -378,9 +385,11 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
