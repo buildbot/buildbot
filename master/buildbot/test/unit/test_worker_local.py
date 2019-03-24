@@ -21,10 +21,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import local
 
 
-class TestLocalWorker(unittest.TestCase):
+class TestLocalWorker(TestReactorMixin, unittest.TestCase):
 
     try:
         from buildbot_worker.bot import LocalWorker as _  # noqa
@@ -32,7 +33,9 @@ class TestLocalWorker(unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, wantData=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
         self.workers = self.master.workers

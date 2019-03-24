@@ -64,7 +64,8 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
-        master = fakemaster.make_master(testcase=self, wantData=True)
+        master = fakemaster.make_master(self.reactor,
+                                        testcase=self, wantData=True)
         self._http = self.successResultOf(
             fakehttpclientservice.HTTPClientService.getFakeService(
                 master, self, 'tcp://marathon.local', auth=kwargs.get(

@@ -16,8 +16,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import config
@@ -29,6 +27,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
 
@@ -109,13 +108,15 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
+class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
 
     def callAttached(self):
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True)
         self.master.workers.disownServiceParent()
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self.master)
@@ -125,10 +126,12 @@ class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
         return self.wrk.attached(self.conn)
 
 
-class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
+class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
+                     WorkerInterfaceTests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self)
         self.wrk = worker.FakeWorker(self.master)
 
     def callAttached(self):
@@ -136,18 +139,17 @@ class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
         return self.wrk.attached(self.conn)
 
 
-class TestAbstractWorker(unittest.TestCase):
+class TestAbstractWorker(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, wantData=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, wantDb=True,
+                                             wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self.master)
-        self.clock = task.Clock()
-        self.patch(reactor, 'callLater', self.clock.callLater)
-        self.patch(reactor, 'seconds', self.clock.seconds)
 
     @defer.inlineCallbacks
     def createWorker(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
@@ -519,7 +521,7 @@ class TestAbstractWorker(unittest.TestCase):
         worker = yield self.createWorker(attached=False, missing_timeout=1)
         yield worker.startService()
         self.assertNotEqual(worker.missing_timer, None)
-        yield self.clock.advance(1)
+        yield self.reactor.advance(1)
         self.assertEqual(worker.missing_timer, None)
         self.assertEqual(len(self.master.data.updates.missingWorkers), 1)
 
@@ -557,18 +559,17 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker._paused, False)
 
 
-class TestAbstractLatentWorker(unittest.SynchronousTestCase):
+class TestAbstractLatentWorker(TestReactorMixin, unittest.SynchronousTestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, wantData=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self.master)
-        self.clock = task.Clock()
-        self.patch(reactor, 'callLater', self.clock.callLater)
-        self.patch(reactor, 'seconds', self.clock.seconds)
 
     def do_test_reconfigService(self, old, new, existingRegistration=True):
         old.parent = self.master

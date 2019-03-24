@@ -20,30 +20,36 @@ from twisted.trial import unittest
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.util import protocols
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.protocols import base
 
 
-class TestListener(unittest.TestCase):
+class TestListener(TestReactorMixin, unittest.TestCase):
 
     def test_constructor(self):
-        master = fakemaster.make_master()
+        self.setUpTestReactor()
+        master = fakemaster.make_master(self.reactor)
         listener = base.Listener()
         listener.setServiceParent(master)
         self.assertEqual(listener.master, master)
 
 
-class TestFakeConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
+class TestFakeConnection(protocols.ConnectionInterfaceTest,
+                         TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.worker = mock.Mock()
         self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
 
 
-class TestConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
+class TestConnection(protocols.ConnectionInterfaceTest,
+                     TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.worker = mock.Mock()
         self.conn = base.Connection(self.master, self.worker)
 
