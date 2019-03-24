@@ -214,10 +214,6 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         yield self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-
         return dict(
             id=row.id,
             number=row.number,
@@ -225,7 +221,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             buildrequestid=row.buildrequestid,
             workerid=row.workerid,
             masterid=row.masterid,
-            started_at=mkdt(row.started_at),
-            complete_at=mkdt(row.complete_at),
+            started_at=epoch2datetime(row.started_at),
+            complete_at=epoch2datetime(row.complete_at),
             state_string=row.state_string,
             results=row.results)

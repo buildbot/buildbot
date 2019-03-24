@@ -35,6 +35,7 @@ from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
+from buildbot.util import epoch2datetime
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 
@@ -932,7 +933,7 @@ class FakeChangesComponent(FakeDBComponent):
         if chdict['parent_changeids'] is None:
             chdict['parent_changeids'] = []
 
-        chdict['when_timestamp'] = _mkdt(chdict['when_timestamp'])
+        chdict['when_timestamp'] = epoch2datetime(chdict['when_timestamp'])
         return chdict
 
     # assertions
@@ -1159,7 +1160,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, SourceStamp):
                 ss = self.sourcestamps[row.id] = row.values.copy()
-                ss['created_at'] = _mkdt(ss['created_at'])
+                ss['created_at'] = epoch2datetime(ss['created_at'])
                 del ss['ss_hash']
                 del ss['id']
 
@@ -1186,7 +1187,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
         new_ssdict = dict(branch=branch, revision=revision, codebase=codebase,
                           patchid=patchid, repository=repository, project=project,
-                          created_at=_mkdt(_reactor.seconds()))
+                          created_at=epoch2datetime(_reactor.seconds()))
         for id, ssdict in self.sourcestamps.items():
             keys = ['branch', 'revision', 'repository',
                     'codebase', 'project', 'patchid']
@@ -1373,12 +1374,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
     def _row2dict(self, row):
         row = row.copy()
-        if row['complete_at']:
-            row['complete_at'] = _mkdt(row['complete_at'])
-        else:
-            row['complete_at'] = None
-        row['submitted_at'] = row['submitted_at'] and \
-            _mkdt(row['submitted_at'])
+        row['complete_at'] = epoch2datetime(row['complete_at'])
+        row['submitted_at'] = epoch2datetime(row['submitted_at'])
         row['complete'] = bool(row['complete'])
         row['bsid'] = row['id']
         row['sourcestamps'] = self.buildset_sourcestamps.get(row['id'], [])
@@ -1877,8 +1874,8 @@ class FakeBuildsComponent(FakeDBComponent):
             builderid=row['builderid'],
             masterid=row['masterid'],
             workerid=row['workerid'],
-            started_at=_mkdt(row['started_at']),
-            complete_at=_mkdt(row['complete_at']),
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
             state_string=row['state_string'],
             results=row['results'])
 
@@ -1977,8 +1974,8 @@ class FakeStepsComponent(FakeDBComponent):
             buildid=row['buildid'],
             number=row['number'],
             name=row['name'],
-            started_at=_mkdt(row['started_at']),
-            complete_at=_mkdt(row['complete_at']),
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
             state_string=row['state_string'],
             results=row['results'],
             urls=json.loads(row['urls_json']),
@@ -2316,7 +2313,7 @@ class FakeMastersComponent(FakeDBComponent):
                     id=row.id,
                     name=row.name,
                     active=bool(row.active),
-                    last_active=_mkdt(row.last_active))
+                    last_active=epoch2datetime(row.last_active))
 
     def findMasterId(self, name, _reactor=reactor):
         for m in self.masters.values():
@@ -2327,7 +2324,7 @@ class FakeMastersComponent(FakeDBComponent):
             id=id,
             name=name,
             active=False,
-            last_active=_mkdt(_reactor.seconds()))
+            last_active=epoch2datetime(_reactor.seconds()))
         return defer.succeed(id)
 
     def setMasterState(self, masterid, active, _reactor=reactor):
@@ -2336,7 +2333,7 @@ class FakeMastersComponent(FakeDBComponent):
             self.masters[masterid]['active'] = active
             if active:
                 self.masters[masterid]['last_active'] = \
-                    _mkdt(_reactor.seconds())
+                    epoch2datetime(_reactor.seconds())
             return defer.succeed(bool(was_active) != bool(active))
         else:
             return defer.succeed(False)
@@ -2543,10 +2540,3 @@ class FakeDBConnector(service.AsyncMultiService):
             for comp in self._components:
                 comp.insertTestData([row])
         return defer.succeed(None)
-
-
-def _mkdt(epoch):
-    # Local import for better encapsulation.
-    from buildbot.util import epoch2datetime
-    if epoch:
-        return epoch2datetime(epoch)

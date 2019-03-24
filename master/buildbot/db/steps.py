@@ -176,17 +176,13 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-
         return dict(
             id=row.id,
             number=row.number,
             name=row.name,
             buildid=row.buildid,
-            started_at=mkdt(row.started_at),
-            complete_at=mkdt(row.complete_at),
+            started_at=epoch2datetime(row.started_at),
+            complete_at=epoch2datetime(row.complete_at),
             state_string=row.state_string,
             results=row.results,
             urls=json.loads(row.urls_json),

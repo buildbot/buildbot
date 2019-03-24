@@ -176,7 +176,8 @@ class Tests(interfaces.InterfaceTests):
                                       reason='rsn', sourcestamps=[234],
                                       submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
                                                                      tzinfo=UTC),
-                                      complete=False, complete_at=None, results=-1,
+                                      complete=False,
+                                      complete_at=epoch2datetime(0), results=-1,
                                       bsid=91,
                                       parent_buildid=None, parent_relationship=None))
 

@@ -238,13 +238,12 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                         conn.execute(sa.select([tbl.c.sourcestampid],
                                                (tbl.c.buildsetid == row.id))).fetchall()]
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
         return BsDict(external_idstring=row.external_idstring,
-                      reason=row.reason, submitted_at=mkdt(row.submitted_at),
+                      reason=row.reason,
+                      submitted_at=epoch2datetime(row.submitted_at),
                       complete=bool(row.complete),
-                      complete_at=mkdt(row.complete_at), results=row.results,
+                      complete_at=epoch2datetime(row.complete_at),
+                      results=row.results,
                       bsid=row.id, sourcestamps=sourcestamps,
                       parent_buildid=row.parent_buildid,
                       parent_relationship=row.parent_relationship)
