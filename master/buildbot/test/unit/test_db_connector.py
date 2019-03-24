@@ -25,9 +25,11 @@ from buildbot.db import connector
 from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
+class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
+                      unittest.TestCase):
 
     """
     Basic tests of the DBConnector class - all start with an empty DB
@@ -35,13 +37,14 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpRealDatabase(table_names=[
             'changes', 'change_properties', 'change_files', 'patches',
             'sourcestamps', 'buildset_properties', 'buildsets',
             'sourcestampsets', 'builds', 'builders', 'masters',
             'buildrequests', 'workers'])
 
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(self.reactor)
         self.master.config = config.MasterConfig()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         self.db.setServiceParent(self.master)

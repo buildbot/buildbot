@@ -19,13 +19,14 @@ from twisted.internet import defer
 from buildbot.db import model
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class FakeDBConnector:
     pass
 
 
-class ConnectorComponentMixin(db.RealDatabaseMixin):
+class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
 
     """
     Implements a mock DBConnector object, replete with a thread pool and a DB
@@ -40,6 +41,8 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
 
     @defer.inlineCallbacks
     def setUpConnectorComponent(self, table_names=None, basedir='basedir'):
+        self.setUpTestReactor()
+
         """Set up C{self.db}, using the given db_url and basedir."""
         if table_names is None:
             table_names = []
@@ -48,7 +51,7 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
 
         self.db = FakeDBConnector()
         self.db.pool = self.db_pool
-        self.db.master = fakemaster.make_master()
+        self.db.master = fakemaster.make_master(self.reactor)
         self.db.model = model.Model(self.db)
 
     @defer.inlineCallbacks

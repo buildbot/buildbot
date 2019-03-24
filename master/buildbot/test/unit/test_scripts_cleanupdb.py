@@ -28,6 +28,7 @@ from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import flaky
+from buildbot.test.util.misc import TestReactorMixin
 
 from . import test_db_logs
 
@@ -59,9 +60,11 @@ def patch_environ(case, key, value):
 
 
 class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
-                    db.RealDatabaseMixin, unittest.TestCase):
+                    db.RealDatabaseMixin, TestReactorMixin,
+                    unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.origcwd = os.getcwd()
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
@@ -129,7 +132,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
                                                   'workers'])
-        master = fakemaster.make_master()
+        master = fakemaster.make_master(self.reactor)
         master.config.db['db_url'] = self.db_url
         self.db = DBConnector(self.basedir)
         self.db.setServiceParent(master)

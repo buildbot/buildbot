@@ -24,6 +24,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import querylog
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def workerKey(worker):
@@ -652,10 +653,11 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.db = fakedb.FakeDBConnector(self)
         self.db.setServiceParent(self.master)
         self.db.checkForeignKeys = True

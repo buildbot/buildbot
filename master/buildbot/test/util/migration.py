@@ -28,6 +28,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import sautils
 
 # test_upgrade vs. migration tests
@@ -37,16 +38,17 @@ from buildbot.util import sautils
 # single db upgrade script.
 
 
-class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
+class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
     @defer.inlineCallbacks
     def setUpMigrateTest(self):
+        self.setUpTestReactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 
         yield self.setUpRealDatabase()
 
-        master = fakemaster.make_master()
+        master = fakemaster.make_master(self.reactor)
         self.db = connector.DBConnector(self.basedir)
         self.db.setServiceParent(master)
         self.db.pool = self.db_pool

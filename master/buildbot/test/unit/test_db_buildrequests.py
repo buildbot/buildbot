@@ -25,6 +25,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
@@ -636,7 +637,7 @@ class Tests(interfaces.InterfaceTests):
             [45, 47, 48])
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
     # Compatibility with some checks in the "real" tests.
 
     class db_engine:
@@ -645,7 +646,9 @@ class TestFakeDB(unittest.TestCase, Tests):
             name = 'buildbot_fake'
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, wantDb=True,
+                                             testcase=self)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData

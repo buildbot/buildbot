@@ -23,6 +23,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 CREATED_AT = 927845299
@@ -367,10 +368,12 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, wantDb=True,
+                                             testcase=self)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
