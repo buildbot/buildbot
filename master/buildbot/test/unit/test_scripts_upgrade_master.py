@@ -31,6 +31,7 @@ from buildbot.scripts import upgrade_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -106,9 +107,12 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
 
 class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
-                                 misc.StdoutAssertionsMixin, unittest.TestCase):
+                                 misc.StdoutAssertionsMixin,
+                                 TestReactorMixin,
+                                 unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()

@@ -19,6 +19,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucket import _HEADER_EVENT
 
@@ -133,12 +134,14 @@ mercurialJsonNoCommitsPayload = b"""{
 }"""
 
 
-class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
+class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase,
+                                                  TestReactorMixin):
 
     """Unit tests for BitBucket Change Hook
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         self.change_hook = change_hook.ChangeHookResource(
             dialects={'bitbucket': True}, master=fakeMasterForHooks(self))
 

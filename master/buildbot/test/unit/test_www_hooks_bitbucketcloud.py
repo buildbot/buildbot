@@ -21,6 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucketcloud import _HEADER_EVENT
@@ -640,9 +641,11 @@ def _prepare_request(payload, headers=None, change_dict=None):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
+                                            TestReactorMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.change_hook = change_hook.ChangeHookResource(
             dialects={'bitbucketcloud': {}}, master=fakeMasterForHooks(self))
 

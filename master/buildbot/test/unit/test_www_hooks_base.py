@@ -5,6 +5,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.base import BaseHookHandler
@@ -37,8 +38,9 @@ def _prepare_request(payload, headers=None):
     return request
 
 
-class TestChangeHookConfiguredWithBase(unittest.TestCase):
+class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
     def setUp(self):
+        self.setUpTestReactor()
         self.changeHook = _prepare_base_change_hook(self)
 
     @defer.inlineCallbacks
@@ -96,8 +98,11 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
         })
 
 
-class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
+class TestChangeHookConfiguredWithCustomBase(unittest.TestCase,
+                                             TestReactorMixin):
     def setUp(self):
+        self.setUpTestReactor()
+
         class CustomBase(BaseHookHandler):
             def getChanges(self, request):
                 args = request.args

@@ -24,7 +24,11 @@ from buildbot.test.fake import fakemaster
 
 
 def fakeMasterForHooks(testcase):
-    master = fakemaster.make_master(wantData=True, testcase=testcase)
+    # testcase must derive from TestReactorMixin and setUpTestReactor()
+    # must be called before calling this function.
+
+    master = fakemaster.make_master(testcase.reactor, wantData=True,
+                                    testcase=testcase)
     master.www = Mock()
     return master
 

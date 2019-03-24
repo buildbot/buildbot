@@ -23,6 +23,7 @@ from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import change_hook
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
@@ -805,9 +806,11 @@ def FakeRequestMR(content):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
+                                            TestReactorMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.changeHook = change_hook.ChangeHookResource(
             dialects={'gitlab': True}, master=fakeMasterForHooks(self))
 
@@ -996,12 +999,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["category"], "merge_request")
 
 
-class TestChangeHookConfiguredWithSecret(unittest.TestCase):
+class TestChangeHookConfiguredWithSecret(unittest.TestCase, TestReactorMixin):
 
     _SECRET = 'thesecret'
 
     def setUp(self):
-
+        self.setUpTestReactor()
         self.master = fakeMasterForHooks(self)
 
         fakeStorageService = FakeSecretStorage()
