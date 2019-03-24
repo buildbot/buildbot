@@ -25,6 +25,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -86,11 +87,14 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          'island_name': ("despair", 'Book')})
 
 
-class Properties(interfaces.InterfaceTests, unittest.TestCase):
+class Properties(interfaces.InterfaceTests, TestReactorMixin,
+                 unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=False, wantDb=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=False, wantDb=True,
+                                             wantData=True)
         self.rtype = properties.Properties(self.master)
 
     @defer.inlineCallbacks

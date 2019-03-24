@@ -27,6 +27,7 @@ from buildbot.data import resultspec
 from buildbot.data import types
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(interfaces.InterfaceTests):
@@ -87,27 +88,31 @@ class Tests(interfaces.InterfaceTests):
             pass
 
 
-class TestFakeData(unittest.TestCase, Tests):
+class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantData=True, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=True, wantData=True,
+                                             wantDb=True)
         self.data = self.master.data
 
 
-class TestDataConnector(unittest.TestCase, Tests):
+class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantMq=True)
         self.data = connector.DataConnector()
         self.data.setServiceParent(self.master)
 
 
-class DataConnector(unittest.TestCase):
+class DataConnector(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
         self.data = connector.DataConnector()

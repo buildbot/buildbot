@@ -26,6 +26,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1349016870
@@ -129,10 +130,12 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(masters, [])
 
 
-class Master(interfaces.InterfaceTests, unittest.TestCase):
+class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             wantMq=True, wantDb=True,
                                              wantData=True, testcase=self)
         self.rtype = masters.Master(self.master)
 

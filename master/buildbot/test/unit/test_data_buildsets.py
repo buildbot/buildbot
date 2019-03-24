@@ -27,6 +27,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 A_TIMESTAMP = 1341700729
@@ -124,10 +125,12 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildsets[0]['bsid'], 14)
 
 
-class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
+class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
+               unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.Buildset(self.master)
         return self.master.db.insertTestData([

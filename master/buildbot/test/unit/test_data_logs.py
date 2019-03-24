@@ -23,6 +23,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -186,11 +187,13 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          ['results_html', 'stdio'])
 
 
-class Log(interfaces.InterfaceTests, unittest.TestCase):
+class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = logs.Log(self.master)
 
     @defer.inlineCallbacks
