@@ -23,12 +23,13 @@ from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestPBChangeSource(
-    changesource.ChangeSourceMixin,
-    pbmanager.PBManagerMixin,
-        unittest.TestCase):
+class TestPBChangeSource(changesource.ChangeSourceMixin,
+                         pbmanager.PBManagerMixin,
+                         TestReactorMixin,
+                         unittest.TestCase):
 
     DEFAULT_CONFIG = dict(port='9999',
                           user='alice',
@@ -39,6 +40,7 @@ class TestPBChangeSource(
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpPBChangeSource()
         yield self.setUpChangeSource()
 
@@ -209,10 +211,11 @@ class TestPBChangeSource(
         self.assertNotUnregistered()
 
 
-class TestChangePerspective(unittest.TestCase):
+class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantDb=True, wantData=True)
 
     @defer.inlineCallbacks

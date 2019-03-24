@@ -23,9 +23,10 @@ from twisted.trial import unittest
 from buildbot.changes import changes
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class Change(unittest.TestCase):
+class Change(unittest.TestCase, TestReactorMixin):
 
     change23_rows = [
         fakedb.Change(changeid=23, author="dustin", comments="fix whitespace",
@@ -44,7 +45,9 @@ class Change(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             testcase=self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
             repository='git://warner',

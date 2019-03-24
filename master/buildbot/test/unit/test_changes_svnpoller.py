@@ -24,6 +24,7 @@ from buildbot.changes import svnpoller
 from buildbot.process.properties import Interpolate
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
+from buildbot.test.util.misc import TestReactorMixin
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -251,9 +252,11 @@ def split_file(path):
 
 class TestSVNPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
+                    TestReactorMixin,
                     unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpGetProcessOutput()
         return self.setUpChangeSource()
 

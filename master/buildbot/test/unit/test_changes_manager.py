@@ -22,12 +22,15 @@ from twisted.trial import unittest
 from buildbot.changes import base
 from buildbot.changes import manager
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestChangeManager(unittest.TestCase):
+class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             testcase=self, wantData=True)
         self.cm = manager.ChangeManager()
         self.master.startService()
         self.cm.setServiceParent(self.master)

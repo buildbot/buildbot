@@ -22,6 +22,7 @@ from buildbot.changes.github import GitHubPullrequestPoller
 from buildbot.config import ConfigErrors
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import changesource
+from buildbot.test.util.misc import TestReactorMixin
 
 gitJsonPayloadSinglePullrequest = """
 {
@@ -151,9 +152,11 @@ _GH_PARSED_PROPS = {
 
 
 class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
+                                  TestReactorMixin,
                                   unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
 

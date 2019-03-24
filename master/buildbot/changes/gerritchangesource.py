@@ -283,7 +283,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             log.msg(
                 "'gerrit stream-events' failed; restarting after %ds"
                 % round(self.streamProcessTimeout))
-            reactor.callLater(
+            self.master.reactor.callLater(
                 self.streamProcessTimeout, self.startStreamProcess)
             self.streamProcessTimeout *= self.STREAM_BACKOFF_EXPONENT
             if self.streamProcessTimeout > self.STREAM_BACKOFF_MAX:

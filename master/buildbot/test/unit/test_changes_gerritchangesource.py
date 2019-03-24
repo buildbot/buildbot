@@ -28,6 +28,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestGerritHelpers(unittest.TestCase):
@@ -85,9 +86,11 @@ class TestGerritHelpers(unittest.TestCase):
 
 
 class TestGerritChangeSource(changesource.ChangeSourceMixin,
+                             TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpChangeSource()
 
     def tearDown(self):
@@ -228,6 +231,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
 
 class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
+                               TestReactorMixin,
                                unittest.TestCase):
     NOW_TIMESTAMP = 1479302598
     EVENT_TIMESTAMP = 1479302599
@@ -237,6 +241,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
 

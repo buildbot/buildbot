@@ -27,6 +27,7 @@ from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
@@ -170,6 +171,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 class TestGitPollerBase(gpo.GetProcessOutputMixin,
                         changesource.ChangeSourceMixin,
                         logging.LoggingMixin,
+                        TestReactorMixin,
                         unittest.TestCase):
 
     REPOURL = 'git@example.com:foo/baz.git'
@@ -181,6 +183,7 @@ class TestGitPollerBase(gpo.GetProcessOutputMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpGetProcessOutput()
         yield self.setUpChangeSource()
 
