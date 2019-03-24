@@ -16,6 +16,7 @@
 import os
 import sys
 
+from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
 from twisted.python.compat import NativeStringIO
@@ -76,6 +77,12 @@ class TestReactorMixin:
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
         _setReactor(self.reactor)
+
+        def deferToThread(f, *args, **kwargs):
+            return threads.deferToThreadPool(self.reactor, self.reactor.getThreadPool(),
+                                             f, *args, **kwargs)
+        self.patch(threads, 'deferToThread', deferToThread)
+
         # During shutdown sequence we must first stop the reactor and only then
         # set unset the reactor used for eventually() because any callbacks
         # that are run during reactor.stop() may use eventually() themselves.
