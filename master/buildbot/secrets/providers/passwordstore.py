@@ -17,7 +17,6 @@ password store based provider
 """
 
 import os
-import subprocess
 from pathlib import Path
 
 from buildbot import config

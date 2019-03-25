@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from pathlib import Path
-from unittest.mock import PropertyMock
 from unittest.mock import patch
 
 from twisted.internet import defer, utils
@@ -97,6 +96,6 @@ class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_not_found(self):
-        with patch("subprocess.run", side_effect=IOError()):
+        with patch.object(utils, "getProcessOutput", side_effect=IOError()):
             value = yield self.srvpass.get("secret")
         self.assertEqual(value, None)
