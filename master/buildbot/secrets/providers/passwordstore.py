@@ -22,6 +22,7 @@ from pathlib import Path
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
+from twisted.internet import defer, utils
 
 
 class SecretInPass(SecretProviderBase):
@@ -50,19 +51,17 @@ class SecretInPass(SecretProviderBase):
         if dirname:
             self._env["PASSWORD_STORE_DIR"] = dirname
 
+    @defer.inlineCallbacks
     def get(self, entry):
         """
         get the value from pass identified by 'entry'
         """
         try:
-            proc = subprocess.run(
-                ["pass", entry],
-                env=self._env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                check=True,
-                universal_newlines=True
+            output = yield utils.getProcessOutput(
+                "pass",
+                args=[entry],
+                env=self._env
             )
-            return proc.stdout.splitlines()[0]
-        except subprocess.CalledProcessError:
+            return output.decode("utf-8", "ignore").splitlines()[0]
+        except IOError:
             return None

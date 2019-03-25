@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import subprocess
 from pathlib import Path
 from unittest.mock import PropertyMock
 from unittest.mock import patch
 
-from twisted.internet import defer
+from twisted.internet import defer, utils
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
@@ -28,15 +27,10 @@ from buildbot.test.util.config import ConfigErrorsMixin
 
 class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
 
-    def createTempDir(self, dirname):
-        tempdir = FilePath(self.mktemp())
-        tempdir.createDirectory()
-        return tempdir.path
-
     @defer.inlineCallbacks
     def setUp(self):
         with patch.object(Path, "is_file", return_value=True):
-            self.tmp_dir = self.createTempDir("temp")
+            self.tmp_dir = self.create_temp_dir("temp")
             self.srvpass = SecretInPass("password", self.tmp_dir)
             yield self.srvpass.startService()
 
@@ -44,59 +38,65 @@ class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
     def tearDown(self):
         yield self.srvpass.stopService()
 
-    def testCheckConfigSecretInPassService(self):
+    def create_temp_dir(self, dirname):
+        tempdir = FilePath(self.mktemp())
+        tempdir.createDirectory()
+        return tempdir.path
+
+    def test_check_config_secret_in_pass_service(self):
         self.assertEqual(self.srvpass.name, "SecretInPass")
         env = self.srvpass._env
         self.assertEquals(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password")
         self.assertEquals(env["PASSWORD_STORE_DIR"], self.tmp_dir)
 
-    def testCheckConfigBinaryErrorSecretInPassService(self):
+    def test_check_config_binary_error_secret_in_pass_service(self):
         expected_error_msg = "pass does not exist in PATH"
         with patch.object(Path, "is_file", return_value=False):
             with self.assertRaisesConfigError(expected_error_msg):
                 self.srvpass.checkConfig("password", "temp")
 
-    def testCheckConfigDirectoryErrorSecretInPassService(self):
+    def test_check_config_directory_error_secret_in_pass_service(self):
         expected_error_msg = "directory temp2 does not exist"
         with patch.object(Path, "is_file", return_value=True):
             with self.assertRaisesConfigError(expected_error_msg):
                 self.srvpass.checkConfig("password", "temp2")
 
     @defer.inlineCallbacks
-    def testReconfigSecretInAFileService(self):
+    def test_reconfig_secret_in_a_file_service(self):
         with patch.object(Path, "is_file", return_value=True):
-            otherdir = self.createTempDir("temp2")
+            otherdir = self.create_temp_dir("temp2")
             yield self.srvpass.reconfigService("password2", otherdir)
         self.assertEqual(self.srvpass.name, "SecretInPass")
         env = self.srvpass._env
         self.assertEquals(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password2")
         self.assertEquals(env["PASSWORD_STORE_DIR"], otherdir)
 
-    def testGetSecretInPass(self):
-        with patch("subprocess.run") as mock:
-            type(mock.return_value).stdout = PropertyMock(return_value="value")
-            value = self.srvpass.get("secret")
+    @defer.inlineCallbacks
+    def test_get_secret_in_pass(self):
+        with patch.object(utils, "getProcessOutput", return_value=b"value"):
+            value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value")
 
-    def testGetSecretInPassMultipleLinesUnix(self):
-        with patch("subprocess.run") as mock:
-            type(mock.return_value).stdout = PropertyMock(return_value="value1\nvalue2\nvalue3")
-            value = self.srvpass.get("secret")
+    @defer.inlineCallbacks
+    def test_get_secret_in_pass_multiple_lines_unix(self):
+        with patch.object(utils, "getProcessOutput", return_value=b"value1\nvalue2\nvalue3"):
+            value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value1")
 
-    def testGetSecretInPassMultipleLinesDarwin(self):
-        with patch("subprocess.run") as mock:
-            type(mock.return_value).stdout = PropertyMock(return_value="value1\rvalue2\rvalue3")
-            value = self.srvpass.get("secret")
+    @defer.inlineCallbacks
+    def test_get_secret_in_pass_multiple_lines_darwin(self):
+        with patch.object(utils, "getProcessOutput", return_value=b"value1\rvalue2\rvalue3"):
+            value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value1")
 
-    def testGetSecretInPassMultipleLinesWindows(self):
-        with patch("subprocess.run") as mock:
-            type(mock.return_value).stdout = PropertyMock(return_value="value1\r\nvalue2\r\nvalue3")
-            value = self.srvpass.get("secret")
+    @defer.inlineCallbacks
+    def test_get_secret_in_pass_multiple_lines_windows(self):
+        with patch.object(utils, "getProcessOutput", return_value=b"value1\r\nvalue2\r\nvalue3"):
+            value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value1")
 
-    def testGetSecretInPassNotFound(self):
-        with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "cmd")):
-            value = self.srvpass.get("secret")
+    @defer.inlineCallbacks
+    def test_get_secret_in_pass_not_found(self):
+        with patch("subprocess.run", side_effect=IOError()):
+            value = yield self.srvpass.get("secret")
         self.assertEqual(value, None)
