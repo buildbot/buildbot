@@ -151,8 +151,8 @@ def get_sqlalchemy_migrate_version():
     return tuple(map(int, version.split('.')))
 
 
-class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
-    # A subclass of the ThreadLocalEngineStrategy that can effectively interact
+class BuildbotEngineStrategy(strategies.PlainEngineStrategy):
+    # A subclass of the PlainEngineStrategy that can effectively interact
     # with Buildbot.
     #
     # This adjusts the passed-in parameters to ensure that we get the behaviors

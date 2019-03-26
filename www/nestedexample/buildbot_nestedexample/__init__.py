@@ -1,10 +1,10 @@
 from twisted.internet import defer
 
-from buildbot.www.plugin import Application
+from buildbot.schedulers.forcesched import ChoiceStringParameter
 from buildbot.schedulers.forcesched import NestedParameter
 from buildbot.schedulers.forcesched import StringParameter
-from buildbot.schedulers.forcesched import ChoiceStringParameter
 from buildbot.schedulers.forcesched import ValidationError
+from buildbot.www.plugin import Application
 
 from .api import Api
 

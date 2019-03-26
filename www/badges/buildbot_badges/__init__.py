@@ -16,17 +16,18 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import cairocffi as cairo
-import cairosvg
+from xml.sax.saxutils import escape
 
 import jinja2
+
 from klein import Klein
 from twisted.internet import defer
 
+import cairocffi as cairo
+import cairosvg
 from buildbot.process.results import Results
-from buildbot.www.plugin import Application
-from xml.sax.saxutils import escape
 from buildbot.util import bytes2unicode
+from buildbot.www.plugin import Application
 
 
 class Api:
