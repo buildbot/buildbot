@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.www.plugin import Application
 from buildbot.schedulers.forcesched import TextParameter
+from buildbot.www.plugin import Application
 
 
 class CodeParameter(TextParameter):

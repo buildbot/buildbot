@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.www.plugin import Application
-from twisted.web.wsgi import WSGIResource
 from twisted.internet import reactor
-from buildbot.util import unicode2bytes
 from twisted.internet.threads import blockingCallFromThread
+from twisted.web.wsgi import WSGIResource
+
+from buildbot.util import unicode2bytes
+from buildbot.www.plugin import Application
 
 
 class WSGIDashboardsApplication(Application):
