@@ -28,11 +28,15 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestCase):
+class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
+                                            TestReactorMixin,
+                                            unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
@@ -74,9 +78,12 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestC
         return d
 
 
-class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin, unittest.TestCase):
+class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
+                                          TestReactorMixin,
+                                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
@@ -113,10 +120,13 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin, unittest.TestCas
         return d
 
 
-class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestCase,
-                                          configmixin.ConfigErrorsMixin):
+class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
+                                          configmixin.ConfigErrorsMixin,
+                                          TestReactorMixin,
+                                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path

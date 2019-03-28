@@ -32,6 +32,7 @@ from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 
 try:
@@ -54,9 +55,11 @@ class FakeResponse:
         pass
 
 
-class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
+class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
+                 unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
@@ -501,13 +504,16 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
 #  }
 
 
-class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
+class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
+                          unittest.TestCase):
     authClass = "GitHubAuth"
 
     def _instantiateAuth(self, cls, config):
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
     def setUp(self):
+        self.setUpTestReactor()
+
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 

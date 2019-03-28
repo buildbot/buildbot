@@ -33,11 +33,16 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+class TestShellCommandExecution(steps.BuildStepMixin,
+                                configmixin.ConfigErrorsMixin,
+                                TestReactorMixin,
+                                unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -319,9 +324,10 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             shell.ShellCommand()
 
 
-class TreeSize(steps.BuildStepMixin, unittest.TestCase):
+class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -365,9 +371,11 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
+class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -527,9 +535,10 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
             shell.SetPropertyFromCommand(command=["echo", "value"])
 
 
-class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
+class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -661,10 +670,13 @@ class Configure(unittest.TestCase):
         self.assertEqual(step.command, ['./configure'])
 
 
-class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
-                                  configmixin.ConfigErrorsMixin):
+class WarningCountingShellCommand(steps.BuildStepMixin,
+                                  configmixin.ConfigErrorsMixin,
+                                  TestReactorMixin,
+                                  unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -1008,9 +1020,10 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             shell.WarningCountingShellCommand()
 
 
-class Compile(steps.BuildStepMixin, unittest.TestCase):
+class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -1028,9 +1041,12 @@ class Compile(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.command, ["make", "all"])
 
 
-class Test(steps.BuildStepMixin, unittest.TestCase):
+class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+           TestReactorMixin,
+           unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuildStep()
 
     def tearDown(self):

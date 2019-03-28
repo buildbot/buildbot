@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import threads
 from twisted.trial import unittest
 
 from buildbot import config
@@ -42,11 +41,6 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
-
-        def deferToThread(f, *args, **kwargs):
-            return threads.deferToThreadPool(self.reactor, self.reactor.getThreadPool(),
-                                             f, *args, **kwargs)
-        self.patch(threads, 'deferToThread', deferToThread)
 
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')

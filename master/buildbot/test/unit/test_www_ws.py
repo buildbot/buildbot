@@ -20,13 +20,15 @@ from mock import Mock
 from twisted.trial import unittest
 
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www import ws
 
 
-class WsResource(www.WwwTestMixin, unittest.TestCase):
+class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = master = self.make_master(url='h:/a/b/')
         self.ws = ws.WsResource(master)
         self.proto = self.ws._factory.buildProtocol("me")

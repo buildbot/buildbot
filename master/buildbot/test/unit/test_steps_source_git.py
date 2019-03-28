@@ -31,12 +31,18 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
+class TestGit(sourcesteps.SourceStepMixin,
+              config.ConfigErrorsMixin,
+              TestReactorMixin,
+              unittest.TestCase):
+
     stepClass = git.Git
 
     def setUp(self):
+        self.setUpTestReactor()
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
 
@@ -3288,10 +3294,12 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
 
 class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
+                  TestReactorMixin,
                   unittest.TestCase):
     stepClass = git.GitPush
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -3653,10 +3661,11 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
 
 class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
-                 unittest.TestCase):
+                 TestReactorMixin, unittest.TestCase):
     stepClass = git.GitTag
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

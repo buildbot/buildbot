@@ -44,6 +44,7 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
 
 
@@ -59,7 +60,9 @@ class NewStyleStep(buildstep.BuildStep):
         pass
 
 
-class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
+class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
+                    TestReactorMixin,
+                    unittest.TestCase):
 
     class FakeBuildStep(buildstep.BuildStep):
 
@@ -72,6 +75,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
             return SKIPPED
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -786,9 +790,11 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestFakeItfc(unittest.TestCase,
-                   steps.BuildStepMixin, InterfaceTests):
+                   steps.BuildStepMixin, TestReactorMixin,
+                   InterfaceTests):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setupStep(buildstep.BuildStep())
 
 
@@ -808,10 +814,12 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
+class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
+                       unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpBuildStep()
         self.step = CommandMixinExample()
         self.setupStep(self.step)
@@ -966,10 +974,12 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
 class TestShellMixin(steps.BuildStepMixin,
                      config.ConfigErrorsMixin,
+                     TestReactorMixin,
                      unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpBuildStep()
 
     def tearDown(self):

@@ -23,12 +23,16 @@ from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.www import auth
 from buildbot.www import config
 
 
-class IndexResource(www.WwwTestMixin, unittest.TestCase):
+class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
 
     @defer.inlineCallbacks
     def test_render(self):

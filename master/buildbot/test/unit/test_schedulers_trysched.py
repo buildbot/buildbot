@@ -29,13 +29,15 @@ from twisted.trial import unittest
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TryBase(scheduler.SchedulerMixin, unittest.TestCase):
+class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 26
     SCHEDULERID = 6
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -127,12 +129,13 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         svc.messageReceived('jobdata')
 
 
-class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
+class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     OBJECTID = 23
     SCHEDULERID = 3
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
         self.jobdir = None
 
@@ -678,12 +681,14 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         return self.assertFailure(d, AttributeError)
 
 
-class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
+class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
+                               unittest.TestCase):
 
     OBJECTID = 26
     SCHEDULERID = 6
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -790,12 +795,14 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(buildernames, ['a', 'b'])
 
 
-class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
+class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin,
+                   unittest.TestCase):
 
     OBJECTID = 25
     SCHEDULERID = 5
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

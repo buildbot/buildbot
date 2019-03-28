@@ -19,7 +19,6 @@ import time
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -27,9 +26,10 @@ from buildbot.changes import filter
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
+class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     try:
         datetime.datetime.fromtimestamp(1)
@@ -55,14 +55,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             [fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])])
 
         # add a Clock to help checking timing issues
-        self.clock = sched._reactor = task.Clock()
-        self.clock.advance(self.localtime_offset)  # get to 0 min past the hour
+        sched._reactor = self.reactor
+        self.reactor.advance(self.localtime_offset)  # get to 0 min past the hour
 
         self.addBuildsetCallTimes = []
 
         def recordTimes(timeList, method):
             def timedMethod(**kw):
-                timeList.append(self.clock.seconds() - self.localtime_offset)
+                timeList.append(self.reactor.seconds() - self.localtime_offset)
                 return method(**kw)
             return timedMethod
 
@@ -109,6 +109,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         return ch
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -182,7 +183,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_iterations_simple(self):
-        # note that Nightly works in local time, but the task.Clock() always
+        # note that Nightly works in local time, but the TestReactor always
         # starts at midnight UTC, so be careful not to use times that are
         # timezone dependent -- stick to minutes-past-the-half-hour, as some
         # timezones are multiples of 30 minutes off from UTC
@@ -198,9 +199,9 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # invocation has not requested onlyIfChanged
         self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
 
-        self.clock.advance(0)  # let it get set up
-        while self.clock.seconds() < self.localtime_offset + 30 * 60:
-            self.clock.advance(60)
+        self.reactor.advance(0)
+        while self.reactor.seconds() < self.localtime_offset + 30 * 60:
+            self.reactor.advance(60)
         self.assertEqual(self.addBuildsetCallTimes, [600, 1200, 1260])
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
@@ -233,9 +234,9 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        self.clock.advance(0)
-        while self.clock.seconds() < self.localtime_offset + 10 * 60:
-            self.clock.advance(60)
+        self.reactor.advance(0)
+        while self.reactor.seconds() < self.localtime_offset + 10 * 60:
+            self.reactor.advance(60)
         self.assertEqual(self.addBuildsetCallTimes, [300])
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
@@ -269,17 +270,17 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # manually run the clock forward through a half-hour, allowing any
         # excitement to take place
         changes_at = list(changes_at)
-        self.clock.advance(0)  # let it trigger the first build
-        while self.clock.seconds() < self.localtime_offset + 30 * 60:
+        self.reactor.advance(0)  # let it trigger the first build
+        while self.reactor.seconds() < self.localtime_offset + 30 * 60:
             # inject any new changes..
             while (changes_at and
-                    self.clock.seconds() >=
+                    self.reactor.seconds() >=
                    self.localtime_offset + changes_at[0][0]):
                 when, newchange, important = changes_at.pop(0)
                 self.db.changes.fakeAddChangeInstance(newchange)
                 yield self.sched.gotChange(newchange, important).addErrback(log.err)
             # and advance the clock by a minute
-            self.clock.advance(60)
+            self.reactor.advance(60)
 
     @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_no_changes(self):

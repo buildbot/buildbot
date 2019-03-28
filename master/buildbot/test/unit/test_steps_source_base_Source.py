@@ -20,11 +20,14 @@ from twisted.trial import unittest
 from buildbot.steps.source import Source
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestSource(sourcesteps.SourceStepMixin, unittest.SynchronousTestCase):
+class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
+                 unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -119,9 +122,11 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.SynchronousTestCase):
         self.assertEqual(step.describe(True), ['update', 'suffix'])
 
 
-class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
+class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,
+                            unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -154,9 +159,11 @@ class AttrGroup(Source):
         pass
 
 
-class TestSourceAttrGroup(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

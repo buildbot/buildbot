@@ -19,6 +19,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.properties import Interpolate
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestBuildStep(BuildStep):
@@ -27,9 +28,12 @@ class TestBuildStep(BuildStep):
         return 0
 
 
-class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
+                                    TestReactorMixin,
+                                    configmixin.ConfigErrorsMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

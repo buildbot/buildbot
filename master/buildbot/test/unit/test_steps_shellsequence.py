@@ -25,6 +25,7 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class DynamicRun(shellsequence.ShellSequence):
@@ -33,9 +34,11 @@ class DynamicRun(shellsequence.ShellSequence):
         return self.runShellSequence(self.dynamicCommands)
 
 
-class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+                          TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

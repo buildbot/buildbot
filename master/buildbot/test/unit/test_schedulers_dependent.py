@@ -25,6 +25,7 @@ from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
@@ -33,9 +34,10 @@ SCHEDULERID = 133
 UPSTREAM_NAME = 'uppy'
 
 
-class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
+class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

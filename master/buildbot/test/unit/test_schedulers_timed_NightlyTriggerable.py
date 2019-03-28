@@ -22,9 +22,11 @@ from buildbot.process import properties
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
+class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin,
+                         unittest.TestCase):
 
     try:
         datetime.datetime.fromtimestamp(1)
@@ -47,6 +49,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         return sched
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

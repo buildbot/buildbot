@@ -25,15 +25,18 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
+class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
+                    unittest.TestCase):
 
     OBJECTID = 19
     SCHEDULERID = 9
     exp_bsid_brids = (123, {'b': 456})
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

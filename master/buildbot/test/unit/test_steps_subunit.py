@@ -25,6 +25,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
 @implementer(interfaces.ILogObserver)
@@ -32,9 +33,11 @@ class StubLogObserver(mock.Mock):
     pass
 
 
-class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
+class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
+                               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.logobserver = StubLogObserver()
         self.logobserver.failures = []
         self.logobserver.errors = []

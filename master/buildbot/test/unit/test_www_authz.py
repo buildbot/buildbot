@@ -18,6 +18,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake import fakedb
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import authz
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher
@@ -31,9 +32,10 @@ from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
 
 
-class Authz(www.WwwTestMixin, unittest.TestCase):
+class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         authzcfg = authz.Authz(
             # simple matcher with '*' glob character
             stringsMatcher=authz.fnmatchStrMatcher,

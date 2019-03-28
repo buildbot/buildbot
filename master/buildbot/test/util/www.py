@@ -134,7 +134,8 @@ class WwwTestMixin(RequiresWwwMixin):
     UUID = str(uuid1())
 
     def make_master(self, url=None, **kwargs):
-        master = fakemaster.make_master(wantData=True, testcase=self)
+        master = fakemaster.make_master(self.reactor, wantData=True,
+                                        testcase=self)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
         master.www.getUserInfos = lambda _: getattr(

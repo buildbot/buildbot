@@ -20,11 +20,14 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import lintian
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDebLintian(steps.BuildStepMixin, unittest.TestCase):
+class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
+                     unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

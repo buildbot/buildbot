@@ -23,6 +23,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz
@@ -31,9 +32,12 @@ from buildbot.www.rest import JSONRPC_CODES
 from buildbot.www.rest import BadRequest
 
 
-class RestRootResource(www.WwwTestMixin, unittest.TestCase):
+class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     maxVersion = 2
+
+    def setUp(self):
+        self.setUpTestReactor()
 
     @defer.inlineCallbacks
     def test_render(self):
@@ -63,9 +67,10 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(sorted(rsrc.listNames()), sorted(versions))
 
 
-class V2RootResource(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='http://server/path/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -135,9 +140,11 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         )
 
 
-class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -234,9 +241,11 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
         self.assertNotOk(message='invalid origin')
 
 
-class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/')
         self.master.config.www['debug'] = True
         self.master.data._scanModule(endpoint)
@@ -679,9 +688,11 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(got, exp)
 
 
-class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
+                              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/')
 
         def allow(*args, **kw):

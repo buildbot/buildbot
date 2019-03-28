@@ -33,6 +33,7 @@ from buildbot.steps import shell
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.base import Worker
 
 
@@ -151,11 +152,12 @@ class OldPerlModuleTest(shell.Test):
         return results.SUCCESS
 
 
-class RunSteps(unittest.TestCase):
+class RunSteps(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantMq=True, wantDb=True)
         self.master.db.insertTestData([
             fakedb.Builder(id=80, name='test'), ])

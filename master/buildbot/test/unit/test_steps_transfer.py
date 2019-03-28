@@ -37,6 +37,7 @@ from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
@@ -90,9 +91,10 @@ class UploadError:
         raise RuntimeError('uh oh')
 
 
-class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
+class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
@@ -300,9 +302,11 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             transfer.FileUpload('src')
 
 
-class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
+class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
@@ -408,9 +412,11 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
             transfer.DirectoryUpload('src')
 
 
-class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
+class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
@@ -748,9 +754,11 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             transfer.MultipleFileUpload(['srcfile'])
 
 
-class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
+class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
+                       unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
@@ -841,9 +849,11 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(b''.join(read), contents)
 
 
-class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
+class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
+                         unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -939,9 +949,11 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
             transfer.StringDownload('srcfile')
 
 
-class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
+class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

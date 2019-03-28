@@ -30,10 +30,11 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
 
 
-class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
     svn_st_xml = """<?xml version="1.0"?>
         <status>
@@ -117,6 +118,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             </info>"""
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):

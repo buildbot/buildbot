@@ -26,6 +26,7 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 
 
@@ -38,9 +39,11 @@ class AuthResourceMixin:
         self.auth.master = self.master
 
 
-class AuthRootResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
+                       unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpAuthResource()
         self.rsrc = auth.AuthRootResource(self.master)
 
@@ -57,9 +60,10 @@ class AuthRootResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
         self.assertIdentical(child, glr())
 
 
-class AuthBase(www.WwwTestMixin, unittest.TestCase):
+class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.auth = auth.AuthBase()
         self.master = self.make_master(url='h:/a/b/')
         self.auth.master = self.master
@@ -102,9 +106,10 @@ class NoAuth(unittest.TestCase):
         assert auth.NoAuth
 
 
-class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
+class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.make_master()
         self.request = self.make_request(b'/')
@@ -138,9 +143,10 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
             self.fail("403 expected")
 
 
-class AuthRealm(www.WwwTestMixin, unittest.TestCase):
+class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.auth = auth.NoAuth()
         self.make_master()
@@ -152,7 +158,11 @@ class AuthRealm(www.WwwTestMixin, unittest.TestCase):
         self.assertIsInstance(rsrc, auth.PreAuthenticatedLoginResource)
 
 
-class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
+class TwistedICredAuthBase(TestReactorMixin, www.WwwTestMixin,
+                           unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
 
     # twisted.web makes it difficult to simulate the authentication process, so
     # this only tests the mechanics of the getLoginResource method.
@@ -184,11 +194,14 @@ class UserPasswordAuth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.auth.checkers[0].users, correct_login)
 
 
-class CustomAuth(www.WwwTestMixin, unittest.TestCase):
+class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     class MockCustomAuth(auth.CustomAuth):
         def check_credentials(self, us, ps):
             return us == 'fellow' and ps == 'correct'
+
+    def setUp(self):
+        self.setUpTestReactor()
 
     @defer.inlineCallbacks
     def test_callable(self):
@@ -201,11 +214,15 @@ class CustomAuth(www.WwwTestMixin, unittest.TestCase):
         yield self.assertFailure(defer_bad, UnauthorizedLogin)
 
 
-class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
+                    unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
+        self.setUpAuthResource()
 
     @defer.inlineCallbacks
     def test_render(self):
-        self.setUpAuthResource()
         self.rsrc = auth.LoginResource(self.master)
         self.rsrc.renderLogin = mock.Mock(
             spec=self.rsrc.renderLogin, return_value=defer.succeed(b'hi'))
@@ -214,10 +231,11 @@ class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
         self.rsrc.renderLogin.assert_called_with(mock.ANY)
 
 
-class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
-                                    unittest.TestCase):
+class PreAuthenticatedLoginResource(TestReactorMixin, www.WwwTestMixin,
+                                    AuthResourceMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpAuthResource()
         self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
 
@@ -240,9 +258,11 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
                          {'email': 'him@org', 'username': 'him'})
 
 
-class LogoutResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+class LogoutResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin,
+                     unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpAuthResource()
         self.rsrc = auth.LogoutResource(self.master)
 
