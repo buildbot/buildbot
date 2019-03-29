@@ -177,7 +177,7 @@ def grab_commit_info(c, rev):
 
     c['comments'] = ''.join(comments)
     c['files'] = files
-    status = f.terminate()
+    status = f.wait()
     if status:
         logging.warning("git show exited with status %d", status)
 
@@ -235,7 +235,7 @@ def gen_create_branch_changes(newrev, refname, branch):
 
     gen_changes(f3, branch)
 
-    status = f3.returncode
+    status = f3.wait()
     if status:
         logging.warning("git rev-list exited with status %d", status)
 
@@ -249,7 +249,7 @@ def gen_create_tag_changes(newrev, refname, tag):
     f = subprocess.Popen(shlex.split("git log -n 1 --pretty=oneline %s" % newrev),
                          stdout=subprocess.PIPE)
     gen_changes(f, tag)
-    status = f.returncode
+    status = f.wait()
     if status:
         logging.warning("git log exited with status %d", status)
 
@@ -292,7 +292,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             logging.debug("  Rewound file: %s", file)
             files.append(text_type(file))
 
-        status = f.returncode
+        status = f.wait()
         if status:
             logging.warning("git diff exited with status %d", status)
 
@@ -324,7 +324,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
                              stdout=subprocess.PIPE)
         gen_changes(f, branch)
 
-        status = f.terminate()
+        status = f.wait()
         if status:
             logging.warning("git rev-list exited with status %d", status)
 
