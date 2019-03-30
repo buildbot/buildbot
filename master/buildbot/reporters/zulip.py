@@ -8,6 +8,7 @@ from buildbot.util.logger import Logger
 
 logger = Logger()
 
+
 class ZulipStatusPush(HttpStatusPushBase):
     name = "ZulipStatusPush"
 
@@ -48,10 +49,10 @@ class ZulipStatusPush(HttpStatusPushBase):
     def send(self, build, event):
         jsondata = yield self.getBuildDetails(build, event)
         if self.stream is not None:
-            url = "/api/v1/external/buildbot?api_key=%s&stream=%s" % (self.token, self.stream)
+            url = "/api/v1/external/buildbot?api_key={}&stream={}".format(self.token, self.stream)
         else:
-            url = "/api/v1/external/buildbot?api_key=%s" % (self.token)
+            url = "/api/v1/external/buildbot?api_key={}".format(self.token)
         res = yield self._http.post(url, json=jsondata)
         if res.code != 200:
             content = yield res.content()
-            logger.error("%d: Error pushing build status to Zulip: %s" % (res.code, content))
+            logger.error("{}: Error pushing build status to Zulip: {}".format(res.code, content))
