@@ -30,7 +30,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
 
     def makeListener(self):
         listener = pb.Listener()
@@ -91,7 +91,7 @@ class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.conn = pb.Connection(self.master, mock.Mock(), mock.Mock())
 
 
@@ -99,7 +99,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.mind = mock.Mock()
         self.worker = mock.Mock()
 

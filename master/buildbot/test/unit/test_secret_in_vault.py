@@ -31,8 +31,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
         self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
                                                       vaultToken="someToken",
                                                       apiVersion=version)
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         self._http = self.successResultOf(
             fakehttpclientservice.HTTPClientService.getFakeService(
                 self.master, self, 'http://vaultServer', headers={'X-Vault-Token': "someToken"}))

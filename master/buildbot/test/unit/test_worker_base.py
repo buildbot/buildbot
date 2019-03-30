@@ -115,8 +115,7 @@ class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
         self.wrk = ConcreteWorker('wrk', 'pa')
 
     def callAttached(self):
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.master.workers.disownServiceParent()
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self.master)
@@ -131,7 +130,7 @@ class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self)
+        self.master = fakemaster.make_master(self)
         self.wrk = worker.FakeWorker(self.master)
 
     def callAttached(self):
@@ -143,9 +142,7 @@ class TestAbstractWorker(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, wantDb=True,
-                                             wantData=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
@@ -563,9 +560,7 @@ class TestAbstractLatentWorker(TestReactorMixin, unittest.SynchronousTestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor,
-                                             wantDb=True, wantData=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()

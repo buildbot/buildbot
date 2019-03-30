@@ -28,7 +28,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     def test_constructor(self):
         self.setUpTestReactor()
-        master = fakemaster.make_master(self.reactor)
+        master = fakemaster.make_master(self)
         listener = base.Listener()
         listener.setServiceParent(master)
         self.assertEqual(listener.master, master)
@@ -39,7 +39,7 @@ class TestFakeConnection(protocols.ConnectionInterfaceTest,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.worker = mock.Mock()
         self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
 
@@ -49,7 +49,7 @@ class TestConnection(protocols.ConnectionInterfaceTest,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.worker = mock.Mock()
         self.conn = base.Connection(self.master, self.worker)
 

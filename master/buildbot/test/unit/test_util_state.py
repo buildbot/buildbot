@@ -34,8 +34,7 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, wantDb=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.object = FakeObject(self.master)
 
     @defer.inlineCallbacks

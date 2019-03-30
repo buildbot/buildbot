@@ -30,7 +30,7 @@ class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage(secretdict={"foo": "bar",
                                                        "other": "value"})
         self.secretsrv = SecretManager()

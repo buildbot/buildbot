@@ -272,7 +272,7 @@ class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self)
+        self.master = fakemaster.make_master(self)
         self.createKube()
         self.kube.setServiceParent(self.master)
         return self.master.startService()

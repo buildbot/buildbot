@@ -65,8 +65,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         config._errors = Mock()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True,
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
         yield self.master.startService()
 

@@ -30,8 +30,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
     def makeLog(self, type, logEncoding='utf-8'):

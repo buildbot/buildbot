@@ -29,8 +29,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor,
-                                             testcase=self, wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.cm = manager.ChangeManager()
         self.master.startService()
         self.cm.setServiceParent(self.master)

@@ -28,7 +28,7 @@ from buildbot.util import in_reactor
 @in_reactor
 @defer.inlineCallbacks
 def dataspec(config):
-    master = yield fakemaster.make_master()
+    master = yield fakemaster.make_master(None, wantRealReactor=True)
     data = connector.DataConnector()
     data.setServiceParent(master)
     if config['out'] != '--':

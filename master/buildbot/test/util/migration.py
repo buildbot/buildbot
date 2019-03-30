@@ -48,7 +48,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         yield self.setUpRealDatabase()
 
-        master = fakemaster.make_master(self.reactor)
+        master = fakemaster.make_master(self)
         self.db = connector.DBConnector(self.basedir)
         self.db.setServiceParent(master)
         self.db.pool = self.db_pool

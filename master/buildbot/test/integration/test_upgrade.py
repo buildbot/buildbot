@@ -89,7 +89,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                 os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
 
-        self.master = master = fakemaster.make_master(self.reactor)
+        self.master = master = fakemaster.make_master(self)
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(self.basedir)
         self.db.setServiceParent(master)

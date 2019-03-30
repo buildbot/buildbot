@@ -50,8 +50,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     @defer.inlineCallbacks
     def setupMailNotifier(self, *args, **kwargs):

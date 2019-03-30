@@ -13,7 +13,7 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.master.config.secretsProviders = [FakeSecretStorage(secretdict={"foo": "bar",
                                                                              "other": "value"})]
 

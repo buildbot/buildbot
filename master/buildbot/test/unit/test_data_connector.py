@@ -92,8 +92,7 @@ class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantMq=True, wantData=True,
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
         self.data = self.master.data
 
@@ -102,8 +101,7 @@ class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantMq=True)
         self.data = connector.DataConnector()
         self.data.setServiceParent(self.master)
 
@@ -112,7 +110,7 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
         self.data = connector.DataConnector()

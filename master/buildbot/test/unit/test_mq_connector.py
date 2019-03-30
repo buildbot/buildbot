@@ -44,7 +44,7 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
         self.conn.setServiceParent(self.master)

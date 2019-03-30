@@ -132,7 +132,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
                                                   'workers'])
-        master = fakemaster.make_master(self.reactor)
+        master = fakemaster.make_master(self)
         master.config.db['db_url'] = self.db_url
         self.db = DBConnector(self.basedir)
         self.db.setServiceParent(master)

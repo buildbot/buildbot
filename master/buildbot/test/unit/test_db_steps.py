@@ -349,8 +349,7 @@ class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, wantDb=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData

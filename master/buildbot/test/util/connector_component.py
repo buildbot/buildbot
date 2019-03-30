@@ -51,7 +51,7 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
 
         self.db = FakeDBConnector()
         self.db.pool = self.db_pool
-        self.db.master = fakemaster.make_master(self.reactor)
+        self.db.master = fakemaster.make_master(self)
         self.db.model = model.Model(self.db)
 
     @defer.inlineCallbacks

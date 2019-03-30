@@ -59,8 +59,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
         cls = self.makeResourceTypeSubclass(
             name='singular',
             eventPathPatterns="/foo/:fooid/bar/:barid")
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantMq=True)
+        master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
         inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
@@ -75,8 +74,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
                 /builder/:builderid/build/:number
                 /build/:buildid
             """
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantMq=True)
+        master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = MyResourceType(master)
         self.assertEqual(

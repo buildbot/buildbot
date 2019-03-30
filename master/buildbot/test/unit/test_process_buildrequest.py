@@ -30,9 +30,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True,
-                                             wantDb=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.botmaster = mock.Mock(name='botmaster')
         self.master.botmaster.builders = {}
         self.builders = {}
@@ -294,8 +292,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict(self):
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -333,8 +330,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict_submittedAt_NULL(self):
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -354,8 +350,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         self.assertEqual(br.submittedAt, None)
 
     def test_fromBrdict_no_sourcestamps(self):
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
@@ -372,8 +367,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict_multiple_sourcestamps(self):
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -429,8 +423,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
             Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
         """
         brs = []  # list of buildrequests
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -507,8 +500,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
               Merging requests requires both requests to have the same codebases
         """
         brDicts = []  # list of buildrequests dictionary
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=238, branch='trunk',

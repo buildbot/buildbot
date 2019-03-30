@@ -157,8 +157,8 @@ class RunSteps(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantMq=True, wantDb=True)
+        self.master = fakemaster.make_master(self, wantData=True,
+                                             wantMq=True, wantDb=True)
         self.master.db.insertTestData([
             fakedb.Builder(id=80, name='test'), ])
 

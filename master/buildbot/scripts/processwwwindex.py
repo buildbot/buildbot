@@ -31,7 +31,7 @@ from buildbot.www.service import WWWService
 @in_reactor
 @defer.inlineCallbacks
 def processwwwindex(config):
-    master = yield fakemaster.make_master()
+    master = yield fakemaster.make_master(None, wantRealReactor=True)
     master_service = WWWService()
     master_service.setServiceParent(master)
     if not config.get('index-file'):

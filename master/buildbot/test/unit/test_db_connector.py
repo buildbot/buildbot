@@ -44,7 +44,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
             'sourcestampsets', 'builds', 'builders', 'masters',
             'buildrequests', 'workers'])
 
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.master.config = config.MasterConfig()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         self.db.setServiceParent(self.master)

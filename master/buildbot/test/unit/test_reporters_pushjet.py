@@ -34,8 +34,8 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     def setupFakeHttp(self, base_url='https://api.pushjet.io'):
         return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(

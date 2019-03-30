@@ -169,9 +169,8 @@ class BuildStepMixin:
         factory = interfaces.IBuildStepFactory(step)
 
         step = self.step = factory.buildStep()
-        self.master = fakemaster.make_master(self.reactor,
-                                             wantData=wantData, wantDb=wantDb,
-                                             wantMq=wantMq, testcase=self)
+        self.master = fakemaster.make_master(self, wantData=wantData,
+                                             wantDb=wantDb, wantMq=wantMq)
 
         # mock out the reactor for updateSummary's debouncing
         self.debounceClock = task.Clock()

@@ -36,8 +36,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     def setupDb(self):
         self.db = self.master.db
@@ -182,7 +182,7 @@ class TestURLUtils(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self)
+        self.master = fakemaster.make_master(self)
 
     def test_UrlForBuild(self):
         self.assertEqual(utils.getURLForBuild(self.master, 1, 3),
