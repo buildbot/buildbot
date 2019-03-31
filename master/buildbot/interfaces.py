@@ -191,6 +191,11 @@ class IMachine(Interface):
     pass
 
 
+class ILatentMachine(IMachine):
+    """ A machine that is not always running, but can be started when requested.
+    """
+
+
 class IRenderable(Interface):
 
     """An object that can be interpolated with properties from a build.
