@@ -61,7 +61,9 @@ class AbstractWorker(service.BuildbotService):
                     notify_on_missing=None,
                     missing_timeout=None,
                     properties=None, defaultProperties=None,
-                    locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
+                    locks=None,
+                    keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL,
+                    machine_name=None):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -79,8 +81,11 @@ class AbstractWorker(service.BuildbotService):
         @param locks: A list of locks that must be acquired before this worker
                       can be used
         @type locks: dictionary
+        @param machine_name: The name of the machine to associate with the
+                             worker.
         """
         self.name = name = bytes2unicode(name)
+        self.machine_name = machine_name
 
         self.password = password
 
@@ -108,6 +113,10 @@ class AbstractWorker(service.BuildbotService):
         self.properties.setProperty("workername", name, "Worker")
         self.defaultProperties = Properties()
         self.defaultProperties.update(defaultProperties or {}, "Worker")
+
+        if self.machine_name is not None:
+            self.properties.setProperty('machine_name', self.machine_name,
+                                        'Worker')
 
         self.lastMessageReceived = 0
 
@@ -246,12 +255,15 @@ class AbstractWorker(service.BuildbotService):
     def reconfigService(self, name, password, max_builds=None,
                         notify_on_missing=None, missing_timeout=DEFAULT_MISSING_TIMEOUT,
                         properties=None, defaultProperties=None,
-                        locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
+                        locks=None,
+                        keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL,
+                        machine_name=None):
         # Given a Worker config arguments, configure this one identically.
         # Because Worker objects are remotely referenced, we can't replace them
         # without disconnecting the worker, yet there's no reason to do that.
 
         assert self.name == name
+        self.machine_name = machine_name
         self.password = password
 
         # adopt new instance's configuration parameters
@@ -277,6 +289,10 @@ class AbstractWorker(service.BuildbotService):
         self.properties.setProperty("workername", name, "Worker")
         self.defaultProperties = Properties()
         self.defaultProperties.update(defaultProperties or {}, "Worker")
+
+        if self.machine_name is not None:
+            self.properties.setProperty("machine_name", self.machine_name,
+                                        "Worker")
 
         # update our records with the worker manager
         if not self.registration:

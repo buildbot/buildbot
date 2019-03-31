@@ -99,6 +99,19 @@ class FakeBuilder:
         self.__dict__.update(kwargs)
 
 
+@implementer(interfaces.IWorker)
+class FakeWorker:
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+@implementer(interfaces.IMachine)
+class FakeMachine:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
 class ConfigErrors(unittest.TestCase):
 
     def test_constr(self):
@@ -362,6 +375,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.load_builders.called)
         self.assertTrue(rv.load_workers.called)
         self.assertTrue(rv.load_change_sources.called)
+        self.assertTrue(rv.load_machines.called)
         self.assertTrue(rv.load_user_managers.called)
 
         self.assertTrue(rv.check_single_master.called)
@@ -369,6 +383,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.check_locks.called)
         self.assertTrue(rv.check_builders.called)
         self.assertTrue(rv.check_ports.called)
+        self.assertTrue(rv.check_machines.called)
 
     def test_preChangeGenerator(self):
         cfg = config.MasterConfig()
@@ -857,6 +872,27 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                      dict(change_source=[chsrc]))
         self.assertResults(change_sources=[chsrc])
 
+    def test_load_machines_defaults(self):
+        self.cfg.load_machines(self.filename, {})
+        self.assertResults(machines=[])
+
+    def test_load_machines_not_instance(self):
+        self.cfg.load_machines(self.filename,
+                               dict(machines=[mock.Mock()]))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_machines_single(self):
+        mm = FakeMachine(name='a')
+        self.cfg.load_machines(self.filename,
+                               dict(machines=mm))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_machines_list(self):
+        mm = FakeMachine()
+        self.cfg.load_machines(self.filename,
+                               dict(machines=[mm]))
+        self.assertResults(machines=[mm])
+
     def test_load_user_managers_defaults(self):
         self.cfg.load_user_managers(self.filename, {})
         self.assertResults(user_managers=[])
@@ -1223,6 +1259,25 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                                "Some of ports in c['protocols'] duplicated")
+
+    def test_check_machines_unknown_name(self):
+        self.cfg.workers = [
+            FakeWorker(name='wa', machine_name='unk')
+        ]
+        self.cfg.machines = [
+            FakeMachine(name='a')
+        ]
+        self.cfg.check_machines()
+        self.assertConfigError(self.errors, 'uses unknown machine')
+
+    def test_check_machines_duplicate_name(self):
+        self.cfg.machines = [
+            FakeMachine(name='a'),
+            FakeMachine(name='a')
+        ]
+        self.cfg.check_machines()
+        self.assertConfigError(self.errors,
+                               'duplicate machine name')
 
 
 class MasterConfig_old_worker_api(unittest.TestCase):
