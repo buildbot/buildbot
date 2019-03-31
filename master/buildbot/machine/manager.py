@@ -13,31 +13,17 @@
 #
 # Portions Copyright Buildbot Team Members
 
-from zope.interface import implementer
 
-from buildbot import interfaces
 from buildbot.util import service
+from buildbot.worker.manager import WorkerManager
 
 
-@implementer(interfaces.IMachine)
-class Machine(service.BuildbotService):
+class MachineManager(service.BuildbotServiceManager):
+    reconfig_priority = WorkerManager.reconfig_priority + 1
+    name = 'MachineManager'
+    managed_services_name = 'machines'
+    config_attr = 'machines'
 
-    def checkConfig(self, name, **kwargs):
-        super().checkConfig(**kwargs)
-        self.name = name
-        self.workers = []
-
-    def reconfigService(self, name, **kwargs):
-        super().reconfigService(**kwargs)
-        assert self.name == name
-
-    def registerWorker(self, worker):
-        assert worker.machine_name == self.name
-        self.workers.append(worker)
-
-    def unregisterWorker(self, worker):
-        assert worker in self.workers
-        self.workers.remove(worker)
-
-    def __repr__(self):
-        return "<Machine '{}' at {}>".format(self.name, id(self))
+    @property
+    def machines(self):
+        return self.namedServices

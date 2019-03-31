@@ -117,6 +117,7 @@ class AbstractWorker(service.BuildbotService):
         if self.machine_name is not None:
             self.properties.setProperty('machine_name', self.machine_name,
                                         'Worker')
+        self.machine = None
 
         self.lastMessageReceived = 0
 
@@ -263,7 +264,6 @@ class AbstractWorker(service.BuildbotService):
         # without disconnecting the worker, yet there's no reason to do that.
 
         assert self.name == name
-        self.machine_name = machine_name
         self.password = password
 
         # adopt new instance's configuration parameters
@@ -290,9 +290,23 @@ class AbstractWorker(service.BuildbotService):
         self.defaultProperties = Properties()
         self.defaultProperties.update(defaultProperties or {}, "Worker")
 
-        if self.machine_name is not None:
-            self.properties.setProperty("machine_name", self.machine_name,
-                                        "Worker")
+        # Note that before first reconfig self.machine will always be None and
+        # out of sync with self.machine_name, thus more complex logic is needed.
+        if self.machine is not None and self.machine_name != machine_name:
+            self.machine.unregisterWorker(self)
+            self.machine = None
+
+        self.machine_name = machine_name
+        if self.machine is None and self.machine_name is not None:
+            machines = self.master.machine_manager.machines
+            if self.machine_name in machines:
+                self.machine = machines[self.machine_name]
+                self.machine.registerWorker(self)
+                self.properties.setProperty("machine_name", self.machine_name,
+                                            "Worker")
+            else:
+                log.err("Unknown machine '{}' for worker '{}'".format(
+                    self.machine_name, self.name))
 
         # update our records with the worker manager
         if not self.registration:

@@ -32,6 +32,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.test.fake.machine import FakeMachineManager
 from buildbot.util import service
 
 
@@ -183,6 +184,8 @@ class FakeMaster(service.MasterService):
         self.masterid = master_id
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self)
+        self.machine_manager = FakeMachineManager()
+        self.machine_manager.setServiceParent(self)
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()
         self.next_objectid = 0
