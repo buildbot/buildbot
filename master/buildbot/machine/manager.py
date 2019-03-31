@@ -27,3 +27,8 @@ class MachineManager(service.BuildbotServiceManager):
     @property
     def machines(self):
         return self.namedServices
+
+    def getMachineByName(self, name):
+        if name in self.machines:
+            return self.machines[name]
+        return None

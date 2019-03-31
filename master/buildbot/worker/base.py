@@ -298,9 +298,8 @@ class AbstractWorker(service.BuildbotService):
 
         self.machine_name = machine_name
         if self.machine is None and self.machine_name is not None:
-            machines = self.master.machine_manager.machines
-            if self.machine_name in machines:
-                self.machine = machines[self.machine_name]
+            self.machine = self.master.machine_manager.getMachineByName(self.machine_name)
+            if self.machine is not None:
                 self.machine.registerWorker(self)
                 self.properties.setProperty("machine_name", self.machine_name,
                                             "Worker")
