@@ -3292,6 +3292,15 @@ class TestGit(sourcesteps.SourceStepMixin,
         msg = 'git is not installed on worker'
         return self._test_WorkerTooOldError(_dovccmd, step, msg)
 
+    def test_config_get_description_not_dict_or_boolean(self):
+        with self.assertRaisesConfigError("Git: getDescription must be a boolean or a dict."):
+            self.stepClass(repourl="http://github.com/buildbot/buildbot.git",
+                           getDescription=["list"])
+
+    def test_config_invalid_method_with_full(self):
+        with self.assertRaisesConfigError("Git: invalid method for mode 'full'."):
+            self.stepClass(repourl="http://github.com/buildbot/buildbot.git",
+                           mode='full', method='unknown')
 
 
 class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
