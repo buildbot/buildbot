@@ -83,7 +83,7 @@ txaio==18.8.1
 txrequests==0.9.6
 typing==3.6.6
 webcolors==1.8.1
-Werkzeug==0.14.1
+Werkzeug==0.15.1
 wrapt==1.11.1
 xmltodict==0.12.0
 zope.interface==4.6.0
