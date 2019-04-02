@@ -136,6 +136,33 @@ In the master configuration, the Vault provider is instantiated through the Buil
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
+.. _SecretInPass:
+
+SecretInPass
+`````````````
+
+.. code-block:: python
+
+    c['secretsProviders'] = [secrets.SecretInPass(
+                            gpgPassphrase="passphrase", 
+                            dirname="/path/to/password/store"
+    )]
+
+Passwords can be stored in a unix password store, encrypted using GPG keys.
+Buildbot can query secrets via the ``pass`` binary found in the PATH of each worker.
+While ``pass`` allows for multiline entries, the secret must be on the first line of each entry.
+The only caveat is that all passwords Buildbot needs to access have to be encrypted using the same GPG key.
+
+For more information about ``pass``, please visit _`pass`: https://www.passwordstore.org/
+
+Arguments:
+
+``gpgPassphrase``
+  (optional) Pass phrase to the GPG decryption key, if any
+
+``dirname``
+  (optional) Absolute path to the password store directory, defaults to ~/.password-store
+
 How to populate secrets in a build
 ----------------------------------
 
