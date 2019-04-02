@@ -25,6 +25,7 @@ from twisted.trial import unittest
 
 from buildbot.mq import wamp
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.wamp import connector
 
 
@@ -97,7 +98,7 @@ class TopicMatch(unittest.TestCase):
             self.assertFalse(w.topic_match(j))
 
 
-class WampMQ(unittest.TestCase):
+class WampMQ(TestReactorMixin, unittest.TestCase):
 
     """
         Stimulate the code with a fake wamp router:
@@ -105,7 +106,8 @@ class WampMQ(unittest.TestCase):
     """
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.master.wamp = FakeWampConnector()
         self.mq = wamp.WampMQ()
         self.mq.setServiceParent(self.master)
@@ -154,7 +156,7 @@ class FakeConfig:
     mq = dict(type='wamp', router_url="wss://foo", realm="realm1")
 
 
-class WampMQReal(unittest.TestCase):
+class WampMQReal(TestReactorMixin, unittest.TestCase):
 
     """
         Tests a little bit more painful to run, but which involve real communication with
@@ -172,9 +174,10 @@ class WampMQReal(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         if "WAMP_ROUTER_URL" not in os.environ:
             raise unittest.SkipTest(self.HOW_TO_RUN)
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(self.reactor)
         self.mq = wamp.WampMQ()
         yield self.mq.setServiceParent(self.master)
         self.connector = self.master.wamp = connector.WampConnector()

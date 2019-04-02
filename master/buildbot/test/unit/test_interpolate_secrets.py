@@ -9,6 +9,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class FakeBuildWithMaster(FakeBuild):
@@ -18,10 +19,12 @@ class FakeBuildWithMaster(FakeBuild):
         self.master = master
 
 
-class TestInterpolateSecrets(unittest.TestCase, ConfigErrorsMixin):
+class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase,
+                             ConfigErrorsMixin):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar",
                                                        "other": "value"})
@@ -45,10 +48,12 @@ class TestInterpolateSecrets(unittest.TestCase, ConfigErrorsMixin):
         self.flushLoggedErrors(KeyError)
 
 
-class TestInterpolateSecretsNoService(unittest.TestCase, ConfigErrorsMixin):
+class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase,
+                                      ConfigErrorsMixin):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.build = FakeBuildWithMaster(self.master)
 
     @defer.inlineCallbacks
@@ -60,10 +65,11 @@ class TestInterpolateSecretsNoService(unittest.TestCase, ConfigErrorsMixin):
         self.flushLoggedErrors(KeyError)
 
 
-class TestInterpolateSecretsHiddenSecrets(unittest.TestCase):
+class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar",
                                                        "other": "value"})

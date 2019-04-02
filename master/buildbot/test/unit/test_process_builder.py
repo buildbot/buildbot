@@ -28,6 +28,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.worker import AbstractLatentWorker
@@ -37,7 +38,8 @@ class BuilderMixin:
 
     def setUpBuilderMixin(self):
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True)
         self.mq = self.master.mq
         self.db = self.master.db
 
@@ -84,9 +86,10 @@ class FakeWorker:
         self.workername = workername
 
 
-class TestBuilder(BuilderMixin, unittest.TestCase):
+class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         # a collection of rows that would otherwise clutter up every test
         self.setUpBuilderMixin()
         self.base_rows = [
@@ -415,7 +418,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getBuilderId(self):
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True)
         # only include the necessary required config, plus user-requested
         self.bldr = builder.Builder('bldr')
         self.bldr.master = self.master
@@ -455,9 +459,10 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertEquals(props.getProperty('cuckoo'), 42)
 
 
-class TestGetBuilderId(BuilderMixin, unittest.TestCase):
+class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks
@@ -477,10 +482,12 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         self.assertIsInstance(arg, str)
 
 
-class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
+class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin,
+                               unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -529,10 +536,11 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
         self.assertEqual(rqtime, None)
 
 
-class TestGetNewestCompleteTime(BuilderMixin, unittest.TestCase):
+class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -569,11 +577,12 @@ class TestGetNewestCompleteTime(BuilderMixin, unittest.TestCase):
         self.assertEqual(rqtime, None)
 
 
-class TestReconfig(BuilderMixin, unittest.TestCase):
+class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     """Tests that a reconfig properly updates all attributes"""
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks

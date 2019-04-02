@@ -19,12 +19,15 @@ from twisted.trial import unittest
 from buildbot.process.users import users
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class UsersTests(unittest.TestCase):
+class UsersTests(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantDb=True)
         self.db = self.master.db
         self.test_sha = users.encrypt("cancer")
 

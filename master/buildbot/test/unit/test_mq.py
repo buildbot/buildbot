@@ -22,6 +22,7 @@ from buildbot.mq import simple
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 from buildbot.test.util import tuplematching
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(interfaces.InterfaceTests):
@@ -132,17 +133,20 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
     timeout = 3  # those tests should not run long
 
 
-class TestFakeMQ(unittest.TestCase, Tests):
+class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=True)
         self.mq = self.master.mq
         self.mq.verifyMessages = False
 
 
-class TestSimpleMQ(unittest.TestCase, RealTests):
+class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         self.mq = simple.SimpleMQ()
         self.mq.setServiceParent(self.master)

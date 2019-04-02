@@ -5,6 +5,7 @@ from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.service import BuildbotService
 
 
@@ -25,10 +26,11 @@ class FakeServiceUsingSecrets(BuildbotService):
             raise Exception
 
 
-class TestRenderSecrets(unittest.TestCase):
+class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor)
         fakeStorageService = FakeSecretStorage(secretdict={"foo": "bar",
                                                        "other": "value"})
         self.secretsrv = SecretManager()

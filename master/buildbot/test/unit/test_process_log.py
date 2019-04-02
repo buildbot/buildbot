@@ -23,12 +23,14 @@ from buildbot.process import log
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class Tests(unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True)
 
     @defer.inlineCallbacks
