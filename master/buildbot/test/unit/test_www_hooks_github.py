@@ -22,6 +22,9 @@ from io import BytesIO
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.plugins import util
+from buildbot.secrets.manager import SecretManager
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
@@ -1077,8 +1080,16 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
+
+        fakeStorageService = FakeSecretStorage()
+        fakeStorageService.reconfigService(secretdict={"secret_key": self._SECRET})
+
+        secretService = SecretManager()
+        secretService.services = [fakeStorageService]
+
         self.changeHook = _prepare_github_change_hook(self, strict=True,
-                                                      secret=self._SECRET)
+                                                      secret=util.Secret("secret_key"))
+        self.changeHook.master.addService(secretService)
 
     @defer.inlineCallbacks
     def test_signature_ok(self):
