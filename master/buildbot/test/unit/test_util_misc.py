@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import util
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import misc
 
 
@@ -83,13 +83,14 @@ class deferredLocked(unittest.TestCase):
         self.assertFalse(obj.aLock.locked)
 
 
-class TestCancelAfter(unittest.TestCase):
+class TestCancelAfter(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.d = defer.Deferred()
 
     def test_succeeds(self):
-        d = misc.cancelAfter(10, self.d)
+        d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertIdentical(d, self.d)
 
         @d.addCallback
@@ -101,7 +102,7 @@ class TestCancelAfter(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fails(self):
-        d = misc.cancelAfter(10, self.d)
+        d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.d.errback(RuntimeError("oh noes"))
         self.assertTrue(d.called)
@@ -109,20 +110,18 @@ class TestCancelAfter(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_timeout_succeeds(self):
-        c = task.Clock()
-        d = misc.cancelAfter(10, self.d, _reactor=c)
+        d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
-        c.advance(11)
+        self.reactor.advance(11)
         d.callback("result")  # ignored
         self.assertTrue(d.called)
         yield self.assertFailure(d, defer.CancelledError)
 
     @defer.inlineCallbacks
     def test_timeout_fails(self):
-        c = task.Clock()
-        d = misc.cancelAfter(10, self.d, _reactor=c)
+        d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
-        c.advance(11)
+        self.reactor.advance(11)
         self.d.errback(RuntimeError("oh noes"))  # ignored
         self.assertTrue(d.called)
         yield self.assertFailure(d, defer.CancelledError)
