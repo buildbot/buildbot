@@ -23,6 +23,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def changeSourceKey(changeSource):
@@ -275,10 +276,12 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData

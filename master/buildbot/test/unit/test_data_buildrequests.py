@@ -28,6 +28,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
 
 
@@ -246,7 +247,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(res[0]['results'], 1)
 
 
-class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
+class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
+                       unittest.TestCase):
 
     CLAIMED_AT = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
     COMPLETE_AT = datetime.datetime(1980, 6, 15, 12, 31, 15, tzinfo=UTC)
@@ -255,8 +257,10 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         pass
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = buildrequests.BuildRequest(self.master)
 
     @defer.inlineCallbacks

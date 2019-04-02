@@ -29,6 +29,7 @@ from buildbot.changes.p4poller import get_simple_split
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 
 first_p4changes = \
@@ -110,9 +111,11 @@ class FakeTransport:
 class TestP4Poller(changesource.ChangeSourceMixin,
                    gpo.GetProcessOutputMixin,
                    config.ConfigErrorsMixin,
+                   TestReactorMixin,
                    unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpGetProcessOutput()
         return self.setUpChangeSource()
 

@@ -26,6 +26,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 
@@ -250,7 +251,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
 
-class Build(interfaces.InterfaceTests, unittest.TestCase):
+class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     new_build_event = {'builderid': 10,
                        'buildid': 100,
                        'buildrequestid': 13,
@@ -265,8 +266,10 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                        'properties': {}}
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = builds.Build(self.master)
 
     @defer.inlineCallbacks

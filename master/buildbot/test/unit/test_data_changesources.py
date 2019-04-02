@@ -26,6 +26,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -142,10 +143,13 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(changesources, [])
 
 
-class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):
+class ChangeSource(TestReactorMixin, interfaces.InterfaceTests,
+                   unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             wantMq=True, wantDb=True,
                                              wantData=True, testcase=self)
         self.rtype = changesources.ChangeSource(self.master)
 

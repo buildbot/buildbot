@@ -123,6 +123,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
 
         # whether there are calls that should run right now
         self._pendingCurrentCalls = False
+        self.stop_called = False
 
     def _executeCurrentDelayedCalls(self):
         while self.getDelayedCalls():
@@ -170,3 +171,5 @@ class TestReactor(NonReactor, CoreReactor, Clock):
 
         # then, fire the shutdown event
         self.fireSystemEvent('shutdown')
+
+        self.stop_called = True

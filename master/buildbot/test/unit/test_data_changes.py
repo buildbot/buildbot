@@ -27,6 +27,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 
@@ -118,7 +119,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(len(changes), 2)
 
 
-class Change(interfaces.InterfaceTests, unittest.TestCase):
+class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     changeEvent = {
         'author': 'warner',
         'branch': 'warnerdb',
@@ -148,7 +149,9 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
     }
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             wantMq=True, wantDb=True,
                                              wantData=True, testcase=self)
         self.rtype = changes.Change(self.master)
 

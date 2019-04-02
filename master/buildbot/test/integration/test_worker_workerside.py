@@ -34,6 +34,7 @@ from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.status import master
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import manager as workermanager
 
 PKI_DIR = util.sibpath(__file__, 'pki')
@@ -115,7 +116,7 @@ class TestingWorker(buildbot_worker.bot.Worker):
         self.bf.failedToGetPerspective = failedToGetPerspective
 
 
-class TestWorkerConnection(unittest.TestCase):
+class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     """
     Test handling of connections from real worker code
@@ -132,7 +133,9 @@ class TestWorkerConnection(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             testcase=self, wantMq=True,
                                              wantData=True, wantDb=True)
         # set the worker port to a loopback address with unspecified
         # port

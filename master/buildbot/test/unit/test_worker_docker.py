@@ -32,7 +32,8 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
     def setupWorker(self, *args, **kwargs):
         self.patch(dockerworker, 'docker', docker)
         worker = dockerworker.DockerLatentWorker(*args, **kwargs)
-        master = fakemaster.make_master(testcase=self, wantData=True)
+        master = fakemaster.make_master(self.reactor, testcase=self,
+                                        wantData=True)
         fakemaster.master = master
         worker.setServiceParent(master)
         self.successResultOf(master.startService())

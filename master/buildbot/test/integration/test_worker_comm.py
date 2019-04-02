@@ -36,6 +36,7 @@ from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.status import master
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
 
@@ -140,7 +141,7 @@ class MyWorker(worker.Worker):
         d.callback(None)
 
 
-class TestWorkerComm(unittest.TestCase):
+class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
     """
     Test handling of connections from workers as integrated with
@@ -163,7 +164,9 @@ class TestWorkerComm(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             testcase=self, wantMq=True,
                                              wantData=True, wantDb=True)
 
         # set the worker port to a loopback address with unspecified

@@ -24,6 +24,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -138,10 +139,13 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(schedulers, [])
 
 
-class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
+class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
+                unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             wantMq=True, wantDb=True,
                                              wantData=True, testcase=self)
         self.rtype = schedulers.Scheduler(self.master)
 

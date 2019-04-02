@@ -21,6 +21,7 @@ from twisted.trial import unittest
 from buildbot.changes import hgpoller
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
+from buildbot.test.util.misc import TestReactorMixin
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 LINESEP_BYTES = os.linesep.encode("ascii")
@@ -29,6 +30,7 @@ PATHSEP_BYTES = os.pathsep.encode("ascii")
 
 class TestHgPollerBase(gpo.GetProcessOutputMixin,
                        changesource.ChangeSourceMixin,
+                       TestReactorMixin,
                        unittest.TestCase):
     usetimestamps = True
     branches = None
@@ -36,6 +38,8 @@ class TestHgPollerBase(gpo.GetProcessOutputMixin,
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
+
         # To test that environment variables get propagated to subprocesses
         # (See #2116)
         os.environ[ENVIRON_2116_KEY] = 'TRUE'

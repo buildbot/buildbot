@@ -27,19 +27,23 @@ from buildbot.reporters.gitlab import GitLabStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.LoggingMixin):
+class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
+                           ReporterTestMixin, logging.LoggingMixin):
     # repository must be in the form http://gitlab/<owner>/<project>
     TEST_REPO = 'http://gitlab/buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True, wantDb=True,
+                                             wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(

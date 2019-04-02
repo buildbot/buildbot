@@ -13,14 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import poll
 
 
-class TestPollerSync(unittest.TestCase):
+class TestPollerSync(TestReactorMixin, unittest.TestCase):
 
     @poll.method
     def poll(self):
@@ -29,18 +31,21 @@ class TestPollerSync(unittest.TestCase):
             raise RuntimeError('oh noes')
 
     def setUp(self):
+        self.setUpTestReactor()
+        self.master = mock.Mock()
+        self.master.reactor = self.reactor
+
         poll.track_poll_methods()
         self.calls = 0
         self.fail = False
-        self.poll._reactor = self.clock = task.Clock()
 
     def tearDown(self):
         poll.reset_poll_methods()
-        self.assertEqual(self.clock.getDelayedCalls(), [])
+        self.assertEqual(self.reactor.getDelayedCalls(), [])
 
     def test_not_started(self):
         """If the poll method isn't started, nothing happens"""
-        self.clock.advance(100)
+        self.reactor.advance(100)
         self.assertEqual(self.calls, 0)
 
     def test_call_when_stopped(self):
@@ -52,7 +57,7 @@ class TestPollerSync(unittest.TestCase):
         """Calling the poll method when started forces a run."""
         self.poll.start(interval=100, now=False)
         self.poll()
-        self.clock.advance(0)
+        self.reactor.advance(0)
         self.assertEqual(self.calls, 1)
         return self.poll.stop()
 
@@ -86,15 +91,15 @@ class TestPollerSync(unittest.TestCase):
     def test_repeats_and_stops(self):
         """Polling repeats until stopped, and stop returns a Deferred"""
         self.poll.start(interval=10, now=True)
-        while self.clock.seconds() <= 200:
-            self.assertEqual(self.calls, (self.clock.seconds() // 10) + 1)
-            self.clock.advance(1)
+        while self.reactor.seconds() <= 200:
+            self.assertEqual(self.calls, (self.reactor.seconds() // 10) + 1)
+            self.reactor.advance(1)
 
         d = self.poll.stop()
         self.assertTrue(d.called)
 
         self.assertEqual(self.calls, 21)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertEqual(self.calls, 21)
 
     def test_fails(self):
@@ -103,20 +108,20 @@ class TestPollerSync(unittest.TestCase):
         self.fail = True
         self.poll.start(interval=1, now=True)
         self.assertEqual(self.calls, 1)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(self.calls, 2)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
         return self.poll.stop()
 
 
-class TestPollerAsync(unittest.TestCase):
+class TestPollerAsync(TestReactorMixin, unittest.TestCase):
 
     @poll.method
     def poll(self):
         assert not self.running, "overlapping call"
         self.running = True
         d = defer.Deferred()
-        self.clock.callLater(self.duration, d.callback, None)
+        self.reactor.callLater(self.duration, d.callback, None)
 
         @d.addCallback
         def inc(_):
@@ -130,12 +135,15 @@ class TestPollerAsync(unittest.TestCase):
         return d
 
     def setUp(self):
+        self.setUpTestReactor()
+        self.master = mock.Mock()
+        self.master.reactor = self.reactor
+
         poll.track_poll_methods()
         self.calls = 0
         self.running = False
         self.duration = 1
         self.fail = False
-        self.poll._reactor = self.clock = task.Clock()
 
     def tearDown(self):
         poll.reset_poll_methods()
@@ -145,7 +153,7 @@ class TestPollerAsync(unittest.TestCase):
         self.poll.start(interval=10, now=True)
         self.assertEqual(self.calls, 0)
         self.assertTrue(self.running)
-        self.clock.advance(self.duration)
+        self.reactor.advance(self.duration)
         self.assertEqual(self.calls, 1)
         self.assertFalse(self.running)
 
@@ -154,10 +162,10 @@ class TestPollerAsync(unittest.TestCase):
         self.poll.start(interval=10, now=False)
         self.assertEqual(self.calls, 0)
         self.assertFalse(self.running)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertEqual(self.calls, 0)
         self.assertTrue(self.running)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(self.calls, 1)
         self.assertFalse(self.running)
 
@@ -166,16 +174,16 @@ class TestPollerAsync(unittest.TestCase):
         duration of the function's execution does not affect the execution
         interval: executions occur every 10 seconds.  """
         self.poll.start(interval=10, now=True)
-        while self.clock.seconds() <= 200:
-            self.assertEqual(self.calls, (self.clock.seconds() + 9) // 10)
-            self.assertEqual(self.running, self.clock.seconds() % 10 == 0)
-            self.clock.advance(1)
+        while self.reactor.seconds() <= 200:
+            self.assertEqual(self.calls, (self.reactor.seconds() + 9) // 10)
+            self.assertEqual(self.running, self.reactor.seconds() % 10 == 0)
+            self.reactor.advance(1)
 
         d = self.poll.stop()
         self.assertTrue(d.called)
 
         self.assertEqual(self.calls, 21)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertEqual(self.calls, 21)
 
     def test_fails(self):
@@ -183,11 +191,11 @@ class TestPollerAsync(unittest.TestCase):
         the exception is logged each time."""
         self.fail = True
         self.poll.start(interval=10, now=True)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(self.calls, 1)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertTrue(self.running)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(self.calls, 2)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
 
@@ -196,13 +204,13 @@ class TestPollerAsync(unittest.TestCase):
         Deferred does not fire until the run is complete."""
         self.duration = 2
         self.poll.start(interval=10)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertTrue(self.running)
         d = self.poll.stop()
         self.assertFalse(d.called)  # not stopped yet
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertFalse(d.called)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertTrue(d.called)
 
     def test_call_while_running(self):
@@ -210,11 +218,11 @@ class TestPollerAsync(unittest.TestCase):
         a second call as soon as the first is done."""
         self.duration = 5
         self.poll.start(interval=10, now=True)
-        self.clock.advance(3)
+        self.reactor.advance(3)
         self.poll()
-        self.clock.advance(2)
+        self.reactor.advance(2)
         self.assertEqual(self.calls, 1)
-        self.clock.advance(5)
+        self.reactor.advance(5)
         self.assertEqual(self.calls, 2)
 
     def test_call_while_running_then_stop(self):
@@ -222,15 +230,15 @@ class TestPollerAsync(unittest.TestCase):
         calling stop will wait for both invocations to complete."""
         self.duration = 5
         self.poll.start(interval=10, now=True)
-        self.clock.advance(3)
+        self.reactor.advance(3)
         self.poll()
         d = self.poll.stop()
-        self.clock.advance(2)
+        self.reactor.advance(2)
         self.assertEqual(self.calls, 1)
-        self.clock.advance(4)
+        self.reactor.advance(4)
         self.assertEqual(self.calls, 1)
         self.assertFalse(d.called)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertEqual(self.calls, 2)
         self.assertTrue(d.called)
 
@@ -239,14 +247,14 @@ class TestPollerAsync(unittest.TestCase):
         neither Deferred fires until the run is complete."""
         self.duration = 2
         self.poll.start(interval=10)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertTrue(self.running)
         d1 = self.poll.stop()
         self.assertFalse(d1.called)  # not stopped yet
-        self.clock.advance(1)
+        self.reactor.advance(1)
         d2 = self.poll.stop()
         self.assertFalse(d2.called)
-        self.clock.advance(1)
+        self.reactor.advance(1)
         self.assertTrue(d1.called)
         self.assertTrue(d2.called)
 
@@ -255,16 +263,16 @@ class TestPollerAsync(unittest.TestCase):
         the polling continues with the new start time."""
         self.duration = 6
         self.poll.start(interval=10)
-        self.clock.advance(10)
+        self.reactor.advance(10)
         self.assertTrue(self.running)
         d = self.poll.stop()
         d.addCallback(lambda _: self.poll.start(interval=10))
         self.assertFalse(d.called)  # not stopped yet
-        self.clock.advance(6)
+        self.reactor.advance(6)
         self.assertFalse(self.running)
         self.assertTrue(d.called)
-        self.clock.advance(10)
-        self.assertEqual(self.clock.seconds(), 26)
+        self.reactor.advance(10)
+        self.assertEqual(self.reactor.seconds(), 26)
         self.assertTrue(self.running)
 
     def test_long_method(self):
@@ -286,7 +294,7 @@ class TestPollerAsync(unittest.TestCase):
             (16, False, 3),
         ]
         for secs, running, calls in exp:
-            while self.clock.seconds() < secs:
-                self.clock.advance(1)
+            while self.reactor.seconds() < secs:
+                self.reactor.advance(1)
             self.assertEqual(self.running, running)
             self.assertEqual(self.calls, calls)

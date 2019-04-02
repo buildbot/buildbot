@@ -34,9 +34,10 @@ from buildbot.db.model import EightUpgradeError
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import querylog
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class UpgradeTestMixin(db.RealDatabaseMixin):
+class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
 
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
@@ -88,7 +89,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
 
-        self.master = master = fakemaster.make_master()
+        self.master = master = fakemaster.make_master(self.reactor)
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(self.basedir)
         self.db.setServiceParent(master)
@@ -109,6 +110,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpUpgradeTest()
 
     def tearDown(self):

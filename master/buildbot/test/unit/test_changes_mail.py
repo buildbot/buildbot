@@ -21,13 +21,16 @@ from twisted.trial import unittest
 from buildbot.changes import mail
 from buildbot.test.util import changesource
 from buildbot.test.util import dirs
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
+                        TestReactorMixin,
                         unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.maildir = os.path.abspath("maildir")
 
         yield self.setUpChangeSource()

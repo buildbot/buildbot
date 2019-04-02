@@ -32,16 +32,19 @@ from buildbot.reporters.notifier import NotifierBase
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
 
 
-class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
+class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
+                       unittest.TestCase, NotifierTestMixin):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks

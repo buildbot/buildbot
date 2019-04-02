@@ -25,16 +25,18 @@ from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
+class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     LOGCONTENT = textwrap.dedent("""\
         line zero
         line 1
         """)
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
     def setupDb(self):
@@ -176,10 +178,11 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(res['buildid'], 18)
 
 
-class TestURLUtils(unittest.TestCase):
+class TestURLUtils(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self)
 
     def test_UrlForBuild(self):
         self.assertEqual(utils.getURLForBuild(self.master, 1, 3),

@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 
@@ -27,7 +26,7 @@ class Poller:
     __slots__ = ['fn', 'instance', 'loop', 'started', 'running',
                  'pending', 'stopDeferreds', '_reactor']
 
-    def __init__(self, fn, instance):
+    def __init__(self, fn, instance, reactor):
         self.fn = fn
         self.instance = instance
         self.loop = None
@@ -96,7 +95,7 @@ class _Descriptor:
         try:
             poller = getattr(instance, self.attrName)
         except AttributeError:
-            poller = Poller(self.fn, instance)
+            poller = Poller(self.fn, instance, instance.master.reactor)
             setattr(instance, self.attrName, poller)
             # track instances when testing
             if _poller_instances is not None:

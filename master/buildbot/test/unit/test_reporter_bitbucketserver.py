@@ -29,20 +29,24 @@ from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 HTTP_NOT_FOUND = 404
 
 
-class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
+class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
+                                    ReporterTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
     def setupReporter(self, **kwargs):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True, wantDb=True,
+                                             wantMq=True)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
@@ -177,14 +181,17 @@ EXPECTED_API = '/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comment
 PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 
 
-class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, LoggingMixin):
+class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
+                                       NotifierTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantData=True, wantDb=True,
+                                             wantMq=True)
         yield self.master.startService()
 
     @defer.inlineCallbacks

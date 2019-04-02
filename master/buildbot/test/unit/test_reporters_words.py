@@ -26,16 +26,19 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import words
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 
 
-class TestContactChannel(unittest.TestCase):
+class TestContactChannel(TestReactorMixin, unittest.TestCase):
 
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor,
+                                             testcase=self, wantMq=True,
                                              wantData=True, wantDb=True)
 
         for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):

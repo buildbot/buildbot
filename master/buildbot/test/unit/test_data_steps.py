@@ -23,6 +23,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 TIME1 = 2001111
@@ -165,11 +166,13 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
 
-class Step(interfaces.InterfaceTests, unittest.TestCase):
+class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self.reactor, testcase=self,
+                                             wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = steps.Step(self.master)
 
     def test_signature_newStep(self):
