@@ -10,6 +10,25 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.1.1-dev87`` ( ``2019-04-02`` )
+===========================================
+
+Bug fixes
+---------
+
+- Fix passing the verify and debug parameters for the HttpStatusPush reporter
+- The builder page UI now correctly shows the list of owners for each build.
+
+Features
+--------
+
+- Added new :bb:step:`GitTag` step to perform git tag operation
+- HgPoller now supports bookmarks in addition to branches.
+- Buildbot can now monitor multiple branches in a Mercurial repository.
+- :py:class:`~buildbot.www.oauth2.OAuth2Auth` have been adapted to support ref:`Secret`.
+- Added a ``basename`` property to the Github pull request webhook handler.
+
+
 Buildbot ``2.1.0`` ( ``2019-03-09`` )
 =====================================
 

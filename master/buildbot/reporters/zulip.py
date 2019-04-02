@@ -50,11 +50,10 @@ class ZulipStatusPush(HttpStatusPushBase):
         jsondata = dict(event=event, buildid=build["buildid"], buildername=build["builder"]["name"], url=build["url"],
                         project=build["properties"]["project"][0])
         if event == "new":
-            jsondata["timestamp"] = build["started_at"]
+            jsondata["timestamp"] = int(build["started_at"].timestamp())
         elif event == "finished":
-            jsondata["timestamp"] = build["complete_at"]
+            jsondata["timestamp"] = int(build["complete_at"].timestamp())
             jsondata["results"] = build["results"]
-
         if self.stream is not None:
             url = "/api/v1/external/buildbot?api_key={}&stream={}".format(self.token, self.stream)
         else:
@@ -62,4 +61,4 @@ class ZulipStatusPush(HttpStatusPushBase):
         response = yield self._http.post(url, json=jsondata)
         if response.code != 200:
             content = yield response.content()
-            log.error("{}: Error pushing build status to Zulip: {}".format(response.code, content))
+            log.error("{code}: Error pushing build status to Zulip: {content}".format(code=response.code, content=content))
