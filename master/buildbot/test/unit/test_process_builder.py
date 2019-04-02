@@ -38,8 +38,7 @@ class BuilderMixin:
 
     def setUpBuilderMixin(self):
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.mq = self.master.mq
         self.db = self.master.db
 
@@ -418,8 +417,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getBuilderId(self):
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         # only include the necessary required config, plus user-requested
         self.bldr = builder.Builder('bldr')
         self.bldr.master = self.master

@@ -19,9 +19,11 @@ password store based provider
 import os
 from pathlib import Path
 
+from twisted.internet import defer
+from twisted.internet import utils
+
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
-from twisted.internet import defer, utils
 
 
 class SecretInPass(SecretProviderBase):

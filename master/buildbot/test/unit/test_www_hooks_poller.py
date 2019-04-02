@@ -45,7 +45,7 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
         self.request.method = b"GET"
         www = self.request.site.master.www
         self.master = master = self.request.site.master = \
-            fakemaster.make_master(self.reactor, testcase=self, wantData=True)
+            fakemaster.make_master(self, wantData=True)
         master.www = www
         yield self.master.startService()
         self.changeHook = change_hook.ChangeHookResource(

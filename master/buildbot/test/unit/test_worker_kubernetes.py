@@ -59,8 +59,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         config = KubeHardcodedConfig(master_url="https://kube.example.com")
         self.worker = worker = kubernetes.KubeLatentWorker(
             *args, kube_config=config, **kwargs)
-        master = fakemaster.make_master(self.reactor, testcase=self,
-                                        wantData=True)
+        master = fakemaster.make_master(self, wantData=True)
         self._kube = self.successResultOf(
             KubeClientService.getFakeService(master, self, kube_config=config))
         worker.setServiceParent(master)

@@ -408,8 +408,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.patch(NewStyleStep, 'getResultSummary',
                    lambda self: defer.succeed({'step': 'CS', 'build': 'CB'}))
         step = NewStyleStep()
-        step.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True)
+        step.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         step.stepid = 13
         step.step_status = mock.Mock()
         step.build = fakebuild.FakeBuild()

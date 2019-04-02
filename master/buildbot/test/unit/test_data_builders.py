@@ -169,8 +169,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantMq=True, wantDb=True,
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
                                              wantData=True)
         self.rtype = builders.Builder(self.master)
         return self.master.db.insertTestData([

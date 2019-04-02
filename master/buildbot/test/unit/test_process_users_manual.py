@@ -34,8 +34,7 @@ class ManualUsersMixin:
     """
 
     def setUpManualUsers(self):
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantDb=True)
+        self.master = fakemaster.make_master(self, wantDb=True)
 
 
 class TestUsersBase(unittest.TestCase):

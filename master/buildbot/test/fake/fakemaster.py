@@ -206,8 +206,15 @@ class FakeMaster(service.MasterService):
 # Leave this alias, in case we want to add more behavior later
 
 
-def make_master(_reactor=reactor, wantMq=False, wantDb=False, wantData=False,
-                testcase=None, url=None, **kwargs):
+def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
+                wantRealReactor=False, url=None, **kwargs):
+    if wantRealReactor:
+        _reactor = reactor
+    else:
+        assert testcase is not None, "need testcase for fake reactor"
+        # The test case must inherit from TestReactorMixin and setup it.
+        _reactor = testcase.reactor
+
     master = FakeMaster(_reactor, **kwargs)
     if url:
         master.buildbotURL = url

@@ -148,9 +148,8 @@ class ChangeSource(TestReactorMixin, interfaces.InterfaceTests,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor,
-                                             wantMq=True, wantDb=True,
-                                             wantData=True, testcase=self)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = changesources.ChangeSource(self.master)
 
     def test_signature_findChangeSourceId(self):

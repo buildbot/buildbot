@@ -137,8 +137,7 @@ class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantMq=True)
         self.mq = self.master.mq
         self.mq.verifyMessages = False
 
@@ -147,6 +146,6 @@ class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.mq = simple.SimpleMQ()
         self.mq.setServiceParent(self.master)

@@ -24,9 +24,8 @@ class Patch(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor,
-                                             wantMq=True, wantDb=True,
-                                             wantData=True, testcase=self)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = patches.Patch(self.master)
 
     # no update methods -> nothing to test

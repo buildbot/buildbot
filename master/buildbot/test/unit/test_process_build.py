@@ -185,8 +185,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         r.sources[0].revision = "12345"
 
         self.request = r
-        self.master = fakemaster.make_master(self.reactor, wantData=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantData=True)
 
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
@@ -990,8 +989,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         r.sources[1].revision = "34567"
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = FakeBuilder(
-            fakemaster.make_master(self.reactor, wantData=True, testcase=self))
+        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
@@ -1033,8 +1031,7 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         r.sources[0].revision = "12345"
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = FakeBuilder(
-            fakemaster.make_master(self.reactor, wantData=True, testcase=self))
+        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
@@ -1095,16 +1092,14 @@ class TestBuildProperties(TestReactorMixin, unittest.TestCase):
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
         r.sources[0].revision = "12345"
-        self.master = fakemaster.make_master(self.reactor, wantData=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = FakeBuilder(
-            fakemaster.make_master(self.reactor, wantData=True, testcase=self))
+        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.properties = self.build.properties = FakeProperties()
         self.build_status = FakeBuildStatus()

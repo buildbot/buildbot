@@ -54,8 +54,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
             # simple sort-by-name by default
             return sorted(builders, key=lambda b1: b1.name)
         self.master = self.botmaster.master = \
-            fakemaster.make_master(self.reactor, testcase=self,
-                                   wantData=True, wantDb=True)
+            fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.caches = fakemaster.FakeCaches()
         self.master.config.prioritizeBuilders = prioritizeBuilders
         self.brd = buildrequestdistributor.BuildRequestDistributor(

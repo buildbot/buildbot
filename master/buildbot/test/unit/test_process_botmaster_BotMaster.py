@@ -31,8 +31,7 @@ class TestCleanShutdown(unittest.TestCase):
 
     def setUp(self):
         self.reactor = mock.Mock()
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self.master)
         self.botmaster.startService()
@@ -150,8 +149,7 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantMq=True, wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.master.botmaster.disownServiceParent()
         self.botmaster = BotMaster()

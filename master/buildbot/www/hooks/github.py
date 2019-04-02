@@ -26,11 +26,11 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
-from buildbot.process.properties import Properties
 
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'

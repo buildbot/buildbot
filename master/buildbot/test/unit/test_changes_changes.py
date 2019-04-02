@@ -46,8 +46,7 @@ class Change(unittest.TestCase, TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor,
-                                             testcase=self, wantDb=True)
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
             repository='git://warner',

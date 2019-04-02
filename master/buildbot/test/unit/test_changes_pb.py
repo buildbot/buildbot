@@ -215,8 +215,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantDb=True, wantData=True)
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
 
     @defer.inlineCallbacks
     def test_addChange_noprefix(self):

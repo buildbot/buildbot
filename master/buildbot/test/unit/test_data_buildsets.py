@@ -130,8 +130,8 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = buildsets.Buildset(self.master)
         return self.master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',

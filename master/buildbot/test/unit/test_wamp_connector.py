@@ -57,7 +57,7 @@ class WampConnector(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        master = fakemaster.make_master(self.reactor)
+        master = fakemaster.make_master(self)
         self.connector = TestedWampConnector()
         yield self.connector.setServiceParent(master)
         yield master.startService()

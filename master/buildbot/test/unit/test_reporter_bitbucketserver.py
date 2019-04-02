@@ -44,8 +44,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
         self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True,
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
@@ -189,8 +188,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(self.reactor, testcase=self,
-                                             wantData=True, wantDb=True,
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
         yield self.master.startService()
 

@@ -107,7 +107,7 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.master.wamp = FakeWampConnector()
         self.mq = wamp.WampMQ()
         self.mq.setServiceParent(self.master)
@@ -177,7 +177,7 @@ class WampMQReal(TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
         if "WAMP_ROUTER_URL" not in os.environ:
             raise unittest.SkipTest(self.HOW_TO_RUN)
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.mq = wamp.WampMQ()
         yield self.mq.setServiceParent(self.master)
         self.connector = self.master.wamp = connector.WampConnector()

@@ -24,8 +24,8 @@ from twisted.trial import unittest
 
 from buildbot.plugins import util
 from buildbot.secrets.manager import SecretManager
-from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.test.util.misc import TestReactorMixin

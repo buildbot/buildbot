@@ -38,9 +38,7 @@ class ChangeSourceMixin:
 
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
-        self.master = fakemaster.make_master(self.reactor,
-                                             wantDb=True, wantData=True,
-                                             testcase=self)
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         assert not hasattr(self.master, 'addChange')  # just checking..
         return defer.succeed(None)
 

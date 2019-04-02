@@ -27,8 +27,7 @@ def fakeMasterForHooks(testcase):
     # testcase must derive from TestReactorMixin and setUpTestReactor()
     # must be called before calling this function.
 
-    master = fakemaster.make_master(testcase.reactor, wantData=True,
-                                    testcase=testcase)
+    master = fakemaster.make_master(testcase, wantData=True)
     master.www = Mock()
     return master
 

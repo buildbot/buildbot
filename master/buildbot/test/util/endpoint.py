@@ -37,9 +37,8 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
     def setUpEndpoint(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor,
-                                             wantMq=True, wantDb=True,
-                                             wantData=True, testcase=self)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
+                                             wantData=True)
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data

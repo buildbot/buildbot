@@ -16,7 +16,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from twisted.internet import defer, utils
+from twisted.internet import defer
+from twisted.internet import utils
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 

@@ -29,8 +29,7 @@ class TestMetricBase(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setUpTestReactor()
         self.observer = metrics.MetricLogObserver()
-        self.observer.parent = self.master = \
-            fakemaster.make_master(self.reactor)
+        self.observer.parent = self.master = fakemaster.make_master(self)
         self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
         self.observer._reactor = self.reactor
         self.observer.startService()

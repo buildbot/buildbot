@@ -657,7 +657,7 @@ class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self.reactor)
+        self.master = fakemaster.make_master(self)
         self.db = fakedb.FakeDBConnector(self)
         self.db.setServiceParent(self.master)
         self.db.checkForeignKeys = True
