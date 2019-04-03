@@ -61,4 +61,4 @@ class ZulipStatusPush(HttpStatusPushBase):
         response = yield self._http.post(url, json=jsondata)
         if response.code != 200:
             content = yield response.content()
-            log.error("{code}: Error pushing build status to Zulip: {content}".format(code=response.code, content=content))
+            log.error("{code}: Error pushing build status to Zulip: {content}", code=response.code, content=content)

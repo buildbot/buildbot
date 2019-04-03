@@ -1392,7 +1392,7 @@ The build status is sent to a user as a private message or in a stream in Zulip,
 
 .. note::
 
-   A private message is sent if steam is set to None.
+   A private message is sent if stream is set to None.
 
 
 Json object spec
