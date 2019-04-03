@@ -40,7 +40,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     """Test GitPoller methods for parsing git output"""
 
     def setUp(self):
-        self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
+        self.poller = gitpoller.GitPoller('git@example.com:~foo/baz.git')
         self.setUpGetProcessOutput()
 
     dummyRevStr = '12345abcde'
@@ -174,8 +174,8 @@ class TestGitPollerBase(gpo.GetProcessOutputMixin,
                         TestReactorMixin,
                         unittest.TestCase):
 
-    REPOURL = 'git@example.com:foo/baz.git'
-    REPOURL_QUOTED = 'git%40example.com%3Afoo%2Fbaz.git'
+    REPOURL = 'git@example.com:~foo/baz.git'
+    REPOURL_QUOTED = 'git%40example.com%3A%7Efoo%2Fbaz.git'
 
     def createPoller(self):
         # this is overridden in TestGitPollerWithSshPrivateKey
@@ -544,7 +544,7 @@ class TestGitPoller(TestGitPollerBase):
                 'files': ['/etc/442'],
                 'project': '',
                 'properties': {},
-                'repository': 'git@example.com:foo/baz.git',
+                'repository': 'git@example.com:~foo/baz.git',
                 'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 'revlink': '',
                 'src': 'git',
@@ -559,7 +559,7 @@ class TestGitPoller(TestGitPollerBase):
                 'files': ['/etc/64a'],
                 'project': '',
                 'properties': {},
-                'repository': 'git@example.com:foo/baz.git',
+                'repository': 'git@example.com:~foo/baz.git',
                 'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
                 'revlink': '',
                 'src': 'git',
@@ -574,7 +574,7 @@ class TestGitPoller(TestGitPollerBase):
                 'files': ['/etc/911'],
                 'project': '',
                 'properties': {},
-                'repository': 'git@example.com:foo/baz.git',
+                'repository': 'git@example.com:~foo/baz.git',
                 'revision': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
                 'revlink': '',
                 'src': 'git',
@@ -692,7 +692,7 @@ class TestGitPoller(TestGitPollerBase):
              'files': ['/etc/442'],
              'project': '',
              'properties': {},
-             'repository': 'git@example.com:foo/baz.git',
+             'repository': 'git@example.com:~foo/baz.git',
              'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
              'revlink': '',
              'src': 'git',
@@ -769,7 +769,7 @@ class TestGitPoller(TestGitPollerBase):
              'files': ['/etc/442'],
              'project': '',
              'properties': {},
-             'repository': 'git@example.com:foo/baz.git',
+             'repository': 'git@example.com:~foo/baz.git',
              'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
              'revlink': '',
              'src': 'git',
@@ -1233,7 +1233,7 @@ class TestGitPoller(TestGitPollerBase):
             'files': ['/etc/442'],
             'project': '',
             'properties': {},
-            'repository': 'git@example.com:foo/baz.git',
+            'repository': 'git@example.com:~foo/baz.git',
             'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'revlink': '',
             'src': 'git',
@@ -1247,7 +1247,7 @@ class TestGitPoller(TestGitPollerBase):
             'files': ['/etc/64a'],
             'project': '',
             'properties': {},
-            'repository': 'git@example.com:foo/baz.git',
+            'repository': 'git@example.com:~foo/baz.git',
             'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
             'revlink': '',
             'src': 'git',

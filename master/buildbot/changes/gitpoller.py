@@ -181,8 +181,9 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         return branch
 
     def _trackerBranch(self, branch):
-        return "refs/buildbot/{}/{}".format(urlquote(self.repourl, ''),
-                                        self._removeHeads(branch))
+        # manually quote tilde for Python 3.7
+        url = urlquote(self.repourl, '').replace('~', '%7E')
+        return "refs/buildbot/{}/{}".format(url, self._removeHeads(branch))
 
     @defer.inlineCallbacks
     def poll(self):
