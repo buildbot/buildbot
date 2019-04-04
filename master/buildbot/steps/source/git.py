@@ -67,7 +67,6 @@ git_describe_flags = [
 
 class Git(Source, GitStepMixin):
 
-    """ Class for Git with all the smarts """
     name = 'git'
     renderables = ["repourl", "reference", "branch",
                    "codebase", "mode", "method", "origin"]
@@ -76,65 +75,7 @@ class Git(Source, GitStepMixin):
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
                  origin=None, sshPrivateKey=None, sshHostKey=None, **kwargs):
-        """
-        @type  repourl: string
-        @param repourl: the URL which points at the git repository
 
-        @type  branch: string
-        @param branch: The branch or tag to check out by default. If
-                       a build specifies a different branch, it will
-                       be used instead of this.
-
-        @type  submodules: boolean
-        @param submodules: Whether or not to update (and initialize)
-                       git submodules.
-
-        @type  mode: string
-        @param mode: Type of checkout. Described in docs.
-
-        @type  method: string
-        @param method: Full builds can be done is different ways. This parameter
-                       specifies which method to use.
-
-        @type reference: string
-        @param reference: If available use a reference repo.
-                          Uses `--reference` in git command. Refer `git clone --help`
-        @type  progress: boolean
-        @param progress: Pass the --progress option when fetching. This
-                         can solve long fetches getting killed due to
-                         lack of output, but requires Git 1.7.2+.
-
-        @type  shallow: boolean or integer
-        @param shallow: Use a shallow or clone, if possible
-
-        @type  retryFetch: boolean
-        @param retryFetch: Retry fetching before failing source checkout.
-
-        @type  getDescription: boolean or dict
-        @param getDescription: Use 'git describe' to describe the fetched revision
-
-        @type origin: string
-        @param origin: The name to give the remote when cloning (default None)
-
-        @type  sshPrivateKey: Secret or string
-        @param sshPrivateKey: The private key to use when running git for fetch
-                              operations. The ssh utility must be in the system
-                              path in order to use this option. On Windows only
-                              git distribution that embeds MINGW has been
-                              tested (as of July 2017 the official distribution
-                              is MINGW-based).
-
-        @type  sshHostKey: Secret or string
-        @param sshHostKey: Specifies public host key to match when
-                           authenticating with SSH public key authentication.
-                           `sshPrivateKey` must be specified in order to use
-                           this option. The host key must be in the form of
-                           `<key type> <base64-encoded string>`,
-                           e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
-
-        @type  config: dict
-        @param config: Git configuration options to enable when running git
-        """
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
 
@@ -590,8 +531,6 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     descriptionDone = None
     descriptionSuffix = None
 
-    ''' Class to perform Git push commands '''
-
     name = 'gitpush'
     renderables = ['repourl', 'branch']
 
@@ -599,54 +538,6 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
                  env=None, timeout=20 * 60, logEnviron=True,
                  sshPrivateKey=None, sshHostKey=None,
                  config=None, **kwargs):
-        """
-        @type  workdir: string
-        @param workdir: local directory (relative to the Builder's root)
-                        where the tree should be placed
-
-        @type  repourl: string
-        @param repourl: the URL which points at the git repository
-
-        @type  branch: string
-        @param branch: The branch to push. The branch should already exist on
-                       the local repository.
-
-        @type force: boolean
-        @param force: If True, forces overwrite of refs on the remote
-                      repository. Corresponds to the '--force' flag.
-
-        @type env: dict
-        @param env: Specifies custom environment variables to set
-
-        @type logEnviron: boolean
-        @param logEnviron: If this option is true (the default), then the
-                           step's logfile will describe the environment
-                           variables on the worker. In situations where the
-                           environment is not relevant and is long, it may
-                           be easier to set logEnviron=False.
-
-        @type timeout
-        @param timeout: Specifies the timeout for individual git operations
-
-        @type  sshPrivateKey: Secret or string
-        @param sshPrivateKey: The private key to use when running git for push
-                              operations. The ssh utility must be in the system
-                              path in order to use this option. On Windows only
-                              git distribution that embeds MINGW has been
-                              tested (as of July 2017 the official distribution
-                              is MINGW-based).
-
-        @type  sshHostKey: Secret or string
-        @param sshHostKey: Specifies public host key to match when
-                           authenticating with SSH public key authentication.
-                           `sshPrivateKey` must be specified in order to use
-                           this option. The host key must be in the form of
-                           `<key type> <base64-encoded string>`,
-                           e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
-
-        @type  config: dict
-        @param config: Git configuration options to enable when running git
-        """
 
         self.workdir = workdir
         self.repourl = repourl
@@ -767,6 +658,91 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         if self.force:
             cmd.append('--force')
+
+        ret = yield self._dovccmd(cmd)
+        return ret
+
+
+class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
+
+    description = None
+    descriptionDone = None
+    descriptionSuffix = None
+
+    name = 'gitcommit'
+    renderables = ['paths', 'messages']
+
+    def __init__(self, workdir=None, paths=None, messages=None, env=None,
+                 timeout=20 * 60, logEnviron=True,
+                 config=None, **kwargs):
+
+        self.workdir = workdir
+        self.messages = messages
+        self.paths = paths
+        self.env = env
+        self.timeout = timeout
+        self.logEnviron = logEnviron
+        self.config = config
+        # The repourl, sshPrivateKey and sshHostKey attributes are required by
+        # GitStepMixin, but aren't needed by git add and commit operations
+        self.repourl = " "
+        self.sshPrivateKey = None
+        self.sshHostKey = None
+
+        super().__init__(**kwargs)
+
+        self.setupGitStep()
+
+        if not self.messages:
+            bbconfig.error('GitCommit: must provide messages')
+
+        if not isinstance(self.messages, list):
+            bbconfig.error('GitCommit: messages must be a list')
+
+        if not self.paths:
+            bbconfig.error('GitCommit: must provide paths')
+
+        if not isinstance(self.paths, list):
+            bbconfig.error('GitCommit: paths must be a list')
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.stdio_log = yield self.addLog("stdio")
+        gitInstalled = yield self.checkFeatureSupport()
+
+        if not gitInstalled:
+            raise WorkerTooOldError("git is not installed on worker")
+
+        yield self._checkDetachedHead()
+        yield self._doAdd()
+        yield self._doCommit()
+
+        return RC_SUCCESS
+
+    @defer.inlineCallbacks
+    def _checkDetachedHead(self):
+        cmd = ['symbolic-ref', 'HEAD']
+        rc = yield self._dovccmd(cmd, abandonOnFailure=False)
+
+        if rc != RC_SUCCESS:
+            self.stdio_log.addStderr("You are in detached HEAD")
+            raise buildstep.BuildStepFailed
+
+    @defer.inlineCallbacks
+    def _doCommit(self):
+        cmd = ['commit']
+
+        for message in self.messages:
+            cmd.extend(['-m', message])
+
+        ret = yield self._dovccmd(cmd)
+        return ret
+
+    @defer.inlineCallbacks
+    def _doAdd(self):
+        cmd = ['add']
+
+        cmd.extend(self.paths)
 
         ret = yield self._dovccmd(cmd)
         return ret
