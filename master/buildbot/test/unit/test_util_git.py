@@ -56,6 +56,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
     def setUp(self):
         self.sshPrivateKey = None
         self.sshHostKey = None
+        self.sshKnownHosts = None
         self.setupGit()
 
     def test_no_output(self):

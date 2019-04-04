@@ -74,7 +74,7 @@ class Git(Source, GitStepMixin):
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
-                 origin=None, sshPrivateKey=None, sshHostKey=None, **kwargs):
+                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, **kwargs):
 
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
@@ -92,6 +92,7 @@ class Git(Source, GitStepMixin):
         self.getDescription = getDescription
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
+        self.sshKnownHosts = sshKnownHosts
         self.config = config
         self.srcdir = 'source'
         self.origin = origin
@@ -536,7 +537,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
     def __init__(self, workdir=None, repourl=None, branch=None, force=False,
                  env=None, timeout=20 * 60, logEnviron=True,
-                 sshPrivateKey=None, sshHostKey=None,
+                 sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
                  config=None, **kwargs):
 
         self.workdir = workdir
@@ -548,6 +549,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.logEnviron = logEnviron
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
+        self.sshKnownHosts = sshKnownHosts
         self.config = config
 
         super().__init__(**kwargs)
@@ -615,6 +617,7 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.repourl = " "
         self.sshHostKey = None
         self.sshPrivateKey = None
+        self.sshKnownHosts = None
 
         super().__init__(**kwargs)
 
@@ -688,6 +691,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.repourl = " "
         self.sshPrivateKey = None
         self.sshHostKey = None
+        self.sshKnownHosts = None
 
         super().__init__(**kwargs)
 

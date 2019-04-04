@@ -59,6 +59,17 @@ class GitMixin:
                 logname))
             self.sshHostKey = None
 
+        if self.sshKnownHosts is not None and self.sshPrivateKey is None:
+            config.error('{}: sshPrivateKey must be provided in order use sshKnownHosts'.format(
+                logname))
+            self.sshKnownHosts = None
+
+        if self.sshHostKey is not None and self.sshKnownHosts is not None:
+            config.error('{}: only one of sshPrivateKey and sshHostKey can be provided'.format(
+                logname))
+            self.sshHostKey = None
+            self.sshKnownHosts = None
+
         self.gitInstalled = False
         self.supportsBranch = False
         self.supportsSubmoduleForce = False
@@ -175,7 +186,7 @@ class GitStepMixin(GitMixin):
         key_path = self._getSshPrivateKeyPath(ssh_data_path)
         ssh_wrapper_path = self._getSshWrapperScriptPath(ssh_data_path)
         host_key_path = None
-        if self.sshHostKey is not None:
+        if self.sshHostKey is not None or self.sshKnownHosts is not None:
             host_key_path = self._getSshHostKeyPath(ssh_data_path)
 
         self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
@@ -257,6 +268,7 @@ class GitStepMixin(GitMixin):
         p.master = self.master
         private_key = yield p.render(self.sshPrivateKey)
         host_key = yield p.render(self.sshHostKey)
+        known_hosts_contents = yield p.render(self.sshKnownHosts)
 
         # not using self.workdir because it may be changed depending on step
         # options
@@ -279,9 +291,11 @@ class GitStepMixin(GitMixin):
                                                private_key,
                                                workdir=workdir, mode=0o400)
 
-        if self.sshHostKey is not None:
+        if self.sshHostKey is not None or self.sshKnownHosts is not None:
             known_hosts_path = self._getSshHostKeyPath(ssh_data_path)
-            known_hosts_contents = getSshKnownHostsContents(host_key)
+
+            if self.sshHostKey is not None:
+                known_hosts_contents = getSshKnownHostsContents(host_key)
             yield self.downloadFileContentToWorker(known_hosts_path,
                                                    known_hosts_contents,
                                                    workdir=workdir, mode=0o400)
