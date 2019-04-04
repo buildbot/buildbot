@@ -65,11 +65,6 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if name is None:
             name = repourl
 
-        if sshHostKey is not None and sshPrivateKey is None:
-            config.error('GitPoller: sshPrivateKey must be provided in order '
-                         'use sshHostKey')
-            sshPrivateKey = None
-
         super().__init__(name=name,
                          pollInterval=pollInterval,
                          pollAtLaunch=pollAtLaunch,

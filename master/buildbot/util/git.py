@@ -19,7 +19,7 @@ from distutils.version import LooseVersion
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot import config as bbconfig
+from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
@@ -50,7 +50,15 @@ def getSshCommand(keyPath, knownHostsPath):
 
 class GitMixin:
 
-    def setupGit(self):
+    def setupGit(self, logname=None):
+        if logname is None:
+            logname = 'GitMixin'
+
+        if self.sshHostKey is not None and self.sshPrivateKey is None:
+            config.error('{}: sshPrivateKey must be provided in order use sshHostKey'.format(
+                logname))
+            self.sshHostKey = None
+
         self.gitInstalled = False
         self.supportsBranch = False
         self.supportsSubmoduleForce = False
@@ -113,15 +121,10 @@ class GitStepMixin(GitMixin):
 
     def setupGitStep(self):
         self.didDownloadSshPrivateKey = False
-        self.setupGit()
-
-        if self.sshHostKey is not None and self.sshPrivateKey is None:
-            bbconfig.error('Git: sshPrivateKey must be provided in order '
-                           'use sshHostKey')
-            self.sshPrivateKey = None
+        self.setupGit(logname='Git')
 
         if not self.repourl:
-            bbconfig.error("Git: must provide repourl.")
+            config.error("Git: must provide repourl.")
 
     def _isSshPrivateKeyNeededForGitCommand(self, command):
         if not command or self.sshPrivateKey is None:

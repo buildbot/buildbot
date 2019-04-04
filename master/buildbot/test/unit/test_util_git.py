@@ -53,8 +53,12 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
 
-    def test_no_output(self):
+    def setUp(self):
+        self.sshPrivateKey = None
+        self.sshHostKey = None
         self.setupGit()
+
+    def test_no_output(self):
         self.parseGitFeatures('')
         self.assertFalse(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -64,7 +68,6 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
 
     def test_git_noversion(self):
-        self.setupGit()
         self.parseGitFeatures('git')
         self.assertFalse(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -74,7 +77,6 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
 
     def test_git_zero_version(self):
-        self.setupGit()
         self.parseGitFeatures('git version 0.0.0')
         self.assertTrue(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -84,7 +86,6 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
 
     def test_git_2_10_0(self):
-        self.setupGit()
         self.parseGitFeatures('git version 2.10.0')
         self.assertTrue(self.gitInstalled)
         self.assertTrue(self.supportsBranch)
