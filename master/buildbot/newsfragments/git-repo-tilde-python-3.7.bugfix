@@ -1,0 +1,1 @@
+Fixed bug with tilde in git repo url on Python 3.7 (:issue:`4639`).
