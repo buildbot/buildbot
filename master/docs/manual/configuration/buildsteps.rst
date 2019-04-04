@@ -474,6 +474,12 @@ The Git step takes the following arguments:
    `sshPrivateKey` must be specified in order to use this option.
    The host key must be in the form of `<key type> <base64-encoded string>`, e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
 
+``sshKnownHosts`` (optional)
+   Specifies the contents of the SSH known_hosts file to match when authenticating with SSH public key authentication.
+   This may be either a :ref:`Secret` or just a string.
+   `sshPrivateKey` must be specified in order to use this option.
+   `sshHostKey` must not be specified in order to use this option.
+
 .. bb:step:: SVN
 
 .. _Step-SVN:
@@ -1167,6 +1173,12 @@ The GitPush step takes the following arguments:
     This may be either a :ref:`Secret` or just a string.
     ``sshPrivateKey`` must be specified in order to use this option.
     The host key must be in the form of ``<key type> <base64-encoded string>``, e.g. ``ssh-rsa AAAAB3N<...>FAaQ==``.
+
+``sshKnownHosts`` (optional)
+   Specifies the contents of the SSH known_hosts file to match when authenticating with SSH public key authentication.
+   This may be either a :ref:`Secret` or just a string.
+   `sshPrivateKey` must be specified in order to use this option.
+   `sshHostKey` must not be specified in order to use this option.
 
 .. bb:step:: GitTag
 

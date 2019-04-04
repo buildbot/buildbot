@@ -900,18 +900,24 @@ It accepts the following arguments:
 ``only_tags``
     Determines if the GitPoller should poll for new tags in the git repository.
 
-``sshPrivateKey``
+``sshPrivateKey`` (optional)
     Specifies private SSH key for git to use. This may be either a :ref:`Secret`
     or just a string. This option requires Git-2.3 or later. The master must
     either have the host in the known hosts file or the host key must be
     specified via the `sshHostKey` option.
 
-``sshHostKey``
+``sshHostKey`` (optional)
     Specifies public host key to match when authenticating with SSH
     public key authentication. This may be either a :ref:`Secret` or just a
     string. `sshPrivateKey` must be specified in order to use this option.
     The host key must be in the form of `<key type> <base64-encoded string>`,
     e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
+
+``sshKnownHosts`` (optional)
+   Specifies the contents of the SSH known_hosts file to match when authenticating with SSH public key authentication.
+   This may be either a :ref:`Secret` or just a string.
+   `sshPrivateKey` must be specified in order to use this option.
+   `sshHostKey` must not be specified in order to use this option.
 
 A configuration for the Git poller might look like this:
 
