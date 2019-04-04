@@ -495,6 +495,7 @@ class Secret(_SecretRenderer):
         secret_detail = yield credsservice.get(self.secretKey)
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secretKey)
+        props.useSecret(secret_detail.value, self.secretKey)
         return secret_detail.value
 
 
