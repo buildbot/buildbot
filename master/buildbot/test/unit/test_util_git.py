@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 from twisted.trial import unittest
 
+from buildbot.test.util import config
 from buildbot.util.git import GitMixin
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
@@ -49,6 +52,31 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
         self.assert_does_not_escape('a_b')
         self.assert_does_not_escape('-opt')
         self.assert_does_not_escape('--opt')
+
+
+class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
+
+    @parameterized.expand([
+        ('no_keys', None, None, None, None),
+        ('only_private_key', 'key', None, None, None),
+        ('private_key_host_key', 'key', 'host', None, None),
+        ('private_key_known_hosts', 'key', None, 'hosts', None),
+        ('no_private_key_host_key', None, 'host', None,
+         'sshPrivateKey must be provided in order use sshHostKey'),
+        ('no_private_key_known_hosts', None, None, 'hosts',
+         'sshPrivateKey must be provided in order use sshKnownHosts'),
+        ('both_host_key_known_hosts', 'key', 'host', 'hosts',
+         'only one of sshPrivateKey and sshHostKey can be provided'),
+    ])
+    def test_config(self, name, private_key, host_key, known_hosts, config_error):
+        self.sshPrivateKey = private_key
+        self.sshHostKey = host_key
+        self.sshKnownHosts = known_hosts
+        if config_error is None:
+            self.setupGit()
+        else:
+            with self.assertRaisesConfigError(config_error):
+                self.setupGit()
 
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
