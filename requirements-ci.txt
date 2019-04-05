@@ -1,23 +1,23 @@
 alabaster==0.7.12
 appdirs==1.4.3
 asn1crypto==0.24.0
-astroid==2.2.3; python_version >= "3.4"
+astroid==2.2.5; python_version >= "3.4"
 attrs==19.1.0
-autobahn==19.2.1
+autobahn==19.3.3
 Automat==0.7.0
 Babel==2.6.0
 backports.functools-lru-cache==1.5
 blockdiag==1.5.4
 boto==2.49.0
-boto3==1.9.106
-botocore==1.12.106
+boto3==1.9.125
+botocore==1.12.125
 cffi==1.12.2
 click==7.0
-configparser==3.7.3
+configparser==3.7.4
 constantly==15.1.0
 cookies==2.2.1
 cryptography==2.6.1
-decorator==4.3.2
+decorator==4.4.0
 dicttoxml==1.7.4
 docutils==0.14
 enum34==1.1.6
@@ -29,7 +29,7 @@ idna==2.8
 imagesize==1.1.0
 incremental==17.5.0
 ipaddress==1.0.22
-isort==4.3.10
+isort==4.3.16
 Jinja2==2.10
 jmespath==0.9.4
 jsonref==0.2
@@ -61,18 +61,18 @@ pyOpenSSL==19.0.0
 pyparsing==2.3.1
 python-dateutil==2.8.0
 pytz==2018.9
-PyYAML==3.13
+PyYAML==5.1
 requests==2.21.0
 s3transfer==0.2.0
-scandir==1.9.0
+scandir==1.10.0
 service-identity==18.1.0
 setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.12.0
 snowballstemmer==1.2.1
-SQLAlchemy==1.2.18
+SQLAlchemy==1.3.1
 sqlalchemy-migrate==0.12.0
-sqlparse==0.2.4
+sqlparse==0.3.0
 Tempita==0.5.2
 termcolor==1.1.0
 toml==0.10.0
@@ -83,14 +83,14 @@ txaio==18.8.1
 txrequests==0.9.6
 typing==3.6.6
 webcolors==1.8.1
-Werkzeug==0.14.1
+Werkzeug==0.15.1
 wrapt==1.11.1
 xmltodict==0.12.0
 zope.interface==4.6.0
-coverage==4.5.2
+coverage==4.5.3
 codecov==2.0.15
 -e master
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==2.0.1
+buildbot-www==2.1.0

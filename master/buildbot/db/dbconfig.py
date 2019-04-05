@@ -70,7 +70,7 @@ class DbConfig:
         except (ProgrammingError, OperationalError):
             # ProgrammingError: mysql&pg, OperationalError: sqlite
             # assume db is not initialized
-            db.pool.engine.close()
+            db.pool.engine.dispose()
             return None
         return db
 
@@ -79,7 +79,7 @@ class DbConfig:
         if db is not None:
             ret = db.state.thdGetState(
                 db.pool.engine, self.objectid, name, default=default)
-            db.pool.engine.close()
+            db.pool.engine.dispose()
         else:
             if default is not state.StateConnectorComponent.Thunk:
                 return default
@@ -90,4 +90,4 @@ class DbConfig:
         db = self.getDb()
         if db is not None:
             db.state.thdSetState(db.pool.engine, self.objectid, name, value)
-            db.pool.engine.close()
+            db.pool.engine.dispose()
