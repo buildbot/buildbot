@@ -57,18 +57,14 @@ class GitMixin:
         if self.sshHostKey is not None and self.sshPrivateKey is None:
             config.error('{}: sshPrivateKey must be provided in order use sshHostKey'.format(
                 logname))
-            self.sshHostKey = None
 
         if self.sshKnownHosts is not None and self.sshPrivateKey is None:
             config.error('{}: sshPrivateKey must be provided in order use sshKnownHosts'.format(
                 logname))
-            self.sshKnownHosts = None
 
         if self.sshHostKey is not None and self.sshKnownHosts is not None:
             config.error('{}: only one of sshPrivateKey and sshHostKey can be provided'.format(
                 logname))
-            self.sshHostKey = None
-            self.sshKnownHosts = None
 
         self.gitInstalled = False
         self.supportsBranch = False
