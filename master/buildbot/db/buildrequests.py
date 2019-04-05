@@ -235,12 +235,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             claimed = True
             claimed_by_masterid = row.masterid
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-        submitted_at = mkdt(row.submitted_at)
-        complete_at = mkdt(row.complete_at)
-        claimed_at = mkdt(claimed_at)
+        submitted_at = epoch2datetime(row.submitted_at)
+        complete_at = epoch2datetime(row.complete_at)
+        claimed_at = epoch2datetime(claimed_at)
 
         return BrDict(buildrequestid=row.id, buildsetid=row.buildsetid,
                       builderid=row.builderid, buildername=row.buildername,

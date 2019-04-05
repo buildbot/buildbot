@@ -249,7 +249,8 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.expireMasters(_reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(master, dict(id=14, name='other',
-                                      active=False, last_active=None))
+                                      active=False,
+                                      last_active=epoch2datetime(0)))
         self.rtype._masterDeactivated. \
             assert_called_with(14, 'other')
 

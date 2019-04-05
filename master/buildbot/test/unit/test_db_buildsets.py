@@ -143,25 +143,6 @@ class Tests(interfaces.InterfaceTests):
         return self.do_test_getBuildsetProperties(91, [], dict())
 
     @defer.inlineCallbacks
-    def test_getBuildset_incomplete_None(self):
-        yield self.insertTestData([
-            fakedb.Buildset(id=91, complete=0,
-                            complete_at=None, results=-1, submitted_at=266761875,
-                            external_idstring='extid', reason='rsn'),
-            fakedb.BuildsetSourceStamp(buildsetid=91, sourcestampid=234),
-        ])
-        bsdict = yield self.db.buildsets.getBuildset(91)
-
-        validation.verifyDbDict(self, 'bsdict', bsdict)
-        self.assertEqual(bsdict, dict(external_idstring='extid',
-                                      reason='rsn', sourcestamps=[234],
-                                      submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
-                                                                     tzinfo=UTC),
-                                      complete=False, complete_at=None, results=-1,
-                                      bsid=91,
-                                      parent_buildid=None, parent_relationship=None))
-
-    @defer.inlineCallbacks
     def test_getBuildset_incomplete_zero(self):
         yield self.insertTestData([
             fakedb.Buildset(id=91, complete=0,
@@ -176,7 +157,8 @@ class Tests(interfaces.InterfaceTests):
                                       reason='rsn', sourcestamps=[234],
                                       submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
                                                                      tzinfo=UTC),
-                                      complete=False, complete_at=None, results=-1,
+                                      complete=False,
+                                      complete_at=epoch2datetime(0), results=-1,
                                       bsid=91,
                                       parent_buildid=None, parent_relationship=None))
 

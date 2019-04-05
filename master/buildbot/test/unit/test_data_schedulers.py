@@ -25,6 +25,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import epoch2datetime
 
 
 class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -168,7 +169,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
             [(('schedulers', '13', 'updated'),
               {'enabled': False,
                'master': {'active': False,
-                          'last_active': fakedb._mkdt(SOMETIME),
+                          'last_active': epoch2datetime(SOMETIME),
                           'masterid': 22,
                           'name': 'some:master'},
                'name': 'some:scheduler',
@@ -178,7 +179,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
             [(('schedulers', '13', 'updated'),
               {'enabled': True,
                'master': {'active': False,
-                          'last_active': fakedb._mkdt(SOMETIME),
+                          'last_active': epoch2datetime(SOMETIME),
                           'masterid': 22,
                           'name': 'some:master'},
                'name': 'some:scheduler',
