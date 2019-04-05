@@ -932,3 +932,5 @@ xvfb
 yaml
 Zope
 zsh
+zulip
+Zulip
