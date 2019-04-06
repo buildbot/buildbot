@@ -246,6 +246,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.9.2: Upgrade dependencies. Add builtin support for JavaScript sources in addition to CoffeeScript.
 * 0.9.1: Upgrade dependencies. Remove Browserify hack. It does not work anymore, and is not needed as much with yarn improvements
 * 0.8.8: Upgrade dependencies
 * 0.8.7: revert usage of gulp-watch as it does not work as expected.
