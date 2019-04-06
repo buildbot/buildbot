@@ -16,7 +16,6 @@
 import copy
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.data import base
@@ -124,7 +123,7 @@ class Change(base.ResourceType):
     def addChange(self, files=None, comments=None, author=None, revision=None,
                   when_timestamp=None, branch=None, category=None, revlink='',
                   properties=None, repository='', codebase=None, project='',
-                  src=None, _reactor=reactor):
+                  src=None):
         metrics.MetricCountEvent.log("added_changes", 1)
 
         if properties is None:
@@ -191,8 +190,7 @@ class Change(base.ResourceType):
             repository=repository,
             codebase=codebase,
             project=project,
-            uid=uid,
-            _reactor=_reactor)
+            uid=uid)
 
         # get the change and munge the result for the notification
         change = yield self.master.data.get(('changes', str(changeid)))

@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.data import steps
@@ -232,7 +231,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_startStep(self):
-        self.patch(reactor, 'seconds', lambda: TIME1)
+        self.reactor.advance(TIME1)
         yield self.master.db.steps.addStep(buildid=10, name='ten',
                                            state_string='pending')
         yield self.rtype.startStep(stepid=100)
@@ -323,9 +322,9 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_finishStep(self):
         yield self.master.db.steps.addStep(buildid=10, name='ten',
                                            state_string='pending')
-        self.patch(reactor, 'seconds', lambda: TIME1)
+        self.reactor.advance(TIME1)
         yield self.rtype.startStep(stepid=100)
-        self.patch(reactor, 'seconds', lambda: TIME2)
+        self.reactor.advance(TIME2 - TIME1)
         self.master.mq.clearProductions()
         yield self.rtype.finishStep(stepid=100, results=9, hidden=False)
 

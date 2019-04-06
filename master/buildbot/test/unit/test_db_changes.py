@@ -16,7 +16,6 @@
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.db import builds
@@ -98,8 +97,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addChange_getChange(self):
-        clock = task.Clock()
-        clock.advance(SOMETIME)
+        self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
             files=[],
@@ -112,8 +110,7 @@ class Tests(interfaces.InterfaceTests):
             properties={},
             repository='repo://',
             codebase='cb',
-            project='proj',
-            _reactor=clock)
+            project='proj')
         chdict = yield self.db.changes.getChange(changeid)
         validation.verifyDbDict(self, 'chdict', chdict)
         chdict = chdict.copy()
@@ -155,8 +152,7 @@ class Tests(interfaces.InterfaceTests):
     def test_addChange_withParent(self):
         yield self.insertTestData(self.change14_rows)
 
-        clock = task.Clock()
-        clock.advance(SOMETIME)
+        self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='delanne',
             files=[],
@@ -169,8 +165,7 @@ class Tests(interfaces.InterfaceTests):
             properties={},
             repository='git://warner',
             codebase='mainapp',
-            project='Buildbot',
-            _reactor=clock)
+            project='Buildbot')
         chdict = yield self.db.changes.getChange(changeid)
         validation.verifyDbDict(self, 'chdict', chdict)
         chdict = chdict.copy()
@@ -378,8 +373,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addChange(self):
-        clock = task.Clock()
-        clock.advance(SOMETIME)
+        self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
             files=['master/LICENSING.txt', 'worker/LICENSING.txt'],
@@ -392,8 +386,7 @@ class RealTests(Tests):
             properties={'platform': ('linux', 'Change')},
             repository='',
             codebase='cb',
-            project='',
-            _reactor=clock)
+            project='')
         # check all of the columns of the four relevant tables
 
         def thd_change(conn):
@@ -461,8 +454,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addChange_when_timestamp_None(self):
-        clock = task.Clock()
-        clock.advance(OTHERTIME)
+        self.reactor.advance(OTHERTIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
             files=[],
@@ -475,8 +467,7 @@ class RealTests(Tests):
             properties={},
             repository='',
             codebase='',
-            project='',
-            _reactor=clock)
+            project='')
         # check all of the columns of the four relevant tables
 
         def thd(conn):

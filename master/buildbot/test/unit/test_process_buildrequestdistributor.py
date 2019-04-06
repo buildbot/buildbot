@@ -703,7 +703,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.master.db.buildrequests.claimBuildRequests
 
-        def claimBuildRequests(brids, claimed_at=None, _reactor=None):
+        def claimBuildRequests(brids, claimed_at=None):
             # first, ensure this only happens the first time
             self.master.db.buildrequests.claimBuildRequests = old_claimBuildRequests
             # claim brid 10 for some other master

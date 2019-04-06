@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 from zope.interface import implementer
 
@@ -168,11 +167,9 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         Note that addBuildset does not add sourcestamps, so this method assumes
         there are none in the db.
         """
-        clock = task.Clock()
-        clock.advance(A_TIMESTAMP)
-        xxx_todo_changeme = yield self.rtype.addBuildset(_reactor=clock, **kwargs)
+        self.reactor.advance(A_TIMESTAMP)
 
-        (bsid, brids) = xxx_todo_changeme
+        (bsid, brids) = yield self.rtype.addBuildset(**kwargs)
         self.assertEqual((bsid, brids), expectedReturn)
         # check the correct message was received
         self.master.mq.assertProductions(
@@ -324,8 +321,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
         if buildRequestResults is None:
             buildRequestResults = {}
 
-        clock = task.Clock()
-        clock.advance(A_TIMESTAMP)
+        self.reactor.advance(A_TIMESTAMP)
 
         def mkbr(brid, bsid=72):
             return fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=42,
@@ -346,7 +342,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
             fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
         ])
 
-        yield self.rtype.maybeBuildsetComplete(72, _reactor=clock)
+        yield self.rtype.maybeBuildsetComplete(72)
 
         self.master.db.buildsets.assertBuildsetCompletion(72, expectComplete)
         if expectMessage:

@@ -16,7 +16,6 @@
 import copy
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.data import base
@@ -138,15 +137,14 @@ class Buildset(base.ResourceType):
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
-                    parent_buildid=None, parent_relationship=None,
-                    _reactor=reactor):
+                    parent_buildid=None, parent_relationship=None):
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
             properties = {}
         if builderids is None:
             builderids = []
-        submitted_at = int(_reactor.seconds())
+        submitted_at = int(self.master.reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps, reason=reason,
             properties=properties, builderids=builderids,
@@ -187,13 +185,13 @@ class Buildset(base.ResourceType):
         # if there are no builders, then this is done already, so send the
         # appropriate messages for that
         if not builderids:
-            yield self.maybeBuildsetComplete(bsid, _reactor=_reactor)
+            yield self.maybeBuildsetComplete(bsid)
 
         return (bsid, brids)
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid, _reactor=reactor):
+    def maybeBuildsetComplete(self, bsid):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(
             bsid=bsid, complete=False)
 
@@ -222,7 +220,7 @@ class Buildset(base.ResourceType):
             return
 
         # mark it as completed in the database
-        complete_at = epoch2datetime(int(_reactor.seconds()))
+        complete_at = epoch2datetime(int(self.master.reactor.seconds()))
         try:
             yield self.master.db.buildsets.completeBuildset(bsid,
                                                             cumulative_results, complete_at=complete_at)

@@ -16,7 +16,6 @@
 import json
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import failure
 
 from buildbot.data import connector
@@ -174,7 +173,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+    def claimBuildRequests(self, brids, claimed_at=None):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
         validation.verifyType(self.testcase, 'claimed_at', claimed_at,
@@ -183,7 +182,7 @@ class FakeUpdates(service.AsyncService):
             return True
         try:
             yield self.master.db.buildrequests.claimBuildRequests(
-                brids=brids, claimed_at=claimed_at, _reactor=_reactor)
+                brids=brids, claimed_at=claimed_at)
         except AlreadyClaimedError:
             return False
         self.claimedBuildRequests.update(set(brids))
@@ -197,7 +196,7 @@ class FakeUpdates(service.AsyncService):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
-    def completeBuildRequests(self, brids, results, complete_at=None, _reactor=reactor):
+    def completeBuildRequests(self, brids, results, complete_at=None):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
         validation.verifyType(self.testcase, 'results', results,

@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.data import base
@@ -98,9 +97,9 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterActive(self, name, masterid, _reactor=reactor):
+    def masterActive(self, name, masterid):
         activated = yield self.master.db.masters.setMasterState(
-            masterid=masterid, active=True, _reactor=_reactor)
+            masterid=masterid, active=True)
         if activated:
             self.produceEvent(
                 dict(masterid=masterid, name=name, active=True),
@@ -108,8 +107,8 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def expireMasters(self, forceHouseKeeping=False, _reactor=reactor):
-        too_old = epoch2datetime(_reactor.seconds() - 60 * EXPIRE_MINUTES)
+    def expireMasters(self, forceHouseKeeping=False):
+        too_old = epoch2datetime(self.master.reactor.seconds() - 60 * EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
             if m['last_active'] is not None and m['last_active'] >= too_old:
@@ -117,7 +116,7 @@ class Master(base.ResourceType):
 
             # mark the master inactive, and send a message on its behalf
             deactivated = yield self.master.db.masters.setMasterState(
-                masterid=m['id'], active=False, _reactor=_reactor)
+                masterid=m['id'], active=False)
             if deactivated:
                 yield self._masterDeactivated(m['id'], m['name'])
             elif forceHouseKeeping:

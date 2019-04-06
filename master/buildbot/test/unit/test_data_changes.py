@@ -17,7 +17,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.data import changes
@@ -170,9 +169,8 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
                           expectedChangeUsers=None):
         if expectedChangeUsers is None:
             expectedChangeUsers = []
-        clock = task.Clock()
-        clock.advance(10000000)
-        changeid = yield self.rtype.addChange(_reactor=clock, **kwargs)
+        self.reactor.advance(10000000)
+        changeid = yield self.rtype.addChange(**kwargs)
 
         self.assertEqual(changeid, 500)
         # check the correct message was received

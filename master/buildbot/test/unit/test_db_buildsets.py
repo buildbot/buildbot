@@ -20,7 +20,6 @@ import json
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.db import buildsets
@@ -40,8 +39,7 @@ class Tests(interfaces.InterfaceTests):
 
     def setUpTests(self):
         self.now = 9272359
-        self.clock = task.Clock()
-        self.clock.advance(self.now)
+        self.reactor.advance(self.now)
 
         # set up a sourcestamp with id 234 for use below
         return self.insertTestData([
@@ -85,9 +83,10 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addBuildset_getBuildset(self):
-        bsid, brids = yield self.db.buildsets.addBuildset(sourcestamps=[234],
-                                                          reason='because', properties={}, builderids=[1],
-                                                          external_idstring='extid', _reactor=self.clock, waited_for=False)
+        bsid, brids = yield self.db.buildsets.addBuildset(
+                sourcestamps=[234], reason='because', properties={},
+                builderids=[1], external_idstring='extid', waited_for=False)
+
         # TODO: verify buildrequests too
         bsdict = yield self.db.buildsets.getBuildset(bsid)
         validation.verifyDbDict(self, 'bsdict', bsdict)
@@ -104,7 +103,7 @@ class Tests(interfaces.InterfaceTests):
         bsid_brids = yield self.db.buildsets.addBuildset(
                 sourcestamps=[234], reason='because', properties={},
                 builderids=[1], external_idstring='extid',
-                submitted_at=epoch2datetime(8888888), _reactor=self.clock,
+                submitted_at=epoch2datetime(8888888),
                 waited_for=False)
         bsdict = yield self.db.buildsets.getBuildset(bsid_brids[0])
 
@@ -272,22 +271,19 @@ class Tests(interfaces.InterfaceTests):
     def test_completeBuildset_already_completed(self):
         d = self.insert_test_getBuildsets_data()
         d.addCallback(lambda _:
-                      self.db.buildsets.completeBuildset(bsid=92, results=6,
-                                                         _reactor=self.clock))
+                      self.db.buildsets.completeBuildset(bsid=92, results=6))
         return self.assertFailure(d, buildsets.AlreadyCompleteError)
 
     def test_completeBuildset_missing(self):
         d = self.insert_test_getBuildsets_data()
         d.addCallback(lambda _:
-                      self.db.buildsets.completeBuildset(bsid=93, results=6,
-                                                         _reactor=self.clock))
+                      self.db.buildsets.completeBuildset(bsid=93, results=6))
         return self.assertFailure(d, buildsets.AlreadyCompleteError)
 
     @defer.inlineCallbacks
     def test_completeBuildset(self):
         yield self.insert_test_getBuildsets_data()
-        yield self.db.buildsets.completeBuildset(bsid=91, results=6,
-                                                 _reactor=self.clock)
+        yield self.db.buildsets.completeBuildset(bsid=91, results=6)
         bsdicts = yield self.db.buildsets.getBuildsets()
 
         bsdicts = [(bsdict['bsid'], bsdict['complete'],
@@ -406,11 +402,8 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_addBuildset_simple(self):
         (bsid, brids) = yield self.db.buildsets.addBuildset(
-                                            sourcestamps=[234], reason='because',
-                                            properties={}, builderids=[2],
-                                            external_idstring='extid',
-                                            waited_for=True,
-                                            _reactor=self.clock)
+                sourcestamps=[234], reason='because', properties={},
+                builderids=[2], external_idstring='extid', waited_for=True)
 
         def thd(conn):
             # we should only have one brid
@@ -503,8 +496,9 @@ class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
     def test_addBuildset_bad_waited_for(self):
         # only the fake db asserts on the type of waited_for
         d = self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
-                                          properties={}, builderids=[1], external_idstring='extid',
-                                          waited_for='wat', _reactor=self.clock)
+                                          properties={}, builderids=[1],
+                                          external_idstring='extid',
+                                          waited_for='wat')
         yield self.assertFailure(d, AssertionError)
 
 

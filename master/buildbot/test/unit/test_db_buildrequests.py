@@ -16,7 +16,6 @@
 import datetime
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.db import buildrequests
@@ -342,14 +341,12 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_claimBuildRequests(self, rows, now, brids, expected=None,
                                    expfailure=None, claimed_at=None):
-        clock = task.Clock()
-        clock.advance(now)
+        self.reactor.advance(now)
 
         try:
             yield self.insertTestData(rows)
             yield self.db.buildrequests.claimBuildRequests(brids=brids,
-                                                           claimed_at=claimed_at,
-                                                           _reactor=clock)
+                                                           claimed_at=claimed_at)
             results = yield self.db.buildrequests.getBuildRequests()
 
             self.assertNotEqual(expected, None,
@@ -446,8 +443,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_claimBuildRequests_sequential(self):
         now = 120350934
-        clock = task.Clock()
-        clock.advance(now)
+        self.reactor.advance(now)
 
         yield self.insertTestData([
             fakedb.BuildRequest(
@@ -455,10 +451,8 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildRequest(
                 id=45, buildsetid=self.BSID, builderid=self.BLDRID1),
         ])
-        yield self.db.buildrequests.claimBuildRequests(brids=[44],
-                                                       _reactor=clock)
-        yield self.db.buildrequests.claimBuildRequests(brids=[45],
-                                                       _reactor=clock)
+        yield self.db.buildrequests.claimBuildRequests(brids=[44])
+        yield self.db.buildrequests.claimBuildRequests(brids=[45])
         results = yield self.db.buildrequests.getBuildRequests(claimed=False)
 
         self.assertEqual(results, [])
@@ -469,15 +463,12 @@ class Tests(interfaces.InterfaceTests):
                                       complete_at=None):
         if brids is None:
             brids = [44]
-        clock = task.Clock()
-        clock.advance(now)
+        self.reactor.advance(now)
 
         try:
             yield self.insertTestData(rows)
-            yield self.db.buildrequests.completeBuildRequests(brids=brids,
-                                                           results=7,
-                                                           complete_at=complete_at,
-                                                          _reactor=clock)
+            yield self.db.buildrequests.completeBuildRequests(
+                brids=brids, results=7, complete_at=complete_at)
             results = yield self.db.buildrequests.getBuildRequests()
 
             self.assertNotEqual(expected, None,

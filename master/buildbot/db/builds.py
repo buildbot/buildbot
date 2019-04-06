@@ -19,7 +19,6 @@ import json
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import reactor
 
 from buildbot.db import NULL
 from buildbot.db import base
@@ -125,8 +124,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     def addBuild(self, builderid, buildrequestid, workerid, masterid,
-                 state_string, _reactor=reactor, _race_hook=None):
-        started_at = _reactor.seconds()
+                 state_string, _race_hook=None):
+        started_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             tbl = self.db.model.builds
@@ -166,12 +165,12 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
-    def finishBuild(self, buildid, results, _reactor=reactor):
+    def finishBuild(self, buildid, results):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.update(whereclause=(tbl.c.id == buildid))
             conn.execute(q,
-                         complete_at=_reactor.seconds(),
+                         complete_at=self.master.reactor.seconds(),
                          results=results)
         return self.db.pool.do(thd)
 

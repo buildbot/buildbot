@@ -19,7 +19,6 @@ import datetime
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.data import buildrequests
@@ -30,6 +29,7 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
+from buildbot.util import epoch2datetime
 
 
 class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -289,7 +289,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         @self.assertArgSpecMatches(
             self.master.data.updates.claimBuildRequests,  # fake
             self.rtype.claimBuildRequests)  # real
-        def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+        def claimBuildRequests(self, brids, claimed_at=None):
             pass
 
     @defer.inlineCallbacks
@@ -300,8 +300,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         ])
         res = yield self.master.data.updates.claimBuildRequests(
             [44, 55],
-            claimed_at=self.CLAIMED_AT,
-            _reactor=reactor)
+            claimed_at=self.CLAIMED_AT)
         self.assertTrue(res)
 
     @defer.inlineCallbacks
@@ -320,8 +319,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT,
-                                                       _reactor=reactor),
+                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT),
                                      expectedRes=True,
                                      expectedException=None)
         msg = {
@@ -365,8 +363,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT,
-                                                       _reactor=reactor),
+                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT),
                                      expectedRes=False,
                                      expectedException=None)
         self.assertEqual(self.master.mq.productions, [])
@@ -378,8 +375,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         yield self.doTestCallthrough('claimBuildRequests', claimBuildRequestsMock,
                                      self.rtype.claimBuildRequests,
                                      methodargs=[[44]],
-                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT,
-                                                       _reactor=reactor),
+                                     methodkwargs=dict(claimed_at=self.CLAIMED_AT),
                                      expectedRes=None,
                                      expectedException=self.dBLayerException)
         self.assertEqual(self.master.mq.productions, [])
@@ -453,8 +449,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         @self.assertArgSpecMatches(
             self.master.data.updates.completeBuildRequests,  # fake
             self.rtype.completeBuildRequests)  # real
-        def completeBuildRequests(self, brids, results, complete_at=None,
-                                  _reactor=reactor):
+        def completeBuildRequests(self, brids, results, complete_at=None):
             pass
 
     @defer.inlineCallbacks
@@ -462,8 +457,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         res = yield self.master.data.updates.completeBuildRequests(
             [44, 55],
             12,
-            complete_at=self.COMPLETE_AT,
-            _reactor=reactor)
+            complete_at=self.COMPLETE_AT)
         self.assertTrue(res)
 
     @defer.inlineCallbacks
@@ -478,8 +472,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[46], 12],
-                                     methodkwargs=dict(complete_at=self.COMPLETE_AT,
-                                                       _reactor=reactor),
+                                     methodkwargs=dict(complete_at=self.COMPLETE_AT),
                                      expectedRes=True,
                                      expectedException=None)
 
@@ -503,8 +496,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[46], 12],
-                                     methodkwargs=dict(complete_at=self.COMPLETE_AT,
-                                                       _reactor=reactor),
+                                     methodkwargs=dict(complete_at=self.COMPLETE_AT),
                                      expectedRes=False,
                                      expectedException=None)
 
@@ -516,8 +508,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
                                      completeBuildRequestsMock,
                                      self.rtype.completeBuildRequests,
                                      methodargs=[[46], 12],
-                                     methodkwargs=dict(complete_at=self.COMPLETE_AT,
-                                                       _reactor=reactor),
+                                     methodkwargs=dict(complete_at=self.COMPLETE_AT),
                                      expectedRes=None,
                                      expectedException=self.dBLayerException)
 
@@ -542,11 +533,10 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         self.assertEqual(list(brid_dict.keys()), [77])
         buildrequest = yield self.master.data.get(('buildrequests', brid_dict[77]))
         # submitted_at is the time of the test, so better not depend on it
-        self.assertTrue(buildrequest['submitted_at'] is not None)
-        buildrequest['submitted_at'] = None
         self.assertEqual(buildrequest, {'buildrequestid': 1001, 'complete': False, 'waited_for': False,
                                         'claimed_at': None, 'results': -1, 'claimed': False,
-                                        'buildsetid': 200, 'complete_at': None, 'submitted_at': None,
+                                        'buildsetid': 200, 'complete_at': None,
+                                        'submitted_at': epoch2datetime(0),
                                         'builderid': 77, 'claimed_by_masterid': None, 'priority': 0,
                                         'properties': None})
         buildset = yield self.master.data.get(('buildsets', new_bsid))
@@ -555,9 +545,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         # assert same sourcestamp
         self.assertEqual(buildset['sourcestamps'], oldbuildset['sourcestamps'])
         buildset['sourcestamps'] = None
-        self.assertTrue(buildset['submitted_at'] is not None)
-        buildset['submitted_at'] = None
-        self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': None,
+        self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': 0,
                                     'sourcestamps': None, 'parent_buildid': None,
                                     'results': -1, 'parent_relationship': None,
                                     'reason': 'rebuild',
