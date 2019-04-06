@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
@@ -270,11 +272,14 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.runStep()
 
-    def test_mode_full_clean_ssh_host_key_2_10(self):
+    @parameterized.expand([
+        ('host_key', dict(sshHostKey='sshhostkey')),
+        ('known_hosts', dict(sshKnownHosts='known_hosts')),
+    ])
+    def test_mode_full_clean_ssh_host_key_2_10(self, name, class_params):
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='full', method='clean', sshPrivateKey='sshkey',
-                           sshHostKey='sshhostkey'))
+                           mode='full', method='clean', sshPrivateKey='sshkey', **class_params))
 
         ssh_workdir = '/wrk/.wkdir.buildbot'
         ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'

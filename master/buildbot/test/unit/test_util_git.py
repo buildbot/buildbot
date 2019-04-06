@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 from twisted.trial import unittest
 
+from buildbot.test.util import config
 from buildbot.util.git import GitMixin
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
@@ -51,10 +54,40 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
         self.assert_does_not_escape('--opt')
 
 
+class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
+
+    @parameterized.expand([
+        ('no_keys', None, None, None, None),
+        ('only_private_key', 'key', None, None, None),
+        ('private_key_host_key', 'key', 'host', None, None),
+        ('private_key_known_hosts', 'key', None, 'hosts', None),
+        ('no_private_key_host_key', None, 'host', None,
+         'sshPrivateKey must be provided in order use sshHostKey'),
+        ('no_private_key_known_hosts', None, None, 'hosts',
+         'sshPrivateKey must be provided in order use sshKnownHosts'),
+        ('both_host_key_known_hosts', 'key', 'host', 'hosts',
+         'only one of sshPrivateKey and sshHostKey can be provided'),
+    ])
+    def test_config(self, name, private_key, host_key, known_hosts, config_error):
+        self.sshPrivateKey = private_key
+        self.sshHostKey = host_key
+        self.sshKnownHosts = known_hosts
+        if config_error is None:
+            self.setupGit()
+        else:
+            with self.assertRaisesConfigError(config_error):
+                self.setupGit()
+
+
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
 
-    def test_no_output(self):
+    def setUp(self):
+        self.sshPrivateKey = None
+        self.sshHostKey = None
+        self.sshKnownHosts = None
         self.setupGit()
+
+    def test_no_output(self):
         self.parseGitFeatures('')
         self.assertFalse(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -64,7 +97,6 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
 
     def test_git_noversion(self):
-        self.setupGit()
         self.parseGitFeatures('git')
         self.assertFalse(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -74,7 +106,6 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
 
     def test_git_zero_version(self):
-        self.setupGit()
         self.parseGitFeatures('git version 0.0.0')
         self.assertTrue(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -84,7 +115,6 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
 
     def test_git_2_10_0(self):
-        self.setupGit()
         self.parseGitFeatures('git version 2.10.0')
         self.assertTrue(self.gitInstalled)
         self.assertTrue(self.supportsBranch)

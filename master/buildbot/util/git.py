@@ -19,7 +19,7 @@ from distutils.version import LooseVersion
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot import config as bbconfig
+from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
@@ -50,7 +50,22 @@ def getSshCommand(keyPath, knownHostsPath):
 
 class GitMixin:
 
-    def setupGit(self):
+    def setupGit(self, logname=None):
+        if logname is None:
+            logname = 'GitMixin'
+
+        if self.sshHostKey is not None and self.sshPrivateKey is None:
+            config.error('{}: sshPrivateKey must be provided in order use sshHostKey'.format(
+                logname))
+
+        if self.sshKnownHosts is not None and self.sshPrivateKey is None:
+            config.error('{}: sshPrivateKey must be provided in order use sshKnownHosts'.format(
+                logname))
+
+        if self.sshHostKey is not None and self.sshKnownHosts is not None:
+            config.error('{}: only one of sshPrivateKey and sshHostKey can be provided'.format(
+                logname))
+
         self.gitInstalled = False
         self.supportsBranch = False
         self.supportsSubmoduleForce = False
@@ -113,15 +128,10 @@ class GitStepMixin(GitMixin):
 
     def setupGitStep(self):
         self.didDownloadSshPrivateKey = False
-        self.setupGit()
-
-        if self.sshHostKey is not None and self.sshPrivateKey is None:
-            bbconfig.error('Git: sshPrivateKey must be provided in order '
-                           'use sshHostKey')
-            self.sshPrivateKey = None
+        self.setupGit(logname='Git')
 
         if not self.repourl:
-            bbconfig.error("Git: must provide repourl.")
+            config.error("Git: must provide repourl.")
 
     def _isSshPrivateKeyNeededForGitCommand(self, command):
         if not command or self.sshPrivateKey is None:
@@ -172,7 +182,7 @@ class GitStepMixin(GitMixin):
         key_path = self._getSshPrivateKeyPath(ssh_data_path)
         ssh_wrapper_path = self._getSshWrapperScriptPath(ssh_data_path)
         host_key_path = None
-        if self.sshHostKey is not None:
+        if self.sshHostKey is not None or self.sshKnownHosts is not None:
             host_key_path = self._getSshHostKeyPath(ssh_data_path)
 
         self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
@@ -254,6 +264,7 @@ class GitStepMixin(GitMixin):
         p.master = self.master
         private_key = yield p.render(self.sshPrivateKey)
         host_key = yield p.render(self.sshHostKey)
+        known_hosts_contents = yield p.render(self.sshKnownHosts)
 
         # not using self.workdir because it may be changed depending on step
         # options
@@ -276,9 +287,11 @@ class GitStepMixin(GitMixin):
                                                private_key,
                                                workdir=workdir, mode=0o400)
 
-        if self.sshHostKey is not None:
+        if self.sshHostKey is not None or self.sshKnownHosts is not None:
             known_hosts_path = self._getSshHostKeyPath(ssh_data_path)
-            known_hosts_contents = getSshKnownHostsContents(host_key)
+
+            if self.sshHostKey is not None:
+                known_hosts_contents = getSshKnownHostsContents(host_key)
             yield self.downloadFileContentToWorker(known_hosts_path,
                                                    known_hosts_contents,
                                                    workdir=workdir, mode=0o400)

@@ -26,8 +26,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
-from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.reporter import ReporterTestMixin
 
 
 class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, ConfigErrorsMixin, TestReactorMixin):
