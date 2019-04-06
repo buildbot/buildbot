@@ -27,20 +27,20 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestCleanShutdown(unittest.TestCase):
+class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.reactor = mock.Mock()
+        self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantData=True)
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self.master)
         self.botmaster.startService()
 
     def assertReactorStopped(self, _=None):
-        self.assertTrue(self.reactor.stop.called)
+        self.assertTrue(self.reactor.stop_called)
 
     def assertReactorNotStopped(self, _=None):
-        self.assertFalse(self.reactor.stop.called)
+        self.assertFalse(self.reactor.stop_called)
 
     def makeFakeBuild(self, waitedFor=False):
         self.fake_builder = builder = mock.Mock()

@@ -36,6 +36,7 @@ from buildbot.test.fake import fakemq
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 
 
 @implementer(IConfigLoader)
@@ -71,10 +72,12 @@ class InitTests(unittest.SynchronousTestCase):
         self.assertEqual(m.config_loader, config.FileLoader(".", "master.cfg"))
 
 
-class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
+class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
+                         TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         yield self.setUpDirs(self.basedir)
@@ -90,7 +93,6 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.patch(master, 'Status', lambda master: mock.Mock())
 
         master.BuildMaster.masterHeartbeatService = mock.Mock()
-        self.reactor = self.make_reactor()
         self.master = master.BuildMaster(
             self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
         self.master.sendBuildbotNetUsageData = mock.Mock()
@@ -106,13 +108,6 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def tearDown(self):
         return self.tearDownDirs()
 
-    def make_reactor(self):
-        r = mock.Mock()
-        r.callWhenRunning = reactor.callWhenRunning
-        r.getThreadPool = reactor.getThreadPool
-        r.callFromThread = reactor.callFromThread
-        return r
-
     # tests
     @defer.inlineCallbacks
     def test_startup_bad_config(self):
@@ -120,7 +115,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         yield self.master.startService()
 
-        self.reactor.stop.assert_called_with()
+        self.assertTrue(self.reactor.stop_called)
         self.assertLogged("oh noes")
         self.assertLogged("BuildMaster startup failed")
 
@@ -133,7 +128,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         yield self.master.startService()
 
-        self.reactor.stop.assert_called_with()
+        self.assertTrue(self.reactor.stop_called)
         self.assertLogged("GOT HERE")
         self.assertLogged("BuildMaster startup failed")
 
@@ -145,7 +140,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         yield self.master.startService()
 
-        self.reactor.stop.assert_called_with()
+        self.assertTrue(self.reactor.stop_called)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertLogged("BuildMaster startup failed")
 
@@ -156,7 +151,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.assertTrue(self.master.data.updates.thisMasterActive)
         d = self.master.stopService()
         self.assertTrue(d.called)
-        self.assertFalse(self.reactor.stop.called)
+        self.assertFalse(self.reactor.stop_called)
         self.assertLogged("BuildMaster is running")
 
         # check started/stopped messages
@@ -175,7 +170,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.master.botmaster.shutdownDeferred.callback(None)
         self.assertTrue(d.called)
 
-        self.assertFalse(self.reactor.stop.called)
+        self.assertFalse(self.reactor.stop_called)
         self.assertLogged("BuildMaster is running")
 
         # check started/stopped messages
