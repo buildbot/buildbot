@@ -121,38 +121,6 @@ class ForceOptions(usage.Options):
             self['reason'] = " ".join(args)
 
 
-class BuildRequest:
-    hasStarted = False
-    timer = None
-
-    def __init__(self, parent, useRevisions=False, useColors=True):
-        self.parent = parent
-        self.useRevisions = useRevisions
-        self.useColors = useColors
-        self.timer = reactor.callLater(5, self.soon)
-
-    def soon(self):
-        del self.timer
-        if not self.hasStarted:
-            self.parent.send("The build has been queued, I'll give a shout"
-                             " when it starts")
-
-    def started(self, s):
-        self.hasStarted = True
-        if self.timer:
-            self.timer.cancel()
-            del self.timer
-        if self.useRevisions:
-            response = "build containing revision(s) [%s] forced" % s.getRevisions(
-            )
-        else:
-            response = "build #%d forced" % s.getNumber()
-        self.parent.send(response)
-        self.parent.send("I'll give a shout when the build finishes")
-        d = s.waitUntilFinished()
-        d.addCallback(self.parent.watchedBuildFinished)
-
-
 class Contact(service.AsyncService):
 
     """I hold the state for a single user's interaction with the buildbot.
