@@ -30,18 +30,23 @@ module.exports =
         # app entrypoint should be placed first, so need to be specific
         app: [
             'src/**/*.module.coffee'
+            'src/**/*.module.js'
         ]
 
         # scripts (can be coffee or js)
         scripts: [
             'src/**/*.coffee'
+            'src/**/*.js'
             '!src/**/*.spec.coffee'
+            '!src/**/*.spec.js'
         ]
 
         # CoffeeScript tests
         tests: [
             'test/**/*.coffee'
+            'test/**/*.js'
             'src/**/*.spec.coffee'
+            'src/**/*.spec.js'
         ]
 
         # fixtures
