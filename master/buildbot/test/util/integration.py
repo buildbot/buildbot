@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import re
 import sys
 from io import StringIO
 
@@ -291,15 +292,19 @@ class RunMasterBase(unittest.TestCase):
                     self.printLog(log, out)
 
     @defer.inlineCallbacks
-    def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False):
+    def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False, regex=False):
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         for step in build['steps']:
             for log in step['logs']:
                 for line in log['contents']['content'].splitlines():
                     if onlyStdout and line[0] != 'o':
                         continue
-                    if expectedLog in line:
-                        return True
+                    if regex:
+                        if re.search(expectedLog, line):
+                            return True
+                    else:
+                        if expectedLog in line:
+                            return True
         return False
 
     def printLog(self, log, out):
