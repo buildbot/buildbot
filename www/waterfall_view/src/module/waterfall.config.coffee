@@ -1,4 +1,4 @@
-class Waterfall extends Config
+class Waterfall
     constructor: (bbSettingsServiceProvider) ->
 
         bbSettingsServiceProvider.addSettingsGroup
@@ -30,3 +30,7 @@ class Waterfall extends Config
                 caption: 'Build number background'
                 default_value: false
             ]
+
+
+angular.module('app')
+.config(['bbSettingsServiceProvider', Waterfall])

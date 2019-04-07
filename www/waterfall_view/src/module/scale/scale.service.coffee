@@ -1,4 +1,4 @@
-class ScaleService extends Factory
+class ScaleService
     constructor: ->
         return class Service
             constructor: (@d3) ->
@@ -48,3 +48,7 @@ class ScaleService extends Factory
                 @d3.scale.ordinal()
                     .domain(builders.map (builder) -> builder.builderid)
                     .range(builders.map (builder) -> builder.name)
+
+
+angular.module('app')
+.factory('ScaleService', [ScaleService])

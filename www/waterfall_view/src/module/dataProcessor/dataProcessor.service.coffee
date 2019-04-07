@@ -1,4 +1,4 @@
-class DataProcessor extends Service
+class DataProcessor
     constructor: ->
         {}
     # Returns groups and adds builds to builders
@@ -55,3 +55,7 @@ class DataProcessor extends Service
             if builder.builds?.length
                 ret.push(builder)
         return ret
+
+
+angular.module('app')
+.service('dataProcessorService', [DataProcessor])

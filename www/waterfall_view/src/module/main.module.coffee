@@ -1,5 +1,5 @@
 # Register new module
-class WaterfallView extends App
+class WaterfallView
     constructor: -> return [
         'ui.router'
         'ngAnimate'
@@ -8,7 +8,7 @@ class WaterfallView extends App
     ]
 
 
-class Waterfall extends Controller
+class Waterfall
     self = null
     constructor: (@$rootElement, @$scope, $q, $timeout, @$window, @$log,
                   @$uibModal, dataService, d3Service, @dataProcessorService,
@@ -568,3 +568,7 @@ class Waterfall extends Controller
         @drawBuilds()
         @drawXAxis()
         @drawYAxis()
+
+
+angular.module('app', new WaterfallView())
+.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', Waterfall])
