@@ -82,7 +82,7 @@ describe('Scale service', function() {
         let date;
         const idToY = scale.getY(groups, 5, 100);
         // Check gap size
-        expect(idToY(groups[0].max) - idToY(groups[1].min)).toBe(5);
+        expect(idToY.getCoord(groups[0].max) - idToY.getCoord(groups[1].min)).toBe(5);
         // All dates are in domain
         const dates = [
             1325376000, // 2012.01.01 - 0:0:0
@@ -91,12 +91,12 @@ describe('Scale service', function() {
         ];
         for (date of Array.from(dates)) {
             // date -> coordinate -> date, the starting and the ending date should be equal
-            expect(idToY.invert(idToY(date))).toEqual(date);
+            expect(idToY.invert(idToY.getCoord(date))).toEqual(date);
         }
         // Later times have greater Y coordinate
-        expect(idToY(date)).toBeGreaterThan(idToY(date + 10000));
+        expect(idToY.getCoord(date)).toBeGreaterThan(idToY.getCoord(date + 10000));
         // Out of domain
-        expect(idToY(1359731101)).toBeUndefined();
+        expect(idToY.getCoord(1359731101)).toBeUndefined();
         return expect(idToY.invert(120)).toBeUndefined();
     });
 

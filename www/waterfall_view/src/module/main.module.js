@@ -396,7 +396,8 @@ var WaterfallController = (function() {
         }
         addTicks(build) {
             const y = this.scale.getY(this.groups, this.c.gap, this.getInnerHeight());
-            return this.ticks = this.ticks.concat([y(build.complete_at), y(build.started_at)]);
+            return this.ticks = this.ticks.concat([y.getCoord(build.complete_at),
+                                                   y.getCoord(build.started_at)]);
         }
         removeTicks() { return this.ticks = []; }
 
@@ -426,7 +427,7 @@ var WaterfallController = (function() {
 
             let { ticks } = this;
             for (let group of Array.from(this.groups)) {
-                ticks = ticks.concat([y(group.min), y(group.max)]);
+                ticks = ticks.concat([y.getCoord(group.min), y.getCoord(group.max)]);
             }
 
             // Y axis tick format
@@ -497,7 +498,7 @@ var WaterfallController = (function() {
                 .data(data, key).enter()
                 .append('g')
                     .attr('class', 'build')
-                    .attr('transform', build => `translate(0, ${y(build.complete_at)})`);
+                    .attr('transform', build => `translate(0, ${y.getCoord(build.complete_at)})`);
             const max = function(a, b) {
                 if (a > b) {
                     return a;
@@ -505,7 +506,8 @@ var WaterfallController = (function() {
                 return b;
             };
             // Draw rectangle for each build
-            const height = build => max(10, Math.abs(y(build.started_at) - y(build.complete_at)));
+            const height = build => max(10, Math.abs(y.getCoord(build.started_at) -
+                                                     y.getCoord(build.complete_at)));
             builds.append('rect')
                 .attr('class', self.getResultClassFromThing)
                 .attr('width', x.rangeBand(1))

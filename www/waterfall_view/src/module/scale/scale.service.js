@@ -22,16 +22,17 @@ class ScaleService {
 
             // Returns y scale
             getY(groups, gap, height) {
-                let group, Y;
+
+                let group;
                 const H = height;
                 const I = H - ((groups.length - 1) * gap);
                 let T = 0;
                 for (group of Array.from(groups)) { T += (group.max - group.min); }
 
-                return (Y = class Y {
+                class Y {
 
                     // date to coordinate
-                    constructor(date) {
+                    getCoord(date) {
                         const periods = [];
                         for (let id = 0; id < groups.length; id++) {
                             group = groups[id];
@@ -46,7 +47,7 @@ class ScaleService {
                     }
 
                     // coordinate to date
-                    static invert(coordinate) {
+                    invert(coordinate) {
                         const periods = [];
                         for (let id = 0; id < groups.length; id++) {
                             group = groups[id];
@@ -60,7 +61,9 @@ class ScaleService {
                         }
                         return undefined;
                     }
-                });
+                }
+
+                return new Y();
             }
 
             // Returns an id to name scale
@@ -75,4 +78,4 @@ class ScaleService {
 
 
 angular.module('waterfall_view')
-.factory('ScaleService', [ScaleService]);
+.factory('scaleService', [ScaleService]);
