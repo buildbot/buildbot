@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 # Register new module
-class BuildbotGridView extends App
+class BuildbotGridView
     constructor: ->
         return [
             'ui.router'
@@ -25,7 +25,7 @@ class BuildbotGridView extends App
         ]
 
 # Register new state
-class State extends Config
+class State
     constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
         # Menu configuration
         glMenuServiceProvider.addGroup(
@@ -79,3 +79,7 @@ class State extends Config
                     default_value: 1000
             ]
         )
+
+
+angular.module('app', new BuildbotGridView())
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])

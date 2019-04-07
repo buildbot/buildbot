@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-class Grid extends Controller
+class Grid
     constructor: (@$scope, @$stateParams, @$state, resultsService, dataService, bbSettingsService) ->
         _.mixin(@$scope, resultsService)
         @data = dataService.open().closeOnDestroy(@$scope)
@@ -192,3 +192,7 @@ class Grid extends Controller
 
     isTagToggled: (tag) =>
         return @tags.indexOf(tag) >= 0
+
+
+angular.module('app')
+.controller('gridController', ['$scope', '$stateParams', '$state', 'resultsService', 'dataService', 'bbSettingsService', Grid])
