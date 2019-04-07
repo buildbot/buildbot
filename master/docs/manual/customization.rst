@@ -573,7 +573,7 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
         If ``fast`` is ``True`` then the function should call back as soon as it is safe to do so, as, for example, the master may be shutting down.
         The value returned by the callback is ignored.
         Buildbot will ensure that a single worker will never have its ``stop_instance`` called before any previous calls to ``stop_instance`` finish.
-        ``stop_instance`` may be called before ``start_instance`` finishes only if ``start_instance`` takes a long time and the worker times out.
+        During master shutdown any pending calls to ``start_instance`` or ``stop_instance`` will be waited upon finish.
 
     .. py:attribute:: builds_may_be_incompatible
 

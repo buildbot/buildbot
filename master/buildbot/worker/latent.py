@@ -89,8 +89,13 @@ class AbstractLatentWorker(AbstractWorker):
     #   - no disconnection by worker during substantiation when
     #   build_wait_timeout param is negative.
     #
-    # The above means that the connection state of the worker (self.conn) must
-    # be tracked separately from the intended state of the worker (self.state).
+    #   - worker attaching before start_instance returned.
+    #
+    # The above means that the following parts of the state must be tracked separately and can
+    # result in various state combinations:
+    #   - connection state of the worker (self.conn)
+    #   - intended state of the worker (self.state)
+    #   - whether start_instance() has been called and has not yet finished.
 
     state = States.NOT_SUBSTANTIATED
 
@@ -125,6 +130,8 @@ class AbstractLatentWorker(AbstractWorker):
                         build_wait_timeout=60 * 10,
                         **kwargs):
         self._substantiation_notifier = Notifier()
+        self._start_instance_notifier = Notifier()
+        self._start_instance_currently_running = False
         self._insubstantiation_notifier = Notifier()
         self.build_wait_timeout = build_wait_timeout
         return super().reconfigService(name, password, **kwargs)
@@ -211,7 +218,13 @@ class AbstractLatentWorker(AbstractWorker):
             dont_wait_to_attach = \
                 self.build_wait_timeout < 0 and self.conn is not None
 
+            self._start_instance_currently_running = True
+
             start_success = yield self.start_instance(build)
+
+            self._start_instance_currently_running = False
+            if self._start_instance_notifier:
+                self._start_instance_notifier.notify(None)
 
             if not start_success:
                 # this behaviour is kept as compatibility, but it is better
@@ -228,6 +241,10 @@ class AbstractLatentWorker(AbstractWorker):
                 self._fireSubstantiationNotifier(True)
 
         except Exception as e:
+            self._start_instance_currently_running = False
+            if self._start_instance_notifier:
+                self._start_instance_notifier.notify(None)
+
             self.stopMissingTimer()
             self._substantiation_failed(failure.Failure(e))
             # swallow the failure as it is notified
@@ -339,6 +356,15 @@ class AbstractLatentWorker(AbstractWorker):
         # substantiation_build at the end of substantiation
 
         log.msg("insubstantiating worker {}".format(self))
+
+        # ensure start_instance() completes until we do anything. We're likely in
+        # States.SUBSTANTIATING but we can't check that because worker may attach earlier than
+        # start_instance finishes.
+        while self._start_instance_currently_running:
+            log.msg(('while insubstantiating worker {}: ' +
+                     'waiting for start_instance() to finish').format(self))
+            yield self._start_instance_notifier.wait()
+
         if self.state == States.NOT_SUBSTANTIATED:
             return
 

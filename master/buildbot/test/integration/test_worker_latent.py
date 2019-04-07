@@ -295,6 +295,9 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
         master.reactor.advance(controller.worker.quarantine_initial_timeout)
         self.assertEqual(controller.starting, True)
 
+        controller.auto_start(True)
+        controller.auto_stop(True)
+
     @defer.inlineCallbacks
     def test_worker_multiple_substantiations_succeed(self):
         """
@@ -448,6 +451,7 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
         # after the latent workers completes start-stop cycle.
         yield self.createBuildrequest(master, [builder_id])
         d = controller.worker.insubstantiate()
+        controller.start_instance(False)
         controller.stop_instance(True)
         yield d
 
@@ -509,6 +513,7 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
+        yield controller.start_instance(False)
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
@@ -672,8 +677,7 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.disconnect_worker()
         yield self.assertBuildResults(1, RETRY)
 
-        # Request one build.
-        yield self.createBuildrequest(master, [builder_id])
+        # Now check that the build requeued and finished with success
         controller.start_instance(True)
 
         yield self.assertBuildResults(2, None)
