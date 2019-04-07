@@ -37,7 +37,7 @@ describe('page with sidebar', function() {
         return expect(elmBody.find("ul").length).toBeGreaterThan(0);
     });
 
-    return it('should behave', inject(function($timeout) {
+    it('should toggle groups', function() {
         expect(elmBody).toBeDefined();
         const g = scope.page.groups[1];
 
@@ -46,8 +46,9 @@ describe('page with sidebar', function() {
         expect(scope.page.activeGroup).toBe(null);
         scope.page.toggleGroup(g);
         expect(scope.page.activeGroup).toBe(g);
+    });
 
-        // sidebar should get pinned state from localStorage.sidebarPinned
+    it('should pin sidebar', inject(function($timeout, $window) {
         expect(scope.page.sidebarPinned).toBe(false);
 
         $timeout.flush();
@@ -57,6 +58,5 @@ describe('page with sidebar', function() {
         $timeout.flush();
         expect(scope.page.sidebarActive).toBe(false);
         return scope.page.sidebarPinned = false;
-    })
-    );
+    }));
 });
