@@ -1140,6 +1140,7 @@ requestcancelled
 requestjson
 requestsubmitted
 requeue
+requeued
 requiredargs
 reschedulenextbuild
 resetmocks

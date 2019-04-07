@@ -111,6 +111,7 @@ class AbstractLatentWorker(AbstractWorker):
     #
     # insubstantiate():
     # SUBSTANTIATED -> INSUBSTANTIATING
+    # INSUBSTANTIATING_SUBSTANTIATING -> INSUBSTANTIATING (cancels substantiation request)
     # < other state transitions may happen during this time >
     # INSUBSTANTIATING_SUBSTANTIATING -> SUBSTANTIATING
     # INSUBSTANTIATING -> NOT_SUBSTANTIATED
@@ -341,8 +342,14 @@ class AbstractLatentWorker(AbstractWorker):
         if self.state == States.NOT_SUBSTANTIATED:
             return
 
-        if self.state in [States.INSUBSTANTIATING,
-                          States.INSUBSTANTIATING_SUBSTANTIATING]:
+        if self.state == States.INSUBSTANTIATING:
+            yield self._insubstantiation_notifier.wait()
+            return
+
+        if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
+            self.state = States.INSUBSTANTIATING
+            self._fireSubstantiationNotifier(
+                failure.Failure(LatentWorkerSubstantiatiationCancelled()))
             yield self._insubstantiation_notifier.wait()
             return
 

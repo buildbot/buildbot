@@ -34,6 +34,7 @@ from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.test.util.misc import TimeoutableTestCase
 from buildbot.test.util.patch_delay import patchForDelay
+from buildbot.worker.latent import States
 
 
 class TestException(Exception):
@@ -428,6 +429,53 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
 
         self.reactor.advance(1)
         yield controller.stop_instance(True)
+
+    @defer.inlineCallbacks
+    def test_insubstantiation_during_substantiation_refuses_substantiation(self):
+        """
+        If a latent worker gets insubstantiation() during substantiation, then it should refuse
+        to substantiate.
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=1))
+
+        # insubstantiate during start_instance(). Note that failed substantiation is notified only
+        # after the latent workers completes start-stop cycle.
+        yield self.createBuildrequest(master, [builder_id])
+        d = controller.worker.insubstantiate()
+        controller.stop_instance(True)
+        yield d
+
+        yield self.assertBuildResults(1, RETRY)
+
+    @defer.inlineCallbacks
+    def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):
+        """
+        We should cancel substantiation if we insubstantiate when that substantiation is waiting
+        on current insubstantiation to finish
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        # put the worker into insubstantiation phase
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        self.reactor.advance(1)
+        self.assertTrue(controller.stopping)
+
+        # build should wait on the insubstantiation
+        yield self.createBuildrequest(master, [builder_id])
+        self.assertEqual(controller.worker.state, States.INSUBSTANTIATING_SUBSTANTIATING)
+
+        # build should be requeued if we insubstantiate.
+        d = controller.worker.insubstantiate()
+        controller.stop_instance(True)
+        yield d
+
+        yield self.assertBuildResults(2, RETRY)
 
     @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
