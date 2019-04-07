@@ -99,27 +99,37 @@ class AbstractLatentWorker(AbstractWorker):
 
     state = States.NOT_SUBSTANTIATED
 
-    # state transitions:
-    #
-    # substantiate(): either of
-    # NOT_SUBSTANTIATED -> SUBSTANTIATING
-    # INSUBSTANTIATING -> INSUBSTANTIATING_SUBSTANTIATING
-    #
-    # attached():
-    # SUBSTANTIATING -> SUBSTANTIATED
-    # self.conn -> not None
-    #
-    # detached():
-    # self.conn -> None
-    #
-    # errors in any of above will call insubstantiate()
-    #
-    # insubstantiate():
-    # SUBSTANTIATED -> INSUBSTANTIATING
-    # INSUBSTANTIATING_SUBSTANTIATING -> INSUBSTANTIATING (cancels substantiation request)
-    # < other state transitions may happen during this time >
-    # INSUBSTANTIATING_SUBSTANTIATING -> SUBSTANTIATING
-    # INSUBSTANTIATING -> NOT_SUBSTANTIATED
+    '''
+    state transitions:
+
+    substantiate(): either of
+        NOT_SUBSTANTIATED -> SUBSTANTIATING
+        INSUBSTANTIATING -> INSUBSTANTIATING_SUBSTANTIATING
+
+    attached():
+        SUBSTANTIATING -> SUBSTANTIATED
+        then:
+        self.conn -> not None
+
+    detached():
+        self.conn -> None
+
+    errors in any of above will call insubstantiate()
+
+    insubstantiate():
+        either of:
+            SUBSTANTIATED -> INSUBSTANTIATING
+            INSUBSTANTIATING_SUBSTANTIATING -> INSUBSTANTIATING (cancels substantiation request)
+            SUBSTANTIATING -> INSUBSTANTIATING
+            SUBSTANTIATING -> INSUBSTANTIATING_SUBSTANTIATING
+
+        then:
+            < other state transitions may happen during this time >
+
+        then either of:
+            INSUBSTANTIATING_SUBSTANTIATING -> SUBSTANTIATING
+            INSUBSTANTIATING -> NOT_SUBSTANTIATED
+    '''
 
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
