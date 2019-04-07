@@ -79,6 +79,6 @@ class _glPageWithSidebar {
 }
 
 
-angular.module('app')
+angular.module('guanlecoja.ui')
 .directive('glPageWithSidebar', [GlPageWithSidebar])
 .controller('_glPageWithSidebarController', ['$scope', 'glMenuService', '$timeout', '$window', _glPageWithSidebar]);

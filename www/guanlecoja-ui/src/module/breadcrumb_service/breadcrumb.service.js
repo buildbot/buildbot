@@ -14,5 +14,5 @@ class glBreadcrumb {
 
 
 
-angular.module('app')
+angular.module('guanlecoja.ui')
 .service('glBreadcrumbService', ['$rootScope', glBreadcrumb]);

@@ -43,7 +43,7 @@ class glTopbarContextualActions {
 }
 
 
-angular.module('app')
+angular.module('guanlecoja.ui')
 .directive('glTopbarContextualActions', [GlTopbarContextualActions])
 .controller('_glTopbarContextualActionsController', ['$scope', '$sce', _glTopbarContextualActions])
 .service('glTopbarContextualActionsService', ['$rootScope', glTopbarContextualActions]);

@@ -34,6 +34,6 @@ class _glNotification {
 }
 
 
-angular.module('app')
+angular.module('guanlecoja.ui')
 .directive('glNotification', [GlNotification])
 .controller('_glNotificationController', ['$scope', 'glNotificationService', _glNotification]);

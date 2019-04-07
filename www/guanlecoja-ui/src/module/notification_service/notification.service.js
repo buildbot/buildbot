@@ -58,5 +58,5 @@ class glNotification {
 }
 
 
-angular.module('app')
+angular.module('guanlecoja.ui')
 .service('glNotificationService', ['$rootScope', '$timeout', glNotification]);

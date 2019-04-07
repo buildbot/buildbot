@@ -41,6 +41,6 @@ class _glTopbar {
 }
 
 
-angular.module('app')
+angular.module('guanlecoja.ui')
 .directive('glTopbar', [GlTopbar])
 .controller('_glTopbarController', ['$scope', 'glMenuService', '$location', _glTopbar]);
