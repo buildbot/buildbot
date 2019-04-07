@@ -286,5 +286,5 @@ class Grid {
 }
 
 
-angular.module('app')
+angular.module('grid_view')
 .controller('gridController', ['$scope', '$stateParams', '$state', 'resultsService', 'dataService', 'bbSettingsService', Grid]);
