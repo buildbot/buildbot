@@ -7,11 +7,11 @@
  */
 beforeEach(function() {
     module(function($provide) {
-        $provide.service('$uibModal', () => ({open() {}}));
+        $provide.service('$uibModal', function() { return {open() {}}; });
         return null;
     });
     module(function($provide) {
-        $provide.service('resultsService', () => ({results2class() {}}));
+        $provide.service('resultsService', function() { return {results2class() {}}; });
         return null;
     });
 
