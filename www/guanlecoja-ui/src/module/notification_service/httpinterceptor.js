@@ -33,4 +33,4 @@ class glHttpInterceptor {
 
 
 angular.module('guanlecoja.ui')
-.factory('GlHttpInterceptor', ['glNotificationService', '$q', '$timeout', glHttpInterceptor]);
+.factory('glHttpInterceptor', ['glNotificationService', '$q', '$timeout', glHttpInterceptor]);

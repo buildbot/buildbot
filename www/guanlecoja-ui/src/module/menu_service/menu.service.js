@@ -85,4 +85,4 @@ GlMenu.initClass();
 
 
 angular.module('guanlecoja.ui')
-.provider('glMenuProvider', [GlMenu]);
+.provider('glMenuService', [GlMenu]);
