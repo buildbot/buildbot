@@ -1,10 +1,10 @@
 # Register new module
-class Nestedexample extends App
+class Nestedexample
     constructor: -> return [
         'common'
     ]
 
-class Nestedexamplefield extends Directive
+class Nestedexamplefield
     constructor: ->
         return {
             replace: false
@@ -14,7 +14,7 @@ class Nestedexamplefield extends Directive
             controller: '_nestedexamplefieldController'
         }
 
-class _nestedexamplefield extends Controller
+class _nestedexamplefield
     constructor: ($scope, $http) ->
         # boilerplate to extract our two embedded
         # UI elements
@@ -68,3 +68,8 @@ class _nestedexamplefield extends Controller
 
         $scope.getIngredients = () ->
             updateValues($scope.pizza.value)
+
+
+angular.module('app', new Nestedexample())
+.directive('nestedexamplefield', [Nestedexamplefield])
+.controller('_nestedexamplefieldController', ['$scope', '$http', _nestedexamplefield])
