@@ -50,9 +50,14 @@ describe('page with sidebar', function() {
 
     it('should pin sidebar', inject(function($timeout, $window) {
         expect(scope.page.sidebarPinned).toBe(false);
-
         $timeout.flush();
-        expect(scope.page.sidebarActive).toBe(true);
+
+        if ($window.innerWidth > 800) {
+            expect(scope.page.sidebarActive).toBe(true);
+        } else {
+            expect(scope.page.sidebarActive).toBe(false);
+        }
+
         scope.page.sidebarPinned = false;
         scope.page.leaveSidebar();
         $timeout.flush();
