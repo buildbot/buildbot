@@ -19,7 +19,7 @@ describe('Collection', function() {
     beforeEach(inject(injected));
 
     describe("simple collection", function() {
-        beforeEach(() => c = new Collection('builds'));
+        beforeEach(function() { c = new Collection('builds') });
 
         it('should be defined', function() {
             expect(Collection).toBeDefined();
@@ -77,7 +77,7 @@ describe('Collection', function() {
     });
 
     describe("queried collection", function() {
-        beforeEach(() => c = new Collection('builds', {order:'-buildid', limit:2}));
+        beforeEach(function() { c = new Collection('builds', {order:'-buildid', limit:2}) } );
 
         it('should have a from function, which iteratively inserts data', function() {
             c.from([
@@ -133,8 +133,8 @@ describe('Collection', function() {
     });
 
 
-    return describe("singleid collection", function() {
-        beforeEach(() => c = new Collection('builds/1'));
+    describe("singleid collection", function() {
+        beforeEach(function() { c = new Collection('builds/1'); } );
 
         return it("should manage the updates correctly", function() {
             c.listener({k: "builds/1/update", m: {buildid: 1, value:1}});

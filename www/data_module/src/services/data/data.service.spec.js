@@ -170,7 +170,7 @@ describe('Data service', function() {
         return it('should work with mock calls as well', function() {
             let builds;
             dataService.when('builds/1', [{buildid: 1, builderid: 1}]);
-            return builds = opened.getBuilds(1, {subscribe: false});
+            builds = opened.getBuilds(1, {subscribe: false});
         });
     });
 
