@@ -91,5 +91,5 @@ class State {
 }
 
 
-angular.module('app', new BuildbotGridView())
+angular.module('grid_view', new BuildbotGridView())
 .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State]);
