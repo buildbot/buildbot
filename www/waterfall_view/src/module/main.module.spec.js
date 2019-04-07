@@ -7,7 +7,7 @@
  */
 beforeEach(function() {
     module(function($provide) {
-        $provide.service('$uibModal', () => ({open() {}}));
+        $provide.service('$uibModal', function() { return {open() {}}; });
         return null;
     });
 
