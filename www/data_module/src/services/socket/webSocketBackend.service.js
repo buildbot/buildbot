@@ -11,10 +11,10 @@ var WebSocketBackend = (function() {
     WebSocketBackend = class WebSocketBackend {
         static initClass() {
             self = null;
-    
+
             this.prototype.sendQueue = [];
             this.prototype.receiveQueue = [];
-    
+
             // mocked WebSocket
             MockWebSocket = (function() {
                 MockWebSocket = class MockWebSocket {

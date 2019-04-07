@@ -1,6 +1,5 @@
 /*
  * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
  * DS101: Remove unnecessary use of Array.from
  * DS102: Remove unnecessary code created because of implicit returns
  * DS205: Consider reworking code to avoid use of IIFEs
@@ -14,13 +13,6 @@ class Collection {
         return (CollectionInstance = class CollectionInstance extends Array {
             constructor(restPath, query, accessor) {
                 let className;
-                {
-                  // Hack: trick Babel/TypeScript into allowing this before super.
-                  if (false) { super(); }
-                  let thisFn = (() => { return this; }).toString();
-                  let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
-                  eval(`${thisName} = this;`);
-                }
                 this.listener = this.listener.bind(this);
                 this.restPath = restPath;
                 if (query == null) { query = {}; }
