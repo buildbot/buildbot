@@ -187,7 +187,7 @@ class AbstractLatentWorker(AbstractWorker):
         if self.state == States.SUBSTANTIATED and self.conn is None:
             # connection dropped while we were substantiated.
             # insubstantiate to clean up and then substantiate normally.
-            d_ins = self.insubstantiate(_force_substantiation=True)
+            d_ins = self.insubstantiate(force_substantiation=True)
             d_ins.addErrback(log.err, 'while insubstantiating')
             return d
 
@@ -334,9 +334,9 @@ class AbstractLatentWorker(AbstractWorker):
             self.build_wait_timeout, self._soft_disconnect)
 
     @defer.inlineCallbacks
-    def insubstantiate(self, fast=False, _force_substantiation=False):
-        # _force_substantiation=True means we'll try to substantiate a build
-        # with stored substantiation_build at the end of substantiation
+    def insubstantiate(self, fast=False, force_substantiation=False):
+        # force_substantiation=True means we'll try to substantiate a build with stored
+        # substantiation_build at the end of substantiation
 
         log.msg("insubstantiating worker {}".format(self))
         if self.state == States.NOT_SUBSTANTIATED:
@@ -355,7 +355,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         notify_cancel = self.state == States.SUBSTANTIATING
 
-        if _force_substantiation:
+        if force_substantiation:
             self.state = States.INSUBSTANTIATING_SUBSTANTIATING
         else:
             self.state = States.INSUBSTANTIATING
