@@ -206,12 +206,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def stop_instance(self, build):
-        assert self._controller.state in [States.STARTED, States.STARTING]
-        # if we did not succeed starting, at least call back the failure result
-        if self._controller.state == States.STARTING:
-            self._controller.state = States.STOPPED
-            d, self._controller._start_deferred = self._controller._start_deferred, None
-            d.callback(False)
+        assert self._controller.state == States.STARTED
         self._controller.state = States.STOPPING
 
         if self._controller.auto_stop_flag:
