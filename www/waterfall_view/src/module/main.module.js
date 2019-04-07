@@ -17,12 +17,12 @@ class WaterfallView {
 }
 
 
-var Waterfall = (function() {
+var WaterfallController = (function() {
     let self = undefined;
-    Waterfall = class Waterfall {
+    Cls = class Waterfall {
         static initClass() {
             self = null;
-    
+
             // Y axis tick values
             this.prototype.ticks = [];
         }
@@ -52,7 +52,7 @@ var Waterfall = (function() {
             }
             ];
 
-            // 'waterfall' class needs to be dynamically added to the body in order 
+            // 'waterfall' class needs to be dynamically added to the body in order
             //  to support waterfall-specific styling of the body.  (this is a bit
             //  awkward since the body is provided by guanlecoja-ui and is the same
             //  element as you switch between different plugin pages, therefore the
@@ -658,10 +658,11 @@ var Waterfall = (function() {
             return this.drawYAxis();
         }
     };
-    Waterfall.initClass();
-    return Waterfall;
+    Cls.initClass();
+    return Cls;
 })();
 
 
 angular.module('waterfall_view', new WaterfallView())
-.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', Waterfall]);
+.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService',
+                                    WaterfallController]);
