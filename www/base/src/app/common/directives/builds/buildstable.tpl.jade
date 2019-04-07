@@ -8,7 +8,7 @@
         td(width='100px') #
         td(width='150px') Started At
         td(width='150px') Duration
-        td(width='200px') Owner
+        td(width='200px') Owners
         td(width='150px') Worker
         td Status
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
@@ -16,7 +16,7 @@
           td
             a(ui-sref="build({builder:build.builderid, build:build.number})")
               span.badge-status(ng-class="results2class(build, 'pulse')")
-                  span.badge-inactive 
+                  span.badge-inactive
                     | {{build.number}}
                   span.badge-active {{results2text(build)}}
           td
@@ -26,8 +26,7 @@
             span(ng-show="build.complete", title="{{(build.complete_at - build.started_at)| durationformat:'LLL' }}")
               | {{(build.complete_at - build.started_at)| duration }}
           td
-            span(title="{{build.properties.owner[0]}}")
-              | {{ build.properties.owner[0] }}
+            span(ng-repeat="owner in build.properties.owners[0]") {{owner}}
           td
             a(ui-sref='worker({worker: build.workerid})')
               | {{build.properties.workername[0]}}
