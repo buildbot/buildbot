@@ -693,23 +693,14 @@ class MasterConfig(util.ComparableMixin):
         return True
 
     def load_workers(self, filename, config_dict):
-        config_valid = True
-
         workers = config_dict.get('workers')
-        if workers is not None:
-            if not self._check_workers(workers, "c['workers']"):
-                config_valid = False
-
-        if not config_valid:
+        if workers is None:
             return
 
-        elif workers is not None:
-            self.workers = []
-            if workers is not None:
-                self.workers.extend(workers)
+        if not self._check_workers(workers, "c['workers']"):
+            return
 
-        else:
-            pass
+        self.workers = workers[:]
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])

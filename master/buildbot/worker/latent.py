@@ -341,7 +341,8 @@ class AbstractLatentWorker(AbstractWorker):
         if self.state == States.NOT_SUBSTANTIATED:
             return
 
-        if self.state == States.INSUBSTANTIATING:
+        if self.state in [States.INSUBSTANTIATING,
+                          States.INSUBSTANTIATING_SUBSTANTIATING]:
             yield self._insubstantiation_notifier.wait()
             return
 

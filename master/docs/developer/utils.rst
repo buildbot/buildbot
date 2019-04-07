@@ -1023,7 +1023,7 @@ For example, a particular daily scheduler could be configured on multiple master
     .. py:method:: __init__(self, *args, **kwargs)
 
         Constructor of the service.
-        The constructor initialize the service, and store the config arguments in private attributes.
+        The constructor initializes the service, calls checkConfig() and stores the config arguments in private attributes.
 
         This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
