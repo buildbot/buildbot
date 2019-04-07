@@ -1465,6 +1465,7 @@ unclaim
 unclaimedbrdicts
 unclosed
 unconfigure
+unconfigured
 underpowered
 unencrypted
 unexpectedsuccesses
