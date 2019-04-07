@@ -9,9 +9,19 @@
 class Collection {
     constructor($q, $injector, $log, dataUtilsService, socketService, DataQuery, $timeout) {
         let CollectionInstance;
+
         angular.isArray = (Array.isArray = arg => arg instanceof Array);
-        return (CollectionInstance = class CollectionInstance extends Array {
+        CollectionInstance = class CollectionInstance extends Array {
             constructor(restPath, query, accessor) {
+                // this contructor is used to construct completely new instances only.
+                // We override constructor property for existing instances so that
+                // Array.prototype.filter() passes the restPath, query and accessor properties
+                // to the new instance.
+                super();
+                this.constructorImpl(restPath, query, accessor);
+            }
+
+            constructorImpl(restPath, query, accessor) {
                 let className;
                 this.listener = this.listener.bind(this);
                 this.restPath = restPath;
@@ -187,7 +197,18 @@ class Collection {
                 }
                 , 0);
             }
+        };
+        // see explanation in CollectionInstance.constructor() above
+        Object.defineProperty(CollectionInstance.prototype, 'constructor', {
+            get: function() {
+                let copyFrom = this;
+                return function(length) {
+                    return copyFrom.constructorImpl(copyFrom.restPath, copyFrom.query,
+                                                    copyfrom.accessor);
+                };
+            }
         });
+        return CollectionInstance;
     }
 }
 
