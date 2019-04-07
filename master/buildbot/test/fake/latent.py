@@ -205,7 +205,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
         return self._controller._start_deferred
 
     @defer.inlineCallbacks
-    def stop_instance(self, build):
+    def stop_instance(self, fast):
         assert self._controller.state == States.STARTED
         self._controller.state = States.STOPPING
 
