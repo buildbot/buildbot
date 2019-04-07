@@ -254,4 +254,4 @@ Data.initClass();
 
 
 angular.module('bbData')
-.provider('dataProvider', [Data]);
+.provider('dataService', [Data]);
