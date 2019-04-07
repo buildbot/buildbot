@@ -1093,8 +1093,9 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
         controller.start_instance(True)
         self.assertTrue(controller.started)
 
-        controller.worker.insubstantiate()
+        d = controller.worker.insubstantiate()
         controller.stop_instance(True)
+        yield d
 
     @defer.inlineCallbacks
     def test_supports_no_build_for_substantiation_accepts_build_later(self):
