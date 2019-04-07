@@ -6,7 +6,7 @@
  */
 beforeEach(function() {
     module(function($provide) {
-        $provide.service('resultsService', () => ({results2class() {}}));
+        $provide.service('resultsService', function() { return {results2class() {}}; });
         return null;
     });
 
