@@ -939,6 +939,42 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
         yield d
 
     @defer.inlineCallbacks
+    def test_stop_instance_synchronous_exception(self):
+        """
+        Throwing a synchronous exception from stop_instance should allow subsequent build to start.
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=1))
+
+        controller.auto_stop(True)
+
+        # patch stop_instance() to raise exception synchronously
+        def raise_stop_instance(fast):
+            raise TestException()
+
+        real_stop_instance = controller.worker.stop_instance
+        controller.worker.stop_instance = raise_stop_instance
+
+        # create a build and wait for stop
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        self.reactor.advance(1)
+        yield self.assertBuildResults(1, SUCCESS)
+        self.flushLoggedErrors(TestException)
+
+        # unpatch stop_instance() and call it to cleanup state of fake worker controller
+        controller.worker.stop_instance = real_stop_instance
+        yield controller.worker.stop_instance(False)
+
+        self.reactor.advance(1)
+
+        # subsequent build should succeed
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        self.reactor.advance(1)
+        yield self.assertBuildResults(2, SUCCESS)
+
+    @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
         If a build is stopping during latent worker substantiating, the build

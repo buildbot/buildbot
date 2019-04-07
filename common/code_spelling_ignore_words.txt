@@ -1483,6 +1483,7 @@ unlink
 unlinked
 unparsable
 unparseable
+unpatch
 unregister
 unregisters
 unserialized

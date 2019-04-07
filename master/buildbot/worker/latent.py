@@ -386,9 +386,8 @@ class AbstractLatentWorker(AbstractWorker):
         else:
             self.state = States.INSUBSTANTIATING
         self._clearBuildWaitTimer()
-        d = self.stop_instance(fast)
         try:
-            yield d
+            yield self.stop_instance(fast)
         except Exception as e:
             # The case of failure for insubstantiation is bad as we have a
             # left-over costing resource There is not much thing to do here
