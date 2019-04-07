@@ -38,7 +38,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
@@ -1043,8 +1042,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                data = bytes2unicode(data)
-                actualJson = json.loads(data)
+                actualJson = json.loads(data.decode())
                 expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)
                 break
@@ -1075,8 +1073,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                data = bytes2unicode(data)
-                actualJson = json.loads(data)
+                actualJson = json.loads(data.decode())
                 expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)
                 break

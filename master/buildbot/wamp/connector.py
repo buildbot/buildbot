@@ -22,7 +22,6 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 
-from buildbot.util import bytes2unicode
 from buildbot.util import service
 
 
@@ -140,10 +139,13 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         if router_url is None:
             return
         self.router_url = router_url
+        realm = wamp.get('realm', 'buildbot')
+        if isinstance(realm, bytes):
+            realm = realm.decode()
         self.app = self.serviceClass(
             url=self.router_url,
             extra=dict(master=self.master, parent=self),
-            realm=bytes2unicode(wamp.get('realm', 'buildbot')),
+            realm=realm,
             make=make
         )
         wamp_debug_level = wamp.get('wamp_debug_level', 'error')

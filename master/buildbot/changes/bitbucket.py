@@ -23,7 +23,6 @@ from twisted.python import log
 from twisted.web import client
 
 from buildbot.changes import base
-from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
@@ -62,9 +61,12 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.useTimestamps = useTimestamps
-        self.category = category if callable(
-            category) else bytes2unicode(category)
-        self.project = bytes2unicode(project)
+        self.category = category
+        if isinstance(self.category, bytes):
+            self.category = self.category.decode()
+        self.project = project
+        if isinstance(self.project, bytes):
+            self.project = self.project.decode()
         self.initLock = defer.DeferredLock()
 
     def describe(self):
@@ -92,6 +94,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         result = json.loads(page, encoding=self.encoding)
         for pr in result['values']:
             branch = pr['source']['branch']['name']
+            if isinstance(branch, bytes):
+                branch = branch.decode()
             nr = int(pr['id'])
             # Note that this is a short hash. The full length hash can be accessed via the
             # commit api resource but we want to avoid requesting multiple pages as long as
@@ -115,6 +119,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
                     # access additional information
                     author = pr['author']['display_name']
+                    if isinstance(author, bytes):
+                        author = author.decode()
                     prlink = pr['links']['html']['href']
                     # Get time updated time. Note that the timezone offset is
                     # ignored.
@@ -130,26 +136,32 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     commit_json = json.loads(page, encoding=self.encoding)
                     # use the full-length hash from now on
                     revision = commit_json['hash']
+                    if isinstance(revision, bytes):
+                        revision = revision.decode()
                     revlink = commit_json['links']['html']['href']
+                    if isinstance(revlink, bytes):
+                        revlink = revlink.decode()
                     # parse repo api page
                     page = yield client.getPage(str(pr['source']['repository']['links']['self']['href']))
                     repo_json = json.loads(page, encoding=self.encoding)
                     repo = repo_json['links']['html']['href']
+                    if isinstance(repo, bytes):
+                        repo = repo.decode()
 
                     # update database
                     yield self._setCurrentRev(nr, revision)
                     # emit the change
                     yield self.master.data.updates.addChange(
-                        author=bytes2unicode(author),
-                        revision=bytes2unicode(revision),
-                        revlink=bytes2unicode(revlink),
+                        author=author,
+                        revision=revision,
+                        revlink=revlink,
                         comments='pull-request #%d: %s\n%s' % (
                             nr, title, prlink),
                         when_timestamp=datetime2epoch(updated),
-                        branch=bytes2unicode(branch),
+                        branch=branch,
                         category=self.category,
                         project=self.project,
-                        repository=bytes2unicode(repo),
+                        repository=repo,
                         src='bitbucket',
                     )
 

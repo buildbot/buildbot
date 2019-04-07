@@ -34,7 +34,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import ssl
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
@@ -174,7 +173,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             if "base64" not in s:
                 self.assertIn("Unicode log", s)
             else:  # b64encode and remove '=' padding (hence [:-1])
-                logStr = bytes2unicode(base64.b64encode(b"Unicode log")[:-1])
+                logStr = base64.b64encode(b"Unicode log")[:-1].decode()
                 self.assertIn(logStr, s)
 
             self.assertIn(
@@ -345,8 +344,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn, builds = yield self.do_test_sendMessage()
 
         self.assertEqual(1, len(fakereactor.method_calls))
-        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
-                      fakereactor.method_calls)
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}), fakereactor.method_calls)
 
     @defer.inlineCallbacks
     def test_sendMessageWithInterpolatedConfig(self):
@@ -363,8 +361,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         self.assertEqual(mn.smtpUser, "u$er")
         self.assertEqual(mn.smtpPassword, "pa$$word")
         self.assertEqual(1, len(fakereactor.method_calls))
-        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
-                      fakereactor.method_calls)
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}), fakereactor.method_calls)
 
     @ssl.skipUnless
     @defer.inlineCallbacks

@@ -22,7 +22,6 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import base
-from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import unicode2bytes
 
@@ -62,7 +61,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 ins = self.db.model.patches.insert()
                 r = conn.execute(ins, dict(
                     patchlevel=patch_level,
-                    patch_base64=bytes2unicode(patch_base64_bytes),
+                    patch_base64=patch_base64_bytes.decode(),
                     patch_author=patch_author,
                     patch_comment=patch_comment,
                     subdir=patch_subdir))

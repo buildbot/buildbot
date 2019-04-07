@@ -28,7 +28,6 @@ from twisted.internet import threads
 
 from buildbot import config
 from buildbot.process.properties import Properties
-from buildbot.util import bytes2unicode
 from buildbot.util.logger import Logger
 from buildbot.www import auth
 from buildbot.www import resource
@@ -161,7 +160,9 @@ class OAuth2Auth(auth.AuthBase):
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
-            responseContent = bytes2unicode(response.content)
+            responseContent = response.content
+            if isinstance(responseContent, bytes):
+                responseContent = responseContent.decode()
             try:
                 content = json.loads(responseContent)
             except ValueError:

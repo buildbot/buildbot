@@ -38,7 +38,6 @@ from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
-from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 
@@ -245,9 +244,13 @@ class Build(properties.PropertiesMixin):
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
         if workerforbuilder.worker.worker_basedir:
-            builddir = path_module.join(
-                bytes2unicode(workerforbuilder.worker.worker_basedir),
-                bytes2unicode(self.builder.config.workerbuilddir))
+            worker_basedir = workerforbuilder.worker.worker_basedir
+            if isinstance(worker_basedir, bytes):
+                worker_basedir = worker_basedir.decode()
+            workerbuilddir = self.builder.config.workerbuilddir
+            if isinstance(workerbuilddir, bytes):
+                workerbuilddir = workerbuilddir.decode()
+            builddir = path_module.join(worker_basedir, workerbuilddir)
             self.setProperty("builddir", builddir, "Worker")
 
     def setupWorkerForBuilder(self, workerforbuilder):
@@ -563,8 +566,7 @@ class Build(properties.PropertiesMixin):
         log.msg(" step '%s' complete: %s (%s)" % (step.name, statusToString(results), text))
         if text:
             self.text.extend(text)
-            self.master.data.updates.setBuildStateString(self.buildid,
-                                                         bytes2unicode(" ".join(self.text)))
+            self.master.data.updates.setBuildStateString(self.buildid, " ".join(self.text))
         self.results, terminate = computeResultAndTermination(step, results,
                                                               self.results)
         if not self.conn:
@@ -672,8 +674,7 @@ class Build(properties.PropertiesMixin):
             eventually(self.releaseLocks)
             metrics.MetricCountEvent.log('active_builds', -1)
 
-            yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                               bytes2unicode(" ".join(text)))
+            yield self.master.data.updates.setBuildStateString(self.buildid, " ".join(text))
             yield self.master.data.updates.finishBuild(self.buildid, self.results)
 
             if self.results == EXCEPTION:

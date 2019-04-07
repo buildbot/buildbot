@@ -21,7 +21,6 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
-from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-Event-Key'
@@ -40,12 +39,12 @@ class BitBucketHandler(BaseHookHandler):
         """
 
         event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2unicode(event_type)
-        payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
+        if isinstance(event_type, bytes):
+            event_type = event_type.decode()
+        payload = json.loads(request.args[b'payload'][0].decode())
         repo_url = '{}{}'.format(
             payload['canon_url'], payload['repository']['absolute_url'])
-        project = request.args.get(b'project', [b''])[0]
-        project = bytes2unicode(project)
+        project = request.args.get(b'project', [b''])[0].decode()
 
         changes = []
         for commit in payload['commits']:

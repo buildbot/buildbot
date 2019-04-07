@@ -6,7 +6,6 @@ from twisted.trial import unittest
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.base import BaseHookHandler
 
@@ -53,7 +52,9 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
         def _first_or_nothing(val):
             if isinstance(val, type([])):
                 val = val[0]
-            return bytes2unicode(val)
+            if isinstance(val, bytes):
+                val = val.decode()
+            return val
 
         if payload.get(b'files'):
             files = json.loads(_first_or_nothing(payload.get(b'files')))

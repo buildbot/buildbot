@@ -25,7 +25,6 @@ from twisted.spread import pb
 from zope.interface import implementer
 
 from buildbot.process.properties import Properties
-from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 from buildbot.util.eventual import eventually
@@ -164,7 +163,8 @@ class Dispatcher(service.AsyncService):
 
     def requestAvatar(self, username, mind, interface):
         assert interface == pb.IPerspective
-        username = bytes2unicode(username)
+        if isinstance(username, bytes):
+            username = username.decode()
         if username not in self.users:
             d = defer.succeed(None)  # no perspective
         else:
@@ -198,7 +198,9 @@ class Dispatcher(service.AsyncService):
     def requestAvatarId(self, creds):
         p = Properties()
         p.master = self.master
-        username = bytes2unicode(creds.username)
+        username = creds.username
+        if isinstance(username, bytes):
+            username = username.decode()
         try:
             yield self.master.initLock.acquire()
             if username in self.users:

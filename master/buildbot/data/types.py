@@ -19,7 +19,6 @@ import json
 import re
 
 from buildbot import util
-from buildbot.util import bytes2unicode
 
 
 class Type:
@@ -129,7 +128,9 @@ class String(Instance):
     ramlType = "string"
 
     def valueFromString(self, arg):
-        val = util.bytes2unicode(arg)
+        val = arg
+        if isinstance(val, bytes):
+            val = val.decode()
         return val
 
 
@@ -164,7 +165,9 @@ class Identifier(Type):
         self.len = len
 
     def valueFromString(self, arg):
-        val = util.bytes2unicode(arg)
+        val = arg
+        if isinstance(val, bytes):
+            val = val.decode()
         if not self.identRe.match(val) or len(val) > self.len or not val:
             raise TypeError
         return val
@@ -246,7 +249,9 @@ class SourcedProperties(Type):
             if not isinstance(propsrc, str):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
-                json.loads(bytes2unicode(propval))
+                if isinstance(propval, bytes):
+                    propval = propval.decode()
+                json.loads(propval)
             except ValueError:
                 yield "%s[%r] value is not JSON-able" % (name, k)
 

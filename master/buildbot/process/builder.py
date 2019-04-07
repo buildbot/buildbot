@@ -29,7 +29,6 @@ from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
 from buildbot.process.properties import Properties
 from buildbot.process.results import RETRY
-from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
 
@@ -123,7 +122,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def getBuilderIdForName(self, name):
         # buildbot.config should ensure this is already unicode, but it doesn't
         # hurt to check again
-        name = bytes2unicode(name)
+        if isinstance(name, bytes):
+            name = name.decode()
         return self.master.data.updates.findBuilderId(name)
 
     def getBuilderId(self):

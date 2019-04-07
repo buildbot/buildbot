@@ -27,7 +27,6 @@ from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
 from buildbot.www import authz
@@ -67,7 +66,7 @@ class FakeRequest:
         self.uri = self.path
         self.postpath = []
         for p in path[1:].split(b'/'):
-            path = urlunquote(bytes2unicode(p))
+            path = urlunquote(p.decode())
             self.postpath.append(unicode2bytes(path))
 
         self.deferred = defer.Deferred()
@@ -194,7 +193,7 @@ class WwwTestMixin(RequiresWwwMixin):
         if rv == server.NOT_DONE_YET:
             rv = yield request.deferred
 
-        res = json.loads(bytes2unicode(rv))
+        res = json.loads(rv.decode())
         self.assertIn("jsonrpc", res)
         self.assertEqual(res["jsonrpc"], "2.0")
         if not requestJson:
@@ -212,7 +211,7 @@ class WwwTestMixin(RequiresWwwMixin):
             exp['content'] = content
         if contentJson is not None:
             got['contentJson'] = json.loads(
-                bytes2unicode(self.request.written))
+                self.request.written.decode())
             exp['contentJson'] = contentJson
         if contentType is not None:
             got['contentType'] = self.request.headers[b'content-type']

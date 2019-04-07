@@ -24,7 +24,6 @@ from twisted.trial import unittest
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz
 from buildbot.www import rest
@@ -265,7 +264,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
                              total=None, contentType=None, orderSignificant=False):
         self.assertFalse(isinstance(self.request.written, str))
         got = {}
-        got['content'] = json.loads(bytes2unicode(self.request.written))
+        got['content'] = json.loads(self.request.written.decode())
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
 
@@ -292,7 +291,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
     def assertRestDetails(self, typeName, item,
                           contentType=None):
         got = {}
-        got['content'] = json.loads(bytes2unicode(self.request.written))
+        got['content'] = json.loads(self.request.written.decode())
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
 
@@ -307,7 +306,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
         self.assertEqual(got, exp)
 
     def assertRestError(self, responseCode, message):
-        content = json.loads(bytes2unicode(self.request.written))
+        content = json.loads(self.request.written.decode())
         gotResponseCode = self.request.responseCode
         self.assertEqual(list(content.keys()), ['error'])
         self.assertRegex(content['error'], message)
@@ -666,7 +665,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
         got = {}
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
-        content = json.loads(bytes2unicode(self.request.written))
+        content = json.loads(self.request.written.decode())
 
         if 'error' not in content:
             self.fail("response does not have proper error form: %r"
@@ -707,7 +706,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
         got = {}
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
-        content = json.loads(bytes2unicode(self.request.written))
+        content = json.loads(self.request.written.decode())
         if ('error' not in content
                 or sorted(content['error'].keys()) != ['code', 'message']):
             self.fail("response does not have proper error form: %r"

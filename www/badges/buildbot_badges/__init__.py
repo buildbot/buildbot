@@ -26,7 +26,6 @@ from twisted.internet import defer
 import cairocffi as cairo
 import cairosvg
 from buildbot.process.results import Results
-from buildbot.util import bytes2unicode
 from buildbot.www.plugin import Application
 
 
@@ -70,8 +69,12 @@ class Api:
                 config[k] = v
 
         for k, v in request.args.items():
-            k = bytes2unicode(k)
-            config[k] = escape(bytes2unicode(v[0]))
+            if isinstance(k, bytes):
+                k = k.decode()
+            v0 = v[0]
+            if isinstance(v0, bytes):
+                v0 = v0.decode()
+            config[k] = escape(v0)
         return config
 
     @app.route("/<string:builder>.png", methods=['GET'])

@@ -21,8 +21,6 @@
 
 import json
 
-from buildbot.util import bytes2unicode
-
 
 class BaseHookHandler:
     def __init__(self, master, options):
@@ -47,7 +45,9 @@ class BaseHookHandler:
             """
             if (isinstance(value, type([]))):
                 value = value[0]
-            return bytes2unicode(value)
+            if isinstance(value, bytes):
+                value = value.decode()
+            return value
 
         args = request.args
         # first, convert files, links and properties

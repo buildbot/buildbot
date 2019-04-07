@@ -20,7 +20,6 @@ from twisted.internet import defer
 
 from buildbot import config
 from buildbot.changes import base
-from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
@@ -129,8 +128,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         else:
             self.pullrequest_filter = (lambda _: pullrequest_filter)
 
-        self.category = category if callable(category) else bytes2unicode(
-            category)
+        self.category = category
+        if isinstance(self.category, bytes):
+            self.category = self.category.decode()
 
     def describe(self):
         return "GitHubPullrequestPoller watching the "\
@@ -200,6 +200,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             base_branch = pr['base']['ref']
             prnumber = pr['number']
             revision = pr['head']['sha']
+            if isinstance(revision, bytes):
+                revision = revision.decode()
 
             # Check to see if the branch is set or matches
             if self.branches is not None and base_branch not in self.branches:
@@ -218,7 +220,13 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 else:
                     branch = pr['head']['ref']
                     repo = pr['head']['repo'][self.repository_type]
+                if isinstance(branch, bytes):
+                    branch = branch.decode()
+                if isinstance(repo, bytes):
+                    repo = repo.decode()
                 revlink = pr['html_url']
+                if isinstance(revlink, bytes):
+                    revlink = revlink.decode()
                 comments = pr['body']
                 updated = datetime.strptime(pr['updated_at'],
                                             '%Y-%m-%dT%H:%M:%SZ')
@@ -226,6 +234,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 yield self._setCurrentRev(prnumber, revision)
 
                 author = pr['user']['login']
+                if isinstance(author, bytes):
+                    author = author.decode()
                 project = pr['base']['repo']['full_name']
                 commits = pr['commits']
 
@@ -251,17 +261,17 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
                 # emit the change
                 yield self.master.data.updates.addChange(
-                    author=bytes2unicode(author),
-                    revision=bytes2unicode(revision),
-                    revlink=bytes2unicode(revlink),
+                    author=author,
+                    revision=revision,
+                    revlink=revlink,
                     comments='GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
                     format(prnumber, commits, 's'
                            if commits > 0 else '', title, comments),
                     when_timestamp=datetime2epoch(updated),
-                    branch=bytes2unicode(branch),
+                    branch=branch,
                     category=self.category,
                     project=project,
-                    repository=bytes2unicode(repo),
+                    repository=repo,
                     files=files,
                     properties=properties,
                     src='git')

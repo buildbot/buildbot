@@ -21,7 +21,6 @@ from twisted.trial import unittest
 
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.www import ws
 
 
@@ -37,7 +36,8 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def assert_called_with_json(self, obj, expected_json):
         jsonArg = obj.call_args[0][0]
-        jsonArg = bytes2unicode(jsonArg)
+        if isinstance(jsonArg, bytes):
+            jsonArg = jsonArg.decode()
         actual_json = json.loads(jsonArg)
         self.assertEqual(actual_json, expected_json)
 

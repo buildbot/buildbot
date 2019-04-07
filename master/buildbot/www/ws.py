@@ -21,7 +21,6 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 
@@ -38,11 +37,13 @@ class WsProtocol(WebSocketServerProtocol):
         return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson, separators=(',', ':'))))
 
     def onMessage(self, frame, isBinary):
+        if isinstance(frame, bytes):
+            frame = frame.decode()
         if self.debug:
             log.msg("FRAME %s" % frame)
         # parse the incoming request
 
-        frame = json.loads(bytes2unicode(frame))
+        frame = json.loads(frame)
         _id = frame.get("_id")
         if _id is None:
             return self.sendJsonMessage(error="no '_id' in websocket frame", code=400, _id=None)

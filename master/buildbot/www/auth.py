@@ -33,7 +33,6 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 from zope.interface import implementer
 
-from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
@@ -123,7 +122,12 @@ class RemoteUserAuth(AuthBase):
             raise Error(
                 403, b'http header does not match regex! "' + header + b'" not matching ' + self.headerRegex.pattern)
         session = request.getSession()
-        user_info = {k: bytes2unicode(v) for k, v in res.groupdict().items()}
+        user_info = {}
+        for k, v in res.groupdict().items():
+            if isinstance(v, bytes):
+                user_info[k] = v.decode()
+            else:
+                user_info[k] = v
         if session.user_info != user_info:
             session.user_info = user_info
             yield self.updateUserInfo(request)
@@ -203,7 +207,7 @@ class CustomAuth(TwistedICredAuthBase):
 
 def _redirect(master, request):
     url = request.args.get(b"redirect", [b"/"])[0]
-    url = bytes2unicode(url)
+    url = url.decode()
     return resource.Redirect(master.config.buildbotURL + "#" + url)
 
 
@@ -218,7 +222,11 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_info = dict(username=bytes2unicode(self.username))
+        session.user_info = {}
+        if isinstance(self.username, bytes):
+            session.user_info["username"] = self.username.decode()
+        else:
+            session.user_info["username"] = self.username
         yield self.master.www.auth.updateUserInfo(request)
         raise _redirect(self.master, request)
 

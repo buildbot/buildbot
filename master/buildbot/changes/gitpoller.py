@@ -24,7 +24,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
-from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
 from buildbot.util.git import GitMixin
 from buildbot.util.git import getSshKnownHostsContents
@@ -95,9 +94,12 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = category if callable(
-            category) else bytes2unicode(category, encoding=self.encoding)
-        self.project = bytes2unicode(project, encoding=self.encoding)
+        self.category = category
+        if isinstance(category, bytes):
+            self.category = self.category.decode()
+        self.project = project
+        if isinstance(self.project, bytes):
+            self.project = self.project.decode(encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
         self.sshPrivateKey = sshPrivateKey
@@ -139,8 +141,10 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             log.err(e, 'while initializing GitPoller repository')
 
     def describe(self):
-        str = ('GitPoller watching the remote git repository ' +
-               bytes2unicode(self.repourl, self.encoding))
+        repourl = self.repourl
+        if isinstance(repourl, bytes):
+            repourl = repourl.decode(encoding=self.encoding)
+        str = ('GitPoller watching the remote git repository ' + repourl)
 
         if self.branches:
             if self.branches is True:
@@ -222,7 +226,9 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             try:
                 rev = yield self._dovccmd(
                     'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
-                revs[branch] = bytes2unicode(rev, self.encoding)
+                if isinstance(rev, bytes):
+                    rev = rev.decode(encoding=self.encoding)
+                revs[branch] = rev
                 yield self._process_changes(revs[branch], branch)
             except Exception:
                 log.err(_why="trying to poll branch {} of {}".format(
@@ -260,11 +266,12 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
         def decode_file(file):
             # git use octal char sequences in quotes when non ASCII
+            if isinstance(file, bytes):
+                file = file.decode(encoding=self.encoding, errors='unicode_escape')
             match = re.match('^"(.*)"$', file)
             if match:
-                file = bytes2unicode(match.groups()[0], encoding=self.encoding,
-                                     errors='unicode_escape')
-            return bytes2unicode(file, encoding=self.encoding)
+                file = match.groups()[0]
+            return file
 
         @d.addCallback
         def process(git_output):
@@ -356,14 +363,16 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 failures[0].raiseException()
 
             timestamp, author, files, comments = [r[1] for r in results]
-
+            repo = self.repourl
+            if isinstance(repo, bytes):
+                repo = repo.decode(encoding=self.encoding)
             yield self.master.data.updates.addChange(
                 author=author,
-                revision=bytes2unicode(rev, encoding=self.encoding),
+                revision=rev,
                 files=files, comments=comments, when_timestamp=timestamp,
-                branch=bytes2unicode(self._removeHeads(branch)),
+                branch=self._removeHeads(branch),
                 project=self.project,
-                repository=bytes2unicode(self.repourl, encoding=self.encoding),
+                repository=repo,
                 category=self.category, src='git')
 
     def _isSshPrivateKeyNeededForCommand(self, command):
@@ -427,8 +436,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         res = yield utils.getProcessOutputAndValue(self.gitbin,
             full_args, path=path, env=full_env)
         (stdout, stderr, code) = res
-        stdout = bytes2unicode(stdout, self.encoding)
-        stderr = bytes2unicode(stderr, self.encoding)
+        stdout = stdout.decode(self.encoding)
+        stderr = stderr.decode(self.encoding)
         if code != 0:
             if code == 128:
                 raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(

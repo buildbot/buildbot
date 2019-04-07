@@ -33,7 +33,6 @@ from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
@@ -911,9 +910,12 @@ class BuilderConfig(util_config.ConfiguredMixin):
             error(
                 "builder names must not start with an underscore: '%s'" % name)
         try:
-            self.name = util.bytes2unicode(name, encoding="ascii")
-        except UnicodeDecodeError:
-            error("builder names must be unicode or ASCII")
+            if isinstance(name, bytes):
+                name = name.decode()
+        except UnicodeDecodeError as e:
+            error("builder names must be unicode or UTF-8: {}".format(e))
+
+        self.name = name
 
         # factory is required
         if factory is None:
@@ -949,7 +951,6 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
-            builddir = bytes2unicode(builddir)
         self.builddir = builddir
 
         # workerbuilddir defaults to builddir

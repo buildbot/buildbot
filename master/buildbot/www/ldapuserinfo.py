@@ -30,7 +30,6 @@ import ldap3
 
 from twisted.internet import threads
 
-from buildbot.util import bytes2unicode
 from buildbot.util import flatten
 from buildbot.www import auth
 from buildbot.www import avatar
@@ -96,7 +95,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         return c.response
 
     def getUserInfo(self, username):
-        username = bytes2unicode(username)
+        if isinstance(username, bytes):
+            username = username.decode()
 
         def thd():
             c = self.connectLdap()
@@ -148,7 +148,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         return None
 
     def getUserAvatar(self, user_email, size, defaultAvatarUrl):
-        user_email = bytes2unicode(user_email)
+        if isinstance(user_email, bytes):
+            user_email = user_email.decode()
 
         def thd():
             c = self.connectLdap()

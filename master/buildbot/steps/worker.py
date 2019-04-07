@@ -22,7 +22,6 @@ from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.util import bytes2unicode
 
 
 class WorkerBuildStep(buildstep.BuildStep):
@@ -152,8 +151,12 @@ class CopyDirectory(WorkerBuildStep):
 
     # TODO: BuildStep subclasses don't have a describe()....
     def getResultSummary(self):
-        src = bytes2unicode(self.src, errors='replace')
-        dest = bytes2unicode(self.dest, errors='replace')
+        src = self.src
+        if isinstance(src, bytes):
+            src = src.decode(errors='replace')
+        dest = self.dest
+        if isinstance(dest, bytes):
+            dest = dest.decode(errors='replace')
         copy = "{} to {}".format(src, dest)
         if self.results == SUCCESS:
             rv = 'Copied ' + copy

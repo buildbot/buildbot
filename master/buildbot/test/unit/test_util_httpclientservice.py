@@ -29,7 +29,6 @@ from twisted.web import server
 
 from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
@@ -206,9 +205,9 @@ class MyResource(resource.Resource):
     def render_GET(self, request):
         def decode(x):
             if isinstance(x, bytes):
-                return bytes2unicode(x)
+                return x.decode()
             elif isinstance(x, (list, tuple)):
-                return [bytes2unicode(y) for y in x]
+                return [y.decode() if isinstance(y, bytes) else y for y in x]
             elif isinstance(x, dict):
                 newArgs = {}
                 for a, b in x.items():
@@ -219,8 +218,7 @@ class MyResource(resource.Resource):
         args = decode(request.args)
         content_type = request.getHeader(b'content-type')
         if content_type == b"application/json":
-            jsonBytes = request.content.read()
-            jsonStr = bytes2unicode(jsonBytes)
+            jsonStr = request.content.read().decode()
             args['json_received'] = json.loads(jsonStr)
 
         data = json.dumps(args)
@@ -300,7 +298,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                     content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b'))
         content = yield res.content()
-        content = bytes2unicode(content)
+        content = content.decode()
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
@@ -312,7 +310,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                     content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b', ts=dt))
         content = yield res.content()
-        content = bytes2unicode(content)
+        content = content.decode()
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 

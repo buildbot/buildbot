@@ -33,7 +33,6 @@ from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 
 try:
     import requests
@@ -573,7 +572,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
 
         def thd():
             res = requests.get('http://localhost:5000/auth/login')
-            content = bytes2unicode(res.content)
+            content = res.content.decode()
             webbrowser.open(content)
         threads.deferToThread(thd)
         res = yield d

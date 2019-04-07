@@ -26,7 +26,6 @@ from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.status.worker import WorkerStatus
-from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 
@@ -80,7 +79,9 @@ class AbstractWorker(service.BuildbotService):
                       can be used
         @type locks: dictionary
         """
-        self.name = name = bytes2unicode(name)
+        if isinstance(name, bytes):
+            name = name.decode()
+        self.name = name
 
         self.password = password
 

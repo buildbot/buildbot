@@ -109,7 +109,8 @@ class CVSMaildirSource(MaildirSource):
             author = addr  # might still be useful
         else:
             author = addr[:at]
-        author = util.bytes2unicode(author, encoding="ascii")
+        if isinstance(author, bytes):
+            author = author.decode(encoding="ascii")
 
         # CVS accepts RFC822 dates. buildbot-cvs-mail adds the date as
         # part of the mail header, so use that.

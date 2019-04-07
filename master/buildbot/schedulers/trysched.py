@@ -24,7 +24,6 @@ from twisted.spread import pb
 from buildbot import pbutil
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.util import bytes2unicode
 from buildbot.util import netstrings
 from buildbot.util.maildir import MaildirService
 
@@ -159,7 +158,7 @@ class Try_Jobdir(TryBase):
             raise BadJobfile("unable to parse netstrings")
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
-        ver = bytes2unicode(p.strings.pop(0))
+        ver = p.strings.pop(0).decode()
 
         v1_keys = ['jobid', 'branch', 'baserev', 'patch_level', 'patch_body']
         v2_keys = v1_keys + ['repository', 'project']
@@ -172,7 +171,7 @@ class Try_Jobdir(TryBase):
 
         def extract_netstrings(p, keys):
             for i, key in enumerate(keys):
-                parsed_job[key] = bytes2unicode(p.strings[i])
+                parsed_job[key] = p.strings[i].decode()
 
         def postprocess_parsed_job():
             # apply defaults and handle type casting
@@ -186,12 +185,12 @@ class Try_Jobdir(TryBase):
         if ver <= "4":
             i = int(ver) - 1
             extract_netstrings(p, keys[i])
-            parsed_job['builderNames'] = [bytes2unicode(s)
+            parsed_job['builderNames'] = [s.decode()
                                           for s in p.strings[len(keys[i]):]]
             postprocess_parsed_job()
         elif ver == "5":
             try:
-                data = bytes2unicode(p.strings[0])
+                data = p.strings[0].decode()
                 parsed_job = json.loads(data)
             except ValueError:
                 raise BadJobfile("unable to parse JSON")
@@ -236,16 +235,21 @@ class Try_Jobdir(TryBase):
                            project=parsed_job['project'],
                            repository=parsed_job['repository'])
         reason = "'try' job"
+        if isinstance(parsed_job['who'], bytes):
+            parsed_job['who'] = parsed_job['who'].decode()
         if parsed_job['who']:
-            reason += " by user {}".format(bytes2unicode(parsed_job['who']))
+            reason += " by user {}".format(parsed_job['who'])
         properties = parsed_job['properties']
         requested_props = Properties()
         requested_props.update(properties, "try build")
 
+        external_idstring = parsed_job['jobid']
+        if isinstance(external_idstring, bytes):
+            external_idstring = external_idstring.decode()
         return self.addBuildsetForSourceStamps(
             sourcestamps=[sourcestamp],
             reason=reason,
-            external_idstring=bytes2unicode(parsed_job['jobid']),
+            external_idstring=external_idstring,
             builderNames=builderNames,
             properties=requested_props)
 
@@ -396,11 +400,15 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         reason = "'try' job"
 
+        if isinstance(who, bytes):
+            who = who.decode()
         if who:
-            reason += " by user {}".format(bytes2unicode(who))
+            reason += " by user {}".format(who)
 
+        if isinstance(comment, bytes):
+            comment = comment.decode()
         if comment:
-            reason += " ({})".format(bytes2unicode(comment))
+            reason += " ({})".format(comment)
 
         sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,

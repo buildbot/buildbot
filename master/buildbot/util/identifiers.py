@@ -15,8 +15,6 @@
 
 import re
 
-from buildbot import util
-
 ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
 initial_re = re.compile('^[^a-zA-Z_-]')
 subsequent_re = re.compile('[^a-zA-Z0-9_-]')
@@ -37,8 +35,8 @@ def forceIdentifier(maxLength, s):
     if not isinstance(s, str):
         raise TypeError("%r cannot be coerced to an identifier" % (str,))
 
-    # usually bytes2unicode can handle it
-    s = util.bytes2unicode(s)
+    if isinstance(s, bytes):
+        s = s.decode()
     if isIdentifier(maxLength, s):
         return s
 

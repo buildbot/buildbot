@@ -32,7 +32,6 @@ from twisted.python import log
 from buildbot import config
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import bytes2unicode
 
 debug_logging = False
 
@@ -156,7 +155,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.p4bin = p4bin
         self.split_file = split_file
         self.encoding = encoding
-        self.project = util.bytes2unicode(project)
+        self.project = project
+        if isinstance(self.project, bytes):
+            self.project = self.project.decode()
         self.use_tickets = use_tickets
         self.ticket_login_interval = ticket_login_interval
         self.revlink_callable = revlink
@@ -245,11 +246,11 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         result = yield self._get_process_output(args)
         # decode the result from its designated encoding
         try:
-            result = bytes2unicode(result, self.encoding)
+            result = result.decode(encoding=self.encoding)
         except UnicodeError as ex:
             log.msg("{}: cannot fully decode {} in {}".format(
                     ex, repr(result), self.encoding))
-            result = bytes2unicode(result, encoding=self.encoding, errors="replace")
+            result = result.decode(encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
         changelists = []
@@ -285,7 +286,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
             # decode the result from its designated encoding
             try:
-                result = bytes2unicode(result, self.encoding)
+                result = result.decode(encoding=self.encoding)
             except UnicodeError as ex:
                 log.msg(
                     "P4Poller: couldn't decode changelist description: %s" % ex.encoding)

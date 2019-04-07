@@ -27,7 +27,6 @@ from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.process.properties import Properties
-from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
@@ -78,7 +77,8 @@ class GitHubEventHandler(PullRequestMixin):
         payload = yield self._get_payload(request)
 
         event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2unicode(event_type)
+        if isinstance(event_type, bytes):
+            event_type = event_type.decode()
         log.msg("X-GitHub-Event: {}".format(
             event_type), logLevel=logging.DEBUG)
 
@@ -92,11 +92,11 @@ class GitHubEventHandler(PullRequestMixin):
 
     @defer.inlineCallbacks
     def _get_payload(self, request):
-        content = request.content.read()
-        content = bytes2unicode(content)
+        content = request.content.read().decode()
 
         signature = request.getHeader(_HEADER_SIGNATURE)
-        signature = bytes2unicode(signature)
+        if isinstance(signature, bytes):
+            signature = signature.decode()
 
         if not signature and self._strict:
             raise ValueError('Request has no required signature')
@@ -128,7 +128,10 @@ class GitHubEventHandler(PullRequestMixin):
                     # and fallback to the insecure simple comparison otherwise
                     return a == b
 
-            if not _cmp(bytes2unicode(mac.hexdigest()), hexdigest):
+            mac_hexdigest = mac.hexdigest()
+            if isinstance(mac_hexdigest, bytes):
+                mac_hexdigest = mac_hexdigest.decode()
+            if not _cmp(mac_hexdigest, hexdigest):
                 raise ValueError('Hash mismatch')
 
         content_type = request.getHeader(b'Content-Type')
@@ -136,7 +139,7 @@ class GitHubEventHandler(PullRequestMixin):
         if content_type == b'application/json':
             payload = json.loads(content)
         elif content_type == b'application/x-www-form-urlencoded':
-            payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
+            payload = json.loads(request.args[b'payload'][0].decode())
         else:
             raise ValueError('Unknown content type: {}'.format(content_type))
 

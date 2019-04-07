@@ -18,7 +18,6 @@
 
 
 from buildbot.changes.base import PollingChangeSource
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
 
@@ -54,7 +53,7 @@ class PollingHandler(BaseHookHandler):
                       set(unicode2bytes(s.name) for s in pollers))
             if missing:
                 raise ValueError("Could not find pollers: {}".format(
-                    bytes2unicode(b",".join(missing))))
+                    b",".join(missing).decode()))
 
         for p in pollers:
             p.force()

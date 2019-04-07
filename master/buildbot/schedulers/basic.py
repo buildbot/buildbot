@@ -77,9 +77,9 @@ class BaseBasicScheduler(base.BaseScheduler):
         self._stable_timers = defaultdict(lambda: None)
         self._stable_timers_lock = defer.DeferredLock()
 
-        self.reason = util.bytes2unicode(reason % {
+        self.reason = reason % {
             'name': name, 'classname': self.__class__.__name__
-        })
+        }
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError

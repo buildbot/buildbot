@@ -24,7 +24,6 @@ from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.test.util.integration import RunMasterBase
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
@@ -80,7 +79,7 @@ class NotifierMaster(RunMasterBase):
             self.assertIn(text, mail)
         else:  # b64encode and remove '=' padding (hence [:-1])
             encodedBytes = base64.b64encode(unicode2bytes(text)).rstrip(b"=")
-            encodedText = bytes2unicode(encodedBytes)
+            encodedText = encodedBytes.decode()
             self.assertIn(encodedText, mail)
 
     @defer.inlineCallbacks

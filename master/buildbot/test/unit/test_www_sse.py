@@ -22,7 +22,6 @@ from twisted.trial import unittest
 from buildbot.test.unit import test_data_changes
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 from buildbot.www import sse
@@ -118,7 +117,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             ("changes", "500", "new"), test_data_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
-        msg = json.loads(bytes2unicode(kw[b"data"]))
+        msg = json.loads(kw[b"data"].decode())
         self.assertEqual(msg["key"], ['changes', '500', 'new'])
         self.assertEqual(msg["message"], json.loads(
             json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))

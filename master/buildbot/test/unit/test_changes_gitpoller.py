@@ -28,7 +28,6 @@ from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.test.util import logging
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 # Test that environment variables get propagated to subprocesses (See #2116)
@@ -147,7 +146,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
     def test_get_commit_files_with_space_in_changed_files(self):
         filesBytes = b'normal_directory/file1\ndirectory with space/file2'
-        filesStr = bytes2unicode(filesBytes)
+        filesStr = filesBytes.decode()
         return self._perform_git_output_test(
             self.poller._get_commit_files,
             ['log', '--name-only', '--no-walk',
@@ -159,7 +158,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
     def test_get_commit_timestamp(self):
         stampBytes = b'1273258009'
-        stampStr = bytes2unicode(stampBytes)
+        stampStr = stampBytes.decode()
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
                                              ['log', '--no-walk', '--format=%ct',
                                                  self.dummyRevStr, '--'],
@@ -200,8 +199,8 @@ class TestGitPoller(TestGitPollerBase):
         self.assertSubstring("GitPoller", self.poller.describe())
 
     def test_name(self):
-        self.assertEqual(bytes2unicode(self.REPOURL),
-                         bytes2unicode(self.poller.name))
+        self.assertEqual(self.REPOURL,
+                         self.poller.name)
 
         # and one with explicit name...
         other = gitpoller.GitPoller(self.REPOURL, name="MyName")
@@ -257,7 +256,7 @@ class TestGitPoller(TestGitPollerBase):
             'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         })
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
@@ -417,7 +416,7 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assertAllCommandsRan()
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
             })
@@ -1256,7 +1255,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertAllCommandsRan()
 
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
             })
@@ -1356,7 +1355,7 @@ class TestGitPoller(TestGitPollerBase):
     @defer.inlineCallbacks
     def test_startService_loadLastRev(self):
         self.master.db.state.fakeState(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
         )
 
@@ -1424,7 +1423,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         })
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
@@ -1467,7 +1466,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         })
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
@@ -1562,7 +1561,7 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
             'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         })
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
@@ -1630,7 +1629,7 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
             'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         })
         self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            name=self.REPOURL, class_name='GitPoller',
             lastRev={
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })

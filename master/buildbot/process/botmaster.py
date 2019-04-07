@@ -240,7 +240,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         yield self.master.data.updates.updateBuilderList(
             self.master.masterid,
-            [util.bytes2unicode(n) for n in self.builderNames])
+            [n.decode() if isinstance(n, bytes) else n for n in self.builderNames])
 
         metrics.MetricCountEvent.log("num_builders",
                                      len(self.builders), absolute=True)

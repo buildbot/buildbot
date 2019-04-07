@@ -22,7 +22,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
-from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
 from buildbot.util.state import StateMixin
 
@@ -72,8 +71,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.hgbin = hgbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = category if callable(
-            category) else bytes2unicode(category)
+        self.category = category
+        if isinstance(category, bytes):
+            category = category.decode()
         self.project = project
         self.initLock = defer.DeferredLock()
         self.lastRev = {}
@@ -286,10 +286,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 files=files,
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,
-                branch=bytes2unicode(branch),
-                category=bytes2unicode(self.category),
-                project=bytes2unicode(self.project),
-                repository=bytes2unicode(self.repourl),
+                branch=branch,
+                category=self.category,
+                project=self.project,
+                repository=self.repourl,
                 src='hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors

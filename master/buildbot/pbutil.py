@@ -22,8 +22,6 @@ from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 
-from buildbot.util import bytes2unicode
-
 
 class NewCredPerspective(pb.Avatar):
 
@@ -162,7 +160,7 @@ def decode(data, encoding='utf-8', errors='strict'):
     data_type = type(data)
 
     if data_type == bytes:
-        return bytes2unicode(data, encoding, errors)
+        return data.decode(encoding, errors)
     if data_type in (dict, list, tuple):
         if data_type == dict:
             data = data.items()

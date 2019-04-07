@@ -25,7 +25,6 @@ from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
-from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 
 
@@ -89,7 +88,9 @@ class GerritChangeSourceBase(base.ChangeSource):
 
     def lineReceived(self, line):
         try:
-            event = json.loads(bytes2unicode(line))
+            if isinstance(line, bytes):
+                line = line.decode()
+            event = json.loads(line)
         except ValueError:
             msg = "bad json line: %s"
             log.msg(msg % line)
@@ -160,7 +161,7 @@ class GerritChangeSourceBase(base.ChangeSource):
             event_change = event["change"]
             return self.addChange({
                 'author': _gerrit_user_to_author(event_change["owner"]),
-                'project': util.bytes2unicode(event_change["project"]),
+                'project': event_change["project"],
                 'repository': "{}/{}".format(
                     self.gitBaseURL, event_change["project"]),
                 'branch': self.getGroupingPolicyFromEvent(event),

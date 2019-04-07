@@ -23,7 +23,6 @@ from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import util
-from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
 
@@ -175,8 +174,10 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
 
     def __init__(self, *args, **kwargs):
         name = kwargs.pop("name", None)
+        if isinstance(name, bytes):
+            name = name.decode()
         if name is not None:
-            self.name = bytes2unicode(name)
+            self.name = name
         self.checkConfig(*args, **kwargs)
         if self.name is None:
             raise ValueError(

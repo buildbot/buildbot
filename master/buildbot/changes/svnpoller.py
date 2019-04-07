@@ -26,7 +26,6 @@ from twisted.python import log
 
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import bytes2unicode
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
@@ -117,9 +116,12 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.svnbin = svnbin
         self.histmax = histmax
         self._prefix = None
-        self.category = category if callable(
-            category) else util.bytes2unicode(category)
-        self.project = util.bytes2unicode(project)
+        self.category = category
+        if isinstance(self.category, bytes):
+            self.category = self.category.decode()
+        self.project = project
+        if isinstance(self.project, bytes):
+            self.project = self.project.decode()
 
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
@@ -396,22 +398,21 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                         number_of_files_changed == 1 and files[0] == ''):
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
+                    if isinstance(branch, bytes):
+                        branch = branch.decode()
                     chdict = dict(
                         author=author,
                         # weakly assume filenames are utf-8
-                        files=[bytes2unicode(f, 'utf-8', 'replace')
+                        files=[f.decode('utf-8', 'replace') if isinstance(f, bytes) else f
                                for f in files],
                         comments=comments,
                         revision=revision,
-                        branch=util.bytes2unicode(branch),
+                        branch=branch,
                         revlink=revlink,
                         category=self.category,
-                        repository=util.bytes2unicode(
-                            branches[branch].get('repository', self.repourl)),
-                        project=util.bytes2unicode(
-                            branches[branch].get('project', self.project)),
-                        codebase=util.bytes2unicode(
-                            branches[branch].get('codebase', None)))
+                        repository=branches[branch].get('repository', self.repourl),
+                        project=branches[branch].get('project', self.project),
+                        codebase=branches[branch].get('codebase', None))
                     changes.append(chdict)
 
         return changes

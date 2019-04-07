@@ -23,14 +23,13 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
-from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
 
 class GitoriousHandler(BaseHookHandler):
 
     def getChanges(self, request):
-        payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
+        payload = json.loads(request.args[b'payload'][0].decode())
         user = payload['repository']['owner']['name']
         repo = payload['repository']['name']
         repo_url = payload['repository']['url']

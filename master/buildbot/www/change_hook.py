@@ -26,7 +26,6 @@ from twisted.python import log
 from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
@@ -147,7 +146,10 @@ class ChangeHookResource(resource.Resource):
 
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
+        uri = request.uri
+        if isinstance(uri, bytes):
+            uri = uri.decode()
+        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', uri)
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)
@@ -177,12 +179,19 @@ class ChangeHookResource(resource.Resource):
             for k in ('comments', 'author', 'revision', 'branch', 'category',
                     'revlink', 'repository', 'codebase', 'project'):
                 if k in chdict:
-                    chdict[k] = bytes2unicode(chdict[k])
+                    if isinstance(chdict[k], bytes):
+                        chdict[k] = chdict[k].decode()
             if chdict.get('files'):
-                chdict['files'] = [bytes2unicode(f)
+                chdict['files'] = [f.decode() if isinstance(f, bytes) else f
                                 for f in chdict['files']]
             if chdict.get('properties'):
-                chdict['properties'] = dict((bytes2unicode(k), v)
-                                            for k, v in chdict['properties'].items())
-            chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
+                props = {}
+                for k, v in chdict['properties'].items():
+                    if isinstance(k, bytes):
+                        k = k.decode()
+                    props[k] = v
+                chdict['properties'] = props
+            if isinstance(src, bytes):
+                src = src.decode()
+            chid = yield self.master.data.updates.addChange(src=src, **chdict)
             log.msg("injected change %s" % chid)

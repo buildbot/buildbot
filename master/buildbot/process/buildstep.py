@@ -52,7 +52,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import worst_status
-from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
 
@@ -186,17 +185,20 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
-        data = bytes2unicode(data)
+        if isinstance(data, bytes):
+            data = data.decode()
         self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
-        data = bytes2unicode(data)
+        if isinstance(data, bytes):
+            data = data.decode()
         self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
-        data = bytes2unicode(data)
+        if isinstance(data, bytes):
+            data = data.decode()
         self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
@@ -502,9 +504,12 @@ class BuildStep(results.ResultComputingConfigMixin,
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
         self.name = yield self.build.render(self.name)
+        name = self.name
+        if isinstance(name, bytes):
+            name = name.decode()
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
-            name=util.bytes2unicode(self.name))
+            name=name)
         yield self.master.data.updates.startStep(self.stepid)
 
     @defer.inlineCallbacks
@@ -789,8 +794,10 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.build.getWorkerName()
 
     def addLog(self, name, type='s', logEncoding=None):
+        if isinstance(name, bytes):
+            name = name.decode()
         d = self.master.data.updates.addLog(self.stepid,
-                                            util.bytes2unicode(name),
+                                            name,
                                             str(type))
 
         @d.addCallback
@@ -819,8 +826,9 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
-        logid = yield self.master.data.updates.addLog(self.stepid,
-                                                      util.bytes2unicode(name), 't')
+        if isinstance(name, bytes):
+            name = name.decode()
+        logid = yield self.master.data.updates.addLog(self.stepid, name, 't')
         _log = self._newLog(name, 't', logid)
         yield _log.addContent(text)
         yield _log.finish()
@@ -828,10 +836,12 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
-        logid = yield self.master.data.updates.addLog(self.stepid,
-                                                      util.bytes2unicode(name), 'h')
+        if isinstance(name, bytes):
+            name = name.decode()
+        logid = yield self.master.data.updates.addLog(self.stepid, name, 'h')
         _log = self._newLog(name, 'h', logid)
-        html = bytes2unicode(html)
+        if isinstance(html, bytes):
+            html = html.decode()
         yield _log.addContent(html)
         yield _log.finish()
 

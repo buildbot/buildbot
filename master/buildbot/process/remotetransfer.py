@@ -19,7 +19,6 @@ import tarfile
 import tempfile
 from io import BytesIO
 
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
 
@@ -180,7 +179,9 @@ class StringFileWriter(base.FileWriterImpl):
         self.buffer = ""
 
     def remote_write(self, data):
-        self.buffer += bytes2unicode(data)
+        if isinstance(data, bytes):
+            data = data.decode()
+        self.buffer += data
 
     def remote_close(self):
         pass

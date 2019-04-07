@@ -18,7 +18,6 @@ import inspect
 from twisted.internet import defer
 
 from buildbot.data.exceptions import InvalidPathError
-from buildbot.util import bytes2unicode
 
 
 class EndpointMatcherBase:
@@ -101,7 +100,9 @@ class AnyEndpointMatcher(EndpointMatcherBase):
 class AnyControlEndpointMatcher(EndpointMatcherBase):
 
     def match(self, ep, action="", options=None):
-        if bytes2unicode(action).lower() != "get":
+        if isinstance(action, bytes):
+            action = action.decode()
+        if action.lower() != "get":
             return defer.succeed(Match(self.master))
         return defer.succeed(None)
 

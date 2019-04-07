@@ -23,9 +23,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
 from buildbot.reporters import notifier
-from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
-from buildbot.util import unicode2bytes
 
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
@@ -160,10 +158,12 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
         pass
 
     def sendComment(self, pr_url, text):
-        path = urlparse(unicode2bytes(pr_url)).path
+        path = urlparse(pr_url).path
+        if isinstance(path, bytes):
+            path = path.decode()
         payload = {'text': text}
         return self._http.post(COMMENT_API_URL.format(
-            path=bytes2unicode(path)), json=payload)
+            path=path), json=payload)
 
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type=None, builderName=None,
