@@ -188,6 +188,8 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
+
+        yield self.assertBuildResults(1, RETRY)
         yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
@@ -219,6 +221,7 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
+        yield self.assertBuildResults(1, RETRY)
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
@@ -282,6 +285,8 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
             Failure(TestException("substantiation failed")))
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
+
+        yield self.assertBuildResults(1, RETRY)
 
         # advance the time to the point where we should not retry
         master.reactor.advance(controller.worker.quarantine_initial_timeout)
