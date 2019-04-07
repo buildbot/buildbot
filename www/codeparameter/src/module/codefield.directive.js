@@ -27,6 +27,6 @@ class Codefield {
 }
 
 
-angular.module('app', new Codeparameter())
+angular.module('codeparameter', new Codeparameter())
 .run(['$location', AceConfig])
 .directive('codefield', [Codefield]);
