@@ -1,4 +1,4 @@
-class WebSocket extends Service
+class WebSocket
     constructor: ($window) ->
         return new class WebSocketProvider
             constructor: ->
@@ -16,3 +16,7 @@ class WebSocket extends Service
                     new $window.ReconnectingWebSocket(url)
                 else
                     new $window.WebSocket(url)
+
+
+angular.module('app')
+.service('webSocketService', ['$window', WebSocket])

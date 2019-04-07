@@ -1,7 +1,7 @@
-class Api extends Constant
+class Api
     constructor: -> return 'api/v2/'
 
-class Endpoints extends Constant
+class Endpoints
     constructor: ->
         # Rootlinks
         return [
@@ -17,3 +17,8 @@ class Endpoints extends Constant
             'schedulers'
             'forceschedulers'
         ]
+
+
+angular.module('app')
+.constant('API', Api())
+.constant('ENDPOINTS', Endpoints())

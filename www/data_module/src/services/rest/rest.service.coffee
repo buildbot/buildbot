@@ -1,4 +1,4 @@
-class Rest extends Service
+class Rest
     constructor: ($http, $q, API) ->
         return new class RestService
             execute: (config) ->
@@ -42,3 +42,7 @@ class Rest extends Service
 
             parse: (args...) ->
                 args.join('/').replace(/\/\//, '/')
+
+
+angular.module('app')
+.service('restService', ['$http', '$q', 'API', Rest])

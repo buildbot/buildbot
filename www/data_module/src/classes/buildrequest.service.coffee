@@ -1,4 +1,4 @@
-class Buildrequest extends Factory
+class Buildrequest
     constructor: (Base, dataService) ->
         return class BuildrequestInstance extends Base
             constructor: (object, endpoint) ->
@@ -7,3 +7,7 @@ class Buildrequest extends Factory
                 ]
 
                 super(object, endpoint, endpoints)
+
+
+angular.module('app')
+.factory('Buildrequest', ['Base', 'dataService', Buildrequest])

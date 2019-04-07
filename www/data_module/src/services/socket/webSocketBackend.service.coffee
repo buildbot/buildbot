@@ -1,4 +1,4 @@
-class WebSocketBackend extends Service
+class WebSocketBackend
     self = null
     constructor: ->
         self = @
@@ -23,3 +23,7 @@ class WebSocketBackend extends Service
         send: (message) ->
             self.receiveQueue.push(message)
         close: -> @onclose?()
+
+
+angular.module('app')
+.service('webSocketBackendService', [WebSocketBackend])

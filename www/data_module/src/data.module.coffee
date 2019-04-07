@@ -1,4 +1,6 @@
 # Register new module
-class App extends App
+class App
     constructor: ->
         return []
+
+angular.module('app', new App())

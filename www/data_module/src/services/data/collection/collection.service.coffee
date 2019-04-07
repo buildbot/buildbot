@@ -1,4 +1,4 @@
-class Collection extends Factory
+class Collection
     constructor: ($q, $injector, $log, dataUtilsService, socketService, DataQuery, $timeout) ->
         angular.isArray = Array.isArray = (arg) ->
             return arg instanceof Array
@@ -134,3 +134,7 @@ class Collection extends Factory
                     if changed or opts?.initial
                         @onChange(this)
                 , 0
+
+
+angular.module('app')
+.factory('Collection', ['$q', '$injector', '$log', 'dataUtilsService', 'socketService', 'DataQuery', '$timeout', Collection])

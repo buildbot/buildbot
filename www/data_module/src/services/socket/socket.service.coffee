@@ -1,4 +1,4 @@
-class Socket extends Service
+class Socket
     constructor: ($log, $q, $rootScope, $location, Stream, webSocketService) ->
         return new class SocketService
             # subscribe to event stream to get WebSocket messages
@@ -102,3 +102,7 @@ class Socket extends Service
                             cmd: "stopConsuming"
                             path: eventPath
                 return $q.resolve()
+
+
+angular.module('app')
+.service('socketService', ['$log', '$q', '$rootScope', '$location', 'Stream', 'webSocketService', Socket])

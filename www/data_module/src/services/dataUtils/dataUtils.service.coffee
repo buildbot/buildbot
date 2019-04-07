@@ -1,4 +1,4 @@
-class DataUtils extends Service
+class DataUtils
     constructor: ->
         return new class dataUtilsService
             # capitalize first word
@@ -104,3 +104,7 @@ class DataUtils extends Service
                     emailRegex.exec(string).pop() or ''
                 catch
                     ''
+
+
+angular.module('app')
+.service('dataUtilsService', [DataUtils])

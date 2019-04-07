@@ -1,4 +1,4 @@
-class Master extends Factory
+class Master
     constructor: (Base, dataService) ->
         return class MasterInstance extends Base
             constructor: (object, endpoint) ->
@@ -11,3 +11,7 @@ class Master extends Factory
                 ]
 
                 super(object, endpoint, endpoints)
+
+
+angular.module('app')
+.factory('Master', ['Base', 'dataService', Master])

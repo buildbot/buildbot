@@ -1,4 +1,4 @@
-class Change extends Factory
+class Change
     constructor: (Base, dataService, dataUtilsService) ->
         return class ChangeInstance extends Base
             constructor: (object, endpoint) ->
@@ -18,3 +18,7 @@ class Change extends Factory
                         @author_email = email
                 else
                     @author_name = author
+
+
+angular.module('app')
+.factory('Change', ['Base', 'dataService', 'dataUtilsService', Change])

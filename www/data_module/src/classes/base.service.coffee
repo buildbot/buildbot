@@ -1,4 +1,4 @@
-class Base extends Factory
+class Base
     constructor: (dataService, socketService, dataUtilsService) ->
         return class BaseInstance
             constructor: (object, @_endpoint, childEndpoints = []) ->
@@ -48,3 +48,7 @@ class Base extends Factory
                             query.subscribe ?= true
                             query.accessor = @$accessor
                         return @.get(e, args..., query)
+
+
+angular.module('app')
+.factory('Base', ['dataService', 'socketService', 'dataUtilsService', Base])

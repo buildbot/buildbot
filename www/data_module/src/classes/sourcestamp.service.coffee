@@ -1,4 +1,4 @@
-class Sourcestamp extends Factory
+class Sourcestamp
     constructor: (Base, dataService) ->
         return class SourcestampInstance extends Base
             constructor: (object, endpoint) ->
@@ -7,3 +7,7 @@ class Sourcestamp extends Factory
                 ]
 
                 super(object, endpoint, endpoints)
+
+
+angular.module('app')
+.factory('Sourcestamp', ['Base', 'dataService', Sourcestamp])

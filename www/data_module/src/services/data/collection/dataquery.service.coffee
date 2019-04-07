@@ -1,4 +1,4 @@
-class DataQuery extends Factory
+class DataQuery
     constructor: ($http, $q, API) ->
         return class DataQueryClass
             constructor: (query = {}) ->
@@ -81,3 +81,7 @@ class DataQuery extends Factory
             limit: (array, limit) ->
                 while array.length > limit
                     array.pop()
+
+
+angular.module('app')
+.factory('DataQuery', ['$http', '$q', 'API', DataQuery])

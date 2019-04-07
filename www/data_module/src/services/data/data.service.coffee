@@ -1,4 +1,4 @@
-class Data extends Provider
+class Data
     constructor: ->
     # TODO caching
     cache: false
@@ -179,3 +179,7 @@ class Data extends Provider
 
                 collection.initial(response)
                 return collection
+
+
+angular.module('app')
+.provider('dataProvider', [Data])

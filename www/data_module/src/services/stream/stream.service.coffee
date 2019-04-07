@@ -1,4 +1,4 @@
-class Stream extends Factory
+class Stream
     constructor: ->
         return class StreamInstance
             # the unsubscribe listener will be called on each unsubscribe call
@@ -31,3 +31,7 @@ class Stream extends Factory
             generateId: ->
                 @lastId ?= 0
                 return @lastId++
+
+
+angular.module('app')
+.factory('Stream', [Stream])

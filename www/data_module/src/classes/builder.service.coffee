@@ -1,4 +1,4 @@
-class Builder extends Factory
+class Builder
     constructor: (Base, dataService) ->
         return class BuilderInstance extends Base
             constructor: (object, endpoint) ->
@@ -12,3 +12,7 @@ class Builder extends Factory
                 ]
 
                 super(object, endpoint, endpoints)
+
+
+angular.module('app')
+.factory('Builder', ['Base', 'dataService', Builder])

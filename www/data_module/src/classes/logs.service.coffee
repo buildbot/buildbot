@@ -1,4 +1,4 @@
-class Log extends Factory
+class Log
     constructor: (Base, dataService) ->
         return class BuildInstance extends Base
             constructor: (object, endpoint) ->
@@ -7,3 +7,7 @@ class Log extends Factory
                     'contents'
                 ]
                 super(object, endpoint, endpoints)
+
+
+angular.module('app')
+.factory('Log', ['Base', 'dataService', Log])
