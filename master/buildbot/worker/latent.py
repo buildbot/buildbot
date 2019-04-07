@@ -373,7 +373,8 @@ class AbstractLatentWorker(AbstractWorker):
         assert self.state in [States.INSUBSTANTIATING,
                               States.INSUBSTANTIATING_SUBSTANTIATING]
 
-        if notify_cancel:
+        if notify_cancel and self._substantiation_notifier:
+            # if worker already tried to attach() then _substantiation_notifier is already notified
             self._fireSubstantiationNotifier(
                 failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
