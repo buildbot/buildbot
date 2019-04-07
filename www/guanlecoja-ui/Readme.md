@@ -1,5 +1,7 @@
 # Guanlecoja-ui
 
+Note: This package is not maintained for uses outside Buildbot.
+
 Implements generic application base for angular.js, ui.router and bootstrap3, with less, and coffeescript.
 
 To use:
@@ -146,6 +148,8 @@ The stored list of notifications.
 
 ## ChangeLog
 
+* 2.0.0: This package is not maintained for use outside Buildbot.
+         Rewrite the package from CoffeeScript to plain JavaScript.
 * 1.8.0: body is no more height:100%, in order to make full height page, user need to use height: 100vh.
          left-bar pinned preference is now stored in the browser.
 * 1.7.0: topbar is now responsive. It will collapse on mobile.
