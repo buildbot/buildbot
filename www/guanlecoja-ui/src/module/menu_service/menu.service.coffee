@@ -1,4 +1,4 @@
-class GlMenu extends Provider
+class GlMenu
     constructor: ->
         @groups = {}
         @defaultGroup = null
@@ -56,3 +56,7 @@ class GlMenu extends Provider
             getAppTitle: -> self.appTitle
         }
     ]
+
+
+angular.module('app')
+.provider('glMenuProvider', [GlMenu])

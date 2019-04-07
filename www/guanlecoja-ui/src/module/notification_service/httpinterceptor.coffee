@@ -6,7 +6,7 @@
 #        $httpProvider.responseInterceptors.push('glHttpInterceptor')
 
 
-class glHttpInterceptor extends Factory
+class glHttpInterceptor
     constructor: (glNotificationService, $q, $timeout) ->
         return (promise) ->
             errorHandler =  (res) ->
@@ -19,3 +19,7 @@ class glHttpInterceptor extends Factory
                 $q.reject res
 
             promise.then(angular.identity, errorHandler)
+
+
+angular.module('app')
+.factory('GlHttpInterceptor', ['glNotificationService', '$q', '$timeout', glHttpInterceptor])
