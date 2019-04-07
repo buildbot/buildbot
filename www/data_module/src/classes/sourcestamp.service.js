@@ -14,5 +14,5 @@ class Sourcestamp {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Sourcestamp', ['Base', 'dataService', Sourcestamp]);

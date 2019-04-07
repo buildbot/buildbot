@@ -14,5 +14,5 @@ class Step {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Step', ['Base', 'dataService', Step]);

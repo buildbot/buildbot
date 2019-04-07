@@ -10,5 +10,5 @@ class Changesource {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Changesource', ['dataService', 'Base', Changesource]);

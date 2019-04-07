@@ -142,5 +142,5 @@ class DataUtils {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .service('dataUtilsService', [DataUtils]);

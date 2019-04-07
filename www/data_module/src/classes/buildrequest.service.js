@@ -14,5 +14,5 @@ class Buildrequest {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Buildrequest', ['Base', 'dataService', Buildrequest]);

@@ -192,5 +192,5 @@ class Collection {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Collection', ['$q', '$injector', '$log', 'dataUtilsService', 'socketService', 'DataQuery', '$timeout', Collection]);

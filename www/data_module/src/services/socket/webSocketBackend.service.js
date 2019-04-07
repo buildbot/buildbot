@@ -59,5 +59,5 @@ var WebSocketBackend = (function() {
 })();
 
 
-angular.module('app')
+angular.module('bbData')
 .service('webSocketBackendService', [WebSocketBackend]);

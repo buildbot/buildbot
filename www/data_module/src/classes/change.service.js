@@ -33,5 +33,5 @@ class Change {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Change', ['Base', 'dataService', 'dataUtilsService', Change]);

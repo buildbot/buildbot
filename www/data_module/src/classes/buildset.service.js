@@ -14,5 +14,5 @@ class Buildset {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Buildset', ['Base', 'dataService', Buildset]);

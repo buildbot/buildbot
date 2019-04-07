@@ -150,5 +150,5 @@ class Socket {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .service('socketService', ['$log', '$q', '$rootScope', '$location', 'Stream', 'webSocketService', Socket]);

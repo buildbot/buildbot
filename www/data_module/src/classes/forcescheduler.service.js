@@ -10,5 +10,5 @@ class Forcescheduler {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Forcescheduler', ['Base', 'dataService', Forcescheduler]);

@@ -1,8 +1,8 @@
 // Register new module
-class App {
+class BBData {
     constructor() {
         return [];
     }
 }
 
-angular.module('app', new App());
+angular.module('bbData', new BBData());

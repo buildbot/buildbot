@@ -31,5 +31,5 @@ class WebSocket {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .service('webSocketService', ['$window', WebSocket]);

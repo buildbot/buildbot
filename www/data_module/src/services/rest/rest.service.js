@@ -65,5 +65,5 @@ class Rest {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .service('restService', ['$http', '$q', 'API', Rest]);

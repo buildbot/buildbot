@@ -65,5 +65,5 @@ class Stream {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Stream', [Stream]);

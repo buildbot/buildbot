@@ -76,5 +76,5 @@ class Base {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Base', ['dataService', 'socketService', 'dataUtilsService', Base]);

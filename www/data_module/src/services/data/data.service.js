@@ -253,5 +253,5 @@ class Data {
 Data.initClass();
 
 
-angular.module('app')
+angular.module('bbData')
 .provider('dataProvider', [Data]);

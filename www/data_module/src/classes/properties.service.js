@@ -11,5 +11,5 @@ class Propertie {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Propertie', ['Base', 'dataService', Propertie]);

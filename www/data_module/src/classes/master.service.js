@@ -18,5 +18,5 @@ class Master {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Master', ['Base', 'dataService', Master]);

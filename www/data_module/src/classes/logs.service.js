@@ -14,5 +14,5 @@ class Log {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Log', ['Base', 'dataService', Log]);

@@ -22,6 +22,6 @@ class Endpoints {
 }
 
 
-angular.module('app')
-.constant('API', Api())
-.constant('ENDPOINTS', Endpoints());
+angular.module('bbData')
+.constant('API', new Api())
+.constant('ENDPOINTS', new Endpoints());

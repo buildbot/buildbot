@@ -128,5 +128,5 @@ class DataQuery {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('DataQuery', ['$http', '$q', 'API', DataQuery]);

@@ -10,5 +10,5 @@ class Worker {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Worker', ['Base', 'dataService', Worker]);

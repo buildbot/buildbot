@@ -19,5 +19,5 @@ class Builder {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Builder', ['Base', 'dataService', Builder]);

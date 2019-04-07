@@ -10,5 +10,5 @@ class Scheduler {
 }
 
 
-angular.module('app')
+angular.module('bbData')
 .factory('Scheduler', ['Base', 'dataService', Scheduler]);
