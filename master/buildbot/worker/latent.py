@@ -410,7 +410,6 @@ class AbstractLatentWorker(AbstractWorker):
             log.msg("Weird: Got request to stop before started. Allowing "
                     "worker to start cleanly to avoid inconsistent state")
             yield self._substantiation_notifier.wait()
-            self.substantiation_build = None
             log.msg("Substantiation complete, immediately terminating.")
 
         yield defer.DeferredList([
