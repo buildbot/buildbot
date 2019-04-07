@@ -19,7 +19,6 @@ import base64
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.db import base
@@ -43,8 +42,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     def findSourceStampId(self, branch=None, revision=None, repository=None,
                           project=None, codebase=None, patch_body=None,
                           patch_level=None, patch_author=None,
-                          patch_comment=None, patch_subdir=None,
-                          _reactor=reactor):
+                          patch_comment=None, patch_subdir=None):
         tbl = self.db.model.sourcestamps
 
         assert codebase is not None, "codebase cannot be None"
@@ -85,7 +83,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 'project': project,
                 'patchid': patchid,
                 'ss_hash': ss_hash,
-                'created_at': _reactor.seconds(),
+                'created_at': self.master.reactor.seconds(),
             })
         return sourcestampid
 

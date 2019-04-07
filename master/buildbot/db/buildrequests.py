@@ -19,7 +19,6 @@ import itertools
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.db import NULL
@@ -134,11 +133,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return res
 
     @defer.inlineCallbacks
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+    def claimBuildRequests(self, brids, claimed_at=None):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
-            claimed_at = _reactor.seconds()
+            claimed_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             transaction = conn.begin()
@@ -186,13 +185,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None,
-                              _reactor=reactor):
+    def completeBuildRequests(self, brids, results, complete_at=None):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
-            complete_at = _reactor.seconds()
+            complete_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             transaction = conn.begin()

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
@@ -44,16 +42,11 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
         # Necessary to get an assertable submitted_at time.
         self.reactor.advance(946684799)
 
-        self.reactor_patch = mock.patch(
-            'buildbot.test.fake.fakedb.reactor.seconds', self.reactor.seconds)
-        self.reactor_patch.start()
-
         self.setUpScheduler()
         self.subscription = None
 
     def tearDown(self):
         self.tearDownScheduler()
-        self.reactor_patch.stop()
 
     def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):
         self.master.db.insertTestData([fakedb.Builder(id=77, name='b')])

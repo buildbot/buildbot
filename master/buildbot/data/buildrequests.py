@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import reactor
 
 from buildbot.data import base
 from buildbot.data import types
@@ -224,12 +223,11 @@ class BuildRequest(base.ResourceType):
         return True
 
     @base.updateMethod
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+    def claimBuildRequests(self, brids, claimed_at=None):
         return self.callDbBuildRequests(brids,
                                         self.master.db.buildrequests.claimBuildRequests,
                                         event="claimed",
-                                        claimed_at=claimed_at,
-                                        _reactor=_reactor)
+                                        claimed_at=claimed_at)
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -240,8 +238,7 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None,
-                              _reactor=reactor):
+    def completeBuildRequests(self, brids, results, complete_at=None):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
@@ -250,8 +247,7 @@ class BuildRequest(base.ResourceType):
             yield self.master.db.buildrequests.completeBuildRequests(
                 brids,
                 results,
-                complete_at=complete_at,
-                _reactor=_reactor)
+                complete_at=complete_at)
         except NotClaimedError:
             # the db layer returned a NotClaimedError exception, usually
             # because one of the buildrequests has been claimed by another

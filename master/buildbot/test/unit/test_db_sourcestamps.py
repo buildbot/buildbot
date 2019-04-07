@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.db import sourcestamps
@@ -56,12 +55,10 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findSourceStampId_simple(self):
-        clock = task.Clock()
-        clock.advance(CREATED_AT)
+        self.reactor.advance(CREATED_AT)
         ssid = yield self.db.sourcestamps.findSourceStampId(
             branch='production', revision='abdef',
-            repository='test://repo', codebase='cb', project='stamper',
-            _reactor=clock)
+            repository='test://repo', codebase='cb', project='stamper')
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
         validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(ssdict, {
@@ -111,13 +108,12 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findSourceStampId_patch(self):
-        clock = task.Clock()
-        clock.advance(CREATED_AT)
+        self.reactor.advance(CREATED_AT)
         ssid = yield self.db.sourcestamps.findSourceStampId(
             branch='production', revision='abdef',
             repository='test://repo', codebase='cb', project='stamper',
             patch_body=b'my patch', patch_level=3, patch_subdir='master/',
-            patch_author='me', patch_comment="comment", _reactor=clock)
+            patch_author='me', patch_comment="comment")
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
         validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(ssdict, {

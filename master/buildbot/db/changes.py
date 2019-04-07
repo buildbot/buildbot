@@ -22,7 +22,6 @@ import json
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.db import base
@@ -57,7 +56,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties=None, repository='', codebase='',
-                  project='', uid=None, _reactor=reactor):
+                  project='', uid=None):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
@@ -65,7 +64,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             log.msg("WARNING: change source is providing deprecated "
                     "value is_dir (ignored)")
         if when_timestamp is None:
-            when_timestamp = epoch2datetime(_reactor.seconds())
+            when_timestamp = epoch2datetime(self.master.reactor.seconds())
 
         if properties is None:
             properties = {}
@@ -88,7 +87,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # calculate the sourcestamp first, before adding it
         ssid = yield self.db.sourcestamps.findSourceStampId(
             revision=revision, branch=branch, repository=repository,
-            codebase=codebase, project=project, _reactor=_reactor)
+            codebase=codebase, project=project)
 
         parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
         # Someday, changes will have multiple parents.

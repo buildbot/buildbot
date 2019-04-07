@@ -17,7 +17,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.data import masters
@@ -147,8 +146,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masterActive(self):
-        clock = task.Clock()
-        clock.advance(60)
+        self.reactor.advance(60)
 
         self.master.db.insertTestData([
             fakedb.Master(id=13, name='myname', active=0,
@@ -160,8 +158,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         ])
 
         # initial checkin
-        yield self.rtype.masterActive(
-            name='myname', masterid=13, _reactor=clock)
+        yield self.rtype.masterActive(name='myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(60)))
@@ -172,10 +169,9 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.mq.productions = []
 
         # updated checkin time, re-activation
-        clock.advance(60)
+        self.reactor.advance(60)
         yield self.master.db.masters.markMasterInactive(13)
-        yield self.rtype.masterActive(
-            'myname', masterid=13, _reactor=clock)
+        yield self.rtype.masterActive('myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(120)))
@@ -194,12 +190,11 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masterStopped(self):
-        clock = task.Clock()
-        clock.advance(60)
+        self.reactor.advance(60)
 
         self.master.db.insertTestData([
             fakedb.Master(id=13, name='aname', active=1,
-                          last_active=clock.seconds()),
+                          last_active=self.reactor.seconds()),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
@@ -209,8 +204,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masterStopped_already(self):
-        clock = task.Clock()
-        clock.advance(60)
+        self.reactor.advance(60)
 
         self.master.db.insertTestData([
             fakedb.Master(id=13, name='aname', active=0,
@@ -230,8 +224,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_expireMasters(self):
-        clock = task.Clock()
-        clock.advance(60)
+        self.reactor.advance(60)
 
         self.master.db.insertTestData([
             fakedb.Master(id=14, name='other', active=1,
@@ -244,9 +237,9 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
         # check after 10 minutes, and see #14 deactivated; #15 gets deactivated
         # by another master, so it's not included here
-        clock.advance(600)
+        self.reactor.advance(600)
         yield self.master.db.masters.markMasterInactive(15)
-        yield self.rtype.expireMasters(_reactor=clock)
+        yield self.rtype.expireMasters()
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(master, dict(id=14, name='other',
                                       active=False,

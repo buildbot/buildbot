@@ -18,8 +18,6 @@ import re
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
@@ -78,7 +76,8 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
             self.bot.master.botmaster.shuttingDown = False
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = words.Contact(self.bot, user='me', channel='#buildbot')
+        self.contact = words.Contact(self.bot, user='me', channel='#buildbot',
+                                     _reactor=self.reactor)
         self.contact.setServiceParent(self.master)
         return self.master.startService()
 
@@ -105,8 +104,6 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         if exp_usage:
             self.assertTrue(hasattr(cmd, 'usage'))
 
-        clock = task.Clock()
-        self.patch(reactor, 'callLater', clock.callLater)
         self.patch_send()
         self.patch_act()
         self.bot.factory.allowShutdown = allowShutdown
@@ -122,18 +119,16 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         else:
             cmd(args)
         if clock_ticks:
-            clock.pump(clock_ticks)
+            self.reactor.pump(clock_ticks)
 
     # tests
 
     def test_doSilly(self):
-        clock = task.Clock()
-        self.patch(reactor, 'callLater', clock.callLater)
         self.patch_send()
         silly_prompt, silly_response = list(self.contact.silly.items())[0]
 
         self.contact.doSilly(silly_prompt)
-        clock.pump([0.5] * 20)
+        self.reactor.pump([0.5] * 20)
 
         self.assertEqual(self.sent, silly_response)
 
@@ -320,12 +315,10 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_shutdown_now(self):
-        stop = mock.Mock()
-        self.patch(reactor, 'stop', stop)
         yield self.do_test_command('shutdown', args='now', allowShutdown=True)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
-        stop.assert_called_with()
+        self.assertTrue(self.reactor.stop_called)
 
     @defer.inlineCallbacks
     def test_command_source(self):

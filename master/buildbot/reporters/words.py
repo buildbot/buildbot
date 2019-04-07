@@ -121,38 +121,6 @@ class ForceOptions(usage.Options):
             self['reason'] = " ".join(args)
 
 
-class BuildRequest:
-    hasStarted = False
-    timer = None
-
-    def __init__(self, parent, useRevisions=False, useColors=True):
-        self.parent = parent
-        self.useRevisions = useRevisions
-        self.useColors = useColors
-        self.timer = reactor.callLater(5, self.soon)
-
-    def soon(self):
-        del self.timer
-        if not self.hasStarted:
-            self.parent.send("The build has been queued, I'll give a shout"
-                             " when it starts")
-
-    def started(self, s):
-        self.hasStarted = True
-        if self.timer:
-            self.timer.cancel()
-            del self.timer
-        if self.useRevisions:
-            response = "build containing revision(s) [%s] forced" % s.getRevisions(
-            )
-        else:
-            response = "build #%d forced" % s.getNumber()
-        self.parent.send(response)
-        self.parent.send("I'll give a shout when the build finishes")
-        d = s.waitUntilFinished()
-        d.addCallback(self.parent.watchedBuildFinished)
-
-
 class Contact(service.AsyncService):
 
     """I hold the state for a single user's interaction with the buildbot.
@@ -162,7 +130,7 @@ class Contact(service.AsyncService):
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, bot, user=None, channel=None):
+    def __init__(self, bot, user=None, channel=None, _reactor=reactor):
         """
         :param StatusBot bot: StatusBot this Contact belongs to
         :param user: User ID representing this contact
@@ -190,6 +158,8 @@ class Contact(service.AsyncService):
         self.channel = channel
         self._next_HELLO = 'yes?'
 
+        self.reactor = _reactor
+
     # silliness
 
     silly = {
@@ -213,7 +183,7 @@ class Contact(service.AsyncService):
         response = self.silly[message]
         when = 0.5
         for r in response:
-            reactor.callLater(when, self.send, r)
+            self.reactor.callLater(when, self.send, r)
             when += 2.5
 
     def builderMatchesAnyTag(self, builder_tags):
@@ -776,7 +746,8 @@ class Contact(service.AsyncService):
                     complete_at = lastBuild['complete_at']
                     if complete_at:
                         complete_at = util.datetime2epoch(complete_at)
-                        ago = self.convertTime(int(util.now() - complete_at))
+                        ago = self.convertTime(int(self.reactor.seconds() -
+                                                   complete_at))
                     else:
                         ago = "??"
                     status = lastBuild['state_string']
@@ -821,7 +792,8 @@ class Contact(service.AsyncService):
                 complete_at = lastBuild['complete_at']
                 if complete_at:
                     complete_at = util.datetime2epoch(complete_at)
-                    ago = self.convertTime(int(util.now() - complete_at))
+                    ago = self.convertTime(int(self.reactor.seconds() -
+                                               complete_at))
                 else:
                     ago = "??"
                 status = lastBuild['state_string']
@@ -905,11 +877,11 @@ class Contact(service.AsyncService):
             self.act("readies phasers")
 
     def command_DANCE(self, args):
-        reactor.callLater(1.0, self.send, "<(^.^<)")
-        reactor.callLater(2.0, self.send, "<(^.^)>")
-        reactor.callLater(3.0, self.send, "(>^.^)>")
-        reactor.callLater(3.5, self.send, "(7^.^)7")
-        reactor.callLater(5.0, self.send, "(>^.^<)")
+        self.reactor.callLater(1.0, self.send, "<(^.^<)")
+        self.reactor.callLater(2.0, self.send, "<(^.^)>")
+        self.reactor.callLater(3.0, self.send, "(>^.^)>")
+        self.reactor.callLater(3.5, self.send, "(7^.^)7")
+        self.reactor.callLater(5.0, self.send, "(>^.^<)")
 
     def command_HUSTLE(self, args):
         self.act("does the hustle")
@@ -945,7 +917,7 @@ class Contact(service.AsyncService):
                 botmaster.cancelCleanShutdown()
         elif args == 'now':
             self.send("Stopping buildbot")
-            reactor.stop()
+            self.reactor.stop()
     command_SHUTDOWN.usage = {
         None: "shutdown check|start|stop|now - shutdown the buildbot master",
         "check": "shutdown check - check if the buildbot master is running or shutting down",

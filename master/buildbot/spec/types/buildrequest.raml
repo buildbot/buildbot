@@ -11,11 +11,10 @@ description: |
 
     .. py:class:: buildbot.data.buildrequests.BuildRequest
 
-        .. py:method:: claimBuildRequests(brids, claimed_at=None, _reactor=twisted.internet.reactor)
+        .. py:method:: claimBuildRequests(brids, claimed_at=None)
 
             :param list(integer) brids: list of buildrequest id to claim
             :param datetime claimed_at: date and time when the buildrequest is claimed
-            :param twisted.internet.interfaces.IReactorTime _reactor: reactor used to get current time if ``claimed_at`` is None
             :returns: (boolean) whether claim succeeded or not
 
             Claim a list of buildrequests
@@ -26,12 +25,11 @@ description: |
 
             Unclaim a list of buildrequests
 
-        .. py:method:: completeBuildRequests(brids, results, complete_at=None, _reactor=twisted.internet.reactor)
+        .. py:method:: completeBuildRequests(brids, results, complete_at=None)
 
             :param list(integer) brids: list of buildrequest id to complete
             :param integer results: the results of the buildrequest (see :ref:`Build-Result-Codes`)
             :param datetime complete_at: date and time when the buildrequest is completed
-            :param twisted.internet.interfaces.IReactorTime _reactor: reactor used to get current time, if ``complete_at`` is None
 
             Complete a list of buildrequest with the ``results`` status
 

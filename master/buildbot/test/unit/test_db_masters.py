@@ -64,8 +64,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_new(self):
-        id = yield self.db.masters.findMasterId('some:master',
-                                                _reactor=self.reactor)
+        id = yield self.db.masters.findMasterId('some:master')
         masterdict = yield self.db.masters.getMaster(id)
         self.assertEqual(masterdict,
                          dict(id=id, name='some:master', active=False,
@@ -92,7 +91,7 @@ class Tests(interfaces.InterfaceTests):
                           active=1, last_active=OTHERTIME),
         ])
         activated = yield self.db.masters.setMasterState(
-            masterid=7, active=True, _reactor=self.reactor)
+            masterid=7, active=True)
         self.assertFalse(activated)  # it was already active
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(masterdict,
@@ -106,7 +105,7 @@ class Tests(interfaces.InterfaceTests):
                           active=0, last_active=OTHERTIME),
         ])
         activated = yield self.db.masters.setMasterState(
-            masterid=7, active=True, _reactor=self.reactor)
+            masterid=7, active=True)
         self.assertTrue(activated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(masterdict,
@@ -120,7 +119,7 @@ class Tests(interfaces.InterfaceTests):
                           active=1, last_active=OTHERTIME),
         ])
         deactivated = yield self.db.masters.setMasterState(
-            masterid=7, active=False, _reactor=self.reactor)
+            masterid=7, active=False)
         self.assertTrue(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(masterdict,
@@ -134,7 +133,7 @@ class Tests(interfaces.InterfaceTests):
                           active=0, last_active=OTHERTIME),
         ])
         deactivated = yield self.db.masters.setMasterState(
-            masterid=7, active=False, _reactor=self.reactor)
+            masterid=7, active=False)
         self.assertFalse(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(masterdict,
@@ -194,7 +193,7 @@ class RealTests(Tests):
             fakedb.SchedulerMaster(schedulerid=21, masterid=7),
         ])
         deactivated = yield self.db.masters.setMasterState(
-            masterid=7, active=False, _reactor=self.reactor)
+            masterid=7, active=False)
         self.assertTrue(deactivated)
 
         # check that the scheduler_masters row was deleted

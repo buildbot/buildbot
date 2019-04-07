@@ -17,7 +17,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.data import builds
@@ -284,9 +283,9 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_event(self, method, exp_events=None,
                       *args, **kwargs):
+        self.reactor.advance(1)
         if exp_events is None:
             exp_events = []
-        self.patch(reactor, "seconds", lambda: 1)
         yield method(*args, **kwargs)
         self.master.mq.assertProductions(exp_events)
 

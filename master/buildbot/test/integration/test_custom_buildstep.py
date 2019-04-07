@@ -17,7 +17,6 @@ import mock
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
@@ -48,15 +47,16 @@ class TestLogObserver(buildstep.LogObserver):
 
 class OldStyleCustomBuildStep(buildstep.BuildStep):
 
-    def __init__(self, arg1, arg2, doFail=False, **kwargs):
+    def __init__(self, reactor, arg1, arg2, doFail=False, **kwargs):
         super().__init__(**kwargs)
+        self.reactor = reactor
         self.arg1 = arg1
         self.arg2 = arg2
         self.doFail = doFail
 
     def start(self):
         # don't complete immediately, or synchronously
-        reactor.callLater(0, self.doStuff)
+        self.reactor.callLater(0, self.doStuff)
 
     def doStuff(self):
         try:
@@ -241,7 +241,7 @@ class RunSteps(unittest.TestCase, TestReactorMixin):
 
         def finishNewLog(self):
             for d in newLogDeferreds:
-                reactor.callLater(0, d.callback, None)
+                self.reactor.callLater(0, d.callback, None)
 
         def delayedNewLog(*args, **kwargs):
             d = defer.Deferred()
@@ -254,7 +254,8 @@ class RunSteps(unittest.TestCase, TestReactorMixin):
             self.patch(OldStyleCustomBuildStep,
                        "_run_finished_hook", finishNewLog)
 
-        self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
+        self.factory.addStep(OldStyleCustomBuildStep(self.reactor,
+                                                     arg1=1, arg2=2))
         yield self.do_test_step()
 
         self.assertLogs({
@@ -280,7 +281,8 @@ class RunSteps(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_OldStyleCustomBuildStep_failure(self):
-        self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2, doFail=1))
+        self.factory.addStep(OldStyleCustomBuildStep(self.reactor,
+                                                     arg1=1, arg2=2, doFail=1))
         bs = yield self.do_test_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertEqual(bs.getResults(), results.EXCEPTION)
