@@ -915,6 +915,26 @@ class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_negative_build_timeout_insubstantiates_on_master_shutdown(self):
+        """
+        When build_wait_timeout is negative, we should still insubstantiate when master shuts down.
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=-1))
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Shutdown master
+        d = master.stopService()
+        yield controller.stop_instance(True)
+        yield d
+
+    @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
         If a build is stopping during latent worker substantiating, the build

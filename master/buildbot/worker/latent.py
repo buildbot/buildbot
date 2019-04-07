@@ -391,14 +391,14 @@ class AbstractLatentWorker(AbstractWorker):
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks
-    def _soft_disconnect(self, fast=False):
+    def _soft_disconnect(self, fast=False, stopping_service=False):
         if self.building:
             # wait until build finished
             # TODO: remove this behavior as AbstractWorker disconnects forcibly
             return
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
-        if self.build_wait_timeout < 0:
+        if not stopping_service and self.build_wait_timeout < 0:
             yield super().disconnect()
             return
 
@@ -433,7 +433,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         if self.conn is not None or self.state in [States.SUBSTANTIATING,
                                                    States.SUBSTANTIATED]:
-            yield self._soft_disconnect()
+            yield self._soft_disconnect(stopping_service=True)
         self._clearBuildWaitTimer()
         res = yield super().stopService()
         return res

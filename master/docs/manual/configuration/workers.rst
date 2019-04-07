@@ -222,7 +222,7 @@ The following options are available for all latent workers.
     This option allows you to specify how long a latent worker should wait after a build for another build before it shuts down.
     It defaults to 10 minutes.
     If this is set to 0 then the worker will be shut down immediately.
-    If it is less than 0 it will never automatically shutdown.
+    If it is less than 0 it will be shut down only when shutting down master.
 
 .. _Supported-Latent-Workers:
 
