@@ -87,6 +87,6 @@ class _nestedexamplefield {
 }
 
 
-angular.module('app', new Nestedexample())
+angular.module('nestedexample', new Nestedexample())
 .directive('nestedexamplefield', [Nestedexamplefield])
 .controller('_nestedexamplefieldController', ['$scope', '$http', _nestedexamplefield]);
