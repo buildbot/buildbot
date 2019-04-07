@@ -8,9 +8,9 @@
  */
 class GlMenu {
     static initClass() {
-    
+
         this.prototype.appTitle = "set AppTitle using GlMenuServiceProvider.setAppTitle";
-    
+
         this.prototype.$get = ["$state", function($state) {
             let group;
             for (let state of Array.from($state.get().slice(1))) {
@@ -18,17 +18,17 @@ class GlMenu {
                 if (group == null) {
                     continue;
                 }
-    
+
                 if (!this.groups.hasOwnProperty(group)) {
                     throw Error(`group ${group} has not been defined with glMenuProvider.group(). has: ${_.keys(this.groups)}`);
                 }
-    
+
                 this.groups[group].items.push({
                     caption: state.data.caption || _.capitalize(state.name),
                     sref: state.name
                 });
             }
-    
+
             for (let name in this.groups) {
                 // if a group has only no item, we juste delete it
                 group = this.groups[name];

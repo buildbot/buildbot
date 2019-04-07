@@ -40,7 +40,7 @@ describe('menuService', function() {
                 }
             }
         }
-                    
+
 
         glMenuServiceProvider.setFooter([{
             caption: "Github",

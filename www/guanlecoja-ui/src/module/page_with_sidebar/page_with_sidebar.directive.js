@@ -20,18 +20,18 @@ class GlPageWithSidebar {
 
 class _glPageWithSidebar {
     constructor($scope, glMenuService, $timeout, $window) {
-        
+
         // by default, pin sidebar only if window is wide enough (collapse by default if narrow)
         this.$scope = $scope;
         this.$timeout = $timeout;
         this.$window = $window;
-        this.sidebarPinned = this.$window.innerWidth > 800;      
+        this.sidebarPinned = this.$window.innerWidth > 800;
         // If user has previously pinned or unpinned the sidebar, use the saved value from localStorage
         const sidebarWasPinned = this.$window.localStorage.sidebarPinned;
         if ( (sidebarWasPinned === "true") || (sidebarWasPinned === "false") ) { // note -- localstorage only stores strings,  converts bools to string.
             this.sidebarPinned = sidebarWasPinned !== "false";
         }
-        
+
         this.groups = glMenuService.getGroups();
         this.footer = glMenuService.getFooter();
         this.appTitle = glMenuService.getAppTitle();
