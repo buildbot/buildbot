@@ -516,6 +516,6 @@ class Console {
 }
 
 
-angular.module('app', new App())
+angular.module('console_view', new App())
 .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])
 .controller('consoleController', ['$scope', '$q', '$window', 'dataService', 'bbSettingsService', 'resultsService', '$uibModal', '$timeout', Console]);

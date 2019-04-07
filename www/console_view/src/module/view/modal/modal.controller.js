@@ -18,5 +18,5 @@ class ConsoleModal {
 }
 
 
-angular.module('app')
+angular.module('console_view')
 .controller('consoleModalController', ['$scope', '$uibModalInstance', 'selectedBuild', ConsoleModal]);
