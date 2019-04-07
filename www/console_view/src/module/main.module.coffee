@@ -1,5 +1,5 @@
 # Register new module
-class App extends App
+class App
     constructor: ->
         return [
             'ui.router'
@@ -10,7 +10,7 @@ class App extends App
         ]
 
 
-class State extends Config
+class State
     constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -54,7 +54,7 @@ class State extends Config
                 default_value: 30
             ]
 
-class Console extends Controller
+class Console
     constructor: (@$scope, $q, @$window, dataService, bbSettingsService, resultsService,
         @$uibModal, @$timeout) ->
         angular.extend this, resultsService
@@ -384,3 +384,8 @@ class Console extends Controller
         change.show_details = !change.show_details
     infoIsExpanded: (change) ->
         return change.show_details
+
+
+angular.module('app', new App())
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])
+.controller('consoleController', ['$scope', '$q', '$window', 'dataService', 'bbSettingsService', 'resultsService', '$uibModal', '$timeout', Console])
