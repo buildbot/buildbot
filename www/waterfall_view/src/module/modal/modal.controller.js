@@ -17,5 +17,5 @@ class WaterfallModal {
     }
 }
 
-angular.module('app')
+angular.module('waterfall_view')
 .controller('waterfallModalController', ['$scope', '$uibModalInstance', 'selectedBuild', WaterfallModal]);

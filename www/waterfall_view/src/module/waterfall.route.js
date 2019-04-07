@@ -31,5 +31,5 @@ class State {
     }
 }
 
-angular.module('app')
+angular.module('waterfall_view')
 .config(['$stateProvider', 'glMenuServiceProvider', State]);

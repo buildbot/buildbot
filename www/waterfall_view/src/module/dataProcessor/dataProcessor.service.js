@@ -84,5 +84,5 @@ class DataProcessor {
 }
 
 
-angular.module('app')
+angular.module('waterfall_view')
 .service('dataProcessorService', [DataProcessor]);

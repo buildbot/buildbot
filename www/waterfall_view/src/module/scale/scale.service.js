@@ -74,5 +74,5 @@ class ScaleService {
 }
 
 
-angular.module('app')
+angular.module('waterfall_view')
 .factory('ScaleService', [ScaleService]);

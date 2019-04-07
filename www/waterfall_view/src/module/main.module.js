@@ -663,5 +663,5 @@ var Waterfall = (function() {
 })();
 
 
-angular.module('app', new WaterfallView())
+angular.module('waterfall_view', new WaterfallView())
 .controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', Waterfall]);

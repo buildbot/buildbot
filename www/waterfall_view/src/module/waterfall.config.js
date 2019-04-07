@@ -39,5 +39,5 @@ class Waterfall {
 }
 
 
-angular.module('app')
+angular.module('waterfall_view')
 .config(['bbSettingsServiceProvider', Waterfall]);
