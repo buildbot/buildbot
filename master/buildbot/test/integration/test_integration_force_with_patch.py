@@ -64,8 +64,8 @@ class ShellMaster(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         # if no patch, the source step is happy, but the make step cannot find makefile
-        self.assertEqual(build['steps'][0]['results'], SUCCESS)
-        self.assertEqual(build['steps'][1]['results'], FAILURE)
+        self.assertEqual(build['steps'][1]['results'], SUCCESS)
+        self.assertEqual(build['steps'][2]['results'], FAILURE)
         self.assertEqual(build['results'], FAILURE)
 
 

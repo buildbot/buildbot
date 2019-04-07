@@ -40,7 +40,7 @@ class UrlForBuildMaster(RunMasterBase):
             command = "echo 'http://localhost:8080/#builders/1/builds/1'"
 
         self.assertIn(command,
-                      build['steps'][0]['logs'][0]['contents']['content'])
+                      build['steps'][1]['logs'][0]['contents']['content'])
 
 
 # master configuration

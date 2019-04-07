@@ -44,7 +44,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
 
     @defer.inlineCallbacks
     def setupZulipStatusPush(self, endpoint="http://example.com", token="123", stream=None):
-        self.sp = ZulipStatusPush(endpoint=endpoint, token=token, stream=stream)
+        self.sp = ZulipStatusPush(
+            endpoint=endpoint, token=token, stream=stream)
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, endpoint, debug=None, verify=None)
         yield self.sp.setServiceParent(self.master)
@@ -60,7 +61,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def test_build_started(self):
         yield self.setupZulipStatusPush(stream="xyz")
         build = yield self.setupBuildResults()
-        build["started_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build["started_at"] = datetime.datetime(
+            2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -78,7 +80,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def test_build_finished(self):
         yield self.setupZulipStatusPush(stream="xyz")
         build = yield self.setupBuildResults()
-        build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build["complete_at"] = datetime.datetime(
+            2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -97,7 +100,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def test_stream_none(self):
         yield self.setupZulipStatusPush(stream=None)
         build = yield self.setupBuildResults()
-        build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build["complete_at"] = datetime.datetime(
+            2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123',
@@ -126,7 +130,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def test_invalid_json_data(self):
         yield self.setupZulipStatusPush(stream="xyz")
         build = yield self.setupBuildResults()
-        build["started_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build["started_at"] = datetime.datetime(
+            2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -146,7 +151,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def test_invalid_url(self):
         yield self.setupZulipStatusPush(stream="xyz")
         build = yield self.setupBuildResults()
-        build["started_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build["started_at"] = datetime.datetime(
+            2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -166,7 +172,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def test_invalid_token(self):
         yield self.setupZulipStatusPush(stream="xyz")
         build = yield self.setupBuildResults()
-        build["started_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build["started_at"] = datetime.datetime(
+            2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
