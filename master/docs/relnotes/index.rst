@@ -10,6 +10,43 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.2.0`` ( ``2019-04-07`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix secret leak when non-interpolated secret was passed to a step (:issue:`4007`)
+
+Features
+--------
+
+- Each build get a new preparation step which can count the time spend starting latent worker.
+- Support known_hosts file format as ``sshKnownHosts`` parameter in SSH-related operations (:issue:`4681`)
+
+
+Buildbot ``2.2.0`` ( ``2019-04-07`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix passing the verify and debug parameters for the HttpStatusPush reporter
+- The builder page UI now correctly shows the list of owners for each build.
+
+Features
+--------
+
+- Added new :bb:step:`GitCommit` step to perform git commit operation
+- Added new :bb:step:`GitTag` step to perform git tag operation
+- HgPoller now supports bookmarks in addition to branches.
+- Buildbot can now monitor multiple branches in a Mercurial repository.
+- :py:class:`~buildbot.www.oauth2.OAuth2Auth` have been adapted to support ref:`Secret`.
+- Buildbot can now get secrets from the unix password store by `zx2c4` (https://www.passwordstore.org/).
+- Added a ``basename`` property to the Github pull request webhook handler.
+- The GitHub change hook secret can now be rendered.
+
+
 Buildbot ``2.1.0`` ( ``2019-03-09`` )
 =====================================
 
