@@ -1,18 +1,18 @@
 # Register new module
-class Codeparameter extends App
+class Codeparameter
     constructor: -> return [
         'ui.ace'
         'common'
     ]
 
 # setup ace to fetch its module from the plugin baseURL
-class AceConfig extends Run
+class AceConfig
     constructor: ($location) ->
         baseurl = $location.absUrl().split("#")[0]
         window.ace.config.set("basePath", "#{baseurl}codeparameter")
 
 # defines custom field directives which only have templates
-class Codefield extends Directive
+class Codefield
     constructor: ->
         return {
             replace: false
@@ -20,3 +20,8 @@ class Codefield extends Directive
             scope: false
             templateUrl: "codeparameter/views/codefield.html"
         }
+
+
+angular.module('app', new Codeparameter())
+.run(['$location', AceConfig])
+.directive('codefield', [Codefield])
