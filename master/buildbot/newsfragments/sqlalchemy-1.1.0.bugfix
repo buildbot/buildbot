@@ -1,1 +1,0 @@
-SQLAlchemy 1.1.0 or higher is now required for Buildbot, in order to work with Python 3.5+.
