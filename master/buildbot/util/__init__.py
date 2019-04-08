@@ -201,7 +201,7 @@ badchars_map = bytes.maketrans(b"\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
 def safeTranslate(s):
     if isinstance(s, str):
         s = s.encode('utf8')
-    return s.translate(badchars_map)
+    return s.translate(badchars_map).decode()
 
 
 def none_or_str(x):

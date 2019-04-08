@@ -105,27 +105,27 @@ class TestHumanReadableDelta(unittest.TestCase):
 class safeTranslate(unittest.TestCase):
 
     def test_str_good(self):
-        self.assertEqual(util.safeTranslate(str("full")), b"full")
+        self.assertEqual(util.safeTranslate(str("full")), "full")
 
     def test_str_bad(self):
         self.assertEqual(util.safeTranslate(str("speed=slow;quality=high")),
-                         b"speed_slow_quality_high")
+                         "speed_slow_quality_high")
 
     def test_str_pathological(self):
         # if you needed proof this wasn't for use with sensitive data
         self.assertEqual(util.safeTranslate(str("p\ath\x01ogy")),
-                         b"p\ath\x01ogy")  # bad chars still here!
+                         "p\ath\x01ogy")  # bad chars still here!
 
     def test_unicode_good(self):
-        self.assertEqual(util.safeTranslate("full"), b"full")
+        self.assertEqual(util.safeTranslate("full"), "full")
 
     def test_unicode_bad(self):
         self.assertEqual(util.safeTranslate(str("speed=slow;quality=high")),
-                         b"speed_slow_quality_high")
+                         "speed_slow_quality_high")
 
     def test_unicode_pathological(self):
         self.assertEqual(util.safeTranslate("\u0109"),
-                         b"\xc4\x89")  # yuck!
+                         "\u0109")  # yuck!
 
 
 class naturalSort(unittest.TestCase):
