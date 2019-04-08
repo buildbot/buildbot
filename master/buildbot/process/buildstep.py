@@ -789,6 +789,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.build.getWorkerName()
 
     def addLog(self, name, type='s', logEncoding=None):
+        if self.stepid is None:
+            raise BuildStepCancelled
         d = self.master.data.updates.addLog(self.stepid,
                                             util.bytes2unicode(name),
                                             str(type))
@@ -819,6 +821,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
+        if self.stepid is None:
+            raise BuildStepCancelled
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.bytes2unicode(name), 't')
         _log = self._newLog(name, 't', logid)
@@ -828,6 +832,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
+        if self.stepid is None:
+            raise BuildStepCancelled
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.bytes2unicode(name), 'h')
         _log = self._newLog(name, 'h', logid)
