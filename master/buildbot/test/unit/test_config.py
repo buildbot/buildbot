@@ -1261,12 +1261,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             config.BuilderConfig(name='_a', factory=self.factory,
                                  workernames=['a'])
 
-    def test_utf8_name(self):
-        with self.assertRaisesConfigError(
-                "builder names must be unicode or ASCII"):
-            config.BuilderConfig(name="\N{SNOWMAN}".encode('utf-8'),
-                                 factory=self.factory, workernames=['a'])
-
     def test_no_factory(self):
         with self.assertRaisesConfigError("builder 'a' has no factory"):
             config.BuilderConfig(name='a', workernames=['a'])
