@@ -20,6 +20,7 @@ from __future__ import unicode_literals
 import sqlalchemy as sa
 import sqlalchemy.exc as saexc
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.util import migration
@@ -384,6 +385,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         conn.execute(scheduler_changes.insert(), [
             dict(schedulerid=1, changeid=1),
             dict(schedulerid=1, changeid=2),
+            dict(schedulerid=None, changeid=None),
         ])
         conn.execute(buildsets.insert(), [
             dict(id=1),
@@ -440,6 +442,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             dict(id=6, stepid=6),
             dict(id=7, stepid=7),
             dict(id=8, stepid=8),
+            dict(id=9, stepid=None),
         ])
         conn.execute(logchunks.insert(), [
             dict(logid=1, first_line=0, last_line=100),
@@ -450,8 +453,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             dict(logid=6, first_line=0, last_line=100),
             dict(logid=7, first_line=0, last_line=100),
             dict(logid=8, first_line=0, last_line=100),
+            dict(logid=None, first_line=0, last_line=100),
         ])
 
+    @defer.inlineCallbacks
     def test_update(self):
         def setup_thd(conn):
             self.create_tables_and_insert_data(conn)
@@ -495,4 +500,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                          workerid=2, masterid=1),
                 ])
 
-        return self.do_test_migration(51, 52, setup_thd, verify_thd)
+        with self.assertWarnsRegex(
+                UserWarning,
+                'Inconsistent data found in DB: table .+?, deleting invalid rows'):
+            yield self.do_test_migration(51, 52, setup_thd, verify_thd)
