@@ -14,4 +14,4 @@ class scopeTimeout {
 }
 
 angular.module('app')
-.factory('ScopeTimeout', ['$timeout', scopeTimeout]);
+.factory('scopeTimeout', ['$timeout', scopeTimeout]);

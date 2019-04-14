@@ -32,4 +32,4 @@ class buildersService {
 
 
 angular.module('common')
-.factory('BuildersService', ['$log', 'dataService', buildersService]);
+.factory('buildersService', ['$log', 'dataService', buildersService]);

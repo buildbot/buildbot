@@ -101,4 +101,4 @@ bbSettings.initClass();
 
 
 angular.module('common')
-.provider('bbSettingsProvider', ['config', bbSettings]);
+.provider('bbSettingsService', ['config', bbSettings]);

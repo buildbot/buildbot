@@ -166,4 +166,4 @@ class ansicodesService {
 
 
 angular.module('common')
-.factory('AnsicodesService', ['$log', ansicodesService]);
+.factory('ansicodesService', ['$log', ansicodesService]);

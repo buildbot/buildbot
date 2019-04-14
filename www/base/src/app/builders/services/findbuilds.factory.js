@@ -31,4 +31,4 @@ class FindBuilds {
 
 
 angular.module('app')
-.factory('FindBuilds', ['$log', 'scopeTimeout', 'dataService', '$state', 'RESULTS', FindBuilds]);
+.factory('findBuilds', ['$log', 'scopeTimeout', 'dataService', '$state', 'RESULTS', FindBuilds]);

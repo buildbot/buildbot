@@ -39,4 +39,4 @@ class resultsService {
 
 
 angular.module('common')
-.factory('ResultsService', ['$log', 'RESULTS', 'RESULTS_TEXT', resultsService]);
+.factory('resultsService', ['$log', 'RESULTS', 'RESULTS_TEXT', resultsService]);
