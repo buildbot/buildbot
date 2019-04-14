@@ -46,7 +46,7 @@ class _buildsummary {
         const ONLY_NOT_SUCCESS = 1;
         const EVERYTHING = 2;
         let details = EVERYTHING;
-        if (this.condensed) {
+        if ($scope.buildsummary.condensed) {
             details = NONE;
         }
         this.toggleDetails = () => details = (details + 1) % 3;
