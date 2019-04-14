@@ -1,0 +1,2 @@
+Fixed bug with git checkouting from branch with submodule to branch without
+that submodule in :py:class:`~buildbot.steps.source.git.Git`

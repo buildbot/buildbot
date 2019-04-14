@@ -1831,6 +1831,9 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
+            + 0,
+            ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -1877,6 +1880,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
                                  '-f', '-f', '-d', '-x'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1929,6 +1935,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
                                  '-f', '-f', '-d', '-x'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
