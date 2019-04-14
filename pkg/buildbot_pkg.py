@@ -232,7 +232,7 @@ class BuildJsCommand(distutils.cmd.Command):
                 self.announce(
                     'Running command: %s' % str(" ".join(command)),
                     level=distutils.log.INFO)
-                subprocess.call(command, shell=shell)
+                subprocess.check_call(command, shell=shell)
 
         self.copy_tree(os.path.join(package, 'static'), os.path.join(
             "build", "lib", package, "static"))
