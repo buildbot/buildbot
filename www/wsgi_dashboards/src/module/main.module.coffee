@@ -1,5 +1,8 @@
 # Register new module
-class WsgiDashboards extends App
+class WsgiDashboards
     constructor: -> return [
         'ui.router', 'buildbot_config', 'guanlecoja.ui'
     ]
+
+
+angular.module('app', new WsgiDashboards())

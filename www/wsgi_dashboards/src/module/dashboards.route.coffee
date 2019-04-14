@@ -1,5 +1,5 @@
 # Register new state
-class State extends Config
+class State
     constructor: ($stateProvider, glMenuServiceProvider, config) ->
         for dashboard in config.plugins.wsgi_dashboards
             # Name of the state
@@ -26,5 +26,10 @@ class State extends Config
                 data: cfg
             $stateProvider.state(state)
 
-class WsgiDashboards extends Controller
+class WsgiDashboards
     constructor: ($scope, $state) ->
+
+
+angular.module('app')
+.config(['$stateProvider', 'glMenuServiceProvider', 'config', State])
+.controller('wsgiDashboardsController', ['$scope', '$state', WsgiDashboards])
