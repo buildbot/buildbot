@@ -3,10 +3,10 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const invert_constant = (constant_name, inverted_constant_name) =>
-    angular.module('common').service(inverted_constant_name, [constant_name, original => _.invert(original)
-    ])
-;
+const invert_constant = function(constant_name, inverted_constant_name) {
+    const inverted = function(original) { return _.invert(original); }
+    angular.module('common').service(inverted_constant_name, [constant_name, inverted]);
+}
 
 class Baseurlws {
     constructor() {
