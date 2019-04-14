@@ -42,8 +42,7 @@ class States(enum.Enum):
 
     SUBSTANTIATED = 2
 
-    # When in this state, self._insubstantiation_notifier may be potentially
-    # waited on.
+    # When in this state, self._start_stop_lock is held.
     INSUBSTANTIATING = 3
 
     # This state represents the case when insubstantiation is in progress and
@@ -52,8 +51,7 @@ class States(enum.Enum):
     # actions are not supported: insubstantiation during substantiation will
     # cancel the substantiation.
     #
-    # When in this state, self._insubstantiation_notifier may be potentially
-    # waited on.
+    # When in this state, self._start_stop_lock is held.
     INSUBSTANTIATING_SUBSTANTIATING = 4
 
 
@@ -140,9 +138,7 @@ class AbstractLatentWorker(AbstractWorker):
                         build_wait_timeout=60 * 10,
                         **kwargs):
         self._substantiation_notifier = Notifier()
-        self._start_instance_notifier = Notifier()
-        self._start_instance_currently_running = False
-        self._insubstantiation_notifier = Notifier()
+        self._start_stop_lock = defer.DeferredLock()
         self.build_wait_timeout = build_wait_timeout
         return super().reconfigService(name, password, **kwargs)
 
@@ -167,6 +163,11 @@ class AbstractLatentWorker(AbstractWorker):
                 (self.__class__.__name__, self.workername,
                     instance_id, instance_state))
         raise LatentWorkerFailedToSubstantiate(instance_id, instance_state)
+
+    def _log_start_stop_locked(self, action_str):
+        if self._start_stop_lock.locked:
+            log.msg(('while {} worker {}: waiting until previous ' +
+                     'start_instance/stop_instance finishes').format(action_str, self))
 
     def start_instance(self, build):
         # responsible for starting instance that will try to connect with this
@@ -228,13 +229,12 @@ class AbstractLatentWorker(AbstractWorker):
             dont_wait_to_attach = \
                 self.build_wait_timeout < 0 and self.conn is not None
 
-            self._start_instance_currently_running = True
-
-            start_success = yield self.start_instance(build)
-
-            self._start_instance_currently_running = False
-            if self._start_instance_notifier:
-                self._start_instance_notifier.notify(None)
+            try:
+                self._log_start_stop_locked('substantiating')
+                yield self._start_stop_lock.acquire()
+                start_success = yield self.start_instance(build)
+            finally:
+                self._start_stop_lock.release()
 
             if not start_success:
                 # this behaviour is kept as compatibility, but it is better
@@ -251,10 +251,6 @@ class AbstractLatentWorker(AbstractWorker):
                 self._fireSubstantiationNotifier(True)
 
         except Exception as e:
-            self._start_instance_currently_running = False
-            if self._start_instance_notifier:
-                self._start_instance_notifier.notify(None)
-
             self.stopMissingTimer()
             self._substantiation_failed(failure.Failure(e))
             # swallow the failure as it is notified
@@ -367,63 +363,56 @@ class AbstractLatentWorker(AbstractWorker):
 
         log.msg("insubstantiating worker {}".format(self))
 
-        # ensure start_instance() completes until we do anything. We're likely in
-        # States.SUBSTANTIATING but we can't check that because worker may attach earlier than
-        # start_instance finishes.
-        while self._start_instance_currently_running:
-            log.msg(('while insubstantiating worker {}: ' +
-                     'waiting for start_instance() to finish').format(self))
-            yield self._start_instance_notifier.wait()
-
-        if self.state == States.NOT_SUBSTANTIATED:
-            return
-
-        if self.state == States.INSUBSTANTIATING:
-            yield self._insubstantiation_notifier.wait()
-            return
-
         if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
             self.state = States.INSUBSTANTIATING
             self._fireSubstantiationNotifier(
                 failure.Failure(LatentWorkerSubstantiatiationCancelled()))
-            yield self._insubstantiation_notifier.wait()
-            return
 
-        notify_cancel = self.state == States.SUBSTANTIATING
-
-        if force_substantiation:
-            self.state = States.INSUBSTANTIATING_SUBSTANTIATING
-        else:
-            self.state = States.INSUBSTANTIATING
-        self._clearBuildWaitTimer()
         try:
-            yield self.stop_instance(fast)
-        except Exception as e:
-            # The case of failure for insubstantiation is bad as we have a
-            # left-over costing resource There is not much thing to do here
-            # generically, so we must put the problem of stop_instance
-            # reliability to the backend driver
-            log.err(e, "while insubstantiating")
+            self._log_start_stop_locked('insubstantiating')
+            yield self._start_stop_lock.acquire()
 
-        assert self.state in [States.INSUBSTANTIATING,
-                              States.INSUBSTANTIATING_SUBSTANTIATING]
+            assert self.state not in [States.INSUBSTANTIATING,
+                                      States.INSUBSTANTIATING_SUBSTANTIATING]
 
-        if notify_cancel and self._substantiation_notifier:
-            # if worker already tried to attach() then _substantiation_notifier is already notified
-            self._fireSubstantiationNotifier(
-                failure.Failure(LatentWorkerSubstantiatiationCancelled()))
+            if self.state == States.NOT_SUBSTANTIATED:
+                return
 
-        if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
-            self.state = States.SUBSTANTIATING
-            if self._insubstantiation_notifier:
-                self._insubstantiation_notifier.notify(True)
-            self._substantiate(self.substantiation_build)
-        elif self.state == States.INSUBSTANTIATING:
-            self.state = States.NOT_SUBSTANTIATED
-            if self._insubstantiation_notifier:
-                self._insubstantiation_notifier.notify(True)
-        else:
-            pass
+            notify_cancel = self.state == States.SUBSTANTIATING
+
+            if force_substantiation:
+                self.state = States.INSUBSTANTIATING_SUBSTANTIATING
+            else:
+                self.state = States.INSUBSTANTIATING
+
+            self._clearBuildWaitTimer()
+            try:
+                yield self.stop_instance(fast)
+            except Exception as e:
+                # The case of failure for insubstantiation is bad as we have a
+                # left-over costing resource There is not much thing to do here
+                # generically, so we must put the problem of stop_instance
+                # reliability to the backend driver
+                log.err(e, "while insubstantiating")
+
+            assert self.state in [States.INSUBSTANTIATING,
+                                  States.INSUBSTANTIATING_SUBSTANTIATING]
+
+            if notify_cancel and self._substantiation_notifier:
+                # if worker already tried to attach() then _substantiation_notifier is already
+                # notified
+                self._fireSubstantiationNotifier(
+                    failure.Failure(LatentWorkerSubstantiatiationCancelled()))
+
+            if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
+                self.state = States.SUBSTANTIATING
+                self._substantiate(self.substantiation_build)
+            else:  # self.state == States.INSUBSTANTIATING:
+                self.state = States.NOT_SUBSTANTIATED
+
+        finally:
+            self._start_stop_lock.release()
+
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks
