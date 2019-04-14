@@ -4,7 +4,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class Settings {
+class SettingsController {
     constructor($scope, bbSettingsService) {
         // All settings definition
         //
@@ -43,4 +43,4 @@ class Settings {
 
 
 angular.module('app')
-.controller('settingsController', ['$scope', 'bbSettingsService', Settings]);
+.controller('settingsController', ['$scope', 'bbSettingsService', SettingsController]);

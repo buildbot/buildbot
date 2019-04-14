@@ -1,4 +1,4 @@
-class State {
+class BuildersState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
 
         // Name of the state
@@ -57,4 +57,4 @@ class State {
 
 
 angular.module('app')
-.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State]);
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', BuildersState]);

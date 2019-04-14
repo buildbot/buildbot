@@ -1,4 +1,4 @@
-class State {
+class BuildRequestState {
     constructor($stateProvider) {
 
         // Name of the state
@@ -19,4 +19,4 @@ class State {
 
 
 angular.module('app')
-.config(['$stateProvider', State]);
+.config(['$stateProvider', BuildRequestState]);

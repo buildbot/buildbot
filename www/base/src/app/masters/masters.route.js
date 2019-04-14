@@ -1,4 +1,4 @@
-class State {
+class MastersState {
     constructor($stateProvider) {
 
         // Name of the state
@@ -31,4 +31,4 @@ class State {
 
 
 angular.module('app')
-.config(['$stateProvider', State]);
+.config(['$stateProvider', MastersState]);

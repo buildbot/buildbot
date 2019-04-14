@@ -1,4 +1,4 @@
-class State {
+class ChangesState {
     constructor($stateProvider, bbSettingsServiceProvider) {
 
         // Name of the state
@@ -36,4 +36,4 @@ class State {
 
 
 angular.module('app')
-.config(['$stateProvider', 'bbSettingsServiceProvider', State]);
+.config(['$stateProvider', 'bbSettingsServiceProvider', ChangesState]);

@@ -1,4 +1,4 @@
-class State {
+class LogState {
     constructor($stateProvider) {
 
         // Name of the state
@@ -25,4 +25,4 @@ class State {
 
 
 angular.module('app')
-.config(['$stateProvider', State]);
+.config(['$stateProvider', LogState]);

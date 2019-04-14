@@ -5,7 +5,7 @@
  * DS205: Consider reworking code to avoid use of IIFEs
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class State {
+class WorkerActionState {
     constructor($stateProvider, bbSettingsServiceProvider) {
         const states = [{
             name: "worker.actions",
@@ -105,5 +105,5 @@ class workerActionsDialog {
 
 
 angular.module('app')
-.config(['$stateProvider', 'bbSettingsServiceProvider', State])
+.config(['$stateProvider', 'bbSettingsServiceProvider', WorkerActionState])
 .controller('workerActionsDialogController', ['$scope', 'config', '$state', 'modal', 'workerid', 'multiple', '$rootScope', '$q', 'workers', workerActionsDialog]);

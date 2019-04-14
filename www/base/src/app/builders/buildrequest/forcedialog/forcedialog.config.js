@@ -4,7 +4,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class State {
+class ForceDialogState {
     constructor($stateProvider) {
         $stateProvider.state("builder.forcebuilder", {
             url: "/force/:scheduler",
@@ -45,4 +45,4 @@ class State {
 
 
 angular.module('app')
-.config(['$stateProvider', State]);
+.config(['$stateProvider', ForceDialogState]);
