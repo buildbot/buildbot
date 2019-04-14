@@ -75,7 +75,7 @@ class ResultsColor {
 
 
 angular.module('common')
-.constant('BASEURLWS', Baseurlws())
-.constant('PLURALS', Plurals())
-.constant('RESULTS', Results())
-.constant('RESULTS_COLOR', ResultsColor());
+.constant('BASEURLWS', new Baseurlws())
+.constant('PLURALS', new Plurals())
+.constant('RESULTS', new Results())
+.constant('RESULTS_COLOR', new ResultsColor());
