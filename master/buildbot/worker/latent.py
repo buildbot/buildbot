@@ -52,6 +52,8 @@ class States(enum.Enum):
     # cancel the substantiation.
     #
     # When in this state, self._start_stop_lock is held.
+    #
+    # When in this state self.substantiation_build is not None.
     INSUBSTANTIATING_SUBSTANTIATING = 4
 
 
@@ -196,7 +198,6 @@ class AbstractLatentWorker(AbstractWorker):
             return self._substantiation_notifier.wait()
 
         self.startMissingTimer()
-        self.substantiation_build = build
 
         # if anything of the following fails synchronously we need to have a
         # deferred ready to be notified
@@ -205,7 +206,7 @@ class AbstractLatentWorker(AbstractWorker):
         if self.state == States.SUBSTANTIATED and self.conn is None:
             # connection dropped while we were substantiated.
             # insubstantiate to clean up and then substantiate normally.
-            d_ins = self.insubstantiate(force_substantiation=True)
+            d_ins = self.insubstantiate(force_substantiation_build=build)
             d_ins.addErrback(log.err, 'while insubstantiating')
             return d
 
@@ -217,6 +218,7 @@ class AbstractLatentWorker(AbstractWorker):
             self._substantiate(build)
         else:
             self.state = States.INSUBSTANTIATING_SUBSTANTIATING
+            self.substantiation_build = build
         return d
 
     @defer.inlineCallbacks
@@ -264,7 +266,6 @@ class AbstractLatentWorker(AbstractWorker):
         log.msg("Firing {} substantiation deferred with {}".format(
             self.name, result_msg))
 
-        self.substantiation_build = None
         self._substantiation_notifier.notify(result)
 
     @defer.inlineCallbacks
@@ -302,7 +303,6 @@ class AbstractLatentWorker(AbstractWorker):
 
     def _substantiation_failed(self, failure):
         if self.state == States.SUBSTANTIATING:
-            self.substantiation_build = None
             self._fireSubstantiationNotifier(failure)
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
@@ -357,14 +357,16 @@ class AbstractLatentWorker(AbstractWorker):
             self.build_wait_timeout, self._soft_disconnect)
 
     @defer.inlineCallbacks
-    def insubstantiate(self, fast=False, force_substantiation=False):
-        # force_substantiation=True means we'll try to substantiate a build with stored
-        # substantiation_build at the end of substantiation
+    def insubstantiate(self, fast=False, force_substantiation_build=None):
+        # If force_substantiation_build is not None, we'll try to substantiate the given build
+        # after insubstantiation concludes. This parameter allows to go directly to the
+        # SUBSTANTIATING state without going through NOT_SUBSTANTIATED state.
 
         log.msg("insubstantiating worker {}".format(self))
 
         if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
             self.state = States.INSUBSTANTIATING
+            self.substantiation_build = None
             self._fireSubstantiationNotifier(
                 failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
@@ -380,8 +382,9 @@ class AbstractLatentWorker(AbstractWorker):
 
             notify_cancel = self.state == States.SUBSTANTIATING
 
-            if force_substantiation:
+            if force_substantiation_build is not None:
                 self.state = States.INSUBSTANTIATING_SUBSTANTIATING
+                self.substantiation_build = force_substantiation_build
             else:
                 self.state = States.INSUBSTANTIATING
 
@@ -405,8 +408,9 @@ class AbstractLatentWorker(AbstractWorker):
                     failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
             if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
+                build, self.substantiation_build = self.substantiation_build, None
                 self.state = States.SUBSTANTIATING
-                self._substantiate(self.substantiation_build)
+                self._substantiate(build)
             else:  # self.state == States.INSUBSTANTIATING:
                 self.state = States.NOT_SUBSTANTIATED
 
