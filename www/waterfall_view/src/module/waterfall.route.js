@@ -1,5 +1,5 @@
 // Register new state
-class State {
+class WaterfallState {
     constructor($stateProvider, glMenuServiceProvider) {
 
         // Name of the state
@@ -32,4 +32,4 @@ class State {
 }
 
 angular.module('waterfall_view')
-.config(['$stateProvider', 'glMenuServiceProvider', State]);
+.config(['$stateProvider', 'glMenuServiceProvider', WaterfallState]);

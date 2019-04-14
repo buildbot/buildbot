@@ -13,21 +13,8 @@
 //
 // Copyright Buildbot Team Members
 
-// Register new module
-class BuildbotGridView {
-    constructor() {
-        return [
-            'ui.router',
-            'ui.bootstrap',
-            'ngAnimate',
-            'guanlecoja.ui',
-            'bbData'
-        ];
-    }
-}
-
 // Register new state
-class State {
+class GridState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
         // Menu configuration
         glMenuServiceProvider.addGroup({
@@ -91,5 +78,6 @@ class State {
 }
 
 
-angular.module('grid_view', new BuildbotGridView())
-.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State]);
+angular.module('grid_view', [
+    'ui.router', 'ui.bootstrap', 'ngAnimate', 'guanlecoja.ui', 'bbData'])
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', GridState]);

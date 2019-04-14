@@ -6,21 +6,8 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-// Register new module
-class App {
-    constructor() {
-        return [
-            'ui.router',
-            'ui.bootstrap',
-            'ngAnimate',
-            'guanlecoja.ui',
-            'bbData'
-        ];
-    }
-}
 
-
-class State {
+class ConsoleState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
 
         // Name of the state
@@ -516,6 +503,7 @@ class Console {
 }
 
 
-angular.module('console_view', new App())
-.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])
+angular.module('console_view', [
+    'ui.router', 'ui.bootstrap', 'ngAnimate', 'guanlecoja.ui', 'bbData'])
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', ConsoleState])
 .controller('consoleController', ['$scope', '$q', '$window', 'dataService', 'bbSettingsService', 'resultsService', '$uibModal', '$timeout', Console]);

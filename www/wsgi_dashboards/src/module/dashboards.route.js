@@ -5,7 +5,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 // Register new state
-class State {
+class WsgiDashboardsState {
     constructor($stateProvider, glMenuServiceProvider, config) {
         for (let dashboard of Array.from(config.plugins.wsgi_dashboards)) {
             // Name of the state
@@ -44,5 +44,5 @@ class WsgiDashboardsController {
 
 
 angular.module('wsgi_dashboards')
-.config(['$stateProvider', 'glMenuServiceProvider', 'config', State])
+.config(['$stateProvider', 'glMenuServiceProvider', 'config', WsgiDashboardsState])
 .controller('wsgiDashboardsController', ['$scope', '$state', WsgiDashboardsController]);
