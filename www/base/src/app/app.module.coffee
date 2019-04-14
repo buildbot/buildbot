@@ -1,4 +1,4 @@
-class App extends App
+class App
     constructor: -> return [
         'buildbot_config'
         'ngAnimate'
@@ -9,3 +9,6 @@ class App extends App
         'bbData'
         'btorfs.multiselect'
     ]
+
+
+angular.module('app', new App())

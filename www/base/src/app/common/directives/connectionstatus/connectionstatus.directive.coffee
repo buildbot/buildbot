@@ -1,4 +1,4 @@
-class connectionstatus extends Directive('common')
+class connectionstatus
     constructor: (RecursionHelper) ->
         return {
             replace: true
@@ -9,7 +9,7 @@ class connectionstatus extends Directive('common')
             controller: '_connectionstatusController'
         }
 
-class _connectionstatus extends Controller('common')
+class _connectionstatus
     constructor: ($scope, $timeout) ->
         $scope.alertenabled = false
         $scope.connectionlost = false
@@ -23,3 +23,8 @@ class _connectionstatus extends Controller('common')
             $timeout ->
                 $scope.alertenabled = false
             , 4000
+
+
+angular.module('common')
+.directive('connectionstatus', ['RecursionHelper', connectionstatus])
+.controller('_connectionstatusController', ['$scope', '$timeout', _connectionstatus])

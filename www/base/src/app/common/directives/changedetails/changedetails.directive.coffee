@@ -1,4 +1,4 @@
-class Changedetails extends Directive('common')
+class Changedetails
     constructor: ->
         return {
             replace: true
@@ -8,3 +8,7 @@ class Changedetails extends Directive('common')
                 compact: '=?'
             templateUrl: 'views/changedetails.html'
         }
+
+
+angular.module('common')
+.directive('changedetails', [Changedetails])

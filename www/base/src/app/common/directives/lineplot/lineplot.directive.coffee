@@ -1,4 +1,4 @@
-class LinePlot extends Directive('common')
+class LinePlot
     constructor:  (d3Service, $filter) ->
         return {
             replace: true
@@ -84,3 +84,7 @@ linkerWithD3= ($scope, d3, $filter, elem) ->
         # Add the Y Axis
         yaxis_g.call yAxis
     return
+
+
+angular.module('common')
+.directive('linePlot', ['d3Service', '$filter', LinePlot])

@@ -1,4 +1,4 @@
-class Loginbar extends Directive('common')
+class Loginbar
     constructor: ->
         return {
             controller: '_loginbarController'
@@ -7,14 +7,14 @@ class Loginbar extends Directive('common')
             scope: {}
             templateUrl: 'views/loginbar.html'
         }
-class AutoLogin extends Config
+class AutoLogin
     constructor: (config) ->
         if config.auth? and config.auth.autologin and config.user.anonymous and config.auth.oauth2
             window.stop()
             document.location = "auth/login?redirect=" + document.location.hash.substr(1)
 
 
-class _loginbar extends Controller('common')
+class _loginbar
     constructor: ($scope, config, $http, $location) ->
         baseurl = $location.absUrl().split("#")[0]
         $scope.username = ""
@@ -26,3 +26,11 @@ class _loginbar extends Controller('common')
         $scope.$watch (-> document.location.hash), ->
             $scope.redirect = document.location.hash.substr(1)
         _.assign($scope, config.user)
+
+
+angular.module('common')
+.directive('loginbar', [Loginbar])
+.controller('_loginbarController', ['$scope', 'config', '$http', '$location', _loginbar])
+
+angular.module('app')
+.config(['config', AutoLogin])

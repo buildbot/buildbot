@@ -2,7 +2,7 @@
     Favicon service
 ###
 
-class FaviconService extends Factory('common')
+class FaviconService
     constructor: (RESULTS_COLOR, resultsService, $http)->
         return {
             setFavIcon: (build_or_step)->
@@ -38,3 +38,7 @@ class FaviconService extends Factory('common')
                     img.crossOrigin = 'Anonymous'
                     img.src = url
         }
+
+
+angular.module('common')
+.factory('FaviconService', ['RESULTS_COLOR', 'resultsService', '$http', FaviconService])

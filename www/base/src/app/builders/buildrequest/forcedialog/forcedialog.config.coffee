@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider) ->
         $stateProvider.state "builder.forcebuilder",
             url: "/force/:scheduler",
@@ -26,3 +26,7 @@ class State extends Config
                     $state.go "^",
 
                 modal.modal.result.then(goBuild, goUp)
+
+
+angular.module('app')
+.config(['$stateProvider', State])

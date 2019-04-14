@@ -1,4 +1,4 @@
-class WindowTitle extends Directive('common')
+class WindowTitle
     constructor: ($rootScope, $timeout, $stateParams, $window, faviconService) -> return {
         restrict: 'A'
         link: ->
@@ -18,3 +18,7 @@ class WindowTitle extends Directive('common')
             $rootScope.$on '$stateChangeSuccess', listener
             return
         }
+
+
+angular.module('common')
+.directive('windowTitle', ['$rootScope', '$timeout', '$stateParams', '$window', 'faviconService', WindowTitle])

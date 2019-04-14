@@ -1,4 +1,4 @@
-class Buildrequestsummary extends Directive('common')
+class Buildrequestsummary
     constructor: (RecursionHelper) ->
         return {
             replace: true
@@ -9,7 +9,7 @@ class Buildrequestsummary extends Directive('common')
             controller: '_buildrequestsummaryController'
         }
 
-class _buildrequestsummary extends Controller('common')
+class _buildrequestsummary
     constructor: ($scope, dataService, buildersService, findBuilds, resultsService) ->
         _.mixin($scope, resultsService)
         $scope.$watch "buildrequest.claimed", (n, o) ->
@@ -24,3 +24,8 @@ class _buildrequestsummary extends Controller('common')
                 $scope.buildset = buildset
 
             $scope.builder = buildersService.getBuilder(buildrequest.builderid)
+
+
+angular.module('common')
+.directive('buildrequestsummary', ['RecursionHelper', Buildrequestsummary])
+.controller('_buildrequestsummaryController', ['$scope', 'dataService', 'buildersService', 'findBuilds', 'resultsService', _buildrequestsummary])

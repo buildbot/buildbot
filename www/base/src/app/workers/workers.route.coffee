@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -39,3 +39,7 @@ class State extends Config
                 caption:'Show list of builders for each worker (can take a lot of time)'
                 default_value: false
             ]
+
+
+angular.module('app')
+.config(['$stateProvider', 'bbSettingsServiceProvider', State])

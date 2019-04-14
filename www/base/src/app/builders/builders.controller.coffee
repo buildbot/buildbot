@@ -1,4 +1,4 @@
-class Builders extends Controller
+class Builders
     constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams,
         $location, dataGrouperService, $rootScope, $filter) ->
         # make resultsService utilities available in the template
@@ -132,3 +132,6 @@ class Builders extends Controller
                 builds.close()
                 requeryBuilds()
         , true
+
+angular.module('app')
+.controller('buildersController', ['$scope', '$log', 'dataService', 'resultsService', 'bbSettingsService', '$stateParams', '$location', 'dataGrouperService', '$rootScope', '$filter', Builders])

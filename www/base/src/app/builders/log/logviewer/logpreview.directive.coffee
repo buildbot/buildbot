@@ -1,4 +1,4 @@
-class Logpreview extends Directive
+class Logpreview
     constructor: ($sce, restService, ansicodesService, bbSettingsService) ->
         return {
             replace: true
@@ -102,3 +102,7 @@ class Logpreview extends Directive
             link: (scope, elm, attr) ->
                 ansicodesService.injectStyle()
         }
+
+
+angular.module('app')
+.directive('logpreview', ['$sce', 'restService', 'ansicodesService', 'bbSettingsService', Logpreview])

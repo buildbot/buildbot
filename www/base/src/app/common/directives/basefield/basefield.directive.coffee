@@ -1,5 +1,5 @@
 # base widget handling has-error, and error message popups
-class Basefield extends Directive('common')
+class Basefield
     constructor: ->
         return {
             replace: true
@@ -11,7 +11,7 @@ class Basefield extends Directive('common')
         }
 
 
-class _basefield extends Controller('common')
+class _basefield
     constructor: ($scope) ->
         # clear error on value change
         $scope.$watch "field.value", (o,n) ->
@@ -32,3 +32,7 @@ class _basefield extends Controller('common')
                 if errors.length>0
                     $scope.field.errors = "bad autopopulate configuration: #{errors}"
                     $scope.field.haserrors = true
+
+angular.module('common')
+.directive('basefield', [Basefield])
+.controller('_basefieldController', ['$scope', _basefield])

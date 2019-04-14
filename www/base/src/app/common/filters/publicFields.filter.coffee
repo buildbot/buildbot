@@ -1,4 +1,4 @@
-class PublicFields extends Filter('common')
+class PublicFields
     constructor: ->
         return (object) ->
             if not object?
@@ -8,3 +8,7 @@ class PublicFields extends Filter('common')
                 if k.indexOf('_') != 0 and object.hasOwnProperty(k)
                     object._publicfields[k] = v
             return object._publicfields
+
+
+angular.module('common')
+.filter('publicFields', [PublicFields])

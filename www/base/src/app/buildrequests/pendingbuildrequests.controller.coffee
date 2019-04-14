@@ -1,4 +1,4 @@
-class Pendingbuildrequests extends Controller
+class Pendingbuildrequests
     constructor: ($log, $scope, dataService, bbSettingsService, buildersService, restService) ->
         $scope.settings = bbSettingsService.getSettingsGroup("BuildRequests")
         buildrequestFetchLimit = $scope.settings.buildrequestFetchLimit.value
@@ -11,3 +11,6 @@ class Pendingbuildrequests extends Controller
                 buildrequest.properties = response.properties[0]
                 _.assign($scope.properties, response.properties[0])
             buildrequest.builder = buildersService.getBuilder(buildrequest.builderid)
+
+angular.module('app')
+.controller('pendingbuildrequestsController', ['$log', '$scope', 'dataService', 'bbSettingsService', 'buildersService', 'restService', Pendingbuildrequests])

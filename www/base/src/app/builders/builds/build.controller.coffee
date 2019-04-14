@@ -1,4 +1,4 @@
-class Build extends Controller
+class Build
     constructor: ($rootScope, $scope, $location, $stateParams, $state, faviconService,
                   dataService, dataUtilsService, publicFieldsFilter,
                   glBreadcrumbService, glTopbarContextualActionsService, resultsService, $window) ->
@@ -131,3 +131,7 @@ class Build extends Controller
                         if buildset.parent_buildid
                             data.getBuilds(buildset.parent_buildid).onNew = (build) ->
                                 $scope.parent_build = build
+
+
+angular.module('app')
+.controller('buildController', ['$rootScope', '$scope', '$location', '$stateParams', '$state', 'faviconService', 'dataService', 'dataUtilsService', 'publicFieldsFilter', 'glBreadcrumbService', 'glTopbarContextualActionsService', 'resultsService', '$window', Build])

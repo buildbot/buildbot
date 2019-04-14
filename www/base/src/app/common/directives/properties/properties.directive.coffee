@@ -1,4 +1,4 @@
-class Properties extends Directive('common')
+class Properties
     constructor: ->
         return {
             replace: true
@@ -6,3 +6,7 @@ class Properties extends Directive('common')
             scope: {properties: '='}
             templateUrl: 'views/properties.html'
         }
+
+
+angular.module('common')
+.directive('properties', [Properties])

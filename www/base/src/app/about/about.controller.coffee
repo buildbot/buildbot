@@ -1,4 +1,4 @@
-class About extends Controller
+class About
     constructor: ($scope, config, restService) ->
 
         $scope.config = config
@@ -7,3 +7,7 @@ class About extends Controller
         #$scope.bower_configs = bower_configs
         restService.get('application.spec').then (specs) ->
             $scope.specs = specs['specs']
+
+
+angular.module('app')
+.controller('aboutController', ['$scope', 'config', 'restService', About])

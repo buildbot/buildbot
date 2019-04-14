@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider) ->
 
         # Name of the state
@@ -13,3 +13,7 @@ class State extends Config
             url: '/buildrequests/:buildrequest?redirect_to_build'
 
         $stateProvider.state(state)
+
+
+angular.module('app')
+.config(['$stateProvider', State])

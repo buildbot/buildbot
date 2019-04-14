@@ -1,4 +1,4 @@
-class Workers extends Controller
+class Workers
     constructor: ($scope, dataService, bbSettingsService, resultsService, dataGrouperService, $stateParams, $state, glTopbarContextualActionsService, glBreadcrumbService) ->
         $scope.capitalize = _.capitalize
         _.mixin($scope, resultsService)
@@ -80,3 +80,7 @@ class Workers extends Controller
         $scope.$watch('settings', ->
             bbSettingsService.save()
         , true)
+
+
+angular.module('app')
+.controller('workersController', ['$scope', 'dataService', 'bbSettingsService', 'resultsService', 'dataGrouperService', '$stateParams', '$state', 'glTopbarContextualActionsService', 'glBreadcrumbService', Workers])

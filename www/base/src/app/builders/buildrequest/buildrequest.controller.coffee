@@ -1,4 +1,4 @@
-class Buildrequest extends Controller
+class Buildrequest
     constructor: ($scope, dataService, $stateParams, findBuilds, glBreadcrumbService, glTopbarContextualActionsService, publicFieldsFilter) ->
         $scope.is_cancelling = false
         $scope.$watch "buildrequest.claimed", (n, o) ->
@@ -67,3 +67,7 @@ class Buildrequest extends Controller
                 $scope.buildset = publicFieldsFilter(buildset)
                 buildset.getProperties().onNew  = (properties) ->
                     $scope.properties = publicFieldsFilter(properties)
+
+
+angular.module('app')
+.controller('buildrequestController', ['$scope', 'dataService', '$stateParams', 'findBuilds', 'glBreadcrumbService', 'glTopbarContextualActionsService', 'publicFieldsFilter', Buildrequest])

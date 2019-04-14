@@ -1,4 +1,4 @@
-class Route extends Config
+class Route
     constructor: ($urlRouterProvider, glMenuServiceProvider, config) ->
         $urlRouterProvider.otherwise('/')
         # the app title needs to be < 18 chars else the UI looks bad
@@ -13,3 +13,7 @@ class Route extends Config
             apptitle = "Buildbot"
         glMenuServiceProvider.setAppTitle(apptitle)
         # all states config are in the modules
+
+
+angular.module('app')
+.config(['$urlRouterProvider', 'glMenuServiceProvider', 'config', Route])

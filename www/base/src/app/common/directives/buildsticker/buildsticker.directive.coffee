@@ -1,4 +1,4 @@
-class Buildsticker extends Directive('common')
+class Buildsticker
     constructor: (RecursionHelper) ->
         return {
             replace: true
@@ -7,7 +7,7 @@ class Buildsticker extends Directive('common')
             templateUrl: 'views/buildsticker.html'
             controller: '_buildstickerController'
         }
-class _buildsticker extends Controller('common')
+class _buildsticker
     constructor: ($scope, dataService, buildersService, resultsService, $urlMatcherFactory, $location) ->
         $scope.$watch (-> moment().unix()), ->
             $scope.now = moment().unix()
@@ -24,3 +24,8 @@ class _buildsticker extends Controller('common')
         $scope.$watch 'build', (build) ->
             if not $scope.builder and build?.builderid?
                 $scope.builder = buildersService.getBuilder(build.builderid)
+
+
+angular.module('common')
+.directive('buildsticker', ['RecursionHelper', Buildsticker])
+.controller('_buildstickerController', ['$scope', 'dataService', 'buildersService', 'resultsService', '$urlMatcherFactory', '$location', _buildsticker])

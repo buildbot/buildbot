@@ -4,7 +4,7 @@
 # parent template to have to know each field type in a big ng-switch
 # This is done by merging compile and link phasis, so that the template
 # includes directives whose types depend on the model.
-class Forcefield extends Directive('common')
+class Forcefield
     constructor: ($log, $compile, RecursionHelper) ->
         return {
             replace: true
@@ -90,3 +90,7 @@ angular.module('common').directive 'fileread', ->
                 scope.$apply ->
                     scope.fileread = e.target.result
             reader.readAsText(changeEvent.target.files[0])
+
+
+angular.module('common')
+.directive('forcefield', ['$log', '$compile', 'RecursionHelper', Forcefield])

@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -37,3 +37,7 @@ class State extends Config
                 caption:'Max recent builders'
                 default_value: 10
             ]
+
+
+angular.module('app')
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])

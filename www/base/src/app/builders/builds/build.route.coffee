@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -33,3 +33,7 @@ class State extends Config
                 caption:'Expand logs with these names (use ; as separator)'
                 default_value: 'summary'
             ]
+
+
+angular.module('app')
+.config(['$stateProvider', 'bbSettingsServiceProvider', State])

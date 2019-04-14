@@ -23,7 +23,7 @@ simulate angularjs 1.3 "bindonce" templating.
 
 With this technic, we can load 20k lines log in 2 seconds.
 ###
-class ScrollViewport extends Directive
+class ScrollViewport
     constructor: ($log) ->
         return {
             controller:
@@ -34,7 +34,7 @@ class ScrollViewport extends Directive
                 ]
         }
 
-class Scroll extends Directive
+class Scroll
     constructor: ($log, $injector, $rootScope, $timeout, $window) ->
         return {
             require: ['?^scrollViewport']
@@ -259,3 +259,8 @@ class Scroll extends Directive
 
 
         }
+
+
+angular.module('app')
+.directive('scrollViewport', ['$log', ScrollViewport])
+.directive('scroll', ['$log', '$injector', '$rootScope', '$timeout', '$window', Scroll])

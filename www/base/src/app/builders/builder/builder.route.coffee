@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider) ->
 
         # Name of the state
@@ -18,3 +18,7 @@ class State extends Config
             data: cfg
 
         $stateProvider.state(state)
+
+
+angular.module('app')
+.config(['$stateProvider', State])

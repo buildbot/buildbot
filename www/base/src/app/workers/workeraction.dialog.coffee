@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider, bbSettingsServiceProvider) ->
         states = [
             name: "worker.actions"
@@ -35,7 +35,7 @@ class State extends Config
 
                     modal.modal.result.then(goUp, goUp)
 
-class workerActionsDialog extends Controller
+class workerActionsDialog
     constructor: ($scope, config, $state, modal, workerid, multiple, $rootScope, $q, workers) ->
         $scope.select_options = []
         $scope.worker_selection = []
@@ -67,3 +67,8 @@ class workerActionsDialog extends Controller
                     modal.modal.close(res.result)
             cancel: ->
                 modal.modal.dismiss()
+
+
+angular.module('app')
+.config(['$stateProvider', 'bbSettingsServiceProvider', State])
+.controller('workerActionsDialogController', ['$scope', 'config', '$state', 'modal', 'workerid', 'multiple', '$rootScope', '$q', 'workers', workerActionsDialog])
