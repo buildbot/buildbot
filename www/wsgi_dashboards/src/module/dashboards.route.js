@@ -43,6 +43,6 @@ class WsgiDashboards {
 }
 
 
-angular.module('app')
+angular.module('wsgi_dashboards')
 .config(['$stateProvider', 'glMenuServiceProvider', 'config', State])
 .controller('wsgiDashboardsController', ['$scope', '$state', WsgiDashboards]);

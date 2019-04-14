@@ -6,4 +6,4 @@ class WsgiDashboards {
 }
 
 
-angular.module('app', new WsgiDashboards());
+angular.module('wsgi_dashboards', new WsgiDashboards());
