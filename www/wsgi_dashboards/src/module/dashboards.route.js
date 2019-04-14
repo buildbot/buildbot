@@ -38,11 +38,11 @@ class State {
     }
 }
 
-class WsgiDashboards {
+class WsgiDashboardsController {
     constructor($scope, $state) {}
 }
 
 
 angular.module('wsgi_dashboards')
 .config(['$stateProvider', 'glMenuServiceProvider', 'config', State])
-.controller('wsgiDashboardsController', ['$scope', '$state', WsgiDashboards]);
+.controller('wsgiDashboardsController', ['$scope', '$state', WsgiDashboardsController]);
