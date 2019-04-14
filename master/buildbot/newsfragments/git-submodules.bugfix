@@ -1,2 +1,1 @@
-Fixed bug with git checkouting from branch with submodule to branch without
-that submodule in :py:class:`~buildbot.steps.source.git.Git`
+Fixed :py:class:~buildbot.steps.source.git.Git to clean the repository after the checkout when submodules are enabled. Previously this action could lead to untracked module directories after changing branches.
