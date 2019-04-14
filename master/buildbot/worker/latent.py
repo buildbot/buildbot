@@ -380,13 +380,17 @@ class AbstractLatentWorker(AbstractWorker):
             if self.state == States.NOT_SUBSTANTIATED:
                 return
 
-            notify_cancel = self.state == States.SUBSTANTIATING
+            prev_state = self.state
 
             if force_substantiation_build is not None:
                 self.state = States.INSUBSTANTIATING_SUBSTANTIATING
                 self.substantiation_build = force_substantiation_build
             else:
                 self.state = States.INSUBSTANTIATING
+
+            if prev_state == States.SUBSTANTIATING:
+                self._fireSubstantiationNotifier(
+                    failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
             self._clearBuildWaitTimer()
             try:
@@ -400,12 +404,6 @@ class AbstractLatentWorker(AbstractWorker):
 
             assert self.state in [States.INSUBSTANTIATING,
                                   States.INSUBSTANTIATING_SUBSTANTIATING]
-
-            if notify_cancel and self._substantiation_notifier:
-                # if worker already tried to attach() then _substantiation_notifier is already
-                # notified
-                self._fireSubstantiationNotifier(
-                    failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
             if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
                 build, self.substantiation_build = self.substantiation_build, None
