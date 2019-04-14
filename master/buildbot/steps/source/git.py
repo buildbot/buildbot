@@ -187,8 +187,8 @@ class Git(Source, GitStepMixin):
 
     @defer.inlineCallbacks
     def clean(self):
-        command = ['clean', '-f', '-f', '-d']
-        rc = yield self._dovccmd(command)
+        clean_command = ['clean', '-f', '-f', '-d']
+        rc = yield self._dovccmd(clean_command)
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
 
@@ -204,6 +204,11 @@ class Git(Source, GitStepMixin):
         rc = yield self._cleanSubmodule()
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
+
+        if self.submodules:
+            rc = yield self._dovccmd(clean_command)
+            if rc != RC_SUCCESS:
+                raise buildstep.BuildStepFailed
         return RC_SUCCESS
 
     @defer.inlineCallbacks
@@ -215,7 +220,8 @@ class Git(Source, GitStepMixin):
 
     @defer.inlineCallbacks
     def fresh(self):
-        res = yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'],
+        clean_command = ['clean', '-f', '-f', '-d', '-x']
+        res = yield self._dovccmd(clean_command,
                                   abandonOnFailure=False)
         if res == RC_SUCCESS:
             yield self._fetchOrFallback()
@@ -225,6 +231,8 @@ class Git(Source, GitStepMixin):
         yield self._syncSubmodule()
         yield self._updateSubmodule()
         yield self._cleanSubmodule()
+        if self.submodules:
+            yield self._dovccmd(clean_command)
 
     @defer.inlineCallbacks
     def copy(self):

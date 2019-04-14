@@ -1,0 +1,1 @@
+Fixed :py:class:~buildbot.steps.source.git.Git to clean the repository after the checkout when submodules are enabled. Previously this action could lead to untracked module directories after changing branches.
