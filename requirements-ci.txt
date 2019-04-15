@@ -29,7 +29,7 @@ idna==2.8
 imagesize==1.1.0
 incremental==17.5.0
 ipaddress==1.0.22
-isort==4.3.16
+isort==4.3.17
 Jinja2==2.10
 jmespath==0.9.4
 jsonref==0.2
