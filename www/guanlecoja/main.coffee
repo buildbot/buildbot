@@ -70,7 +70,11 @@ module.exports =  (gulp) ->
 
     # Load in the build config files
     config = require("./defaultconfig.coffee")
-    buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"))
+    buildConfigPath = path.join(process.cwd(), "guanlecoja", "config.js")
+    if not fs.existsSync(buildConfigPath)
+        buildConfigPath = path.join(process.cwd(), "guanlecoja", "config.coffee")
+
+    buildConfig = require(buildConfigPath)
     _.merge(config, buildConfig)
 
     # _.merge does not play well with lists, we just take the overridden version
