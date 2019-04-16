@@ -1140,6 +1140,7 @@ requestcancelled
 requestjson
 requestsubmitted
 requeue
+requeued
 requiredargs
 reschedulenextbuild
 resetmocks
@@ -1464,6 +1465,7 @@ unclaim
 unclaimedbrdicts
 unclosed
 unconfigure
+unconfigured
 underpowered
 unencrypted
 unexpectedsuccesses
@@ -1482,6 +1484,7 @@ unlink
 unlinked
 unparsable
 unparseable
+unpatch
 unregister
 unregisters
 unserialized
