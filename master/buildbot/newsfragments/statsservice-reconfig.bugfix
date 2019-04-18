@@ -1,0 +1,1 @@
+Fixed: On reconfig the StatsService would not correctly clear old consumers.
