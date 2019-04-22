@@ -202,6 +202,19 @@ module.exports =  (gulp) ->
             return
         gulp.src bower.deps
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
+            .pipe(catch_errors(gif("*.js", babel({
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
+                ]
+            }))))
             .pipe concat("vendors.js")
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, uglify())
