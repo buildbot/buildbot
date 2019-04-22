@@ -89,7 +89,18 @@ module.exports =
         # JavaScript libraries
         deps: {}
         testdeps: {}
-
+    babel:
+        presets: [
+            [   '@babel/preset-env',
+                "targets": {
+                    "chrome": "56",
+                    "firefox": "52",
+                    "edge": "13",
+                    "safari": "10"
+                },
+                "modules": false
+            ]
+        ]
     # Enable code coverage on coffeescript. ATM, this restricts you to CS 1.6,
     # so you might want to disable it.
     coffee_coverage: true
