@@ -170,10 +170,13 @@ module.exports =  (gulp) ->
             # babel build
             .pipe(catch_errors(gif("*.js", babel({
                 presets: ['@babel/preset-env'],
-                plugins: ['@babel/transform-runtime']
+                plugins: [
+                    '@babel/transform-runtime',
+                    'angularjs-annotate'
+                ]
             }))))
             # coffee build
-            .pipe(catch_errors(gif("*.coffee", coffeeCompile())))
+            .pipe(catch_errors(gif("*.coffee", coffeeCompile().pipe(gif(prod, annotate())))))
             # jade build
             .pipe(catch_errors(gif("*.jade", jadeCompile())))
             .pipe(catch_errors(gif("*.pug", jadeCompile())))
@@ -181,8 +184,7 @@ module.exports =  (gulp) ->
             .pipe(gif("*.html", templateCache({module:config.name})))
             .pipe(catch_errors(gif("*.jjs", jadeConcat())))
             .pipe concat(config.output_scripts)
-            # now everything is in js, do angular annotation, and minification
-            .pipe gif(prod, annotate())
+            # now everything is in js, do minification
             .pipe gif(prod, uglify())
             .pipe gif(dev or config.sourcemaps, sourcemaps.write("."))
             .pipe gulp.dest config.dir.build
