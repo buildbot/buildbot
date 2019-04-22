@@ -42,7 +42,7 @@ var config = {
         // JavaScript libraries (order matters)
         deps: {
             "guanlecoja-ui": {
-                version: '~1.8.0',
+                version: '~2.0.0',
                 files: ['vendors.js', 'scripts.js']
             },
             moment: {

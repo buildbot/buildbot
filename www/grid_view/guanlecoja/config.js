@@ -21,7 +21,7 @@ module.exports = {
         testdeps: {
             // vendors.js includes jquery, angularjs, etc in the right order
             "guanlecoja-ui": {
-                version: '~1.6.0',
+                version: '~2.0.0',
                 files: ['vendors.js', 'scripts.js']
             },
             "angular-mocks": {
