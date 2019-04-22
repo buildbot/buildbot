@@ -68,7 +68,7 @@
     "gulp-replace": "^0.5.4",
     "gulp-sass": "^3.1.0",
     "gulp-sourcemaps": "~1.6.0",
-    "gulp-uglify": "~1.4.0",
+    "gulp-uglify-es": "^1.0.4",
     "gulp-util": "~3.0.6",
     "gulp-wrap": "0.8.0",
     "jasmine-core": "^2.4.1",

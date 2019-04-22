@@ -11,7 +11,7 @@ module.exports =
     concat: require 'gulp-concat'
     cached: require 'gulp-cached'
     remember: require 'gulp-remember'
-    uglify: require 'gulp-uglify'
+    uglify: require('gulp-uglify-es').default
     jade: require 'gulp-pug'
     wrap: require 'gulp-wrap'
     rename: require 'gulp-rename'
