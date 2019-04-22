@@ -9,7 +9,7 @@
         "npm": ">=1.4.0"
     },
     "devDependencies": {
-        "guanlecoja": "~0.9.2",
+        "guanlecoja": "~1.0.0",
         "gulp": "~3.9.0",
         "shelljs": "0.5.1"
     },
