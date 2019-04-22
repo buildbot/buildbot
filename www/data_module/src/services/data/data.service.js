@@ -11,10 +11,8 @@ class Data {
         // TODO caching
         this.prototype.cache = false;
     }
-    constructor() {}
-
-    /* @ngInject */
-    $get($log, $injector, $q, restService, socketService, dataUtilsService, Collection, ENDPOINTS) {
+    constructor($log, $injector, $q, restService, socketService, dataUtilsService, Collection,
+                ENDPOINTS) {
         let DataService;
         return new ((DataService = (function() {
             let self = undefined;
@@ -254,4 +252,5 @@ Data.initClass();
 
 
 angular.module('bbData')
-.provider('dataService', [Data]);
+.service('dataService', ['$log', '$injector', '$q', 'restService', 'socketService',
+                         'dataUtilsService', 'Collection', 'ENDPOINTS', Data]);
