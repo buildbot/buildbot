@@ -4,7 +4,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 angular.module('common', []).constant('config', {'url': 'foourl'});
-beforeEach(module('codeparameter'));
+beforeEach(angular.mock.module('codeparameter'));
 describe('minimalistic test', function() {
     let scope;
     let elmBody = (scope = null);

@@ -3,7 +3,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-beforeEach(module('app'));
+beforeEach(angular.mock.module('app'));
 
 describe('buildrequest controller', function() {
     let $httpBackend, $rootScope, $scope, $stateParams, createController;
@@ -11,7 +11,7 @@ describe('buildrequest controller', function() {
     let $timeout = (createController = ($stateParams = null));
     let goneto  = null;
     // override "$state"
-    beforeEach(module(function($provide) {
+    beforeEach(angular.mock.module(function($provide) {
         $provide.value("$state", {go(...args) { return goneto = args; }});
         $provide.value("$stateParams", {buildrequest: 1});
         return null;  // those module callbacks need to return null!

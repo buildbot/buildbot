@@ -9,7 +9,7 @@
  */
 describe('page with sidebar', function() {
     let queries, rootScope, scope, timeout;
-    beforeEach((module("app")));
+    beforeEach(angular.mock.module("app"));
     let elmBody = (scope = (rootScope = (queries = (timeout = null))));
     let elmContent = null;
     const padding = pix => ({type: "padding", height: pix});

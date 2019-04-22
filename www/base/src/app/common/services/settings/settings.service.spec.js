@@ -5,7 +5,7 @@
  */
 describe('settingsService', function() {
     let bbSettingsServiceProviderRef = "";
-    beforeEach(module('common', function(bbSettingsServiceProvider) {
+    beforeEach(angular.mock.module('common', function(bbSettingsServiceProvider) {
         bbSettingsServiceProviderRef = bbSettingsServiceProvider;
         bbSettingsServiceProvider.ui_default_config = {
             'User.config_overriden': 100

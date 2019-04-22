@@ -3,7 +3,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-beforeEach(module('app'));
+beforeEach(angular.mock.module('app'));
 
 describe('results service', function() {
     let resultsService = null;

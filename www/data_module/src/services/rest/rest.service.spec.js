@@ -5,7 +5,7 @@
  */
 describe('Rest service', function() {
     let $httpBackend;
-    beforeEach(module('bbData'));
+    beforeEach(angular.mock.module('bbData'));
     beforeEach(() =>
         module($provide => $provide.constant('API', '/api/'))
     );
