@@ -5,6 +5,7 @@ module.exports =
     path: require('path')
     fs: require('fs')
     gif: require 'gulp-if'
+    babel: require 'gulp-babel'
     sourcemaps: require 'gulp-sourcemaps'
     annotate: require 'gulp-ng-annotate'
     concat: require 'gulp-concat'
