@@ -169,10 +169,16 @@ module.exports =  (gulp) ->
             .pipe cached('scripts')
             # babel build
             .pipe(catch_errors(gif("*.js", babel({
-                presets: ['@babel/preset-env'],
-                plugins: [
-                    '@babel/transform-runtime',
-                    'angularjs-annotate'
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
                 ]
             }))))
             # coffee build
@@ -230,8 +236,17 @@ module.exports =  (gulp) ->
             .pipe gif(dev, sourcemaps.init())
             # babel build
             .pipe(catch_errors(gif("*.js", babel({
-                presets: ['@babel/preset-env'],
-                plugins: ['@babel/transform-runtime']
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
+                ]
             }))))
             # coffee build
             .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify))))
