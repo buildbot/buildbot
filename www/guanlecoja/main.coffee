@@ -53,6 +53,21 @@ serveStatic = vendors.static
 # this cannot be browserified, because browserify's require does not support registering
 require "coffee-script/register"
 
+babel_config = {
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "ie": "11",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
+                ]
+            }
+
 module.exports =  (gulp) ->
     run_sequence = run_sequence.use(gulp)
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
@@ -168,19 +183,7 @@ module.exports =  (gulp) ->
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
             .pipe cached('scripts')
             # babel build
-            .pipe(catch_errors(gif("*.js", babel({
-                presets: [
-                    [   '@babel/preset-env',
-                        "targets": {
-                           "chrome": "56",
-                           "firefox": "52",
-                           "edge": "13",
-                           "safari": "10"
-                        },
-                        "modules": false
-                    ]
-                ]
-            }))))
+            .pipe(catch_errors(gif("*.js", babel(babel_config))))
             # coffee build
             .pipe(catch_errors(gif("*.coffee", coffeeCompile().pipe(gif(prod, annotate())))))
             # jade build
@@ -202,19 +205,7 @@ module.exports =  (gulp) ->
             return
         gulp.src bower.deps
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
-            .pipe(catch_errors(gif("*.js", babel({
-                presets: [
-                    [   '@babel/preset-env',
-                        "targets": {
-                           "chrome": "56",
-                           "firefox": "52",
-                           "edge": "13",
-                           "safari": "10"
-                        },
-                        "modules": false
-                    ]
-                ]
-            }))))
+            .pipe(catch_errors(gif("*.js", babel(babel_config))))
             .pipe concat("vendors.js")
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, uglify())
@@ -248,19 +239,7 @@ module.exports =  (gulp) ->
             .pipe cached('tests')
             .pipe gif(dev, sourcemaps.init())
             # babel build
-            .pipe(catch_errors(gif("*.js", babel({
-                presets: [
-                    [   '@babel/preset-env',
-                        "targets": {
-                           "chrome": "56",
-                           "firefox": "52",
-                           "edge": "13",
-                           "safari": "10"
-                        },
-                        "modules": false
-                    ]
-                ]
-            }))))
+            .pipe(catch_errors(gif("*.js", babel(babel_config))))
             # coffee build
             .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify))))
             .pipe(catch_errors(gif("*.coffee", coffee())))
