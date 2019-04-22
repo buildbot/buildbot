@@ -25,6 +25,7 @@ argv = vendors.minimist(process.argv.slice(2))
 
 run_sequence = vendors.run_sequence
 gif = vendors.gif
+babel = vendors.babel
 sourcemaps = vendors.sourcemaps
 coffee = vendors.coffee
 gutil = vendors.gutil
@@ -166,8 +167,22 @@ module.exports =  (gulp) ->
         gulp.src script_sources
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
             .pipe cached('scripts')
+            # babel build
+            .pipe(catch_errors(gif("*.js", babel({
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
+                ]
+            }))))
             # coffee build
-            .pipe(catch_errors(gif("*.coffee", coffeeCompile())))
+            .pipe(catch_errors(gif("*.coffee", coffeeCompile().pipe(gif(prod, annotate())))))
             # jade build
             .pipe(catch_errors(gif("*.jade", jadeCompile())))
             .pipe(catch_errors(gif("*.pug", jadeCompile())))
@@ -175,8 +190,7 @@ module.exports =  (gulp) ->
             .pipe(gif("*.html", templateCache({module:config.name})))
             .pipe(catch_errors(gif("*.jjs", jadeConcat())))
             .pipe concat(config.output_scripts)
-            # now everything is in js, do angular annotation, and minification
-            .pipe gif(prod, annotate())
+            # now everything is in js, do minification
             .pipe gif(prod, uglify())
             .pipe gif(dev or config.sourcemaps, sourcemaps.write("."))
             .pipe gulp.dest config.dir.build
@@ -188,6 +202,19 @@ module.exports =  (gulp) ->
             return
         gulp.src bower.deps
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
+            .pipe(catch_errors(gif("*.js", babel({
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
+                ]
+            }))))
             .pipe concat("vendors.js")
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, uglify())
@@ -220,6 +247,20 @@ module.exports =  (gulp) ->
         gulp.src src
             .pipe cached('tests')
             .pipe gif(dev, sourcemaps.init())
+            # babel build
+            .pipe(catch_errors(gif("*.js", babel({
+                presets: [
+                    [   '@babel/preset-env',
+                        "targets": {
+                           "chrome": "56",
+                           "firefox": "52",
+                           "edge": "13",
+                           "safari": "10"
+                        },
+                        "modules": false
+                    ]
+                ]
+            }))))
             # coffee build
             .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify))))
             .pipe(catch_errors(gif("*.coffee", coffee())))

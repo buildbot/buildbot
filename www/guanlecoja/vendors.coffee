@@ -5,12 +5,13 @@ module.exports =
     path: require('path')
     fs: require('fs')
     gif: require 'gulp-if'
+    babel: require 'gulp-babel'
     sourcemaps: require 'gulp-sourcemaps'
     annotate: require 'gulp-ng-annotate'
     concat: require 'gulp-concat'
     cached: require 'gulp-cached'
     remember: require 'gulp-remember'
-    uglify: require 'gulp-uglify'
+    uglify: require('gulp-uglify-es').default
     jade: require 'gulp-pug'
     wrap: require 'gulp-wrap'
     rename: require 'gulp-rename'

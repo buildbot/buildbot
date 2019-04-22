@@ -4,6 +4,8 @@
 
 # guanlecoja: opinionated RAD build environment for single page web apps
 
+Note: this package is not maintained for uses outside Buildbot.
+
 It integrates several web technologies and methodologies together to accelerate web development.
 
 - Gulp: build tool
@@ -246,6 +248,8 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 1.0.0: This package is not maintained for anything outside the Buildbot project.
+         Added support for transcoding Javascript via babel.
 * 0.9.2: Upgrade dependencies. Add builtin support for JavaScript sources in addition to CoffeeScript.
 * 0.9.1: Upgrade dependencies. Remove Browserify hack. It does not work anymore, and is not needed as much with yarn improvements
 * 0.8.8: Upgrade dependencies
