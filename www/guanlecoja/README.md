@@ -4,6 +4,8 @@
 
 # guanlecoja: opinionated RAD build environment for single page web apps
 
+Note: this package is not maintained for uses outside Buildbot.
+
 It integrates several web technologies and methodologies together to accelerate web development.
 
 - Gulp: build tool
