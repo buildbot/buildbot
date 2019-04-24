@@ -4,7 +4,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class Log {
+class LogController {
     constructor($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService, faviconService) {
         const data = dataService.open().closeOnDestroy($scope);
         $scope.jumpToLine = "end";
@@ -52,4 +52,4 @@ class Log {
 
 
 angular.module('app')
-.controller('logController', ['$scope', 'dataService', 'dataUtilsService', '$stateParams', 'glBreadcrumbService', 'faviconService', Log]);
+.controller('logController', ['$scope', 'dataService', 'dataUtilsService', '$stateParams', 'glBreadcrumbService', 'faviconService', LogController]);

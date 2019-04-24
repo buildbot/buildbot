@@ -3,7 +3,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class Step {
+class StepController {
     constructor($log, $scope, $location, dataService, dataUtilsService, faviconService, $stateParams, glBreadcrumbService, publicFieldsFilter) {
         const data = dataService.open().closeOnDestroy($scope);
         const builderid = dataUtilsService.numberOrString($stateParams.builder);
@@ -45,4 +45,4 @@ class Step {
 
 
 angular.module('app')
-.controller('stepController', ['$log', '$scope', '$location', 'dataService', 'dataUtilsService', 'faviconService', '$stateParams', 'glBreadcrumbService', 'publicFieldsFilter', Step]);
+.controller('stepController', ['$log', '$scope', '$location', 'dataService', 'dataUtilsService', 'faviconService', '$stateParams', 'glBreadcrumbService', 'publicFieldsFilter', StepController]);

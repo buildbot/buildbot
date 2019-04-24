@@ -4,7 +4,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class Buildrequest {
+class BuildrequestController {
     constructor($scope, dataService, $stateParams, findBuilds, glBreadcrumbService, glTopbarContextualActionsService, publicFieldsFilter) {
         $scope.is_cancelling = false;
         $scope.$watch("buildrequest.claimed", function(n, o) {
@@ -93,4 +93,4 @@ class Buildrequest {
 
 
 angular.module('app')
-.controller('buildrequestController', ['$scope', 'dataService', '$stateParams', 'findBuilds', 'glBreadcrumbService', 'glTopbarContextualActionsService', 'publicFieldsFilter', Buildrequest]);
+.controller('buildrequestController', ['$scope', 'dataService', '$stateParams', 'findBuilds', 'glBreadcrumbService', 'glTopbarContextualActionsService', 'publicFieldsFilter', BuildrequestController]);

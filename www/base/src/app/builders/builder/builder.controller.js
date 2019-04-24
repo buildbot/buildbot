@@ -4,7 +4,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class Builder {
+class BuilderController {
     constructor($rootScope, $scope, dataService, $stateParams, resultsService,
         glBreadcrumbService, $state, glTopbarContextualActionsService, $q, $window) {
         // make resultsService utilities available in the template
@@ -174,4 +174,4 @@ class Builder {
 
 
 angular.module('app')
-.controller('builderController', ['$rootScope', '$scope', 'dataService', '$stateParams', 'resultsService', 'glBreadcrumbService', '$state', 'glTopbarContextualActionsService', '$q', '$window', Builder]);
+.controller('builderController', ['$rootScope', '$scope', 'dataService', '$stateParams', 'resultsService', 'glBreadcrumbService', '$state', 'glTopbarContextualActionsService', '$q', '$window', BuilderController]);

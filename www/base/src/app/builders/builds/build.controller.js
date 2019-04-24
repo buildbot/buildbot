@@ -5,7 +5,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-class Build {
+class BuildController {
     constructor($rootScope, $scope, $location, $stateParams, $state, faviconService,
                   dataService, dataUtilsService, publicFieldsFilter,
                   glBreadcrumbService, glTopbarContextualActionsService, resultsService, $window) {
@@ -171,4 +171,4 @@ class Build {
 
 
 angular.module('app')
-.controller('buildController', ['$rootScope', '$scope', '$location', '$stateParams', '$state', 'faviconService', 'dataService', 'dataUtilsService', 'publicFieldsFilter', 'glBreadcrumbService', 'glTopbarContextualActionsService', 'resultsService', '$window', Build]);
+.controller('buildController', ['$rootScope', '$scope', '$location', '$stateParams', '$state', 'faviconService', 'dataService', 'dataUtilsService', 'publicFieldsFilter', 'glBreadcrumbService', 'glTopbarContextualActionsService', 'resultsService', '$window', BuildController]);
