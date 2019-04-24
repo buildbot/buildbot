@@ -63,4 +63,4 @@ class dataGrouperService {
 
 
 angular.module('common')
-.factory('DataGrouperService', [dataGrouperService]);
+.factory('dataGrouperService', [dataGrouperService]);
