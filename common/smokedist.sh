@@ -11,7 +11,7 @@ do
     VE=sandbox.$suffix
     rm -rf $VE
     if [ -z "$python" ]; then
-        virtualenv $VE
+        virtualenv --python python3 $VE
     else
         virtualenv --python python$python $VE
     fi
