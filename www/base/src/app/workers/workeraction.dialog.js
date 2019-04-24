@@ -19,10 +19,9 @@ class WorkerActionState {
         states.forEach(state =>
             $stateProvider.state(state.name, {
                 url: "/actions",
-                data: { group: null
-                /* @ngInject */
-            },
-                onEnter($stateParams, $state, $uibModal, dataService, $q) {
+                data: { group: null },
+                onEnter: ['$stateParams', '$state', '$uibModal', 'dataService', '$q',
+                          function($stateParams, $state, $uibModal, dataService, $q) {
                     const modal = {};
                     modal.modal = $uibModal.open({
                         templateUrl: "views/workeractions.html",
@@ -47,7 +46,7 @@ class WorkerActionState {
                     const goUp = result => $state.go("^");
 
                     return modal.modal.result.then(goUp, goUp);
-                }
+                }]
             }
             )
         );

@@ -8,8 +8,8 @@ class ForceDialogState {
     constructor($stateProvider) {
         $stateProvider.state("builder.forcebuilder", {
             url: "/force/:scheduler",
-            /* @ngInject */
-            onEnter($stateParams, $state, $uibModal) {
+            onEnter: ['$stateParams', '$state', '$uibModal',
+                      function($stateParams, $state, $uibModal) {
                 const modal = {};
                 modal.modal = $uibModal.open({
                     templateUrl: "views/forcedialog.html",
@@ -37,7 +37,7 @@ class ForceDialogState {
                 const goUp = result => $state.go("^");
 
                 return modal.modal.result.then(goBuild, goUp);
-            }
+            }]
         }
         );
     }
