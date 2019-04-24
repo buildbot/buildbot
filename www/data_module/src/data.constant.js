@@ -1,5 +1,5 @@
 class Api {
-    constructor() { return 'api/v2/'; }
+    constructor() { return new String('api/v2/'); }
 }
 
 class Endpoints {
