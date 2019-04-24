@@ -115,7 +115,7 @@ class _buildsummary {
 
         $scope.$watch((() => this.build), function(build) {
             if ((build == null)) { return; }
-            if (this.builder) { return; }
+            if (self.builder) { return; }
             self.builder = buildersService.getBuilder(build.builderid);
 
             build.getProperties().onNew = function(properties) {
