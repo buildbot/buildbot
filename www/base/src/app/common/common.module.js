@@ -1,9 +1,8 @@
-const name = 'common';
 const dependencies = [
     'ui.router',
     'RecursionHelper'
 ];
 
 // Register new module
-angular.module(name, dependencies);
-angular.module('app').requires.push(name);
+angular.module('common', dependencies);
+angular.module('app').requires.push('common');
