@@ -63,7 +63,7 @@ var config = {
                 files: []
             },
             'buildbot-data': {
-                version: '~2.2.2',
+                version: '~2.2.6',
                 files: 'dist/buildbot-data.js'
             },
             "angular-bootstrap-multiselect": {

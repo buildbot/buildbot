@@ -29,7 +29,7 @@ module.exports = {
                 files: "angular-mocks.js"
             },
             'buildbot-data': {
-                version: '~2.2.0',
+                version: '~2.2.6',
                 files: 'dist/buildbot-data.js'
             }
         }
