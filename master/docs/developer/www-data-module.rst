@@ -68,7 +68,7 @@ It is recommended however for coherency to use the installation method via guanl
     'bower':
         'deps':
             'buildbot-data':
-                version: '~1.0.14'
+                version: '~2.2.6'
                 files: 'dist/buildbot-data.js'
 
 Inject the ``bbData`` module to your application:

@@ -18,7 +18,7 @@ gulp.task("publish", ['default'], function() {
     exec("git clone git@github.com:buildbot/buildbot-data-js.git");
     const bower_json = {
         name: "buildbot-data",
-        version: "2.2.5",
+        version: "2.2.6",
         main: ["buildbot-data.js"],
         moduleType: [],
         license: "MIT",
