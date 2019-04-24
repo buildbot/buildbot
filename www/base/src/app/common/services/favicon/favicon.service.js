@@ -55,4 +55,4 @@ class FaviconService {
 
 
 angular.module('common')
-.factory('FaviconService', ['RESULTS_COLOR', 'resultsService', '$http', FaviconService]);
+.factory('faviconService', ['RESULTS_COLOR', 'resultsService', '$http', FaviconService]);
