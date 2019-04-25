@@ -1,7 +1,7 @@
 {
     "name": "buildbot-grid-view",
     "dependencies": {
-        "guanlecoja": "~0.8.0",
+        "guanlecoja": "~1.1.0",
         "gulp": "~3.9.0"
     },
     "coffeelintConfig": {
