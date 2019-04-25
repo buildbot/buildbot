@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import warnings
+
 import sqlalchemy as sa
 from migrate.changeset.constraint import ForeignKeyConstraint
 from migrate.exceptions import NotSupportedError
@@ -69,9 +71,21 @@ def upgrade(migrate_engine):
         if table.dialect_options.get('mysql', {}).get('engine') == 'InnoDB':
             migrate_engine.execute('SET FOREIGN_KEY_CHECKS = 0;')
         try:
+            col_objs = []
+            where = sa.false()
             for c in table.columns:
                 if c.name in cols:
-                    c.alter(nullable=False)
+                    col_objs.append(c)
+                    where |= c == None
+
+            res = migrate_engine.execute(sa.select(col_objs).where(where))
+            if res.first():
+                warnings.warn(
+                    'Inconsistent data found in DB: table %r, deleting invalid rows' % t)
+                migrate_engine.execute(table.delete(where))
+
+            for c in col_objs:
+                c.alter(nullable=False)
         finally:
             if table.dialect_options.get('mysql', {}).get('engine') == 'InnoDB':
                 migrate_engine.execute('SET FOREIGN_KEY_CHECKS = 1;')
