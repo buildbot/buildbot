@@ -108,8 +108,8 @@ def main():
         chromedriver_version = compat_map[version]
         print('Using chromedriver release {0}'.format(chromedriver_version))
 
-        check_call([args.manager + ' update --versions.chrome ' +
-                   chromedriver_version], shell=True)
+        check_call([args.manager, 'update', '--versions.chrome',
+                    chromedriver_version, '--versions.standalone', '3.141.59'])
         return
 
     except Exception as e:
