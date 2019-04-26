@@ -23,6 +23,7 @@ from twisted.python import failure
 from twisted.python import log
 from zope.interface import implementer
 
+from buildbot.interfaces import ILatentMachine
 from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
@@ -40,10 +41,14 @@ class States(enum.Enum):
     # SUBSTANTIATING.
     SUBSTANTIATING = 1
 
-    SUBSTANTIATED = 2
+    # This is the same as SUBSTANTIATING, the difference is that start_instance
+    # has been called
+    SUBSTANTIATING_STARTING = 2
+
+    SUBSTANTIATED = 3
 
     # When in this state, self._start_stop_lock is held.
-    INSUBSTANTIATING = 3
+    INSUBSTANTIATING = 4
 
     # This state represents the case when insubstantiation is in progress and
     # we also request substantiation at the same time. Substantiation will be
@@ -54,7 +59,7 @@ class States(enum.Enum):
     # When in this state, self._start_stop_lock is held.
     #
     # When in this state self.substantiation_build is not None.
-    INSUBSTANTIATING_SUBSTANTIATING = 4
+    INSUBSTANTIATING_SUBSTANTIATING = 5
 
 
 @implementer(ILatentWorker)
@@ -106,8 +111,15 @@ class AbstractLatentWorker(AbstractWorker):
         NOT_SUBSTANTIATED -> SUBSTANTIATING
         INSUBSTANTIATING -> INSUBSTANTIATING_SUBSTANTIATING
 
+    _substantiate():
+        either of:
+        SUBSTANTIATING -> SUBSTANTIATING_STARTING
+        SUBSTANTIATING -> SUBSTANTIATING_STARTING -> SUBSTANTIATED
+
     attached():
+        either of:
         SUBSTANTIATING -> SUBSTANTIATED
+        SUBSTANTIATING_STARTING -> SUBSTANTIATED
         then:
         self.conn -> not None
 
@@ -122,6 +134,8 @@ class AbstractLatentWorker(AbstractWorker):
             INSUBSTANTIATING_SUBSTANTIATING -> INSUBSTANTIATING (cancels substantiation request)
             SUBSTANTIATING -> INSUBSTANTIATING
             SUBSTANTIATING -> INSUBSTANTIATING_SUBSTANTIATING
+            SUBSTANTIATING_STARTING -> INSUBSTANTIATING
+            SUBSTANTIATING_STARTING -> INSUBSTANTIATING_SUBSTANTIATING
 
         then:
             < other state transitions may happen during this time >
@@ -129,6 +143,7 @@ class AbstractLatentWorker(AbstractWorker):
         then either of:
             INSUBSTANTIATING_SUBSTANTIATING -> SUBSTANTIATING
             INSUBSTANTIATING -> NOT_SUBSTANTIATED
+        """
     '''
 
     def checkConfig(self, name, password,
@@ -194,6 +209,7 @@ class AbstractLatentWorker(AbstractWorker):
             return defer.succeed(True)
 
         if self.state in [States.SUBSTANTIATING,
+                          States.SUBSTANTIATING_STARTING,
                           States.INSUBSTANTIATING_SUBSTANTIATING]:
             return self._substantiation_notifier.wait()
 
@@ -223,7 +239,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def _substantiate(self, build):
-        # register event trigger
+        assert self.state == States.SUBSTANTIATING
         try:
             # if build_wait_timeout is negative we don't ever disconnect the
             # worker ourselves, so we don't need to wait for it to attach
@@ -231,10 +247,17 @@ class AbstractLatentWorker(AbstractWorker):
             dont_wait_to_attach = \
                 self.build_wait_timeout < 0 and self.conn is not None
 
+            start_success = True
+            if ILatentMachine.providedBy(self.machine):
+                start_success = yield self.machine.substantiate(self)
+
             try:
                 self._log_start_stop_locked('substantiating')
                 yield self._start_stop_lock.acquire()
-                start_success = yield self.start_instance(build)
+
+                if start_success:
+                    self.state = States.SUBSTANTIATING_STARTING
+                    start_success = yield self.start_instance(build)
             finally:
                 self._start_stop_lock.release()
 
@@ -245,7 +268,7 @@ class AbstractLatentWorker(AbstractWorker):
                 raise LatentWorkerFailedToSubstantiate(self.name, msg)
 
             if dont_wait_to_attach and \
-                    self.state == States.SUBSTANTIATING and \
+                    self.state == States.SUBSTANTIATING_STARTING and \
                     self.conn is not None:
                 log.msg(r"Worker %s substantiated (already attached)" %
                     (self.name,))
@@ -270,7 +293,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def attached(self, bot):
-        if self.state != States.SUBSTANTIATING and \
+        if self.state != States.SUBSTANTIATING_STARTING and \
                 self.build_wait_timeout >= 0:
             msg = 'Worker %s received connection while not trying to ' \
                 'substantiate.  Disconnecting.' % (self.name,)
@@ -286,10 +309,14 @@ class AbstractLatentWorker(AbstractWorker):
         log.msg(r"Worker %s substantiated \o/" % (self.name,))
 
         # only change state when we are actually substantiating. We could
-        # end up at this point in different state than SUBSTANTIATING if
-        # build_wait_timeout is negative. When build_wait_timeout is not
-        # negative, we throw an error (see above)
-        if self.state == States.SUBSTANTIATING:
+        # end up at this point in different state than SUBSTANTIATING_STARTING
+        # if build_wait_timeout is negative. In that case, the worker is never
+        # shut down, but it may reconnect if the connection drops on its side
+        # without master seeing this condition.
+        #
+        # When build_wait_timeout is not negative, we throw an error (see above)
+        if self.state in [States.SUBSTANTIATING,
+                          States.SUBSTANTIATING_STARTING]:
             self.state = States.SUBSTANTIATED
         self._fireSubstantiationNotifier(True)
 
@@ -302,7 +329,8 @@ class AbstractLatentWorker(AbstractWorker):
         return self._substantiation_failed(defer.TimeoutError())
 
     def _substantiation_failed(self, failure):
-        if self.state == States.SUBSTANTIATING:
+        if self.state in [States.SUBSTANTIATING,
+                          States.SUBSTANTIATING_STARTING]:
             self._fireSubstantiationNotifier(failure)
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
@@ -327,6 +355,9 @@ class AbstractLatentWorker(AbstractWorker):
         assert wfb.isBusy()
         self._clearBuildWaitTimer()
 
+        if ILatentMachine.providedBy(self.machine):
+            self.machine.notifyBuildStarted()
+
     def buildFinished(self, wfb):
         assert not wfb.isBusy()
         if not self.building:
@@ -342,6 +373,9 @@ class AbstractLatentWorker(AbstractWorker):
         # AbstractWorker.buildFinished() will try to start the next build for
         # that worker
         super().buildFinished(wfb)
+
+        if ILatentMachine.providedBy(self.machine):
+            self.machine.notifyBuildFinished()
 
     def _clearBuildWaitTimer(self):
         if self.build_wait_timer is not None:
@@ -388,19 +422,21 @@ class AbstractLatentWorker(AbstractWorker):
             else:
                 self.state = States.INSUBSTANTIATING
 
-            if prev_state == States.SUBSTANTIATING:
+            if prev_state in [States.SUBSTANTIATING, States.SUBSTANTIATING_STARTING]:
                 self._fireSubstantiationNotifier(
                     failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
             self._clearBuildWaitTimer()
-            try:
-                yield self.stop_instance(fast)
-            except Exception as e:
-                # The case of failure for insubstantiation is bad as we have a
-                # left-over costing resource There is not much thing to do here
-                # generically, so we must put the problem of stop_instance
-                # reliability to the backend driver
-                log.err(e, "while insubstantiating")
+
+            if prev_state in [States.SUBSTANTIATING_STARTING, States.SUBSTANTIATED]:
+                try:
+                    yield self.stop_instance(fast)
+                except Exception as e:
+                    # The case of failure for insubstantiation is bad as we have a
+                    # left-over costing resource There is not much thing to do here
+                    # generically, so we must put the problem of stop_instance
+                    # reliability to the backend driver
+                    log.err(e, "while insubstantiating")
 
             assert self.state in [States.INSUBSTANTIATING,
                                   States.INSUBSTANTIATING_SUBSTANTIATING]

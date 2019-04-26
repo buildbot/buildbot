@@ -228,6 +228,7 @@ class MasterConfig(util.ComparableMixin):
         self.builders = []
         self.workers = []
         self.change_sources = []
+        self.machines = []
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
@@ -263,6 +264,7 @@ class MasterConfig(util.ComparableMixin):
         "logMaxSize",
         "logMaxTailSize",
         "manhole",
+        "machines",
         "collapseRequests",
         "metrics",
         "mq",
@@ -338,6 +340,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_builders(filename, config_dict)
             config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
+            config.load_machines(filename, config_dict)
             config.load_user_managers(filename, config_dict)
             config.load_www(filename, config_dict)
             config.load_services(filename, config_dict)
@@ -348,6 +351,7 @@ class MasterConfig(util.ComparableMixin):
             config.check_locks()
             config.check_builders()
             config.check_ports()
+            config.check_machines()
         finally:
             _errors = None
 
@@ -717,6 +721,23 @@ class MasterConfig(util.ComparableMixin):
 
         self.change_sources = change_sources
 
+    def load_machines(self, filename, config_dict):
+        if 'machines' not in config_dict:
+            return
+
+        machines = config_dict['machines']
+        msg = "c['machines'] must be a list of machines"
+        if not isinstance(machines, (list, tuple)):
+            error(msg)
+            return
+
+        for m in machines:
+            if not interfaces.IMachine.providedBy(m):
+                error(msg)
+                return
+
+        self.machines = machines
+
     def load_user_managers(self, filename, config_dict):
         if 'user_managers' not in config_dict:
             return
@@ -892,6 +913,19 @@ class MasterConfig(util.ComparableMixin):
             return
         if self.workers:
             error("workers are configured, but c['protocols'] not")
+
+    def check_machines(self):
+        seen_names = set()
+
+        for mm in self.machines:
+            if mm.name in seen_names:
+                error("duplicate machine name '{}'".format(mm.name))
+            seen_names.add(mm.name)
+
+        for w in self.workers:
+            if w.machine_name is not None and w.machine_name not in seen_names:
+                error("worker '{}' uses unknown machine '{}'".format(
+                    w.name, w.machine_name))
 
 
 class BuilderConfig(util_config.ConfiguredMixin):

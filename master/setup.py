@@ -170,6 +170,7 @@ setup_args = {
         "buildbot.db",
         "buildbot.db.migrate.versions",
         "buildbot.db.types",
+        "buildbot.machine",
         "buildbot.monkeypatches",
         "buildbot.mq",
         "buildbot.plugins",
@@ -261,6 +262,9 @@ setup_args = {
             ('buildbot.worker.docker', ['DockerLatentWorker']),
             ('buildbot.worker.kubernetes', ['KubeLatentWorker']),
             ('buildbot.worker.local', ['LocalWorker']),
+        ]),
+        ('buildbot.machine', [
+            ('buildbot.machine.base', ['Machine']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),

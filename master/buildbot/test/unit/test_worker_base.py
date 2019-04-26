@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -20,6 +22,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import locks
+from buildbot.machine.base import Machine
 from buildbot.process import properties
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedb
@@ -27,6 +30,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
+from buildbot.test.util import logging
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
@@ -138,10 +142,11 @@ class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
         return self.wrk.attached(self.conn)
 
 
-class TestAbstractWorker(TestReactorMixin, unittest.TestCase):
+class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setUpLogging()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
@@ -156,6 +161,13 @@ class TestAbstractWorker(TestReactorMixin, unittest.TestCase):
         if attached:
             worker.conn = fakeprotocol.FakeConnection(self.master, worker)
         return worker
+
+    @defer.inlineCallbacks
+    def createMachine(self, name, configured=True, **kwargs):
+        machine = Machine(name)
+        if configured:
+            yield machine.setServiceParent(self.master.machine_manager)
+        return machine
 
     @defer.inlineCallbacks
     def test_constructor_minimal(self):
@@ -204,7 +216,9 @@ class TestAbstractWorker(TestReactorMixin, unittest.TestCase):
         if existingRegistration:
             old.registration = bworkermanager.FakeWorkerRegistration(old)
         old.missing_timer = mock.Mock(name='missing_timer')
-        yield old.startService()
+
+        if not old.running:
+            yield old.startService()
 
         yield old.reconfigServiceWithSibling(new)
 
@@ -287,6 +301,82 @@ class TestAbstractWorker(TestReactorMixin, unittest.TestCase):
         workers = yield self.master.data.get(('workers',))
         self.assertEqual(len(workers[0]['configured_on']), 1)
         self.assertEqual(workers[0]['configured_on'][0]['builderid'], 1)
+
+    @defer.inlineCallbacks
+    def test_reconfig_service_no_machine(self):
+        old = yield self.createWorker('bot', 'pass')
+        self.assertIsNone(old.machine)
+
+        yield self.do_test_reconfigService(old, old)
+        self.assertIsNone(old.machine)
+
+    @defer.inlineCallbacks
+    def test_reconfig_service_with_machine_initial(self):
+        machine = yield self.createMachine('machine1')
+        old = yield self.createWorker('bot', 'pass', machine_name='machine1')
+        self.assertIsNone(old.machine)
+
+        yield self.do_test_reconfigService(old, old)
+        self.assertIs(old.machine, machine)
+
+    @defer.inlineCallbacks
+    def test_reconfig_service_with_unknown_machine(self):
+        old = yield self.createWorker('bot', 'pass', machine_name='machine1')
+        self.assertIsNone(old.machine)
+
+        yield self.do_test_reconfigService(old, old)
+        self.assertLogged('Unknown machine')
+
+    @parameterized.expand([
+        ('None_to_machine_initial',
+         False, None, None, 'machine1', 'machine1'),
+        ('None_to_machine',
+         True, None, None, 'machine1', 'machine1'),
+        ('machine_to_None_initial',
+         False, 'machine1', None, None, None),
+        ('machine_to_None',
+         True, 'machine1', 'machine1', None, None),
+        ('machine_to_same_machine_initial',
+         False, 'machine1', None, 'machine1', 'machine1'),
+        ('machine_to_same_machine',
+         True, 'machine1', 'machine1', 'machine1', 'machine1'),
+        ('machine_to_another_machine_initial',
+         False, 'machine1', None, 'machine2', 'machine2'),
+        ('machine_to_another_machine',
+         True, 'machine1', 'machine1', 'machine2', 'machine2'),
+    ])
+    @defer.inlineCallbacks
+    def test_reconfig_service_machine(self, test_name,
+                                      do_initial_self_reconfig,
+                                      old_machine_name,
+                                      expected_old_machine_name,
+                                      new_machine_name,
+                                      expected_new_machine_name):
+
+        machine1 = yield self.createMachine('machine1')
+        machine2 = yield self.createMachine('machine2')
+
+        name_to_machine = {
+            None: None,
+            machine1.name: machine1,
+            machine2.name: machine2,
+        }
+
+        expected_old_machine = name_to_machine[expected_old_machine_name]
+        expected_new_machine = name_to_machine[expected_new_machine_name]
+
+        old = yield self.createWorker('bot', 'pass',
+                                      machine_name=old_machine_name)
+        new = yield self.createWorker('bot', 'pass', configured=False,
+                                      machine_name=new_machine_name)
+
+        if do_initial_self_reconfig:
+            yield self.do_test_reconfigService(old, old)
+
+        self.assertIs(old.machine, expected_old_machine)
+
+        yield self.do_test_reconfigService(old, new)
+        self.assertIs(old.machine, expected_new_machine)
 
     @defer.inlineCallbacks
     def test_stopService(self):

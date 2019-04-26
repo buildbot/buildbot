@@ -19,6 +19,7 @@ from zope.interface import implementer
 
 from buildbot.config import BuilderConfig
 from buildbot.interfaces import IBuildStepFactory
+from buildbot.machine.base import Machine
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
@@ -162,6 +163,28 @@ class Tests(RunFakeMasterTestCase):
         )
 
         self.assertEqual(len(started_builds), 1)
+
+    @defer.inlineCallbacks
+    def test_worker_registered_to_machine(self):
+        worker = self.createLocalWorker('worker1', machine_name='machine1')
+        machine = Machine('machine1')
+
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="builder1",
+                              workernames=["worker1"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [worker],
+            'machines': [machine],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+
+        yield self.getMaster(config_dict)
+
+        self.assertIs(worker.machine, machine)
 
     if RemoteWorker is None:
         skip = "buildbot-worker package is not installed"
