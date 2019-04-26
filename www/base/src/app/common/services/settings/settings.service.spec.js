@@ -64,7 +64,6 @@ describe('settingsService', function() {
                 ]
             }
             ]});
-        return null;
     })
     );
 

@@ -8,7 +8,6 @@
 beforeEach(function() {
     module(function($provide) {
         $provide.service('$uibModal', function() { return {open() {}}; });
-        return null;
     });
 
     // Mock bbSettingsProvider
@@ -38,7 +37,6 @@ beforeEach(function() {
             return Cls;
         })()
         );
-        return null;
     });
 
     return module('waterfall_view');

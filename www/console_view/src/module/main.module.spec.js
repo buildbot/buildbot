@@ -8,11 +8,9 @@
 beforeEach(function() {
     module(function($provide) {
         $provide.service('$uibModal', function() { return {open() {}}; });
-        return null;
     });
     module(function($provide) {
         $provide.service('resultsService', function() { return {results2class() {}}; });
-        return null;
     });
 
     // Mock bbSettingsProvider
@@ -42,7 +40,6 @@ beforeEach(function() {
             return Cls;
         })()
         );
-        return null;
     });
     return module('console_view');
 });

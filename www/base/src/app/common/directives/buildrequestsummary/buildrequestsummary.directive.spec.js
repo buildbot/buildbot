@@ -14,7 +14,6 @@ describe('buildrequest summary controller', function() {
     beforeEach(angular.mock.module(function($provide) {
         $provide.value("$state",
                         {go(...args) { return goneto = args; }});
-        return null;  // those module callbacks need to return null!
     })
     );
 
