@@ -172,7 +172,7 @@ describe('dataquery service', function() {
         });
     });
 
-    return describe('limit(array, limit)', function() {
+    describe('limit(array, limit)', function() {
 
         it('should slice the array', function() {
             const result = wrappedDataQuery.limit(testArray, 1);

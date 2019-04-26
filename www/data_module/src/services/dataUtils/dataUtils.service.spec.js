@@ -158,7 +158,7 @@ describe('Data utils service', function() {
         });
     });
 
-    return describe('emailInString(string)', () =>
+    describe('emailInString(string)', () =>
 
         it('should return an email from a string', function() {
             let email = dataUtilsService.emailInString('foo <bar@foo.com>');

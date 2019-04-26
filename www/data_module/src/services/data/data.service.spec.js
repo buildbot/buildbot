@@ -174,7 +174,7 @@ describe('Data service', function() {
         });
     });
 
-    return describe('when()', () =>
+    describe('when()', () =>
         it('should autopopulate ids', function(done) {
             dataService.when('builds', [{}, {}, {}]);
             dataService.getBuilds().onChange = function(builds) {

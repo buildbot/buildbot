@@ -156,7 +156,7 @@ describe('Socket service', function() {
     });
 
 
-    return describe('getUrl()', function() {
+    describe('getUrl()', function() {
 
         it('should return the WebSocket url based on the host and port (localhost)', function() {
             const host = 'localhost';
