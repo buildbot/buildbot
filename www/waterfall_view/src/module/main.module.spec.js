@@ -241,7 +241,7 @@ describe('Waterfall view controller', function() {
             4: 'exception',
             5: 'cancelled'
         };
-        return (() => {
+        (() => {
             const result = [];
             for (let i = 0; i <= 5; i++) {
                 testBuild.results = i;

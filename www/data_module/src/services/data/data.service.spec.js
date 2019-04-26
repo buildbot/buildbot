@@ -33,7 +33,7 @@ describe('Data service', function() {
                 expect(dataService[`get${E}`]).toBeDefined();
                 result.push(expect(angular.isFunction(dataService[`get${E}`])).toBeTruthy());
             }
-            return result;
+            result;
         })()
     );
 
@@ -143,7 +143,7 @@ describe('Data service', function() {
                     expect(opened[`get${E}`]).toBeDefined();
                     result.push(expect(angular.isFunction(opened[`get${E}`])).toBeTruthy());
                 }
-                return result;
+                result;
             })()
         );
 
@@ -181,9 +181,9 @@ describe('Data service', function() {
                 expect(builds.length).toBe(3);
                 expect(builds[1].buildid).toBe(2);
                 expect(builds[2].buildid).toBe(3);
-                return done();
+                done();
             };
-            return $timeout.flush();
+            $timeout.flush();
         })
     );
 });

@@ -216,7 +216,7 @@ describe('Console view controller', function() {
         expect(builders[3].builds[0].buildid).toBe(3);
     });
 
-    return xit('should match sort the builders by tag groups', function() {
+    xit('should match sort the builders by tag groups', function() {
         createController();
         const _builders = FIXTURES['builders.fixture.json'].builders;
         for (let builder of Array.from(_builders)) {

@@ -43,7 +43,7 @@ describe('Scale service', function() {
             name: 'builder4'
         }
         ];
-        return $rootScope.$digest();
+        $rootScope.$digest();
     };
 
 
@@ -104,7 +104,7 @@ describe('Scale service', function() {
         // Get new scale
         const idToName = scale.getBuilderName(builders);
         // The return value should be the name of the builder
-        return Array.from(builders).map((builder) =>
+        Array.from(builders).map((builder) =>
             expect(idToName(builder.builderid)).toEqual(builder.name));
     });
 });

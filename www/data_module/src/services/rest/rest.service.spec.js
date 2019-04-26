@@ -20,7 +20,7 @@ describe('Rest service', function() {
 
     afterEach(function() {
         $httpBackend.verifyNoOutstandingExpectation();
-        return $httpBackend.verifyNoOutstandingRequest();
+        $httpBackend.verifyNoOutstandingRequest();
     });
 
     it('should be defined', () => expect(restService).toBeDefined());

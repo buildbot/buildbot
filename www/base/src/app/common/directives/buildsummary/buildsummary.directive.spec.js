@@ -73,7 +73,7 @@ describe('buildsummary controller', function() {
         expect(buildsummary.isStepDisplayed({results:results.SUCCESS})).toBe(false);
         expect(buildsummary.isStepDisplayed({results:results.WARNING})).toBe(true);
         expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(true);
-        return buildsummary.toggleDetails();
+        buildsummary.toggleDetails();
     });
 
     it('should provide correct getBuildRequestIDFromURL', function() {

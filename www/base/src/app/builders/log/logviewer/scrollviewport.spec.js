@@ -200,7 +200,7 @@ describe('page with sidebar', function() {
         scrollTo(10000, 9950);
 
         expect(queries).toEqual([[0,10], [990, 10]]);
-        return assertDOM([
+        assertDOM([
             elements(0,9),   // 100
             padding(9800),   // 9900
             elements(990, 999) // 10000

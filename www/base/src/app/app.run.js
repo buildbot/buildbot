@@ -47,7 +47,7 @@ class ReconnectingListener {
                             // send event to connectionstatus directive
                             $rootScope.$broadcast("mq.lost_connection")
                         );
-                        return reloadWhenReady();
+                        reloadWhenReady();
                     };
                 }
             }

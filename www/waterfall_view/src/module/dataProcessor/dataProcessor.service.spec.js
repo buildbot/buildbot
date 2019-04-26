@@ -130,7 +130,7 @@ describe('Data Processor service', function() {
         expect(buildsInGroups).toEqual(builds.length);
 
         // If the time between two builds is less than the threshold, they should be in different groups
-        return Array.from(builds).map((build1, i) =>
+        Array.from(builds).map((build1, i) =>
             (() => {
                 const result = [];
                 for (let build2 of Array.from(builds.slice(i + 1))) {
@@ -151,7 +151,7 @@ describe('Data Processor service', function() {
     it('should add complete_at to unfinished builds', function() {
         const unfinishedBuilds = builds.filter(build => !build.complete);
         dataProcessorService.getGroups(builders, unfinishedBuilds, 0);
-        return (() => {
+        (() => {
             const result = [];
             for (let build of Array.from(unfinishedBuilds)) {
                 expect(build.complete_at).toBeDefined();
@@ -166,7 +166,7 @@ describe('Data Processor service', function() {
         // Add builds to builders first
         dataProcessorService.getGroups(builders, builds, 0);
         dataProcessorService.addStatus(builders);
-        return Array.from(builders).map((builder) =>
+        Array.from(builders).map((builder) =>
             builder.complete ? expect(builder.results).toBeDefined()
             : expect(builder.results).not.toBeDefined());
     });

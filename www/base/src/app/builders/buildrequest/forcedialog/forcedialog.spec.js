@@ -35,7 +35,7 @@ describe('buildrequest controller', function() {
     it('should query for forcecheduler', function() {
         dataService.when('forceschedulers/forcesched', [{all_fields:[{'foo': 'int'}]}]);
         const controller = createController();
-        return $rootScope.$apply();
+        $rootScope.$apply();
     });
 
     it('should call forcecheduler control api when ok', function() {
@@ -44,6 +44,6 @@ describe('buildrequest controller', function() {
         $timeout.flush();
         $httpBackend.when('POST', 'api/v2/forceschedulers/forcesched') .respond("{}");
         $scope.ok();
-        return $rootScope.$apply();
+        $rootScope.$apply();
     });
 });
