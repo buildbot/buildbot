@@ -40,14 +40,10 @@ var WebSocketBackend = (function() {
         }
 
         flush() {
-            return (() => {
-                let message;
-                const result = [];
-                while ((message = this.sendQueue.shift())) {
-                    result.push(this.webSocket.onmessage(message));
-                }
-                return result;
-            })();
+            let message;
+            while ((message = this.sendQueue.shift())) {
+                this.webSocket.onmessage(message);
+            }
         }
 
         getWebSocket() {

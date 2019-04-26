@@ -18,31 +18,22 @@ describe('page with sidebar', function() {
     const assertDOM = function(l) {
         const childs = [];
         $("div", elmContent).each((i, c) => childs.push(c));
-        return (() => {
-            const result = [];
-            for (var item of Array.from(l)) {
-                var c;
-                if (item.type === "padding") {
+
+        for (var item of Array.from(l)) {
+            var c;
+            if (item.type === "padding") {
+                c = childs.shift();
+                expect($(c).hasClass("padding")).toBe(true, c.outerHTML);
+                expect($(c).height()).toEqual(item.height, c.outerHTML);
+            }
+            if (item.type === "elements") {
+                for (let i = item.start, { end } = item, asc = item.start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
                     c = childs.shift();
-                    expect($(c).hasClass("padding")).toBe(true, c.outerHTML);
-                    expect($(c).height()).toEqual(item.height, c.outerHTML);
-                }
-                if (item.type === "elements") {
-                    result.push((() => {
-                        const result1 = [];
-                        for (let i = item.start, { end } = item, asc = item.start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-                            c = childs.shift();
-                            expect($(c).hasClass("padding")).toBe(false, c.outerHTML);
-                            result1.push(expect(c.innerText).toEqual(i.toString() + "a" + i.toString(), c.outerHTML));
-                        }
-                        return result1;
-                    })());
-                } else {
-                    result.push(undefined);
+                    expect($(c).hasClass("padding")).toBe(false, c.outerHTML);
+                    expect(c.innerText).toEqual(i.toString() + "a" + i.toString(), c.outerHTML);
                 }
             }
-            return result;
-        })();
+        }
     };
     const printDOM = () =>
         $("div", elmContent).each(function() {

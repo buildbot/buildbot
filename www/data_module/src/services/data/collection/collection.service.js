@@ -148,13 +148,9 @@ class Collection {
             }
 
             clear() {
-                return (() => {
-                    const result = [];
-                    while (this.length > 0) {
-                        result.push(this.pop());
-                    }
-                    return result;
-                })();
+                while (this.length > 0) {
+                    this.pop();
+                }
             }
 
             delete(element) {

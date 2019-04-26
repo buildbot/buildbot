@@ -13,39 +13,32 @@ class forceDialog {
             const all_fields_by_name = {};
 
             // prepare default values
-            var prepareFields = fields =>
-                (() => {
-                    const result = [];
-                    for (let field of Array.from(fields)) {
-                        all_fields_by_name[field.fullName] = field;
-                        // give a reference of other fields to easily implement
-                        // autopopulate
-                        field.all_fields_by_name = all_fields_by_name;
-                        field.errors = '';
-                        field.haserrors = false;
-                        if (field.fields != null) {
-                            result.push(prepareFields(field.fields));
-                        } else {
-                            field.value = field.default;
-                            // if field type is username, then we just hide the field
-                            // the backend will fill the value automatically
-                            if (field.type === 'username') {
+            var prepareFields = fields => {
+                for (let field of Array.from(fields)) {
+                    all_fields_by_name[field.fullName] = field;
+                    // give a reference of other fields to easily implement
+                    // autopopulate
+                    field.all_fields_by_name = all_fields_by_name;
+                    field.errors = '';
+                    field.haserrors = false;
+                    if (field.fields != null) {
+                        prepareFields(field.fields);
+                    } else {
+                        field.value = field.default;
+                        // if field type is username, then we just hide the field
+                        // the backend will fill the value automatically
+                        if (field.type === 'username') {
+                            field.type = "text";
+                            const { user } = config;
+                            if (user.email != null) {
                                 field.type = "text";
-                                const { user } = config;
-                                if (user.email != null) {
-                                    field.type = "text";
-                                    result.push(field.hide = true);
-                                } else {
-                                    result.push(undefined);
-                                }
-                            } else {
-                                result.push(undefined);
+                                field.hide = true;
                             }
                         }
                     }
-                    return result;
-                })()
-            ;
+                }
+            };
+
             prepareFields(scheduler.all_fields);
             return angular.extend($scope, {
                 rootfield: {
@@ -70,15 +63,12 @@ class forceDialog {
                             return;
                         }
                         if (err.error.code === -32602) {
-                            return (() => {
-                                const result = [];
-                                for (let k in err.error.message) {
-                                    const v = err.error.message[k];
-                                    all_fields_by_name[k].errors = v;
-                                    result.push(all_fields_by_name[k].haserrors = true);
-                                }
-                                return result;
-                            })();
+                            for (let k in err.error.message) {
+                                const v = err.error.message[k];
+                                all_fields_by_name[k].errors = v;
+                                all_fields_by_name[k].haserrors = true;
+                            }
+                            return null;
                         } else {
                             return $scope.error = err.error.message;
                         }

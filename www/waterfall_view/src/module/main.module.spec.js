@@ -241,13 +241,10 @@ describe('Waterfall view controller', function() {
             4: 'exception',
             5: 'cancelled'
         };
-        (() => {
-            const result = [];
-            for (let i = 0; i <= 5; i++) {
-                testBuild.results = i;
-                result.push(expect(w.getResultClassFromThing(testBuild)).toBe(results[i]));
-            }
-            return result;
-        })();
+
+        for (let i = 0; i <= 5; i++) {
+            testBuild.results = i;
+            expect(w.getResultClassFromThing(testBuild)).toBe(results[i]);
+        }
     });
 });

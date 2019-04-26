@@ -44,13 +44,9 @@ class Stream {
 
                 destroy() {
                     // @listeners = [], but keep the reference
-                    return (() => {
-                        const result = [];
-                        while (this.listeners.length > 0) {
-                            result.push(this.listeners.pop());
-                        }
-                        return result;
-                    })();
+                    while (this.listeners.length > 0) {
+                        this.listeners.pop();
+                    }
                 }
 
                 generateId() {
