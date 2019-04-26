@@ -22,7 +22,7 @@ describe('buildsticker controller', function() {
 
     beforeEach(inject(injected));
 
-    return it('directive should generate correct html', function() {
+    it('directive should generate correct html', function() {
         const build = {buildid: 3, builderid: 2, number: 1};
         dataService.when('builds/3', [build]);
         dataService.when('builders/2', [{builderid: 2}]);

@@ -6,7 +6,7 @@
 describe('change class', function() {
     beforeEach(angular.mock.module('bbData'));
 
-    return it('should calculate authors emails', inject(function(Change) {
+    it('should calculate authors emails', inject(function(Change) {
         const changes = [
             new Change({author: "foo <bar@foo.com>"}, "changes")
         ,

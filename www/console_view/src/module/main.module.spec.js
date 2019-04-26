@@ -52,7 +52,7 @@ describe('Console view', function() {
     beforeEach(inject($injector => $state = $injector.get('$state'))
     );
 
-    return it('should register a new state with the correct configuration', function() {
+    it('should register a new state with the correct configuration', function() {
         const name = 'console';
         const state = $state.get().pop();
         const { data } = state;

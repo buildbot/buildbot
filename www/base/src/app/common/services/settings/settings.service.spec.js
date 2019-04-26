@@ -355,7 +355,7 @@ describe('settingsService', function() {
     })
     );
 
-    return it('should be overriden by master.cfg', inject(function(bbSettingsService) {
+    it('should be overriden by master.cfg', inject(function(bbSettingsService) {
         let to_override = bbSettingsService.getSetting('User.config_overriden');
         expect(to_override.value).toEqual(100);
         to_override.value = 200;

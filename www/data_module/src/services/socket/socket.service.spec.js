@@ -193,7 +193,7 @@ describe('Socket service', function() {
             expect(url).toBe('wss://buildbot.test/ws');
         });
 
-        return it('should return the WebSocket url based on the host and port and protocol and basedir', function() {
+        it('should return the WebSocket url based on the host and port and protocol and basedir', function() {
             const host = 'buildbot.test';
             const port = 443;
             const protocol = 'https';

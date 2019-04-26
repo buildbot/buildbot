@@ -84,7 +84,7 @@ describe('Rest service', function() {
         expect(gotResponse).not.toEqual(response);
     });
 
-    return it('should reject the promise when cancelled', inject(function($rootScope) {
+    it('should reject the promise when cancelled', inject(function($rootScope) {
         $httpBackend.expectGET('/api/endpoint').respond({});
 
         let gotResponse = null;

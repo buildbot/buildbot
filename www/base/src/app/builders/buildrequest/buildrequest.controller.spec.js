@@ -65,7 +65,7 @@ describe('buildrequest controller', function() {
         expect($scope.builds.length).toBe(2);
     });
 
-    return it('should go to build page if build started', function() {
+    it('should go to build page if build started', function() {
         dataService.when('buildsets/1/properties', [{a: ['a','b']}]);
         dataService.when('buildrequests/1', [{buildrequestid: 1, builderid: 3, buildsetid: 1}]);
         dataService.when('builders/3', [{builderid: 3}]);

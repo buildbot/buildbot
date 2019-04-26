@@ -37,7 +37,7 @@ describe('results service', function() {
         )).toBe("results_PENDING pulse");
     });
 
-    return it('should provide correct results2Text', function() {
+    it('should provide correct results2Text', function() {
         const { results } = resultsService;
         const results2text = r => resultsService.results2text({results: r});
 

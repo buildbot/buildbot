@@ -128,7 +128,7 @@ describe('dataquery service', function() {
             expect(result).toContain(testArray[2]);
         });
 
-        return it('should convert on/off, true/false, yes/no to boolean', function() {
+        it('should convert on/off, true/false, yes/no to boolean', function() {
             const resultTrue = wrappedDataQuery.filter(testArray, {complete: true});
             const resultFalse = wrappedDataQuery.filter(testArray, {complete: false});
 
@@ -164,7 +164,7 @@ describe('dataquery service', function() {
             expect(result[2]).toEqual(testArray[1]);
         });
 
-        return it('should sort the array (more parameter)', function() {
+        it('should sort the array (more parameter)', function() {
             const result = wrappedDataQuery.sort(testArray, ['builderid', '-buildid']);
             expect(result[0]).toEqual(testArray[0]);
             expect(result[1]).toEqual(testArray[2]);
@@ -180,7 +180,7 @@ describe('dataquery service', function() {
             expect(result[0]).toEqual(testArray[0]);
         });
 
-        return it('should return the array when the limit >= array.length', function() {
+        it('should return the array when the limit >= array.length', function() {
             const result = wrappedDataQuery.limit(testArray, 3);
             expect(result.length).toBe(3);
             expect(result[2]).toEqual(testArray[2]);

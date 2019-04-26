@@ -103,7 +103,7 @@ describe('Data utils service', function() {
             expect(result).toEqual(array);
         });
 
-        return it('should split a string', function() {
+        it('should split a string', function() {
             const string = 'asd/123/bnm';
             const result = dataUtilsService.copyOrSplit(string);
             expect(result).toEqual(['asd', '123', 'bnm']);
@@ -152,7 +152,7 @@ describe('Data utils service', function() {
             expect(result).toBe(12);
         });
 
-        return it('should return the string if it is not a number', function() {
+        it('should return the string if it is not a number', function() {
             const result = dataUtilsService.numberOrString('w3as');
             expect(result).toBe('w3as');
         });

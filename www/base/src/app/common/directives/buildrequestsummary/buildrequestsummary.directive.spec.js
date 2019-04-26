@@ -46,7 +46,7 @@ describe('buildrequest summary controller', function() {
         expect($scope.buildrequest.buildrequestid).toBe(1);
     });
 
-    return it('should query for builds again if first query returns 0', function() {
+    it('should query for builds again if first query returns 0', function() {
         const buildrequests = [{buildrequestid: 1, builderid: 2, buildsetid: 3}];
         dataService.expect('buildrequests/1', buildrequests);
         dataService.expect('buildsets/3', buildrequests);

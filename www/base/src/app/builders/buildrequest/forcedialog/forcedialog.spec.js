@@ -38,7 +38,7 @@ describe('buildrequest controller', function() {
         return $rootScope.$apply();
     });
 
-    return it('should call forcecheduler control api when ok', function() {
+    it('should call forcecheduler control api when ok', function() {
         dataService.when('forceschedulers/forcesched', [{name: "forcesched", all_fields:[{'foo': 'int'}]}]);
         const controller = createController();
         $timeout.flush();

@@ -92,7 +92,7 @@ describe('ansicode service', function() {
     });
 
 
-    return it('should inject generated style only once', function() {
+    it('should inject generated style only once', function() {
         const before = document.getElementsByTagName("style").length;
         ansicodesService.injectStyle();
         const after1 = document.getElementsByTagName("style").length;

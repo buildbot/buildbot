@@ -26,7 +26,7 @@ describe('Base class', function() {
         expect(base.b).toEqual(object.b);
     });
 
-    return it('should have loadXxx function for child endpoints', function() {
+    it('should have loadXxx function for child endpoints', function() {
         const children = ['a', 'bcd', 'ccc'];
         const base = new Base({}, 'ab', children);
         expect(angular.isFunction(base.loadA)).toBeTruthy();

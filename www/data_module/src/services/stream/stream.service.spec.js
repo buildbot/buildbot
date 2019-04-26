@@ -90,7 +90,7 @@ describe('Stream service', function() {
         expect(listeners.length).toBe(0);
     });
 
-    return it('should call the unsubscribe listener on unsubscribe call', function() {
+    it('should call the unsubscribe listener on unsubscribe call', function() {
         spyOn(stream, 'onUnsubscribe');
 
         const listener = function() {};

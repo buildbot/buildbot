@@ -162,7 +162,7 @@ describe('Data Processor service', function() {
         })();
     });
 
-    return it('should add status to builders', function() {
+    it('should add status to builders', function() {
         // Add builds to builders first
         dataProcessorService.getGroups(builders, builds, 0);
         dataProcessorService.addStatus(builders);

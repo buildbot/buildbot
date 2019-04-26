@@ -63,7 +63,7 @@ describe('Collection', function() {
             expect(c.length).toEqual(2);
         });
 
-        return it("should order the updates correctly", function() {
+        it("should order the updates correctly", function() {
             c.listener({k: "builds/1/update", m: {buildid: 1, value:1}});
             c.initial([{
                 buildid: 1,
@@ -100,7 +100,7 @@ describe('Collection', function() {
             expect(c[1].buildid).toEqual(4);
         });
 
-        return it('should call the event handlers', function() {
+        it('should call the event handlers', function() {
             spyOn(c, 'onNew');
             spyOn(c, 'onChange');
             spyOn(c, 'onUpdate');
@@ -136,7 +136,7 @@ describe('Collection', function() {
     describe("singleid collection", function() {
         beforeEach(function() { c = new Collection('builds/1'); } );
 
-        return it("should manage the updates correctly", function() {
+        it("should manage the updates correctly", function() {
             c.listener({k: "builds/1/update", m: {buildid: 1, value:1}});
             c.listener({k: "builds/2/update", m: {buildid: 2, value:2}});
             c.initial([{

@@ -98,7 +98,7 @@ describe('buildsummary controller', function() {
         .toBe(false);
     });
 
-    return it('should provide correct isBuildURL', function() {
+    it('should provide correct isBuildURL', function() {
         const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
         scope.$apply();
         const { buildsummary } = element.isolateScope();

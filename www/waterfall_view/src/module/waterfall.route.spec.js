@@ -10,7 +10,7 @@ describe('Waterfall view', function() {
 
     beforeEach(inject(injected));
 
-    return it('should register a new state with the correct configuration', function() {
+    it('should register a new state with the correct configuration', function() {
         const name = 'waterfall';
         const states = $state.get().map(state => state.name);
         expect(states).toContain(name);

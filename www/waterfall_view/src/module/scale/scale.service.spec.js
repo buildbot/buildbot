@@ -100,7 +100,7 @@ describe('Scale service', function() {
         expect(idToY.invert(120)).toBeUndefined();
     });
 
-    return it('should return a builderid to name scale', function() {
+    it('should return a builderid to name scale', function() {
         // Get new scale
         const idToName = scale.getBuilderName(builders);
         // The return value should be the name of the builder

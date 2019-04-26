@@ -227,7 +227,7 @@ describe('Waterfall view controller', function() {
         expect(newSetting).toBe(oldSetting * 1.5);
     });
 
-    return it('should have string representations of result codes', function() {
+    it('should have string representations of result codes', function() {
         const testBuild = {
             complete: false,
             started_at: 0

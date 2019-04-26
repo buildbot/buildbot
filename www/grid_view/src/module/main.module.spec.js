@@ -259,7 +259,7 @@ describe('Grid view controller', function() {
         expect(scope.builders.length).toBe(3);
     });
 
-    return it('should only list builders with the selected tags', function() {
+    it('should only list builders with the selected tags', function() {
         createController();
         $rootScope.$digest();
         scope.C.tags = ['b'];

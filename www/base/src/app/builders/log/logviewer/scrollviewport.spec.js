@@ -194,7 +194,7 @@ describe('page with sidebar', function() {
     })
     );
 
-    return it('Scroll to the end', inject(function($timeout) {
+    it('Scroll to the end', inject(function($timeout) {
         // initial load
         $timeout.flush();
         scrollTo(10000, 9950);

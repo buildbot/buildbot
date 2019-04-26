@@ -48,7 +48,7 @@ describe('Waterfall modal controller', function() {
         expect(m.close).toHaveBeenCalled();
     });
 
-    return it('should call $uibModalInstance.close on close()', function() {
+    it('should call $uibModalInstance.close on close()', function() {
         createController();
         const { m } = scope;
         spyOn($uibModalInstance, 'close');

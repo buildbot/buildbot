@@ -97,7 +97,7 @@ describe('Data service', function() {
             expect(socketService.send).not.toHaveBeenCalled();
         });
 
-        return it('should add the new instance on /new WebSocket message', function() {
+        it('should add the new instance on /new WebSocket message', function() {
             spyOn(restService, 'get').and.returnValue($q.resolve({builds: []}));
             let builds = null;
             $rootScope.$apply(() => builds = dataService.getBuilds({subscribe: false}));
@@ -167,7 +167,7 @@ describe('Data service', function() {
             expect(opened.close).toHaveBeenCalled();
         });
 
-        return it('should work with mock calls as well', function() {
+        it('should work with mock calls as well', function() {
             let builds;
             dataService.when('builds/1', [{buildid: 1, builderid: 1}]);
             builds = opened.getBuilds(1, {subscribe: false});
