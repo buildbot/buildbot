@@ -133,7 +133,7 @@ class BuilderController {
             $scope.buildrequests.onNew = buildrequest =>
                 data.getBuildsets(buildrequest.buildsetid).onNew = buildset =>
                     buildset.getProperties().onNew = properties => buildrequest.properties = properties
-                
+
             ;
 
             $scope.builds.onChange= function() {

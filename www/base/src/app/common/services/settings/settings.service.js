@@ -8,7 +8,7 @@
  */
 class bbSettings {
     static initClass() {
-    
+
         this.prototype.$get = [ function() {
             let groupAndSettingName, groupName, item, settingName;
             const self = this;
@@ -32,7 +32,7 @@ class bbSettings {
                     }
                 }
             }
-    
+
             return {
                 getSettingsGroups() {
                     return self.groups;

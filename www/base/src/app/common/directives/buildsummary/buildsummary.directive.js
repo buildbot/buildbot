@@ -91,7 +91,7 @@ class _buildsummary {
         };
 
         // Returns the logs, sorted with the "Summary" log first, if it exists in the step's list of logs
-        this.getLogs = function(step) { 
+        this.getLogs = function(step) {
             const summaryLogs = step.logs.filter(log => this.isSummaryLog(log));
             const logs = summaryLogs.concat( step.logs.filter(log => !this.isSummaryLog(log)) );
             return logs;

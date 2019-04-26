@@ -15,7 +15,7 @@ class schedulers {
         };
     }
 }
-                
+
 
 angular.module('app')
 .controller('schedulersController', ['$log', '$scope', '$location', 'dataService', schedulers]);

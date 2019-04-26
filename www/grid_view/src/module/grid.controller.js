@@ -80,7 +80,7 @@ class Grid {
             order: '-buildrequestid'
         });
 
-        this.buildsets.onChange = (this.changes.onChange = (this.builders.onChange = 
+        this.buildsets.onChange = (this.changes.onChange = (this.builders.onChange =
             (this.buildrequests.change = (this.builds.onChange = this.onChange))));
     }
 

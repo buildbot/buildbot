@@ -15,9 +15,9 @@ describe('Socket service', function() {
             static initClass() {
                 this.prototype.sendQueue = [];
                 this.prototype.receiveQueue = [];
-    
+
                 self = null;
-    
+
                 // mocked WebSocket
                 MockWebSocket = (function() {
                     MockWebSocket = class MockWebSocket {
