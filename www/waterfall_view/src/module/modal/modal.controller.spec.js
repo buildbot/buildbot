@@ -20,7 +20,7 @@ describe('Waterfall modal controller', function() {
         $uibModalInstance = $injector.get('$uibModalInstance');
         scope = $rootScope.$new();
 
-        return createController = () =>
+        createController = () =>
             $controller('waterfallModalController as m', {
                 $scope: scope,
                 selectedBuild: {}

@@ -155,7 +155,7 @@ describe('Waterfall view controller', function() {
         spyOn(w, 'click').and.callThrough();
         spyOn(w, 'loadMore').and.callThrough();
         // Data is loaded
-        return $timeout.flush();
+        $timeout.flush();
     };
 
     beforeEach(inject(injected));

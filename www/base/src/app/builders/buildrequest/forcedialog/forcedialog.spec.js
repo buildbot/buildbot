@@ -20,7 +20,7 @@ describe('buildrequest controller', function() {
         $httpBackend = $injector.get('$httpBackend');
 
         modal = {};
-        return createController = () =>
+        createController = () =>
             $controller('forceDialogController', {
                 $scope,
                 builderid: 1,

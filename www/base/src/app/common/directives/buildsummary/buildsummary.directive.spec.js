@@ -30,7 +30,7 @@ describe('buildsummary controller', function() {
         dataService.when('builds/1', [{buildid: 1, builderid: 1}]);
         dataService.when('builders/1', [{builderid: 1}]);
         dataService.when('builds/1/steps', [{builderid: 1, stepid: 1, number: 1}]);
-        return dataService.when('steps/1/logs', [{stepid: 1, logid: 1}, {stepid: 1, logid: 2}]);
+        dataService.when('steps/1/logs', [{stepid: 1, logid: 1}, {stepid: 1, logid: 2}]);
     };
 
     beforeEach(inject(injected));

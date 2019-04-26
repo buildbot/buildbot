@@ -10,7 +10,7 @@ describe('Stream service', function() {
     let Stream = (stream = null);
     const injected = function($injector) {
         Stream = $injector.get('Stream');
-        return stream = new Stream();
+        stream = new Stream();
     };
 
     beforeEach(inject(injected));

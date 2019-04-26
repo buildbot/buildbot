@@ -75,7 +75,7 @@ describe('Data Processor service', function() {
         }
         ];
         builds = new Collection("builds", {});
-        return builds.from(_builds);
+        builds.from(_builds);
     };
 
     beforeEach(inject(injected));

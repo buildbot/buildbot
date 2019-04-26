@@ -26,7 +26,7 @@ describe('buildrequest summary controller', function() {
         $q = $injector.get('$q');
         dataService = $injector.get('dataService');
         // stub out the actual backend of mqservice
-        return createController = () =>
+        createController = () =>
             $controller('_buildrequestsummaryController',
                 {$scope})
         ;

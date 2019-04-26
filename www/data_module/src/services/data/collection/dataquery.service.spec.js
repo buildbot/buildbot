@@ -57,7 +57,7 @@ describe('dataquery service', function() {
                 return array;
             }
         }
-        return wrappedDataQuery = new WrappedDataQuery();
+        wrappedDataQuery = new WrappedDataQuery();
     };
     beforeEach(inject(injected));
 

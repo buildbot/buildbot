@@ -17,7 +17,7 @@ describe('buildsticker controller', function() {
         const $q = $injector.get('$q');
         $timeout = $injector.get('$timeout');
         results = $injector.get('RESULTS');
-        return dataService = $injector.get('dataService');
+        dataService = $injector.get('dataService');
     };
 
     beforeEach(inject(injected));

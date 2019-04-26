@@ -13,7 +13,7 @@ describe('Rest service', function() {
     let restService = ($httpBackend = undefined);
     const injected = function($injector) {
         restService = $injector.get('restService');
-        return $httpBackend = $injector.get('$httpBackend');
+        $httpBackend = $injector.get('$httpBackend');
     };
 
     beforeEach(inject(injected));
@@ -42,7 +42,7 @@ describe('Rest service', function() {
         $httpBackend.whenGET('/api/endpoint?key=value').respond(200);
 
         restService.get('endpoint', params);
-        return $httpBackend.flush();
+        $httpBackend.flush();
     });
 
     it('should reject the promise on error', function() {

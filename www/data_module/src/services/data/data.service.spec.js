@@ -18,7 +18,7 @@ describe('Data service', function() {
         ENDPOINTS = $injector.get('ENDPOINTS');
         $rootScope = $injector.get('$rootScope');
         $q = $injector.get('$q');
-        return $httpBackend = $injector.get('$httpBackend');
+        $httpBackend = $injector.get('$httpBackend');
     };
 
     beforeEach(inject(injected));

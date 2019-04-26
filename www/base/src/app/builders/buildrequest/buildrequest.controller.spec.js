@@ -25,7 +25,7 @@ describe('buildrequest controller', function() {
         const $controller = $injector.get('$controller');
         const $q = $injector.get('$q');
         dataService = $injector.get('dataService');
-        return createController = () =>
+        createController = () =>
             $controller('buildrequestController',
                 {$scope})
         ;

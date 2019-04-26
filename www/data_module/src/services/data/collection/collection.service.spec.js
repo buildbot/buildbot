@@ -13,7 +13,7 @@ describe('Collection', function() {
         $rootScope = $injector.get('$rootScope');
         Collection = $injector.get('Collection');
         $timeout = $injector.get('$timeout');
-        return $filter = $injector.get('$filter');
+        $filter = $injector.get('$filter');
     };
 
     beforeEach(inject(injected));

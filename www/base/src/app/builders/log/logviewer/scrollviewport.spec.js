@@ -97,7 +97,7 @@ describe('page with sidebar', function() {
 
         // we need to append to body, so that the element is styled properly, and gets a height
         elmBody.appendTo("body");
-        return elmContent = $("div", elmBody)[0];}));
+        elmContent = $("div", elmBody)[0];}));
 
     // ViewPort height is 50, and item height is 10, so a screen should contain 5 item
     it('should initially load 2 screens', inject(function($timeout) {

@@ -12,7 +12,7 @@ describe('Base class', function() {
         Base = $injector.get('Base');
         dataService = $injector.get('dataService');
         socketService = $injector.get('socketService');
-        return $q = $injector.get('$q');
+        $q = $injector.get('$q');
     };
 
     beforeEach(inject(injected));

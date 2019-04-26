@@ -202,7 +202,7 @@ describe('Grid view controller', function() {
 
         // Create new controller using controller as syntax
         const $controller = $injector.get('$controller');
-        return createController = () =>
+        createController = () =>
             $controller('gridController as C',
                 // Inject controller dependencies
                 {$scope: scope})
