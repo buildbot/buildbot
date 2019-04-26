@@ -74,7 +74,7 @@ describe('Socket service', function() {
         socketService = $injector.get('socketService');
         ({ socket } = socketService);
         spyOn(socket, 'send').and.callThrough();
-        return spyOn(socket, 'onmessage').and.callThrough();
+        spyOn(socket, 'onmessage').and.callThrough();
     };
 
     beforeEach(inject(injected));
