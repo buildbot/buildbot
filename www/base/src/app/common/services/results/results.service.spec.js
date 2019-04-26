@@ -28,7 +28,7 @@ describe('results service', function() {
             started_at:undefined
         })).toBe("results_UNKNOWN");
 
-        return expect(resultsService.results2class({
+        expect(resultsService.results2class({
             results:undefined,
             complete:false,
             started_at:10
@@ -53,7 +53,7 @@ describe('results service', function() {
             started_at:undefined
         })).toBe("...");
 
-        return expect(resultsService.results2text({
+        expect(resultsService.results2text({
             results:undefined,
             complete:false,
             started_at:10

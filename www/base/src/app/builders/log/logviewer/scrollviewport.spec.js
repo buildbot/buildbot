@@ -66,7 +66,7 @@ describe('page with sidebar', function() {
 
         timeout.flush();
         // make sure it did not changed
-        return expect(elmBody.scrollTop()).toBe(verifyPos);
+        expect(elmBody.scrollTop()).toBe(verifyPos);
     };
 
     beforeEach(inject(function($rootScope, $compile, glMenuService, $timeout, $q, $document) {
@@ -107,7 +107,7 @@ describe('page with sidebar', function() {
             elements(0,9),
             padding(9900)
         ]);
-        return expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
+        expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
     })
     );
 
@@ -124,7 +124,7 @@ describe('page with sidebar', function() {
             elements(55,69), // 700
             padding(10000 - 700)
         ]);
-        return expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
+        expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
     })
     );
 
@@ -190,7 +190,7 @@ describe('page with sidebar', function() {
             elements(0,69), // 700
             padding(10000 - 700)
         ]);
-        return expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
+        expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
     })
     );
 

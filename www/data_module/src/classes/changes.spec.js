@@ -19,7 +19,7 @@ describe('change class', function() {
         expect(changes[2].author_email).toBeUndefined();
         expect(changes[0].author_name).toBe("foo");
         expect(changes[1].author_name).toBe("foo");
-        return expect(changes[2].author_name).toBe("foo");
+        expect(changes[2].author_name).toBe("foo");
     })
     );
 });

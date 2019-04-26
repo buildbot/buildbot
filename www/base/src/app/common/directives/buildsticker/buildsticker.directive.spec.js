@@ -82,6 +82,6 @@ describe('buildsticker controller', function() {
         expect(durationSpan.hasClass('ng-hide')).toBe(false);
         expect(startedSpan.hasClass('ng-hide')).toBe(true);
         expect(durationSpan.text()).toBe('1 s');
-        return expect(stateSpan.text()).toBe('failed');
+        expect(stateSpan.text()).toBe('failed');
     });
 });

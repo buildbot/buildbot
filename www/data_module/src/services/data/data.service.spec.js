@@ -40,7 +40,7 @@ describe('Data service', function() {
     describe('get()', function() {
         it('should return a collection', function() {
             const ret = dataService.getBuilds();
-            return expect(ret.length).toBeDefined();
+            expect(ret.length).toBeDefined();
         });
 
         it('should call get for the rest api endpoint', function() {
@@ -49,7 +49,7 @@ describe('Data service', function() {
             expect(restService.get).not.toHaveBeenCalled();
             $rootScope.$apply(() => dataService.get('asd', {subscribe: false}));
             // the query should not contain the subscribe field
-            return expect(restService.get).toHaveBeenCalledWith('asd', {});
+            expect(restService.get).toHaveBeenCalledWith('asd', {});
         });
 
         it('should send startConsuming with the socket path', function() {
@@ -81,7 +81,7 @@ describe('Data service', function() {
                 cmd: 'stopConsuming',
                 path: 'builds/*/*'
             });
-            return expect(socketService.send).toHaveBeenCalledWith({
+            expect(socketService.send).toHaveBeenCalledWith({
                 cmd: 'stopConsuming',
                 path: 'builds/1/*'
             });
@@ -94,7 +94,7 @@ describe('Data service', function() {
             spyOn(socketService, 'send').and.returnValue(d.promise);
             expect(socketService.send).not.toHaveBeenCalled();
             $rootScope.$apply(() => dataService.getBuilds({subscribe: false}));
-            return expect(socketService.send).not.toHaveBeenCalled();
+            expect(socketService.send).not.toHaveBeenCalled();
         });
 
         return it('should add the new instance on /new WebSocket message', function() {
@@ -106,7 +106,7 @@ describe('Data service', function() {
                 m: { asd: 111
             }
             });
-            return expect(builds.pop().asd).toBe(111);
+            expect(builds.pop().asd).toBe(111);
         });
     });
 
@@ -118,7 +118,7 @@ describe('Data service', function() {
             const method = 'force';
             const params = {a: 1};
             dataService.control("a", 1, method, params);
-            return expect(restService.post).toHaveBeenCalledWith("a/1", {
+            expect(restService.post).toHaveBeenCalledWith("a/1", {
                 id: 1,
                 jsonrpc: '2.0',
                 method,
@@ -155,7 +155,7 @@ describe('Data service', function() {
             expect(builds.length).toBe(3);
             spyOn(builds, 'close');
             opened.close();
-            return expect(builds.close).toHaveBeenCalled();
+            expect(builds.close).toHaveBeenCalled();
         });
 
         it('should call close when the $scope is destroyed', function() {
@@ -164,7 +164,7 @@ describe('Data service', function() {
             opened.closeOnDestroy(scope);
             expect(opened.close).not.toHaveBeenCalled();
             scope.$destroy();
-            return expect(opened.close).toHaveBeenCalled();
+            expect(opened.close).toHaveBeenCalled();
         });
 
         return it('should work with mock calls as well', function() {

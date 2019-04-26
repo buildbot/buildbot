@@ -13,6 +13,6 @@ describe('Waterfall view', function() {
     return it('should register a new state with the correct configuration', function() {
         const name = 'waterfall';
         const states = $state.get().map(state => state.name);
-        return expect(states).toContain(name);
+        expect(states).toContain(name);
     });
 });

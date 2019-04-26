@@ -34,7 +34,7 @@ describe('Rest service', function() {
         expect(gotResponse).toBeNull();
 
         $httpBackend.flush();
-        return expect(gotResponse).toEqual(response);
+        expect(gotResponse).toEqual(response);
     });
 
     it('should make an ajax GET call to /api/endpoint with parameters', function() {
@@ -54,7 +54,7 @@ describe('Rest service', function() {
         , reason => gotResponse = reason);
 
         $httpBackend.flush();
-        return expect(gotResponse).toBe(error);
+        expect(gotResponse).toBe(error);
     });
 
     it('should make an ajax POST call to /api/endpoint', function() {
@@ -66,7 +66,7 @@ describe('Rest service', function() {
         restService.post('endpoint', data).then(r => gotResponse = r);
 
         $httpBackend.flush();
-        return expect(gotResponse).toEqual(response);
+        expect(gotResponse).toEqual(response);
     });
 
     it('should reject the promise when the response is not valid JSON', function() {
@@ -81,7 +81,7 @@ describe('Rest service', function() {
 
         $httpBackend.flush();
         expect(gotResponse).not.toBeNull();
-        return expect(gotResponse).not.toEqual(response);
+        expect(gotResponse).not.toEqual(response);
     });
 
     return it('should reject the promise when cancelled', inject(function($rootScope) {
@@ -96,7 +96,7 @@ describe('Rest service', function() {
         request.cancel();
         $rootScope.$apply();
         expect(gotResponse).toBeNull();
-        return expect(rejected).toBe(true);
+        expect(rejected).toBe(true);
     })
     );
 });

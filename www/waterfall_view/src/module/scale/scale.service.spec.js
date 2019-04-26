@@ -60,7 +60,7 @@ describe('Scale service', function() {
         expect(typeof scale.getY).toBe('function');
         // getBuilderName is a function
         expect(scale.getBuilderName).toBeDefined();
-        return expect(typeof scale.getBuilderName).toBe('function');
+        expect(typeof scale.getBuilderName).toBe('function');
     });
 
     it('should return a builderid to X scale', function() {
@@ -74,7 +74,7 @@ describe('Scale service', function() {
             expect(a).toBeLessThan(b);
         }
         // Out of domain
-        return expect(idToX(8)).toBeUndefined();
+        expect(idToX(8)).toBeUndefined();
     });
 
     it('should return a build length to height scale', function() {
@@ -97,7 +97,7 @@ describe('Scale service', function() {
         expect(idToY.getCoord(date)).toBeGreaterThan(idToY.getCoord(date + 10000));
         // Out of domain
         expect(idToY.getCoord(1359731101)).toBeUndefined();
-        return expect(idToY.invert(120)).toBeUndefined();
+        expect(idToY.invert(120)).toBeUndefined();
     });
 
     return it('should return a builderid to name scale', function() {

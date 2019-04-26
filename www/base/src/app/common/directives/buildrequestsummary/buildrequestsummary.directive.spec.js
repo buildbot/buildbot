@@ -43,7 +43,7 @@ describe('buildrequest summary controller', function() {
         const controller = createController();
         $timeout.flush();
         dataService.verifyNoOutstandingExpectation();
-        return expect($scope.buildrequest.buildrequestid).toBe(1);
+        expect($scope.buildrequest.buildrequestid).toBe(1);
     });
 
     return it('should query for builds again if first query returns 0', function() {
@@ -70,6 +70,6 @@ describe('buildrequest summary controller', function() {
 
         $timeout.flush();
         dataService.verifyNoOutstandingExpectation();
-        return expect($scope.builds.length).toBe(builds.length);
+        expect($scope.builds.length).toBe(builds.length);
     });
 });

@@ -23,7 +23,7 @@ describe('Base class', function() {
         const object = {a: 1, b: 2};
         const base = new Base(object, 'ab');
         expect(base.a).toEqual(object.a);
-        return expect(base.b).toEqual(object.b);
+        expect(base.b).toEqual(object.b);
     });
 
     return it('should have loadXxx function for child endpoints', function() {
@@ -31,6 +31,6 @@ describe('Base class', function() {
         const base = new Base({}, 'ab', children);
         expect(angular.isFunction(base.loadA)).toBeTruthy();
         expect(angular.isFunction(base.loadBcd)).toBeTruthy();
-        return expect(angular.isFunction(base.loadCcc)).toBeTruthy();
+        expect(angular.isFunction(base.loadCcc)).toBeTruthy();
     });
 });

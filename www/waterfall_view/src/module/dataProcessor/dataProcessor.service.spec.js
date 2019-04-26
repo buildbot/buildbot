@@ -87,7 +87,7 @@ describe('Data Processor service', function() {
         expect(typeof dataProcessorService.getGroups).toBe('function');
         // addStatus is a function
         expect(dataProcessorService.addStatus).toBeDefined();
-        return expect(typeof dataProcessorService.addStatus).toBe('function');
+        expect(typeof dataProcessorService.addStatus).toBe('function');
     });
 
     it('should add builds to builders', function() {
@@ -102,7 +102,7 @@ describe('Data Processor service', function() {
         for (let builder of Array.from(builders)) {
             buildsInBuilders += builder.builds.length;
         }
-        return expect(buildsInBuilders).toEqual(builds.length);
+        expect(buildsInBuilders).toEqual(builds.length);
     });
 
     it('should create groups', function() {

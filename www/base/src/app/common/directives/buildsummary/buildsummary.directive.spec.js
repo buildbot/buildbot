@@ -54,7 +54,7 @@ describe('buildsummary controller', function() {
         buildsummary.toggleDetails();
         expect(buildsummary.isStepDisplayed({results:results.SUCCESS})).toBe(false);
         expect(buildsummary.isStepDisplayed({results:results.WARNING})).toBe(false);
-        return expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(false);
+        expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(false);
     });
 
     it('should provide correct isStepDisplayed when not condensed', function() {
@@ -80,7 +80,7 @@ describe('buildsummary controller', function() {
         const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
         scope.$apply();
         const { buildsummary } = element.isolateScope();
-        return expect(buildsummary.getBuildRequestIDFromURL(`${baseurl}#buildrequests/123`))
+        expect(buildsummary.getBuildRequestIDFromURL(`${baseurl}#buildrequests/123`))
         .toBe(123);
     });
 
@@ -94,7 +94,7 @@ describe('buildsummary controller', function() {
         .toBe(false);
         expect(buildsummary.isBuildRequestURL(`${baseurl}#builds/123`))
         .toBe(false);
-        return expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/bla`))
+        expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/bla`))
         .toBe(false);
     });
 
@@ -104,7 +104,7 @@ describe('buildsummary controller', function() {
         const { buildsummary } = element.isolateScope();
         expect(buildsummary.isBuildURL(`${baseurl}#builders/123/builds/123`))
         .toBe(true);
-        return expect(buildsummary.isBuildURL(`${baseurl}#builders/sdf/builds/123`))
+        expect(buildsummary.isBuildURL(`${baseurl}#builders/sdf/builds/123`))
         .toBe(false);
     });
 });

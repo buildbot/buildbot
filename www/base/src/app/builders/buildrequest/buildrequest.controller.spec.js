@@ -45,7 +45,7 @@ describe('buildrequest controller', function() {
             [{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}]);
         $scope.$apply(() => $scope.buildrequest.claimed = true);
         $timeout.flush();
-        return expect($scope.builds[0]).toBeDefined();
+        expect($scope.builds[0]).toBeDefined();
     });
 
     it('should query for builds again if first query returns 0', function() {
@@ -62,7 +62,7 @@ describe('buildrequest controller', function() {
         // simulate new builds from event stream
         $scope.builds.from([{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}]);
         $timeout.flush();
-        return expect($scope.builds.length).toBe(2);
+        expect($scope.builds.length).toBe(2);
     });
 
     return it('should go to build page if build started', function() {
@@ -76,6 +76,6 @@ describe('buildrequest controller', function() {
         dataService.when('builds', {buildrequestid: 1}, [{buildid: 1, builderid: 3, number: 1, buildrequestid: 1}]);
         $scope.$apply(() => $scope.buildrequest.claimed = true);
         $timeout.flush();
-        return expect(goneto).toEqual(['build', { builder : 3, build : 1 }]);
+        expect(goneto).toEqual(['build', { builder : 3, build : 1 }]);
     });
 });
