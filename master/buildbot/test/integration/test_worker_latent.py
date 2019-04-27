@@ -1219,13 +1219,21 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
                 master, builder_id)
 
     @defer.inlineCallbacks
-    def create_two_worker_config(self, build_wait_timeout=0):
+    def create_two_worker_config(self, build_wait_timeout=0,
+                                 controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
         machine_controller = LatentMachineController(
             name='machine1',
             build_wait_timeout=build_wait_timeout)
 
-        worker1_controller = LatentController(self, 'worker1', machine_name='machine1')
-        worker2_controller = LatentController(self, 'worker2', machine_name='machine1')
+        worker1_controller = LatentController(self, 'worker1',
+                                              machine_name='machine1',
+                                              **controller_kwargs)
+        worker2_controller = LatentController(self, 'worker2',
+                                              machine_name='machine1',
+                                              **controller_kwargs)
         step1_controller = BuildStepController()
         step2_controller = BuildStepController()
 
@@ -1429,6 +1437,31 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state,
                          MachineStates.STOPPED)
         self.flushLoggedErrors(FakeError)
+
+    @defer.inlineCallbacks
+    def test_2workers_build_substantiates_insubstantiates_both_workers(self):
+        machine_controller, worker_controllers, step_controllers, \
+            master, builder_ids = yield self.create_two_worker_config(
+                controller_kwargs=dict(starts_without_substantiate=True))
+
+        for wc in worker_controllers:
+            wc.auto_start(True)
+            wc.auto_stop(True)
+
+        yield self.createBuildrequest(master, [builder_ids[0]])
+
+        machine_controller.start_machine(True)
+        for wc in worker_controllers:
+            self.assertTrue(wc.started)
+
+        step_controllers[0].finish_step(SUCCESS)
+        self.reactor.advance(0)  # force deferred suspend call to be executed
+        machine_controller.stop_machine()
+
+        for wc in worker_controllers:
+            self.assertFalse(wc.started)
+        self.assertEqual(machine_controller.machine.state,
+                         MachineStates.STOPPED)
 
     @defer.inlineCallbacks
     def test_2workers_two_builds_start_machine_concurrently(self):

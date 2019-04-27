@@ -81,6 +81,11 @@ class AbstractLatentWorker(AbstractWorker):
     build_wait_timer = None
     start_missing_on_startup = False
 
+    # override if the latent worker may connect without substantiate. Most
+    # often this will be used in workers whose lifetime is managed by
+    # latent machines.
+    starts_without_substantiate = False
+
     # Caveats: The handling of latent workers is much more complex than it
     # might seem. The code must handle at least the following conditions:
     #
@@ -507,3 +512,19 @@ class AbstractLatentWorker(AbstractWorker):
             if b.name not in self.workerforbuilders:
                 b.addLatentWorker(self)
         return super().updateWorker()
+
+
+class LocalLatentWorker(AbstractLatentWorker):
+    """
+    A worker that can be suspended by shutting down or suspending the hardware
+    it runs on. It is intended to be used with LatentMachines.
+    """
+    starts_without_substantiate = True
+
+    def checkConfig(self, name, password, **kwargs):
+        super.checkConfig(self, name, password, build_wait_timeout=-1,
+                          **kwargs)
+
+    def reconfigService(self, name, password, **kwargs):
+        return super().reconfigService(name, password, build_wait_timeout=-1,
+                                       **kwargs)

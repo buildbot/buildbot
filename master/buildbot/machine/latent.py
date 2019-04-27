@@ -90,8 +90,20 @@ class AbstractLatentMachine(Machine):
 
         self.state = States.STARTING
 
-        # Start the machine. start_machine may substantiate additional workers
-        # depending on the implementation.
+        # substantiate all workers that will start if we wake the machine. We
+        # do so before waking the machine to guarantee that we're already
+        # waiting for worker connection as waking may take time confirming
+        # machine came online. We'll call substantiate on the worker that
+        # invoked this function again, but that's okay as that function is
+        # reentrant. Note that we substantiate without gathering results
+        # because the original call to substantiate will get them anyway and
+        # we don't want to be slowed down by other workers on the machine.
+        for worker in self.workers:
+            if worker.starts_without_substantiate:
+                worker.substantiate(None, None)
+
+        # Start the machine. We don't need to wait for any workers to actually
+        # come online as that's handled in their substantiate() functions.
         try:
             ret = yield self.start_machine()
         except Exception as e:

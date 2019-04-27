@@ -51,11 +51,16 @@ class LatentController(SeverWorkerConnectionMixin):
     stop_instance() is executed.
     """
 
-    def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
+    def __init__(self, case, name, kind=None, build_wait_timeout=600,
+                 starts_without_substantiate=None, **kwargs):
         self.case = case
         self.build_wait_timeout = build_wait_timeout
         self.worker = ControllableLatentWorker(name, self, **kwargs)
         self.remote_worker = None
+
+        if starts_without_substantiate is not None:
+            self.worker.starts_without_substantiate = \
+                starts_without_substantiate
 
         self.state = States.STOPPED
         self.auto_stop_flag = False
