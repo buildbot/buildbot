@@ -191,6 +191,14 @@ class IMachine(Interface):
     pass
 
 
+class IMachineAction(Interface):
+    def perform(self, manager):
+        """ Perform an action on the machine managed by manager. Returns a
+            deferred evaluating to True if it was possible to execute the
+            action.
+        """
+
+
 class ILatentMachine(IMachine):
     """ A machine that is not always running, but can be started when requested.
     """
