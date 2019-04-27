@@ -18,6 +18,7 @@ import stat
 
 from twisted.internet import defer
 from twisted.internet import utils
+from twisted.python import log
 from zope.interface import implementer
 
 from buildbot import config
@@ -53,6 +54,18 @@ class GenericLatentMachine(AbstractLatentMachine):
         return self.stop_action.perform(self)
 
 
+@defer.inlineCallbacks
+def runProcessLogFailures(bin, args, expectedCode=0):
+    stdout, stderr, code = yield utils.getProcessOutputAndValue(bin, args)
+    if code != expectedCode:
+        log.err(('Got unexpected return code when running {} {}: '
+                 'code: {}, stdout: {}, stderr: {}').format(bin, args,
+                                                            code, stdout,
+                                                            stderr))
+        return False
+    return True
+
+
 class _LocalMachineActionMixin:
     def setupLocal(self, command):
         if not isinstance(command, list):
@@ -62,8 +75,7 @@ class _LocalMachineActionMixin:
     @defer.inlineCallbacks
     def perform(self, manager):
         args = yield manager.renderSecrets(self._command)
-        _, _, code = yield utils.getProcessOutputAndValue(args[0], args[1:])
-        return code == 0
+        return (yield runProcessLogFailures(args[0], args[1:]))
 
 
 class _SshActionMixin:
@@ -87,8 +99,7 @@ class _SshActionMixin:
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
-        _, _, code = yield utils.getProcessOutputAndValue(self._sshBin, args)
-        return code == 0)
+        return (yield runProcessLogFailures(self._sshBin, args))
 
     @defer.inlineCallbacks
     def _prepareSshKeys(self, manager, temp_dir_path):
