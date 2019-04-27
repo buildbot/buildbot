@@ -19,7 +19,7 @@ class Data {
             DataService = class DataService {
                 static initClass() {
                     self = null;
-    
+
                 //############# utils for testing
                 // register return values for the mocked get function
                     this.prototype.mocks = {};
