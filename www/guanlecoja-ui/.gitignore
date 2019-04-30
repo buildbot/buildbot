@@ -1,0 +1,6 @@
+guanlecoja-ui/
+coverage
+static
+node_modules
+npm-debug.log
+libs/
