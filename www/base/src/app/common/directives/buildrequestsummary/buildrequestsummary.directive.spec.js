@@ -14,7 +14,6 @@ describe('buildrequest summary controller', function() {
     beforeEach(angular.mock.module(function($provide) {
         $provide.value("$state",
                         {go(...args) { return goneto = args; }});
-        return null;  // those module callbacks need to return null!
     })
     );
 
@@ -27,7 +26,7 @@ describe('buildrequest summary controller', function() {
         $q = $injector.get('$q');
         dataService = $injector.get('dataService');
         // stub out the actual backend of mqservice
-        return createController = () =>
+        createController = () =>
             $controller('_buildrequestsummaryController',
                 {$scope})
         ;
@@ -43,10 +42,10 @@ describe('buildrequest summary controller', function() {
         const controller = createController();
         $timeout.flush();
         dataService.verifyNoOutstandingExpectation();
-        return expect($scope.buildrequest.buildrequestid).toBe(1);
+        expect($scope.buildrequest.buildrequestid).toBe(1);
     });
 
-    return it('should query for builds again if first query returns 0', function() {
+    it('should query for builds again if first query returns 0', function() {
         const buildrequests = [{buildrequestid: 1, builderid: 2, buildsetid: 3}];
         dataService.expect('buildrequests/1', buildrequests);
         dataService.expect('buildsets/3', buildrequests);
@@ -70,6 +69,6 @@ describe('buildrequest summary controller', function() {
 
         $timeout.flush();
         dataService.verifyNoOutstandingExpectation();
-        return expect($scope.builds.length).toBe(builds.length);
+        expect($scope.builds.length).toBe(builds.length);
     });
 });

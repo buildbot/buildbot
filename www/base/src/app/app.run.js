@@ -36,7 +36,7 @@ class ReconnectingListener {
                     $interval.cancel(interval);
                     interval = null;
                     hasBeenConnected = true;
-                    return socketService.socket.onclose = function(evt) {
+                    socketService.socket.onclose = function(evt) {
                         // ignore if we are navigating away from buildbot
                         // see https://github.com/buildbot/buildbot/issues/3306
                         if (evt.code <= 1001) {  // CLOSE_GOING_AWAY or CLOSE_NORMAL
@@ -47,7 +47,7 @@ class ReconnectingListener {
                             // send event to connectionstatus directive
                             $rootScope.$broadcast("mq.lost_connection")
                         );
-                        return reloadWhenReady();
+                        reloadWhenReady();
                     };
                 }
             }

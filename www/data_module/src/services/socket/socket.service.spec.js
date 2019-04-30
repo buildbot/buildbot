@@ -43,14 +43,10 @@ describe('Socket service', function() {
             }
 
             flush() {
-                return (() => {
-                    let message;
-                    const result = [];
-                    while ((message = this.sendQueue.shift())) {
-                        result.push(this.webSocket.onmessage(message));
-                    }
-                    return result;
-                })();
+                let message;
+                while ((message = this.sendQueue.shift())) {
+                    this.webSocket.onmessage(message);
+                }
             }
 
             getWebSocket() {
@@ -74,7 +70,7 @@ describe('Socket service', function() {
         socketService = $injector.get('socketService');
         ({ socket } = socketService);
         spyOn(socket, 'send').and.callThrough();
-        return spyOn(socket, 'onmessage').and.callThrough();
+        spyOn(socket, 'onmessage').and.callThrough();
     };
 
     beforeEach(inject(injected));
@@ -96,7 +92,7 @@ describe('Socket service', function() {
         expect(socket.send).toHaveBeenCalled();
         expect(webSocketBackend.receiveQueue).toContain(angular.toJson(msg1));
         expect(webSocketBackend.receiveQueue).toContain(angular.toJson(msg2));
-        return expect(webSocketBackend.receiveQueue).not.toContain(angular.toJson(msg3));
+        expect(webSocketBackend.receiveQueue).not.toContain(angular.toJson(msg3));
     });
 
     it('should add an _id to each message', function() {
@@ -105,7 +101,7 @@ describe('Socket service', function() {
         socketService.send({});
         expect(socket.send).toHaveBeenCalledWith(jasmine.any(String));
         const argument = socket.send.calls.argsFor(0)[0];
-        return expect(angular.fromJson(argument)._id).toBeDefined();
+        expect(angular.fromJson(argument)._id).toBeDefined();
     });
 
     it('should resolve the promise when a response message is received with code 200', function() {
@@ -127,7 +123,7 @@ describe('Socket service', function() {
         webSocketBackend.send(response);
         $rootScope.$apply(() => webSocketBackend.flush());
         // the promise should be resolved
-        return expect(handler).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalled();
     });
 
     it('should reject the promise when a response message is received, but the code is not 200', function() {
@@ -152,11 +148,11 @@ describe('Socket service', function() {
         $rootScope.$apply(() => webSocketBackend.flush());
         // the promise should be rejected
         expect(handler).not.toHaveBeenCalled();
-        return expect(errorHandler).toHaveBeenCalled();
+        expect(errorHandler).toHaveBeenCalled();
     });
 
 
-    return describe('getUrl()', function() {
+    describe('getUrl()', function() {
 
         it('should return the WebSocket url based on the host and port (localhost)', function() {
             const host = 'localhost';
@@ -166,7 +162,7 @@ describe('Socket service', function() {
             spyOn(socketService, 'getRootPath').and.returnValue('/');
 
             const url = socketService.getUrl();
-            return expect(url).toBe('ws://localhost:8080/ws');
+            expect(url).toBe('ws://localhost:8080/ws');
         });
 
         it('should return the WebSocket url based on the host and port', function() {
@@ -177,7 +173,7 @@ describe('Socket service', function() {
             spyOn(socketService, 'getRootPath').and.returnValue('/');
 
             const url = socketService.getUrl();
-            return expect(url).toBe('ws://buildbot.test/ws');
+            expect(url).toBe('ws://buildbot.test/ws');
         });
 
         it('should return the WebSocket url based on the host and port and protocol', function() {
@@ -190,10 +186,10 @@ describe('Socket service', function() {
             spyOn(socketService, 'getRootPath').and.returnValue('/');
 
             const url = socketService.getUrl();
-            return expect(url).toBe('wss://buildbot.test/ws');
+            expect(url).toBe('wss://buildbot.test/ws');
         });
 
-        return it('should return the WebSocket url based on the host and port and protocol and basedir', function() {
+        it('should return the WebSocket url based on the host and port and protocol and basedir', function() {
             const host = 'buildbot.test';
             const port = 443;
             const protocol = 'https';
@@ -204,7 +200,7 @@ describe('Socket service', function() {
             spyOn(socketService, 'getRootPath').and.returnValue(path);
 
             const url = socketService.getUrl();
-            return expect(url).toBe('wss://buildbot.test/travis/ws');
+            expect(url).toBe('wss://buildbot.test/travis/ws');
         });
     });
 });

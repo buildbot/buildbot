@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 beforeEach(angular.mock.module('app'));
 
 describe('buildrequest controller', function() {
@@ -20,7 +15,7 @@ describe('buildrequest controller', function() {
         $httpBackend = $injector.get('$httpBackend');
 
         modal = {};
-        return createController = () =>
+        createController = () =>
             $controller('forceDialogController', {
                 $scope,
                 builderid: 1,
@@ -35,15 +30,15 @@ describe('buildrequest controller', function() {
     it('should query for forcecheduler', function() {
         dataService.when('forceschedulers/forcesched', [{all_fields:[{'foo': 'int'}]}]);
         const controller = createController();
-        return $rootScope.$apply();
+        $rootScope.$apply();
     });
 
-    return it('should call forcecheduler control api when ok', function() {
+    it('should call forcecheduler control api when ok', function() {
         dataService.when('forceschedulers/forcesched', [{name: "forcesched", all_fields:[{'foo': 'int'}]}]);
         const controller = createController();
         $timeout.flush();
         $httpBackend.when('POST', 'api/v2/forceschedulers/forcesched') .respond("{}");
         $scope.ok();
-        return $rootScope.$apply();
+        $rootScope.$apply();
     });
 });

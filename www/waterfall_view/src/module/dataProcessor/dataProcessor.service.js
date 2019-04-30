@@ -1,7 +1,6 @@
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
  * DS205: Consider reworking code to avoid use of IIFEs
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
@@ -56,20 +55,16 @@ class DataProcessor {
 
     // Add the most recent build result to the builder
     addStatus(builders) {
-        return (() => {
-            const result = [];
-            for (let builder of Array.from(builders)) {
-                let latest = null;
-                for (let build of Array.from(builder.builds)) {
-                    latest = build;
-                    if (build.number > latest.number) { latest = build; }
-                }
-                builder.started_at = latest != null ? latest.started_at : undefined;
-                builder.complete = (latest != null ? latest.complete : undefined) || false;
-                result.push(builder.results = latest != null ? latest.results : undefined);
+        for (let builder of Array.from(builders)) {
+            let latest = null;
+            for (let build of Array.from(builder.builds)) {
+                latest = build;
+                if (build.number > latest.number) { latest = build; }
             }
-            return result;
-        })();
+            builder.started_at = latest != null ? latest.started_at : undefined;
+            builder.complete = (latest != null ? latest.complete : undefined) || false;
+            builder.results = latest != null ? latest.results : undefined;
+        }
     }
 
     filterBuilders(builders) {

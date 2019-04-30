@@ -26,10 +26,10 @@ describe('minimalistic test', function() {
 
     beforeEach((inject(injected)));
 
-    return it('should load ace ui ', function() {
+    it('should load ace ui ', function() {
         expect(elmBody).toBeDefined();
         // if we can find a div with class ace_layer, then ace has loaded
         const elm = elmBody.find('.ace_layer');
-        return expect(elm.length).toBeGreaterThan(0);
+        expect(elm.length).toBeGreaterThan(0);
     });
 });

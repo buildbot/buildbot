@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 beforeEach(angular.mock.module('app'));
 
 describe('buildsticker controller', function() {
@@ -17,12 +12,12 @@ describe('buildsticker controller', function() {
         const $q = $injector.get('$q');
         $timeout = $injector.get('$timeout');
         results = $injector.get('RESULTS');
-        return dataService = $injector.get('dataService');
+        dataService = $injector.get('dataService');
     };
 
     beforeEach(inject(injected));
 
-    return it('directive should generate correct html', function() {
+    it('directive should generate correct html', function() {
         const build = {buildid: 3, builderid: 2, number: 1};
         dataService.when('builds/3', [build]);
         dataService.when('builders/2', [{builderid: 2}]);
@@ -82,6 +77,6 @@ describe('buildsticker controller', function() {
         expect(durationSpan.hasClass('ng-hide')).toBe(false);
         expect(startedSpan.hasClass('ng-hide')).toBe(true);
         expect(durationSpan.text()).toBe('1 s');
-        return expect(stateSpan.text()).toBe('failed');
+        expect(stateSpan.text()).toBe('failed');
     });
 });

@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 describe('Stream service', function() {
     let stream;
     beforeEach(angular.mock.module('bbData'));
@@ -10,14 +5,14 @@ describe('Stream service', function() {
     let Stream = (stream = null);
     const injected = function($injector) {
         Stream = $injector.get('Stream');
-        return stream = new Stream();
+        stream = new Stream();
     };
 
     beforeEach(inject(injected));
 
     it('should be defined', function() {
         expect(Stream).toBeDefined();
-        return expect(stream).toBeDefined();
+        expect(stream).toBeDefined();
     });
 
     it('should add the listener to listeners on subscribe call', function() {
@@ -25,7 +20,7 @@ describe('Stream service', function() {
         expect(listeners.length).toBe(0);
 
         stream.subscribe(function() {});
-        return expect(listeners.length).toBe(1);
+        expect(listeners.length).toBe(1);
     });
 
     it('should add a unique id to each listener passed in to subscribe', function() {
@@ -39,7 +34,7 @@ describe('Stream service', function() {
 
         expect(listener1.id).toBeDefined();
         expect(listener2.id).toBeDefined();
-        return expect(listener1.id).not.toBe(listener2.id);
+        expect(listener1.id).not.toBe(listener2.id);
     });
 
     it('should return the unsubscribe function on subscribe call', function() {
@@ -53,14 +48,14 @@ describe('Stream service', function() {
 
         unsubscribe();
         expect(listeners).not.toContain(listener);
-        return expect(listeners).toContain(otherListener);
+        expect(listeners).toContain(otherListener);
     });
 
     it('should call all listeners on push call', function() {
         const data = {a: 'A', b: 'B'};
         const listeners = {
-            first(data) { return expect(data).toEqual({a: 'A', b: 'B'}); },
-            second(data) { return expect(data).toEqual({a: 'A', b: 'B'}); }
+            first(data) { expect(data).toEqual({a: 'A', b: 'B'}); },
+            second(data) { expect(data).toEqual({a: 'A', b: 'B'}); }
         };
 
         spyOn(listeners, 'first').and.callThrough();
@@ -75,7 +70,7 @@ describe('Stream service', function() {
         stream.push(data);
 
         expect(listeners.first).toHaveBeenCalled();
-        return expect(listeners.second).toHaveBeenCalled();
+        expect(listeners.second).toHaveBeenCalled();
     });
 
     it('should remove all listeners on destroy call', function() {
@@ -87,10 +82,10 @@ describe('Stream service', function() {
         expect(listeners.length).not.toBe(0);
 
         stream.destroy();
-        return expect(listeners.length).toBe(0);
+        expect(listeners.length).toBe(0);
     });
 
-    return it('should call the unsubscribe listener on unsubscribe call', function() {
+    it('should call the unsubscribe listener on unsubscribe call', function() {
         spyOn(stream, 'onUnsubscribe');
 
         const listener = function() {};
@@ -98,6 +93,6 @@ describe('Stream service', function() {
 
         expect(stream.onUnsubscribe).not.toHaveBeenCalled();
         unsubscribe();
-        return expect(stream.onUnsubscribe).toHaveBeenCalledWith(listener);
+        expect(stream.onUnsubscribe).toHaveBeenCalledWith(listener);
     });
 });

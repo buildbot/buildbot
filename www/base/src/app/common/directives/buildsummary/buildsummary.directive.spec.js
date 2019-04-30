@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 beforeEach(angular.mock.module('app'));
 
 describe('buildsummary controller', function() {
@@ -30,7 +25,7 @@ describe('buildsummary controller', function() {
         dataService.when('builds/1', [{buildid: 1, builderid: 1}]);
         dataService.when('builders/1', [{builderid: 1}]);
         dataService.when('builds/1/steps', [{builderid: 1, stepid: 1, number: 1}]);
-        return dataService.when('steps/1/logs', [{stepid: 1, logid: 1}, {stepid: 1, logid: 2}]);
+        dataService.when('steps/1/logs', [{stepid: 1, logid: 1}, {stepid: 1, logid: 2}]);
     };
 
     beforeEach(inject(injected));
@@ -54,7 +49,7 @@ describe('buildsummary controller', function() {
         buildsummary.toggleDetails();
         expect(buildsummary.isStepDisplayed({results:results.SUCCESS})).toBe(false);
         expect(buildsummary.isStepDisplayed({results:results.WARNING})).toBe(false);
-        return expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(false);
+        expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(false);
     });
 
     it('should provide correct isStepDisplayed when not condensed', function() {
@@ -73,14 +68,14 @@ describe('buildsummary controller', function() {
         expect(buildsummary.isStepDisplayed({results:results.SUCCESS})).toBe(false);
         expect(buildsummary.isStepDisplayed({results:results.WARNING})).toBe(true);
         expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(true);
-        return buildsummary.toggleDetails();
+        buildsummary.toggleDetails();
     });
 
     it('should provide correct getBuildRequestIDFromURL', function() {
         const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
         scope.$apply();
         const { buildsummary } = element.isolateScope();
-        return expect(buildsummary.getBuildRequestIDFromURL(`${baseurl}#buildrequests/123`))
+        expect(buildsummary.getBuildRequestIDFromURL(`${baseurl}#buildrequests/123`))
         .toBe(123);
     });
 
@@ -94,17 +89,17 @@ describe('buildsummary controller', function() {
         .toBe(false);
         expect(buildsummary.isBuildRequestURL(`${baseurl}#builds/123`))
         .toBe(false);
-        return expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/bla`))
+        expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/bla`))
         .toBe(false);
     });
 
-    return it('should provide correct isBuildURL', function() {
+    it('should provide correct isBuildURL', function() {
         const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
         scope.$apply();
         const { buildsummary } = element.isolateScope();
         expect(buildsummary.isBuildURL(`${baseurl}#builders/123/builds/123`))
         .toBe(true);
-        return expect(buildsummary.isBuildURL(`${baseurl}#builders/sdf/builds/123`))
+        expect(buildsummary.isBuildURL(`${baseurl}#builders/sdf/builds/123`))
         .toBe(false);
     });
 });

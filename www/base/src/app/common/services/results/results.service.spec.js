@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 beforeEach(angular.mock.module('app'));
 
 describe('results service', function() {
@@ -28,7 +23,7 @@ describe('results service', function() {
             started_at:undefined
         })).toBe("results_UNKNOWN");
 
-        return expect(resultsService.results2class({
+        expect(resultsService.results2class({
             results:undefined,
             complete:false,
             started_at:10
@@ -37,7 +32,7 @@ describe('results service', function() {
         )).toBe("results_PENDING pulse");
     });
 
-    return it('should provide correct results2Text', function() {
+    it('should provide correct results2Text', function() {
         const { results } = resultsService;
         const results2text = r => resultsService.results2text({results: r});
 
@@ -53,7 +48,7 @@ describe('results service', function() {
             started_at:undefined
         })).toBe("...");
 
-        return expect(resultsService.results2text({
+        expect(resultsService.results2text({
             results:undefined,
             complete:false,
             started_at:10

@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 describe('Rest service', function() {
     let $httpBackend;
     beforeEach(angular.mock.module('bbData'));
@@ -13,14 +8,14 @@ describe('Rest service', function() {
     let restService = ($httpBackend = undefined);
     const injected = function($injector) {
         restService = $injector.get('restService');
-        return $httpBackend = $injector.get('$httpBackend');
+        $httpBackend = $injector.get('$httpBackend');
     };
 
     beforeEach(inject(injected));
 
     afterEach(function() {
         $httpBackend.verifyNoOutstandingExpectation();
-        return $httpBackend.verifyNoOutstandingRequest();
+        $httpBackend.verifyNoOutstandingRequest();
     });
 
     it('should be defined', () => expect(restService).toBeDefined());
@@ -34,7 +29,7 @@ describe('Rest service', function() {
         expect(gotResponse).toBeNull();
 
         $httpBackend.flush();
-        return expect(gotResponse).toEqual(response);
+        expect(gotResponse).toEqual(response);
     });
 
     it('should make an ajax GET call to /api/endpoint with parameters', function() {
@@ -42,7 +37,7 @@ describe('Rest service', function() {
         $httpBackend.whenGET('/api/endpoint?key=value').respond(200);
 
         restService.get('endpoint', params);
-        return $httpBackend.flush();
+        $httpBackend.flush();
     });
 
     it('should reject the promise on error', function() {
@@ -54,7 +49,7 @@ describe('Rest service', function() {
         , reason => gotResponse = reason);
 
         $httpBackend.flush();
-        return expect(gotResponse).toBe(error);
+        expect(gotResponse).toBe(error);
     });
 
     it('should make an ajax POST call to /api/endpoint', function() {
@@ -66,7 +61,7 @@ describe('Rest service', function() {
         restService.post('endpoint', data).then(r => gotResponse = r);
 
         $httpBackend.flush();
-        return expect(gotResponse).toEqual(response);
+        expect(gotResponse).toEqual(response);
     });
 
     it('should reject the promise when the response is not valid JSON', function() {
@@ -81,10 +76,10 @@ describe('Rest service', function() {
 
         $httpBackend.flush();
         expect(gotResponse).not.toBeNull();
-        return expect(gotResponse).not.toEqual(response);
+        expect(gotResponse).not.toEqual(response);
     });
 
-    return it('should reject the promise when cancelled', inject(function($rootScope) {
+    it('should reject the promise when cancelled', inject(function($rootScope) {
         $httpBackend.expectGET('/api/endpoint').respond({});
 
         let gotResponse = null;
@@ -96,7 +91,7 @@ describe('Rest service', function() {
         request.cancel();
         $rootScope.$apply();
         expect(gotResponse).toBeNull();
-        return expect(rejected).toBe(true);
+        expect(rejected).toBe(true);
     })
     );
 });

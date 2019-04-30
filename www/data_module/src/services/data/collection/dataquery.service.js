@@ -115,13 +115,9 @@ class DataQuery {
             }
 
             limit(array, limit) {
-                return (() => {
-                    const result = [];
-                    while (array.length > limit) {
-                        result.push(array.pop());
-                    }
-                    return result;
-                })();
+                while (array.length > limit) {
+                    array.pop();
+                }
             }
         });
     }

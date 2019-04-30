@@ -7,7 +7,6 @@ beforeEach(() =>
     // Mock modalService
     module(function($provide) {
         $provide.service('$uibModalInstance', function() { return {close() {}}; });
-        return null;
     })
 );
 
@@ -21,7 +20,7 @@ describe('Waterfall modal controller', function() {
         $uibModalInstance = $injector.get('$uibModalInstance');
         scope = $rootScope.$new();
 
-        return createController = () =>
+        createController = () =>
             $controller('waterfallModalController as m', {
                 $scope: scope,
                 selectedBuild: {}
@@ -37,7 +36,7 @@ describe('Waterfall modal controller', function() {
         expect(m).toBeDefined();
         // close function should be to defined
         expect(m.close).toBeDefined();
-        return expect(typeof m.close).toBe('function');
+        expect(typeof m.close).toBe('function');
     });
 
     it('should call close() on stateChangeStart event', function() {
@@ -45,15 +44,15 @@ describe('Waterfall modal controller', function() {
         const { m } = scope;
         spyOn(m, 'close');
         $rootScope.$broadcast('$stateChangeStart');
-        return expect(m.close).toHaveBeenCalled();
+        expect(m.close).toHaveBeenCalled();
     });
 
-    return it('should call $uibModalInstance.close on close()', function() {
+    it('should call $uibModalInstance.close on close()', function() {
         createController();
         const { m } = scope;
         spyOn($uibModalInstance, 'close');
         expect($uibModalInstance.close).not.toHaveBeenCalled();
         m.close();
-        return expect($uibModalInstance.close).toHaveBeenCalled();
+        expect($uibModalInstance.close).toHaveBeenCalled();
     });
 });

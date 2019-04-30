@@ -1,7 +1,6 @@
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
  * DS205: Consider reworking code to avoid use of IIFEs
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
@@ -75,7 +74,7 @@ describe('Data Processor service', function() {
         }
         ];
         builds = new Collection("builds", {});
-        return builds.from(_builds);
+        builds.from(_builds);
     };
 
     beforeEach(inject(injected));
@@ -87,7 +86,7 @@ describe('Data Processor service', function() {
         expect(typeof dataProcessorService.getGroups).toBe('function');
         // addStatus is a function
         expect(dataProcessorService.addStatus).toBeDefined();
-        return expect(typeof dataProcessorService.addStatus).toBe('function');
+        expect(typeof dataProcessorService.addStatus).toBe('function');
     });
 
     it('should add builds to builders', function() {
@@ -102,7 +101,7 @@ describe('Data Processor service', function() {
         for (let builder of Array.from(builders)) {
             buildsInBuilders += builder.builds.length;
         }
-        return expect(buildsInBuilders).toEqual(builds.length);
+        expect(buildsInBuilders).toEqual(builds.length);
     });
 
     it('should create groups', function() {
@@ -130,43 +129,35 @@ describe('Data Processor service', function() {
         expect(buildsInGroups).toEqual(builds.length);
 
         // If the time between two builds is less than the threshold, they should be in different groups
-        return Array.from(builds).map((build1, i) =>
-            (() => {
-                const result = [];
-                for (let build2 of Array.from(builds.slice(i + 1))) {
-                // If build2 starts earlier than build1, swap them
-                    if (build2.buildid < build1.buildid) {
-                        [build1, build2] = Array.from([build2, build1]);
-                    }
-                    if ((build2.started_at - build1.complete_at) > threshold) {
-                        result.push(expect(build1.groupid).not.toBe(build2.groupid));
-                    } else {
-                        result.push(undefined);
-                    }
+        Array.from(builds).map((build1, i) => {
+            for (let build2 of Array.from(builds.slice(i + 1))) {
+            // If build2 starts earlier than build1, swap them
+                if (build2.buildid < build1.buildid) {
+                    [build1, build2] = Array.from([build2, build1]);
                 }
-                return result;
-            })());
+                if ((build2.started_at - build1.complete_at) > threshold) {
+                    expect(build1.groupid).not.toBe(build2.groupid);
+                }
+            }
+        });
     });
 
     it('should add complete_at to unfinished builds', function() {
         const unfinishedBuilds = builds.filter(build => !build.complete);
         dataProcessorService.getGroups(builders, unfinishedBuilds, 0);
-        return (() => {
-            const result = [];
-            for (let build of Array.from(unfinishedBuilds)) {
-                expect(build.complete_at).toBeDefined();
-                // It should be a correct timestamp
-                result.push(expect(build.complete_at.toString().length).toBe(10));
-            }
-            return result;
-        })();
+
+        for (let build of Array.from(unfinishedBuilds)) {
+            expect(build.complete_at).toBeDefined();
+            // It should be a correct timestamp
+            expect(build.complete_at.toString().length).toBe(10);
+        }
     });
 
-    return it('should add status to builders', function() {
+    it('should add status to builders', function() {
         // Add builds to builders first
         dataProcessorService.getGroups(builders, builds, 0);
         dataProcessorService.addStatus(builders);
-        return Array.from(builders).map((builder) =>
+        Array.from(builders).map((builder) =>
             builder.complete ? expect(builder.results).toBeDefined()
             : expect(builder.results).not.toBeDefined());
     });

@@ -8,11 +8,9 @@
 beforeEach(function() {
     module(function($provide) {
         $provide.service('$uibModal', function() { return {open() {}}; });
-        return null;
     });
     module(function($provide) {
         $provide.service('resultsService', function() { return {results2class() {}}; });
-        return null;
     });
 
     // Mock bbSettingsProvider
@@ -42,7 +40,6 @@ beforeEach(function() {
             return Cls;
         })()
         );
-        return null;
     });
     return module('console_view');
 });
@@ -52,14 +49,14 @@ describe('Console view', function() {
     beforeEach(inject($injector => $state = $injector.get('$state'))
     );
 
-    return it('should register a new state with the correct configuration', function() {
+    it('should register a new state with the correct configuration', function() {
         const name = 'console';
         const state = $state.get().pop();
         const { data } = state;
         expect(state.controller).toBe(`${name}Controller`);
         expect(state.controllerAs).toBe('c');
         expect(state.templateUrl).toBe(`console_view/views/${name}.html`);
-        return expect(state.url).toBe(`/${name}`);
+        expect(state.url).toBe(`/${name}`);
     });
 });
 
@@ -171,7 +168,7 @@ describe('Console view controller', function() {
 
         // Create new controller using controller as syntax
         const $controller = $injector.get('$controller');
-        return createController = () =>
+        createController = () =>
             $controller('consoleController as c', {
                 // Inject controller dependencies
                 $q,
@@ -186,7 +183,7 @@ describe('Console view controller', function() {
 
     it('should be defined', function() {
         createController();
-        return expect(scope.c).toBeDefined();
+        expect(scope.c).toBeDefined();
     });
 
     it('should bind the builds, builders, changes, buildrequests and buildsets to scope', function() {
@@ -202,7 +199,7 @@ describe('Console view controller', function() {
         expect(scope.c.buildrequests).toBeDefined();
         expect(scope.c.buildrequests.length).toBe(buildrequests.length);
         expect(scope.c.buildsets).toBeDefined();
-        return expect(scope.c.buildsets.length).toBe(buildsets.length);
+        expect(scope.c.buildsets.length).toBe(buildsets.length);
     });
 
     it('should match the builds with the change', function() {
@@ -216,10 +213,10 @@ describe('Console view controller', function() {
         expect(builders[0].builds[0].buildid).toBe(1);
         expect(builders[1].builds[0].buildid).toBe(2);
         expect(builders[2].builds[0].buildid).toBe(4);
-        return expect(builders[3].builds[0].buildid).toBe(3);
+        expect(builders[3].builds[0].buildid).toBe(3);
     });
 
-    return xit('should match sort the builders by tag groups', function() {
+    xit('should match sort the builders by tag groups', function() {
         createController();
         const _builders = FIXTURES['builders.fixture.json'].builders;
         for (let builder of Array.from(_builders)) {
@@ -227,6 +224,6 @@ describe('Console view controller', function() {
         }
         scope.c.sortBuildersByTags(_builders);
         expect(_builders.length).toBe(scope.c.builders.length);
-        return expect(scope.c.tag_lines.length).toEqual(5);
+        expect(scope.c.tag_lines.length).toEqual(5);
     });
 });

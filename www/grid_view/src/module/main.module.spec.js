@@ -7,7 +7,6 @@
 beforeEach(function() {
     module(function($provide) {
         $provide.service('resultsService', function() { return {results2class() {}}; });
-        return null;
     });
 
     // Mock bbSettingsProvider
@@ -37,7 +36,6 @@ beforeEach(function() {
             return Cls;
         })()
         );
-        return null;
     });
     return module('grid_view');
 });
@@ -204,7 +202,7 @@ describe('Grid view controller', function() {
 
         // Create new controller using controller as syntax
         const $controller = $injector.get('$controller');
-        return createController = () =>
+        createController = () =>
             $controller('gridController as C',
                 // Inject controller dependencies
                 {$scope: scope})
@@ -215,7 +213,7 @@ describe('Grid view controller', function() {
 
     it('should be defined', function() {
         createController();
-        return expect(scope.C).toBeDefined();
+        expect(scope.C).toBeDefined();
     });
 
     it('should bind the builds, builders, changes, buildrequests and buildsets to scope', function() {
@@ -230,7 +228,7 @@ describe('Grid view controller', function() {
         expect(scope.C.buildrequests).toBeDefined();
         expect(scope.C.buildrequests.length).toBe(buildrequests.length);
         expect(scope.C.buildsets).toBeDefined();
-        return expect(scope.C.buildsets.length).toBe(buildsets.length);
+        expect(scope.C.buildsets.length).toBe(buildsets.length);
     });
 
     it('should list branches', function() {
@@ -238,7 +236,7 @@ describe('Grid view controller', function() {
         $rootScope.$digest();
         scope.C.onChange();
         expect(scope.branches).toBeDefined();
-        return expect(scope.branches).toEqual(['refs/pull/3333/merge', 'master']);
+        expect(scope.branches).toEqual(['refs/pull/3333/merge', 'master']);
     });
 
     it('should only list changes of the selected branch', function() {
@@ -247,7 +245,7 @@ describe('Grid view controller', function() {
         scope.C.branch = 'master';
         scope.C.onChange();
         expect(scope.changes).toBeDefined();
-        return expect(scope.changes.length).toBe(2);
+        expect(scope.changes.length).toBe(2);
     });
 
     it('should only list builders with builds of the selected branch', function() {
@@ -256,15 +254,15 @@ describe('Grid view controller', function() {
         scope.C.branch = 'refs/pull/3333/merge';
         scope.C.onChange();
         expect(scope.builders).toBeDefined();
-        return expect(scope.builders.length).toBe(3);
+        expect(scope.builders.length).toBe(3);
     });
 
-    return it('should only list builders with the selected tags', function() {
+    it('should only list builders with the selected tags', function() {
         createController();
         $rootScope.$digest();
         scope.C.tags = ['b'];
         scope.C.onChange();
         expect(scope.builders).toBeDefined();
-        return expect(scope.builders.length).toBe(2);
+        expect(scope.builders.length).toBe(2);
     });
 });

@@ -36,7 +36,7 @@ class _buildsummary {
         // to get an update of the current builds every seconds, we need to update self.now
         // but we want to stop counting when the scope destroys!
         const stop = $interval(() => {
-            return this.now = moment().unix();
+            this.now = moment().unix();
         }
         , 1000);
         $scope.$on("$destroy", () => $interval.cancel(stop));

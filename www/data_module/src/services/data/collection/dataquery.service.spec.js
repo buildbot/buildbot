@@ -57,7 +57,7 @@ describe('dataquery service', function() {
                 return array;
             }
         }
-        return wrappedDataQuery = new WrappedDataQuery();
+        wrappedDataQuery = new WrappedDataQuery();
     };
     beforeEach(inject(injected));
 
@@ -68,67 +68,67 @@ describe('dataquery service', function() {
         it('should filter the array (one filter)', function() {
             const result = wrappedDataQuery.filter(testArray, {complete: false});
             expect(result.length).toBe(1);
-            return expect(result).toContain(testArray[0]);
+            expect(result).toContain(testArray[0]);
         });
 
         it('should filter the array (more than one filters)', function() {
             const result = wrappedDataQuery.filter(testArray, {complete: true, buildrequestid: 1});
             expect(result.length).toBe(2);
             expect(result).toContain(testArray[1]);
-            return expect(result).toContain(testArray[2]);
+            expect(result).toContain(testArray[2]);
         });
 
         it('should filter the array (eq - equal)', function() {
             const result = wrappedDataQuery.filter(testArray, {'complete__eq': true});
             expect(result.length).toBe(2);
             expect(result).toContain(testArray[1]);
-            return expect(result).toContain(testArray[2]);
+            expect(result).toContain(testArray[2]);
         });
 
         it('should filter the array (two eq)', function() {
             const result = wrappedDataQuery.filter(testArray, {'buildid__eq': [1, 2]});
             expect(result.length).toBe(2);
             expect(result).toContain(testArray[1]);
-            return expect(result).toContain(testArray[2]);
+            expect(result).toContain(testArray[2]);
         });
 
         it('should treat empty eq criteria as no restriction', function() {
             const result = wrappedDataQuery.filter(testArray, {'buildid__eq': []});
-            return expect(result.length).toBe(3);
+            expect(result.length).toBe(3);
         });
 
         it('should filter the array (ne - not equal)', function() {
             const result = wrappedDataQuery.filter(testArray, {'complete__ne': true});
             expect(result.length).toBe(1);
-            return expect(result).toContain(testArray[0]);
+            expect(result).toContain(testArray[0]);
         });
 
         it('should filter the array (lt - less than)', function() {
             const result = wrappedDataQuery.filter(testArray, {'buildid__lt': 3});
             expect(result.length).toBe(2);
             expect(result).toContain(testArray[1]);
-            return expect(result).toContain(testArray[2]);
+            expect(result).toContain(testArray[2]);
         });
 
         it('should filter the array (le - less than or equal to)', function() {
             const result = wrappedDataQuery.filter(testArray, {'buildid__le': 3});
-            return expect(result.length).toBe(3);
+            expect(result.length).toBe(3);
         });
 
         it('should filter the array (gt - greater than)', function() {
             const result = wrappedDataQuery.filter(testArray, {'started_at__gt': 1417803025});
             expect(result.length).toBe(1);
-            return expect(result).toContain(testArray[1]);
+            expect(result).toContain(testArray[1]);
         });
 
         it('should filter the array (ge - greater than or equal to)', function() {
             const result = wrappedDataQuery.filter(testArray, {'started_at__ge': 1417803025});
             expect(result.length).toBe(2);
             expect(result).toContain(testArray[1]);
-            return expect(result).toContain(testArray[2]);
+            expect(result).toContain(testArray[2]);
         });
 
-        return it('should convert on/off, true/false, yes/no to boolean', function() {
+        it('should convert on/off, true/false, yes/no to boolean', function() {
             const resultTrue = wrappedDataQuery.filter(testArray, {complete: true});
             const resultFalse = wrappedDataQuery.filter(testArray, {complete: false});
 
@@ -144,7 +144,7 @@ describe('dataquery service', function() {
             result = wrappedDataQuery.filter(testArray, {complete: 'false'});
             expect(result).toEqual(resultFalse);
             result = wrappedDataQuery.filter(testArray, {complete: 'no'});
-            return expect(result).toEqual(resultFalse);
+            expect(result).toEqual(resultFalse);
         });
     });
 
@@ -154,36 +154,36 @@ describe('dataquery service', function() {
             const result = wrappedDataQuery.sort(testArray, 'buildid');
             expect(result[0]).toEqual(testArray[1]);
             expect(result[1]).toEqual(testArray[2]);
-            return expect(result[2]).toEqual(testArray[0]);
+            expect(result[2]).toEqual(testArray[0]);
         });
 
         it('should sort the array (one parameter, - reverse)', function() {
             const result = wrappedDataQuery.sort(testArray, '-buildid');
             expect(result[0]).toEqual(testArray[0]);
             expect(result[1]).toEqual(testArray[2]);
-            return expect(result[2]).toEqual(testArray[1]);
+            expect(result[2]).toEqual(testArray[1]);
         });
 
-        return it('should sort the array (more parameter)', function() {
+        it('should sort the array (more parameter)', function() {
             const result = wrappedDataQuery.sort(testArray, ['builderid', '-buildid']);
             expect(result[0]).toEqual(testArray[0]);
             expect(result[1]).toEqual(testArray[2]);
-            return expect(result[2]).toEqual(testArray[1]);
+            expect(result[2]).toEqual(testArray[1]);
         });
     });
 
-    return describe('limit(array, limit)', function() {
+    describe('limit(array, limit)', function() {
 
         it('should slice the array', function() {
             const result = wrappedDataQuery.limit(testArray, 1);
             expect(result.length).toBe(1);
-            return expect(result[0]).toEqual(testArray[0]);
+            expect(result[0]).toEqual(testArray[0]);
         });
 
-        return it('should return the array when the limit >= array.length', function() {
+        it('should return the array when the limit >= array.length', function() {
             const result = wrappedDataQuery.limit(testArray, 3);
             expect(result.length).toBe(3);
-            return expect(result[2]).toEqual(testArray[2]);
+            expect(result[2]).toEqual(testArray[2]);
         });
     });
 });

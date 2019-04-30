@@ -64,7 +64,6 @@ describe('settingsService', function() {
                 ]
             }
             ]});
-        return null;
     })
     );
 
@@ -97,7 +96,7 @@ describe('settingsService', function() {
             ]
         };
         const group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group);
-        return expect(group_result).toEqual({
+        expect(group_result).toEqual({
             name:'Auth',
             caption: 'Auth related settings',
             items:[{
@@ -133,7 +132,7 @@ describe('settingsService', function() {
             items:[]
         };
         const group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group);
-        return expect(group_result).toEqual({
+        expect(group_result).toEqual({
             name:'Auth',
             caption: 'Auth related settings',
             items:[]});}));
@@ -161,7 +160,7 @@ describe('settingsService', function() {
             ]
         };
         const group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group);
-        return expect(group_result).toEqual({
+        expect(group_result).toEqual({
             name:'System',
             caption: 'System related settings',
             items:[{
@@ -196,7 +195,7 @@ describe('settingsService', function() {
             ]
         };
         const group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, undefined);
-        return expect(group_result).toBeUndefined();
+        expect(group_result).toBeUndefined();
     })
     );
 
@@ -218,7 +217,7 @@ describe('settingsService', function() {
             ]
         };
         const group_result = bbSettingsServiceProviderRef._mergeNewGroup(undefined, new_group);
-        return expect(group_result).toEqual({
+        expect(group_result).toEqual({
             name:'Auth',
             caption: 'Auth related settings',
             items:[{
@@ -255,7 +254,7 @@ describe('settingsService', function() {
             let group_result;
             return group_result = bbSettingsServiceProviderRef.addSettingsGroup(group);
         };
-        return expect(exceptionRun).toThrow();
+        expect(exceptionRun).toThrow();
     })
     );
 
@@ -282,7 +281,7 @@ describe('settingsService', function() {
             ]
         };
         const group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group);
-        return expect(group_result).toEqual({
+        expect(group_result).toEqual({
             name:'System',
             caption: 'System related settings',
             items:[{
@@ -301,7 +300,7 @@ describe('settingsService', function() {
 
     it('should generate correct settings', inject(function(bbSettingsService) {
         const groups = bbSettingsService.getSettingsGroups();
-        return expect(groups['Release']).toEqual({
+        expect(groups['Release']).toEqual({
             name:'Release',
             caption: 'Release related settings',
             items:[{
@@ -340,7 +339,7 @@ describe('settingsService', function() {
         const userSetting3 = bbSettingsService.getSetting('UserAA.User_checkbox1');
         expect(userSetting1).toBeDefined();
         expect(userSetting2).toBeUndefined();
-        return expect(userSetting3).toBeUndefined();
+        expect(userSetting3).toBeUndefined();
     })
     );
 
@@ -351,18 +350,18 @@ describe('settingsService', function() {
         bbSettingsService.save();
         const storageGroups = angular.fromJson(localStorage.getItem('settings'));
         const storageCheckbox = storageGroups['User'].items[0].value;
-        return expect(storageCheckbox).toBeTruthy();
+        expect(storageCheckbox).toBeTruthy();
     })
     );
 
-    return it('should be overriden by master.cfg', inject(function(bbSettingsService) {
+    it('should be overriden by master.cfg', inject(function(bbSettingsService) {
         let to_override = bbSettingsService.getSetting('User.config_overriden');
         expect(to_override.value).toEqual(100);
         to_override.value = 200;
         bbSettingsService.save();
         const storageGroups = angular.fromJson(localStorage.getItem('settings'));
         to_override = storageGroups['User'].items[1].value;
-        return expect(to_override).toEqual(200);
+        expect(to_override).toEqual(200);
     })
     );
 });

@@ -452,20 +452,14 @@ var WaterfallController = (function() {
                 const words = e.text().split('^');
                 e.text('');
 
-                return (() => {
-                    const result = [];
-                    for (i = 0; i < words.length; i++) {
-                        const word = words[i];
-                        const text = e.append('tspan').text(word);
-                        if (i !== 0) {
-                            const x = e.attr('x');
-                            result.push(text.attr('x', x).attr('dy', i * 10));
-                        } else {
-                            result.push(undefined);
-                        }
+                for (i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    const text = e.append('tspan').text(word);
+                    if (i !== 0) {
+                        const x = e.attr('x');
+                        text.attr('x', x).attr('dy', i * 10);
                     }
-                    return result;
-                })();
+                }
             };
             yAxis.selectAll('text').each(lineBreak);
 

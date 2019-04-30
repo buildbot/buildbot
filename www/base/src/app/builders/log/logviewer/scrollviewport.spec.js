@@ -18,31 +18,22 @@ describe('page with sidebar', function() {
     const assertDOM = function(l) {
         const childs = [];
         $("div", elmContent).each((i, c) => childs.push(c));
-        return (() => {
-            const result = [];
-            for (var item of Array.from(l)) {
-                var c;
-                if (item.type === "padding") {
+
+        for (var item of Array.from(l)) {
+            var c;
+            if (item.type === "padding") {
+                c = childs.shift();
+                expect($(c).hasClass("padding")).toBe(true, c.outerHTML);
+                expect($(c).height()).toEqual(item.height, c.outerHTML);
+            }
+            if (item.type === "elements") {
+                for (let i = item.start, { end } = item, asc = item.start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
                     c = childs.shift();
-                    expect($(c).hasClass("padding")).toBe(true, c.outerHTML);
-                    expect($(c).height()).toEqual(item.height, c.outerHTML);
-                }
-                if (item.type === "elements") {
-                    result.push((() => {
-                        const result1 = [];
-                        for (let i = item.start, { end } = item, asc = item.start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-                            c = childs.shift();
-                            expect($(c).hasClass("padding")).toBe(false, c.outerHTML);
-                            result1.push(expect(c.innerText).toEqual(i.toString() + "a" + i.toString(), c.outerHTML));
-                        }
-                        return result1;
-                    })());
-                } else {
-                    result.push(undefined);
+                    expect($(c).hasClass("padding")).toBe(false, c.outerHTML);
+                    expect(c.innerText).toEqual(i.toString() + "a" + i.toString(), c.outerHTML);
                 }
             }
-            return result;
-        })();
+        }
     };
     const printDOM = () =>
         $("div", elmContent).each(function() {
@@ -66,7 +57,7 @@ describe('page with sidebar', function() {
 
         timeout.flush();
         // make sure it did not changed
-        return expect(elmBody.scrollTop()).toBe(verifyPos);
+        expect(elmBody.scrollTop()).toBe(verifyPos);
     };
 
     beforeEach(inject(function($rootScope, $compile, glMenuService, $timeout, $q, $document) {
@@ -97,7 +88,7 @@ describe('page with sidebar', function() {
 
         // we need to append to body, so that the element is styled properly, and gets a height
         elmBody.appendTo("body");
-        return elmContent = $("div", elmBody)[0];}));
+        elmContent = $("div", elmBody)[0];}));
 
     // ViewPort height is 50, and item height is 10, so a screen should contain 5 item
     it('should initially load 2 screens', inject(function($timeout) {
@@ -107,7 +98,7 @@ describe('page with sidebar', function() {
             elements(0,9),
             padding(9900)
         ]);
-        return expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
+        expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
     })
     );
 
@@ -124,7 +115,7 @@ describe('page with sidebar', function() {
             elements(55,69), // 700
             padding(10000 - 700)
         ]);
-        return expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
+        expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
     })
     );
 
@@ -190,17 +181,17 @@ describe('page with sidebar', function() {
             elements(0,69), // 700
             padding(10000 - 700)
         ]);
-        return expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
+        expect(elmBody[0].scrollHeight).toEqual(1000 * 10);
     })
     );
 
-    return it('Scroll to the end', inject(function($timeout) {
+    it('Scroll to the end', inject(function($timeout) {
         // initial load
         $timeout.flush();
         scrollTo(10000, 9950);
 
         expect(queries).toEqual([[0,10], [990, 10]]);
-        return assertDOM([
+        assertDOM([
             elements(0,9),   // 100
             padding(9800),   // 9900
             elements(990, 999) // 10000

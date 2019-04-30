@@ -139,28 +139,19 @@ class Console {
         }
 
         this.filtered_changes = [];
-        return (() => {
-            const result = [];
-            for (let ssid in this.changesBySSID) {
-                change = this.changesBySSID[ssid];
-                if (change.comments) {
-                    change.subject = change.comments.split("\n")[0];
-                }
-                result.push((() => {
-                    const result1 = [];
-                    for (let builder of Array.from(change.builders)) {
-                        if (builder.builds.length > 0) {
-                            this.filtered_changes.push(change);
-                            break;
-                        } else {
-                            result1.push(undefined);
-                        }
-                    }
-                    return result1;
-                })());
+
+        for (let ssid in this.changesBySSID) {
+            change = this.changesBySSID[ssid];
+            if (change.comments) {
+                change.subject = change.comments.split("\n")[0];
             }
-            return result;
-        })();
+            for (let builder of Array.from(change.builders)) {
+                if (builder.builds.length > 0) {
+                    this.filtered_changes.push(change);
+                    break;
+                }
+            }
+        }
     }
     /*
      * Sort builders by tags
@@ -325,15 +316,11 @@ class Console {
     populateChange(change) {
         change.builders = [];
         change.buildersById = {};
-        return (() => {
-            const result = [];
-            for (let builder of Array.from(this.builders)) {
-                builder = {builderid: builder.builderid, name: builder.name, builds: []};
-                change.builders.push(builder);
-                result.push(change.buildersById[builder.builderid] = builder);
-            }
-            return result;
-        })();
+        for (let builder of Array.from(this.builders)) {
+            builder = {builderid: builder.builderid, name: builder.name, builds: []};
+            change.builders.push(builder);
+            change.buildersById[builder.builderid] = builder;
+        }
     }
     /*
      * Match builds with a change

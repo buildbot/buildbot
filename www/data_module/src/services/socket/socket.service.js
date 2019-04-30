@@ -86,14 +86,10 @@ class Socket {
 
                 flush() {
                     // send all the data waiting in the queue
-                    return (() => {
-                        let data;
-                        const result = [];
-                        while ((data = this.queue.pop())) {
-                            result.push(this.socket.send(data));
-                        }
-                        return result;
-                    })();
+                    let data;
+                    while ((data = this.queue.pop())) {
+                        this.socket.send(data);
+                    }
                 }
 
                 nextId() {

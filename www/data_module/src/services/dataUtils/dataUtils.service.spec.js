@@ -20,7 +20,7 @@ describe('Data utils service', function() {
             expect(result).toBe('Test');
 
             result = dataUtilsService.capitalize('t');
-            return expect(result).toBe('T');
+            expect(result).toBe('T');
         })
     );
 
@@ -31,7 +31,7 @@ describe('Data utils service', function() {
             expect(result).toBe('asd');
 
             result = dataUtilsService.type('asd/1/bnm');
-            return expect(result).toBe('bnm');
+            expect(result).toBe('bnm');
         })
     );
 
@@ -42,7 +42,7 @@ describe('Data utils service', function() {
             expect(result).toBe('test');
 
             result = dataUtilsService.singularType('tests');
-            return expect(result).toBe('test');
+            expect(result).toBe('test');
         })
     );
 
@@ -53,7 +53,7 @@ describe('Data utils service', function() {
             expect(result).toBe('asd/1/bnm/*/*');
 
             result = dataUtilsService.socketPath('asd/1');
-            return expect(result).toBe('asd/1/*');
+            expect(result).toBe('asd/1/*');
         })
     );
 
@@ -67,7 +67,7 @@ describe('Data utils service', function() {
             expect(result).toBe('^asd\\/1\\/bnm\\/[^\\/]+\\/[^\\/]+$');
 
             result = dataUtilsService.socketPathRE('asd/1/*').source;
-            return expect(result).toBe('^asd\\/1\\/[^\\/]+$');
+            expect(result).toBe('^asd\\/1\\/[^\\/]+$');
         })
     );
 
@@ -79,7 +79,7 @@ describe('Data utils service', function() {
             expect(result).toBe('asd/1/bnm');
 
             result = dataUtilsService.restPath('asd/1/*');
-            return expect(result).toBe('asd/1');
+            expect(result).toBe('asd/1');
         })
     );
 
@@ -90,7 +90,7 @@ describe('Data utils service', function() {
             expect(result).toBe('asd/1/bnm');
 
             result = dataUtilsService.endpointPath('asd/1/*');
-            return expect(result).toBe('asd');
+            expect(result).toBe('asd');
         })
     );
 
@@ -100,13 +100,13 @@ describe('Data utils service', function() {
             const array = [1, 2, 3];
             const result = dataUtilsService.copyOrSplit(array);
             expect(result).not.toBe(array);
-            return expect(result).toEqual(array);
+            expect(result).toEqual(array);
         });
 
-        return it('should split a string', function() {
+        it('should split a string', function() {
             const string = 'asd/123/bnm';
             const result = dataUtilsService.copyOrSplit(string);
-            return expect(result).toEqual(['asd', '123', 'bnm']);
+            expect(result).toEqual(['asd', '123', 'bnm']);
         });
     });
 
@@ -121,7 +121,7 @@ describe('Data utils service', function() {
             expect(result).toBe(data.asd);
 
             result = dataUtilsService.unWrap(data, 'bnm/1/asd/2');
-            return expect(result).toBe(data.asd);
+            expect(result).toBe(data.asd);
         })
     );
 
@@ -141,7 +141,7 @@ describe('Data utils service', function() {
 
             const parsed = dataUtilsService.parse(test);
 
-            return expect(parsed).toEqual(test);
+            expect(parsed).toEqual(test);
         })
     );
 
@@ -149,22 +149,22 @@ describe('Data utils service', function() {
 
         it('should convert a string to a number if possible', function() {
             const result = dataUtilsService.numberOrString('12');
-            return expect(result).toBe(12);
+            expect(result).toBe(12);
         });
 
-        return it('should return the string if it is not a number', function() {
+        it('should return the string if it is not a number', function() {
             const result = dataUtilsService.numberOrString('w3as');
-            return expect(result).toBe('w3as');
+            expect(result).toBe('w3as');
         });
     });
 
-    return describe('emailInString(string)', () =>
+    describe('emailInString(string)', () =>
 
         it('should return an email from a string', function() {
             let email = dataUtilsService.emailInString('foo <bar@foo.com>');
             expect(email).toBe('bar@foo.com');
             email = dataUtilsService.emailInString('bar@foo.com');
-            return expect(email).toBe('bar@foo.com');
+            expect(email).toBe('bar@foo.com');
         })
     );
 });

@@ -8,7 +8,6 @@
 beforeEach(function() {
     module(function($provide) {
         $provide.service('$uibModal', function() { return {open() {}}; });
-        return null;
     });
 
     // Mock bbSettingsProvider
@@ -38,7 +37,6 @@ beforeEach(function() {
             return Cls;
         })()
         );
-        return null;
     });
 
     return module('waterfall_view');
@@ -157,7 +155,7 @@ describe('Waterfall view controller', function() {
         spyOn(w, 'click').and.callThrough();
         spyOn(w, 'loadMore').and.callThrough();
         // Data is loaded
-        return $timeout.flush();
+        $timeout.flush();
     };
 
     beforeEach(inject(injected));
@@ -166,7 +164,7 @@ describe('Waterfall view controller', function() {
     afterEach(function() {
         expect($document.find('svg').length).toEqual(2);
         elem.remove();
-        return expect($document.find('svg').length).toEqual(0);
+        expect($document.find('svg').length).toEqual(0);
     });
 
     it('should be defined', () => expect(w).toBeDefined());
@@ -177,19 +175,19 @@ describe('Waterfall view controller', function() {
         expect(w.builds).toBeDefined();
         expect(w.builds.length).toBe(limit);
         expect(w.builders).toBeDefined();
-        return expect(w.builders.length).not.toBe(0);
+        expect(w.builders.length).not.toBe(0);
     });
 
     it('should create svg elements', function() {
         expect(elem.find('svg').length).toBeGreaterThan(1);
-        return expect(elem.find('g').length).toBeGreaterThan(1);
+        expect(elem.find('g').length).toBeGreaterThan(1);
     });
 
     it('should rerender the waterfall on resize', function() {
         spyOn(w, 'render').and.callThrough();
         expect(w.render).not.toHaveBeenCalled();
         angular.element($window).triggerHandler('resize');
-        return expect(w.render).toHaveBeenCalled();
+        expect(w.render).toHaveBeenCalled();
     });
 
     it('should rerender the waterfall on data change', function() {
@@ -200,7 +198,7 @@ describe('Waterfall view controller', function() {
         w.buildLimit = 0;
         w.loadMore();
         $timeout.flush();
-        return expect(w.render).toHaveBeenCalled();
+        expect(w.render).toHaveBeenCalled();
     });
 
     it('should lazy load data on scroll', function() {
@@ -212,7 +210,7 @@ describe('Waterfall view controller', function() {
         expect(callCount).toBe(0);
         angular.element(n).triggerHandler('scroll');
         callCount = w.loadMore.calls.count();
-        return expect(callCount).toBe(1);
+        expect(callCount).toBe(1);
     });
 
     it('height should be scalable', function() {
@@ -224,10 +222,10 @@ describe('Waterfall view controller', function() {
         const newHeight = w.getInnerHeight();
         expect(newHeight).toBe(height * 1.5);
         const newSetting = group.scaling_waterfall.value;
-        return expect(newSetting).toBe(oldSetting * 1.5);
+        expect(newSetting).toBe(oldSetting * 1.5);
     });
 
-    return it('should have string representations of result codes', function() {
+    it('should have string representations of result codes', function() {
         const testBuild = {
             complete: false,
             started_at: 0
@@ -243,13 +241,10 @@ describe('Waterfall view controller', function() {
             4: 'exception',
             5: 'cancelled'
         };
-        return (() => {
-            const result = [];
-            for (let i = 0; i <= 5; i++) {
-                testBuild.results = i;
-                result.push(expect(w.getResultClassFromThing(testBuild)).toBe(results[i]));
-            }
-            return result;
-        })();
+
+        for (let i = 0; i <= 5; i++) {
+            testBuild.results = i;
+            expect(w.getResultClassFromThing(testBuild)).toBe(results[i]);
+        }
     });
 });
