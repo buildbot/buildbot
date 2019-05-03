@@ -205,7 +205,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         instances = list(instances)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
-        self.assertEqual(instances[0].tags, [])
+        self.assertIsNone(instances[0].tags)
         self.assertEqual(instances[0].id, bs.properties.getProperty('instance'))
 
     @mock_ec2
@@ -443,7 +443,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.product_description, product_description)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
-        self.assertEqual(instances[0].tags, [])
+        self.assertIsNone(instances[0].tags)
 
     @mock_ec2
     def test_get_image_ami(self):
