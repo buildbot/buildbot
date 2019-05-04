@@ -12,7 +12,7 @@ class GlTopbar {
             restrict: 'E',
             scope: false,
             controllerAs: "page",
-            templateUrl: "guanlecoja.ui/views/topbar.html",
+            template: require('./topbar.tpl.jade'),
             controller: "_glTopbarController"
         };
     }

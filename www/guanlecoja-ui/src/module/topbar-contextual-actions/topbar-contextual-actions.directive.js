@@ -11,7 +11,7 @@ class GlTopbarContextualActions {
             replace: true,
             restrict: 'E',
             scope: true,
-            templateUrl: "guanlecoja.ui/views/topbar-contextual-actions.html",
+            template: require('./topbar-contextual-actions.tpl.jade'),
             controller: "_glTopbarContextualActionsController"
         };
     }

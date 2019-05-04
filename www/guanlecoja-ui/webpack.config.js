@@ -40,6 +40,10 @@ module.exports = function makeWebpackConfig() {
             test: /\.js$/,
             loader: 'babel-loader',
             exclude: /node_modules/
+        }, {
+            test: /\.jade$/,
+            loader: 'pug-loader',
+            exclude: /node_modules/
         }]
     };
     // config.plugins = [
