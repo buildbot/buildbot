@@ -35,6 +35,13 @@ module.exports = function makeWebpackConfig() {
         config.devtool = 'eval-source-map';
     }
 
+    config.plugins = [
+          new webpack.ProvidePlugin({
+              "window.jQuery": "jquery",
+              "$": "jquery",
+          }),
+    ];
+
     config.module = {
         rules: [{
             test: /\.js$/,
