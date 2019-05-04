@@ -14,7 +14,7 @@ class Codefield {
             replace: false,
             restrict: 'E',
             scope: false,
-            templateUrl: "codeparameter/views/codefield.html"
+            template: require('./codefield.tpl.jade')
         };
     }
 }
