@@ -6,3 +6,6 @@ class BBData {
 }
 
 angular.module('bbData', new BBData());
+
+const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
+context.keys().forEach(context);
