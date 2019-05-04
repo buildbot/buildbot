@@ -80,7 +80,9 @@ def main():
         chrome_major, chrome_minor, chrome_patch = version
 
         if chrome_major >= 73:
-            chromedriver_version = '{}.{}.{}'.format(chrome_major, chrome_minor, chrome_patch)
+            # webdriver manager requires us to provide the 4th version component, however does not
+            # use it when picking the version to download
+            chromedriver_version = '{}.{}.{}.0'.format(chrome_major, chrome_minor, chrome_patch)
         else:
             chrome_major_to_chromedriver = {
                 73: '2.46',
