@@ -3,7 +3,7 @@
 
 import 'angular';
 import 'angular-mocks/angular-mocks';
-import './module/main.module.js'
+import './app/app.module.js'
 
 const context = require.context('./', true, /\.spec.js$/);
 context.keys().forEach(context);

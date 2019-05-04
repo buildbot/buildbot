@@ -1,3 +1,11 @@
+import '@uirouter/angularjs';
+import 'angular-animate';
+import 'angular-bootstrap-multiselect';
+import 'angular-recursion';
+import 'angular-ui-bootstrap';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 class App {
     constructor() { return [
         'buildbot_config',
