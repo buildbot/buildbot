@@ -622,7 +622,7 @@ var WaterfallController = (function() {
             // Open modal on click
             let modal;
             return modal = self.$uibModal.open({
-                templateUrl: 'waterfall_view/views/modal.html',
+                template: require('./modal/modal.tpl.jade'),
                 controller: 'waterfallModalController as modal',
                 windowClass: 'modal-small',
                 resolve: {

@@ -21,7 +21,7 @@ class WaterfallState {
         const state = {
             controller: `${name}Controller`,
             controllerAs: "w",
-            templateUrl: `waterfall_view/views/${name}.html`,
+            template: require('./waterfall.tpl.jade'),
             name,
             url: `/${name}`,
             data: cfg

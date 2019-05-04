@@ -32,6 +32,8 @@
         "node-libs-browser": "^2.2.0",
         "null-loader": "^1.0.0",
         "postcss-loader": "^3.0.0",
+        "pug": "^2.0.3",
+        "pug-loader": "^2.4.0",
         "raw-loader": "^2.0.0",
         "rimraf": "^2.6.3",
         "style-loader": "^0.23.1",
