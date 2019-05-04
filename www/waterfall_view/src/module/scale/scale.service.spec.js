@@ -3,6 +3,9 @@
  * DS101: Remove unnecessary use of Array.from
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+
+import * as d3 from 'd3';
+
 describe('Scale service', function() {
 
     let builders, scale;
@@ -23,7 +26,7 @@ describe('Scale service', function() {
         const $rootScope = $injector.get('$rootScope');
         scaleService = $injector.get('scaleService');
 
-        scale = new scaleService(window.d3);
+        scale = new scaleService(d3);
 
         builders = [{
             builderid: 1,
