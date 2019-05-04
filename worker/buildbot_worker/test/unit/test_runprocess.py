@@ -178,6 +178,23 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertTrue({'rc': 0} in b.updates, b.show())
 
     @defer.inlineCallbacks
+    def testInvalidUTF8(self):
+        b = FakeWorkerForBuilder(self.basedir)
+        b.unicode_encoding = "utf-8"
+        s = runprocess.RunProcess(
+            b, stderrCommand("hello"), self.basedir, sendStderr=True)
+        pp = runprocess.RunProcessPP(s)
+        INVALID_UTF8 = b"\xff"
+        with self.assertRaises(UnicodeDecodeError):
+            INVALID_UTF8.decode('utf-8')
+        pp.outReceived(INVALID_UTF8)
+        yield s.start()
+        stdout = [up['stdout'] for up in b.updates if 'stdout' in up][0]
+        # On Python < 2.7 bytes is used, on Python >= 2.7 unicode
+        self.assertIn(stdout, (b'\xef\xbf\xbd', u'\ufffd'))
+        self.assertTrue({'rc': 0} in b.updates, b.show())
+
+    @defer.inlineCallbacks
     def testKeepStderr(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(
