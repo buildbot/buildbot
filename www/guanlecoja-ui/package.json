@@ -46,6 +46,7 @@
         "@uirouter/angularjs": "^1.0.15",
         "angular-animate": "^1.7.8",
         "angular-ui-bootstrap": "^2.5.6",
+        "jquery": "^3.4.0",
         "lodash": "^4.17.11",
         "pug-loader": "^2.4.0"
     }

@@ -46,6 +46,14 @@ module.exports = function makeWebpackConfig() {
             exclude: /node_modules/
         }]
     };
+
+    config.plugins = [
+          new webpack.ProvidePlugin({
+              "window.jQuery": "jquery",
+              "$": "jquery",
+          }),
+    ];
+
     // config.plugins = [
     //   new webpack.optimize.UglifyJsPlugin({minimize: true})
     // ]
