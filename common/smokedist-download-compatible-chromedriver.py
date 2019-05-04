@@ -98,8 +98,12 @@ def main():
 
         print('Using chromedriver release {0}'.format(chromedriver_version))
 
-        check_call([args.manager, 'update', '--versions.chrome',
-                    chromedriver_version, '--versions.standalone', '3.141.59'])
+        cmd = [args.manager, 'update', '--versions.chrome',
+               chromedriver_version, '--versions.standalone', '3.141.59']
+        print('Calling: ' + ' '.join(cmd))
+
+        check_call(cmd)
+
         return
 
     except Exception as e:
