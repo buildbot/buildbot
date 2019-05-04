@@ -42,7 +42,7 @@ class _glPageWithSidebar {
 
     toggleSidebarPinned() {
         this.sidebarPinned=!this.sidebarPinned;
-        return this.$window.localStorage.sidebarPinned = this.sidebarPinned;
+        return this.$window.localStorage.sidebarPinned = this.sidebarPinned.toString();
     }
 
     toggleGroup(group) {
