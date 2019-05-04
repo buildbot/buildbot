@@ -4,7 +4,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('breadcrumbService', function() {
-    beforeEach(module("guanlecoja.ui"));
+    beforeEach(angular.mock.module("guanlecoja.ui"));
 
     // simple test to make sure the directive loads
     return it('should forward call to setBreadcrumb via $broadcast', inject(function($rootScope, glBreadcrumbService) {

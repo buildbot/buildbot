@@ -5,7 +5,7 @@
  */
 describe('page with sidebar', function() {
     let rootScope, scope;
-    beforeEach((module("guanlecoja.ui")));
+    beforeEach(angular.mock.module("guanlecoja.ui"));
     let elmBody = (scope = (rootScope = null));
 
     const injected = function($rootScope, $compile, glMenuService, $window) {

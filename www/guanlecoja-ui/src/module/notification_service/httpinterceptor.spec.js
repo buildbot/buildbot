@@ -4,7 +4,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('http Interceptor', function() {
-    beforeEach(module("guanlecoja.ui"));
+    beforeEach(angular.mock.module("guanlecoja.ui"));
 
     it('should intercept errors', inject(function($q, $rootScope, glNotificationService, $timeout, glHttpInterceptor) {
         const d = $q.defer();
