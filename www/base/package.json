@@ -1,14 +1,52 @@
 {
-  "name": "buildbot-www",
-  "engines": {
-    "node": ">=0.10.20",
-    "npm": ">=1.4.10"
-  },
-  "dependencies": {
-    "guanlecoja": "~1.1.0",
-    "gulp": "3.9.1",
-    "gulp-shell": "^0.4.1",
-    "http-proxy": "^1.11.1",
-    "minimist": "^1.1.1"
-  }
+    "name": "buildbot-www",
+    "scripts": {
+        "build": "rimraf dist && webpack --bail --progress --profile",
+        "test": "karma start",
+        "test-watch": "karma start --auto-watch --no-single-run",
+        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui && yarn add --peer --dev ../data_module ../guanlecoja-ui"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.4.3",
+        "@babel/plugin-transform-runtime": "^7.4.3",
+        "@babel/preset-env": "^7.4.3",
+        "@babel/runtime": "^7.4.3",
+        "angular-mocks": "^1.5.3",
+        "autoprefixer": "^9.5.1",
+        "babel-loader": "^8.0.5",
+        "copy-webpack-plugin": "^5.0.3",
+        "css-loader": "^2.1.1",
+        "extract-text-webpack-plugin": "^3.0.2",
+        "file-loader": "^3.0.1",
+        "html-webpack-plugin": "^3.2.0",
+        "istanbul-instrumenter-loader": "^3.0.1",
+        "jasmine-core": "^3.4.0",
+        "jquery": "^3.4.0",
+        "karma": "^4.1.0",
+        "karma-chrome-launcher": "^2.2.0",
+        "karma-coverage": "^1.1.2",
+        "karma-jasmine": "^2.0.1",
+        "karma-sourcemap-loader": "^0.3.7",
+        "karma-spec-reporter": "^0.0.32",
+        "karma-webpack": "^3.0.5",
+        "lodash": "^4.17.11",
+        "node-libs-browser": "^2.2.0",
+        "null-loader": "^1.0.0",
+        "postcss-loader": "^3.0.0",
+        "raw-loader": "^2.0.0",
+        "rimraf": "^2.6.3",
+        "style-loader": "^0.23.1",
+        "webpack": "^4.30.0",
+        "webpack-cli": "^3.3.1",
+        "webpack-dev-server": "^3.3.1"
+    },
+    "dependencies": {
+        "angular": "^1.5.3",
+        "angular-animate": "^1.7.8",
+        "angular-ui-bootstrap": "^2.5.6",
+        "buildbot-data-js": "../data_module/",
+        "guanlecoja-ui": "../guanlecoja-ui/",
+        "http-proxy": "^1.11.1",
+        "minimist": "^1.1.1"
+    }
 }
