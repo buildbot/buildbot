@@ -4,8 +4,9 @@
   "description": "Buildbot AngularJS data module",
   "readme": "README.md",
   "author": "Andras Toth <andras.toth93@gmail.com>",
+  "main": "dist/buildbot-data-js.js",
   "scripts": {
-    "build": "rimraf dist && webpack --bail --progress --profile",
+    "build": "rimraf dist && webpack --bail --progress --profile --env dev && webpack --bail --progress --profile --env prod",
     "test": "karma start",
     "test-watch": "karma start --auto-watch --no-single-run"
   },
@@ -14,11 +15,11 @@
     "url": "git://github.com/buildbot/buildbot-data-js.git"
   },
   "devDependencies": {
+    "angular": "^1.5.3",
     "@babel/core": "^7.4.3",
     "@babel/plugin-transform-runtime": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "@babel/runtime": "^7.4.3",
-    "angular": "^1.5.3",
     "angular-mocks": "^1.5.3",
     "autoprefixer": "^9.5.1",
     "babel-loader": "^8.0.5",
@@ -38,12 +39,17 @@
     "karma-webpack": "^3.0.5",
     "node-libs-browser": "^2.2.0",
     "null-loader": "^1.0.0",
+    "peer-deps-externals-webpack-plugin": "^1.0.4",
     "postcss-loader": "^3.0.0",
     "raw-loader": "^2.0.0",
     "rimraf": "^2.6.3",
     "style-loader": "^0.23.1",
     "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.1",
     "webpack-dev-server": "^3.3.1"
+  },
+  "peerDependencies": {
+    "angular": "^1.5.3"
   },
   "license": "MIT"
 }
