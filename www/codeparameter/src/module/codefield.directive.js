@@ -1,10 +1,3 @@
-// Register new module
-class Codeparameter {
-    constructor() { return [
-        'ui.ace',
-        'common'
-    ]; }
-}
 
 // setup ace to fetch its module from the plugin baseURL
 class AceConfig {
@@ -26,7 +19,6 @@ class Codefield {
     }
 }
 
-
-angular.module('codeparameter', new Codeparameter())
+angular.module('codeparameter')
 .run(['$location', AceConfig])
 .directive('codefield', [Codefield]);
