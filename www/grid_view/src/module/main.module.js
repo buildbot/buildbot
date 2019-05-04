@@ -13,7 +13,10 @@
 //
 // Copyright Buildbot Team Members
 
-// Register new state
+import 'angular-animate';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 class GridState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
         // Menu configuration
@@ -81,3 +84,6 @@ class GridState {
 angular.module('grid_view', [
     'ui.router', 'ui.bootstrap', 'ngAnimate', 'guanlecoja.ui', 'bbData'])
 .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', GridState]);
+
+const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
+context.keys().forEach(context);
