@@ -7,6 +7,11 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 
+import 'angular-animate';
+import '@uirouter/angularjs';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 class ConsoleState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
 
