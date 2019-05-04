@@ -12,7 +12,7 @@ class ForceDialogState {
                       function($stateParams, $state, $uibModal) {
                 const modal = {};
                 modal.modal = $uibModal.open({
-                    templateUrl: "views/forcedialog.html",
+                    template: require('./forcedialog.tpl.jade'),
                     controller: 'forceDialogController',
                     windowClass: 'modal-xlg',
                     resolve: {

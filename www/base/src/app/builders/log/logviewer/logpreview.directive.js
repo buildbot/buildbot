@@ -12,7 +12,7 @@ class Logpreview {
             transclude: true,
             restrict: 'E',
             scope: {log:"<", fulldisplay:"<", buildnumber:"<", builderid:"<", step:"<"},
-            templateUrl: "views/logpreview.html",
+            template: require('./logpreview.tpl.jade'),
             controllerAs: "logpreview",
             bindToController: true,
             controller: ["$scope", function($scope) {

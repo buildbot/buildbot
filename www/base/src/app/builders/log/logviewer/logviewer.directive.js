@@ -121,7 +121,7 @@ class Logviewer {
             transclude: true,
             restrict: 'E',
             scope: {log:"=", jumpToLine:"="},
-            templateUrl: "views/logviewer.html",
+            template: require('./logviewer.tpl.jade'),
             controller: ["$scope", function($scope) {
                 const self = directive();
                 $scope.logviewer = self;

@@ -20,7 +20,7 @@ class HomeState {
         // Register new state
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./home.tpl.jade'),
             name,
             url: '/',
             data: cfg

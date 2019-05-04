@@ -9,7 +9,7 @@ class connectionstatus {
             replace: true,
             restrict: 'E',
             scope: {},
-            templateUrl: 'views/connectionstatus.html',
+            template: require('./connectionstatus.tpl.jade'),
             compile: RecursionHelper.compile,
             controller: '_connectionstatusController'
         };

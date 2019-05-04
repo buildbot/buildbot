@@ -21,7 +21,7 @@ class BuildersState {
         // Register new state
         const state = {
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./builders.tpl.jade'),
             name,
             url: '/builders?tags',
             data: cfg,

@@ -10,7 +10,7 @@ class Loginbar {
             replace: true,
             restrict: 'E',
             scope: {},
-            templateUrl: 'views/loginbar.html'
+            template: require('./loginbar.tpl.jade'),
         };
     }
 }

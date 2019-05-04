@@ -10,7 +10,7 @@ class Buildsticker {
             replace: true,
             restrict: 'E',
             scope: {build: '=?', builder: '=?', buildid: '=?'},
-            templateUrl: 'views/buildsticker.html',
+            template: require('./buildsticker.tpl.jade'),
             controller: '_buildstickerController'
         };
     }

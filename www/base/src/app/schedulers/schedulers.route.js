@@ -13,7 +13,7 @@ class SchedulersState {
         // Register new state
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./schedulers.tpl.jade'),
             name,
             url: '/schedulers',
             data: cfg

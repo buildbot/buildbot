@@ -13,7 +13,7 @@ class WorkersState {
         // Register new state
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./workers.tpl.jade'),
             name,
             url: '/workers?numbuilds',
             data: cfg
@@ -22,7 +22,7 @@ class WorkersState {
         // worker page is actually same as worker, just filtered
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./workers.tpl.jade'),
             name: 'worker',
             url: '/workers/:worker?numbuilds',
             data: {}});

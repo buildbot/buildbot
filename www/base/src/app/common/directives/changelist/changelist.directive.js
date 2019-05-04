@@ -9,7 +9,7 @@ class Changelist {
             replace: true,
             restrict: 'E',
             scope: {changes: '=?'},
-            templateUrl: 'views/changelist.html',
+            template: require('./changelist.tpl.jade'),
             controller: '_changeListController'
         };
     }

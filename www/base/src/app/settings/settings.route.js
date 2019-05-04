@@ -21,7 +21,7 @@ class Settings {
         // Register new state
         const state = {
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./settings.tpl.jade'),
             name,
             url: '/settings',
             data: cfg

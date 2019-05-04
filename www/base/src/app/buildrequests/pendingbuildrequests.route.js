@@ -13,7 +13,7 @@ class PendingBuildRequestsState {
         // Register new state
         const state = {
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./pendingbuildrequests.tpl.jade'),
             name,
             url: '/pendingbuildrequests',
             data: cfg

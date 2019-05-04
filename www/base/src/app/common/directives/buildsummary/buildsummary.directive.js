@@ -14,7 +14,7 @@ class Buildsummary {
             restrict: 'E',
             scope: {},
             bindToController: {buildid: '=?', build: '=?', condensed: '=?', parentbuild: '=?', parentrelationship: '=?'},
-            templateUrl: 'views/buildsummary.html',
+            template: require('./buildsummary.tpl.jade'),
             compile: RecursionHelper.compile,
             controller: '_buildsummaryController',
             controllerAs: 'buildsummary'

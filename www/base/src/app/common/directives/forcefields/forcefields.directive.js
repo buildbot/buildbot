@@ -41,7 +41,7 @@ _.each(['verticallayout', 'simplelayout', 'tabslayout'],
             ({
                 replace: true,
                 restrict: 'E',
-                templateUrl: `views/${fieldtype}.html`,
+                template: require(`./${fieldtype}.tpl.jade`),
                 controller: [ "$scope", function($scope) {
                     // filter out hidden fields, and nested params empty of full of hidden fields
                     const filtered = [];
@@ -78,7 +78,7 @@ _.each([ 'textfield' , 'intfield', 'textareafield', 'listfield', 'boolfield'],
                 replace: false,
                 restrict: 'E',
                 scope: false,
-                templateUrl: `views/${fieldtype}.html`
+                template: require(`./${fieldtype}.tpl.jade`),
             })
         )
 );
@@ -91,7 +91,7 @@ angular.module('common').directive('filefield', () =>
         // the template uses custom file input styling using trick from
         // https://tympanus.net/codrops/2015/09/15/styling-customizing-file-inputs-smart-way/
         // which basically uses label(for="<id>") to capture the click event and the ugly input(type="file") is just hidden
-        templateUrl: "views/filefield.html",
+        template: require('./filefield.tpl.jade'),
         controller: [ "$scope", function($scope) {
             // If user selects a big file, then the UI will be completely blocked
             // while browser tries to display it in the textarea

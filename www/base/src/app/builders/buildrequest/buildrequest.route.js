@@ -7,7 +7,7 @@ class BuildRequestState {
         // Register new state
         const state = {
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./buildrequest.tpl.jade'),
             name,
             data: {},
             url: '/buildrequests/:buildrequest?redirect_to_build'

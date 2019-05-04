@@ -4,7 +4,7 @@ class BuildsTable {
             replace: true,
             restrict: 'E',
             scope: {builds: '=?', builder: '=?', builders: '=?'},
-            templateUrl: 'views/buildstable.html',
+            template: require('./buildstable.tpl.jade'),
             controller: '_buildstableController'
         };
     }
