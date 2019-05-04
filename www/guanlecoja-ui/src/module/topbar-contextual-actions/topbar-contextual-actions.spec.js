@@ -40,10 +40,8 @@ describe('topbar-contextual-actions', function() {
             caption:"bar",
             action() { return called++; }
         }
-            ],
+            ]);
 
-        // need two digests to propagate
-        scope.$digest());
         scope.$digest();
         expect(elmBody.find(".form-group").length).toEqual(2);
         expect(elmBody.find("button").text()).toEqual("foobar");
