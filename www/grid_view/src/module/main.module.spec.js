@@ -5,12 +5,12 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 beforeEach(function() {
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('resultsService', function() { return {results2class() {}}; });
     });
 
     // Mock bbSettingsProvider
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.provider('bbSettingsService', (function() {
             let group = undefined;
             const Cls = class {
@@ -37,7 +37,7 @@ beforeEach(function() {
         })()
         );
     });
-    return module('grid_view');
+    angular.mock.module('grid_view');
 });
 
 describe('Grid view controller', function() {
