@@ -1,1 +1,4 @@
-angular.module("common").constant("MOMENT", window.moment);
+
+import * as moment from 'moment';
+
+angular.module("common").constant("MOMENT", moment);
