@@ -6,12 +6,12 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 beforeEach(function() {
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('$uibModal', function() { return {open() {}}; });
     });
 
     // Mock bbSettingsProvider
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.provider('bbSettingsService', (function() {
             let group = undefined;
             const Cls = class {
@@ -39,7 +39,7 @@ beforeEach(function() {
         );
     });
 
-    return module('waterfall_view');
+    angular.mock.module('waterfall_view');
 });
 
 describe('Waterfall view controller', function() {

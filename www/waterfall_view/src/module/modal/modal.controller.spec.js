@@ -5,7 +5,7 @@
  */
 beforeEach(() =>
     // Mock modalService
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('$uibModalInstance', function() { return {close() {}}; });
     })
 );
