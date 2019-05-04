@@ -22,5 +22,7 @@ class App {
 
 angular.module('app', new App());
 
-const context = require.context('./', true, /\.spec.js$/);
+require('./common/common.module.js');
+
+const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
 context.keys().forEach(context);
