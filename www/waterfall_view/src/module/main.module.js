@@ -6,6 +6,12 @@
  * DS206: Consider reworking classes to avoid initClass
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+
+import 'angular-animate';
+import '@uirouter/angularjs';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 // Register new module
 class WaterfallView {
     constructor() { return [
@@ -19,7 +25,7 @@ class WaterfallView {
 
 var WaterfallController = (function() {
     let self = undefined;
-    Cls = class Waterfall {
+    let Cls = class Waterfall {
         static initClass() {
             self = null;
 
@@ -662,3 +668,6 @@ var WaterfallController = (function() {
 angular.module('waterfall_view', new WaterfallView())
 .controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService',
                                     WaterfallController]);
+
+const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
+context.keys().forEach(context);
