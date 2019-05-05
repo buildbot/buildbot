@@ -89,6 +89,10 @@ module.exports = function makeWebpackConfig() {
                 'css-loader',
             ],
         }, {
+            test: /\.jade$/,
+            loader: 'pug-loader',
+            exclude: /node_modules/
+        }, {
             test: /\.less$/,
             use: [
                 cssExtractLoader,

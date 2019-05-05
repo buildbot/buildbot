@@ -55,7 +55,6 @@ describe('Console view', function() {
         const { data } = state;
         expect(state.controller).toBe(`${name}Controller`);
         expect(state.controllerAs).toBe('c');
-        expect(state.templateUrl).toBe(`console_view/views/${name}.html`);
         expect(state.url).toBe(`/${name}`);
     });
 });
