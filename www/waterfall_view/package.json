@@ -2,7 +2,8 @@
     "name": "buildbot-waterfall_view",
     "main": "buildbot_waterfall_view/static/scripts.js",
     "scripts": {
-        "build": "rimraf dist && webpack --bail --progress --profile --env prod",
+        "build": "rimraf buildbot_waterfall_view/static && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf buildbot_waterfall_view/static && webpack --bail --progress --profile --env dev",
         "test": "karma start",
         "test-watch": "karma start --auto-watch --no-single-run",
         "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui && yarn add ../data_module ../guanlecoja-ui"

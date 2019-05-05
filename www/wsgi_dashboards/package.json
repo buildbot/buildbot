@@ -2,7 +2,8 @@
     "name": "buildbot-wsgi-dashboards",
     "main": "buildbot_wsgi_dashboards/static/scripts.js",
     "scripts": {
-        "build": "rimraf dist && webpack --bail --progress --profile --env prod",
+        "build": "rimraf buildbot_wsgi_dashboards/static && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf buildbot_wsgi_dashboards/static && webpack --bail --progress --profile --env dev",
         "test": "karma start",
         "test-watch": "karma start --auto-watch --no-single-run"
     },
