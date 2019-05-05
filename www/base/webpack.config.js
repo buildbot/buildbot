@@ -8,6 +8,7 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+const WebpackShellPlugin = require('webpack-shell-plugin');
 const pkg = require('./package.json');
 
 var event = process.env.npm_lifecycle_event;
@@ -56,6 +57,12 @@ module.exports = function makeWebpackConfig() {
               "$": "jquery",
           }),
     ];
+
+    if (!isTest) {
+        config.plugins.push(new WebpackShellPlugin({
+            onBuildEnd:['./node_modules/.bin/pug src/app/index.jade -o buildbot_www/static/']
+        }))
+    }
 
     config.module = {
         rules: [{
