@@ -33,7 +33,7 @@ class GridState {
                 name: 'grid',
                 controller: 'gridController',
                 controllerAs: 'C',
-                templateUrl: 'grid_view/views/grid.html',
+                template: require('./grid.tpl.jade'),
                 url: '/grid?branch&tag&result',
                 reloadOnSearch: false,
                 data: {
