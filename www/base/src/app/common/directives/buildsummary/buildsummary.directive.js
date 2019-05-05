@@ -15,8 +15,8 @@ class Buildsummary {
         return {
             replace: true,
             restrict: 'E',
-            scope: {},
-            bindToController: {buildid: '=?', build: '=?', condensed: '=?', parentbuild: '=?', parentrelationship: '=?'},
+            scope: {buildid: '=?', build: '=?', condensed: '=?', parentbuild: '=?', parentrelationship: '=?'},
+            bindToController: true,
             template: require('./buildsummary.tpl.jade'),
             compile: RecursionHelper.compile,
             controller: '_buildsummaryController',
@@ -49,7 +49,7 @@ class _buildsummary {
         const ONLY_NOT_SUCCESS = 1;
         const EVERYTHING = 2;
         let details = EVERYTHING;
-        if ($scope.buildsummary.condensed) {
+        if ($scope.condensed) {
             details = NONE;
         }
         this.toggleDetails = () => details = (details + 1) % 3;

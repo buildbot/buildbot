@@ -4,6 +4,7 @@ describe('buildsummary controller', function() {
     let $compile, $rootScope, $stateParams, baseurl, createController, results, scope;
     let dataService = (scope = ($rootScope = ($compile = null)));
     let $timeout = (createController = ($stateParams = (results = (baseurl = null))));
+    let $controller = null;
     const goneto  = null;
 
     const injected = function($injector) {
@@ -15,7 +16,7 @@ describe('buildsummary controller', function() {
 
         $timeout = $injector.get('$timeout');
         $stateParams = $injector.get('$stateParams');
-        const $controller = $injector.get('$controller');
+        $controller = $injector.get('$controller');
         const $q = $injector.get('$q');
         $compile = $injector.get('$compile');
         const $location = $injector.get('$location');
@@ -32,9 +33,7 @@ describe('buildsummary controller', function() {
 
     it('should provide correct isStepDisplayed when condensed', function() {
         scope.condensed = true;
-        const element = $compile("<buildsummary buildid='buildid' condensed='condensed'></buildsummary>")(scope);
-        scope.$apply();
-        const { buildsummary } = element.isolateScope();
+        const buildsummary = $controller('_buildsummaryController', {$scope: scope});
         expect(buildsummary.isStepDisplayed({results:results.SUCCESS})).toBe(false);
         expect(buildsummary.isStepDisplayed({results:results.WARNING})).toBe(false);
         expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(false);
@@ -54,9 +53,7 @@ describe('buildsummary controller', function() {
 
     it('should provide correct isStepDisplayed when not condensed', function() {
         scope.condensed = 0;
-        const element = $compile("<buildsummary buildid='buildid' condensed='condensed'></buildsummary>")(scope);
-        scope.$apply();
-        const { buildsummary } = element.isolateScope();
+        const buildsummary = $controller('_buildsummaryController', {$scope: scope});
         expect(buildsummary.isStepDisplayed({results:results.SUCCESS})).toBe(true);
         expect(buildsummary.isStepDisplayed({results:results.WARNING})).toBe(true);
         expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(true);
@@ -72,17 +69,13 @@ describe('buildsummary controller', function() {
     });
 
     it('should provide correct getBuildRequestIDFromURL', function() {
-        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
-        scope.$apply();
-        const { buildsummary } = element.isolateScope();
+        const buildsummary = $controller('_buildsummaryController', {$scope: scope});
         expect(buildsummary.getBuildRequestIDFromURL(`${baseurl}#buildrequests/123`))
         .toBe(123);
     });
 
     it('should provide correct isBuildRequestURL', function() {
-        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
-        scope.$apply();
-        const { buildsummary } = element.isolateScope();
+        const buildsummary = $controller('_buildsummaryController', {$scope: scope});
         expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/123`))
         .toBe(true);
         expect(buildsummary.isBuildRequestURL("http://otherdomain:5000/#buildrequests/123"))
@@ -94,9 +87,7 @@ describe('buildsummary controller', function() {
     });
 
     it('should provide correct isBuildURL', function() {
-        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")(scope);
-        scope.$apply();
-        const { buildsummary } = element.isolateScope();
+        const buildsummary = $controller('_buildsummaryController', {$scope: scope});
         expect(buildsummary.isBuildURL(`${baseurl}#builders/123/builds/123`))
         .toBe(true);
         expect(buildsummary.isBuildURL(`${baseurl}#builders/sdf/builds/123`))
