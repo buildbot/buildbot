@@ -53,7 +53,12 @@ module.exports = function makeWebpackConfig() {
         config.devtool = 'source-map';
     }
 
-    config.plugins = []
+    config.plugins = [
+          new webpack.ProvidePlugin({
+              "window.jQuery": "jquery",
+              "$": "jquery",
+          }),
+    ];
 
     if (!isTest) {
         config.plugins.push(new PeerDepsExternalsPlugin());
