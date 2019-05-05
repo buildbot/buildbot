@@ -203,28 +203,17 @@ class BuildJsCommand(distutils.cmd.Command):
         package = self.distribution.packages[0]
         if os.path.exists("gulpfile.js") or os.path.exists("webpack.config.js"):
             yarn_version = check_output("yarn --version")
-            npm_version = check_output("npm -v")
-            print("yarn:", yarn_version, "npm: ", npm_version)
-            if yarn_version != "":
-                npm_bin = check_output("yarn bin").strip()
-            else:
-                assert npm_version != "", "need nodejs and one of npm or yarn installed in current PATH"
-                assert LooseVersion(npm_version) >= LooseVersion(
-                    "1.4"), "npm < 1.4 (%s)" % (npm_version)
-                npm_bin = check_output("npm bin").strip()
+            assert yarn_version != "", "need nodejs and yarn installed in current PATH"
+            yarn_bin = check_output("yarn bin").strip()
 
             commands = []
 
-            # if we find yarn, then we use it as it is much faster
-            if yarn_version != "":
-                commands.append(['yarn', 'install', '--pure-lockfile'])
-            else:
-                commands.append(['npm', 'install'])
+            commands.append(['yarn', 'install', '--pure-lockfile'])
 
             if os.path.exists("gulpfile.js"):
-                commands.append([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
+                commands.append([os.path.join(yarn_bin, "gulp"), 'prod', '--notests'])
             elif os.path.exists("webpack.config.js"):
-                commands.append([os.path.join(npm_bin, "webpack"), '-p'])
+                commands.append([os.path.join(yarn_bin, "webpack"), '-p'])
 
             shell = bool(os.name == 'nt')
 

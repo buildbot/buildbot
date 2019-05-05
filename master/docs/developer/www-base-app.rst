@@ -150,7 +150,7 @@ Hacking Quick-Start
 
 This section describes how to get set up quickly to hack on the JavaScript UI.
 It does not assume familiarity with Python, although a Python installation is required, as well as ``virtualenv``.
-You will also need ``NodeJS``, and ``npm`` installed.
+You will also need ``NodeJS``, and ``yarn`` installed.
 
 Prerequisites
 ~~~~~~~~~~~~~
@@ -177,7 +177,7 @@ Prerequisites
 
   .. code-block:: none
 
-    sudo npm install -g gulp
+    sudo yarn global gulp
 
 
 Hacking the Buildbot JavaScript
