@@ -6,6 +6,7 @@
     "dependencies": {
         "jasmine-spec-reporter": "^4.2.1",
         "protractor": "^5.4.2",
+        "request": "^2.88.0",
         "ts-node": "~4.1.0",
         "tslint": "~5.9.1",
         "typescript": "^2.5.3"
