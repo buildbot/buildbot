@@ -86,5 +86,12 @@ module.exports = function makeWebpackConfig() {
         })
     }
 
+    // avoid duplicate load of angular
+    config.resolve = {
+        alias: {
+          'angular': path.resolve(path.join(__dirname, 'node_modules', 'angular'))
+        },
+    };
+
     return config;
 }();
