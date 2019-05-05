@@ -44,7 +44,7 @@ module.exports = function makeWebpackConfig() {
         library: libraryName,
         libraryTarget: 'umd',
         umdNamedDefine: true,
-        globalObject: "typeof self !== 'undefined' ? self : this",
+        globalObject: "(typeof self !== 'undefined' ? self : this)",
     };
 
     if (isTest) {
