@@ -8,6 +8,8 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 const pkg = require('./package.json');
 
 var event = process.env.npm_lifecycle_event;
@@ -32,12 +34,13 @@ module.exports = function makeWebpackConfig() {
     config.mode = mode;
 
     config.entry = {
-        waterfall: './src/module/main.module.js'
+        scripts: './src/module/main.module.js',
+        styles: './src/styles/styles.less',
     };
 
     config.output = isTest ? {} : {
         path: __dirname + '/buildbot_waterfall_view/static',
-        filename: 'scripts.js',
+        filename: '[name].js',
         library: libraryName,
         libraryTarget: 'umd',
         umdNamedDefine: true,
@@ -55,6 +58,10 @@ module.exports = function makeWebpackConfig() {
               "window.jQuery": "jquery",
               "$": "jquery",
           }),
+        new FixStyleOnlyEntriesPlugin(),
+        new MiniCssExtractPlugin({
+            filename: 'styles.css',
+        }),
     ];
 
     if (!isTest) {
@@ -69,6 +76,13 @@ module.exports = function makeWebpackConfig() {
         ];
     }
 
+    var cssExtractLoader = {
+        loader: MiniCssExtractPlugin.loader,
+        options: {
+            hmr: process.env.NODE_ENV === 'development',
+        },
+    };
+
     config.module = {
         rules: [{
             test: /\.js$/,
@@ -78,6 +92,20 @@ module.exports = function makeWebpackConfig() {
             test: /\.jade$/,
             loader: 'pug-loader',
             exclude: /node_modules/
+        }, {
+            test: /\.css$/,
+            use: [
+                cssExtractLoader,
+                'css-loader',
+            ],
+        }, {
+            test: /\.less$/,
+            use: [
+                cssExtractLoader,
+                'css-loader',
+                'less-loader',
+                'import-glob-loader',
+            ],
         }]
     };
 
