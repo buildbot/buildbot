@@ -7,7 +7,6 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
-var PeerDepsExternalsPlugin = require('peer-deps-externals-webpack-plugin');
 const pkg = require('./package.json');
 
 let libraryName = pkg.name;
@@ -72,7 +71,14 @@ module.exports = function makeWebpackConfig() {
     ];
 
     if (!isTest) {
-        config.plugins.push(new PeerDepsExternalsPlugin());
+        config.externals = [
+            'angular',
+            '@uirouter/angularjs',
+            'angular-animate',
+            'angular-ui-bootstrap',
+            'jquery',
+            'lodash',
+        ];
     }
 
     if (isTest) {

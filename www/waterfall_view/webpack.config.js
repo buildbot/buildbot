@@ -8,7 +8,6 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
-var PeerDepsExternalsPlugin = require('peer-deps-externals-webpack-plugin');
 const pkg = require('./package.json');
 
 var event = process.env.npm_lifecycle_event;
@@ -51,18 +50,24 @@ module.exports = function makeWebpackConfig() {
         config.devtool = 'source-map';
     }
 
-    config.plugins = []
-
-    if (!isTest) {
-        config.plugins.push(new PeerDepsExternalsPlugin());
-    }
-
     config.plugins = [
           new webpack.ProvidePlugin({
               "window.jQuery": "jquery",
               "$": "jquery",
           }),
     ];
+
+    if (!isTest) {
+        config.externals = [
+            '@uirouter/angularjs',
+            'angular',
+            'angular-animate',
+            'buildbot-data-js',
+            'd3',
+            'guanlecoja-ui',
+            'jquery',
+        ];
+    }
 
     config.module = {
         rules: [{

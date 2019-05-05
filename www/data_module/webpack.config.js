@@ -7,7 +7,6 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
-var PeerDepsExternalsPlugin = require('peer-deps-externals-webpack-plugin');
 const pkg = require('./package.json');
 
 let libraryName = pkg.name;
@@ -52,6 +51,12 @@ module.exports = function makeWebpackConfig() {
         config.devtool = 'source-map';
     }
 
+    if (!isTest) {
+        config.externals = [
+            'angular',
+        ];
+    }
+
     config.module = {
         rules: [{
             test: /\.js$/,
@@ -61,10 +66,6 @@ module.exports = function makeWebpackConfig() {
     };
 
     config.plugins = [];
-
-    if (!isTest) {
-        config.plugins.push(new PeerDepsExternalsPlugin());
-    }
 
     if (isTest) {
         config.module.rules.push({

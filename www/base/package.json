@@ -5,7 +5,7 @@
         "build": "rimraf dist && webpack --bail --progress --profile",
         "test": "karma start",
         "test-watch": "karma start --auto-watch --no-single-run",
-        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui && yarn add --peer --dev ../data_module ../guanlecoja-ui"
+        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui && yarn add ../data_module ../guanlecoja-ui"
     },
     "devDependencies": {
         "@babel/core": "^7.4.3",
@@ -33,7 +33,6 @@
         "lodash": "^4.17.11",
         "node-libs-browser": "^2.2.0",
         "null-loader": "^1.0.0",
-        "peer-deps-externals-webpack-plugin": "^1.0.4",
         "postcss-loader": "^3.0.0",
         "pug": "^2.0.3",
         "pug-loader": "^2.4.0",
