@@ -4,8 +4,7 @@
     "scripts": {
         "build": "rimraf dist && webpack --bail --progress --profile --env prod",
         "test": "karma start",
-        "test-watch": "karma start --auto-watch --no-single-run",
-        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui && yarn add ../data_module ../guanlecoja-ui"
+        "test-watch": "karma start --auto-watch --no-single-run"
     },
     "devDependencies": {
         "@babel/core": "^7.4.3",
