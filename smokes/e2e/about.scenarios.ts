@@ -15,7 +15,7 @@ describe('', function() {
             await about.checkAboutPage();
             await about.checkBuildbotTitle();
             await about.checkConfigTitle();
-            await about.checkDependenciesTitle();
+            await about.checkAPIDescriptionTitle();
     })
 );
 });
