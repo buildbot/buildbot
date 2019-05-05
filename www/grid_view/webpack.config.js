@@ -18,14 +18,12 @@ let libraryName = pkg.name;
 var isTest = event === 'test' || event === 'test-watch';
 var isProd = env === 'prod';
 
-let outputFile, mode;
+let mode;
 
 if (isProd) {
     mode = 'production';
-    outputFile = libraryName + '.min.js';
 } else {
     mode = 'development';
-    outputFile = libraryName + '.js';
 }
 
 module.exports = function makeWebpackConfig() {
@@ -39,8 +37,8 @@ module.exports = function makeWebpackConfig() {
     };
 
     config.output = isTest ? {} : {
-        path: __dirname + '/dist',
-        filename: outputFile,
+        path: __dirname + '/buildbot_grid_view/static',
+        filename: 'scripts.js',
         library: libraryName,
         libraryTarget: 'umd',
         umdNamedDefine: true,

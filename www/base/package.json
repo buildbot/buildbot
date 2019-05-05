@@ -1,6 +1,6 @@
 {
     "name": "buildbot-www",
-    "main": "dist/buildbot-www.js",
+    "main": "buildbot_www/static/scripts.js",
     "scripts": {
         "build": "rimraf dist && webpack --bail --progress --profile",
         "test": "karma start",
