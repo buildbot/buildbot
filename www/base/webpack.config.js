@@ -9,6 +9,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const pkg = require('./package.json');
@@ -46,6 +47,20 @@ module.exports = function makeWebpackConfig() {
         libraryTarget: 'umd',
         umdNamedDefine: true,
         globalObject: "(typeof self !== 'undefined' ? self : this)",
+    };
+
+    config.optimization = {
+        minimize: isProd,
+        minimizer: [
+            new TerserPlugin({
+                cache: true,
+                parallel: true,
+                sourceMap: true,
+                terserOptions: {
+                    keep_classnames: true
+                }
+            }),
+        ],
     };
 
     if (isTest) {
