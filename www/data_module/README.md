@@ -17,12 +17,12 @@ angular.module('myModule', ['bbData']);
 
 ## Building
 ```
-$ npm install
+$ yarn install
 $ gulp
 ```
 ## Running tests
 ```
-$ npm install
+$ yarn install
 $ karma start
 ```
 
