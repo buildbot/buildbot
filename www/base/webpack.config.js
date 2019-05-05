@@ -8,6 +8,8 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const pkg = require('./package.json');
 
@@ -32,13 +34,14 @@ module.exports = function makeWebpackConfig() {
 
     config.mode = mode;
 
-    config.entry = isTest ? void 0 : {
-        base: './src/app/app.module.js'
-    };
+    config.entry = {
+        scripts: './src/app/app.module.js',
+        styles: './src/styles/styles.less',
+    }
 
     config.output = isTest ? {} : {
         path: __dirname + '/buildbot_www/static',
-        filename: 'scripts.js',
+        filename: '[name].js',
         library: libraryName,
         libraryTarget: 'umd',
         umdNamedDefine: true,
@@ -56,6 +59,10 @@ module.exports = function makeWebpackConfig() {
               "window.jQuery": "jquery",
               "$": "jquery",
           }),
+        new FixStyleOnlyEntriesPlugin(),
+        new MiniCssExtractPlugin({
+            filename: 'styles.css',
+        }),
     ];
 
     if (!isTest) {
@@ -63,6 +70,13 @@ module.exports = function makeWebpackConfig() {
             onBuildEnd:['./node_modules/.bin/pug src/app/index.jade -o buildbot_www/static/']
         }))
     }
+
+    var cssExtractLoader = {
+        loader: MiniCssExtractPlugin.loader,
+        options: {
+            hmr: process.env.NODE_ENV === 'development',
+        },
+    };
 
     config.module = {
         rules: [{
@@ -73,6 +87,23 @@ module.exports = function makeWebpackConfig() {
             test: /\.jade$/,
             loader: 'pug-loader',
             exclude: /node_modules/
+        }, {
+            test: /\.css$/,
+            use: [
+                cssExtractLoader,
+                'css-loader',
+            ],
+        }, {
+            test: /\.less$/,
+            use: [
+                cssExtractLoader,
+                'css-loader',
+                'less-loader',
+                'import-glob-loader',
+            ],
+        }, {
+            test: /\.(ttf|eot|svg|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            use: 'file-loader'
         }]
     };
 

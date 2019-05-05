@@ -1,6 +1,7 @@
 {
     "name": "buildbot-www",
     "main": "buildbot_www/static/scripts.js",
+    "style": "buildbot_www/static/styles.css",
     "scripts": {
         "build": "rimraf buildbot_www/static && webpack --bail --progress --profile --env prod",
         "build-dev": "rimraf buildbot_www/static && webpack --bail --progress --profile --env dev",
@@ -48,6 +49,7 @@
         "webpack": "^4.30.0",
         "webpack-cli": "^3.3.1",
         "webpack-dev-server": "^3.3.1",
+        "webpack-fix-style-only-entries": "^0.2.1",
         "webpack-shell-plugin": "^0.5.0"
     },
     "dependencies": {
@@ -57,10 +59,13 @@
         "angular-bootstrap-multiselect": "^1.1.11",
         "angular-recursion": "^1.0.5",
         "angular-ui-bootstrap": "^2.5.6",
+        "bootstrap": "^3.1.1",
         "buildbot-data-js": "../data_module",
+        "font-awesome": "^4.7.0",
         "guanlecoja-ui": "../guanlecoja-ui",
         "http-proxy": "^1.11.1",
         "minimist": "^1.1.1",
-        "moment": "^2.24.0"
+        "moment": "^2.24.0",
+        "popper.js": "^1.15.0"
     }
 }
