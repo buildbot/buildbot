@@ -1,1 +1,0 @@
-Fixed a potential error during database migration when upgrading to versions >=2.0 (:issue:`4711`).

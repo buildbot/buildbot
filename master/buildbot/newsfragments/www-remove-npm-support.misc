@@ -1,2 +1,0 @@
-The support for building Buildbot using npm as package manager has been removed.
-Please use yarn as a replacement that is used by Buildbot developers.

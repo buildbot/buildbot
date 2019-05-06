@@ -10,6 +10,36 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.3.0`` ( ``2019-05-06`` )
+=====================================
+
+Highlights
+----------
+
+- Support for older browsers has been hopefully temporarily broken due to frontend changes in progress.
+  Notably, Internet Explorer 11 is not supported in this release.
+  Currently supported browsers are Chrome 56, Firefox 52, Edge 13 and Safari 10, newer versions of these browsers and their compatible derivatives.
+  This set of browsers covers 98% of users of buildbot.net.
+
+Bug fixes
+---------
+
+- Fixed :bb:step:`Git` to clean the repository after the checkout when submodules are enabled. Previously this action could lead to untracked module directories after changing branches.
+- Latent workers with negative `build_wait_timeout` will be shutdown on master shutdown.
+- Latent worker will now wait until `start_instance()` before starting `stop_instance()` or vice-versa. Master will wait for these functions to finish during shutdown.
+- Latent worker will now correctly handle synchronous exception from the backend worker driver.
+- Fixed a potential error during database migration when upgrading to versions >=2.0 (:issue:`4711`).
+
+Deprecations and Removals
+-------------------------
+
+- The implementation language of the Buildbot web frontend has been changed from CoffeeScript to JavaScript.
+  The documentation has not been updated yet, as we plan to transition to TypeScript.
+  In the transitory period support for some browsers, notably IE 11 has been dropped.
+  We hope to bring support for older browsers back once the transitory period is over.
+- The support for building Buildbot using npm as package manager has been removed.
+  Please use yarn as a replacement that is used by Buildbot developers.
+
 Buildbot ``2.2.0`` ( ``2019-04-07`` )
 =====================================
 

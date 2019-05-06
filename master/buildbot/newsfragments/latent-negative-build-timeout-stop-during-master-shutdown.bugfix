@@ -1,1 +1,0 @@
-Latent workers with negative build_wait_timeout will be shutdown on master shutdown.
