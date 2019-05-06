@@ -1,4 +1,0 @@
-The implementation language of the Buildbot web frontend has been changed from CoffeeScript to JavaScript.
-The documentation has not been updated yet, as we plan to transition to TypeScript.
-In the transitory period support for some browsers, notably IE 11 has been dropped.
-We hope to bring support for older browsers back once the transitory period is over.

@@ -1,1 +1,0 @@
-Latent worker will now wait until start_instance() before starting stop_instance() or vice-versa. Master will wait for these functions to finish during shutdown.

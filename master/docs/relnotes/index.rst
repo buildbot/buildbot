@@ -10,6 +10,24 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.3.0`` ( ``2019-05-06`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed :py:class:~buildbot.steps.source.git.Git to clean the repository after the checkout when submodules are enabled. Previously this action could lead to untracked module directories after changing branches.
+- Latent workers with negative build_wait_timeout will be shutdown on master shutdown.
+- Latent worker will now wait until start_instance() before starting stop_instance() or vice-versa. Master will wait for these functions to finish during shutdown.
+- Latent worker will now correctly handle synchronous exception from the backend worker driver.
+- Fixed a potential error during database migration when upgrading to versions >=2.0 (:issue:`4711`).
+
+Misc
+----
+
+- www-coffeescript-removal, www-remove-npm-support
+
+
 Buildbot ``2.2.0`` ( ``2019-04-07`` )
 =====================================
 

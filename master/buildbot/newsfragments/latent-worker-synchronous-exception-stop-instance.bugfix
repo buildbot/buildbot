@@ -1,1 +1,0 @@
-Latent worker will now correctly handle synchronous exception from the backend worker driver.
