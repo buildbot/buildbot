@@ -6,7 +6,7 @@ future==0.17.1
 hyperlink==19.0.0
 idna==2.8
 incremental==17.5.0
-mock==2.0.0
+mock==3.0.4
 pbr==5.2.0
 PyHamcrest==1.9.0
 six==1.12.0
