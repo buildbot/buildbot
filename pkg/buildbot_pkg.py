@@ -208,12 +208,13 @@ class BuildJsCommand(distutils.cmd.Command):
 
             commands = []
 
+            commands.append(['yarn', 'run', 'yarn-update-local'])
             commands.append(['yarn', 'install', '--pure-lockfile'])
 
             if os.path.exists("gulpfile.js"):
                 commands.append([os.path.join(yarn_bin, "gulp"), 'prod', '--notests'])
             elif os.path.exists("webpack.config.js"):
-                commands.append([os.path.join(yarn_bin, "webpack"), '-p'])
+                commands.append(['yarn', 'run', 'build'])
 
             shell = bool(os.name == 'nt')
 
