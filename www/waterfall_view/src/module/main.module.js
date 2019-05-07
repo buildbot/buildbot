@@ -669,5 +669,9 @@ angular.module('waterfall_view', new WaterfallView())
 .controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService',
                                     WaterfallController]);
 
-const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
-context.keys().forEach(context);
+require('./dataProcessor/dataProcessor.service.js');
+require('./main.module.js');
+require('./modal/modal.controller.js');
+require('./scale/scale.service.js');
+require('./waterfall.config.js');
+require('./waterfall.route.js');

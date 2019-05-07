@@ -5,5 +5,4 @@ import 'angular-ui-ace';
 
 angular.module("codeparameter", ['ui.ace', 'common']);
 
-const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
-context.keys().forEach(context);
+require('./codefield.directive.js');

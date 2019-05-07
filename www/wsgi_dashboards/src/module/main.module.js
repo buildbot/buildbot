@@ -7,5 +7,4 @@ class WsgiDashboards {
 
 angular.module('wsgi_dashboards', new WsgiDashboards());
 
-const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
-context.keys().forEach(context);
+require('./dashboards.route.js');

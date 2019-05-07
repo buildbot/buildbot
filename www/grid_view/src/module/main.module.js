@@ -85,5 +85,4 @@ angular.module('grid_view', [
     'ui.router', 'ui.bootstrap', 'ngAnimate', 'guanlecoja.ui', 'bbData'])
 .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', GridState]);
 
-const context = require.context('./', true, /^(?!.*(?:module|spec|webpack.js$)).*\.js$/);
-context.keys().forEach(context);
+require('./grid.controller.js');
