@@ -55,21 +55,11 @@ Installation
 ~~~~~~~~~~~~
 
 The Data module is available as a standalone AngularJS module.
-Installation via bower:
+Installation via yarn:
 
   .. code-block:: sh
 
-      bower install buildbot-data --save
-
-It is recommended however for coherency to use the installation method via guanlecoja, in the bower section of guanlecoja/config.coffee:
-
-  .. code-block:: coffee
-
-    'bower':
-        'deps':
-            'buildbot-data':
-                version: '~2.2.6'
-                files: 'dist/buildbot-data.js'
+      yarn add buildbot-data
 
 Inject the ``bbData`` module to your application:
 
@@ -94,16 +84,18 @@ Methods:
   * open a new accessor every time you need updating data in a controller
   * it registers on $destroy event on the scope, and thus automatically unsubscribes from updates when the data is not used anymore.
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # open a new accessor every time you need updating data in a controller
-      class DemoController extends Controller
-          constructor: ($scope, dataService) ->
-              # automatically closes all the bindings when the $scope is destroyed
-              data = dataService.open().closeOnDestroy($scope)
+    // open a new accessor every time you need updating data in a controller
+    class DemoController {
+        constructor($scope, dataService) {
+            // automatically closes all the bindings when the $scope is destroyed
+            const data = dataService.open().closeOnDestroy($scope);
 
-              # request new data, it updates automatically
-              @builders = data.getBuilders(limit: 10, order: '-started_at')
+            // request new data, it updates automatically
+            this.builders = data.getBuilders({limit: 10, order: '-started_at'});
+        }
+    }
 
 ``.getXs([id], [query])``: returns Collection which will eventually contain all the requested data
 
@@ -112,40 +104,37 @@ Methods:
   * The collections returns without using an accessor are not automatically updated.
     So use those methods only when you know the data are not changing
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # assign builds to $scope.builds and then load the steps when the builds are discovered
-      # onNew is called at initial load
-      $scope.builds = dataService.getBuilds(builderid: 1)
-      $scope.builds.onNew = (build) ->
-          build.loadSteps()
+    // assign builds to $scope.builds and then load the steps when the builds are discovered
+    // onNew is called at initial load
+    $scope.builds = dataService.getBuilds({builderid: 1});
+    $scope.builds.onNew = build => build.loadSteps();
 
 
 ``.get(endpoint, [id], [query])``: returns a <Collection>, when the promise is resolved, the Collection contains all the requested data
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # assign builds to $scope.builds once the Collection is filled
-      builderid = 1
-      $scope.builds = dataService.get("builders/#{builderid}/builds", limit: 1)
-      $scope.builds.onNew = (build) ->
-          build.loadSteps()
+    // assign builds to $scope.builds once the Collection is filled
+    const builderid = 1;
+    $scope.builds = dataService.get(`builders/${builderid}/builds`, {limit: 1});
+    $scope.builds.onNew = build => build.loadSteps();
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # assign builds to $scope.builds before the Collection is filled using the .getArray() function
-      $scope.builds = dataService.get('builds', builderid: 1)
+    // assign builds to $scope.builds before the Collection is filled using the .getArray() function
+    $scope.builds = dataService.get('builds', {builderid: 1});
 
 
 ``.control(url, method, [params])``: returns a promise, sends a JSON RPC2 POST request to the server
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # open a new accessor every time you need updating data in a controller
-      dataService.control('forceschedulers/force', 'force').then (response) ->
-          $log.debug(response)
-      , (reason) ->
-          $log.error(reason)
+    // open a new accessor every time you need updating data in a controller
+    dataService.control('forceschedulers/force', 'force')
+        .then(response => $log.debug(response),
+              reason => $log.error(reason));
 
 
 DataAccessor
@@ -210,25 +199,28 @@ Those objects have specific methods, depending on their types. methods:
 
   * same as ``dataService.getXs``, but with relative endpoint
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # assign builds to $scope.builds once the Collection is filled
-      $scope.builds = dataService.getBuilds(builderid: 1)
-      $scope.builds.onNew = (b) ->
-          b.complete_steps = b.getSteps(complete:true)
-          b.running_steps = b.getSteps(complete:false)
+    // assign builds to $scope.builds once the Collection is filled
+    $scope.builds = dataService.getBuilds({builderid: 1});
+    $scope.builds.onNew = function(b) {
+        b.complete_steps = b.getSteps({complete:true});
+        b.running_steps = b.getSteps({complete:false});
+    };
 
 ``.loadXs([id], [query])``: returns a Collection, the Collection contains all the requested data, which is also assigned to ``o.Xs``
 
   * ``o.loadXs()`` is equivalent to ``o.xs = o.getXs()``
 
-  .. code-block:: coffeescript
+  .. code-block:: javascript
 
-      # get builder with id = 1
-      dataService.getBuilders(1).onNew = (builder) ->
-          # load all builds in builder.builds
-          builder.loadBuilds().onNew (build) ->
-              # load all buildsteps in build.steps
-              build.loadSteps()
+    // get builder with id = 1
+    dataService.getBuilders(1).onNew = builder => {
+        // load all builds in builder.builds
+        builder.loadBuilds().onNew(build => {
+            // load all buildsteps in build.steps
+            build.loadSteps();
+        });
+    };
 
 ``.control(method, params)``: returns a promise, sends a JSON RPC2 POST request to the server

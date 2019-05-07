@@ -89,4 +89,4 @@ Once again, there is a number of options available for you:
 
 The last option is probably the best one since it will make your plugin available pretty much to all Python developers.
 
-Once you have published the package, please send a link to `buildbot-devel <mailto:buildbot-devel@lists.sourceforge.net>`_ mailing list, so we can include a link to your plugin to :doc:`../manual/plugins`.
+Once you have published the package, please send a link to `buildbot-devel <mailto:devel@buildbot.net>`_ mailing list, so we can include a link to your plugin to :doc:`../manual/plugins`.
