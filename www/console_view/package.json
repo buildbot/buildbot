@@ -13,7 +13,8 @@
     "devDependencies": {
         "angular-mocks": "1.5.3",
         "buildbot-build-common": "../build_common",
-        "lodash": "^4.17.11"
+        "lodash": "^4.17.11",
+        "rimraf": "^2.6.3"
     },
     "dependencies": {
         "@uirouter/angularjs": "^1.0.15",
