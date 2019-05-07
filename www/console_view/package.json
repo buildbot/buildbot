@@ -5,6 +5,7 @@
     "scripts": {
         "build": "rimraf buildbot_console_view/static && webpack --bail --progress --profile --env prod",
         "build-dev": "rimraf buildbot_console_view/static && webpack --bail --progress --profile --env dev",
+        "dev": "webpack --bail --progress --profile --watch --env dev",
         "test": "karma start",
         "test-watch": "karma start --auto-watch --no-single-run",
         "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui buildbot-build-common && yarn add ../data_module ../guanlecoja-ui && yarn add --dev ../build_common"
