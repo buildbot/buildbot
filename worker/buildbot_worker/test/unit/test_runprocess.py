@@ -857,3 +857,20 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         self.assertEqual(
             st and st[2], 2, "statfile.log exists and size is correct")
         os.remove('statfile.log')
+
+    def test_invalid_utf8(self):
+        # create the log file watcher first
+        rp = self.makeRP()
+        lf = runprocess.LogFileWatcher(rp, 'test', 'invalid_utf8.log',
+                                       follow=False, poll=False)
+        # now write to the log file
+        INVALID_UTF8 = b'\xff'
+        with open('invalid_utf8.log', 'wb') as f:
+            f.write(INVALID_UTF8)
+        # the watcher picks up the changed log
+        lf.poll()
+        # flush she buffer
+        rp._sendBuffers()
+        # cleanup
+        lf.stop()
+        os.remove('invalid_utf8.log')
