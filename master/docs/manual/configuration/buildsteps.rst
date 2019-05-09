@@ -2183,6 +2183,9 @@ This step takes the following arguments:
 ``defines``
    (optional) Dictionary of defines to overwrite values of the :file:`conf.py` file.
 
+``strict_warnings``
+   (optional) Boolean, defaults to False. Treat all warnings as errors.
+
 ``mode``
    (optional) String, one of ``full`` or ``incremental`` (the default).
    If set to ``full``, indicates to Sphinx to rebuild everything without re-using the previous build results.
