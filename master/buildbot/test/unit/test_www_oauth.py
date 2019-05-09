@@ -222,30 +222,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
-    def test_GithubAcceptToken(self):
-        requests.get.side_effect = []
-        requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
-        self.githubAuth.get = mock.Mock(side_effect=[
-            dict(  # /user
-                login="bar",
-                name="foo bar",
-                email="buzz@bar"),
-            [  # /user/emails
-                {'email': 'buzz@bar', 'verified': True, 'primary': False},
-                {'email': 'bar@foo', 'verified': True, 'primary': True}],
-            [  # /user/orgs
-                dict(login="hello"),
-                dict(login="grp"),
-            ]])
-        res = yield self.githubAuth.acceptToken("TOK3N")
-        self.assertEqual({'email': 'bar@foo',
-                          'username': 'bar',
-                          'groups': ["hello", "grp"],
-                          'full_name': 'foo bar'}, res)
-
-    @defer.inlineCallbacks
-    def test_GithubAcceptToken_v4(self):
+    def test_GithubVerifyCode_v4(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
             FakeResponse(dict(access_token="TOK3N"))]
@@ -274,14 +251,14 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                 }
             }
         ])
-        res = yield self.githubAuth_v4.acceptToken("TOK3N")
+        res = yield self.githubAuth_v4.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
                           'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
-    def test_GithubAcceptToken_v4_teams(self):
+    def test_GithubVerifyCode_v4_teams(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
             FakeResponse(dict(access_token="TOK3N"))]
@@ -362,7 +339,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                 }
             }
         ])
-        res = yield self.githubAuth_v4_teams.acceptToken("TOK3N")
+        res = yield self.githubAuth_v4_teams.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
                           'groups': [
@@ -465,11 +442,9 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
         rsrc.auth.verifyCode.assert_called_once_with(b"code!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': b'://me'})
+        # token not supported anymore
         res = yield self.render_resource(rsrc, b'/?token=token!')
-        rsrc.auth.getLoginURL.assert_not_called()
-        rsrc.auth.acceptToken.assert_called_once_with(b"token!")
-        self.assertEqual(self.master.session.user_info, {'username': 'bar'})
-        self.assertEqual(res, {'redirected': b'://me'})
+        rsrc.auth.getLoginURL.assert_called_once()
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
