@@ -228,7 +228,7 @@ class V2RootResource(resource.Resource):
             method, id, params = self.decodeJsonRPC2(request)
             jsonRpcReply['id'] = id
             ep, kwargs = yield self.getEndpoint(request, method, params)
-            userinfos = self.master.www.getUserInfos(request)
+            userinfos = self.master.www.getUserInfosFromSessionOrApiToken(request)
             if 'anonymous' in userinfos and userinfos['anonymous']:
                 owner = "anonymous"
             else:

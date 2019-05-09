@@ -36,6 +36,7 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.www import api_token
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
@@ -153,6 +154,8 @@ class BuildbotSite(server.Site):
 
     def setSessionSecret(self, secret):
         self.session_secret = secret
+        # change the key for api tokens
+        self.api_token_secret = secret[SESSION_SECRET_LENGTH//8:] + secret[:SESSION_SECRET_LENGTH//8]
 
     def makeSession(self):
         """
@@ -294,6 +297,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /api
         root.putChild(b'api', rest.RestRootResource(self.master))
 
+        # /token
+        root.putChild(b'api_token', api_token.APITokenResource(self.master))
+
         # /ws
         root.putChild(b'ws', ws.WsResource(self.master))
 
@@ -386,6 +392,18 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         session = request.getSession()
         return session.user_info
 
+    def getUserInfosFromSessionOrApiToken(self, request):
+        token = request.getHeader(b'X-API-TOKEN')
+        if token:
+            try:
+                session = jwt.decode(token, self.site.api_token_secret, algorithm=APITOKEN_SECRET_ALGORITHM)
+                return session.user_info
+            except Exception as e:
+                pass
+
+        session = request.getSession()
+        return session.user_info
+
     def assertUserAllowed(self, request, ep, action, options):
-        user_info = self.getUserInfos(request)
+        user_info = self.getUserInfosFromSessionOrApiToken(request)
         return self.authz.assertUserAllowed(ep, action, options, user_info)
