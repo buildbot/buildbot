@@ -75,6 +75,17 @@ dumping search index... done
 dumping object inventory... done
 build succeeded, 2 warnings.'''
 
+log_output_warnings_strict = '''\
+Running Sphinx v1.0.7
+loading pickled environment... done
+building [html]: targets for 1 source files that are out of date
+updating environment: 0 added, 1 changed, 0 removed
+reading sources... [100%] file
+
+Warning, treated as error:
+file.rst:18:Literal block expected; none found.
+'''
+
 warnings = '''\
 file.rst:18: (WARNING/2) Literal block expected; none found.
 index.rst:: WARNING: toctree contains reference to document 'preamble' that \
@@ -489,6 +500,19 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string="sphinx 0 warnings (failure)")
         return self.runStep()
 
+    def test_strict_warnings(self):
+        self.setupStep(python.Sphinx(sphinx_builddir="_build", strict_warnings=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['sphinx-build', '-W', '.', '_build'])
+            + ExpectShell.log('stdio',
+                              stdout=log_output_warnings_strict)
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           state_string="sphinx 1 warnings (failure)")
+        return self.runStep()
+
     def test_nochange(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
@@ -525,6 +549,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                      sphinx_builder='css',
                                      sphinx="/path/to/sphinx-build",
                                      tags=['a', 'b'],
+                                     strict_warnings=True,
                                      defines=dict(
                                          empty=None, t=True, f=False, s="str"),
                                      mode='full'))
@@ -533,7 +558,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['/path/to/sphinx-build', '-b', 'css',
                                  '-t', 'a', '-t', 'b', '-D', 'empty',
                                  '-D', 'f=0', '-D', 's=str', '-D', 't=1',
-                                 '-E', 'src', 'bld'])
+                                 '-E', '-W', 'src', 'bld'])
             + ExpectShell.log('stdio',
                               stdout=log_output_success)
             + 0

@@ -273,7 +273,7 @@ class Sphinx(ShellCommand):
 
     def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
                  sphinx_builder=None, sphinx='sphinx-build', tags=None,
-                 defines=None, mode='incremental', **kwargs):
+                 defines=None, strict_warnings=False, mode='incremental', **kwargs):
 
         if tags is None:
             tags = []
@@ -312,6 +312,9 @@ class Sphinx(ShellCommand):
         if mode == 'full':
             command.extend(['-E'])  # Don't use a saved environment
 
+        if strict_warnings:
+            command.extend(['-W'])  # Convert warnings to errors
+
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
 
@@ -322,15 +325,23 @@ class Sphinx(ShellCommand):
 
     def logConsumer(self):
         self.warnings = []
+        next_is_warning = False
+
         while True:
             stream, line = yield
             if line.startswith('build succeeded') or \
                line.startswith('no targets are out of date.'):
                 self.success = True
+            elif line.startswith('Warning, treated as error:'):
+                next_is_warning = True
             else:
-                for msg in self._msgs:
-                    if msg in line:
-                        self.warnings.append(line)
+                if next_is_warning:
+                    self.warnings.append(line)
+                    next_is_warning = False
+                else:
+                    for msg in self._msgs:
+                        if msg in line:
+                            self.warnings.append(line)
 
     def createSummary(self, log):
         if self.warnings:
