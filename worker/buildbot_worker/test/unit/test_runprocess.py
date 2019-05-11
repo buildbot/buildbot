@@ -21,6 +21,7 @@ import os
 import re
 import signal
 import sys
+import tempfile
 import time
 
 from mock import Mock
@@ -841,36 +842,48 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         rp = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         return rp
 
+    def tempLogFile(self, prefix):
+        return tempfile.NamedTemporaryFile(
+            prefix=prefix + '_', suffix='.log', mode='w', delete=False)
+
     def test_statFile_missing(self):
         rp = self.makeRP()
-        if os.path.exists('statfile.log'):
-            os.remove('statfile.log')
-        lf = runprocess.LogFileWatcher(rp, 'test', 'statfile.log', False)
+        with self.tempLogFile('statfile') as f:
+            pass
+        os.remove(f.name)
+        lf = runprocess.LogFileWatcher(rp, 'test', f.name, False)
         self.assertFalse(lf.statFile(), "statfile.log doesn't exist")
 
     def test_statFile_exists(self):
         rp = self.makeRP()
-        with open('statfile.log', 'w') as f:
+        with self.tempLogFile('statfile') as f:
             f.write('hi')
-        lf = runprocess.LogFileWatcher(rp, 'test', 'statfile.log', False)
+        lf = runprocess.LogFileWatcher(rp, 'test', f.name, False)
         st = lf.statFile()
         self.assertEqual(
             st and st[2], 2, "statfile.log exists and size is correct")
-        os.remove('statfile.log')
+        os.remove(f.name)
 
     def test_invalid_utf8(self):
         # create the log file watcher first
         rp = self.makeRP()
-        lf = runprocess.LogFileWatcher(rp, 'test', 'invalid_utf8.log',
+        with self.tempLogFile('invalid_utf8') as f:
+            pass
+        os.remove(f.name)
+        lf = runprocess.LogFileWatcher(rp, 'test', f.name,
                                        follow=False, poll=False)
         # now write to the log file
-        INVALID_UTF8 = b'\xff'
-        with open('invalid_utf8.log', 'wb') as f:
-            f.write(INVALID_UTF8)
+        INVALID_UTF8 = b'before\xffafter'
+        with open(f.name, 'wb') as log_file:
+            log_file.write(INVALID_UTF8)
         # the watcher picks up the changed log
         lf.poll()
         # flush she buffer
         rp._sendBuffers()
+        # the log file content was captured and the invalid byte replaced with \ufffd (the
+        # replacement character, often a black diamond with a white question mark)
+        REPLACED = u'before\ufffdafter'
+        self.assertEqual(rp.builder.updates, [{'log': ('test', REPLACED)}])
         # cleanup
         lf.stop()
-        os.remove('invalid_utf8.log')
+        os.remove(f.name)
