@@ -1456,6 +1456,7 @@ txrequests
 txt
 tz
 ubuntu
+ufffd
 ui
 uid
 umask
