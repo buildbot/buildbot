@@ -21,7 +21,6 @@ import os
 import re
 import signal
 import sys
-import tempfile
 import time
 
 from mock import Mock
@@ -842,48 +841,48 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         rp = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         return rp
 
-    def tempLogFile(self, prefix):
-        return tempfile.NamedTemporaryFile(
-            prefix=prefix + '_', suffix='.log', mode='w', delete=False)
-
     def test_statFile_missing(self):
         rp = self.makeRP()
-        with self.tempLogFile('statfile') as f:
-            pass
-        os.remove(f.name)
-        lf = runprocess.LogFileWatcher(rp, 'test', f.name, False)
-        self.assertFalse(lf.statFile(), "statfile.log doesn't exist")
+        test_filename = 'test_runprocess_test_statFile_missing.log'
+        if os.path.exists(test_filename):
+            os.remove(test_filename)
+        lf = runprocess.LogFileWatcher(rp, 'test', test_filename, False)
+        self.assertFalse(lf.statFile(), "{} doesn't exist".format(test_filename))
 
     def test_statFile_exists(self):
         rp = self.makeRP()
-        with self.tempLogFile('statfile') as f:
-            f.write('hi')
-        lf = runprocess.LogFileWatcher(rp, 'test', f.name, False)
-        st = lf.statFile()
-        self.assertEqual(
-            st and st[2], 2, "statfile.log exists and size is correct")
-        os.remove(f.name)
+        test_filename = 'test_runprocess_test_statFile_exists.log'
+        try:
+            with open(test_filename, 'w') as f:
+                f.write('hi')
+            lf = runprocess.LogFileWatcher(rp, 'test', test_filename, False)
+            st = lf.statFile()
+            self.assertEqual(
+                st and st[2], 2, "statfile.log exists and size is correct")
+        finally:
+            os.remove(test_filename)
 
     def test_invalid_utf8(self):
         # create the log file watcher first
         rp = self.makeRP()
-        with self.tempLogFile('invalid_utf8') as f:
-            pass
-        os.remove(f.name)
-        lf = runprocess.LogFileWatcher(rp, 'test', f.name,
-                                       follow=False, poll=False)
-        # now write to the log file
-        INVALID_UTF8 = b'before\xffafter'
-        with open(f.name, 'wb') as log_file:
-            log_file.write(INVALID_UTF8)
-        # the watcher picks up the changed log
-        lf.poll()
-        # flush she buffer
-        rp._sendBuffers()
-        # the log file content was captured and the invalid byte replaced with \ufffd (the
-        # replacement character, often a black diamond with a white question mark)
-        REPLACED = u'before\ufffdafter'
-        self.assertEqual(rp.builder.updates, [{'log': ('test', REPLACED)}])
-        # cleanup
-        lf.stop()
-        os.remove(f.name)
+        test_filename = 'test_runprocess_test_invalid_utf8.log'
+
+        try:
+            lf = runprocess.LogFileWatcher(rp, 'test', test_filename,
+                                           follow=False, poll=False)
+            # now write to the log file
+            INVALID_UTF8 = b'before\xffafter'
+            with open(test_filename, 'wb') as f:
+                f.write(INVALID_UTF8)
+            # the watcher picks up the changed log
+            lf.poll()
+            # flush she buffer
+            rp._sendBuffers()
+            # the log file content was captured and the invalid byte replaced with \ufffd (the
+            # replacement character, often a black diamond with a white question mark)
+            REPLACED = u'before\ufffdafter'
+            self.assertEqual(rp.builder.updates, [{'log': ('test', REPLACED)}])
+
+        finally:
+            lf.stop()
+            os.remove(f.name)
