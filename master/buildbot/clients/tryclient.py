@@ -460,9 +460,9 @@ def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
     if version < 5:
         job += ns(jobid)
         job += ns(branch)
-        job += ns(str(baserev))
+        job += ns(baserev.decode())
         job += ns("{}".format(patch_level))
-        job += ns(patch_body or "")
+        job += ns(patch_body.decode() or "")
         job += ns(repository)
         job += ns(project)
         if (version >= 3):
@@ -474,8 +474,8 @@ def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
     else:
         job += ns(
             json.dumps({
-                'jobid': jobid, 'branch': branch, 'baserev': str(baserev),
-                'patch_level': patch_level, 'patch_body': patch_body,
+                'jobid': jobid, 'branch': branch, 'baserev': baserev.decode(),
+                'patch_level': "{}".format(patch_level), 'patch_body': patch_body.decode(),
                 'repository': repository, 'project': project, 'who': who,
                 'comment': comment, 'builderNames': builderNames,
                 'properties': properties,
@@ -509,7 +509,7 @@ class RemoteTryPP(protocol.ProcessProtocol):
         self.d = defer.Deferred()
 
     def connectionMade(self):
-        self.transport.write(self.job)
+        self.transport.write(self.job.encode('utf-8'))
         self.transport.closeStdin()
 
     def outReceived(self, data):
