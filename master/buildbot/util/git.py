@@ -157,14 +157,18 @@ class GitStepMixin(GitMixin):
         # ending with a slash
         path_module = self.build.path_module
 
-        workdir = self._getSshDataWorkDir().rstrip('/\\')
-        if path_module.isabs(workdir):
-            parent_path = path_module.dirname(workdir)
+        if self.build.hasProperty("builddir"):
+            base_path = self.build.getProperty("builddir").rstrip("/\\")
+        else:
+            base_path = self._getSshDataWorkDir().rstrip("/\\")
+
+        if path_module.isabs(base_path):
+            parent_path = path_module.dirname(base_path)
         else:
             parent_path = path_module.join(self.worker.worker_basedir,
-                                           path_module.dirname(workdir))
+                                           path_module.dirname(base_path))
 
-        basename = '.{0}.buildbot'.format(path_module.basename(workdir))
+        basename = '.{0}.buildbot'.format(path_module.basename(base_path))
         return path_module.join(parent_path, basename)
 
     def _getSshPrivateKeyPath(self, ssh_data_path):
