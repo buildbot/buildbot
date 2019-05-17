@@ -1,0 +1,1 @@
+MasterShellCommand should not print master's environment variables by default (:issue:`4770`)

@@ -47,7 +47,7 @@ class MasterShellCommand(BuildStep):
         self.env = kwargs.pop('env', None)
         self.usePTY = kwargs.pop('usePTY', 0)
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
-        self.logEnviron = kwargs.pop('logEnviron', True)
+        self.logEnviron = kwargs.pop('logEnviron', False)
 
         super().__init__(**kwargs)
 
