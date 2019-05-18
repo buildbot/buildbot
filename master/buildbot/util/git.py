@@ -151,24 +151,22 @@ class GitStepMixin(GitMixin):
         # temporary directory for that data to ensure the confidentiality of it.
         # So instead of
         # '{path}/{to}/{workdir}/.buildbot-ssh-key' we put the key at
-        # '{path}/{to}/.{workdir}.buildbot/ssh-key'.
+        # '{path}/{to}/.{builder_name}.{workdir}.buildbot/ssh-key'.
 
         # basename and dirname interpret the last element being empty for paths
         # ending with a slash
         path_module = self.build.path_module
 
-        if self.build.hasProperty("builddir"):
-            base_path = self.build.getProperty("builddir").rstrip("/\\")
-        else:
-            base_path = self._getSshDataWorkDir().rstrip("/\\")
+        workdir = self._getSshDataWorkDir().rstrip("/\\")
 
-        if path_module.isabs(base_path):
-            parent_path = path_module.dirname(base_path)
+        if path_module.isabs(workdir):
+            parent_path = path_module.dirname(workdir)
         else:
             parent_path = path_module.join(self.worker.worker_basedir,
-                                           path_module.dirname(base_path))
+                                           path_module.dirname(workdir))
 
-        basename = '.{0}.buildbot'.format(path_module.basename(base_path))
+        basename = '.{0}.{1}.buildbot'.format(self.build.builder.name,
+                                              path_module.basename(workdir))
         return path_module.join(parent_path, basename)
 
     def _getSshPrivateKeyPath(self, ssh_data_path):

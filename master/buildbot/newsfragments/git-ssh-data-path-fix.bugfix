@@ -1,1 +1,1 @@
-:py:class:`~buildbot.util.git.GitStepMixin`: Change ssh data path to be more unique for a given builder
+:py:class:`~buildbot.util.git.GitStepMixin`: Prevent builders from corrupting temporary ssh data path by using builder name as part of the path
