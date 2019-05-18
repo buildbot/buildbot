@@ -157,7 +157,7 @@ class GitStepMixin(GitMixin):
         # ending with a slash
         path_module = self.build.path_module
 
-        workdir = self._getSshDataWorkDir().rstrip("/\\")
+        workdir = self._getSshDataWorkDir().rstrip('/\\')
 
         if path_module.isabs(workdir):
             parent_path = path_module.dirname(workdir)
