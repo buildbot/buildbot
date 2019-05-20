@@ -1,18 +1,3 @@
-// Register new module
-class Codeparameter {
-    constructor() { return [
-        'ui.ace',
-        'common'
-    ]; }
-}
-
-// setup ace to fetch its module from the plugin baseURL
-class AceConfig {
-    constructor($location) {
-        const baseurl = $location.absUrl().split("#")[0];
-        window.ace.config.set("basePath", `${baseurl}codeparameter`);
-    }
-}
 
 // defines custom field directives which only have templates
 class Codefield {
@@ -21,12 +6,10 @@ class Codefield {
             replace: false,
             restrict: 'E',
             scope: false,
-            templateUrl: "codeparameter/views/codefield.html"
+            template: require('./codefield.tpl.jade')
         };
     }
 }
 
-
-angular.module('codeparameter', new Codeparameter())
-.run(['$location', AceConfig])
+angular.module('codeparameter')
 .directive('codefield', [Codefield]);

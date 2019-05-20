@@ -4,7 +4,7 @@ class Properties {
             replace: true,
             restrict: 'E',
             scope: {properties: '='},
-            templateUrl: 'views/properties.html'
+            template: require('./properties.tpl.jade'),
         };
     }
 }

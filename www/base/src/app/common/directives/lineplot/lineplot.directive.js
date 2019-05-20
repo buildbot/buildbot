@@ -18,7 +18,7 @@ class LinePlot {
                 width: '@',
                 height: '@'
             },
-            templateUrl: 'views/lineplot.html',
+            template: require('./lineplot.tpl.jade'),
             link(scope, elem, attrs){
                 return d3Service.get().then(d3 => linkerWithD3(scope, d3, $filter, elem));
             }

@@ -12,7 +12,7 @@ class GlPageWithSidebar {
             restrict: 'E',
             scope: false,
             controllerAs: "page",
-            templateUrl: "guanlecoja.ui/views/page_with_sidebar.html",
+            template: require('./page_with_sidebar.tpl.jade'),
             controller: "_glPageWithSidebarController"
         };
     }
@@ -42,7 +42,7 @@ class _glPageWithSidebar {
 
     toggleSidebarPinned() {
         this.sidebarPinned=!this.sidebarPinned;
-        return this.$window.localStorage.sidebarPinned = this.sidebarPinned;
+        return this.$window.localStorage.sidebarPinned = this.sidebarPinned.toString();
     }
 
     toggleGroup(group) {

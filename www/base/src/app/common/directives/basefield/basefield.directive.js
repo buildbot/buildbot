@@ -12,7 +12,7 @@ class Basefield {
             transclude: true,
             restrict: 'E',
             scope: true,
-            templateUrl: "views/basefield.html",
+            template: require('./basefield.tpl.jade'),
             controller: '_basefieldController'
         };
     }

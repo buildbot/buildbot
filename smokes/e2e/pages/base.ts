@@ -3,6 +3,7 @@
 // inspired by this methodology
 // http://www.lindstromhenrik.com/using-protractor-with.jsscript/
 
+export const testPageUrl = 'http://localhost:8011'
 
 export class BasePage {
     // accessors for elements that all pages have have (menu, login, etc)

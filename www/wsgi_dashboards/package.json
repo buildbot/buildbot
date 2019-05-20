@@ -1,11 +1,20 @@
 {
     "name": "buildbot-wsgi-dashboards",
-    "engines": {
-        "node": ">=0.10.20",
-        "npm": ">=1.4.10"
+    "main": "buildbot_wsgi_dashboards/static/scripts.js",
+    "scripts": {
+        "build": "rimraf buildbot_wsgi_dashboards/static && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf buildbot_wsgi_dashboards/static && webpack --bail --progress --profile --env dev",
+        "dev": "webpack --bail --progress --profile --watch --env dev",
+        "test": "karma start",
+        "test-watch": "karma start --auto-watch --no-single-run",
+        "yarn-update-local": "yarn remove buildbot-build-common && yarn add --dev ../build_common"
+    },
+    "devDependencies": {
+        "angular-mocks": "1.5.3",
+        "buildbot-build-common": "../build_common",
+        "rimraf": "^2.6.3"
     },
     "dependencies": {
-        "guanlecoja": "~1.1.0",
-        "gulp": "3.9.0"
+        "angular": "1.5.3"
     }
 }

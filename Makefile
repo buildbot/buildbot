@@ -10,6 +10,7 @@ VENV_PY_VERSION?=python3
 
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
+WWW_DEP_PKGS := www/guanlecoja-ui www/data_module
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
@@ -40,6 +41,8 @@ flake8:
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
 	$(PIP) install mock wheel buildbot
+	for i in $(WWW_DEP_PKGS); \
+		do (cd $$i; yarn run yarn-update-local; yarn install --pure-lockfile; yarn run build); done
 
 # rebuild front-end from source
 frontend: frontend_deps
@@ -51,7 +54,8 @@ frontend_install_tests: frontend_deps
 
 # upgrade FE dependencies
 frontend_yarn_upgrade:
-	for i in $(WWW_PKGS) $(WWW_EX_PKGS); do (cd $$i; echo $$i; rm -rf yarn.lock; yarn install || echo $$i failed); done
+	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS); \
+		do (cd $$i; echo $$i; rm -rf yarn.lock; yarn install || echo $$i failed); done
 
 # install git hooks for validating patches at commit time
 hooks:

@@ -13,7 +13,10 @@
 //
 // Copyright Buildbot Team Members
 
-// Register new state
+import 'angular-animate';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 class GridState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
         // Menu configuration
@@ -30,7 +33,7 @@ class GridState {
                 name: 'grid',
                 controller: 'gridController',
                 controllerAs: 'C',
-                templateUrl: 'grid_view/views/grid.html',
+                template: require('./grid.tpl.jade'),
                 url: '/grid?branch&tag&result',
                 reloadOnSearch: false,
                 data: {
@@ -81,3 +84,5 @@ class GridState {
 angular.module('grid_view', [
     'ui.router', 'ui.bootstrap', 'ngAnimate', 'guanlecoja.ui', 'bbData'])
 .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', GridState]);
+
+require('./grid.controller.js');

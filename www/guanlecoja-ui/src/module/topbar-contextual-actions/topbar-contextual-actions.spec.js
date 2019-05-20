@@ -5,7 +5,7 @@
  */
 describe('topbar-contextual-actions', function() {
     let scope;
-    beforeEach((module("guanlecoja.ui")));
+    beforeEach(angular.mock.module("guanlecoja.ui"));
     let elmBody = (scope = null);
 
     const injected = function($rootScope, $compile) {
@@ -40,10 +40,8 @@ describe('topbar-contextual-actions', function() {
             caption:"bar",
             action() { return called++; }
         }
-            ],
+            ]);
 
-        // need two digests to propagate
-        scope.$digest());
         scope.$digest();
         expect(elmBody.find(".form-group").length).toEqual(2);
         expect(elmBody.find("button").text()).toEqual("foobar");

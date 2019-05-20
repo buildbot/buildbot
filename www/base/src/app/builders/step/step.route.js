@@ -13,7 +13,7 @@ class StepState {
         // Register new state
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./step.tpl.jade'),
             name,
             url: '/builders/:builder/builds/:build/steps/:step',
             data: cfg

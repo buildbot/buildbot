@@ -9,7 +9,7 @@ class Buildrequestsummary {
             replace: true,
             restrict: 'E',
             scope: {buildrequestid: '=?'},
-            templateUrl: 'views/buildrequestsummary.html',
+            template: require('./buildrequestsummary.tpl.jade'),
             compile: RecursionHelper.compile,
             controller: '_buildrequestsummaryController'
         };

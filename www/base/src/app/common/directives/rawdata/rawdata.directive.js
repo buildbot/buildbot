@@ -4,7 +4,7 @@ class Rawdata {
             replace: true,
             restrict: 'E',
             scope: {data:'='},
-            templateUrl: 'views/rawdata.html',
+            template: require('./rawdata.tpl.jade'),
             compile: RecursionHelper.compile,
             controller: '_rawdataController'
         };

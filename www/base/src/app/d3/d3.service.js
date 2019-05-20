@@ -10,10 +10,9 @@ class D3 {
     constructor($document, $q, config, $rootScope) {
         const d = $q.defer();
 
-        // Resolve function
-        $.getScript('d3.min.js', () =>
-            $rootScope.$apply(() => d.resolve(window.d3))
-        );
+        import('d3').then(module => {
+            d.resolve(module);
+        });
 
         return {get() { return d.promise; }};
     }

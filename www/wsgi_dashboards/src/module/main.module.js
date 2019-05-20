@@ -5,5 +5,6 @@ class WsgiDashboards {
     ]; }
 }
 
-
 angular.module('wsgi_dashboards', new WsgiDashboards());
+
+require('./dashboards.route.js');

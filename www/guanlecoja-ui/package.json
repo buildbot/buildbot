@@ -4,16 +4,25 @@
     "version": "2.0.0",
     "license": "MIT",
     "readmeFilename": "Readme.md",
-    "engines": {
-        "node": ">=0.10.0",
-        "npm": ">=1.4.0"
+    "main": "dist/guanlecoja-ui.js",
+    "style": "dist/styles.css",
+    "scripts": {
+        "build": "rimraf dist && webpack --bail --progress --profile --env dev && webpack --bail --progress --profile --env prod",
+        "test": "karma start",
+        "test-watch": "karma start --auto-watch --no-single-run",
+        "yarn-update-local": "yarn remove buildbot-build-common && yarn add --dev ../build_common"
     },
     "devDependencies": {
-        "guanlecoja": "~1.1.0",
-        "gulp": "~3.9.0",
-        "shelljs": "0.5.1"
+        "angular-mocks": "1.5.3",
+        "buildbot-build-common": "../build_common",
+        "rimraf": "^2.6.3"
     },
     "dependencies": {
-        "@uirouter/angularjs": "^1.0.15"
+        "@uirouter/angularjs": "^1.0.15",
+        "angular": "1.5.3",
+        "angular-animate": "1.5.3",
+        "angular-ui-bootstrap": "^2.5.6",
+        "jquery": "^3.4.0",
+        "lodash": "^4.17.11"
     }
 }

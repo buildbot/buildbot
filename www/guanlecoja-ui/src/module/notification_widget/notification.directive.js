@@ -11,7 +11,7 @@ class GlNotification {
             restrict: 'E',
             scope: false,
             controllerAs: "n",
-            templateUrl: "guanlecoja.ui/views/notification.html",
+            template: require('./notification.tpl.jade'),
             controller: "_glNotificationController"
         };
     }

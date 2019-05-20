@@ -13,7 +13,7 @@ class ChangesState {
         // Register new state
         const state = {
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./changes.tpl.jade'),
             name,
             url: '/changes',
             data: cfg

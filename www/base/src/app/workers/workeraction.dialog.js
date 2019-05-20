@@ -24,7 +24,7 @@ class WorkerActionState {
                           function($stateParams, $state, $uibModal, dataService, $q) {
                     const modal = {};
                     modal.modal = $uibModal.open({
-                        templateUrl: "views/workeractions.html",
+                        template: require('./workeractions.tpl.jade'),
                         controller: 'workerActionsDialogController',
                         windowClass: 'modal-xlg',
                         resolve: {

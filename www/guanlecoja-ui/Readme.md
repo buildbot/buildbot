@@ -2,7 +2,7 @@
 
 Note: This package is not maintained for uses outside Buildbot.
 
-Implements generic application base for angular.js, ui.router and bootstrap3, with less, and coffeescript.
+Implements generic application base for angular.js, ui.router and bootstrap3, with less.
 
 To use:
 

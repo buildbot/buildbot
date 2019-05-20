@@ -7,14 +7,17 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+
+import moment from 'moment';
+
 class Buildsummary {
     constructor(RecursionHelper) {
         return {
             replace: true,
             restrict: 'E',
-            scope: {},
-            bindToController: {buildid: '=?', build: '=?', condensed: '=?', parentbuild: '=?', parentrelationship: '=?'},
-            templateUrl: 'views/buildsummary.html',
+            scope: {buildid: '=?', build: '=?', condensed: '=?', parentbuild: '=?', parentrelationship: '=?'},
+            bindToController: true,
+            template: require('./buildsummary.tpl.jade'),
             compile: RecursionHelper.compile,
             controller: '_buildsummaryController',
             controllerAs: 'buildsummary'
@@ -46,7 +49,7 @@ class _buildsummary {
         const ONLY_NOT_SUCCESS = 1;
         const EVERYTHING = 2;
         let details = EVERYTHING;
-        if ($scope.buildsummary.condensed) {
+        if ($scope.condensed) {
             details = NONE;
         }
         this.toggleDetails = () => details = (details + 1) % 3;

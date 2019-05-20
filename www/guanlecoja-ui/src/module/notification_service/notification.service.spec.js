@@ -4,7 +4,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('notificationService', function() {
-    beforeEach(module("guanlecoja.ui"));
+    beforeEach(angular.mock.module("guanlecoja.ui"));
 
     return it('should add and delete notifications', inject(function(glNotificationService, $timeout) {
 

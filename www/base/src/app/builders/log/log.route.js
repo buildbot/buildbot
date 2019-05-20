@@ -13,7 +13,7 @@ class LogState {
         // Register new state
         const state = {
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./log.tpl.jade'),
             name,
             url: '/builders/:builder/builds/:build/steps/:step/logs/:log?jump_to_line',
             data: cfg

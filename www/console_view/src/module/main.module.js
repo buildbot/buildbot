@@ -7,6 +7,11 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 
+import 'angular-animate';
+import '@uirouter/angularjs';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 class ConsoleState {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
 
@@ -31,7 +36,7 @@ class ConsoleState {
         const state = {
             controller: `${name}Controller`,
             controllerAs: "c",
-            templateUrl: `console_view/views/${name}.html`,
+            template: require('./console.tpl.jade'),
             name,
             url: `/${name}`,
             data: cfg
@@ -467,7 +472,7 @@ class Console {
     selectBuild(build) {
         let modal;
         return modal = this.$uibModal.open({
-            templateUrl: 'console_view/views/modal.html',
+            template: require('./view/modal/modal.tpl.jade'),
             controller: 'consoleModalController as modal',
             windowClass: 'modal-big',
             resolve: {

@@ -8,7 +8,6 @@ This section gives some general information about Buildbot development.
 
     master-overview
     style
-    coffeescript-style
     tests
     config
     schedulers

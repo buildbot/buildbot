@@ -1,0 +1,18 @@
+{
+    "plugins": ["@babel/plugin-syntax-dynamic-import"],
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "useBuiltIns": "entry",
+                "targets": {
+                    "chrome": "56",
+                    "firefox": "52",
+                    "edge": "13",
+                    "safari": "10"
+                },
+                "modules": false
+            }
+        ]
+    ]
+}

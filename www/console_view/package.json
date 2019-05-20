@@ -1,11 +1,26 @@
 {
     "name": "buildbot-console-view",
-    "engines": {
-        "node": ">=0.10.0",
-        "npm": ">=1.4.0"
+    "main": "buildbot_console_view/static/scripts.js",
+    "style": "buildbot_console_view/static/styles.js",
+    "scripts": {
+        "build": "rimraf buildbot_console_view/static && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf buildbot_console_view/static && webpack --bail --progress --profile --env dev",
+        "dev": "webpack --bail --progress --profile --watch --env dev",
+        "test": "karma start",
+        "test-watch": "karma start --auto-watch --no-single-run",
+        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui buildbot-build-common && yarn add ../data_module ../guanlecoja-ui && yarn add --dev ../build_common"
+    },
+    "devDependencies": {
+        "angular-mocks": "1.5.3",
+        "buildbot-build-common": "../build_common",
+        "lodash": "^4.17.11",
+        "rimraf": "^2.6.3"
     },
     "dependencies": {
-        "guanlecoja": "~1.1.0",
-        "gulp": "3.9.0"
+        "@uirouter/angularjs": "^1.0.15",
+        "angular": "1.5.3",
+        "angular-animate": "1.5.3",
+        "buildbot-data-js": "../data_module",
+        "guanlecoja-ui": "../guanlecoja-ui"
     }
 }

@@ -35,9 +35,9 @@ export class AboutPage extends BasePage {
         expect(title).toContain('Configuration');
     }
 
-    async checkDependenciesTitle() {
+    async checkAPIDescriptionTitle() {
         const dependenciesTitle = element.all(By.css('h2')).get(2);
         const dependenciesText:string = await dependenciesTitle.getText();
-        expect(dependenciesText).toContain('Javascript dependencies');
+        expect(dependenciesText).toContain('API description');
     }
 }

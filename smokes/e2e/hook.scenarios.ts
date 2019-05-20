@@ -1,7 +1,9 @@
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { post } from 'request';
 import { ConsolePage } from './pages/console';
 import { BuilderPage } from './pages/builder';
 import { HomePage } from './pages/home';
+import { testPageUrl } from './pages/base';
 
 describe('change hook', function() {
     let builder = null;
@@ -19,16 +21,14 @@ describe('change hook', function() {
     it('should create a build', async () => {
         await builder.go();
         let lastbuild = await builder.getLastSuccessBuildNumber();
-        await browser.executeAsyncScript((done) =>
-            $.post('change_hook/base', {
-                comments:'sd',
-                project:'pyflakes',
-                repository:'git://github.com/buildbot/hello-world.git',
-                author:'foo <foo@bar.com>',
-                revision: 'HEAD',
-                branch:'master'
-                }, done)
-        );
+        await post(`${testPageUrl}/change_hook/base`).form({
+            comments:'sd',
+            project:'pyflakes',
+            repository:'git://github.com/buildbot/hello-world.git',
+            author:'foo <foo@bar.com>',
+            revision: 'HEAD',
+            branch:'master'
+        });
         await builder.waitNextBuildFinished(lastbuild);
         await console.go();
         expect(await console.countSuccess()).toBeGreaterThan(0);

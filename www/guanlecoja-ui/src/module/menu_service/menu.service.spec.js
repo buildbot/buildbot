@@ -5,7 +5,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('menuService', function() {
-    beforeEach(module("guanlecoja.ui", function($stateProvider, glMenuServiceProvider) {
+    beforeEach(angular.mock.module("guanlecoja.ui", function($stateProvider, glMenuServiceProvider) {
         let group;
         const _glMenuServiceProvider = glMenuServiceProvider;
         const stateProvider = $stateProvider;
@@ -89,7 +89,7 @@ describe('menuService', function() {
     it('should generate error if group is undefined', function() {
 
         // configure the menu a little bit more.. with an erronous state
-        module(function($stateProvider, glMenuServiceProvider) {
+        angular.mock.module(function($stateProvider, glMenuServiceProvider) {
             $stateProvider.state({
                 name: "foo",
                 data: {
@@ -111,7 +111,7 @@ describe('menuService', function() {
     return it('should remove empty groups', function() {
 
         // configure the menu a little bit more.. with an erronous state
-        module(function(glMenuServiceProvider) {
+        angular.mock.module(function(glMenuServiceProvider) {
             glMenuServiceProvider.addGroup({
                 name: "foo"});
             return null;

@@ -6,15 +6,15 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 beforeEach(function() {
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('$uibModal', function() { return {open() {}}; });
     });
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('resultsService', function() { return {results2class() {}}; });
     });
 
     // Mock bbSettingsProvider
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.provider('bbSettingsService', (function() {
             let group = undefined;
             const Cls = class {
@@ -41,7 +41,7 @@ beforeEach(function() {
         })()
         );
     });
-    return module('console_view');
+    angular.mock.module('console_view');
 });
 
 describe('Console view', function() {
@@ -55,7 +55,6 @@ describe('Console view', function() {
         const { data } = state;
         expect(state.controller).toBe(`${name}Controller`);
         expect(state.controllerAs).toBe('c');
-        expect(state.templateUrl).toBe(`console_view/views/${name}.html`);
         expect(state.url).toBe(`/${name}`);
     });
 });

@@ -7,7 +7,7 @@ class Changedetails {
                 change: '=',
                 compact: '=?'
             },
-            templateUrl: 'views/changedetails.html'
+            template: require('./changedetails.tpl.jade'),
         };
     }
 }

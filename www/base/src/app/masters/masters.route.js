@@ -13,7 +13,7 @@ class MastersState {
         // Register new state
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./masters.tpl.jade'),
             name,
             url: '/masters',
             data: cfg
@@ -22,7 +22,7 @@ class MastersState {
         // master page is actually same as masters, just filtered
         $stateProvider.state({
             controller: `${name}Controller`,
-            templateUrl: `views/${name}.html`,
+            template: require('./masters.tpl.jade'),
             name: 'master',
             url: '/masters/:master',
             data: {}});

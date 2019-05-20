@@ -11,13 +11,14 @@ class Rest {
             execute(config) {
                 return $q((resolve, reject) =>
                     $http(config)
-                    .success(function(response) {
+                    .then(function(response) {
                         try {
-                            const data = angular.fromJson(response);
+                            const data = angular.fromJson(response.data);
                             return resolve(data);
                         } catch (e) {
                             return reject(e);
-                        }}).error(reason => reject(reason))
+                        }},
+                    function(response) { reject(response.data); })
                 );
             }
 

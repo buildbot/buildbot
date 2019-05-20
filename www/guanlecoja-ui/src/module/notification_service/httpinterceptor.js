@@ -23,7 +23,7 @@ class glHttpInterceptor {
                     msg = res.toString();
                 }
                 $timeout((() => glNotificationService.network(msg)), 100);
-                return $q.reject(res);
+                return $q.resolve(null);
             };
 
             return promise.then(angular.identity, errorHandler);

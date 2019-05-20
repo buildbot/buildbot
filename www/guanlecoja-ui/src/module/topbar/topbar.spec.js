@@ -5,7 +5,7 @@
  */
 describe('topbar', function() {
     let scope;
-    beforeEach((module("guanlecoja.ui")));
+    beforeEach(angular.mock.module("guanlecoja.ui"));
     let elmBody = (scope = null);
 
     const injected = function($rootScope, $compile) {

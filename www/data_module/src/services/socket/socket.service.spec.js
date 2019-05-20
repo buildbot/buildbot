@@ -59,8 +59,8 @@ describe('Socket service', function() {
 
     const webSocketBackend = new WebSocketBackend();
     beforeEach(function() {
-        module('bbData');
-        return module($provide => $provide.constant('webSocketService', webSocketBackend));
+        angular.mock.module('bbData');
+        angular.mock.module($provide => $provide.constant('webSocketService', webSocketBackend));
     });
 
     let $rootScope = (socketService = (socket = ($location = null)));

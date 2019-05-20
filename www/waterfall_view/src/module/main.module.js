@@ -6,6 +6,12 @@
  * DS206: Consider reworking classes to avoid initClass
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+
+import 'angular-animate';
+import '@uirouter/angularjs';
+import 'guanlecoja-ui';
+import 'buildbot-data-js';
+
 // Register new module
 class WaterfallView {
     constructor() { return [
@@ -19,7 +25,7 @@ class WaterfallView {
 
 var WaterfallController = (function() {
     let self = undefined;
-    Cls = class Waterfall {
+    let Cls = class Waterfall {
         static initClass() {
             self = null;
 
@@ -616,7 +622,7 @@ var WaterfallController = (function() {
             // Open modal on click
             let modal;
             return modal = self.$uibModal.open({
-                templateUrl: 'waterfall_view/views/modal.html',
+                template: require('./modal/modal.tpl.jade'),
                 controller: 'waterfallModalController as modal',
                 windowClass: 'modal-small',
                 resolve: {
@@ -662,3 +668,10 @@ var WaterfallController = (function() {
 angular.module('waterfall_view', new WaterfallView())
 .controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService',
                                     WaterfallController]);
+
+require('./dataProcessor/dataProcessor.service.js');
+require('./main.module.js');
+require('./modal/modal.controller.js');
+require('./scale/scale.service.js');
+require('./waterfall.config.js');
+require('./waterfall.route.js');
