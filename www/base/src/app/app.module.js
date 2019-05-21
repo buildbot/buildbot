@@ -50,6 +50,8 @@ require('./builders/step/step.controller.js');
 require('./builders/step/step.route.js');
 require('./buildrequests/pendingbuildrequests.controller.js');
 require('./buildrequests/pendingbuildrequests.route.js');
+require('./changes/changes.controller.js');
+require('./changes/changes.route.js');
 require('./common/common.constant.js');
 require('./common/directives/basefield/basefield.directive.js');
 require('./common/directives/buildrequestsummary/buildrequestsummary.directive.js');
