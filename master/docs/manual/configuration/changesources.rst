@@ -1170,6 +1170,8 @@ GerritChangeSource
 
 The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH interface and uses its event source mechanism, `gerrit stream-events <https://gerrit-documentation.storage.googleapis.com/Documentation/2.2.1/cmd-stream-events.html>`_.
 
+Note that the Gerrit event stream is stateless and any events that occur while buildbot is not connected to Gerrit will be lost. See :bb:chsrc:`GerritEventLogPoller` for a stateful change source.
+
 The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
 ``gerritserver``
@@ -1336,15 +1338,25 @@ GerritEventLogPoller
 
 The :bb:chsrc:`GerritEventLogPoller` class is similar to :bb:chsrc:`GerritChangeSource` but connects to the Gerrit server by its HTTP interface and uses the events-log_ plugin.
 
+It is possible to use both :bb:chsrc:`GerritEventLogPoller` and :bb:chsrc:`GerritChangeSource` together which is advantageous because:
+
+1. :bb:chsrc:`GerritChangeSource` is low-overhead and reacts instantaneously to events, but a broken connection to Gerrit will lead to missed changes
+2. :bb:chsrc:`GerritEventLogPoller` is subject to polling overhead and reacts only at it's polling rate, but is robust to a broken connection to Gerrit and missed changes will be discovered when a connection is restored.
+
+.. note::
+
+    The :bb:chsrc:`GerritEventLogPoller` requires either the ``txrequest`` or the ``treq`` package.
+
 The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 
 ``baseURL``
-    the HTTP url where to find Gerrit
+    the HTTP url where to find Gerrit. If the URL of the events-log endpoint for your server is ``https://example.com/a/plugins/events-log/events/`` then the ``baseURL`` is ``https://example.com/a``. Note that ``/a`` is included.
 
 ``auth``
     a requests authentication configuration.
     if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
     if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+    However, note that usage of ``requests.auth.HTTPDigestAuth`` is incompatible with ``treq``.
 
 ``handled_events``
     event to be handled (optional).

@@ -235,8 +235,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                                unittest.TestCase):
     NOW_TIMESTAMP = 1479302598
     EVENT_TIMESTAMP = 1479302599
-    NOW_FORMATTED = '2016-16-11 13:23:18'
-    EVENT_FORMATTED = '2016-16-11 13:23:19'
+    NOW_FORMATTED = '2016-11-16 13:23:18'
+    EVENT_FORMATTED = '2016-11-16 13:23:19'
     OBJECTID = 1234
 
     @defer.inlineCallbacks

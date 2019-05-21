@@ -374,7 +374,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             last_event = self.now()
         else:
             last_event = datetime.datetime.utcfromtimestamp(last_event_ts)
-        last_event_formatted = last_event.strftime("%Y-%d-%m %H:%M:%S")
+        last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
         res = yield self._http.get("/plugins/events-log/events/", params=dict(t1=last_event_formatted))
         lines = yield res.content()
         for line in lines.splitlines():
