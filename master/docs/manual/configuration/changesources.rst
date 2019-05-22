@@ -1338,10 +1338,12 @@ GerritEventLogPoller
 
 The :bb:chsrc:`GerritEventLogPoller` class is similar to :bb:chsrc:`GerritChangeSource` but connects to the Gerrit server by its HTTP interface and uses the events-log_ plugin.
 
-It is possible to use both :bb:chsrc:`GerritEventLogPoller` and :bb:chsrc:`GerritChangeSource` together which is advantageous because:
+Note that the decision of whether to use :bb:chsrc:`GerritEventLogPoller` and :bb:chsrc:`GerritChangeSource` will depend on your needs. The trade off is:
 
 1. :bb:chsrc:`GerritChangeSource` is low-overhead and reacts instantaneously to events, but a broken connection to Gerrit will lead to missed changes
 2. :bb:chsrc:`GerritEventLogPoller` is subject to polling overhead and reacts only at it's polling rate, but is robust to a broken connection to Gerrit and missed changes will be discovered when a connection is restored.
+
+However, you probably do not want use both at the same time as they do not coordinate and changes will be duplicated in this case.
 
 .. note::
 
@@ -1560,4 +1562,3 @@ Change Properties
 
 A Change may have one or more properties attached to it, usually specified through the Force Build form or :bb:cmdline:`sendchange`.
 Properties are discussed in detail in the :ref:`Build-Properties` section.
-
