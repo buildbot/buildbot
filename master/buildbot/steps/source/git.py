@@ -605,7 +605,7 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     descriptionSuffix = None
 
     name = 'gittag'
-    renderables = ['repourl', 'name', 'messages']
+    renderables = ['repourl', 'tagName', 'messages']
 
     def __init__(self, workdir=None, tagName=None,
                  annotated=False, messages=None, force=False, env=None,

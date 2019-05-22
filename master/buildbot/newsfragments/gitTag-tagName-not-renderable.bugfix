@@ -1,0 +1,1 @@
+:py:class:`~buildbot.util.git.GitTag`: Allow ``tagName`` to be a renderable
