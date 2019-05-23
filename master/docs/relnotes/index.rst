@@ -10,6 +10,17 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.8.2`` ( ``2019-05-22`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix vulnerability in OAuth where user-submitted authorization token was used for authentication
+  (https://github.com/buildbot/buildbot/wiki/OAuth-vulnerability-in-using-submitted-authorization-token-for-authentication)
+  Thanks to Phillip Kuhrt for reporting it.
+
+
 Buildbot ``1.8.1`` ( ``2019-02-02`` )
 =====================================
 
