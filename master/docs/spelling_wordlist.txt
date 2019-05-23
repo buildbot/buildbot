@@ -429,6 +429,7 @@ KiB
 kibibytes
 kube
 kubernetes
+Kuhrt
 kv
 kwargs
 latin
