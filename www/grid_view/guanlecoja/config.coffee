@@ -26,7 +26,7 @@ module.exports =
                 version: '~1.5.3'
                 files: "angular-mocks.js"
             'buildbot-data':
-                version: '~2.2.0'
+                version: '~2.2.0 < 2.2.5'
                 files: 'dist/buildbot-data.js'
 
     karma:
