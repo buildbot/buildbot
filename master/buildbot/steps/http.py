@@ -57,6 +57,10 @@ def closeSession():
         _session = None
 
 
+def _headerSet(headers):
+    return frozenset(map(lambda x: x.casefold(), headers))
+
+
 class HTTPStep(BuildStep):
 
     name = 'HTTPStep'
@@ -69,7 +73,9 @@ class HTTPStep(BuildStep):
     renderables = requestsParams + ["method", "url"]
     session = None
 
-    def __init__(self, url, method, **kwargs):
+    def __init__(self, url, method,
+                 hide_request_headers=None, hide_response_headers=None,
+                 **kwargs):
         if txrequests is None:
             config.error(
                 "Need to install txrequest to use this step:\n\n pip install txrequests")
@@ -79,6 +85,9 @@ class HTTPStep(BuildStep):
 
         self.method = method
         self.url = url
+
+        self.hide_request_headers = _headerSet(hide_request_headers or [])
+        self.hide_response_headers = _headerSet(hide_response_headers or [])
 
         for param in HTTPStep.requestsParams:
             setattr(self, param, kwargs.pop(param, None))
@@ -156,6 +165,8 @@ class HTTPStep(BuildStep):
 
         log.addHeader('Request Header:\n')
         for k, v in response.request.headers.items():
+            if k.casefold() in self.hide_request_headers:
+                v = '<HIDDEN>'
             log.addHeader('\t%s: %s\n' % (k, v))
 
         log.addStdout('URL: %s\n' % response.url)
@@ -167,6 +178,8 @@ class HTTPStep(BuildStep):
 
         log.addHeader('Response Header:\n')
         for k, v in response.headers.items():
+            if k.casefold() in self.hide_response_headers:
+                v = '<HIDDEN>'
             log.addHeader('\t%s: %s\n' % (k, v))
 
         log.addStdout(' ------ Content ------\n%s' % response.text)

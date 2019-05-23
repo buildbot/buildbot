@@ -3071,6 +3071,14 @@ The parameters are the following:
 ``headers``
     Dictionary of headers to send.
 
+``hide_request_headers``
+   Iterable of request headers to be hidden from the log.
+   The header will be listed in the log but the value will be shown as ``<HIDDEN>``.
+
+``hide_response_headers``
+   Iterable of response headers to be hidden from the log.
+   The header will be listed in the log but the value will be shown as ``<HIDDEN>``.
+
 ``other params``
     Any other keywords supported by the ``requests``
     `api <http://docs.python-requests.org/en/master/api/#main-interface>`_
