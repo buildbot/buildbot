@@ -19,9 +19,9 @@ def parse_chrome_major_version(output):
         # e.g.:
         # Chromium 69.0.3497.81 Built on Ubuntu , running on Ubuntu 18.04
         # Google Chrome 70.0.3538.77
-        m = re.match(r'.*[cC]hrom.*\s(\d+)\.\d+\.\d+(?:\.\d+|).*', line)
+        m = re.match(r'.*[cC]hrom.*\s(\d+)\.(\d+)\.(\d+)(?:\.\d+|).*', line)
         if m is not None:
-            return int(m.group(1))
+            return int(m.group(1)), int(m.group(2)), int(m.group(3))
     return None
 
 
@@ -39,29 +39,6 @@ def get_chrome_version(browsers):
         except Exception:
             pass
     return (None, None)
-
-
-def parse_chromedriver_compatibility_map(notes):
-    ret = {}
-    lines = notes.splitlines()
-    for i in range(len(lines) - 1):
-        m1 = re.match(r'--+ChromeDriver v(\d+\.\d+) .*', lines[i])
-        m2 = re.match(r'Supports Chrome v(\d+)-(\d+).*', lines[i+1])
-        m3 = re.match(r'Supports Chrome v(\d+).*', lines[i+1])
-        if m1 is not None and (m2 is not None or m3 is not None):
-            chromedrive_version = m1.group(1)
-            if m2 is not None:
-                chrome_version_min = int(m2.group(1))
-                chrome_version_max = int(m2.group(2)) + 1
-            else:
-                chrome_version_min = int(m3.group(1))
-                chrome_version_max = int(m3.group(1)) + 1
-            for version in range(chrome_version_min, chrome_version_max):
-                # prefer newer chromedriver, assuming it is first in notes
-                if version not in ret:
-                    ret[version] = chromedrive_version
-
-    return ret
 
 
 def get_chromedriver_compatibility_map():
@@ -100,16 +77,33 @@ def main():
 
         print('Using {0} release {1}'.format(browser, version))
 
-        compat_map = get_chromedriver_compatibility_map()
+        chrome_major, chrome_minor, chrome_patch = version
 
-        if version not in compat_map:
-            raise Exception('Unknown {0} version {1}'.format(browser, version))
+        if chrome_major >= 73:
+            # webdriver manager requires us to provide the 4th version component, however does not
+            # use it when picking the version to download
+            chromedriver_version = '{}.{}.{}.0'.format(chrome_major, chrome_minor, chrome_patch)
+        else:
+            chrome_major_to_chromedriver = {
+                73: '2.46',
+                72: '2.46',
+                71: '2.46',
+                70: '2.45',
+                69: '2.44',
+            }
+            if chrome_major not in chrome_major_to_chromedriver:
+                raise Exception('Unknown Chrome version {}.{}.{}'.format(
+                    chrome_major, chrome_minor, chrome_patch))
+            chromedriver_version = chrome_major_to_chromedriver[chrome_major]
 
-        chromedriver_version = compat_map[version]
         print('Using chromedriver release {0}'.format(chromedriver_version))
 
-        check_call([args.manager + ' update --versions.chrome ' +
-                   chromedriver_version], shell=True)
+        cmd = [args.manager, 'update', '--versions.chrome',
+               chromedriver_version, '--versions.standalone', '3.141.59']
+        print('Calling: ' + ' '.join(cmd))
+
+        check_call(cmd)
+
         return
 
     except Exception as e:
