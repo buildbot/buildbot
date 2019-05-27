@@ -5,7 +5,7 @@ astroid==2.2.5; python_version >= "3.4"
 attrs==19.1.0
 autobahn==19.5.1
 Automat==0.7.0
-Babel==2.6.0
+Babel==2.7.0
 backports.functools-lru-cache==1.5
 blockdiag==1.5.4
 boto==2.49.0
