@@ -208,7 +208,6 @@ class BuildJsCommand(distutils.cmd.Command):
 
             commands = []
 
-            commands.append(['yarn', 'run', 'yarn-update-local'])
             commands.append(['yarn', 'install', '--pure-lockfile'])
 
             if os.path.exists("gulpfile.js"):
