@@ -17,6 +17,15 @@ Database Specification
 
 Buildbot requires a connection to a database to maintain certain state information, such as tracking pending build requests.
 In the default configuration Buildbot uses a file-based SQLite database, stored in the :file:`state.sqlite` file of the master's base directory.
+
+.. important::
+
+   SQLite3 is perfectly suitable for small setups with a few users.
+   However, it does not scale well with large numbers of builders, workers and users.
+   If you expect your Buildbot to grow over time, it is strongly advised to use a real database server (e.g., MySQL or Postgres).
+
+   See the :ref:`Database-Server` section for more details.
+
 Override this configuration with the :bb:cfg:`db_url` parameter.
 
 Buildbot accepts a database configuration in a dictionary named ``db``.
