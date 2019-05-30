@@ -110,7 +110,7 @@ var WaterfallController = (function() {
 
             // Load data (builds and builders)
             this.all_builders = this.dataAccessor.getBuilders({order: 'name'});
-            this.$scope.builders = (this.builders = []);
+            this.$scope.builders = (this.builders = this.all_builders);
             this.buildLimit = this.c.limit;
             this.$scope.builds = (this.builds = this.dataAccessor.getBuilds({limit: this.buildLimit, order: '-started_at'}));
 
@@ -122,7 +122,11 @@ var WaterfallController = (function() {
 
                 // Create groups and add builds to builders
                 this.groups = this.dataProcessorService.getGroups(this.all_builders, this.builds, this.c.threshold);
-                this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+                if (this.s.show_builders_without_builds.value) {
+                    this.$scope.builders = this.all_builders;
+                } else {
+                    this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+                }
                 // Add builder status to builders
                 this.dataProcessorService.addStatus(this.builders);
 
@@ -633,7 +637,11 @@ var WaterfallController = (function() {
 
         renderNewData() {
             this.groups = this.dataProcessorService.getGroups(this.all_builders, this.builds, this.c.threshold);
-            this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+            if (this.s.show_builders_without_builds.value) {
+                this.$scope.builders = this.all_builders;
+            } else {
+                this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+            }
             this.dataProcessorService.addStatus(this.builders);
             this.render();
             return this.loadingMore = false;
