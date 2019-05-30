@@ -34,7 +34,6 @@ setup_www_plugin(
     author=u'Robin Jarry',
     author_email=u'robin.jarry@6wind.com',
     url='http://buildbot.net/',
-    license='GNU GPL',
     packages=['buildbot_grid_view'],
     package_data={
         '': [
@@ -46,4 +45,7 @@ setup_www_plugin(
         [buildbot.www]
         grid_view = buildbot_grid_view:ep
     """,
+    classifiers=[
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
+    ],
 )

@@ -60,12 +60,11 @@ setup_args = {
     'maintainer': "Dustin J. Mitchell",
     'maintainer_email': "dustin@v.igoro.us",
     'url': "http://buildbot.net/",
-    'license': "GNU GPL",
     'classifiers': [
         'Development Status :: 5 - Production/Stable',
         'Environment :: No Input/Output (Daemon)',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
         'Programming Language :: Python :: 2',
