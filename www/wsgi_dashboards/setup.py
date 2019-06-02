@@ -35,7 +35,6 @@ setup_www_plugin(
     author=u'Buildbot maintainers',
     author_email=u'devel@buildbot.net',
     url='http://buildbot.net/',
-    license='GNU GPL',
     packages=['buildbot_wsgi_dashboards'],
     package_data={
         '': [
@@ -47,4 +46,7 @@ setup_www_plugin(
         [buildbot.www]
         wsgi_dashboards = buildbot_wsgi_dashboards:ep
     """,
+    classifiers=[
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
+    ],
 )

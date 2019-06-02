@@ -34,7 +34,6 @@ setup_www_plugin(
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
-    license='GNU GPL',
     packages=['buildbot_codeparameter'],
     package_data={
         '': [
@@ -46,4 +45,7 @@ setup_www_plugin(
         [buildbot.www]
         codeparameter = buildbot_codeparameter:ep
     """,
+    classifiers=[
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
+    ],
 )
