@@ -34,6 +34,12 @@ class Waterfall {
                 caption: 'Build number background',
                 default_value: false
             }
+            , {
+                type: 'bool',
+                name: 'show_builders_without_builds',
+                caption: 'Show builders without builds',
+                default_value: false
+            }
             ]});
     }
 }
