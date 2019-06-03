@@ -1287,8 +1287,8 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'submodule', 'update', '--init', '--recursive'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
-                                 '-f', '-f', '-d'])
+                        command=['git', 'submodule', 'foreach', '--recursive',
+                                 'git clean -f -f -d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -1879,8 +1879,8 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'submodule', 'update', '--init', '--recursive'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
-                                 '-f', '-f', '-d', '-x'])
+                        command=['git', 'submodule', 'foreach', '--recursive',
+                                 'git clean -f -f -d -x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
@@ -1930,8 +1930,8 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'submodule', 'update', '--init', '--recursive', '--force'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
-                                 '-f', '-f', '-d', '-x'])
+                        command=['git', 'submodule', 'foreach', '--recursive',
+                                 'git clean -f -f -d -x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
@@ -1985,8 +1985,8 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '--force', '--checkout'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
-                                 '-f', '-f', '-d', '-x'])
+                        command=['git', 'submodule', 'foreach', '--recursive',
+                                 'git clean -f -f -d -x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])

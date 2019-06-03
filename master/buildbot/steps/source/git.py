@@ -482,10 +482,10 @@ class Git(Source, GitStepMixin):
     def _cleanSubmodule(self, _=None):
         rc = RC_SUCCESS
         if self.submodules:
-            command = ['submodule', 'foreach', '--recursive',
-                       'git', 'clean', '-f', '-f', '-d']
+            subcommand = 'git clean -f -f -d'
             if self.mode == 'full' and self.method == 'fresh':
-                command.append('-x')
+                subcommand += ' -x'
+            command = ['submodule', 'foreach', '--recursive', subcommand]
             rc = yield self._dovccmd(command)
         return rc
 
