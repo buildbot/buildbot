@@ -64,7 +64,9 @@ class Properties(base.ResourceType):
     def setBuildProperties(self, buildid, properties):
         to_update = {}
         oldproperties = yield self.master.data.get(('builds', str(buildid), "properties"))
-        for k, v in properties.getProperties().asDict().items():
+        properties = properties.getProperties()
+        properties = yield properties.render(properties.asDict())
+        for k, v in properties.items():
             if k in oldproperties and oldproperties[k] == v:
                 continue
             to_update[k] = v

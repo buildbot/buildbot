@@ -78,7 +78,7 @@ class Properties(util.ComparableMixin):
     @property
     def sourcestamps(self):
         if self.build is not None:
-            return [b.asSSDict() for b in self.build.getAllSourceStamps()]
+            return [b.asDict() for b in self.build.getAllSourceStamps()]
         elif self._sourcestamps is not None:
             return self._sourcestamps
         raise AttributeError('neither build nor _sourcestamps are set')

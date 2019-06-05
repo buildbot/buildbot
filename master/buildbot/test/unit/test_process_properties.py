@@ -60,7 +60,7 @@ class FakeSource:
             'revision': self.revision
         }
         return ds
-
+    asSSDict = asDict
 
 @implementer(IRenderable)
 class DeferredRenderable:
@@ -990,9 +990,6 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(self.props.getPropertySource('x'), 'old')
 
     def test_setProperty_notJsonable(self):
-        with self.assertRaises(TypeError):
-            self.props.setProperty("project", ConstantRenderable('testing'),
-                                   "test")
         with self.assertRaises(TypeError):
             self.props.setProperty("project", object, "test")
 

@@ -125,7 +125,7 @@ class TempSourceStamp:
         # SourceStampsConnectorComponent.findSourceStampId
         result = {}
         for attr in self.ATTRS:
-            result[attr] = self._ssdict[attr]
+            result[attr] = self._ssdict.get(attr)
 
         patch = self._ssdict.get('patch') or {}
         for attr in self.PATCH_ATTRS:
