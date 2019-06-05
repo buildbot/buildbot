@@ -60,7 +60,7 @@ class FakeSource:
             'revision': self.revision
         }
         return ds
-    asSSDict = asDict
+
 
 @implementer(IRenderable)
 class DeferredRenderable:

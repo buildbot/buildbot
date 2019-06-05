@@ -425,8 +425,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties_with_virtual_builders(self):
         sched = self.makeScheduler(name='n', builderNames=['c'], properties={
-                    'virtual_builder_name': Interpolate("myproject-%(src::branch)s")
-            })
+            'virtual_builder_name': Interpolate("myproject-%(src::branch)s")
+        })
         self.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
             fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
