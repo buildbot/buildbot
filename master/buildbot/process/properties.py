@@ -87,6 +87,12 @@ class Properties(util.ComparableMixin):
     def sourcestamps(self, value):
         self._sourcestamps = value
 
+    def getSourceStamp(self, codebase=''):
+        for source in self.sourcestamps:
+            if source['codebase'] == codebase:
+                return source
+        return None
+
     @property
     def changes(self):
         if self.build is not None:
@@ -148,7 +154,7 @@ class Properties(util.ComparableMixin):
     def asDict(self):
         """Return the properties as a simple key:value dictionary,
         properly unicoded"""
-        return dict((k, (v, s)) for k, (v, s) in self.properties.items())
+        return self.properties.copy()
 
     def __repr__(self):
         return ('Properties(**' +
@@ -184,7 +190,8 @@ class Properties(util.ComparableMixin):
 
     def setProperty(self, name, value, source, runtime=False):
         name = util.bytes2unicode(name)
-        json.dumps(value)  # Let the exception propagate ...
+        if not IRenderable.providedBy(value):
+            json.dumps(value)  # Let the exception propagate ...
         source = util.bytes2unicode(source)
 
         self.properties[name] = (value, source)
@@ -498,10 +505,10 @@ class _SourceStampDict(util.ComparableMixin):
     def __init__(self, codebase):
         self.codebase = codebase
 
-    def getRenderingFor(self, build):
-        ss = build.getBuild().getSourceStamp(self.codebase)
+    def getRenderingFor(self, props):
+        ss = props.getSourceStamp(self.codebase)
         if ss:
-            return ss.asDict()
+            return ss
         return {}
 
 
