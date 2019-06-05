@@ -56,3 +56,12 @@ To complete the release just run the following:
 The above will download the releases from GitHub and upload them using twine.
 If you get bytes-related error after entering Pypi password, you'll need to upgrade Twine.
 
+Step 6: Announce the release
+----------------------------
+
+This step involves announcing the release of the new Buildbot version on several channels.
+Write an email to the BuildBot mailing lists: announce@buildbot.net, devel@buildbot.net, users@buildbot.net.
+Write a blog post on the Buildbot Medium account: https://medium.com/buildbot.
+The blog post should include the highlights of the release in less monotonous style than the release notes.
+Any extra important remarks can be added there.
+Lastly, include the output of `git shortlog --no-merges -ns v<prev_version>...v<curr_version>` to recognize the contributors.
