@@ -1,0 +1,1 @@
+:py:class:`~buildbot.steps.source.git.Git`: Fix the invocation of `git submodule foreach` on cleaning
