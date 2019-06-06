@@ -8,7 +8,7 @@
         "dev": "webpack --bail --progress --profile --watch --env dev",
         "test": "karma start",
         "test-watch": "karma start --auto-watch --no-single-run",
-        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui buildbot-build-common && yarn add ../data_module ../guanlecoja-ui && yarn add --dev ../build_common"
+        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui buildbot-build-common && yarn add ../data_module ../guanlecoja-ui && yarn add --dev ../build_common && git checkout yarn.lock"
     },
     "devDependencies": {
         "@babel/plugin-syntax-dynamic-import": "^7.2.0",
