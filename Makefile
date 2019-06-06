@@ -53,10 +53,27 @@ frontend: frontend_deps
 frontend_install_tests: frontend_deps
 	trial pkg/test_buildbot_pkg.py
 
-# upgrade FE dependencies
+# upgrade front-end dependencies
 frontend_yarn_upgrade:
 	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS); \
 		do (cd $$i; echo $$i; rm -rf yarn.lock; yarn install || echo $$i failed); done
+
+# Most of the front-end packages in this repository have their dependencies from other local
+# packages via relative paths. Unfortunately yarn caches the contents of such packages and the
+# only way to properly purge the cache is removing the dependency from package.json and re-adding
+# it. Such actions have been added to "yarn-update-local" script rule in packages that need it.
+frontend_local_deps:
+	for i in $(WWW_DEP_PKGS); \
+		do (cd $$i; yarn run yarn-update-local; \
+			    yarn install --pure-lockfile; \
+			    yarn run build); \
+		done
+	for i in $(WWW_PKGS) $(WWW_EX_PKGS); \
+		do (cd $$i; if grep -q "yarn-update-local" "package.json"; then \
+			yarn run yarn-update-local; \
+			yarn install --pure-lockfile; \
+			fi); \
+		done
 
 # install git hooks for validating patches at commit time
 hooks:

@@ -14,8 +14,8 @@ If you are completely new to python, the best is to first follow the tutorials t
 
 .. _PythonDevQuickStart:
 
-Create a Buildbot Python Environment
-------------------------------------
+Creating a Buildbot Python Environment
+--------------------------------------
 
 Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_ to run its test suite.
 
@@ -49,8 +49,8 @@ Following is a quick shell session to put you on the right track, including runn
     trial buildbot.test.unit.test_reporters_mail
 
 
-Create a JavaScript Frontend Environment
-----------------------------------------
+Creating a JavaScript Frontend Environment
+------------------------------------------
 
 This section describes how to get set up quickly to hack on the JavaScript UI.
 It does not assume familiarity with Python, although a Python installation is required, as well as ``virtualenv``.
@@ -79,8 +79,8 @@ Prerequisites
 
 .. _JSDevQuickStart:
 
-Hacking the Buildbot JavaScript
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Changing the Buildbot JavaScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To effectively develop Buildbot JavaScript, you'll need a running Buildmaster, configured to operate out of the source directory.
 
@@ -98,6 +98,15 @@ This will fetch a number of python dependencies from pypi, the Python package re
 Then the actual frontend code will be built with artifacts stored in the source directory, e.g. ``www/base/buildbot_www/static``.
 Finally, the built python packages will be installed to virtualenv environment as ``--editable`` packages.
 This means that the webserver will load resources from ``www/base/buildbot_www/static``.
+
+Several of the JavaScript UI dependencies are installed from the local Buildbot repository using relative paths.
+These are ``www/data_module`` or ``www/guanlecoja-ui``.
+Whenever you change branches or modify the code under these modules you need to tell the package manager to refresh the cached data.
+This is done by calling the following:
+
+.. code-block:: none
+
+    make frontend_local_deps
 
 Now you'll need to create a master instance.
 For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
