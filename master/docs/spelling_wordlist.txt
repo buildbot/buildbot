@@ -346,6 +346,7 @@ gtk
 guanlecoja
 Guanlecoja
 gz
+gzip
 hackability
 hardcode
 hardcoded
@@ -818,6 +819,7 @@ twistd
 Twistd
 txgithub
 Ubuntu
+ubuntu
 ues
 ui
 uid
