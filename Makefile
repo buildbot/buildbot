@@ -37,6 +37,7 @@ flake8:
 	$(MAKE) -C worker flake8
 	flake8 --config=common/flake8rc www/*/buildbot_*/
 	flake8 --config=common/flake8rc www/*/setup.py
+	flake8 --config=common/flake8rc common/*.py
 
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
