@@ -109,8 +109,8 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
     This is a string (generally an octal representation of an integer) which will cause the worker process' ``umask`` value to be set shortly after initialization.
     The ``twistd`` daemonization utility forces the umask to 077 at startup (which means that all files created by the worker or its child processes will be unreadable by any user other than the worker account).
-    If you want build products to be readable by other accounts, you can add ``--umask=022`` to tell the worker to fix the umask after twistd clobbers it.
-    If you want build products to be *writable* by other accounts too, use ``--umask=000``, but this is likely to be a security problem.
+    If you want build products to be readable by other accounts, you can add ``--umask=0o22`` to tell the worker to fix the umask after twistd clobbers it.
+    If you want build products to be *writable* by other accounts too, use ``--umask=0o000``, but this is likely to be a security problem.
 
 .. option:: --keepalive
 
