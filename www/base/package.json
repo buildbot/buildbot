@@ -12,7 +12,7 @@
     },
     "devDependencies": {
         "@babel/plugin-syntax-dynamic-import": "^7.2.0",
-        "angular-mocks": "1.5.3",
+        "angular-mocks": "1.7.8",
         "buildbot-build-common": "../build_common",
         "lodash": "^4.17.11",
         "pug-cli": "^1.0.0-alpha6",
@@ -21,8 +21,8 @@
     },
     "dependencies": {
         "@uirouter/angularjs": "^1.0.22",
-        "angular": "1.5.3",
-        "angular-animate": "1.5.3",
+        "angular": "1.7.8",
+        "angular-animate": "1.7.8",
         "angular-bootstrap-multiselect": "^1.1.11",
         "angular-recursion": "^1.0.5",
         "angular-ui-bootstrap": "^2.5.6",

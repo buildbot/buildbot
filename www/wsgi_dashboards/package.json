@@ -10,11 +10,11 @@
         "yarn-update-local": "yarn remove buildbot-build-common && yarn add --dev ../build_common"
     },
     "devDependencies": {
-        "angular-mocks": "1.5.3",
+        "angular-mocks": "1.7.8",
         "buildbot-build-common": "../build_common",
         "rimraf": "^2.6.3"
     },
     "dependencies": {
-        "angular": "1.5.3"
+        "angular": "1.7.8"
     }
 }
