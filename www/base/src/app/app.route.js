@@ -27,4 +27,7 @@ class Route {
 
 
 angular.module('app')
-.config(['$urlRouterProvider', 'glMenuServiceProvider', 'config', Route]);
+.config(['$urlRouterProvider', 'glMenuServiceProvider', 'config', Route])
+.config(['$locationProvider', function($locationProvider) {
+    $locationProvider.hashPrefix('');
+}]);
