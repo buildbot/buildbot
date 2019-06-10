@@ -10,6 +10,6 @@ mock==3.0.5
 pbr==5.2.1
 PyHamcrest==1.9.0
 six==1.12.0
-Twisted==19.2.0
+Twisted==19.2.1
 zope.interface==4.6.0
 -e worker
