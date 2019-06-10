@@ -34,7 +34,7 @@ Jinja2==2.10.1
 jmespath==0.9.4
 jsonref==0.2
 lazy-object-proxy==1.4.1
-lz4==2.1.6
+lz4==2.1.10
 markdown2==2.3.7
 MarkupSafe==1.1.1
 mccabe==0.6.1
