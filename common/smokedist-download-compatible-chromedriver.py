@@ -3,15 +3,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import argparse
-import os
 import re
-import sys
-from subprocess import PIPE
-from subprocess import STDOUT
 from subprocess import check_call
 from subprocess import check_output
-
-import requests
 
 
 def parse_chrome_major_version(output):
@@ -39,24 +33,6 @@ def get_chrome_version(browsers):
         except Exception:
             pass
     return (None, None)
-
-
-def get_chromedriver_compatibility_map():
-    chromedriver_root = 'https://chromedriver.storage.googleapis.com'
-
-    r = requests.get('{0}/LATEST_RELEASE'.format(chromedriver_root))
-    if r.status_code != 200:
-        raise Exception('Could not get newest chromedriver version')
-
-    chromedriver_newest_release = r.text
-
-    r = requests.get('{0}/{1}/notes.txt'.format(chromedriver_root,
-                                                chromedriver_newest_release))
-    if r.status_code != 200:
-        raise Exception('Could not get chromedriver v{0} notes.txt'.format(
-            chromedriver_newest_release))
-
-    return parse_chromedriver_compatibility_map(r.text)
 
 
 def main():

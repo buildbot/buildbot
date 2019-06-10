@@ -16,6 +16,7 @@ def download(url, fn):
         for c in r.iter_content(1024):
             f.write(c)
 
+
 def main():
     global s
     with open(os.path.expanduser("~/.config/hub")) as f:
@@ -61,5 +62,7 @@ def main():
     # remove files so that twine upload do not upload them
     os.unlink(sigfn)
     os.unlink(fn)
+
+
 if __name__ == '__main__':
     main()
