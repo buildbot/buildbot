@@ -3,5 +3,5 @@ sphinx-jinja==1.1.0
 sphinxcontrib-blockdiag==1.5.5
 sphinxcontrib-spelling==4.2.1
 sphinxcontrib-websupport==1.1.2
-Pygments==2.4.1
+Pygments==2.4.2
 towncrier==19.2.0
