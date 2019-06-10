@@ -70,7 +70,7 @@ setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.12.0
 snowballstemmer==1.2.1
-SQLAlchemy==1.3.3
+SQLAlchemy==1.3.4
 sqlalchemy-migrate==0.12.0
 sqlparse==0.3.0
 Tempita==0.5.2
