@@ -78,7 +78,7 @@ termcolor==1.1.0
 toml==0.10.0
 towncrier==19.2.0
 treq==18.6.0
-Twisted==19.2.0
+Twisted==19.2.1
 txaio==18.8.1
 txrequests==0.9.6
 typing==3.6.6
