@@ -48,7 +48,13 @@ class forceDialog {
                     columns: 1
                 },
                 sch: scheduler,
+                startDisabled: false,
                 ok() {
+                    if ($scope.startDisabled == true) {
+                        // prevent multiple executions of scheduler
+                        return null;
+                    };
+                    $scope.startDisabled = true;
                     const params =
                         {builderid};
                     for (let name in all_fields_by_name) {
@@ -59,6 +65,7 @@ class forceDialog {
                     return scheduler.control('force', params)
                     .then(res => modal.modal.close(res.result)
                     ,   function(err) {
+                        $scope.startDisabled = false;
                         if (err === null) {
                             return;
                         }

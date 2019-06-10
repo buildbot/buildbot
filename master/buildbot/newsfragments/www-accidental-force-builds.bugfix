@@ -1,0 +1,1 @@
+Prevent accidental start of multiple force builds. (:issue:`4823`)
