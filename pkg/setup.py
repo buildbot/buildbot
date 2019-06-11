@@ -15,9 +15,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from setuptools import setup
 
 import buildbot_pkg
