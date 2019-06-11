@@ -1,6 +1,6 @@
 {
   "name": "buildbot-data-js",
-  "version": "1.0.10",
+  "version": "3.0.1",
   "description": "Buildbot AngularJS data module",
   "readme": "README.md",
   "author": "Andras Toth <andras.toth93@gmail.com>",
@@ -16,12 +16,12 @@
     "url": "git://github.com/buildbot/buildbot-data-js.git"
   },
   "devDependencies": {
-    "angular-mocks": "1.5.3",
+    "angular-mocks": "1.7.8",
     "buildbot-build-common": "../build_common",
     "rimraf": "^2.6.3"
   },
   "dependencies": {
-    "angular": "1.5.3"
+    "angular": "1.7.8"
   },
   "license": "MIT"
 }
