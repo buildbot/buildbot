@@ -124,13 +124,13 @@ After which, you can configure a proper `SQLAlchemy`_ URL:
 
 .. code-block:: python
 
-   c['db_url'] = 'postgresql://buildbot:bu1ldb0t@127.0.0.1/buildbot'
+   c['db'] = {'db_url': 'postgresql://buildbot:bu1ldb0t@127.0.0.1/buildbot'}
 
 And initialize the database tables with the following command:
 
 .. code-block:: console
 
-   $ buildbot update-master
+   $ buildbot upgrade-master
    checking basedir
    checking for running master
    checking master.cfg
