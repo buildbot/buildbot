@@ -126,7 +126,7 @@ release: virtualenv
 
 finishrelease:
 	rm -rf dist
-	python ./common/download_release.py
+	python3 ./common/download_release.py
 	rm -rf ./dist/v*
 	./common/smokedist.sh
 	twine upload --sign dist/*

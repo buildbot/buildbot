@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import base64
 import copy
 import os
@@ -99,7 +96,6 @@ class KubeClientServiceTestClusterConfig(
 
 
 KUBE_CTL_PROXY_FAKE = """
-from __future__ import print_function
 import time
 import sys
 
@@ -109,7 +105,6 @@ time.sleep(1000)
 """
 
 KUBE_CTL_PROXY_FAKE_ERROR = """
-from __future__ import print_function
 import time
 import sys
 
