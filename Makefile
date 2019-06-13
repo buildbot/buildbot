@@ -88,8 +88,7 @@ virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 	$(PIP) install -e pkg \
 		-e 'master[tls,test,docs]' \
 		-e 'worker[test]' \
-		buildbot_www packaging \
-		'towncrier>=17.8.0,<=18.5.0'
+		buildbot_www packaging towncrier
 
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
