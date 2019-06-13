@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
-
 from twisted.internet import defer
 
 from buildbot.config import BuilderConfig
@@ -24,6 +22,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.util.eventual import flushEventualQueue
+from parameterized import parameterized
 
 
 class Tests(RunFakeMasterTestCase):

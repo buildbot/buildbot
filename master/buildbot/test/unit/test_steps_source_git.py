@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
@@ -34,6 +32,7 @@ from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
+from parameterized import parameterized
 
 
 class TestGit(sourcesteps.SourceStepMixin,

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
-
 import mock
 
 from twisted.internet import defer
@@ -34,6 +32,7 @@ from buildbot.test.util import logging
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
+from parameterized import parameterized
 
 
 class ConcreteWorker(base.AbstractWorker):

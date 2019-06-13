@@ -15,14 +15,13 @@
 
 import os
 
-from parameterized import parameterized
-
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
 from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util.integration import RunMasterBase
+from parameterized import parameterized
 
 
 class FakeSecretReporter(HttpStatusPush):

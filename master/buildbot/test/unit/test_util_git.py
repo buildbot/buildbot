@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
-
 from twisted.trial import unittest
 
 from buildbot.test.util import config
 from buildbot.util.git import GitMixin
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
+from parameterized import parameterized
 
 
 class TestEscapeShellArgIfNeeded(unittest.TestCase):

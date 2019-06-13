@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
-
 import mock
 
 from twisted.internet import defer
@@ -27,6 +25,7 @@ from buildbot.locks import RealMasterLock
 from buildbot.locks import RealWorkerLock
 from buildbot.locks import WorkerLock
 from buildbot.util.eventual import flushEventualQueue
+from parameterized import parameterized
 
 
 class Requester:
