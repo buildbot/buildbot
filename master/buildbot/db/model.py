@@ -369,6 +369,9 @@ class Model(base.DBConnectorComponent):
         # author's name (usually an email address)
         sa.Column('author', sa.String(255), nullable=False),
 
+        # committer's name
+        sa.Column('committer', sa.String(255), nullable=False),
+
         # commit comment
         sa.Column('comments', sa.Text, nullable=False),
 
