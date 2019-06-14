@@ -16,6 +16,7 @@
 
 import json
 import os
+import shutil
 
 import jinja2
 
@@ -34,24 +35,37 @@ def processwwwindex(config):
     master = yield fakemaster.make_master(None, wantRealReactor=True)
     master_service = WWWService()
     master_service.setServiceParent(master)
-    if not config.get('index-file'):
-        print(
-            "Path to the index.html file is required with option --index-file or -i")
+
+    if not config.get('src-dir'):
+        print("Path to the source directory is with option --src-dir")
         return 1
-    path = config.get('index-file')
-    if not os.path.isfile(path):
-        print("Invalid path to index.html")
+    if not config.get('dst-dir'):
+        print("Path to the destination directory is with option --dst-dir")
+        return 1
+
+    src_dir = config.get('src-dir')
+    dst_dir = config.get('dst-dir')
+
+    if not os.path.isdir(src_dir):
+        print("Invalid path to source directory")
         return 2
 
-    main_dir = os.path.dirname(path)
+    if os.path.exists(dst_dir):
+        print('Removing {}'.format(dst_dir))
+        if os.path.isfile(dst_dir):
+            os.remove(dst_dir)
+        elif os.path.isdir(dst_dir):
+            shutil.rmtree(dst_dir)
+
+    shutil.copytree(src_dir, dst_dir)
 
     for name in master_service.apps.names:
         if name != 'base':
             pluginapp = master_service.apps.get(name)
             try:
-                os.symlink(pluginapp.static_dir, os.path.join(main_dir, name))
+                os.symlink(pluginapp.static_dir, os.path.join(dst_dir, name))
             except OSError:
-                pass
+                print('Could not link static dir of plugin {}'.format(name))
 
     plugins = dict((k, {}) for k in master_service.apps.names if k != "base")
 
@@ -63,11 +77,12 @@ def processwwwindex(config):
     fakeconfig['versions'] = IndexResource.getEnvironmentVersions()
     fakeconfig['plugins'] = plugins
     fakeconfig['auth'] = auth.NoAuth().getConfigDict()
-    outputstr = ''
-    with open(path) as indexfile:
+
+    indexfile_path = os.path.join(dst_dir, 'index.html')
+    with open(indexfile_path) as indexfile:
         template = jinja2.Template(indexfile.read())
-        outputstr = template.render(
-            configjson=json.dumps(fakeconfig), config=fakeconfig)
-    with open(path, 'w') as indexfile:
+        outputstr = template.render(configjson=json.dumps(fakeconfig), config=fakeconfig)
+
+    with open(indexfile_path, 'w') as indexfile:
         indexfile.write(outputstr)
     return 0

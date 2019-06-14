@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+import os
 import tempfile
 
 from twisted.internet import defer
@@ -30,14 +31,21 @@ class TestUsersClient(unittest.TestCase):
                    processwwwindex.processwwwindex._orig)
 
     @defer.inlineCallbacks
-    def test_no_input_file(self):
+    def test_no_src_dir(self):
         ret = yield processwwwindex.processwwwindex({})
 
         self.assertEqual(ret, 1)
 
     @defer.inlineCallbacks
-    def test_invalid_input_file(self):
-        ret = yield processwwwindex.processwwwindex({'index-file': '/some/no/where'})
+    def test_no_dst_dir(self):
+        ret = yield processwwwindex.processwwwindex({'str-dir': '/some/no/where'})
+
+        self.assertEqual(ret, 1)
+
+    @defer.inlineCallbacks
+    def test_invalid_input_dir(self):
+        ret = yield processwwwindex.processwwwindex({'src-dir': '/some/no/where',
+                                                     'dst-dir': '/some/no/where'})
 
         self.assertEqual(ret, 2)
 
@@ -45,15 +53,19 @@ class TestUsersClient(unittest.TestCase):
     def test_output_config(self):
         # Get temporary file ending with ".html" that has visible to other
         # operations name.
-        with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as tmpf:
-            tmpf_name = tmpf.name
+        with tempfile.TemporaryDirectory(suffix='output_config') as src_dir:
+            dst_dir = os.path.join(src_dir, 'output_dir')
 
-        with open(tmpf_name, 'w') as f:
-            f.write('{{ configjson|safe }}')
+            src_html_path = os.path.join(src_dir, 'index.html')
+            dst_html_path = os.path.join(dst_dir, 'index.html')
 
-        ret = yield processwwwindex.processwwwindex({'index-file': tmpf_name})
+            with open(src_html_path, 'w') as f:
+                f.write('{{ configjson|safe }}')
 
-        self.assertEqual(ret, 0)
-        with open(tmpf_name) as f:
-            config = json.loads(f.read())
-            self.assertTrue(isinstance(config, dict))
+            ret = yield processwwwindex.processwwwindex({'src-dir': src_dir,
+                                                         'dst-dir': dst_dir})
+
+            self.assertEqual(ret, 0)
+            with open(dst_html_path) as f:
+                config = json.loads(f.read())
+                self.assertTrue(isinstance(config, dict))
