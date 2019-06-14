@@ -356,11 +356,21 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
             # update log types older than timestamps
             # we do it first to avoid having UI discrepancy
+
+            # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
+            res = conn.execute(
+                sa.select([model.steps.c.id])
+                .where(model.steps.c.started_at < older_than_timestamp)
+                .order_by(model.steps.c.id.desc())
+                .limit(1)
+            )
+            stepid_max = res.fetchone()[0]
+            res.close()
+
+            # UPDATE logs SET logs.type = 'd' WHERE logs.stepid <= stepid_max;
             res = conn.execute(
                 model.logs.update()
-                .where(model.logs.c.stepid.in_(
-                    sa.select([model.steps.c.id])
-                    .where(model.steps.c.started_at < older_than_timestamp)))
+                .where(model.logs.c.stepid <= stepid_max)
                 .values(type='d')
             )
             res.close()
