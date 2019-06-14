@@ -99,7 +99,7 @@ $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
 	. $(VENV_NAME)/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
-	find . -name VERSION -exec rm {} \;
+	find master pkg worker www -name VERSION -exec rm {} \;
 	rm -rf dist
 	mkdir dist
 .PHONY: cleanup_for_tarballs

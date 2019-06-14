@@ -656,13 +656,14 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
 
 class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
 
-    """This command is used with the front end's proxy task. It enables to run the front end
-    without the backend server running in the background"""
+    """This command is used with the front end's development proxy task. It enables to run the
+    front end with a third-party buildbot instance without the backend server running in the
+    background"""
 
     subcommandFunction = "buildbot.scripts.processwwwindex.processwwwindex"
     optParameters = [
-        ['index-file', 'i', None,
-            "Path to the index.html file to be processed"],
+        ['src-dir', None, None, "Path to the build directory of the base app"],
+        ['dst-dir', None, None, "Path to the directory to create the proxy data files in"],
     ]
 
 
@@ -727,8 +728,8 @@ class Options(usage.Options):
         ['dataspec', None, DataSpecOption,
          "Output data api spec"],
         ['processwwwindex', None, ProcessWWWIndexOption,
-         "Process the index.html to enable the front end package working without backend. "
-         "This is a command to work with the frontend's proxy task."
+         "Create a directory structure for the development proxy that allows using the frontend "
+         "with another buildbot instance."
          ],
         ['cleanupdb', None, CleanupDBOptions,
          "cleanup the database"
