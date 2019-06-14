@@ -35,11 +35,11 @@ On top of Angular we use nodeJS tools to ease development
 
 Additionally the following npm modules are loaded by webpack and available to plugins:
 
-* `@uirouter/angularjs <https://www.npmjs.com/package/@uirouter/angularjs>`
-* `angular-animate <https://www.npmjs.com/package/angular-animate>`
-* `angular-ui-boostrap <https://www.npmjs.com/package/angular-ui-bootstrap>`
-* `d3 <https://www.npmjs.com/package/d3>`
-* `jQuery <https://www.npmjs.com/package/jquery>`
+* `@uirouter/angularjs <https://www.npmjs.com/package/@uirouter/angularjs>`_
+* `angular-animate <https://www.npmjs.com/package/angular-animate>`_
+* `angular-ui-boostrap <https://www.npmjs.com/package/angular-ui-bootstrap>`_
+* `d3 <https://www.npmjs.com/package/d3>`_
+* `jQuery <https://www.npmjs.com/package/jquery>`_
 
 For exact versions of these dependencies available, check ``www/base/package.json``.
 
@@ -54,33 +54,50 @@ You can also completely replace the default application by another application m
 Some Web plugins are maintained inside buildbot's git repository, but this is not required in order for a plugin to work.
 Unofficial plugins are possible and encouraged.
 
-Please look at official plugins for working samples.
-
 Typical plugin source code layout is:
 
-.. code-block:: bash
+``setup.py``
+    Standard setup script.
+    Most plugins should use the same boilerplate, which implements building the BuildBot plugin app as part of the package setup.
+    Minimal adaptation is needed.
 
-    setup.py                     # standard setup script. Most plugins should use the same boilerplate, which helps building guanlecoja app as part of the setup. Minimal adaptation is needed
-    <pluginname>/__init__.py     # python entrypoint. Must contain an "ep" variable of type buildbot.www.plugin.Application. Minimal adaptation is needed
-    webpack.config.js            # Configuration for webpack. Few changes are usually needed here. Please see webpack docs for details.
-    src/..                       # source code for the angularjs application.
-    package.json                 # declares npm dependencies.
-    MANIFEST.in                  # needed by setup.py for sdist generation. You need to adapt this file to match the name of your plugin
+``<pluginname>/__init__.py``
+    The python entrypoint.
+    Must contain an "ep" variable of type buildbot.www.plugin.Application.
+    Minimal adaptation is needed
+
+``webpack.config.js``
+    Configuration for Webpack.
+    Few changes are usually needed here.
+    Please see webpack docs for details.
+
+``src/...``
+    Source code for the angularjs application.
+
+``package.json``
+    Declares npm dependencies and development scripts.
+
+``MANIFEST.in``
+    Needed by setup.py for sdist generation.
+    You need to adapt this file to match the name of your plugin.
+
 
 Plugins are packaged as python entry-points for the ``buildbot.www`` namespace.
 The python part is defined in the ``buildbot.www.plugin`` module.
 The entrypoint must contain a ``twisted.web`` Resource, that is populated in the web server in ``/<pluginname>/``.
 
-The front-end part of the plugin system automatically loads ``/<pluginname>/scripts.js`` and ``/<pluginname>/styles.css`` into the angular.js application.
-The scripts.js files can register itself as a dependency to the main "app" module, register some new states to ``$stateProvider``, or new menu items via glMenuProvider.
+The plugin may only add a http endpoint, or it could add a full JavaScript UI.
+This is controlled by the ``ui`` argument of the ``Application`` endpoint object.
+If ``ui==True``, then will automatically load ``/<pluginname>/scripts.js`` and ``/<pluginname>/styles.css`` into the angular.js application.
+Additionally, an angular.js module with the name ``<pluginname>`` will be registered as a dependency of the main ``app`` module.
+The ``scripts.js`` file may register some new states to ``$stateProvider`` or add new menu items via ``glMenuProvider`` for example.
 
-The entrypoint containing a Resource, nothing forbids plugin writers to add more REST apis in ``/<pluginname>/api``.
+The plugin writers may add more REST apis to ``/<pluginname>/api``.
 For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint.
-You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <https://twistedmatrix.com/documents/current/web/howto/web-in-60/wsgi.html>`_.
+The plugins are not restricted to Twisted, and could even `load a wsgi application using flask, django, or some other framework <https://twistedmatrix.com/documents/current/web/howto/web-in-60/wsgi.html>`_.
 
-It is also possible to make a web plugin which only adds http endpoint, and has no javascript UI.
-For that the ``Application`` endpoint object should have ``ui=False`` argument.
-You can look at the :src:`www/badges` plugin for an example of a ui-less plugin.
+Please look into the official BuildBot www plugins for examples.
+The :src:`www/grid_view` and :src:`www/badges` are good examples of plugins with and without a JavaScript UI respectively.
 
 .. _Routing:
 
