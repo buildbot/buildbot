@@ -29,6 +29,13 @@ from buildbot.www.config import IndexResource
 from buildbot.www.service import WWWService
 
 
+def get_www_plugins_config(master):
+    all_apps = [(name, master.apps.get(name)) for name in master.apps.names]
+    all_apps = [(name, app) for name, app in all_apps if name != "base"]
+    all_apps = [(name, app) for name, app in all_apps if app.ui]
+    return {name: {} for name, _ in all_apps}
+
+
 @in_reactor
 @defer.inlineCallbacks
 def processwwwindex(config):
@@ -67,15 +74,13 @@ def processwwwindex(config):
             except OSError:
                 print('Could not link static dir of plugin {}'.format(name))
 
-    plugins = dict((k, {}) for k in master_service.apps.names if k != "base")
-
     fakeconfig = {"user": {"anonymous": True}}
     fakeconfig['buildbotURL'] = master.config.buildbotURL
     fakeconfig['title'] = master.config.title
     fakeconfig['titleURL'] = master.config.titleURL
     fakeconfig['multiMaster'] = master.config.multiMaster
     fakeconfig['versions'] = IndexResource.getEnvironmentVersions()
-    fakeconfig['plugins'] = plugins
+    fakeconfig['plugins'] = get_www_plugins_config(master_service)
     fakeconfig['auth'] = auth.NoAuth().getConfigDict()
 
     indexfile_path = os.path.join(dst_dir, 'index.html')
