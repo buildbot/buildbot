@@ -233,6 +233,18 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     (optional, defaults to false)
     Always pulls image if autopull is set to true.
 
+``custom_context``
+	(optional)
+	Boolean indicating that the user wants to use custom build arguments for the docker environment. Defaults to False.
+
+``encoding``
+	(optional)
+	String indicating the compression format for the build context. defaults to 'gzip', but 'bzip' can be used as well.
+
+``buildargs``
+	(optional if ``custom_context`` is True)
+	Dictionary, passes information for the docker to build its environment. Eg. {'DISTRO':'ubuntu', 'RELEASE':'11.11'}. Defaults to None.
+
 Setting up Volumes
 ..................
 

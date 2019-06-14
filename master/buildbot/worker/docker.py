@@ -129,9 +129,12 @@ class DockerLatentWorker(DockerBaseWorker,
                          CompatibleLatentWorkerMixin):
     instance = None
 
-    def checkConfig(self, name, password, docker_host, image=None, command=None,
-                    volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                    masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, **kwargs):
+    def checkConfig(self, name, password, docker_host, image=None,
+                    command=None, volumes=None, dockerfile=None, version=None,
+                    tls=None, followStartupLogs=False, masterFQDN=None,
+                    hostconfig=None, autopull=False, alwaysPull=False,
+                    custom_context=False, encoding='gzip', buildargs=None,
+                    **kwargs):
 
         super().checkConfig(name, password, image, masterFQDN, **kwargs)
 
@@ -157,9 +160,12 @@ class DockerLatentWorker(DockerBaseWorker,
                     continue
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, password, docker_host, image=None, command=None,
-                        volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                        masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, **kwargs):
+    def reconfigService(self, name, password, docker_host, image=None,
+                        command=None, volumes=None, dockerfile=None,
+                        version=None, tls=None, followStartupLogs=False,
+                        masterFQDN=None, hostconfig=None, autopull=False,
+                        alwaysPull=False, custom_context=False,
+                        encoding='gzip', buildargs=None, **kwargs):
 
         yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
@@ -170,6 +176,9 @@ class DockerLatentWorker(DockerBaseWorker,
         self.hostconfig = hostconfig or {}
         self.autopull = autopull
         self.alwaysPull = alwaysPull
+        self.custom_context = custom_context
+        self.encoding = encoding
+        self.buildargs = buildargs
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
@@ -206,15 +215,20 @@ class DockerLatentWorker(DockerBaseWorker,
 
     def renderWorkerProps(self, build):
         return build.render((self.image, self.dockerfile,
-                             self.volumes))
+                             self.volumes, self.custom_context,
+                             self.encoding, self.buildargs))
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        image, dockerfile, volumes = yield self.renderWorkerPropsOnStart(build)
-        res = yield threads.deferToThread(self._thd_start_instance, image, dockerfile, volumes)
-        return res
+        image, dockerfile, volumes, custom_context, encoding, buildargs = \
+            yield self.renderWorkerPropsOnStart(build)
+
+        res = yield threads.deferToThread(self._thd_start_instance, image,
+                                          dockerfile, volumes, custom_context,
+                                          encoding, buildargs)
+        defer.returnValue(res)
 
     def _image_exists(self, client, name):
         # Make sure the image exists
@@ -226,7 +240,8 @@ class DockerLatentWorker(DockerBaseWorker,
                     return True
         return False
 
-    def _thd_start_instance(self, image, dockerfile, volumes):
+    def _thd_start_instance(self, image, dockerfile, volumes,
+                            custom_context, encoding, buildargs):
         docker_client = self._getDockerClient()
         container_name = self.getContainerName()
         # cleanup the old instances
@@ -250,8 +265,19 @@ class DockerLatentWorker(DockerBaseWorker,
         if (not found) and (dockerfile is not None):
             log.msg("Image '%s' not found, building it from scratch" %
                     image)
-            for line in docker_client.build(fileobj=BytesIO(dockerfile.encode('utf-8')),
-                                            tag=image):
+            if (custom_context):
+                with open(dockerfile, 'rb') as fin:
+                    lines = docker_client.build(fileobj=fin,
+                                                custom_context=custom_context,
+                                                encoding=encoding, tag=image,
+                                                buildargs=buildargs)
+            else:
+                lines = docker_client.build(
+                    fileobj=BytesIO(dockerfile.encode('utf-8')),
+                    tag=image,
+                )
+
+            for line in lines:
                 for streamline in _handle_stream_line(line):
                     log.msg(streamline)
 
