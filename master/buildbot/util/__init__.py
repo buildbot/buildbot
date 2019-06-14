@@ -19,6 +19,7 @@ import itertools
 import json
 import locale
 import re
+import sys
 import textwrap
 import time
 from builtins import bytes
@@ -317,7 +318,7 @@ def in_reactor(f):
 
             @d.addErrback
             def eb(f):
-                f.printTraceback()
+                f.printTraceback(file=sys.stderr)
 
             @d.addBoth
             def do_stop(r):
