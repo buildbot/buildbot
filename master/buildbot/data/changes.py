@@ -104,6 +104,7 @@ class Change(base.ResourceType):
         changeid = types.Integer()
         parent_changeids = types.List(of=types.Integer())
         author = types.String()
+        committer = types.String()
         files = types.List(of=types.String())
         comments = types.String()
         revision = types.NoneOk(types.String())
@@ -120,7 +121,7 @@ class Change(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addChange(self, files=None, comments=None, author=None, revision=None,
+    def addChange(self, files=None, comments=None, author=None, committer=None, revision=None,
                   when_timestamp=None, branch=None, category=None, revlink='',
                   properties=None, repository='', codebase=None, project='',
                   src=None):
@@ -146,6 +147,7 @@ class Change(base.ResourceType):
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               committer=committer,
                                                                files=files,
                                                                comments=comments,
                                                                revision=revision,
@@ -161,6 +163,7 @@ class Change(base.ResourceType):
         if codebase is None \
                 and self.master.config.codebaseGenerator is not None:
             pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               committer=committer,
                                                                files=files,
                                                                comments=comments,
                                                                revision=revision,
@@ -179,6 +182,7 @@ class Change(base.ResourceType):
         # add the Change to the database
         changeid = yield self.master.db.changes.addChange(
             author=author,
+            committer=committer,
             files=files,
             comments=comments,
             revision=revision,

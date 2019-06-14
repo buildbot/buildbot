@@ -71,7 +71,7 @@ class FakeUpdates(service.AsyncService):
 
     # update methods
 
-    def addChange(self, files=None, comments=None, author=None,
+    def addChange(self, files=None, comments=None, author=None, committer=None,
                   revision=None, when_timestamp=None, branch=None, category=None,
                   revlink='', properties=None, repository='', codebase=None,
                   project='', src=None):
@@ -84,6 +84,7 @@ class FakeUpdates(service.AsyncService):
             map(lambda f: self.testcase.assertIsInstance(f, str), files)
         self.testcase.assertIsInstance(comments, (type(None), str))
         self.testcase.assertIsInstance(author, (type(None), str))
+        self.testcase.assertIsInstance(committer, (type(None), str))
         self.testcase.assertIsInstance(revision, (type(None), str))
         self.testcase.assertIsInstance(when_timestamp, (type(None), int))
         self.testcase.assertIsInstance(branch, (type(None), str))
@@ -91,6 +92,7 @@ class FakeUpdates(service.AsyncService):
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
                                                                files=files,
+                                                               committer=committer,
                                                                comments=comments,
                                                                revision=revision,
                                                                when_timestamp=when_timestamp,

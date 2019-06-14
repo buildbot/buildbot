@@ -53,7 +53,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updates_addChange(self):
         @self.assertArgSpecMatches(self.data.updates.addChange)
-        def addChange(self, files=None, comments=None, author=None,
+        def addChange(self, files=None, comments=None, author=None, committer=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink='', properties=None, repository='', codebase=None,
                       project='', src=None):
