@@ -335,7 +335,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
             log.msg("Adding change revision %s" % (revision,))
             author = self._get_text(el, "author")
-            committer = None
             comments = self._get_text(el, "msg")
             # there is a "date" field, but it provides localtime in the
             # repository's timezone, whereas we care about buildmaster's

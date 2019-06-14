@@ -91,8 +91,8 @@ class FakeUpdates(service.AsyncService):
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
-                                                               files=files,
                                                                committer=committer,
+                                                               files=files,
                                                                comments=comments,
                                                                revision=revision,
                                                                when_timestamp=when_timestamp,

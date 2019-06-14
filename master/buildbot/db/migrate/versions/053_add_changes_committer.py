@@ -23,5 +23,5 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
     changes_table = sautils.Table('changes', metadata, autoload=True)
-    committer = sa.Column('committer', sa.String(255), nullable=True, server_default='tommy')
+    committer = sa.Column('committer', sa.String(255), nullable=True, server_default=None)
     committer.create(changes_table)

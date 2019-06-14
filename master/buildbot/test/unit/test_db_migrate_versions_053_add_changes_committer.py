@@ -95,7 +95,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             num_rows = 0
             for row in conn.execute(q):
                 # verify that the default value was set correctly
-                self.assertEqual(row.committer, 'tommy')
+                self.assertEqual(row.committer, None)
                 num_rows += 1
             self.assertEqual(num_rows, 1)
 

@@ -53,10 +53,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, files=None, comments=None, is_dir=None,
+    def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties=None, repository='', codebase='',
-                  project='', uid=None, committer=None):
+                  project='', uid=None):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 

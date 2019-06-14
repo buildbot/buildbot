@@ -808,10 +808,12 @@ changes
 
         return the last changeID which matches the repository/project/codebase
 
-    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None, committer=None)
+    .. py:method:: addChange(author=None, committer=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
 
         :param author: the author of this change
         :type author: unicode string
+        :param committer: the committer of this change
+        :type committer: unicode string
         :param files: a list of filenames that were changed
         :type branch: list of unicode strings
         :param comments: user comments on the change
@@ -842,8 +844,6 @@ changes
         :type project: unicode string
         :param uid: uid generated for the change author
         :type uid: integer
-        :param committer: the committer of this change
-        :type committer: unicode string
         :returns: new change's ID via Deferred
 
         Add a Change with the given attributes to the database, returning the

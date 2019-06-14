@@ -832,10 +832,10 @@ class FakeChangesComponent(FakeDBComponent):
     # component methods
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, files=None, comments=None, is_dir=None,
+    def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties=None, repository='',
-                  codebase='', project='', uid=None, committer=None):
+                  codebase='', project='', uid=None):
         if properties is None:
             properties = {}
 
@@ -975,7 +975,6 @@ class FakeChangesComponent(FakeDBComponent):
         row = dict(
             changeid=changeid,
             author=change.who,
-            # committer=change.committer,
             files=change.files,
             comments=change.comments,
             revision=change.revision,

@@ -116,7 +116,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     # access additional information
                     author = pr['author']['display_name']
                     prlink = pr['links']['html']['href']
-                    committer = None
                     # Get time updated time. Note that the timezone offset is
                     # ignored.
                     if self.useTimestamps:

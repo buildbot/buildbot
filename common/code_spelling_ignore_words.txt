@@ -300,6 +300,7 @@ commandname
 commitish
 committer
 committers
+committer's
 compability
 comparablemixin
 comparaison

@@ -85,10 +85,10 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(self.db.changes.addChange)
-        def addChange(self, author=None, files=None, comments=None, is_dir=None,
+        def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink='', properties=None, repository='', codebase='',
-                      project='', uid=None, committer=None):
+                      project='', uid=None):
             pass
 
     def test_signature_getChange(self):
