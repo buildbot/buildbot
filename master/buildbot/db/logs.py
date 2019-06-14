@@ -357,6 +357,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # update log types older than timestamps
             # we do it first to avoid having UI discrepancy
 
+            # N.B.: we utilize the fact that steps.id is auto-increment, thus steps.started_at
+            # times are effectively sorted and we only need to find the steps.id at the upper
+            # bound of steps to update.
+
             # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
             res = conn.execute(
                 sa.select([model.steps.c.id])
