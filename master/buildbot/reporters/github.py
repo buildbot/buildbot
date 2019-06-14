@@ -129,12 +129,12 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
         project = sourcestamps[0]['project']
 
+        issue = None
         branch = props['branch']
-        m = re.search(r"refs/pull/([0-9]*)/merge", branch)
-        if m:
-            issue = m.group(1)
-        else:
-            issue = None
+        if branch:
+            m = re.search(r"refs/pull/([0-9]*)/merge", branch)
+            if m:
+                issue = m.group(1)
 
         if "/" in project:
             repoOwner, repoName = project.split('/')

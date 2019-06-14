@@ -1,0 +1,3 @@
+Fixed handling
+of null ``branch`` property
+in :py:class:`~buildbot.reporters.github.GitHubStatusPush`'s ``send()`` method.
