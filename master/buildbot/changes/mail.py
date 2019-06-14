@@ -256,7 +256,7 @@ class CVSMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
         if comments == '\n':
             comments = None
-        return ('cvs', dict(author=author, files=files, comments=comments,
+        return ('cvs', dict(author=author, committer=None, files=files, comments=comments,
                             isdir=isdir, when=when, branch=branch,
                             revision=rev, category=category,
                             repository=cvsroot, project=project,
@@ -385,7 +385,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return ('svn', dict(author=author, files=files, comments=comments,
+        return ('svn', dict(author=author, committer=None, files=files, comments=comments,
                             when=when, revision=rev))
 
 # bzr Launchpad branch subscription mails. Sample mail:
@@ -524,7 +524,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                     branch = None
 
         if rev and author:
-            return ('bzr', dict(author=author, files=d['files'],
+            return ('bzr', dict(author=author, committer=None, files=d['files'],
                                 comments=d['comments'],
                                 when=when, revision=rev,
                                 branch=branch, repository=repository or ''))

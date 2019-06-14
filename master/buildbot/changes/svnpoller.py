@@ -335,6 +335,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
             log.msg("Adding change revision %s" % (revision,))
             author = self._get_text(el, "author")
+            committer = None
             comments = self._get_text(el, "msg")
             # there is a "date" field, but it provides localtime in the
             # repository's timezone, whereas we care about buildmaster's
@@ -398,6 +399,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 else:
                     chdict = dict(
                         author=author,
+                        committer=None,
                         # weakly assume filenames are utf-8
                         files=[bytes2unicode(f, 'utf-8', 'replace')
                                for f in files],

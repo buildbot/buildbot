@@ -282,6 +282,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 node)
             yield self.master.data.updates.addChange(
                 author=author,
+                committer=None,
                 revision=str(node),
                 files=files,
                 comments=comments,
