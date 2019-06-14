@@ -279,6 +279,7 @@ Encodings
 endsWith
 entityType
 entrypoint
+ep
 eq
 errback
 errbacks
@@ -609,6 +610,7 @@ procmail
 prois
 propertiesDict
 propKey
+proxying
 psycopg
 Psycopg
 pubDate
@@ -693,6 +695,7 @@ schedulerName
 schedulerNames
 schemas
 scp
+sdist
 searchable
 sed
 selectable
