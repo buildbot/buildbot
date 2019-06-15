@@ -491,6 +491,7 @@ test_deps = [
     'boto3',
     'moto',
     'mock>=2.0.0',
+    'parameterized',
 ]
 if sys.platform != 'win32':
     test_deps += [
