@@ -105,6 +105,12 @@ virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 	@echo now you can type following command  to activate your virtualenv
 	@echo . $(VENV_NAME)/bin/activate
 
+TRIALOPTS?=buildbot
+
+.PHONY: trial
+trial: virtualenv
+	. $(VENV_NAME)/bin/activate && trial $(TRIALOPTS)
+
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
