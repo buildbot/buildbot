@@ -529,6 +529,7 @@ Nevow
 newcred
 newfeature
 newstyle
+newsfragments
 nextBuild
 nextWorker
 nginx
@@ -821,6 +822,7 @@ Tuples
 twistd
 Twistd
 txgithub
+txt
 Ubuntu
 ubuntu
 ues
@@ -913,16 +915,19 @@ websvn
 wgetrc
 Whent
 whereclause
+whitelist
 whitelists
 whitespace
 Whitespace
 Whlie
 wich
+wiki
 wikis
 wil
 wildcard
 wildcards
 Wildcards
+wordlist
 workdir
 Workdir
 workdirs
