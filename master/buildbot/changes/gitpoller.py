@@ -285,16 +285,13 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             return git_output
         return d
 
+    @defer.inlineCallbacks
     def _get_commit_committer(self, rev):
         args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
-        d = self._dovccmd('log', args, path=self.workdir)
-
-        @d.addCallback
-        def process(git_output):
-            if not git_output:
-                raise EnvironmentError('could not get commit committer for rev')
-            return git_output
-        return d
+        res = yield self._dovccmd('log', args, path=self.workdir)
+        if not res:
+            raise EnvironmentError('could not get commit committer for rev')
+        return res
 
     @defer.inlineCallbacks
     def _process_changes(self, newRev, branch):
