@@ -44,7 +44,7 @@ olefile==0.46
 packaging==19.0
 parameterized==0.7.0
 pathlib2==2.3.3
-pbr==5.2.1
+pbr==5.3.0
 pep8==1.7.1
 Pillow==6.0.0
 pyaml==19.4.1
