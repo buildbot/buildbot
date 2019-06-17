@@ -98,6 +98,49 @@ class TestLibVirtWorker(unittest.TestCase):
             "cp", ["o", "p"])
 
     @defer.inlineCallbacks
+    def _test_stop_instance(self, graceful, fast, expected_destroy,
+                            expected_shutdown, shutdown_side_effect=None):
+        bs = self.ConcreteWorker('name', 'p', self.conn,
+                                 mock.sentinel.hd_image, 'o', xml='<xml/>')
+        bs.graceful_shutdown = graceful
+        domain_mock = mock.Mock()
+        if shutdown_side_effect:
+            domain_mock.shutdown.side_effect = shutdown_side_effect
+        bs.domain = libvirtworker.Domain(mock.sentinel.connection, domain_mock)
+
+        with mock.patch('os.remove') as remove_mock:
+            yield bs.stop_instance(fast=fast)
+
+        self.assertIsNone(bs.domain)
+
+        self.assertEqual(int(expected_destroy), domain_mock.destroy.call_count)
+        self.assertEqual(int(expected_shutdown),
+                         domain_mock.shutdown.call_count)
+        remove_mock.assert_called_once_with(mock.sentinel.hd_image)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_destroy(self):
+        yield self._test_stop_instance(graceful=False,
+                                       fast=False,
+                                       expected_destroy=True,
+                                       expected_shutdown=False)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_shutdown(self):
+        yield self._test_stop_instance(graceful=True,
+                                       fast=False,
+                                       expected_destroy=False,
+                                       expected_shutdown=True)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_shutdown_fails(self):
+        yield self._test_stop_instance(graceful=True,
+                                       fast=False,
+                                       expected_destroy=True,
+                                       expected_shutdown=True,
+                                       shutdown_side_effect=Exception)
+
+    @defer.inlineCallbacks
     def test_start_instance(self):
         bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o',
                                  xml='<xml/>')
