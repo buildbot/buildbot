@@ -1,5 +1,6 @@
 {
     "name": "buildbot-console-view",
+    "private": true,
     "main": "buildbot_console_view/static/scripts.js",
     "style": "buildbot_console_view/static/styles.js",
     "scripts": {

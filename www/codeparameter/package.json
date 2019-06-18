@@ -1,5 +1,6 @@
 {
     "name": "buildbot-codeparameter",
+    "private": true,
     "main": "buildbot_codeparameter/static/scripts.js",
     "scripts": {
         "build": "rimraf buildbot_codeparameter/static && webpack --bail --progress --profile --env prod",

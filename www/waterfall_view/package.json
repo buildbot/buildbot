@@ -1,5 +1,6 @@
 {
     "name": "buildbot-waterfall_view",
+    "private": true,
     "main": "buildbot_waterfall_view/static/scripts.js",
     "style": "buildbot_waterfall_view/static/styles.css",
     "scripts": {

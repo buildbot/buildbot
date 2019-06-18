@@ -1,5 +1,6 @@
 {
     "name": "buildbot-wsgi-dashboards",
+    "private": true,
     "main": "buildbot_wsgi_dashboards/static/scripts.js",
     "scripts": {
         "build": "rimraf buildbot_wsgi_dashboards/static && webpack --bail --progress --profile --env prod",
