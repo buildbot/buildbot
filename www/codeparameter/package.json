@@ -10,7 +10,7 @@
     },
     "devDependencies": {
         "angular-mocks": "1.7.8",
-        "buildbot-build-common": "../build_common",
+        "buildbot-build-common": "link:../build_common",
         "lodash": "^4.17.11",
         "rimraf": "^2.6.3",
         "style-loader": "^0.23.1"
