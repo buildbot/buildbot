@@ -43,7 +43,7 @@ frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
 	$(PIP) install mock wheel buildbot
 	for i in $(WWW_DEP_PKGS); \
-		do (cd $$i; yarn run yarn-update-local; yarn install --pure-lockfile; yarn run build); done
+		do (cd $$i; yarn install --pure-lockfile; yarn run build); done
 
 # rebuild front-end from source
 frontend: frontend_deps

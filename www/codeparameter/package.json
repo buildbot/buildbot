@@ -6,8 +6,7 @@
         "build-dev": "rimraf buildbot_codeparameter/static && webpack --bail --progress --profile --env dev",
         "dev": "webpack --bail --progress --profile --watch --env dev",
         "test": "karma start",
-        "test-watch": "karma start --auto-watch --no-single-run",
-        "yarn-update-local": "yarn remove buildbot-build-common && yarn add --dev ../build_common"
+        "test-watch": "karma start --auto-watch --no-single-run"
     },
     "devDependencies": {
         "angular-mocks": "1.7.8",
