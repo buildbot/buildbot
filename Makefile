@@ -42,6 +42,7 @@ flake8:
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
 	$(PIP) install mock wheel buildbot
+	cd www/build_common; yarn install --pure-lockfile
 	for i in $(WWW_DEP_PKGS); \
 		do (cd $$i; yarn install --pure-lockfile; yarn run build); done
 
