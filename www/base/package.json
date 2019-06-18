@@ -31,8 +31,6 @@
         "d3": "^3.5.17",
         "font-awesome": "^4.7.0",
         "guanlecoja-ui": "link:../guanlecoja-ui",
-        "http-proxy": "^1.11.1",
-        "minimist": "^1.1.1",
         "moment": "^2.24.0",
         "popper.js": "^1.15.0"
     }
