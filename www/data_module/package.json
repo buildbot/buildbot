@@ -11,10 +11,6 @@
     "test-watch": "karma start --auto-watch --no-single-run",
     "yarn-update-local": "yarn remove buildbot-build-common && yarn add --dev ../build_common"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/buildbot/buildbot-data-js.git"
-  },
   "devDependencies": {
     "angular-mocks": "1.7.8",
     "buildbot-build-common": "../build_common",
