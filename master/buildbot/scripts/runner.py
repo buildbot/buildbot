@@ -654,16 +654,24 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
         return "Usage:   buildbot dataspec [options]"
 
 
-class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
+class DevProxyOptions(base.BasedirMixin, base.SubcommandOptions):
 
-    """This command is used with the front end's development proxy task. It enables to run the
-    front end with a third-party buildbot instance without the backend server running in the
-    background"""
+    """Run a fake web server serving the local ui frontend and a distant rest and websocket api.
+    This command required aiohttp to be installed in the virtualenv"""
 
-    subcommandFunction = "buildbot.scripts.processwwwindex.processwwwindex"
+    subcommandFunction = "buildbot.scripts.devproxy.devproxy"
+    optFlags = [
+        ["unsafe_ssl", None, "Bypass ssl certificate validation"],
+    ]
     optParameters = [
-        ['src-dir', None, None, "Path to the build directory of the base app"],
-        ['dst-dir', None, None, "Path to the directory to create the proxy data files in"],
+        ["port", "p", 8011,
+         "http port to use"],
+        ["plugins", None, None,
+         "plugin config to use. As json string e.g: --plugins='{\"custom_plugin\": {\"option1\": true}}'"],
+        ["auth_cookie", None, None,
+         "TWISTED_SESSION cookie to be used for auth (taken in developer console: in document.cookie variable)"],
+        ["buildbot_url", "b", "https://buildbot.buildbot.net",
+         "real buildbot url to proxy to (can be http or https)"]
     ]
 
 
@@ -727,9 +735,8 @@ class Options(usage.Options):
          "Manage users in buildbot's database"],
         ['dataspec', None, DataSpecOption,
          "Output data api spec"],
-        ['processwwwindex', None, ProcessWWWIndexOption,
-         "Create a directory structure for the development proxy that allows using the frontend "
-         "with another buildbot instance."
+        ['dev-proxy', None, DevProxyOptions,
+         "Run a fake web server serving the local ui frontend and a distant rest and websocket api."
          ],
         ['cleanupdb', None, CleanupDBOptions,
          "cleanup the database"
