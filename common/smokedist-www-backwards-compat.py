@@ -38,37 +38,27 @@ def install_local_dependencies(curr_buildbot_root, test_buildbot_root):
 
         with open(package_json_path) as in_f:
             contents = json.load(in_f)
-        if 'scripts' not in contents:
-            raise Exception('Unexpected package.json for {}'.format(package))
-        if 'yarn-update-local' not in contents['scripts']:
-            raise Exception('Unexpected package.json for {}'.format(package))
-        yarn_cmd = contents['scripts']['yarn-update-local']
-
-        # we delete the yarn-update-local script so that the package builder does not reinstall
-        # the old local dependencies when building python packages.
-        del contents['scripts']['yarn-update-local']
-        with open(package_json_path, 'w') as out_f:
-            json.dump(contents, out_f, indent=4, sort_keys=True)
 
         replacements = [
-            ('../data_module', os.path.join(curr_buildbot_root, 'www/data_module')),
-            ('../guanlecoja-ui', os.path.join(curr_buildbot_root, 'www/guanlecoja-ui')),
-            ('../build_common', os.path.join(curr_buildbot_root, 'www/build_common')),
+            ('guanlecoja-ui',
+             'link:' + os.path.join(curr_buildbot_root, 'www/data_module')),
+            ('buildbot-data-js',
+             'link:' + os.path.join(curr_buildbot_root, 'www/guanlecoja-ui')),
+            ('buildbot-build-common',
+             'link:' + os.path.join(curr_buildbot_root, 'www/build_common')),
         ]
 
-        for old, new in replacements:
-            yarn_cmd = yarn_cmd.replace(old, new)
+        for dep_key in ['dependencies', 'devDependencies']:
+            if dep_key not in contents:
+                continue
 
-        if '../' in yarn_cmd:
-            raise Exception('Not all local dependencies have been replaced: {}'.format(yarn_cmd))
+            deps = contents[dep_key]
+            for package, target in replacements:
+                if package in deps:
+                    deps[package] = target
 
-        # Note that we don't reset yarn.lock during this test even though `yarn add` and
-        # `yarn remove` commands will modify it. The new local dependencies may have different or
-        # newer sub-dependencies which may in fact need to be updated.
-        #
-        # Also note that `yarn install` will be run by the test script
-        print('Running: {}'.format(yarn_cmd))
-        subprocess.check_call(yarn_cmd, shell=True, cwd=package_root)
+        with open(package_json_path, 'w') as out_f:
+            json.dump(contents, out_f, indent=4, sort_keys=True)
 
 
 def run_test(test_buildbot_root):

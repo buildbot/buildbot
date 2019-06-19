@@ -1,5 +1,6 @@
 {
     "name": "buildbot-grid-view",
+    "private": true,
     "main": "buildbot_grid_view/static/scripts.js",
     "style": "buildbot_grid_view/static/styles.css",
     "scripts": {
@@ -7,12 +8,11 @@
         "build-dev": "rimraf buildbot_grid_view/static && webpack --bail --progress --profile --env dev",
         "dev": "webpack --bail --progress --profile --watch --env dev",
         "test": "karma start",
-        "test-watch": "karma start --auto-watch --no-single-run",
-        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui buildbot-build-common && yarn add ../data_module ../guanlecoja-ui && yarn add --dev ../build_common"
+        "test-watch": "karma start --auto-watch --no-single-run"
     },
     "devDependencies": {
         "angular-mocks": "1.7.8",
-        "buildbot-build-common": "../build_common",
+        "buildbot-build-common": "link:../build_common",
         "lodash": "^4.17.11",
         "rimraf": "^2.6.3"
     },
@@ -20,8 +20,8 @@
         "angular": "1.7.8",
         "angular-animate": "1.7.8",
         "angular-ui-bootstrap": "^2.5.6",
-        "buildbot-data-js": "../data_module",
-        "guanlecoja-ui": "../guanlecoja-ui",
+        "buildbot-data-js": "link:../data_module",
+        "guanlecoja-ui": "link:../guanlecoja-ui",
         "jquery": "^3.4.0"
     }
 }

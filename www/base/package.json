@@ -1,5 +1,6 @@
 {
     "name": "buildbot-www",
+    "private": true,
     "main": "buildbot_www/static/scripts.js",
     "style": "buildbot_www/static/styles.css",
     "scripts": {
@@ -7,13 +8,12 @@
         "build-dev": "rimraf buildbot_www/static && webpack --bail --progress --profile --env dev",
         "dev": "webpack --bail --progress --profile --watch --env dev",
         "test": "karma start",
-        "test-watch": "karma start --auto-watch --no-single-run",
-        "yarn-update-local": "yarn remove buildbot-data-js guanlecoja-ui buildbot-build-common && yarn add ../data_module ../guanlecoja-ui && yarn add --dev ../build_common"
+        "test-watch": "karma start --auto-watch --no-single-run"
     },
     "devDependencies": {
         "@babel/plugin-syntax-dynamic-import": "^7.2.0",
         "angular-mocks": "1.7.8",
-        "buildbot-build-common": "../build_common",
+        "buildbot-build-common": "link:../build_common",
         "lodash": "^4.17.11",
         "pug-cli": "^1.0.0-alpha6",
         "rimraf": "^2.6.3",
@@ -27,10 +27,10 @@
         "angular-recursion": "^1.0.5",
         "angular-ui-bootstrap": "^2.5.6",
         "bootstrap": "^3.1.1",
-        "buildbot-data-js": "../data_module",
+        "buildbot-data-js": "link:../data_module",
         "d3": "^3.5.17",
         "font-awesome": "^4.7.0",
-        "guanlecoja-ui": "../guanlecoja-ui",
+        "guanlecoja-ui": "link:../guanlecoja-ui",
         "http-proxy": "^1.11.1",
         "minimist": "^1.1.1",
         "moment": "^2.24.0",
