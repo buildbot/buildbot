@@ -563,6 +563,8 @@ class RealTests(Tests):
         deleted_chunks = yield self.db.logs.deleteOldLogChunks(
             self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101)
         self.assertEqual(deleted_chunks, 0)
+        deleted_chunks = yield self.db.logs.deleteOldLogChunks(0)
+        self.assertEqual(deleted_chunks, 0)
         for logid in logids:
             logdict = yield self.db.logs.getLog(logid)
             self.assertEqual(logdict['type'], 'd')
