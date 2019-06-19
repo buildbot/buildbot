@@ -1,0 +1,1 @@
++Fix janitor Exception when there is no logchunk to delete.
