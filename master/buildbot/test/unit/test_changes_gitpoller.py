@@ -777,6 +777,81 @@ class TestGitPoller(TestGitPollerBase):
         )
 
     @defer.inlineCallbacks
+    def test_poll_multipleBranches_buildPushesWithNoCommits_true_not_tip(self):
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/release\n'),
+            gpo.Expect('git', 'fetch', self.REPOURL,
+                       '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
+            .path('gitpoller-work'),
+
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/' + self.REPOURL_QUOTED + '/release')
+            .path('gitpoller-work')
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            gpo.Expect('git', 'log',
+                       '--format=%H',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
+                       '--')
+            .path('gitpoller-work')
+            .stdout(b''),
+        )
+
+        # and patch out the _get_commit_foo methods which were already tested
+        # above
+        def timestamp(rev):
+            return defer.succeed(1273258009)
+        self.patch(self.poller, '_get_commit_timestamp', timestamp)
+
+        def author(rev):
+            return defer.succeed('by:' + rev[:8])
+        self.patch(self.poller, '_get_commit_author', author)
+
+        def files(rev):
+            return defer.succeed(['/etc/' + rev[:3]])
+        self.patch(self.poller, '_get_commit_files', files)
+
+        def comments(rev):
+            return defer.succeed('hello!')
+        self.patch(self.poller, '_get_commit_comments', comments)
+
+        # do the poll
+        self.poller.branches = ['release']
+        self.poller.lastRev = {
+            'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
+
+        }
+
+        self.poller.buildPushesWithNoCommits = True
+        yield self.poller.poll()
+
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
+            'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+        })
+        self.assertEqual(self.master.data.updates.changesAdded, [
+            {'author': 'by:4423cdbc',
+             'branch': 'release',
+             'category': None,
+             'codebase': None,
+             'comments': 'hello!',
+             'files': ['/etc/442'],
+             'project': '',
+             'properties': {},
+             'repository': 'git@example.com:~foo/baz.git',
+             'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+             'revlink': '',
+             'src': 'git',
+             'when_timestamp': 1273258009}]
+        )
+
+    @defer.inlineCallbacks
     def test_poll_allBranches_single(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
