@@ -1,0 +1,1 @@
+:py:class:`~buildbot.changes.gitpoller.GitPoller`: Trigger on pushes with no commits when the new revision is not the tip of another branch.

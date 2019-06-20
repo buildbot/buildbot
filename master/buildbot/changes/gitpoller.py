@@ -298,21 +298,6 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         # initial run, don't parse all history
         if not self.lastRev:
             return
-        rebuild = False
-        if newRev in self.lastRev.values():
-            if self.buildPushesWithNoCommits:
-                existingRev = self.lastRev.get(branch)
-                if existingRev is None:
-                    # This branch was completely unknown, rebuild
-                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
-                            newRev, branch))
-                    rebuild = True
-                elif existingRev != newRev:
-                    # This branch is known, but it now points to a different
-                    # commit than last time we saw it, rebuild.
-                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
-                            newRev, branch))
-                    rebuild = True
 
         # get the change list
         revListArgs = (['--format=%H', '{}'.format(newRev)] +
@@ -326,8 +311,19 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         revList = results.split()
         revList.reverse()
 
-        if rebuild and not revList:
-            revList = [newRev]
+        if self.buildPushesWithNoCommits and not revList:
+            existingRev = self.lastRev.get(branch)
+            if existingRev != newRev:
+                revList = [newRev]
+                if existingRev is None:
+                    # This branch was completely unknown, rebuild
+                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
+                        newRev, branch))
+                else:
+                    # This branch is known, but it now points to a different
+                    # commit than last time we saw it, rebuild.
+                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
+                        newRev, branch))
 
         self.changeCount = len(revList)
         self.lastRev[branch] = newRev
