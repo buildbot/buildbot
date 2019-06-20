@@ -24,6 +24,7 @@ import jinja2
 
 from buildbot.plugins.db import get_plugins
 
+log = logging.getLogger(__name__)
 
 class DevProxy:
     MAX_CONNECTIONS = 10
@@ -50,9 +51,8 @@ class DevProxy:
         self.plugins = plugins
 
         app.router.add_route('*', '/ws', self.ws_handler)
-        for path in ['api', 'auth', 'sse', 'avatar']:
-            app.router.add_route(
-                '*', '/%s{path:.*}' % path, self.proxy_handler)
+        for path in ['/api', '/auth', '/sse', '/avatar']:
+            app.router.add_route('*', path + '{path:.*}', self.proxy_handler)
         app.router.add_route('*', '/', self.index_handler)
         for plugin in self.apps.names:
             if plugin != 'base':
@@ -68,8 +68,18 @@ class DevProxy:
         self.session = aiohttp.ClientSession(connector=conn, trust_env=True, cookies=cookies)
         self.config = None
         self.buildbotURL = "http://localhost:{}/".format(port)
+        app.on_startup.append(self.on_startup)
+        app.on_cleanup.append(self.on_cleanup)
         aiohttp.web.run_app(app, host="localhost", port=port)
-        self.session.close()
+
+    async def on_startup(self, app):
+        try:
+            await self.fetch_config_from_upstream()
+        except aiohttp.ClientConnectionError as e:
+            raise RuntimeError("Unable to connect to buildbot master" + str(e))
+
+    async def on_cleanup(self, app):
+        await self.session.close()
 
     async def ws_handler(self, req):
         # based on https://github.com/oetiker/aio-reverse-proxy/blob/master/paraview-proxy.py
@@ -82,23 +92,27 @@ class DevProxy:
 
             async def ws_forward(ws_from, ws_to):
                 async for msg in ws_from:
-                    mt = msg.type
-                    md = msg.data
-                    if mt == aiohttp.WSMsgType.TEXT:
-                        await ws_to.send_str(md)
-                    elif mt == aiohttp.WSMsgType.BINARY:
-                        await ws_to.send_bytes(md)
-                    elif mt == aiohttp.WSMsgType.PING:
-                        await ws_to.ping()
-                    elif mt == aiohttp.WSMsgType.PONG:
-                        await ws_to.pong()
-                    elif ws_to.closed:
+                    if ws_to.closed:
                         await ws_to.close(code=ws_to.close_code, message=msg.extra)
+                        return
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        await ws_to.send_str(msg.data)
+                    elif msg.type == aiohttp.WSMsgType.BINARY:
+                        await ws_to.send_bytes(msg.data)
+                    elif msg.type == aiohttp.WSMsgType.PING:
+                        await ws_to.ping()
+                    elif msg.type == aiohttp.WSMsgType.PONG:
+                        await ws_to.pong()
                     else:
                         raise ValueError('unexpected message type: %s' % msg)
 
             # keep forwarding websocket data in both directions
-            await asyncio.wait([ws_forward(ws_server, ws_client), ws_forward(ws_client, ws_server)], return_when=asyncio.FIRST_COMPLETED)
+            await asyncio.wait(
+                [
+                    ws_forward(ws_server, ws_client),
+                    ws_forward(ws_client, ws_server)
+                ],
+                return_when=asyncio.FIRST_COMPLETED)
         return ws_server
 
     async def proxy_handler(self, req):
@@ -132,31 +146,32 @@ class DevProxy:
         return aiohttp.web.Response(text='Unable to connect to upstream server {} ({!s})'.format(
             self.next_url, error), status=502)
 
+    async def fetch_config_from_upstream(self):
+        async with self.session.get(self.next_url) as request:
+            index = await request.content.read()
+            if request.status != 200:
+                raise RuntimeError("Unable to fetch buildbot config: " + index.decode())
+        # hack to parse the configjson from upstream buildbot config
+        start_delimiter = b'angular.module("buildbot_config", []).constant("config", '
+        start_index = index.index(start_delimiter)
+        last_index = index.index(b')</script></html>')
+        self.config = json.loads(
+            index[start_index + len(start_delimiter):last_index].decode())
+
+        # keep the original config, but remove the plugins that we don't know
+        for plugin in list(self.config['plugins'].keys()):
+            if plugin not in self.apps:
+                del self.config['plugins'][plugin]
+                log.warn("warning: Missing plugin compared to original buildbot: " + plugin)
+
+        # add the plugins configs passed in cmdline
+        for k, v in self.plugins.items():
+            self.config['plugins'][k] = v
+
+        self.config['buildbotURL'] = self.buildbotURL
+        self.config['buildbotURLs'] = [self.buildbotURL, self.next_url + "/"]
+
     async def index_handler(self, req):
-        if self.config is None:  # on first get, we prepare the config from upstream
-            try:
-                async with self.session.get(self.next_url) as request:
-                    index = await request.content.read()
-            except aiohttp.ClientConnectionError as e:
-                return self.connection_error(e)
-            # hack to parse the configjson from upstream buildbot config
-            start_delimiter = b'angular.module("buildbot_config", []).constant("config", '
-            start_index = index.index(start_delimiter)
-            last_index = index.index(b')</script></html>')
-            self.config = json.loads(
-                index[start_index + len(start_delimiter):last_index].decode())
-
-            # keep the original config, but remove the plugins that we don't know
-            for plugin in list(self.config['plugins'].keys()):
-                if plugin not in self.apps:
-                    del self.config['plugins'][plugin]
-
-            # add the plugins configs passed in cmdline
-            for k, v in self.plugins.items():
-                self.config['plugins'][k] = v
-
-            self.config['buildbotURL'] = self.buildbotURL
-            self.config['buildbotURLs'] = [self.buildbotURL, self.next_url + "/"]
         tpl = self.jinja.get_template('index.html')
         index = tpl.render(configjson=json.dumps(self.config),
                            custom_templates={},
