@@ -280,6 +280,14 @@ class LibVirtWorker(AbstractLatentWorker):
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
+        @defer.inlineCallbacks
+        def _destroy_domain(res, domain):
+            log.msg('Graceful shutdown failed. Force destroying domain %s' %
+                    self.workername)
+            # Don't return res to stop propagating shutdown error if destroy
+            # was successful.
+            yield domain.destroy()
+
         log.msg("Attempting to stop '%s'" % self.workername)
         if self.domain is None:
             log.msg("I don't think that domain is even running, aborting")
@@ -291,22 +299,16 @@ class LibVirtWorker(AbstractLatentWorker):
         if self.graceful_shutdown and not fast:
             log.msg("Graceful shutdown chosen for %s" % self.workername)
             d = domain.shutdown()
+            d.addErrback(_destroy_domain, domain)
         else:
             d = domain.destroy()
 
-        @d.addCallback
-        def _disconnect(res):
-            log.msg("VM destroyed (%s): Forcing its connection closed." %
-                    self.workername)
-            return super().disconnect()
-
-        @d.addBoth
-        def _disconnected(res):
-            log.msg(
-                "We forced disconnection (%s), cleaning up and triggering new build" % self.workername)
-            if self.base_image:
+        if self.base_image:
+            @d.addBoth
+            def _remove_image(res):
+                log.msg('Removing base image %s for %s' % (self.image,
+                                                           self.workername))
                 os.remove(self.image)
-            self.botmaster.maybeStartBuildsForWorker(self.workername)
-            return res
+                return res
 
         return d
