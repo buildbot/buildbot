@@ -156,6 +156,7 @@ class DevProxy:
                 self.config['plugins'][k] = v
 
             self.config['buildbotURL'] = self.buildbotURL
+            self.config['buildbotURLs'] = [self.buildbotURL, self.next_url + "/"]
         tpl = self.jinja.get_template('index.html')
         index = tpl.render(configjson=json.dumps(self.config),
                            custom_templates={},

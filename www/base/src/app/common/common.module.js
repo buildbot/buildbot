@@ -1,6 +1,7 @@
 const dependencies = [
     'ui.router',
-    'RecursionHelper'
+    'RecursionHelper',
+    'buildbot_config'
 ];
 
 // Register new module

@@ -1,6 +1,6 @@
 .panel.panel-default(ng-class="results2class(buildsummary.build)", style="margin-bottom:0px")
     .panel-heading
-        .flex-row
+        .flex-row(ng-if="buildsummary.build.started_at")
             .flex-grow-1
                 .btn.btn-xs.btn-default(ng-click="buildsummary.toggleFullDisplay()", title="Expand all step logs")
                     i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':buildsummary.fulldisplay}")
@@ -27,6 +27,8 @@
                     ui-sref="build({builder:buildsummary.parentbuilder.builderid, build:buildsummary.parentbuild.number})")
                           | {{buildsummary.parentrelationship}}:
                           | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
+        .flex-row(ng-if="!buildsummary.build.started_at")
+          | loading build details...
     ul.list-group
       li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)"
                          ng-repeat="step in buildsummary.steps | orderBy: ['stepid']")
@@ -44,7 +46,7 @@
             | #{' '} {{step.name}}
         ul
           li(ng-if='!(buildsummary.isBuildRequestURL(url.url) || buildsummary.isBuildURL(url.url))', ng-repeat="url in step.urls")
-            a(target="_blank", ng-href="{{url.url}}") {{url.name}}
+            a(ng-href="{{url.url}}", target="_blank") {{url.name}}
         ul.list-unstyled
           li(ng-if='buildsummary.isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
             buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='buildsummary.getBuildRequestIDFromURL(url.url)')
