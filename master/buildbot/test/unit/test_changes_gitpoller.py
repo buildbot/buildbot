@@ -837,6 +837,10 @@ class TestGitPoller(TestGitPollerBase):
             return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
+        def committer(rev):
+            return defer.succeed('by:' + rev[:8])
+        self.patch(self.poller, '_get_commit_committer', committer)
+
         def files(rev):
             return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
@@ -862,6 +866,7 @@ class TestGitPoller(TestGitPollerBase):
         })
         self.assertEqual(self.master.data.updates.changesAdded, [
             {'author': 'by:4423cdbc',
+             'committer': 'by:4423cdbc',
              'branch': 'release',
              'category': None,
              'codebase': None,
