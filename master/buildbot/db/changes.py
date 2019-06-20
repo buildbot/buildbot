@@ -53,7 +53,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, files=None, comments=None, is_dir=None,
+    def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties=None, repository='', codebase='',
                   project='', uid=None):
@@ -77,6 +77,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         ch_tbl = self.db.model.changes
 
         self.checkLength(ch_tbl.c.author, author)
+        self.checkLength(ch_tbl.c.committer, committer)
         self.checkLength(ch_tbl.c.branch, branch)
         self.checkLength(ch_tbl.c.revision, revision)
         self.checkLength(ch_tbl.c.revlink, revlink)
@@ -105,6 +106,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             r = conn.execute(ch_tbl.insert(), dict(
                 author=author,
+                committer=committer,
                 comments=comments,
                 branch=branch,
                 revision=revision,
@@ -355,6 +357,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             changeid=ch_row.changeid,
             parent_changeids=parent_changeids,
             author=ch_row.author,
+            committer=ch_row.committer,
             files=[],  # see below
             comments=ch_row.comments,
             revision=ch_row.revision,

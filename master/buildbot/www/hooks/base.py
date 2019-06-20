@@ -72,6 +72,7 @@ class BaseHookHandler:
         author = firstOrNothing(args.get(b'author'))
         if not author:
             author = firstOrNothing(args.get(b'who'))
+        committer = firstOrNothing(args.get(b'committer'))
         comments = firstOrNothing(args.get(b'comments'))
         branch = firstOrNothing(args.get(b'branch'))
         category = firstOrNothing(args.get(b'category'))
@@ -80,7 +81,7 @@ class BaseHookHandler:
         project = firstOrNothing(args.get(b'project')) or ''
         codebase = firstOrNothing(args.get(b'codebase'))
 
-        chdict = dict(author=author, files=files, comments=comments,
+        chdict = dict(author=author, committer=committer, files=files, comments=comments,
                       revision=revision, when_timestamp=when,
                       branch=branch, category=category, revlink=revlink,
                       properties=properties, repository=repository,

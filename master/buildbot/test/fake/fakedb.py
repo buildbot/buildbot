@@ -256,6 +256,7 @@ class Change(Row):
     defaults = dict(
         changeid=None,
         author='frank',
+        committer='steve',
         comments='test change',
         branch='master',
         revision='abcd',
@@ -831,7 +832,7 @@ class FakeChangesComponent(FakeDBComponent):
     # component methods
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, files=None, comments=None, is_dir=None,
+    def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties=None, repository='',
                   codebase='', project='', uid=None):
@@ -853,6 +854,7 @@ class FakeChangesComponent(FakeDBComponent):
             changeid=changeid,
             parent_changeids=parent_changeids,
             author=author,
+            committer=committer,
             comments=comments,
             revision=revision,
             when_timestamp=datetime2epoch(when_timestamp),

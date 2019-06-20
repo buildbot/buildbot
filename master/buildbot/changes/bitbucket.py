@@ -141,6 +141,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     # emit the change
                     yield self.master.data.updates.addChange(
                         author=bytes2unicode(author),
+                        committer=None,
                         revision=bytes2unicode(revision),
                         revlink=bytes2unicode(revlink),
                         comments='pull-request #%d: %s\n%s' % (

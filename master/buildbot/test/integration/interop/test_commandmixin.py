@@ -33,6 +33,7 @@ class CommandMixinMaster(RunMasterBase):
         change = dict(branch="master",
                       files=["foo.c"],
                       author="me@foo.com",
+                      committer="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
                       project="none"

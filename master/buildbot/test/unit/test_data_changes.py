@@ -121,6 +121,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     changeEvent = {
         'author': 'warner',
+        'committer': 'david',
         'branch': 'warnerdb',
         'category': 'devel',
         'codebase': '',
@@ -157,7 +158,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.addChange,  # fake
             self.rtype.addChange)  # real
-        def addChange(self, files=None, comments=None, author=None,
+        def addChange(self, files=None, comments=None, author=None, committer=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink='', properties=None, repository='', codebase=None,
                       project='', src=None):
@@ -183,7 +184,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addChange(self):
         # src and codebase are default here
-        kwargs = dict(author='warner', branch='warnerdb',
+        kwargs = dict(author='warner', committer='david', branch='warnerdb',
                       category='devel', comments='fix whitespace',
                       files=['master/buildbot/__init__.py'],
                       project='Buildbot', repository='git://warner',
@@ -195,6 +196,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         expectedRow = fakedb.Change(
             changeid=500,
             author='warner',
+            committer='david',
             comments='fix whitespace',
             branch='warnerdb',
             revision='0e92a098b',
@@ -214,7 +216,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
-        kwargs = dict(author='warner', branch='warnerdb',
+        kwargs = dict(author='warner', committer='david', branch='warnerdb',
                       category='devel', comments='fix whitespace',
                       files=['master/buildbot/__init__.py'],
                       project='Buildbot', repository='git://warner',
@@ -224,6 +226,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': 'warner',
+            'committer': 'david',
             'branch': 'warnerdb',
             'category': 'devel',
             'codebase': 'cb',
@@ -252,6 +255,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         expectedRow = fakedb.Change(
             changeid=500,
             author='warner',
+            committer='david',
             comments='fix whitespace',
             branch='warnerdb',
             revision='0e92a098b',
@@ -276,7 +280,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = \
             lambda change: 'cb-%s' % change['category']
-        kwargs = dict(author='warner', branch='warnerdb',
+        kwargs = dict(author='warner', committer='david', branch='warnerdb',
                       category='devel', comments='fix whitespace',
                       files=['master/buildbot/__init__.py'],
                       project='Buildbot', repository='git://warner',
@@ -286,6 +290,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': 'warner',
+            'committer': 'david',
             'branch': 'warnerdb',
             'category': 'devel',
             'codebase': 'cb-devel',
@@ -314,6 +319,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         expectedRow = fakedb.Change(
             changeid=500,
             author='warner',
+            committer='david',
             comments='fix whitespace',
             branch='warnerdb',
             revision='0e92a098b',
@@ -332,7 +338,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config = mock.Mock(name='master.config')
         self.master.config.revlink = lambda rev, repo: 'foo%sbar%sbaz' % (repo, rev)
         # revlink is default here
-        kwargs = dict(author='warner', branch='warnerdb',
+        kwargs = dict(author='warner', committer='david', branch='warnerdb',
                       category='devel', comments='fix whitespace',
                       files=['master/buildbot/__init__.py'],
                       project='Buildbot', repository='git://warner',
@@ -344,6 +350,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # in the config. We thus expect a revlink of 'foogit://warnerbar0e92a098bbaz'
         expectedMessage = {
             'author': 'warner',
+            'committer': 'david',
             'branch': 'warnerdb',
             'category': 'devel',
             'codebase': '',
@@ -372,6 +379,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         expectedRow = fakedb.Change(
             changeid=500,
             author='warner',
+            committer='david',
             comments='fix whitespace',
             branch='warnerdb',
             revision='0e92a098b',

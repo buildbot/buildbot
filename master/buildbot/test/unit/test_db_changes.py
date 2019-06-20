@@ -40,7 +40,7 @@ class Tests(interfaces.InterfaceTests):
     change13_rows = [
         fakedb.SourceStamp(id=92, branch="thirteen"),
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
-                      branch="master", revision="deadbeef",
+                      branch="master", revision="deadbeef", committer="justin",
                       when_timestamp=266738400, revlink=None, category=None,
                       repository='', codebase='', project='', sourcestampid=92),
 
@@ -54,7 +54,7 @@ class Tests(interfaces.InterfaceTests):
     change14_rows = [
         fakedb.SourceStamp(id=233, branch="fourteen"),
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
-                      branch="warnerdb", revision="0e92a098b",
+                      branch="warnerdb", revision="0e92a098b", committer="david",
                       when_timestamp=266738404, revlink='http://warner/0e92a098b',
                       category='devel', repository='git://warner', codebase='mainapp',
                       project='Buildbot', sourcestampid=233),
@@ -66,6 +66,7 @@ class Tests(interfaces.InterfaceTests):
         'changeid': 14,
         'parent_changeids': [],
         'author': 'warner',
+        'committer': 'david',
         'branch': 'warnerdb',
         'category': 'devel',
         'comments': 'fix whitespace',
@@ -84,7 +85,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(self.db.changes.addChange)
-        def addChange(self, author=None, files=None, comments=None, is_dir=None,
+        def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink='', properties=None, repository='', codebase='',
                       project='', uid=None):
@@ -100,6 +101,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
+            committer='justin',
             files=[],
             comments='fix spelling',
             revision='2d6caa52',
@@ -118,6 +120,7 @@ class Tests(interfaces.InterfaceTests):
         chdict['sourcestampid'] = ss
         self.assertEqual(chdict, {
             'author': 'dustin',
+            'committer': 'justin',
             'branch': 'master',
             'category': None,
             'changeid': changeid,
@@ -155,6 +158,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='delanne',
+            committer='melanne',
             files=[],
             comments='child of changeid14',
             revision='50adad56',
@@ -173,6 +177,7 @@ class Tests(interfaces.InterfaceTests):
         chdict['sourcestampid'] = ss
         self.assertEqual(chdict, {
             'author': 'delanne',
+            'committer': 'melanne',
             'branch': 'warnerdb',
             'category': 'devel',
             'changeid': changeid,
@@ -376,6 +381,7 @@ class RealTests(Tests):
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
+            committer='justin',
             files=['master/LICENSING.txt', 'worker/LICENSING.txt'],
             comments='fix spelling',
             revision='2d6caa52',
@@ -396,6 +402,7 @@ class RealTests(Tests):
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, changeid)
             self.assertEqual(r[0].author, 'dustin')
+            self.assertEqual(r[0].committer, 'justin')
             self.assertEqual(r[0].comments, 'fix spelling')
             self.assertEqual(r[0].branch, 'master')
             self.assertEqual(r[0].revision, '2d6caa52')
@@ -457,6 +464,7 @@ class RealTests(Tests):
         self.reactor.advance(OTHERTIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
+            committer='justin',
             files=[],
             comments='fix spelling',
             revision='2d6caa52',
@@ -506,6 +514,7 @@ class RealTests(Tests):
         ])
         changeid = yield self.db.changes.addChange(
                           author='dustin',
+                          committer='justin',
                           files=[],
                           comments='fix spelling',
                           revision='2d6caa52',
@@ -640,7 +649,7 @@ class RealTests(Tests):
 
         codebase_ss = {}  # shared state between addChange and addBuild
 
-        def addChange(codebase, revision, author, comments, branch='master', category='cat', project='proj', repository='repo'):
+        def addChange(codebase, revision, author, committer, comments, branch='master', category='cat', project='proj', repository='repo'):
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
             parent_changeids = codebase_ss.get(codebase, None)
@@ -652,6 +661,7 @@ class RealTests(Tests):
                                              revision=revision),
                           fakedb.Change(changeid=lastID["changeid"],
                                         author=author,
+                                        committer=committer,
                                         comments=comments,
                                         revision=revision,
                                         sourcestampid=lastID["sourcestampid"],
@@ -698,28 +708,28 @@ class RealTests(Tests):
             return buildRows
 
         # Build1 has 1 change per code base
-        rows.extend(addChange('A', 1, 'franck', '1st commit'))
-        rows.extend(addChange('B', 1, 'alice', '2nd commit'))
-        rows.extend(addChange('C', 1, 'bob', '3rd commit'))
+        rows.extend(addChange('A', 1, 'franck', 'franck', '1st commit'))
+        rows.extend(addChange('B', 1, 'alice', 'alice', '2nd commit'))
+        rows.extend(addChange('C', 1, 'bob', 'bob', '3rd commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 2 has only one change for codebase A
-        rows.extend(addChange('A', 2, 'delanne', '4th commit'))
+        rows.extend(addChange('A', 2, 'delanne', 'delanne', '4th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 3 has only one change for codebase B
-        rows.extend(addChange('B', 2, 'bob', '6th commit'))
+        rows.extend(addChange('B', 2, 'bob', 'bob', '6th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 4 has no change
         rows.extend(addBuild(codebase_ss))
         # Build 5 has 2 changes for codebase A and 1 change for codebase C
-        rows.extend(addChange('A', 3, 'franck', '7th commit'))
-        rows.extend(addChange('A', 4, 'alice', '8th commit'))
-        rows.extend(addChange('B', 3, 'bob', '9th commit'))
+        rows.extend(addChange('A', 3, 'franck', 'franck', '7th commit'))
+        rows.extend(addChange('A', 4, 'alice', 'alice', '8th commit'))
+        rows.extend(addChange('B', 3, 'bob', 'bob', '9th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 6 has only one change for codebase C
-        rows.extend(addChange('C', 2, 'bob', '10th commit'))
+        rows.extend(addChange('C', 2, 'bob', 'bob', '10th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         # Build 7 has only one change for codebase C
-        rows.extend(addChange('C', 3, 'bob', '11th commit'))
+        rows.extend(addChange('C', 3, 'bob', 'bob', '11th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         yield self.insertTestData(rows)
 

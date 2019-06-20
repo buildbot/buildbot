@@ -775,6 +775,7 @@ changes
     * ``changeid`` (the ID of this change)
     * ``parent_changeids`` (list of ID; change's parents)
     * ``author`` (unicode; the author of the change)
+    * ``committer`` (unicode; the committer of the change)
     * ``files`` (list of unicode; source-code filenames changed)
     * ``comments`` (unicode; user comments)
     * ``is_dir`` (deprecated)
@@ -807,10 +808,12 @@ changes
 
         return the last changeID which matches the repository/project/codebase
 
-    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
+    .. py:method:: addChange(author=None, committer=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
 
         :param author: the author of this change
         :type author: unicode string
+        :param committer: the committer of this change
+        :type committer: unicode string
         :param files: a list of filenames that were changed
         :type branch: list of unicode strings
         :param comments: user comments on the change

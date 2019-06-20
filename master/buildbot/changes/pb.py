@@ -44,6 +44,8 @@ class ChangePerspective(NewCredPerspective):
             changedict['project'] = ''
         if 'files' not in changedict or not changedict['files']:
             changedict['files'] = []
+        if 'committer' in changedict and not changedict['committer']:
+            changedict['committer'] = None
 
         # rename arguments to new names.  Note that the client still uses the
         # "old" names (who, when, and isdir), as they are not deprecated yet,

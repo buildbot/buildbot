@@ -286,6 +286,14 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         return d
 
     @defer.inlineCallbacks
+    def _get_commit_committer(self, rev):
+        args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
+        res = yield self._dovccmd('log', args, path=self.workdir)
+        if not res:
+            raise EnvironmentError('could not get commit committer for rev')
+        return res
+
+    @defer.inlineCallbacks
     def _process_changes(self, newRev, branch):
         """
         Read changes since last change.
@@ -336,6 +344,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             dl = defer.DeferredList([
                 self._get_commit_timestamp(rev),
                 self._get_commit_author(rev),
+                self._get_commit_committer(rev),
                 self._get_commit_files(rev),
                 self._get_commit_comments(rev),
             ], consumeErrors=True)
@@ -351,10 +360,11 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
 
-            timestamp, author, files, comments = [r[1] for r in results]
+            timestamp, author, committer, files, comments = [r[1] for r in results]
 
             yield self.master.data.updates.addChange(
                 author=author,
+                committer=committer,
                 revision=bytes2unicode(rev, encoding=self.encoding),
                 files=files, comments=comments, when_timestamp=timestamp,
                 branch=bytes2unicode(self._removeHeads(branch)),

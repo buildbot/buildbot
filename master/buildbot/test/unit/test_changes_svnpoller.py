@@ -479,6 +479,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'warner',
+            'committer': None,
             'branch': 'branch',
             'category': None,
             'codebase': None,
@@ -501,6 +502,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'warner',
+            'committer': None,
             'branch': 'branch',
             'category': None,
             'codebase': None,
@@ -516,6 +518,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             'when_timestamp': None,
         }, {
             'author': 'warner',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,

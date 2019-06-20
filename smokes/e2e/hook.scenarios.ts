@@ -26,6 +26,7 @@ describe('change hook', function() {
             project:'pyflakes',
             repository:'git://github.com/buildbot/hello-world.git',
             author:'foo <foo@bar.com>',
+            committer:'foo <foo@bar.com>',
             revision: 'HEAD',
             branch:'master'
         });

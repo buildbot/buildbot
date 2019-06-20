@@ -58,6 +58,7 @@ class NotifierMaster(RunMasterBase):
         change = dict(branch="master",
                       files=["foo.c"],
                       author="author@foo.com",
+                      committer="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
                       project="none"

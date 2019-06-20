@@ -370,6 +370,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'contributor',
+            'committer': None,
             'branch': 'default',
             'category': None,
             'codebase': None,
@@ -395,6 +396,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'contributor',
+            'committer': None,
             'branch': 'default',
             'category': None,
             'codebase': None,
@@ -423,6 +425,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'contributor',
+            'committer': None,
             'branch': 'default',
             'category': None,
             'codebase': None,
@@ -443,6 +446,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(self.master.data.updates.changesAdded, [
             {
                 'author': 'contributor',
+                'committer': None,
                 'branch': 'default',
                 'category': None,
                 'codebase': None,
@@ -458,6 +462,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             },
             {
                 'author': 'contributor',
+                'committer': None,
                 'branch': 'default',
                 'category': None,
                 'codebase': None,
@@ -503,6 +508,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'contributor',
+            'committer': None,
             'branch': 'default',
             'category': None,
             'codebase': None,
@@ -531,6 +537,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
         yield self.changesource.poll()
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'contributor',
+            'committer': None,
             'branch': 'default',
             'category': None,
             'codebase': None,

@@ -398,6 +398,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 else:
                     chdict = dict(
                         author=author,
+                        committer=None,
                         # weakly assume filenames are utf-8
                         files=[bytes2unicode(f, 'utf-8', 'replace')
                                for f in files],

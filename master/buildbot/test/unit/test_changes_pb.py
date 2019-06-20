@@ -224,6 +224,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'bar',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -245,6 +246,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'bar',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': 'cb',
@@ -267,6 +269,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'bar',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -290,6 +293,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': None,
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -313,6 +317,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': None,
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -336,6 +341,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': None,
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -359,6 +365,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': '\u2603',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -383,6 +390,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': '\u2603',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -406,6 +414,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': replacement,
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -428,6 +437,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'me',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
@@ -449,6 +459,7 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': 'c <h@c>',
+            'committer': None,
             'branch': None,
             'category': None,
             'codebase': None,
