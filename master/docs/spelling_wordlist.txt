@@ -6,8 +6,8 @@ admins
 afterwards
 al
 Allura
-amongst
 AMIs
+amongst
 analyse
 angularjs
 angularJS
@@ -27,8 +27,8 @@ argv
 ascii
 AssertionFailed
 asymmetrics
-Async
 async
+Async
 Atlassian
 attrs
 auth
@@ -168,8 +168,8 @@ coffeelint
 Coffeelint
 coffeescript
 coffeeScript
-collapseRequests
 collapser
+collapseRequests
 commandId
 commandline
 committer
@@ -398,8 +398,8 @@ io
 ip
 iPhone
 IProperties
-IPv
 iptables
+IPv
 irc
 Irc
 IRenderable
@@ -528,8 +528,8 @@ netstrings
 Nevow
 newcred
 newfeature
-newstyle
 newsfragments
+newstyle
 nextBuild
 nextWorker
 nginx
@@ -630,8 +630,8 @@ Pythonic
 Pywin
 qcow
 qmail
-queuedir
 queried
+queuedir
 queueing
 Queueing
 Raml
@@ -689,8 +689,8 @@ runtests
 runtime
 runtimes
 sautils
-scalable
 scalability
+scalable
 sched
 schedulerid
 schedulerName
@@ -754,8 +754,8 @@ stepid
 stopService
 storages
 subclassed
-subclassing
 subclasses
+subclassing
 subcommand
 subcommands
 subdir
@@ -811,10 +811,10 @@ tracebacks
 tradeoffs
 travelled
 travis
-trustRoot
 triallog
 triggerable
 Triggerable
+trustRoot
 tryclient
 tuple
 tuples
@@ -823,8 +823,8 @@ twistd
 Twistd
 txgithub
 txt
-Ubuntu
 ubuntu
+Ubuntu
 ues
 ui
 uid
@@ -837,8 +837,8 @@ Unclaim
 unclaiming
 uncollectable
 uncomment
-unescaped
 unencrypted
+unescaped
 unhandled
 unices
 unicode
