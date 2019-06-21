@@ -26,6 +26,7 @@ from buildbot.plugins.db import get_plugins
 
 log = logging.getLogger(__name__)
 
+
 class DevProxy:
     MAX_CONNECTIONS = 10
 
@@ -121,14 +122,13 @@ class DevProxy:
         headers = req.headers.copy()
         query = req.query
         try:
-            async with method(
-                    upstream_url,
-                    headers=headers,
-                    params=query,
-                    allow_redirects=False,
-                    # note that request.content is a StreamReader, so the data is streamed
-                    # and not fully loaded in memory (unlike with python-requests)
-                    data=req.content) as request:
+            # note that req.content is a StreamReader, so the data is streamed
+            # and not fully loaded in memory (unlike with python-requests)
+            async with method(upstream_url,
+                              headers=headers,
+                              params=query,
+                              allow_redirects=False,
+                              data=req.content) as request:
                 response = aiohttp.web.StreamResponse(
                     status=request.status, headers=request.headers)
                 writer = await response.prepare(req)
@@ -162,7 +162,7 @@ class DevProxy:
         for plugin in list(self.config['plugins'].keys()):
             if plugin not in self.apps:
                 del self.config['plugins'][plugin]
-                log.warn("warning: Missing plugin compared to original buildbot: " + plugin)
+                log.warn("warning: Missing plugin compared to original buildbot: %s", plugin)
 
         # add the plugins configs passed in cmdline
         for k, v in self.plugins.items():
