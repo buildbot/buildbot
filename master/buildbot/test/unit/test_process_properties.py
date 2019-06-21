@@ -991,9 +991,6 @@ class TestProperties(unittest.TestCase):
 
     def test_setProperty_notJsonable(self):
         with self.assertRaises(TypeError):
-            self.props.setProperty("project", ConstantRenderable('testing'),
-                                   "test")
-        with self.assertRaises(TypeError):
             self.props.setProperty("project", object, "test")
 
     # IProperties methods

@@ -390,7 +390,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         # translate properties object into a dict as required by the
         # addBuildset method
-        properties_dict = properties.asDict()
+        properties_dict = yield properties.render(properties.asDict())
 
         bsid, brids = yield self.master.data.updates.addBuildset(
             scheduler=self.name, sourcestamps=sourcestamps, reason=reason,

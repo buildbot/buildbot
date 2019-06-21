@@ -211,4 +211,16 @@ The virtual builder metadata is configured with the following properties:
 
 * ``virtual_builder_tags``: The tags for the virtual builder.
 
+You can also use virtual builders with :bb:sched:`SingleBranchScheduler`.
+For example if you want to automatically build all branches in your project without having to manually create a new builder each time one is added::
+
+    c['schedulers'].append(schedulers.SingleBranchScheduler(
+        name='myproject-epics',
+        change_filter=util.ChangeFilter(branch_re='epics/.*'),
+        builderNames=['myproject-epics'],
+        properties={
+            'virtual_builder_name': util.Interpolate("myproject-%(ss::branch)s")
+        }
+    ))
+
 .. _Buildbot_travis: https://github.com/buildbot/buildbot_travis

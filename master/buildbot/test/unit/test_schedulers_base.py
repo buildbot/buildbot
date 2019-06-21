@@ -22,6 +22,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.changes import changes
 from buildbot.process import properties
+from buildbot.process.properties import Interpolate
 from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
@@ -415,6 +416,30 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             builderids=[1],
             external_idstring=None,
             properties={
+                'scheduler': ('n', 'Scheduler'),
+            },
+            reason='downstream',
+            scheduler='n',
+            sourcestamps=[234])
+
+    @defer.inlineCallbacks
+    def test_addBuildsetForChanges_properties_with_virtual_builders(self):
+        sched = self.makeScheduler(name='n', builderNames=['c'], properties={
+            'virtual_builder_name': Interpolate("myproject-%(src::branch)s")
+        })
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
+            fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
+        ])
+        bsid, brids = yield sched.addBuildsetForChanges(reason='downstream',
+                                                        waited_for=False, changeids=[14])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            waited_for=False,
+            builderids=[1],
+            external_idstring=None,
+            properties={
+                'virtual_builder_name': ("myproject-dev1", "Scheduler"),
                 'scheduler': ('n', 'Scheduler'),
             },
             reason='downstream',
