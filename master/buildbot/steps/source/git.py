@@ -74,10 +74,15 @@ class Git(Source, GitStepMixin):
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
-                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, **kwargs):
+                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, supportsProgress=None, **kwargs):
 
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
+
+        self.supportsProgress = supportsProgress
+
+        if supportsProgress:
+            progress = True
 
         self.branch = branch
         self.method = method
