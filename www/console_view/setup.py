@@ -26,7 +26,7 @@ except ImportError:
 
 setup_www_plugin(
     name='buildbot-console-view',
-    description='Buildbot Console View plugin.',
+    description='Buildbot Console View plugin',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
