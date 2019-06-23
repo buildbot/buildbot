@@ -98,7 +98,9 @@ class IdentifierValidator(Validator):
     name = 'identifier'
     hasArgs = True
 
-    ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
+    # Not sure about this one, but I added a dot for consistency
+    # I'm also not yet sure why this is not using the expression defined in util/identifiers.py
+    ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff._-][a-zA-Z0-9\u00a0-\U0010ffff._-]*$', flags=re.UNICODE)
 
     def __init__(self, len):
         self.len = len
