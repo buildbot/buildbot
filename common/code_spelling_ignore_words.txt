@@ -30,6 +30,7 @@ admin
 admin's
 admins
 agenced
+aiohttp
 allard
 allen
 allfiles
@@ -319,6 +320,7 @@ configfunc
 configs
 configurator
 configurators
+configjson
 conn
 connectedness
 connectionmade
@@ -513,6 +515,7 @@ fqdn
 freebsd
 freshcvs
 fri
+frontend
 fromchdict
 fromdir
 fs
@@ -1580,6 +1583,7 @@ webdriver
 webhook
 webhooks
 webserver
+websocket
 wehn
 werzeug
 wfb

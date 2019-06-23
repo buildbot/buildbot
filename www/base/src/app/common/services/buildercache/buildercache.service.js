@@ -13,17 +13,25 @@
 
 class buildersService {
     constructor($log, dataService) {
-        // we use an always on dataService instance
+        // we use an always one dataService instance
         const data = dataService.open();
         const cache = {};
+        /* make only one full list of builders. this is much faster than querying builders one by one*/
+        let builders = data.getBuilders().onNew = builder => {
+            let id = builder.builderid
+            if (cache.hasOwnProperty(id)) {
+                _.assign(cache[id], builder)
+            } else {
+                cache[id] = builder
+            }
+        }
         return {
             getBuilder(id) {
                 if (cache.hasOwnProperty(id)) {
-                    return cache[id];
+                    return cache[id]
                 } else {
-                    cache[id] = {};
-                    data.getBuilders(id).onNew = builder => _.assign(cache[id], builder);
-                    return cache[id];
+                    cache[id] = {}
+                    return cache[id]
                 }
             }
         };
@@ -32,4 +40,4 @@ class buildersService {
 
 
 angular.module('common')
-.factory('buildersService', ['$log', 'dataService', buildersService]);
+    .factory('buildersService', ['$log', 'dataService', buildersService]);

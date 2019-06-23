@@ -188,25 +188,18 @@ Testing with real data
 ~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to run only the frontend and proxy the requests to another BuildBot instance.
-This allows skipping the setup of a BuildBot installation of appropriate complexity and just using already existing one.
+This allows to make front-end work on realistic data without bothering to reproduce the setup locally.
 
-This is implemented as the ``www/base/frontend_proxy.js`` nodejs script.
+This is implemented as the ``master/buildbot/scripts/devproxy.py`` aiohttp server.
+
 To run it, setup and enable a virtualenv like described in :ref:`PythonDevQuickStart`.
 Then execute the script as follows:
 
 .. code-block:: bash
 
-    cd www/base
-    nodejs fontend_proxy.js --host <buildbot_host> --port <localhost_port>
+    buildbot dev-proxy
 
-You can then just point your browser to `localhost:<localhost_port>`, and you will access `http://<buildbot_host>` with your own version of the JavaScript UI.
+There are many options which are documented as usual with ``--help``.
 
-If your buildbot instance is served over HTTPS, use the ``--secure`` argument to access the host via ``https://`` and ``wss://``, respectively.
-The argument ``--ignoresslerrors`` may be helpful if the server uses a self-signed certificate.
-Note that the ``--host`` parameter can specify port and URL path, in case buildbot is served on a non-standard port or not from the root path ``/``.
-
-.. code-block:: none
-
-    nodejs fontend_proxy.js --host ssl-protected.ci.example.com --secure
-    nodejs fontend_proxy.js --host self-signed-ssl.ci.example.com/buildbot \
-        --secure --ignoresslerrors
+Note that ``dev-proxy`` does not work with most of authentication except basic password.
+You can steal a ``document.cookie`` string from your real Buildbot and then pass to ``dev-proxy`` using the ``--auth_cookie`` option

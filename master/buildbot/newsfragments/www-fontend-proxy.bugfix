@@ -1,2 +1,2 @@
-The support for proxying BuildBot frontend to another BuildBot instance during development has been fixed.
-This feature has been broken since v2.3.0.
+The support for proxying Buildbot frontend to another Buildbot instance during development has been fixed.
+This feature has been broken since v2.3.0, and is now completely re-implemented for best performance ease of use and maintainability.

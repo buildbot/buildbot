@@ -47,4 +47,3 @@ sandbox.*
 # www
 */node_modules/
 node_modules
-www/base/buildbot_www_proxy
