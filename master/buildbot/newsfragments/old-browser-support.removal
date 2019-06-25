@@ -1,0 +1,4 @@
+Support for older browsers that were not working since 2.3.0 has been removed due to technical limitations.
+Notably, Internet Explorer 11 is no longer supported.
+Currently supported browsers are Chrome 56, Firefox 52, Edge 13 and Safari 10, newer versions of these browsers and their compatible derivatives.
+This set of browsers covers 98% of users of buildbot.net.
