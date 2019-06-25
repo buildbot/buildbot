@@ -13,6 +13,7 @@
     "devDependencies": {
         "angular-mocks": "1.7.8",
         "buildbot-build-common": "link:../build_common",
+        "copy-webpack-plugin": "^5.0.3",
         "lodash": "^4.17.11",
         "pug-cli": "^1.0.0-alpha6",
         "rimraf": "^2.6.3",
@@ -31,6 +32,7 @@
         "font-awesome": "^4.7.0",
         "guanlecoja-ui": "link:../guanlecoja-ui",
         "moment": "^2.24.0",
+        "outdated-browser-rework": "^2.8.0",
         "popper.js": "^1.15.0"
     }
 }

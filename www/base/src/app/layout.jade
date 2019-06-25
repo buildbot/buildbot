@@ -9,11 +9,13 @@ html.no-js(ng-app="app", xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     link(href='styles.css', rel='stylesheet')
     link(id='bbicon', href='img/icon.png', rel='icon')
     link(href='img/icon.svg', title="Buildbot", rel='fluid-icon')
-
+    div(id='outdated')
     body(ng-cloak)
         block content
         block footer
-
+    script(src="browser-warning.js")
+    link(href='browser-warning.css', rel='stylesheet')
+    script(src="browser-warning-list.js")
     script(src="scripts.js?_" + (new Date()).getTime())
     | {% for app in config.plugins -%}
     script(src="{{app}}/scripts.js")
