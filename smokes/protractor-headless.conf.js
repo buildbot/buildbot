@@ -18,7 +18,13 @@ exports.config = {
     capabilities: {
         'browserName': 'chrome',
         'chromeOptions': {
-            'args': ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1024,768']
+            'args': [
+                '--headless',
+                '--disable-gpu',
+                '--no-sandbox',
+                '--window-size=1024,768',
+                '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/56.0.2924.87"',
+            ]
         }
     },
 
