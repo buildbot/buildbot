@@ -8,6 +8,7 @@
     "style": "dist/styles.css",
     "scripts": {
         "build": "rimraf dist && webpack --bail --progress --profile --env dev && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf dist && webpack --bail --progress --profile --env dev",
         "test": "karma start",
         "test-watch": "karma start --auto-watch --no-single-run"
     },

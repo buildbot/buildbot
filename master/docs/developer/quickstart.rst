@@ -136,3 +136,13 @@ To run unit tests, do the following:
 .. code-block:: none
 
     yarn run test
+
+To run unit tests within all frontend packages within Buildbot, do the following at the root of the project:
+
+.. code-block:: none
+
+    make frontend_tests
+
+.. note::
+
+   You need to have Chrome-based browser installed in order to run unit tests in the default configuration.
