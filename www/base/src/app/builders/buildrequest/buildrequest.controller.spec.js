@@ -49,6 +49,7 @@ describe('buildrequest controller', function() {
 
     it('should query for builds again if first query returns 0', function() {
         dataService.when('buildsets/1/properties', [{a: ['a','b']}]);
+        dataService.when('builders', [{builderid: 1}]);
         dataService.when('buildrequests/1', [{buildrequestid: 1, builderid: 1, buildsetid: 1}]);
         dataService.when('builders/1', [{builderid: 1}]);
         dataService.when('buildsets/1', [{buildsetid: 1}]);

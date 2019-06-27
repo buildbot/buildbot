@@ -19,7 +19,9 @@ describe('buildsticker controller', function() {
 
     it('directive should generate correct html', function() {
         const build = {buildid: 3, builderid: 2, number: 1};
+        dataService.when('builds', [build]);
         dataService.when('builds/3', [build]);
+        dataService.when('builders', [{builderid: 2}]);
         dataService.when('builders/2', [{builderid: 2}]);
         const data = dataService.open();
         data.getBuilds(build.buildid).onNew = build => scope.build = build;

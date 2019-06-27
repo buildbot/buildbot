@@ -35,9 +35,9 @@ describe('buildrequest summary controller', function() {
 
     it('should get the buildrequest', function() {
         const buildrequests = [{buildrequestid: 1, builderid: 2, buildsetid: 3}];
+        dataService.expect('builders', buildrequests);
         dataService.expect('buildrequests/1', buildrequests);
         dataService.expect('buildsets/3', buildrequests);
-        dataService.expect('builders/2', buildrequests);
         expect(dataService.get).not.toHaveBeenCalled();
         const controller = createController();
         $timeout.flush();
@@ -47,9 +47,9 @@ describe('buildrequest summary controller', function() {
 
     it('should query for builds again if first query returns 0', function() {
         const buildrequests = [{buildrequestid: 1, builderid: 2, buildsetid: 3}];
+        dataService.expect('builders', buildrequests);
         dataService.expect('buildrequests/1', buildrequests);
         dataService.expect('buildsets/3', buildrequests);
-        dataService.expect('builders/2', buildrequests);
         let builds = [];
 
         const controller = createController();
