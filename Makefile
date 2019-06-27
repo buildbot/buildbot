@@ -13,6 +13,8 @@ WWW_EX_PKGS := www/nestedexample www/codeparameter
 WWW_DEP_PKGS := www/guanlecoja-ui www/data_module
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
+
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
 
@@ -47,7 +49,7 @@ frontend_deps: $(VENV_NAME)
 		do (cd $$i; yarn install --pure-lockfile; yarn run build); done
 
 frontend_tests: frontend_deps
-	for i in $(WWW_DEP_PKGS) $(WWW_PKGS); \
+	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; yarn run build-dev || exit 1; yarn run test || exit 1) || exit 1; done
 
 # rebuild front-end from source
