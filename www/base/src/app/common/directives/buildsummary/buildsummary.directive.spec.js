@@ -14,11 +14,9 @@ describe('buildsummary controller', function() {
 
         $timeout = $injector.get('$timeout');
         $stateParams = $injector.get('$stateParams');
-        $controller = $injector.get('$controller');
         const $q = $injector.get('$q');
         $compile = $injector.get('$compile');
-        const $location = $injector.get('$location');
-        baseurl = $location.absUrl().split("#")[0];
+        baseurl = $injector.get('config')['buildbotURL'];
 
         dataService = $injector.get('dataService');
         dataService.when('builds/1', [{buildid: 1, builderid: 1}]);
