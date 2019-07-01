@@ -199,7 +199,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # - category, project and codebase
     category = ui.config('hgbuildbot', 'category', None)
     project = ui.config('hgbuildbot', 'project', '')
-    codebase = ui.config('hgbuildbot', 'codebase', '')
+    codebase = ui.config('hgbuildbot', 'codebase', None)
 
     # Process changesets
     if branch is None and branchtype == 'dirname':
