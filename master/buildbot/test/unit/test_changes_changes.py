@@ -29,7 +29,7 @@ from buildbot.test.util.misc import TestReactorMixin
 class Change(unittest.TestCase, TestReactorMixin):
 
     change23_rows = [
-        fakedb.Change(changeid=23, author="dustin", comments="fix whitespace",
+        fakedb.Change(changeid=23, author="dustin", committer="dustin", comments="fix whitespace",
                       branch="warnerdb", revision="deadbeef",
                       when_timestamp=266738404, revlink='http://warner/0e92a098b',
                       category='devel', repository='git://warner', codebase='mainapp',
@@ -52,6 +52,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             repository='git://warner',
             codebase='mainapp',
             who='dustin',
+            committer='dustin',
             when=266738404,
             comments='fix whitespace',
             project='Buildbot',
@@ -67,6 +68,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             repository='git://warner',
             codebase='mainapp',
             who='dustin',
+            committer='dustin',
             when=266738405,
             comments='fix whitespace again',
             project='Buildbot',
@@ -82,6 +84,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             repository='git://warner',
             codebase='mainapp',
             who='dustin',
+            committer='dustin',
             when=266738406,
             comments='fix whitespace again',
             project='Buildbot',
@@ -105,6 +108,7 @@ class Change(unittest.TestCase, TestReactorMixin):
         ok = True
         ok = ok and got.number == exp.number
         ok = ok and got.who == exp.who
+        ok = ok and got.committer == exp.committer
         ok = ok and sorted(got.files) == sorted(exp.files)
         ok = ok and got.comments == exp.comments
         ok = ok and got.revision == exp.revision
@@ -136,6 +140,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             For: Buildbot
             At: .*
             Changed By: dustin
+            Committed By: dustin
             Comments: fix whitespaceProperties:.
               notest: no
 
@@ -160,7 +165,8 @@ class Change(unittest.TestCase, TestReactorMixin):
             'revision': 'deadbeef',
             'revlink': 'http://warner/0e92a098b',
             'when': 266738404,
-            'who': 'dustin'})
+            'who': 'dustin',
+            'committer': 'dustin'})
 
     def test_getShortAuthor(self):
         self.assertEqual(self.change23.getShortAuthor(), 'dustin')
