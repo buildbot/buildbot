@@ -71,7 +71,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
             change['author'],
             _first_or_nothing(payload.get(b'author', payload.get(b'who'))))
 
-        for field in ('revision', 'comments', 'branch', 'category',
+        for field in ('revision', 'committer', 'comments', 'branch', 'category',
                       'revlink'):
             self.assertEqual(
                 change[field], _first_or_nothing(payload.get(field.encode())))
@@ -93,6 +93,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
             b'repository': [b'myproject'],
             b'project': [b'myproject'],
             b'author': [b'me <me@myself.org>'],
+            b'committer': [b'me <me@myself.org>'],
             b'files': [b'["src/main.c", "src/foo.c"]'],
             b'properties': [b'{"color": "blue", "important": true, "size": 2}'],
         })
