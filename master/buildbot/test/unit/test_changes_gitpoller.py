@@ -129,7 +129,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         committerStr = 'Sammy Jankis <email@example.com>'
         committerBytes = unicode2bytes(committerStr)
         return self._perform_git_output_test(self.poller._get_commit_committer,
-                                             ['log', '--no-walk', '--format=%aN <%aE>',
+                                             ['log', '--no-walk', '--format=%cN <%cE>',
                                                  self.dummyRevStr, '--'],
                                              committerBytes, committerStr)
 

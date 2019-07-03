@@ -287,7 +287,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
     @defer.inlineCallbacks
     def _get_commit_committer(self, rev):
-        args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
+        args = ['--no-walk', r'--format=%cN <%cE>', rev, '--']
         res = yield self._dovccmd('log', args, path=self.workdir)
         if not res:
             raise EnvironmentError('could not get commit committer for rev')
