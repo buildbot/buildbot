@@ -117,18 +117,31 @@ gitJsonPayloadFiles = """
 ]
 """
 
-gitJsonUserPage = """
-{
-  "login": "defunkt",
-  "email": "defunkt@defunkt.null"
-}
+gitJsonPayloadAuthors = """
+[
+  {
+    "commit": {
+      "author": {
+        "name": "defunkt",
+        "email": "defunkt@defunkt.null"
+      }
+    }
+  }
+]
 """
 
-gitJsonUserPage_missingEmail = """
-{
-  "login": "defunkt",
-  "email": null
-}"""
+gitJsonPayloadCommitters = """
+[
+  {
+    "commit": {
+      "committer": {
+        "name": "defunktc",
+        "email": "defunktc@defunkt.null"
+      }
+    }
+  }
+]
+"""
 
 
 _CT_ENCODED = b'application/x-www-form-urlencoded'
@@ -226,12 +239,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
-            ep='/repos/defunkt/defunkt/pulls/4242/files',
-            content_json=json.loads(gitJsonPayloadFiles))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadAuthors))
         self._http.expect(
             method='get',
-            ep='/users/defunkt',
-            content_json=json.loads(gitJsonUserPage))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadCommitters))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads(gitJsonPayloadFiles))
         yield self.startChangeSource()
         yield self.changesource.poll()
 
@@ -246,6 +263,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
+        self.assertEqual(change['committer'], 'defunktc <defunktc@defunkt.null>')
 
         self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
@@ -285,12 +303,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
-            ep='/repos/defunkt/defunkt/pulls/4242/files',
-            content_json=json.loads(gitJsonPayloadFiles))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadAuthors))
         self._http.expect(
             method='get',
-            ep='/users/defunkt',
-            content_json=json.loads(gitJsonUserPage))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadCommitters))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads(gitJsonPayloadFiles))
         yield self.startChangeSource()
         yield self.changesource.poll()
 
@@ -305,6 +327,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
+        self.assertEqual(change['committer'], 'defunktc <defunktc@defunkt.null>')
         self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"
@@ -328,6 +351,28 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
+    def test_failCommitters(self):
+        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls',
+            content_json=json.loads(gitJsonPayloadPullRequests))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242',
+            content_json=json.loads(gitJsonPayloadSinglePullrequest))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads("[{}]"))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads("[{}]"))
+        yield self.startChangeSource()
+        yield self.assertFailure(self.changesource.poll(), KeyError)
+
+    @defer.inlineCallbacks
     def test_failFiles(self):
         yield self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
@@ -338,6 +383,10 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             method='get',
             ep='/repos/defunkt/defunkt/pulls/4242',
             content_json=json.loads(gitJsonPayloadSinglePullrequest))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads("[{}]"))
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls/4242/files',
@@ -367,12 +416,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
-            ep='/repos/defunkt/defunkt/pulls/4242/files',
-            content_json=json.loads(gitJsonPayloadFiles))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadAuthors))
         self._http.expect(
             method='get',
-            ep='/users/defunkt',
-            content_json=json.loads(gitJsonUserPage))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadCommitters))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads(gitJsonPayloadFiles))
         yield self.startChangeSource()
         yield self.changesource.poll()
 
@@ -387,6 +440,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/buildbot/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
+        self.assertEqual(change['committer'], 'defunktc <defunktc@defunkt.null>')
         self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"
@@ -407,18 +461,22 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
-            ep='/repos/defunkt/defunkt/pulls/4242/files',
-            content_json=json.loads(gitJsonPayloadFiles))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadAuthors))
         self._http.expect(
             method='get',
-            ep='/users/defunkt',
-            content_json=json.loads(gitJsonUserPage_missingEmail))
+            ep='/repos/defunkt/defunkt/pulls/4242/commits',
+            content_json=json.loads(gitJsonPayloadCommitters))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads(gitJsonPayloadFiles))
         yield self.startChangeSource()
         yield self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
-        self.assertEqual(change['author'], 'defunkt')
+        self.assertEqual(change['author'], 'defunkt <defunkt@defunkt.null>')
         self.assertEqual(change['revision'],
                          '4c9a7f03e04e551a5e012064b581577f949dd3a4')
         self.assertEqual(change['revlink'],
@@ -427,6 +485,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
+        self.assertEqual(change['committer'], 'defunktc <defunktc@defunkt.null>')
         self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"

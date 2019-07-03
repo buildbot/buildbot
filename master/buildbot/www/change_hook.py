@@ -174,7 +174,7 @@ class ChangeHookResource(resource.Resource):
             if isinstance(when_timestamp, datetime):
                 chdict['when_timestamp'] = datetime2epoch(when_timestamp)
             # unicodify stuff
-            for k in ('comments', 'author', 'revision', 'branch', 'category',
+            for k in ('comments', 'author', 'committer', 'revision', 'branch', 'category',
                     'revlink', 'repository', 'codebase', 'project'):
                 if k in chdict:
                     chdict[k] = bytes2unicode(chdict[k])

@@ -65,6 +65,10 @@ gitJsonPayload = b"""
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
       },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
+      },
       "message": "okay i give in",
       "timestamp": "2008-02-15T14:57:17-08:00",
       "added": ["filepath.rb"]
@@ -75,6 +79,10 @@ gitJsonPayload = b"""
       "author": {
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
+      },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
       },
       "message": "update pricing a tad",
       "timestamp": "2008-02-15T14:36:34-08:00",
@@ -88,6 +96,10 @@ gitJsonPayload = b"""
     "author": {
       "email": "fred@flinstone.org",
       "name": "Fred Flinstone"
+    },
+    "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
     },
     "message": "update pricing a tad",
     "timestamp": "2008-02-15T14:36:34-08:00",
@@ -125,6 +137,10 @@ gitJsonPayloadCiSkipTemplate = """
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
       },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
+      },
       "message": "okay i give in",
       "timestamp": "2008-02-15T14:57:17-08:00",
       "added": ["filepath.rb"]
@@ -135,6 +151,10 @@ gitJsonPayloadCiSkipTemplate = """
       "author": {
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
+      },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
       },
       "message": "update pricing a tad %(skip)s",
       "timestamp": "2008-02-15T14:36:34-08:00",
@@ -148,6 +168,10 @@ gitJsonPayloadCiSkipTemplate = """
     "author": {
       "email": "fred@flinstone.org",
       "name": "Fred Flinstone"
+    },
+    "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
     },
     "message": "update pricing a tad %(skip)s",
     "timestamp": "2008-02-15T14:36:34-08:00",
@@ -185,6 +209,10 @@ gitJsonPayloadTag = b"""
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
       },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
+      },
       "message": "okay i give in",
       "timestamp": "2008-02-15T14:57:17-08:00",
       "added": ["filepath.rb"]
@@ -195,6 +223,10 @@ gitJsonPayloadTag = b"""
       "author": {
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
+      },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
       },
       "message": "update pricing a tad",
       "timestamp": "2008-02-15T14:36:34-08:00",
@@ -208,6 +240,10 @@ gitJsonPayloadTag = b"""
     "author": {
       "email": "fred@flinstone.org",
       "name": "Fred Flinstone"
+    },
+    "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
     },
     "message": "update pricing a tad",
     "timestamp": "2008-02-15T14:36:34-08:00",
@@ -244,6 +280,10 @@ gitJsonPayloadNonBranch = b"""
       "author": {
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
+      },
+      "committer": {
+        "email": "freddy@flinstone.org",
+        "name": "Freddy Flinstone"
       },
       "message": "okay i give in",
       "timestamp": "2008-02-15T14:57:17-08:00",
@@ -632,6 +672,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
         change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["branch"], "v1.0.0")
         self.assertEqual(change["category"], "tag")
 
@@ -663,6 +705,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                          1203116237)
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["revision"],
                          '41a212ee83ca127e3c8cf465891ab7216a705f59')
         self.assertEqual(change["comments"],
@@ -680,6 +724,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                          1203114994)
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["src"], "git")
         self.assertEqual(change["revision"],
                          'de8251ff97ee194a289832576287d6f8ad74e3d0')
@@ -722,6 +768,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                          1203116237)
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["revision"],
                          '41a212ee83ca127e3c8cf465891ab7216a705f59')
         self.assertEqual(change["comments"],
@@ -741,6 +789,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                          1203114994)
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["src"], "git")
         self.assertEqual(change["revision"],
                          'de8251ff97ee194a289832576287d6f8ad74e3d0')
@@ -1107,6 +1157,8 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
                          1203116237)
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["revision"],
                          '41a212ee83ca127e3c8cf465891ab7216a705f59')
         self.assertEqual(change["comments"],
@@ -1124,6 +1176,8 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
                          1203114994)
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"],
+                         "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["src"], "git")
         self.assertEqual(change["revision"],
                          'de8251ff97ee194a289832576287d6f8ad74e3d0')
