@@ -288,6 +288,8 @@ class GitHubEventHandler(PullRequestMixin):
             change = {
                 'author': '{} <{}>'.format(commit['author']['name'],
                                            commit['author']['email']),
+                'committer': '{} <{}>'.format(commit['committer']['name'],
+                                           commit['committer']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
