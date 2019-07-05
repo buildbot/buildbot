@@ -22,7 +22,8 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   # add js tests in separate job. Start it early because it is quite long
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js HYPER_SIZE=m1
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m1
   - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
@@ -125,13 +126,17 @@ before_script:
 # Tests running commands
 script:
   # make frontend_install_tests takes 17 min, so we only do it post submit
-  - title: frontend tests
-    condition: TESTS == "js" and TRAVIS_PULL_REQUEST
+  - title: frontend build tests
+    condition: TESTS == "js_build" and TRAVIS_PULL_REQUEST
     cmd: make frontend
 
   - title: full frontend tests
-    condition: TESTS == "js" and not TRAVIS_PULL_REQUEST
+    condition: TESTS == "js_build" and not TRAVIS_PULL_REQUEST
     cmd: make frontend_install_tests
+
+  - title: frontend unit tests
+    condition: TESTS == "js_unit" and not TRAVIS_PULL_REQUEST
+    cmd: make frontend_tests
 
   - title: master and worker tests
     condition: TESTS == "trial"
