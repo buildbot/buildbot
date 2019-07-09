@@ -34,6 +34,7 @@ from twisted.python.procutils import which
 from twisted.spread import pb
 
 from buildbot.status import builder
+from buildbot.util import bytes2unicode
 from buildbot.util import now
 from buildbot.util import unicode2bytes
 from buildbot.util.eventual import fireEventually
@@ -90,7 +91,7 @@ class SourceStampExtractor:
     def readPatch(self, diff, patchlevel):
         if not diff:
             diff = None
-        self.patch = (patchlevel, diff)
+        self.patch = (patchlevel, bytes2unicode(diff))
 
     def done(self, res):
         if not self.repository:
@@ -332,9 +333,9 @@ class GitExtractor(SourceStampExtractor):
 
     # strip remote prefix from self.branch
     def fixBranch(self, remotes):
-        for l in remotes.split("\n"):
+        for l in bytes2unicode(remotes).split("\n"):
             r = l.strip()
-            if r and self.branch.startswith(r):
+            if r and self.branch.startswith(r + "/"):
                 self.branch = self.branch[len(r) + 1:]
                 break
 
@@ -370,7 +371,7 @@ class GitExtractor(SourceStampExtractor):
         return d
 
     def override_baserev(self, res):
-        self.baserev = res.strip()
+        self.baserev = bytes2unicode(res).strip()
 
     def parseStatus(self, res):
         # The current branch is marked by '*' at the start of the
@@ -509,14 +510,14 @@ class RemoteTryPP(protocol.ProcessProtocol):
         self.d = defer.Deferred()
 
     def connectionMade(self):
-        self.transport.write(self.job)
+        self.transport.write(unicode2bytes(self.job))
         self.transport.closeStdin()
 
     def outReceived(self, data):
-        sys.stdout.write(data)
+        sys.stdout.write(bytes2unicode(data))
 
     def errReceived(self, data):
-        sys.stderr.write(data)
+        sys.stderr.write(bytes2unicode(data))
 
     def processEnded(self, status_object):
         sig = status_object.value.signal
