@@ -278,7 +278,7 @@ class MTR(Test):
         dbpool is specified. The test_type string, if specified, will also
         appear on the waterfall page."""
 
-    renderables = ['mtr_subdir']
+    renderables = ['mtr_subdir', 'parallel']
 
     def __init__(self, dbpool=None, test_type=None, test_info="",
                  description=None, descriptionDone=None,
