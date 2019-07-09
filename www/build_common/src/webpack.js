@@ -130,6 +130,24 @@ module.exports.createTemplateWebpackConfig = function(options) {
         rules: [{
             test: /\.js$/,
             loader: 'babel-loader',
+            options: {
+                'plugins': ['@babel/plugin-syntax-dynamic-import'],
+                'presets': [
+                    [
+                        '@babel/preset-env',
+                        {
+                            'useBuiltIns': 'entry',
+                            'targets': {
+                                'chrome': '56',
+                                'firefox': '52',
+                                'edge': '13',
+                                'safari': '10'
+                            },
+                            'modules': false
+                        }
+                    ]
+                ]
+            },
             exclude: /node_modules/
         }, {
             test: /\.jade$/,
