@@ -371,7 +371,7 @@ class GitExtractor(SourceStampExtractor):
         return d
 
     def override_baserev(self, res):
-        self.baserev = res.strip()
+        self.baserev = bytes2unicode(res).strip()
 
     def parseStatus(self, res):
         # The current branch is marked by '*' at the start of the

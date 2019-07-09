@@ -144,6 +144,11 @@ class createJobfile(unittest.TestCase):
         sse.fixBranch(b'origin\n')
         self.assertEqual(sse.branch, "master")
 
+    def test_GitExtractor_override_baserev(self):
+        sse = tryclient.GitExtractor(None, None, None)
+        sse.override_baserev(b"23ae367063327b79234e081f396ecbc\n")
+        self.assertEqual(sse.baserev, "23ae367063327b79234e081f396ecbc")
+
     class RemoteTryPP_TestStream(object):
         def __init__(self):
             self.writes = []
