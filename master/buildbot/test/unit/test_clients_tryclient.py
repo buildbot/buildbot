@@ -136,6 +136,14 @@ class createJobfile(unittest.TestCase):
             }))
         self.assertEqual(job, jobstr)
 
+    def test_SourceStampExtractor_readPatch(self):
+        sse = tryclient.GitExtractor(None, None, None)
+        for patchlevel, diff in enumerate((None, "", b"")):
+            sse.readPatch(diff, patchlevel)
+            self.assertEqual(sse.patch, (patchlevel, None))
+        sse.readPatch(b"diff schmiff blah blah blah", 23)
+        self.assertEqual(sse.patch, (23, "diff schmiff blah blah blah"))
+
     def test_GitExtractor_fixBranch(self):
         sse = tryclient.GitExtractor(None, "origin/master", None)
         self.assertEqual(sse.branch, "origin/master")

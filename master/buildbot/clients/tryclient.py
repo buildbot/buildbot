@@ -91,7 +91,7 @@ class SourceStampExtractor:
     def readPatch(self, diff, patchlevel):
         if not diff:
             diff = None
-        self.patch = (patchlevel, diff)
+        self.patch = (patchlevel, bytes2unicode(diff))
 
     def done(self, res):
         if not self.repository:
