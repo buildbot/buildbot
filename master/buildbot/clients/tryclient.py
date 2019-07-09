@@ -335,7 +335,7 @@ class GitExtractor(SourceStampExtractor):
     def fixBranch(self, remotes):
         for l in bytes2unicode(remotes).split("\n"):
             r = l.strip()
-            if r and self.branch.startswith(r):
+            if r and self.branch.startswith(r + "/"):
                 self.branch = self.branch[len(r) + 1:]
                 break
 

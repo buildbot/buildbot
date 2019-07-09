@@ -137,5 +137,7 @@ class createJobfile(unittest.TestCase):
     def test_GitExtractor_fixBranch(self):
         sse = tryclient.GitExtractor(None, "origin/master", None)
         self.assertEqual(sse.branch, "origin/master")
+        sse.fixBranch(b'origi\n')
+        self.assertEqual(sse.branch, "origin/master")
         sse.fixBranch(b'origin\n')
         self.assertEqual(sse.branch, "master")
