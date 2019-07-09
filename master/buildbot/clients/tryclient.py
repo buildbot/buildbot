@@ -34,6 +34,7 @@ from twisted.python.procutils import which
 from twisted.spread import pb
 
 from buildbot.status import builder
+from buildbot.util import bytes2unicode
 from buildbot.util import now
 from buildbot.util import unicode2bytes
 from buildbot.util.eventual import fireEventually
@@ -332,7 +333,7 @@ class GitExtractor(SourceStampExtractor):
 
     # strip remote prefix from self.branch
     def fixBranch(self, remotes):
-        for l in remotes.split("\n"):
+        for l in bytes2unicode(remotes).split("\n"):
             r = l.strip()
             if r and self.branch.startswith(r):
                 self.branch = self.branch[len(r) + 1:]
