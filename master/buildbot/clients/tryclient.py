@@ -510,7 +510,7 @@ class RemoteTryPP(protocol.ProcessProtocol):
         self.d = defer.Deferred()
 
     def connectionMade(self):
-        self.transport.write(self.job)
+        self.transport.write(unicode2bytes(self.job))
         self.transport.closeStdin()
 
     def outReceived(self, data):

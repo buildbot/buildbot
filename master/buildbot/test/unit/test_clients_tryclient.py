@@ -147,12 +147,24 @@ class createJobfile(unittest.TestCase):
     class RemoteTryPP_TestStream(object):
         def __init__(self):
             self.writes = []
+            self.is_open = True
 
         def write(self, data):
+            assert self.is_open
             self.writes.append(data)
+
+        def closeStdin(self):
+            assert self.is_open
+            self.is_open = False
 
     def test_RemoteTryPP_encoding(self):
         rmt = tryclient.RemoteTryPP("job")
+        self.assertTrue(isinstance(rmt.job, unicode))
+        rmt.transport = self.RemoteTryPP_TestStream()
+        rmt.connectionMade()
+        self.assertFalse(rmt.transport.is_open)
+        self.assertEqual(len(rmt.transport.writes), 1)
+        self.assertFalse(isinstance(rmt.transport.writes[0], unicode))
         for streamname in "out", "err":
             sys_streamattr = "std" + streamname
             rmt_methodattr = streamname + "Received"
