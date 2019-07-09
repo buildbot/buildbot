@@ -514,10 +514,10 @@ class RemoteTryPP(protocol.ProcessProtocol):
         self.transport.closeStdin()
 
     def outReceived(self, data):
-        sys.stdout.write(data)
+        sys.stdout.write(bytes2unicode(data))
 
     def errReceived(self, data):
-        sys.stderr.write(data)
+        sys.stderr.write(bytes2unicode(data))
 
     def processEnded(self, status_object):
         sig = status_object.value.signal

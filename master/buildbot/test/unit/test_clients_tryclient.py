@@ -15,7 +15,9 @@
 
 
 import json
+import sys
 
+from twisted.python.compat import unicode
 from twisted.trial import unittest
 
 from buildbot.clients import tryclient
@@ -141,3 +143,25 @@ class createJobfile(unittest.TestCase):
         self.assertEqual(sse.branch, "origin/master")
         sse.fixBranch(b'origin\n')
         self.assertEqual(sse.branch, "master")
+
+    class RemoteTryPP_TestStream(object):
+        def __init__(self):
+            self.writes = []
+
+        def write(self, data):
+            self.writes.append(data)
+
+    def test_RemoteTryPP_encoding(self):
+        rmt = tryclient.RemoteTryPP("job")
+        for streamname in "out", "err":
+            sys_streamattr = "std" + streamname
+            rmt_methodattr = streamname + "Received"
+            teststream = self.RemoteTryPP_TestStream()
+            saved_stream = getattr(sys, sys_streamattr)
+            try:
+                setattr(sys, sys_streamattr, teststream)
+                getattr(rmt, rmt_methodattr)(b"data")
+            finally:
+                setattr(sys, sys_streamattr, saved_stream)
+            self.assertEqual(len(teststream.writes), 1)
+            self.assertTrue(isinstance(teststream.writes[0], unicode))
