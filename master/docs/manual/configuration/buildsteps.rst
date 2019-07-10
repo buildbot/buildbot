@@ -129,7 +129,7 @@ Arguments common to all :class:`BuildStep` subclasses:
     To do this, set the step's ``doStepIf`` to a boolean value, or to a function that returns a boolean value or Deferred.
     If the value or function result is false, then the step will return ``SKIPPED`` without doing anything.
     Otherwise, the step will be executed normally.
-    If you set ``doStepIf`` to a function, that function should accept one parameter, which will be the :class:`Step` object itself.
+    If you set ``doStepIf`` to a function, that function should accept one parameter, which will be the :class:`BuildStep` object itself.
 
 .. index:: Buildstep Parameter; hideStepIf
 
