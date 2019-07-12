@@ -304,7 +304,11 @@ class GerritStatusPush(service.BuildbotService):
     def getBuildDetails(self, build):
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(self.master, buildset, [build], wantProperties=True)
+        yield utils.getDetailsForBuilds(self.master,
+                                        buildset,
+                                        [build],
+                                        wantProperties=True,
+                                        wantSteps=self.wantSteps)
 
     def isBuildReported(self, build):
         return self.builders is None or build['builder']['name'] in self.builders
