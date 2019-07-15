@@ -25,6 +25,10 @@ from buildbot.db import base
 from buildbot.util import epoch2datetime
 
 
+class BuildDict(dict):
+    pass
+
+
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
@@ -96,6 +100,44 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             offset += 10
 
         return rv
+
+    def getBuildsForChange(self, changeid):
+        assert changeid > 0
+
+        def thd(conn):
+            # Get builds for the change
+            changes_tbl = self.db.model.changes
+            bsets_tbl = self.db.model.buildsets
+            bsss_tbl = self.db.model.buildset_sourcestamps
+            reqs_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            from_clause = changes_tbl.join(bsss_tbl,
+                                           changes_tbl.c.sourcestampid == bsss_tbl.c.sourcestampid)
+            from_clause = from_clause.join(bsets_tbl,
+                                           bsss_tbl.c.buildsetid == bsets_tbl.c.id)
+            from_clause = from_clause.join(reqs_tbl,
+                                           bsets_tbl.c.id == reqs_tbl.c.buildsetid)
+            from_clause = from_clause.join(builds_tbl,
+                                           reqs_tbl.c.id == builds_tbl.c.buildrequestid)
+
+            q = sa.select([builds_tbl]).select_from(
+                from_clause).where(changes_tbl.c.changeid == changeid)
+            res = conn.execute(q)
+            return [self._rowToBuildsdict_thd(conn, row)
+                    for row in res.fetchall()]
+
+        return self.db.pool.do(thd)
+
+    def _rowToBuildsdict_thd(self, conn, row):
+        buildid = row.id
+        builddict = BuildDict(buildid=buildid, number=row.number, builderid=row.builderid,
+                              buildrequestid=row.buildrequestid, workerid=row.workerid,
+                              masterid=row.masterid, started_at=row.started_at,
+                              complete_at=row.complete_at, state_string=row.state_string,
+                              results=row.results)
+
+        return builddict
 
     # returns a Deferred that returns a value
     def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
