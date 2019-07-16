@@ -30,6 +30,11 @@ TIME1 = 1304262222
 TIME2 = 1304262223
 TIME3 = 1304262224
 TIME4 = 1304262235
+CREATED_AT = 927845299
+
+
+def buildKey(build):
+    return (build['buildid'], build['state_string'])
 
 
 class Tests(interfaces.InterfaceTests):
@@ -184,6 +189,51 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[50], self.threeBdicts[51]])
+
+    def test_signature_getBuildsForChange(self):
+        @self.assertArgSpecMatches(self.db.builds.getBuildsForChange)
+        def getBuildsForChange(self, changeid):
+            pass
+
+    @defer.inlineCallbacks
+    def do_test_getBuildsForChange(self, rows, changeid, expected):
+        yield self.insertTestData(rows)
+
+        builds = yield self.db.builds.getBuildsForChange(changeid)
+
+        self.assertEqual(sorted(builds, key=buildKey),
+                         sorted(expected, key=buildKey))
+
+    def test_getBuildsForChange_OneCodebase(self):
+        rows = [fakedb.Master(id=88, name="bar"),
+                fakedb.Worker(id=13, name='one'),
+                fakedb.Builder(id=77, name='A'),
+                fakedb.SourceStamp(id=234, created_at=CREATED_AT,
+                                   revision="aaa"),
+                fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
+                fakedb.Buildset(id=30, reason='foo',
+                                submitted_at=1300305712, results=1),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+                fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                    priority=13, submitted_at=1300305712, results=1,
+                                    complete=0, complete_at=None),
+                fakedb.Build(id=50, buildrequestid=19, number=5, masterid=88,
+                             builderid=77, state_string="test", workerid=13,
+                             started_at=1304262222, results=1), ]
+
+        expected = [{
+            'buildid': 50,
+            'number': 5,
+            'builderid': 77,
+            'buildrequestid': 19,
+            'workerid': 13,
+            'masterid': 88,
+            'started_at': 1304262222,
+            'complete_at': None,
+            'state_string': 'test',
+            'results': 1}]
+
+        return self.do_test_getBuildsForChange(rows, 14, expected)
 
     @defer.inlineCallbacks
     def test_getBuilds_complete(self):
@@ -443,7 +493,8 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         yield self.setUpConnectorComponent(
             table_names=['builds', 'builders', 'masters', 'buildrequests',
-                         'buildsets', 'workers', 'build_properties'])
+                         'buildsets', 'workers', 'build_properties', 'changes',
+                         'sourcestamps', 'buildset_sourcestamps', 'patches'])
 
         self.db.builds = builds.BuildsConnectorComponent(self.db)
 

@@ -1956,6 +1956,9 @@ class FakeBuildsComponent(FakeDBComponent):
         self.builds[bid]['properties'][name] = (value, source)
         return defer.succeed(None)
 
+    def getBuildsForChange(self, changeid):
+        raise NotImplementedError(
+            "Please patch in tests to return appropriate results")
 
 class FakeStepsComponent(FakeDBComponent):
 
