@@ -33,10 +33,6 @@ TIME4 = 1304262235
 CREATED_AT = 927845299
 
 
-def buildKey(build):
-    return (build['buildid'], build['state_string'])
-
-
 class Tests(interfaces.InterfaceTests):
 
     # common sample data
@@ -201,8 +197,7 @@ class Tests(interfaces.InterfaceTests):
 
         builds = yield self.db.builds.getBuildsForChange(changeid)
 
-        self.assertEqual(sorted(builds, key=buildKey),
-                         sorted(expected, key=buildKey))
+        self.assertEqual(sorted(builds), sorted(expected))
 
     def test_getBuildsForChange_OneCodebase(self):
         rows = [fakedb.Master(id=88, name="bar"),
@@ -222,13 +217,13 @@ class Tests(interfaces.InterfaceTests):
                              started_at=1304262222, results=1), ]
 
         expected = [{
-            'buildid': 50,
+            'id': 50,
             'number': 5,
             'builderid': 77,
             'buildrequestid': 19,
             'workerid': 13,
             'masterid': 88,
-            'started_at': 1304262222,
+            'started_at': epoch2datetime(1304262222),
             'complete_at': None,
             'state_string': 'test',
             'results': 1}]

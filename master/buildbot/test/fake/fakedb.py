@@ -1978,12 +1978,12 @@ class FakeBuildsComponent(FakeDBComponent):
         for build in builds:
             for result in results:
                 if result['buildrequestid'] == build['buildrequestid']:
-                    result['buildid'] = build['id']
+                    result['id'] = build['id']
                     result['number'] = build['number']
                     result['builderid'] = build['builderid']
                     result['workerid'] = build['workerid']
                     result['masterid'] = build['masterid']
-                    result['started_at'] = 1304262222
+                    result['started_at'] = epoch2datetime(1304262222)
                     result['complete_at'] = build['complete_at']
                     result['state_string'] = build['state_string']
                     result['results'] = build['results']
