@@ -915,6 +915,13 @@ changes
 
         Get the "blame" list of changes for a build.
 
+    .. py:method:: getBuildsForChange(changeid)
+
+        :param changeid: ID of the change
+        :returns: list of buildDict via Deferred
+
+        Get builds related to a change
+
     .. py:method:: getChangeFromSSid(sourcestampid)
 
         :param sourcestampid: ID of the sourcestampid

@@ -97,6 +97,34 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return rv
 
+    def getBuildsForChange(self, changeid):
+        assert changeid > 0
+
+        def thd(conn):
+            # Get builds for the change
+            changes_tbl = self.db.model.changes
+            bsets_tbl = self.db.model.buildsets
+            bsss_tbl = self.db.model.buildset_sourcestamps
+            reqs_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            from_clause = changes_tbl.join(bsss_tbl,
+                                           changes_tbl.c.sourcestampid == bsss_tbl.c.sourcestampid)
+            from_clause = from_clause.join(bsets_tbl,
+                                           bsss_tbl.c.buildsetid == bsets_tbl.c.id)
+            from_clause = from_clause.join(reqs_tbl,
+                                           bsets_tbl.c.id == reqs_tbl.c.buildsetid)
+            from_clause = from_clause.join(builds_tbl,
+                                           reqs_tbl.c.id == builds_tbl.c.buildrequestid)
+
+            q = sa.select([builds_tbl]).select_from(
+                from_clause).where(changes_tbl.c.changeid == changeid)
+            res = conn.execute(q)
+            return [self._builddictFromRow(row)
+                    for row in res.fetchall()]
+
+        return self.db.pool.do(thd)
+
     # returns a Deferred that returns a value
     def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         def thd(conn):

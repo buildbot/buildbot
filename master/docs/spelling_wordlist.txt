@@ -86,6 +86,7 @@ buildbot
 Buildbot
 buildCacheSize
 builddir
+buildDict
 builderid
 builderids
 buildername
