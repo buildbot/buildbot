@@ -306,6 +306,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             maxsize=None,
             blocksize=512,
             compress=compress,
+            regex=None
         ))
 
         yield self.run_command()
