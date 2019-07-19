@@ -188,7 +188,7 @@ class DirectoryUpload(_TransferBuildStep):
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
-                 compress=None, url=None, urlText=None,
+                 compress=None, url=None, urlText=None, regex=None,
                  **buildstep_kwargs
                  ):
         # Emulate that first two arguments are positional.
@@ -198,6 +198,7 @@ class DirectoryUpload(_TransferBuildStep):
         super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.workersrc = workersrc
+        self.regex= regex
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -240,7 +241,8 @@ class DirectoryUpload(_TransferBuildStep):
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
-            'compress': self.compress
+            'compress': self.compress,
+            'regex': self.regex
         }
 
         if self.workerVersionIsOlderThan('uploadDirectory', '3.0'):

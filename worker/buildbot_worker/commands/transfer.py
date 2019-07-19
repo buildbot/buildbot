@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import tarfile
 import tempfile
+import re
 
 from twisted.internet import defer
 from twisted.python import log
@@ -197,6 +198,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
         self.compress = args['compress']
+        self.regex = args['regex']
         self.stderr = None
         self.rc = 0
 
@@ -224,7 +226,17 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Not possible with older versions:
         # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
         archive = tarfile.open(mode=mode, fileobj=self.fp)
-        archive.add(self.path, '')
+        if self.regex:
+            regex = re.compile(self.regex)
+            os.chdir(self.path)
+            for root, dirs, files in os.walk('.'):
+                archive.add(root, recursive=False)
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    if regex.match(file_path):
+                        archive.add(file_path, recursive=False)
+        else:
+            archive.add(self.path, '')
         archive.close()
 
         # Transfer it
