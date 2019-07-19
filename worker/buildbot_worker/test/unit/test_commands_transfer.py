@@ -349,7 +349,8 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=512,
-            compress=None
+            compress=None,
+            regex=None
         ))
 
         yield self.assertFailure(self.run_command(), RuntimeError)
