@@ -35,21 +35,6 @@ class Builders {
         , true);
         const buildFetchLimit = $scope.settings.buildFetchLimit.value;
 
-        $scope.getAllTags = function() {
-            const all_tags = [];
-            for (let builder of Array.from($scope.builders)) {
-                if ($scope.hasActiveMaster(builder)) {
-                    for (let tag of Array.from(builder.tags)) {
-                        if (all_tags.indexOf(tag) < 0) {
-                            all_tags.push(tag);
-                        }
-                    }
-                }
-            }
-            all_tags.sort();
-            return all_tags;
-        };
-
         const updateTagsFilterFromLocation = function() {
             $scope.tags_filter = $location.search()["tags"];
             if ($scope.tags_filter == null) { $scope.tags_filter = []; }
