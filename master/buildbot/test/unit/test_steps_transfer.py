@@ -381,7 +381,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands(
             Expect('uploadDirectory', dict(
                 workersrc="srcdir", workdir='wkdir',
-                blocksize=16384, compress=None, maxsize=None,
+                blocksize=16384, compress=None, maxsize=None, regex=None,
                 writer=ExpectRemoteRef(remotetransfer.DirectoryWriter)))
             + Expect.behavior(behavior))
 
