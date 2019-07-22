@@ -652,11 +652,11 @@ var WaterfallController = (function() {
             this.renderNewData(this.$scope.tags_filter);
         }
 
-        isTagToggled(tag) {
+        isTagFiltered(tag) {
             if (this.$scope.tags_filter.includes(tag)) {
-                return 'label-success';
+                return true;
             } else {
-                return 'label-default';
+                return false;
             }
         }
 
@@ -664,6 +664,34 @@ var WaterfallController = (function() {
             this.$scope.tags_filter = this.tags_filter = [];
             this.$location.search("tags", this.$scope.tags_filter);
             this.renderNewData(this.$scope.tags_filter);
+        }
+
+        setTagBuilders(currentTags, builders) {
+            let tag_builders = [];
+            let anyTagSelected = false;
+            if (typeof currentTags != 'string') {
+                anyTagSelected = true;
+                for (const builder of builders) {
+                    let v = currentTags.every(currentTag => {
+                        if (!builder.tags.includes(currentTag)) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    });
+                    if (v) {
+                        tag_builders.push(builder);
+                    }
+                }
+            } else if (typeof currentTags == 'string') {
+                anyTagSelected = true;
+                for (const builder of builders) {
+                    if (builder.tags.includes(currentTags)) {
+                        tag_builders.push(builder);
+                    }
+                }
+            }
+            return [anyTagSelected, tag_builders];
         }
 
         renderNewData(currentTags) {
@@ -682,8 +710,8 @@ var WaterfallController = (function() {
                 this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
             }
             var all_tags = [];
-            for (let builder of Array.from(this.builders)) {
-                for (let tag of Array.from(builder.tags)) {
+            for (let builder of this.builders) {
+                for (let tag of builder.tags) {
                     if (all_tags.indexOf(tag) < 0) {
                         all_tags.push(tag);
                     }
@@ -692,32 +720,11 @@ var WaterfallController = (function() {
             all_tags.sort();
             this.$scope.all_tags = this.all_tags = all_tags;
             this.dataProcessorService.addStatus(this.builders);
-            let tag_builders = [];
-            let anyTagSelected = false;
+
+            let anyTagSelected, tag_builders;
 
             if (currentTags != null) {
-                if (typeof currentTags != 'string') {
-                    anyTagSelected = true;
-                    this.$scope.builders.forEach(element => {
-                        let v = currentTags.every(currentTag => {
-                            if (!element.tags.includes(currentTag)) {
-                                return false;
-                            } else {
-                                return true;
-                            }
-                        });
-                        if (v) {
-                            tag_builders.push(element);
-                        }
-                    });
-                } else if (typeof currentTags == 'string') {
-                    anyTagSelected = true;
-                    this.$scope.builders.forEach(element => {
-                        if (element.tags.includes(currentTags)) {
-                            tag_builders.push(element);
-                        }
-                    });
-                }
+                [anyTagSelected, tag_builders] = this.setTagBuilders(currentTags, this.$scope.builders);
             }
 
             if (anyTagSelected) {
