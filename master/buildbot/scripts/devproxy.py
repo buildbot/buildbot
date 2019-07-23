@@ -155,15 +155,17 @@ class DevProxy:
         start_delimiter = b'angular.module("buildbot_config", []).constant("config", '
         start_index = html.index(start_delimiter)
         last_index = html[start_index:].index(b')</script>')+start_index
-        
         jsonString = html[start_index + len(start_delimiter):last_index].decode()
         try:
             self.config = json.loads(jsonString)
         except Exception as e:
-            print ( "== UNPARSABLE JSON CONFIG ======================================================" )
-            print ( jsonString )
-            print ( "================================================================================" )
-            raise RuntimeError('Unable to parse json config fetched from {}: {}.  Please see string in block above that we are trying to parse as json and inspect it for json syntax errors.'.format(self.next_url, e))
+            print("== UNPARSABLE JSON CONFIG ======================================================")
+            print(jsonString)
+            print("================================================================================")
+            exceptionFormatString = 'Unable to parse json config fetched from {}: {}.'\
+                'Please see string in block above that we are trying to parse'\
+                ' as json and inspect it for json syntax errors.'
+            raise RuntimeError(exceptionFormatString.format(self.next_url, e))
 
         # keep the original config, but remove the plugins that we don't know
         for plugin in list(self.config['plugins'].keys()):
