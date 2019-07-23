@@ -154,7 +154,7 @@ class DevProxy:
         # hack to parse the configjson from upstream buildbot config
         start_delimiter = b'angular.module("buildbot_config", []).constant("config", '
         start_index = html.index(start_delimiter)
-        last_index = html[start_index:].index(b')</script>')+start_index
+        last_index = html[start_index:].index(b')</script>') + start_index
         jsonString = html[start_index + len(start_delimiter):last_index].decode()
         try:
             self.config = json.loads(jsonString)
