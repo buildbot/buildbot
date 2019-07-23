@@ -1,0 +1,1 @@
+Fixed issues with code that `devproxy.py` uses to extract JSON from the returned HTML from the server.  It did not work correctly in the case where the script tag which contains the JSON was not right at the end of the HTML document.  Also added improved error messaging in the case that the JSON cannot be parsed.
