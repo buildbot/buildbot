@@ -193,6 +193,12 @@ var WaterfallController = (function() {
                     return window.unbind('resize', resizeHandler);
                 });
             });
+
+            $rootScope.$on('$locationChangeSuccess', function() {
+                if (self.$scope.tags_filter.length) {
+                    self.renderNewData(self.$scope.tags_filter);
+                }
+            });
         }
 
 
