@@ -601,7 +601,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             + 0,
             Expect('uploadDirectory', dict(
                 slavesrc="srcdir", workdir='wkdir',
-                blocksize=16384, compress=None, maxsize=None,
+                blocksize=16384, compress=None, maxsize=None, regex=None,
                 writer=ExpectRemoteRef(remotetransfer.DirectoryWriter)))
             + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
             + 0)
