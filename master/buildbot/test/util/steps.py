@@ -402,7 +402,7 @@ class BuildStepMixin:
             if exp_tup != got:
                 text = _describe_cmd_difference(exp, command)
                 raise AssertionError(
-                    "Command contents different from expected; " + text)
+                    "Command contents different from expected; " + text + str(exp.args) + ":" + str(exp.remote_command))
 
         if exp.shouldRunBehaviors():
             # let the Expect object show any behaviors that are required
