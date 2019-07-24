@@ -97,7 +97,7 @@ class FileUpload(_TransferBuildStep):
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=256 * 1024, mode=None,
-                 keepstamp=False, url=None, urlText=None,
+                 keepstamp=False, url=None, urlText=None, regex=None,
                  **buildstep_kwargs):
         # Emulate that first two arguments are positional.
         if workersrc is None or masterdest is None:
@@ -264,7 +264,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
 
     def __init__(self, workersrcs=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, glob=False,
-                 mode=None, compress=None, keepstamp=False, url=None,
+                 mode=None, compress=None, keepstamp=False, url=None, regex=None,
                  **buildstep_kwargs):
 
         # Emulate that first two arguments are positional.
