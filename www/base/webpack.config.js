@@ -25,8 +25,17 @@ module.exports = function() {
         outputPath: outputPath,
         extractStyles: true,
         extraRules: [{
-            test: /\.(ttf|eot|svg|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            test: /\.(ttf|eot|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
             use: 'file-loader'
+        }, {
+            test: /\.(jp?eg|png|svg|ico)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            use: [{
+                loader: 'file-loader',
+                options: {
+                    name: '[name].[ext]',
+                    outputPath: 'img'
+                }
+            }]
         }],
         extraPlugins: [
             new WebpackShellPlugin({

@@ -90,4 +90,8 @@ require('./workers/worker/worker.route.js');
 require('./workers/workeraction.dialog.js');
 require('./workers/workers.controller.js');
 require('./workers/workers.route.js');
-
+require('../img/favicon.ico');
+require('../img/icon.png');
+require('../img/icon.svg');
+require('../img/icon16.svg');
+require('../img/nobody.png');
