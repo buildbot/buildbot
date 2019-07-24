@@ -198,7 +198,7 @@ class DirectoryUpload(_TransferBuildStep):
         super().__init__(workdir=workdir, **buildstep_kwargs)
 
         self.workersrc = workersrc
-        self.regex= regex
+        self.regex = regex
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
