@@ -116,6 +116,7 @@ class FileUpload(_TransferBuildStep):
         self.keepstamp = keepstamp
         self.url = url
         self.urlText = urlText
+        self.regex = regex
 
     def finished(self, results):
         log.msg("File '{}' upload finished with results {}".format(
@@ -168,6 +169,7 @@ class FileUpload(_TransferBuildStep):
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'keepstamp': self.keepstamp,
+            'regex': self.regex,
         }
 
         if self.workerVersionIsOlderThan('uploadFile', '3.0'):
@@ -288,6 +290,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         self.glob = glob
         self.keepstamp = keepstamp
         self.url = url
+        self.regex = regex
 
     def uploadFile(self, source, masterdest):
         fileWriter = remotetransfer.FileWriter(
@@ -299,6 +302,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'keepstamp': self.keepstamp,
+            'regex': self.regex,
         }
 
         if self.workerVersionIsOlderThan('uploadFile', '3.0'):
@@ -318,7 +322,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
-            'compress': self.compress
+            'compress': self.compress,
+            'regex': self.regex
         }
 
         if self.workerVersionIsOlderThan('uploadDirectory', '3.0'):
