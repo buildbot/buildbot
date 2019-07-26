@@ -72,6 +72,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         rv = None
         tbl = self.db.model.builds
         offset = 0
+        increment = 1000
         matchssBuild = {(ss['repository'],
                          ss['branch'],
                          ss['codebase']) for ss in ssBuild}
@@ -81,7 +82,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                                                   (tbl.c.number < number) &
                                                                   (tbl.c.results == 0)),
                                                      offset=offset,
-                                                     limit=10)
+                                                     limit=increment)
             if not prevBuilds:
                 break
             for prevBuild in prevBuilds:
@@ -93,7 +94,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     # repository/branch/codebase was found !
                     rv = prevBuild
                     break
-            offset += 10
+            offset += increment
 
         return rv
 
