@@ -1,0 +1,1 @@
+Reduced the number of SQL queries triggered by getPrevSuccessfulBuild() by up to 100
