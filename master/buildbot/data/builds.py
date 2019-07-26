@@ -164,21 +164,21 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                 workerid=kwargs.get('workerid'),
                 complete=complete,
                 resultSpec=resultSpec)
-            # returns properties' list
-            filters = resultSpec.popProperties()
+
+        # returns properties' list
+        filters = resultSpec.popProperties()
+
         buildscol = []
         for b in builds:
             data = yield self.db2data(b)
             # Avoid to request DB for Build's properties if not specified
-            try:
-                if filters:  # pragma: no cover
-                    props = yield self.master.db.builds.getBuildProperties(b['id'])
-                    filtered_properties = self._generate_filtered_properties(
-                        props, filters)
-                    if filtered_properties:
-                        data['properties'] = filtered_properties
-            except NameError:
-                pass
+            if filters:  # pragma: no cover
+                props = yield self.master.db.builds.getBuildProperties(b['id'])
+                filtered_properties = self._generate_filtered_properties(
+                    props, filters)
+                if filtered_properties:
+                    data['properties'] = filtered_properties
+
             buildscol.append(data)
         return buildscol
 
