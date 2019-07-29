@@ -2906,6 +2906,12 @@ The step takes the following parameters
 ``sources``
     Path to the directory containing the sources, defaulting to ``.``.
 
+.. note::
+
+   It is necessary to pass the ``resultdir`` parameter to let the master
+   watch for (and display) changes to :file:`build.log`,
+   :file:`root.log`, and :file:`state.log`.
+
 .. bb:step:: MockRebuild
 
 MockRebuild Step
@@ -2927,6 +2933,12 @@ The step takes the following parameters
 
 ``srpm``
     The path to the SourceRPM to rebuild.
+
+.. note::
+
+   It is necessary to pass the ``resultdir`` parameter to let the master
+   watch for (and display) changes to :file:`build.log`,
+   :file:`root.log`, and :file:`state.log`.
 
 Debian Build Steps
 ------------------
