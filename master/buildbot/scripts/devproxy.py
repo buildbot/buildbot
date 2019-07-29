@@ -14,17 +14,40 @@
 # Copyright Buildbot Team Members
 
 
-import asyncio
 import json
-import logging
 
-import aiohttp  # dev-proxy command requires aiohttp! run 'pip install aiohttp'
-import aiohttp.web
-import jinja2
+# Note.  The following imports cause a failure when this file is imported
+# for unit tests, so only importing these when this script is run stand-alone.
+if (__name__ == "__main__"):
+    import asyncio
+    import logging
 
-from buildbot.plugins.db import get_plugins
+    import aiohttp  # dev-proxy command requires aiohttp! run 'pip install aiohttp'
+    import aiohttp.web
+    import jinja2
 
-log = logging.getLogger(__name__)
+    from buildbot.plugins.db import get_plugins
+
+    log = logging.getLogger(__name__)
+
+
+def extract_config_from_html(html):
+    # hack to parse the configjson from upstream buildbot config
+    start_delimiter = 'angular.module("buildbot_config", []).constant("config", '
+    start_index = html.index(start_delimiter)
+    last_index = html[start_index:].index(')</script>') + start_index
+    json_string = html[start_index + len(start_delimiter):last_index]
+    try:
+        config = json.loads(json_string)
+        return config
+    except Exception as e:
+        print("\n== UNPARSABLE JSON CONFIG ======================================================")
+        print(json_string)
+        print("================================================================================")
+        exceptionFormatString = 'Unable to parse json config: {}.'\
+            'Please see string in block above that we are trying to parse'\
+            ' as json and inspect it for json syntax errors.'
+        raise RuntimeError(exceptionFormatString.format(e))
 
 
 class DevProxy:
@@ -151,21 +174,8 @@ class DevProxy:
             html = await request.content.read()
             if request.status != 200:
                 raise RuntimeError("Unable to fetch buildbot config: " + html.decode())
-        # hack to parse the configjson from upstream buildbot config
-        start_delimiter = b'angular.module("buildbot_config", []).constant("config", '
-        start_index = html.index(start_delimiter)
-        last_index = html[start_index:].index(b')</script>') + start_index
-        jsonString = html[start_index + len(start_delimiter):last_index].decode()
-        try:
-            self.config = json.loads(jsonString)
-        except Exception as e:
-            print("== UNPARSABLE JSON CONFIG ======================================================")
-            print(jsonString)
-            print("================================================================================")
-            exceptionFormatString = 'Unable to parse json config fetched from {}: {}.'\
-                'Please see string in block above that we are trying to parse'\
-                ' as json and inspect it for json syntax errors.'
-            raise RuntimeError(exceptionFormatString.format(self.next_url, e))
+
+        self.config = extract_config_from_html(self, html.decode())
 
         # keep the original config, but remove the plugins that we don't know
         for plugin in list(self.config['plugins'].keys()):
