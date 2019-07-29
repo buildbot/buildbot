@@ -235,7 +235,11 @@ class GlobPath(base.Command):
         pathname = os.path.join(self.builder.basedir, self.args['path'])
 
         try:
-            files = glob.glob(pathname)
+            # recursive matching is only support in python3.5+
+            if sys.version_info[:2] >= (3, 5):
+                files = glob.glob(pathname, recursive=True)
+            else:
+                files = glob.glob(pathname)
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
         except OSError as e:

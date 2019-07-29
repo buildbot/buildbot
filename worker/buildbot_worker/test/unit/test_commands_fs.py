@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import sys
 
 from twisted.internet import defer
 from twisted.python import runtime
@@ -288,6 +289,27 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
         self.assertEqual(
             self.get_updates()[0]['files'], [os.path.join(self.basedir, 'test-file')])
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
+
+    @defer.inlineCallbacks
+    def test_recursive(self):
+        self.make_command(fs.GlobPath, dict(
+            path='**/*.txt',
+        ), True)
+        os.makedirs(os.path.join(self.basedir, 'test/testdir'))
+        with open(os.path.join(self.basedir, 'test/testdir/test.txt'), 'w'):
+            pass
+
+        yield self.run_command()
+        if sys.version_info[:] >= (3, 5):
+            filename = 'test\\testdir\\test.txt' if sys.platform == 'win32' else 'test/testdir/test.txt'
+            self.assertEqual(
+                self.get_updates()[0]['files'], [os.path.join(self.basedir, filename)])
+        else:
+            self.assertEqual(
+                self.get_updates()[0]['files'], [])
         self.assertIn({'rc': 0},
                       self.get_updates(),
                       self.builder.show())
