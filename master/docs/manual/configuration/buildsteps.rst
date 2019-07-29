@@ -2915,7 +2915,7 @@ The :bb:step:`MockRebuild` step rebuilds a SourceRPM package::
 
     from buildbot.plugins import steps
 
-    f.addStep(steps.MockRebuild(root='default', spec='mypkg-1.0-1.src.rpm'))
+    f.addStep(steps.MockRebuild(root='default', srpm='mypkg-1.0-1.src.rpm'))
 
 The step takes the following parameters
 
