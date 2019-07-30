@@ -19,8 +19,6 @@ class Buildsummary {
             replace: true,
             restrict: 'E',
             scope: {
-                builderid: '=?',
-                buildnumber: '=?',
                 buildid: '=?',
                 build: '=?',
                 condensed: '=?',
@@ -97,6 +95,7 @@ class _buildsummary {
             }, 1000);
             $scope.$on("$destroy", () => $interval.cancel(stop));
             $scope.settings = bbSettingsService.getSettingsGroup("LogPreview");
+            $scope.page_size = bbSettingsService.getSettingsGroup("TriggerStep").page_size.value;
 
             const NONE = 0;
             const ONLY_NOT_SUCCESS = 1;
