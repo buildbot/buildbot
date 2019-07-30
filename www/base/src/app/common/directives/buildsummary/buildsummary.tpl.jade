@@ -45,11 +45,11 @@
             i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':step.fulldisplay}", ng-if="step.logs.length")
             | #{' '} {{step.name}}
         ul
-          li(ng-if='!(buildsummary.isBuildRequestURL(url.url) || buildsummary.isBuildURL(url.url))', ng-repeat="url in step.urls")
+          li(ng-repeat="url in step.other_urls")
             a(ng-href="{{url.url}}", target="_blank") {{url.name}}
         ul.list-unstyled
-          li(ng-if='buildsummary.isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
-            buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='buildsummary.getBuildRequestIDFromURL(url.url)')
+          li(ng-repeat="br in step.builds")
+            buildsummary(style="margin-left:30px;margin-top:8px", builderid="build.builderid", buildnumber="build.buildnumber", condensed="true")
         div.anim-stepdetails(ng-if="step.fulldisplay")
           logpreview(ng-repeat="log in buildsummary.getLogs(step)", log="log",
                      fulldisplay="step.logs.length == 1 || buildsummary.expandByName(log)",
