@@ -2,7 +2,7 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
-import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { browser, by, element, ExpectedConditions as EC, By } from 'protractor';
 
 export class WaterfallPage extends BasePage {
     builder: string;
@@ -69,5 +69,17 @@ export class WaterfallPage extends BasePage {
                            "local builder not clickable");
         await localBuilder.click();
         await this.checkBuilder();
+    }
+
+    async goTagAndCheck() {
+        const firstTag = element.all(By.binding('tag'));
+        await firstTag.click();
+        expect(browser.getCurrentUrl()).toContain(firstTag.getText());
+    }
+
+    async goUrlAndCheckTag() {
+        await browser.get('#/waterfall?tags=runt');
+        const selectedTag = element(by.className('label-success'));
+        expect(browser.getCurrentUrl()).toContain(selectedTag.getText());
     }
 }
