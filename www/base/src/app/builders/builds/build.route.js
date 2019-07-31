@@ -38,6 +38,16 @@ class BuildState {
                 default_value: 'summary'
             }
             ]});
+        bbSettingsServiceProvider.addSettingsGroup({
+            name:'TriggerStep',
+            caption: 'Builds per page',
+            items:[{
+                type:'integer',
+                name:'page_size',
+                caption:'Number of builds to show per page in trigger step',
+                default_value: 20
+            }
+            ]});
     }
 }
 

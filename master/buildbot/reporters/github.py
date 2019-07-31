@@ -149,6 +149,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
+            response = None
             try:
                 repo_user = repoOwner
                 repo_name = repoName
@@ -174,7 +175,11 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                             state=state, repoOwner=repoOwner, repoName=repoName,
                             sha=sha, issue=issue, context=context))
             except Exception as e:
-                content = yield response.content()
+                if response:
+                    content = yield response.content()
+                    code = response.code
+                else:
+                    content = code = "n/a"
                 log.err(
                     e,
                     'Failed to update "{state}" for {repoOwner}/{repoName} '
@@ -182,7 +187,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     'http {code}, {content}'.format(
                         state=state, repoOwner=repoOwner, repoName=repoName,
                         sha=sha, issue=issue, context=context,
-                        code=response.code, content=content))
+                        code=code, content=content))
 
 
 class GitHubCommentPush(GitHubStatusPush):
