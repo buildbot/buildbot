@@ -672,7 +672,7 @@ var WaterfallController = (function() {
             this.renderNewData(this.$scope.tags_filter);
         }
 
-        setTagBuilders(currentTags, builders) {
+        makeTagBuilders(currentTags, builders) {
             let tag_builders = [];
             let anyTagSelected = false;
             if (typeof currentTags != 'string') {
@@ -730,7 +730,7 @@ var WaterfallController = (function() {
             let anyTagSelected, tag_builders;
 
             if (currentTags != null) {
-                [anyTagSelected, tag_builders] = this.setTagBuilders(currentTags, this.$scope.builders);
+                [anyTagSelected, tag_builders] = this.makeTagBuilders(currentTags, this.$scope.builders);
             }
 
             if (anyTagSelected) {
