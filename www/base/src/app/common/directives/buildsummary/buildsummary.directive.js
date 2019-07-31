@@ -47,7 +47,7 @@ class _buildsummary {
             buildrequestURLMatchers.push($urlMatcherFactory.compile(
                 `${baseurl}#buildrequests/{buildrequestid:[0-9]+}`))
             buildURLMatchers.push($urlMatcherFactory.compile(
-                `${baseurl}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}`));
+                `${baseurl}#builders/{builderid:[0-9]+}/builds/{buildnumber:[0-9]+}`));
         }
 
         function execMatchers(matchers, url) {
@@ -59,6 +59,33 @@ class _buildsummary {
             }
             return null
         }
+        this.stepUpdated = function(step) {
+            step.fulldisplay = (step.complete === false) || (step.results > 0);
+            if (step.complete) {
+                step.duration = step.complete_at - step.started_at;
+            }
+            step.other_urls = []
+            step.buildrequests = []
+            step.builds = []
+            for (let url of step.urls) {
+                let brRes = execMatchers(buildrequestURLMatchers, url.url)
+                if (brRes !== null) {
+                    step.buildrequests.push({
+                        buildrequestid: brRes.buildrequestid
+                    })
+                    continue
+                }
+                let buildRes = execMatchers(buildURLMatchers, url.url)
+                if (buildRes !== null) {
+                    step.builds.push({
+                        builderid: buildRes.builderid,
+                        buildnumber: buildRes.buildnumber
+                    })
+                    continue
+                }
+                step.other_urls.push(url)
+            }
+        }
         this.$onInit = function () {
 
             // to get an update of the current builds every seconds, we need to update self.now
@@ -68,6 +95,7 @@ class _buildsummary {
             }, 1000);
             $scope.$on("$destroy", () => $interval.cancel(stop));
             $scope.settings = bbSettingsService.getSettingsGroup("LogPreview");
+            $scope.page_size = bbSettingsService.getSettingsGroup("TriggerStep").page_size.value;
 
             const NONE = 0;
             const ONLY_NOT_SUCCESS = 1;
@@ -99,10 +127,6 @@ class _buildsummary {
                 }
             };
 
-            this.getBuildRequestIDFromURL = memoize(url => parseInt(execMatchers(buildrequestURLMatchers, url).buildrequestid, 10));
-
-            this.isBuildRequestURL = memoize(url => execMatchers(buildrequestURLMatchers, url) !== null);
-            this.isBuildURL = memoize(url => execMatchers(buildURLMatchers, url) !== null);
 
             this.getBuildProperty = function (property) {
                 const hasProperty = self.properties && self.properties.hasOwnProperty(property);
@@ -159,7 +183,7 @@ class _buildsummary {
                     return self.reason = self.getBuildProperty('reason');
                 };
 
-                return $scope.$watch((() => details), function (details) {
+                $scope.$watch((() => details), function (details) {
                     if ((details !== NONE) && (self.steps == null)) {
                         self.steps = build.getSteps();
 
@@ -169,13 +193,7 @@ class _buildsummary {
                             // but we need to update our additional needed attributes
                             return self.steps.onUpdate(step);
                         };
-
-                        return self.steps.onUpdate = function (step) {
-                            step.fulldisplay = (step.complete === false) || (step.results > 0);
-                            if (step.complete) {
-                                return step.duration = step.complete_at - step.started_at;
-                            }
-                        };
+                        self.steps.onUpdate = self.stepUpdated
                     }
                 });
             });
