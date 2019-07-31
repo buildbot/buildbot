@@ -23,7 +23,7 @@ class PendingBuildRequestsState {
 
         bbSettingsServiceProvider.addSettingsGroup({
             name:'BuildRequests',
-            caption: 'Buildreqests page related settings',
+            caption: 'Buildrequests page related settings',
             items:[{
                 type:'integer',
                 name:'buildrequestFetchLimit',

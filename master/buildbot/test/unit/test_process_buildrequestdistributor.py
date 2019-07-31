@@ -396,7 +396,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.assertBuildsStarted(exp_builds)
 
     @defer.inlineCallbacks
-    def test_no_buildreqests(self):
+    def test_no_buildrequests(self):
         self.addWorkers({'test-worker11': 1})
         yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[], exp_builds=[])
 
