@@ -11,6 +11,7 @@ import 'angular-animate';
 import '@uirouter/angularjs';
 import 'guanlecoja-ui';
 import 'buildbot-data-js';
+import _ from 'lodash';
 
 // Register new module
 class WaterfallView {
@@ -34,7 +35,8 @@ var WaterfallController = (function() {
         }
         constructor($rootElement, $scope, $q, $timeout, $window, $log,
                       $uibModal, dataService, d3Service, dataProcessorService,
-                      scaleService, bbSettingsService, glTopbarContextualActionsService) {
+                      scaleService, bbSettingsService, glTopbarContextualActionsService,
+                      $location, $rootScope) {
             this.zoomPlus = this.zoomPlus.bind(this);
             this.zoomMinus = this.zoomMinus.bind(this);
             this.renderNewData = this.renderNewData.bind(this);
@@ -43,6 +45,9 @@ var WaterfallController = (function() {
             this.$window = $window;
             this.$log = $log;
             this.$uibModal = $uibModal;
+            this.$location = $location;
+            this.$rootScope = $rootScope;
+            this.$scope.tags_filter = this.tags_filter = [];
             this.dataProcessorService = dataProcessorService;
             this.bbSettingsService = bbSettingsService;
             self = this;
@@ -187,6 +192,10 @@ var WaterfallController = (function() {
                     window.unbind('keypress', keyHandler);
                     return window.unbind('resize', resizeHandler);
                 });
+            });
+
+            $rootScope.$on('$locationChangeSuccess', function() {
+                self.renderNewData(self.$scope.tags_filter);
             });
         }
 
@@ -635,14 +644,89 @@ var WaterfallController = (function() {
             });
         }
 
-        renderNewData() {
+        toggleTag(tag) {
+            if (!this.$scope.tags_filter.includes(tag)) {
+                this.$scope.tags_filter.push(tag);
+            } else {
+                this.$scope.tags_filter = _.remove(this.$scope.tags_filter, function(currentTag) {
+                    return currentTag != tag;
+                });
+            }
+            this.$location.search("tags", this.$scope.tags_filter);
+        }
+
+        isTagFiltered(tag) {
+            if (this.$scope.tags_filter.includes(tag)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        clearTags() {
+            this.$scope.tags_filter = this.tags_filter = [];
+            this.$location.search("tags", this.$scope.tags_filter);
+        }
+
+        makeTagBuilders(currentTags, builders) {
+            let tag_builders = [];
+            let anyTagSelected = false;
+            if (typeof currentTags != 'string') {
+                anyTagSelected = true;
+                for (const builder of builders) {
+                    let v = currentTags.every(currentTag =>
+                        builder.tags.includes(currentTag));
+                    if (v) {
+                        tag_builders.push(builder);
+                    }
+                }
+            } else if (typeof currentTags == 'string') {
+                anyTagSelected = true;
+                for (const builder of builders) {
+                    if (builder.tags.includes(currentTags)) {
+                        tag_builders.push(builder);
+                    }
+                }
+            }
+            return [anyTagSelected, tag_builders];
+        }
+
+        renderNewData(currentTags) {
+            currentTags = this.$location.search()['tags'];
+            if (currentTags != null) {
+                if (typeof currentTags == 'string') {
+                    this.$scope.tags_filter = this.tags_filter = [currentTags];
+                } else {
+                    this.$scope.tags_filter = this.tags_filter = currentTags;
+                }
+            }
             this.groups = this.dataProcessorService.getGroups(this.all_builders, this.builds, this.c.threshold);
             if (this.s.show_builders_without_builds.value) {
                 this.$scope.builders = this.all_builders;
             } else {
                 this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
             }
+            var all_tags = [];
+            for (let builder of this.builders) {
+                for (let tag of builder.tags) {
+                    if (!all_tags.includes(tag)) {
+                        all_tags.push(tag);
+                    }
+                }
+            }
+            all_tags.sort();
+            this.$scope.all_tags = this.all_tags = all_tags;
             this.dataProcessorService.addStatus(this.builders);
+
+            let anyTagSelected, tag_builders;
+
+            if (currentTags != null) {
+                [anyTagSelected, tag_builders] = this.makeTagBuilders(currentTags, this.$scope.builders);
+            }
+
+            if (anyTagSelected) {
+                this.$scope.builders = this.builders = tag_builders;
+            }
             this.render();
             return this.loadingMore = false;
         }
@@ -674,8 +758,11 @@ var WaterfallController = (function() {
 
 
 angular.module('waterfall_view', new WaterfallView())
-.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService',
-                                    WaterfallController]);
+.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', '$location', '$rootScope',
+                                    WaterfallController])
+.config(['$locationProvider', function($locationProvider) {
+    $locationProvider.hashPrefix('');
+}]);
 
 require('./dataProcessor/dataProcessor.service.js');
 require('./main.module.js');

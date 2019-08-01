@@ -42,4 +42,14 @@ describe('waterfall', function() {
         await waterfall.go();
         await waterfall.goBuildAndClose();
     });
+
+    it('should click on tag and check if url is changed', async () => {
+        await waterfall.go();
+        await waterfall.goTagAndCheck();
+    });
+
+    it('should go to url containing a tag and check if tag is clicked', async () => {
+        await waterfall.go();
+        await waterfall.goUrlAndCheckTag();
+    });
 });
