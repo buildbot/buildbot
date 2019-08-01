@@ -195,9 +195,7 @@ var WaterfallController = (function() {
             });
 
             $rootScope.$on('$locationChangeSuccess', function() {
-                if (self.$scope.tags_filter.length) {
-                    self.renderNewData(self.$scope.tags_filter);
-                }
+                self.renderNewData(self.$scope.tags_filter);
             });
         }
 
@@ -655,7 +653,6 @@ var WaterfallController = (function() {
                 });
             }
             this.$location.search("tags", this.$scope.tags_filter);
-            this.renderNewData(this.$scope.tags_filter);
         }
 
         isTagFiltered(tag) {
@@ -669,7 +666,6 @@ var WaterfallController = (function() {
         clearTags() {
             this.$scope.tags_filter = this.tags_filter = [];
             this.$location.search("tags", this.$scope.tags_filter);
-            this.renderNewData(this.$scope.tags_filter);
         }
 
         makeTagBuilders(currentTags, builders) {
@@ -678,13 +674,8 @@ var WaterfallController = (function() {
             if (typeof currentTags != 'string') {
                 anyTagSelected = true;
                 for (const builder of builders) {
-                    let v = currentTags.every(currentTag => {
-                        if (!builder.tags.includes(currentTag)) {
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    });
+                    let v = currentTags.every(currentTag =>
+                        builder.tags.includes(currentTag));
                     if (v) {
                         tag_builders.push(builder);
                     }
@@ -718,7 +709,7 @@ var WaterfallController = (function() {
             var all_tags = [];
             for (let builder of this.builders) {
                 for (let tag of builder.tags) {
-                    if (all_tags.indexOf(tag) < 0) {
+                    if (!all_tags.includes(tag)) {
                         all_tags.push(tag);
                     }
                 }
