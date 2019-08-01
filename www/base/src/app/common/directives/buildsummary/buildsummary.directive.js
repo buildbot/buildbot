@@ -67,6 +67,10 @@ class _buildsummary {
             step.other_urls = []
             step.buildrequests = []
             step.builds = []
+            if (step.buildrequestsCurrentPage === undefined) {
+                // uib-pagination starts counting at 1...
+                step.buildrequestsCurrentPage = 1
+            }
             for (let url of step.urls) {
                 let brRes = execMatchers(buildrequestURLMatchers, url.url)
                 if (brRes !== null) {

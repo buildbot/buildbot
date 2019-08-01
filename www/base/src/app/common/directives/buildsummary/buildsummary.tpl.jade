@@ -52,7 +52,7 @@
               a(ng-href="{{url.url}}", target="_blank") {{url.name}}
           ul(ng-if="step.buildrequests.length>page_size",uib-pagination,total-items="step.buildrequests.length",
             ng-model="step.buildrequestsCurrentPage",class="pagination-sm" boundary-link-numbers="true",
-            max-size=10, items-per-page="page_size")
+            max-size=10, items-per-page="page_size", style="margin-left:30px;margin-bottom:0px")
           ul.list-unstyled
             li(ng-repeat="br in step.buildrequests | limitTo: page_size :(step.buildrequestsCurrentPage-1)*page_size")
               buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='br.buildrequestid')
