@@ -120,7 +120,7 @@ SecretInVault
 .. code-block:: python
 
     c['secretsProviders'] = [secrets.SecretInVault(
-                            vaultToken=open('VAULT_TOKEN').read(),
+                            vaultToken=open('VAULT_TOKEN').read().strip(),
                             vaultServer="http://localhost:8200",
                             apiVersion=2
     )]
