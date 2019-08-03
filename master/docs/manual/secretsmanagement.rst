@@ -119,7 +119,7 @@ SecretInVault
 
 .. code-block:: python
 
-    c['secretsProviders'] = [secrets.SecretInVault(
+    c['secretsProviders'] = [secrets.HashiCorpVaultSecretProvider(
                             vaultToken=open('VAULT_TOKEN').read().strip(),
                             vaultServer="http://localhost:8200",
                             secretsmount="secret",
