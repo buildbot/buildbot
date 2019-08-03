@@ -70,10 +70,7 @@ class BitbucketCloudEventHandler:
 
     def handle_repo_push(self, payload):
         changes = []
-        if payload['repository'].get('project'):
-        project = payload['repository']['project']['name']
-        else:
-            project = 'none'
+        project = payload['repository'].get('project', {'name': 'none'})['name']
         repo_url = payload['repository']['links']['self']['href']
         web_url = payload['repository']['links']['html']['href']
 
@@ -142,10 +139,7 @@ class BitbucketCloudEventHandler:
     def handle_pullrequest(self, payload, refname, category):
         pr_number = int(payload['pullrequest']['id'])
         repo_url = payload['repository']['links']['self']['href']
-        if payload['repository'].get('project'):
-            project = payload['repository']['project']['name']
-        else:
-            project = 'none'
+        project = payload['repository'].get('project', {'name': 'none'})['name']
         change = {
             'revision': payload['pullrequest']['fromRef']['commit']['hash'],
             'revlink': payload['pullrequest']['link'],
