@@ -31,7 +31,7 @@ _CT_JSON = b'application/json'
 pushJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -52,7 +52,7 @@ pushJsonPayload = """
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -87,7 +87,7 @@ pushJsonPayload = """
 pullRequestCreatedJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -111,7 +111,7 @@ pullRequestCreatedJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -143,7 +143,7 @@ pullRequestCreatedJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -175,7 +175,7 @@ pullRequestCreatedJsonPayload = """
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -186,7 +186,7 @@ pullRequestCreatedJsonPayload = """
 pullRequestUpdatedJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -210,7 +210,7 @@ pullRequestUpdatedJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -242,7 +242,7 @@ pullRequestUpdatedJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -274,7 +274,7 @@ pullRequestUpdatedJsonPayload = """
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -285,7 +285,7 @@ pullRequestUpdatedJsonPayload = """
 pullRequestRejectedJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -309,7 +309,7 @@ pullRequestRejectedJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -341,7 +341,7 @@ pullRequestRejectedJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -373,7 +373,7 @@ pullRequestRejectedJsonPayload = """
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -384,7 +384,7 @@ pullRequestRejectedJsonPayload = """
 pullRequestFulfilledJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -408,7 +408,7 @@ pullRequestFulfilledJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -440,7 +440,7 @@ pullRequestFulfilledJsonPayload = """
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -472,7 +472,7 @@ pullRequestFulfilledJsonPayload = """
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -483,7 +483,7 @@ pullRequestFulfilledJsonPayload = """
 deleteTagJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -504,7 +504,7 @@ deleteTagJsonPayload = """
         "ownerName": "BUIL",
         "public": false,
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -532,7 +532,7 @@ deleteTagJsonPayload = """
 deleteBranchJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -553,7 +553,7 @@ deleteBranchJsonPayload = """
         "ownerName": "CI",
         "public": false,
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -581,7 +581,7 @@ deleteBranchJsonPayload = """
 newTagJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -602,7 +602,7 @@ newTagJsonPayload = """
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"

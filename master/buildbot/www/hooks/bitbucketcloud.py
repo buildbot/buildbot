@@ -70,7 +70,7 @@ class BitbucketCloudEventHandler:
 
     def handle_repo_push(self, payload):
         changes = []
-        project = payload['repository']['project']['name']
+        project = payload['repository'].get('project', {'name': 'none'})['name']
         repo_url = payload['repository']['links']['self']['href']
         web_url = payload['repository']['links']['html']['href']
 
@@ -94,7 +94,7 @@ class BitbucketCloudEventHandler:
                 'revlink': '{}/commits/{}'.format(web_url, commit_hash),
                 'repository': repo_url,
                 'author': '{} <{}>'.format(payload['actor']['display_name'],
-                                           payload['actor']['username']),
+                                           payload['actor']['nickname']),
                 'comments': 'Bitbucket Cloud commit {}'.format(commit_hash),
                 'branch': branch,
                 'project': project,
@@ -139,15 +139,16 @@ class BitbucketCloudEventHandler:
     def handle_pullrequest(self, payload, refname, category):
         pr_number = int(payload['pullrequest']['id'])
         repo_url = payload['repository']['links']['self']['href']
+        project = payload['repository'].get('project', {'name': 'none'})['name']
         change = {
             'revision': payload['pullrequest']['fromRef']['commit']['hash'],
             'revlink': payload['pullrequest']['link'],
             'repository': repo_url,
             'author': '{} <{}>'.format(payload['actor']['display_name'],
-                                       payload['actor']['username']),
+                                       payload['actor']['nickname']),
             'comments': 'Bitbucket Cloud Pull Request #{}'.format(pr_number),
             'branch': refname,
-            'project': payload['repository']['project']['name'],
+            'project': project,
             'category': category,
             'properties': {'pullrequesturl': payload['pullrequest']['link']}
         }
