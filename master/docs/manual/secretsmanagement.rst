@@ -233,7 +233,11 @@ Then, export the environment variable VAULT_ADDR needed to init Vault.
 Writing secrets
 ```````````````
 
-By default Vault is initialized with a mount named secret.
+By default the official docker instance of Vault is initialized with a mount path
+of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
+Currently buildbot is "hard wired" to expect KV v2 engines to reside within this
+"data" sub path. Provision is made to set a top level path via the "secretsmount"
+argument: defaults to "secret".
 To add a new secret:
 
 .. code-block:: shell
