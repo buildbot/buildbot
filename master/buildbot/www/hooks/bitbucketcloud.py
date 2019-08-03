@@ -145,7 +145,7 @@ class BitbucketCloudEventHandler:
             'revlink': payload['pullrequest']['link'],
             'repository': repo_url,
             'author': '{} <{}>'.format(payload['actor']['display_name'],
-                                       payload['actor']['username']),
+                                       payload['actor']['nickname']),
             'comments': 'Bitbucket Cloud Pull Request #{}'.format(pr_number),
             'branch': refname,
             'project': project,
