@@ -128,7 +128,8 @@ SecretInVault
 
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
-At the moment buildbot supports KV v1 and v2 backends.
+At the moment buildbot supports KV v1 and v2 backends via the apiVersion
+argument.
 
 Buildbot's Vault authentication/authorisation is via a token. The "Initial Root
 Token", generated on Vault initialization, can be used but has ‘root’ authorization.
