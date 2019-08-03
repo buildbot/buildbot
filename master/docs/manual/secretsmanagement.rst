@@ -122,6 +122,7 @@ SecretInVault
     c['secretsProviders'] = [secrets.SecretInVault(
                             vaultToken=open('VAULT_TOKEN').read().strip(),
                             vaultServer="http://localhost:8200",
+                            secretsmount="secret",
                             apiVersion=2
     )]
 
