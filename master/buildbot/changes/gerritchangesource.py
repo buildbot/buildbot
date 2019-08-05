@@ -298,17 +298,30 @@ class GerritChangeSource(GerritChangeSourceBase):
             self.startStreamProcess()
             self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
+    def _buildGerritCommand(self, *gerrit_args):
+        '''Get an ssh command list which invokes gerrit with the given args on the
+        remote host'''
+
+        cmd = [
+            "ssh",
+            "%s@%s" % (self.username, self.gerritserver),
+            "-p", str(self.gerritport)
+        ]
+
+        if self.identity_file is not None:
+            cmd.extend(["-i", self.identity_file])
+
+        cmd.append("gerrit")
+        cmd.extend(gerrit_args)
+        return cmd
+
     def startStreamProcess(self):
         if self.debug:
             log.msg("starting 'gerrit stream-events'")
+
+        cmd = self._buildGerritCommand("stream-events")
         self.lastStreamProcessStart = util.now()
-        uri = "%s@%s" % (self.username, self.gerritserver)
-        args = [uri, "-p", str(self.gerritport)]
-        if self.identity_file is not None:
-            args = args + ['-i', self.identity_file]
-        self.process = reactor.spawnProcess(
-            self.LocalPP(self), "ssh",
-            ["ssh"] + args + ["gerrit", "stream-events"], env=None)
+        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
 
     def activate(self):
         self.wantProcess = True
