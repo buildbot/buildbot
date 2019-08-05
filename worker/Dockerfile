@@ -6,7 +6,7 @@
 # Provides a base Ubuntu (16.04) image with latest buildbot worker installed
 # the worker image is not optimized for size, but rather uses ubuntu for wider package availability
 
-FROM        ubuntu:16.04
+FROM        ubuntu:18.04
 MAINTAINER  Buildbot maintainers
 
 
@@ -28,14 +28,13 @@ RUN         apt-get update && \
     libffi-dev \
     libssl-dev \
     python-setuptools \
-    curl && \
-    rm -rf /var/lib/apt/lists/* && \
+    python-pip \
     # Test runs produce a great quantity of dead grandchild processes.  In a
     # non-docker environment, these are automatically reaped by init (process 1),
     # so we need to simulate that here.  See https://github.com/Yelp/dumb-init
-    curl https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64.deb -Lo /tmp/init.deb && dpkg -i /tmp/init.deb &&\
-    # ubuntu pip version has issues so we should use the official upstream version it: https://github.com/pypa/pip/pull/3287
-    easy_install pip && \
+    dumb-init \
+    curl && \
+    rm -rf /var/lib/apt/lists/* && \
     # Install required python packages, and twisted
     pip --no-cache-dir install 'twisted[tls]' && \
     pip install virtualenv && \
