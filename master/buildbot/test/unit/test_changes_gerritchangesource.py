@@ -356,7 +356,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         self.master.db.insertTestData([
             fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
                           class_name='GerritEventLogPoller')])
-        yield self.newChangeSource()
+        yield self.newChangeSource(get_files=True)
         self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(
             self.NOW_TIMESTAMP)
         self._http.expect(method='get', ep='/plugins/events-log/events/',
@@ -375,14 +375,26 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                               eventCreatedOn=self.EVENT_TIMESTAMP,
                               patchSet=dict(revision="abcdef", number="12")))
 
+        self._http.expect(
+            method='get',
+            ep='/changes/4321/revisions/12/files/',
+            content=self.change_revision_resp,
+        )
+
         yield self.startChangeSource()
         yield self.changesource.poll()
+
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+
         c = self.master.data.updates.changesAdded[0]
         for k, v in c.items():
+            if k == 'files':
+                continue
             self.assertEqual(TestGerritChangeSource.expected_change[k], v)
         self.master.db.state.assertState(
             self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
+
+        self.assertEqual(set(c['files']), {'/COMMIT_MSG', 'file1'})
 
         # do a second poll, it should ask for the next events
         self._http.expect(method='get', ep='/plugins/events-log/events/',
@@ -401,9 +413,35 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                               eventCreatedOn=self.EVENT_TIMESTAMP + 1,
                               patchSet=dict(revision="abcdef", number="12")))
 
+        self._http.expect(
+            method='get',
+            ep='/changes/4321/revisions/12/files/',
+            content=self.change_revision_resp,
+        )
+
         yield self.changesource.poll()
         self.master.db.state.assertState(
             self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
+
+    change_revision_dict = {
+        '/COMMIT_MSG': {'status': 'A', 'lines_inserted': 9, 'size_delta': 1, 'size': 1},
+        'file1': {'lines_inserted': 9, 'lines_deleted': 2, 'size_delta': 1, 'size': 1},
+    }
+    change_revision_resp = b')]}\n' + json.dumps(change_revision_dict).encode('utf8')
+
+    @defer.inlineCallbacks
+    def test_getFiles(self):
+        yield self.newChangeSource(get_files=True)
+        yield self.startChangeSource()
+
+        self._http.expect(
+            method='get',
+            ep='/changes/100/revisions/1/files/',
+            content=self.change_revision_resp,
+        )
+
+        files = yield self.changesource.getFiles(100, 1)
+        self.assertEqual(set(files), {'/COMMIT_MSG', 'file1'})
 
 
 class TestGerritChangeFilter(unittest.TestCase):

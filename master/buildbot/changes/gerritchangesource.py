@@ -431,6 +431,14 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
         return res
 
+    @defer.inlineCallbacks
+    def getFiles(self, change, patchset):
+        res = yield self._http.get("/changes/%s/revisions/%s/files/" % (change, patchset))
+        res = yield res.content()
+
+        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
+        return list(json.loads(res))
+
     # FIXME this copy the code from PollingChangeSource
     # but as PollingChangeSource and its subclasses need to be ported to reconfigurability
     # we can't use it right now
