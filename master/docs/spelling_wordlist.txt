@@ -16,6 +16,7 @@ ansible
 apache
 api
 apis
+apiVersion
 app
 apparmor
 appart
@@ -34,6 +35,7 @@ Atlassian
 attrs
 auth
 Auth
+authorisation
 authUri
 authz
 autoconf
@@ -701,6 +703,7 @@ schemas
 scp
 sdist
 searchable
+secretsmount
 sed
 selectable
 sendchange
