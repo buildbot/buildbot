@@ -1,0 +1,5 @@
+.container
+  .row
+    changedetails(change="change")
+    div(ng-if="builds")
+        builds-table(builds="builds", builders="builders", ng-if="builds")

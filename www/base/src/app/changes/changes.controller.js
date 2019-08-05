@@ -1,5 +1,6 @@
 class Changes {
-    constructor($log, $scope, dataService, bbSettingsService) {
+    constructor($log, $scope, dataService, bbSettingsService,
+        $location, $rootScope) {
         $scope.settings = bbSettingsService.getSettingsGroup("Changes");
         $scope.$watch('settings', () => bbSettingsService.save()
         , true);
@@ -13,4 +14,4 @@ class Changes {
 
 
 angular.module('app')
-.controller('changesController', ['$log', '$scope', 'dataService', 'bbSettingsService', Changes]);
+.controller('changesController', ['$log', '$scope', 'dataService', 'bbSettingsService', '$location', '$rootScope', Changes]);
