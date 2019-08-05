@@ -15,8 +15,9 @@ class ChangesState {
             controller: `${name}Controller`,
             template: require('./changes.tpl.jade'),
             name,
-            url: '/changes',
-            data: cfg
+            url: '/changes?id',
+            data: cfg,
+            reloadOnSearch: false
         };
 
         $stateProvider.state(state);
@@ -29,8 +30,7 @@ class ChangesState {
                 name:'changesFetchLimit',
                 caption:'Maximum number of changes to fetch',
                 default_value: 50
-            }
-            ]});
+            }]});
     }
 }
 
