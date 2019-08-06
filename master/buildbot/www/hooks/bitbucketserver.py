@@ -68,7 +68,7 @@ class BitbucketServerEventHandler:
 
         return payload
 
-    def handle_repo_push(self, payload):
+    def handle_repo_refs_changed(self, payload):
         changes = []
         project = payload['repository']['project']['name']
         repo_url = payload['repository']['links']['self'][0]['href']
