@@ -13,29 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-
-import re
-from abc import ABCMeta
-from abc import abstractmethod
-
-from twisted.cred.checkers import FilePasswordDB
-from twisted.cred.checkers import ICredentialsChecker
-from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
-from twisted.cred.credentials import IUsernamePassword
-from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm
-from twisted.cred.portal import Portal
 from twisted.internet import defer
 from twisted.web.error import Error
-from twisted.web.guard import BasicCredentialFactory
-from twisted.web.guard import DigestCredentialFactory
-from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 from zope.interface import implementer
 
 from buildbot.util import bytes2unicode
 from buildbot.util import config
-from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
@@ -96,39 +81,6 @@ class LoginResource(resource.Resource):
         raise NotImplementedError
 
 
-class NoAuth(AuthBase):
-    pass
-
-
-class RemoteUserAuth(AuthBase):
-    header = b"REMOTE_USER"
-    headerRegex = re.compile(br"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")
-
-    def __init__(self, header=None, headerRegex=None, **kwargs):
-        super().__init__(**kwargs)
-        if self.userInfoProvider is None:
-            self.userInfoProvider = UserInfoProviderBase()
-        if header is not None:
-            self.header = unicode2bytes(header)
-        if headerRegex is not None:
-            self.headerRegex = re.compile(unicode2bytes(headerRegex))
-
-    @defer.inlineCallbacks
-    def maybeAutoLogin(self, request):
-        header = request.getHeader(self.header)
-        if header is None:
-            raise Error(403, b"missing http header " + self.header + b". Check your reverse proxy config!")
-        res = self.headerRegex.match(header)
-        if res is None:
-            raise Error(
-                403, b'http header does not match regex! "' + header + b'" not matching ' + self.headerRegex.pattern)
-        session = request.getSession()
-        user_info = {k: bytes2unicode(v) for k, v in res.groupdict().items()}
-        if session.user_info != user_info:
-            session.user_info = user_info
-            yield self.updateUserInfo(request)
-
-
 @implementer(IRealm)
 class AuthRealm:
 
@@ -142,63 +94,6 @@ class AuthRealm:
                     PreAuthenticatedLoginResource(self.master, avatarId),
                     lambda: None)
         raise NotImplementedError()
-
-
-class TwistedICredAuthBase(AuthBase):
-
-    def __init__(self, credentialFactories, checkers, **kwargs):
-        super().__init__(**kwargs)
-        if self.userInfoProvider is None:
-            self.userInfoProvider = UserInfoProviderBase()
-        self.credentialFactories = credentialFactories
-        self.checkers = checkers
-
-    def getLoginResource(self):
-        return HTTPAuthSessionWrapper(
-            Portal(AuthRealm(self.master, self), self.checkers),
-            self.credentialFactories)
-
-
-class HTPasswdAuth(TwistedICredAuthBase):
-
-    def __init__(self, passwdFile, **kwargs):
-        super().__init__([DigestCredentialFactory(b"md5", b"buildbot"),
-             BasicCredentialFactory(b"buildbot")],
-            [FilePasswordDB(passwdFile)],
-            **kwargs)
-
-
-class UserPasswordAuth(TwistedICredAuthBase):
-
-    def __init__(self, users, **kwargs):
-        if isinstance(users, dict):
-            users = {user: unicode2bytes(pw) for user, pw in users.items()}
-        elif isinstance(users, list):
-            users = [(user, unicode2bytes(pw)) for user, pw in users]
-        super().__init__([DigestCredentialFactory(b"md5", b"buildbot"),
-             BasicCredentialFactory(b"buildbot")],
-            [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
-            **kwargs)
-
-
-@implementer(ICredentialsChecker)
-class CustomAuth(TwistedICredAuthBase):
-    __metaclass__ = ABCMeta
-    credentialInterfaces = [IUsernamePassword]
-
-    def __init__(self, **kwargs):
-        super().__init__([BasicCredentialFactory(b"buildbot")],
-            [self],
-            **kwargs)
-
-    def requestAvatarId(self, cred):
-        if self.check_credentials(cred.username, cred.password):
-            return defer.succeed(cred.username)
-        return defer.fail(UnauthorizedLogin())
-
-    @abstractmethod
-    def check_credentials(username, password):
-        return False
 
 
 def _redirect(master, request):
