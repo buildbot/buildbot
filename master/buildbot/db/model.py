@@ -257,6 +257,12 @@ class Model(base.DBConnectorComponent):
         # text describing what is the relationship with the build
         # could be 'triggered from', 'rebuilt from', 'inherited from'
         sa.Column('parent_relationship', sa.Text),
+
+        # optional pipeline id, used to map nested triggered builds
+        sa.Column('pipeline_id', sa.Integer,
+                  sa.ForeignKey('builds.id', use_alter=True,
+                                name='pipeline_id', ondelete='SET NULL'),
+                  nullable=True),
     )
 
     # changesources
@@ -787,6 +793,9 @@ class Model(base.DBConnectorComponent):
         ('buildsets',
             dict(unique=False, column_names=['parent_buildid'],
                  name='parent_buildid')),
+        ('buildsets',
+            dict(unique=False, column_names=['pipeline_id'],
+                 name='pipeline_id')),
         ('builders_tags',
             dict(unique=False, column_names=['tagid'],
                  name='tagid')),
