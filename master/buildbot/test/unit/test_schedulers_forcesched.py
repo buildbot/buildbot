@@ -390,7 +390,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                     print(
                         "You may update the test with (copied to clipboard):\n" + formatted)
                     xerox.copy(formatted)
-                    input()
+                    input() # nosec
                 except ImportError:
                     print("Note: for quick fix, pip install xerox")
             self.assertEqual(gotSpec, expectSpec)

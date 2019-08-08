@@ -61,7 +61,7 @@ class DevProxy:
                 app.router.add_static('/' + plugin, staticdir)
         staticdir = self.staticdir = self.apps.get('base').static_dir
         loader = jinja2.FileSystemLoader(staticdir)
-        self.jinja = jinja2.Environment(
+        self.jinja = jinja2.Environment(autoescape=True,
             loader=loader, undefined=jinja2.StrictUndefined)
         app.router.add_static('/', staticdir)
         conn = aiohttp.TCPConnector(

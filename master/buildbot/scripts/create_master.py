@@ -39,7 +39,7 @@ def makeBasedir(config):
 def makeTAC(config):
     # render buildbot_tac.tmpl using the config
     loader = jinja2.FileSystemLoader(os.path.dirname(__file__))
-    env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
+    env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined, autoescape=True)
     env.filters['repr'] = repr
     tpl = env.get_template('buildbot_tac.tmpl')
     cxt = dict((k.replace('-', '_'), v) for k, v in config.items())

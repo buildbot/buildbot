@@ -142,7 +142,7 @@ class RmdirRecursive(unittest.TestCase):
         finally:
             # even Twisted can't clean this up very well, so try hard to
             # clean it up ourselves..
-            os.chmod("noperms/x", 0o777)
+            os.chmod("noperms/x", 0o777) # nosec
             os.unlink("noperms/x")
             os.rmdir("noperms")
 

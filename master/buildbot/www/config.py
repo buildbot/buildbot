@@ -36,7 +36,7 @@ class IndexResource(resource.Resource):
     def __init__(self, master, staticdir):
         super().__init__(master)
         loader = jinja2.FileSystemLoader(staticdir)
-        self.jinja = jinja2.Environment(
+        self.jinja = jinja2.Environment(autoescape=True,
             loader=loader, undefined=jinja2.StrictUndefined)
 
     def reconfigResource(self, new_config):
