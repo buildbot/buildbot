@@ -192,6 +192,7 @@ setup_args = {
         "buildbot.wamp",
         "buildbot.www",
         "buildbot.www.hooks",
+        "buildbot.www.auth",
         "buildbot.www.authz",
     ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
@@ -392,8 +393,10 @@ setup_args = {
             ('buildbot.steps.shellsequence', ['ShellArg']),
             ('buildbot.util.kubeclientservice', ['KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader']),
             ('buildbot.www.avatar', ['AvatarGravatar']),
-            ('buildbot.www.auth', [
-                'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
+            ('buildbot.www.auth', ['NoAuth']),
+            ('buildbot.www.auth.userpasswd', ['UserPasswordAuth', 'HTPasswdAuth']),
+            ('buildbot.www.auth.remoteuser', ['RemoteUserAuth']),
+            ('buildbot.www.auth.customauth', ['CustomAuth']),
             ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth', 'GitLabAuth', 'BitbucketAuth']),
