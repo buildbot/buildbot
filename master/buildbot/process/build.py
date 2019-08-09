@@ -267,6 +267,8 @@ class Build(properties.PropertiesMixin):
                 tags = self.getProperty(
                     self.VIRTUAL_BUILDERTAGS_PROP,
                     self.builder.config.tags)
+                if '_virtual_' not in tags:
+                    tags.append('_virtual_')
 
                 self.master.data.updates.updateBuilderInfo(self._builderid,
                                                            description,
