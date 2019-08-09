@@ -127,7 +127,7 @@ SecretInVault
 
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
-At the moment buildbot supports KV v1 and v2 backends via the apiVersion argument.
+At the moment Buildbot supports KV v1 and v2 backends via the apiVersion argument.
 
 Buildbot's Vault authentication/authorisation is via a token.
 The "Initial Root Token", generated on Vault initialization, can be used but has ‘root’ authorization.
@@ -232,7 +232,7 @@ Writing secrets
 ```````````````
 
 By default the official docker instance of Vault is initialized with a mount path of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
-Currently buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
+Currently Buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
 Provision is made to set a top level path via the "secretsmount" argument: defaults to "secret".
 To add a new secret:
 
