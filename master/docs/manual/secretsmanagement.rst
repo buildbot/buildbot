@@ -109,8 +109,7 @@ Arguments:
   (required) Absolute path to directory containing the files with a secret.
 
 ``strip``
-  (optional) if ``True`` (the default), trailing newlines are removed from the
-  file contents.
+  (optional) if ``True`` (the default), trailing newlines are removed from the file contents.
 
 .. _SecretInAVault:
 
@@ -128,13 +127,11 @@ SecretInVault
 
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
-At the moment buildbot supports KV v1 and v2 backends via the apiVersion
-argument.
+At the moment buildbot supports KV v1 and v2 backends via the apiVersion argument.
 
-Buildbot's Vault authentication/authorisation is via a token. The "Initial Root
-Token", generated on Vault initialization, can be used but has ‘root’ authorization.
-Vault policies, and subsequent tokens assigned to them, provide for a more restrictive
-approach.
+Buildbot's Vault authentication/authorisation is via a token.
+The "Initial Root Token", generated on Vault initialization, can be used but has ‘root’ authorization.
+Vault policies, and subsequent tokens assigned to them, provide for a more restrictive approach.
 
 In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
@@ -234,11 +231,9 @@ Then, export the environment variable VAULT_ADDR needed to init Vault.
 Writing secrets
 ```````````````
 
-By default the official docker instance of Vault is initialized with a mount path
-of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
-Currently buildbot is "hard wired" to expect KV v2 engines to reside within this
-"data" sub path. Provision is made to set a top level path via the "secretsmount"
-argument: defaults to "secret".
+By default the official docker instance of Vault is initialized with a mount path of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
+Currently buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
+Provision is made to set a top level path via the "secretsmount" argument: defaults to "secret".
 To add a new secret:
 
 .. code-block:: shell
