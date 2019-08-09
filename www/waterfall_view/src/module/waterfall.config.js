@@ -40,6 +40,12 @@ class Waterfall {
                 caption: 'Show builders without builds',
                 default_value: false
             }
+            , {
+                type: 'bool',
+                name: 'show_old_builders',
+                caption: 'Show old builders',
+                default_value: false
+            }
             ]});
     }
 }

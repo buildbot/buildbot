@@ -118,6 +118,7 @@ var WaterfallController = (function() {
             this.$scope.builders = (this.builders = this.all_builders);
             this.buildLimit = this.c.limit;
             this.$scope.builds = (this.builds = this.dataAccessor.getBuilds({limit: this.buildLimit, order: '-started_at'}));
+            this.$scope.masters = this.dataAccessor.getMasters();
 
             d3Service.get().then(d3 => {
 
@@ -131,6 +132,15 @@ var WaterfallController = (function() {
                     this.$scope.builders = this.all_builders;
                 } else {
                     this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+                }
+                if (this.s.show_old_builders.value) {
+                    const ret = [];
+                    for (let builder of this.$scope.builders) {
+                        if (this.hasActiveMaster(builder)) {
+                            ret.push(builder);
+                        }
+                    }
+                    this.$scope.builders = this.builders = ret;
                 }
                 // Add builder status to builders
                 this.dataProcessorService.addStatus(this.builders);
@@ -197,6 +207,23 @@ var WaterfallController = (function() {
             $rootScope.$on('$locationChangeSuccess', function() {
                 self.renderNewData(self.$scope.tags_filter);
             });
+        }
+
+        hasActiveMaster(builder) {
+            let active = false;
+            if ((builder.masterids == null)) {
+                return false;
+            }
+            for (let mid of Array.from(builder.masterids)) {
+                const m = this.$scope.masters.get(mid);
+                if ((m != null) && m.active) {
+                    active = true;
+                }
+            }
+            if (builder.tags.includes('_virtual_')) {
+                active = true;
+            }
+            return active;
         }
 
 
@@ -705,6 +732,15 @@ var WaterfallController = (function() {
                 this.$scope.builders = this.all_builders;
             } else {
                 this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+            }
+            if (this.s.show_old_builders.value) {
+                const ret = [];
+                for (let builder of this.$scope.builders) {
+                    if (this.hasActiveMaster(builder)) {
+                        ret.push(builder);
+                    }
+                }
+                this.$scope.builders = this.builders = ret;
             }
             var all_tags = [];
             for (let builder of this.builders) {
