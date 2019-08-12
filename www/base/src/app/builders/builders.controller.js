@@ -154,6 +154,8 @@ class Builders {
             $scope.$watch("builders.$resolved", function(resolved) { if (resolved) { return requeryBuilds(); } });
         }
 
+        $scope.searchQuery = '';
+
         $scope.$watch("tags_filter", function() {
             if (builds && $scope.builders.$resolved) {
                 builds.close();
