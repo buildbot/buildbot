@@ -1,4 +1,19 @@
 .container
+  nav
+    ul.pager
+      li.previous(ng-class="{'disabled': change.changeid == 1}")
+        a(ng-if="change.changeid > 1 ", ui-sref="changebuilds({changeid: change.changeid-1})")
+            span.badge-status(ng-class="results2class('pulse')") &larr;
+            span.nomobile &nbsp;Previous
+        span(ng-if="change.changeid == 1") &larr;
+            span.nomobile &nbsp;Previous
+      li.next(ng-class="{'disabled': change.changeid == last_changeid}")
+        a(ng-if="change.changeid !== last_changeid", ui-sref="changebuilds({changeid: change.changeid+1})")
+            span.nomobile Next&nbsp;
+            span.badge-status(ng-class="results2class('pulse')") &rarr;
+        span(ng-if="change.changeid == last_changeid")
+            span.nomobile Next&nbsp;
+            span &rarr;
   .row
     changedetails(change="change")
     div(ng-if="builds")

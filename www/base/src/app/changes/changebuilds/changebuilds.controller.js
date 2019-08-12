@@ -16,6 +16,12 @@ class ChangeBuildsController {
             $scope.change = change;
         }
 
+        const allChanges = dataAccessor.getChanges();
+
+        allChanges.onChange = (allChanges) => {
+            $scope.last_changeid = allChanges.length;
+        }
+
         const getBuildsData = function() {
             let requestUrl = `changes/${changeId}/builds`;
             if (!buildsFetchLimit == '') {
