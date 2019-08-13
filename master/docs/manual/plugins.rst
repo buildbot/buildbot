@@ -43,7 +43,9 @@ Web interface plugins are not used directly: as described in :doc:`web server co
 
 .. note::
 
-    If you are not very familiar with Python and you need to use different kinds of components, start your ``master.cfg`` file with::
+    If you are not very familiar with Python and you need to use different kinds of components, start your ``master.cfg`` file with:
+
+    .. code-block:: python
 
         from buildbot.plugins import *
 

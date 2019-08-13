@@ -236,7 +236,9 @@ The set you choose will depend upon what your goals are: if you are concerned ab
 You might use just one builder if that platform has libraries or other facilities that allow better test coverage than what you can accomplish on your own machine, or faster test runs.
 
 The set of Builders to use can be specified with multiple option `--builder` arguments on the command line.
-It can also be specified with a single ``try_builders`` option in :file:`.buildbot/options` that uses a list of strings to specify all the Builder names::
+It can also be specified with a single ``try_builders`` option in :file:`.buildbot/options` that uses a list of strings to specify all the Builder names:
+
+.. code-block:: python
 
     try_builders = ["full-OSX", "full-win32", "full-linux"]
 

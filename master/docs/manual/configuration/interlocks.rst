@@ -57,7 +57,7 @@ Examples
 Time for a few examples.
 Below a master lock is defined to protect a data base, and a worker lock is created to limit the number of builds at each worker.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import util
 
@@ -87,7 +87,7 @@ If a build or step needs a lot of locks, it may be starved [#]_ by other builds 
 
 To illustrate use of locks, a few examples.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import util, steps
 

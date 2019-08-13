@@ -14,7 +14,9 @@ Builder Configuration
 The :bb:cfg:`builders` configuration key is a list of objects giving configuration for the Builders.
 For more information on the function of Builders in Buildbot, see :ref:`the Concepts chapter <Builder>`.
 The class definition for the builder configuration is in :file:`buildbot.config`.
-However there is a much simpler way to use it, so in the configuration file, its use looks like::
+However there is a much simpler way to use it, so in the configuration file, its use looks like:
+
+.. code-block:: python
 
     from buildbot.plugins import util
     c['builders'] = [
@@ -99,7 +101,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
     For example, if you have a pool of identical workers it is often easier to manage variables like :envvar:`PATH` from Buildbot rather than manually editing it inside of the workers' environment.
 
-    ::
+    .. code-block:: python
 
         f = factory.BuildFactory
         f.addStep(ShellCommand(
@@ -178,7 +180,9 @@ The :class:`BuilderConfig` parameter ``nextBuild`` can be use to prioritize buil
 Note that this is orthogonal to :ref:`Prioritizing-Builders`, which controls the order in which builders are called on to start their builds.
 The details of writing such a function are in :ref:`Build-Priority-Functions`.
 
-Such a function can be provided to the BuilderConfig as follows::
+Such a function can be provided to the BuilderConfig as follows:
+
+.. code-block:: python
 
     def pickNextBuild(builder, requests):
         ...
@@ -212,7 +216,9 @@ The virtual builder metadata is configured with the following properties:
 * ``virtual_builder_tags``: The tags for the virtual builder.
 
 You can also use virtual builders with :bb:sched:`SingleBranchScheduler`.
-For example if you want to automatically build all branches in your project without having to manually create a new builder each time one is added::
+For example if you want to automatically build all branches in your project without having to manually create a new builder each time one is added:
+
+.. code-block:: python
 
     c['schedulers'].append(schedulers.SingleBranchScheduler(
         name='myproject-epics',

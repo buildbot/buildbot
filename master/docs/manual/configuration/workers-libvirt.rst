@@ -74,7 +74,7 @@ We set the username to ``minion1``, the password to ``sekrit``.
 The base image is called ``base_image`` and a copy of it will be made for the duration of the VM's life.
 That copy will be thrown away every time a build is complete.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker, util
     c['workers'] = [
@@ -173,7 +173,7 @@ Configure buildbot server:
 1. On buildbot server in virtual environment install libvirt-python package: ``pip install libvirt-python``
 2. Create worker using remote ssh connection.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker, util
     c['workers'] = [
