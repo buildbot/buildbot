@@ -3,12 +3,16 @@
         .spinner
             i.fa.fa-circle-o-notch.fa-spin.fa-2x
             p loading
-    p Tags: 
-        span(ng-show="w.all_tags.length > 0" ng-repeat="tag in w.all_tags")
+    p
+        form(role="search" style="width:150px")
+            input(type="text" ng-model="searchedTag" class="form-control" placeholder="Search for tags")
+    p
+        span.label.clickable.label-danger(ng-click="w.clearTags()") x
+        | &nbsp;
+        span(ng-repeat="tag in w.all_tags | filter: searchedTag | limitTo: tags_limit")
             span.builder-tag.label.clickable.label-default(ng-click="w.toggleTag(tag)" ng-class="w.isTagFiltered(tag) ? 'label-success': 'label-default'")
                 | {{ tag }}
             | &nbsp;
-        span.label.clickable.label-danger(ng-click="w.clearTags()") x
     .header
         .header-content
     .content
