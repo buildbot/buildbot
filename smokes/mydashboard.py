@@ -56,7 +56,9 @@ c['www']['plugins']['wsgi_dashboards'] = [  # This is a list of dashboards, you 
         # priority of the dashboard in the left menu (lower is higher in the
         # menu)
         'order': 5,
-        # available icon list can be found at http://fontawesome.io/icons/
+        # An available icon list can be found at http://fontawesome.io/icons/. Double-check the
+        # buildbot about dashboard for the installed version of Font Awesome as the published icons
+        # may include more recently additions.
         'icon': 'area-chart'
     }
 ]
