@@ -686,10 +686,24 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
             '793d4754230023d85532f9a38dba3290f959beb4')
 
     @defer.inlineCallbacks
-    def testHookWithChangeOnPushEvent(self):
+    def testHookWithChangeOnRefsChangedEvent(self):
 
         request = _prepare_request(
             pushJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
+
+        yield request.test_render(self.change_hook)
+
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
+        self._checkPush(change)
+        self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
+        self.assertEqual(change['category'], 'push')
+
+    @defer.inlineCallbacks
+    def testHookWithChangeOnPushEvent(self):
+
+        request = _prepare_request(
+            pushJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
 
         yield request.test_render(self.change_hook)
 
