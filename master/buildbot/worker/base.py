@@ -669,8 +669,9 @@ class AbstractWorker(service.BuildbotService):
 
 class Worker(AbstractWorker):
 
+    @defer.inlineCallbacks
     def detached(self):
-        super().detached()
+        yield super().detached()
         self.botmaster.workerLost(self)
         self.startMissingTimer()
 
