@@ -28,6 +28,9 @@ class Builders {
                     active = true;
                 }
             }
+            if (builder.tags.includes('_virtual_')) {
+                active = true;
+            }
             return active;
         };
         $scope.settings = bbSettingsService.getSettingsGroup("Builders");
