@@ -42,7 +42,7 @@ master/setuptools_trial*
 sandbox
 sandbox.*
 .idea/
-/.venv/
+/.venv*/
 
 # www
 */node_modules/
