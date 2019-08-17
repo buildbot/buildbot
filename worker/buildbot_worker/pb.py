@@ -75,6 +75,7 @@ class BotFactory(AutoLoginPBFactory):
     def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay):
         AutoLoginPBFactory.__init__(self)
         self.keepaliveInterval = keepaliveInterval
+        self.keepalive_lock = defer.DeferredLock()
 
     def gotPerspective(self, perspective):
         log.msg("Connected to buildmaster; worker is ready")
@@ -96,24 +97,27 @@ class BotFactory(AutoLoginPBFactory):
         assert self.keepaliveInterval
         assert not self.keepaliveTimer
 
+        @defer.inlineCallbacks
         def doKeepalive():
             self.keepaliveTimer = None
             self.startTimers()
 
+            yield self.keepalive_lock.acquire()
+            self.currentKeepaliveWaiter = defer.Deferred()
+
             # Send the keepalive request.  If an error occurs
             # was already dropped, so just log and ignore.
             log.msg("sending app-level keepalive")
-            d = self.perspective.callRemote("keepalive")
-            self.currentKeepaliveWaiter = defer.Deferred()
-
-            def keepaliveReplied(details):
+            try:
+                details = yield self.perspective.callRemote("keepalive")
                 log.msg("Master replied to keepalive, everything's fine")
                 self.currentKeepaliveWaiter.callback(details)
                 self.currentKeepaliveWaiter = None
-                return details
+            except Exception as e:
+                log.err(e, "error sending keepalive")
+            finally:
+                self.keepalive_lock.release()
 
-            d.addCallback(keepaliveReplied)
-            d.addErrback(log.err, "error sending keepalive")
         self.keepaliveTimer = self._reactor.callLater(self.keepaliveInterval,
                                                       doKeepalive)
 

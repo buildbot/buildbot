@@ -833,6 +833,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         # Let's fake a virtual builder
         self.builder._builders['wilma'] = 108
         self.build.setProperty('virtual_builder_name', 'wilma', 'Build')
+        self.build.setProperty('virtual_builder_tags', ['_virtual_'])
         self.build.number = 33
         url = yield self.build.getUrl()
         self.assertEqual(url, 'http://localhost:8080/#builders/108/builds/33')

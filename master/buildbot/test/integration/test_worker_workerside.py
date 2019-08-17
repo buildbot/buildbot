@@ -72,8 +72,9 @@ class MasterSideWorker(worker.Worker):
         self.detach_d = defer.Deferred()
         return super().attached(conn)
 
+    @defer.inlineCallbacks
     def detached(self):
-        super().detached()
+        yield super().detached()
         self.detach_d, d = None, self.detach_d
         d.callback(None)
 
@@ -218,9 +219,9 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
     def workerSideDisconnect(self, worker):
         """Disconnect from the worker side
 
-        This seems a good way to simulate a broken connection
+        This seems a good way to simulate a broken connection. Returns a Deferred
         """
-        worker.bf.disconnect()
+        return worker.bf.disconnect()
 
     def addWorker(self, connection_string_tpl=r"tcp:host=127.0.0.1:port={port}",
                   password="pw", name="testworker", keepalive=None):
@@ -232,7 +233,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_connect_disconnect(self):
-        self.addMasterSideWorker()
+        yield self.addMasterSideWorker()
 
         def could_not_connect():
             self.fail("Worker never got connected to master")
@@ -249,7 +250,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_reconnect_network(self):
-        self.addMasterSideWorker()
+        yield self.addMasterSideWorker()
 
         def could_not_connect():
             self.fail("Worker did not reconnect in time to master")
@@ -261,7 +262,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         self.assertTrue('bldr' in worker.bot.builders)
 
         timeout = reactor.callLater(10, could_not_connect)
-        self.workerSideDisconnect(worker)
+        yield self.workerSideDisconnect(worker)
         yield worker.tests_connected
 
         timeout.cancel()
@@ -275,7 +276,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         The worker starts with a password that the master does not accept
         at first, and then the master gets reconfigured to accept it.
         """
-        self.addMasterSideWorker()
+        yield self.addMasterSideWorker()
         worker = self.addWorker(password="pw2")
         yield worker.startService()
         why, broker = yield worker.tests_login_failed
@@ -297,6 +298,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         timeout.cancel()
         self.assertTrue('bldr' in worker.bot.builders)
+
         yield worker.stopService()
         yield worker.tests_disconnected
 
@@ -311,24 +313,24 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
             waiter = worker.keepalive_waiter
             if waiter is not None:
                 waiter.callback(time.time())
+                worker.keepalive_waiter = None
+
         from buildbot.worker.protocols.pb import Connection
         self.patch(Connection, 'perspective_keepalive', perspective_keepalive)
 
-        self.addMasterSideWorker()
+        yield self.addMasterSideWorker()
         # short keepalive to make the test bearable to run
         worker = self.addWorker(keepalive=0.1)
-        worker.keepalive_waiter = defer.Deferred()
+        waiter = worker.keepalive_waiter = defer.Deferred()
 
         yield worker.startService()
         yield worker.tests_connected
-        first = yield worker.keepalive_waiter
+        first = yield waiter
         yield worker.bf.currentKeepaliveWaiter
 
-        worker.keepalive_waiter = defer.Deferred()
+        waiter = worker.keepalive_waiter = defer.Deferred()
 
-        second = yield worker.keepalive_waiter
-        # avoid errors if a third gets fired
-        worker.keepalive_waiter = None
+        second = yield waiter
         yield worker.bf.currentKeepaliveWaiter
 
         self.assertGreater(second, first)

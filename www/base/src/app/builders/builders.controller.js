@@ -28,12 +28,18 @@ class Builders {
                     active = true;
                 }
             }
+            if (builder.tags.includes('_virtual_')) {
+                active = true;
+            }
             return active;
         };
         $scope.settings = bbSettingsService.getSettingsGroup("Builders");
         $scope.$watch('settings', () => bbSettingsService.save()
         , true);
         const buildFetchLimit = $scope.settings.buildFetchLimit.value;
+
+        $scope.page_size = $scope.settings.page_size.value;
+        $scope.currentPage = 1;
 
         const updateTagsFilterFromLocation = function() {
             $scope.tags_filter = $location.search()["tags"];
@@ -150,6 +156,8 @@ class Builders {
         } else {
             $scope.$watch("builders.$resolved", function(resolved) { if (resolved) { return requeryBuilds(); } });
         }
+
+        $scope.searchQuery = '';
 
         $scope.$watch("tags_filter", function() {
             if (builds && $scope.builders.$resolved) {

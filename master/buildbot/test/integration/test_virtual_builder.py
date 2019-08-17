@@ -32,7 +32,7 @@ class ShellMaster(RunMasterBase):
         builders = yield self.master.data.get(("builders",))
         self.assertEqual(len(builders), 2)
         self.assertEqual(builders[1], {
-            'masterids': [], 'tags': ['virtual'], 'description': 'I am a virtual builder',
+            'masterids': [], 'tags': ['virtual', '_virtual_'], 'description': 'I am a virtual builder',
             'name': 'virtual_testy', 'builderid': 2})
         self.assertEqual(build['builderid'], builders[1]['builderid'])
 

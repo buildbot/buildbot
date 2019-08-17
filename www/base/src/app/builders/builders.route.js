@@ -51,6 +51,12 @@ class BuildersState {
                 caption:'Maximum number of builds to fetch',
                 default_value: 200
             }
+            , {
+                type:'integer',
+                name:'page_size',
+                caption:'Number of builders to show per page',
+                default_value: 100
+            }
             ]});
     }
 }
