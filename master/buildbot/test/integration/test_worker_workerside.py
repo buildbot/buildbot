@@ -311,24 +311,24 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
             waiter = worker.keepalive_waiter
             if waiter is not None:
                 waiter.callback(time.time())
+                worker.keepalive_waiter = None
+
         from buildbot.worker.protocols.pb import Connection
         self.patch(Connection, 'perspective_keepalive', perspective_keepalive)
 
         self.addMasterSideWorker()
         # short keepalive to make the test bearable to run
         worker = self.addWorker(keepalive=0.1)
-        worker.keepalive_waiter = defer.Deferred()
+        waiter = worker.keepalive_waiter = defer.Deferred()
 
         yield worker.startService()
         yield worker.tests_connected
-        first = yield worker.keepalive_waiter
+        first = yield waiter
         yield worker.bf.currentKeepaliveWaiter
 
-        worker.keepalive_waiter = defer.Deferred()
+        waiter = worker.keepalive_waiter = defer.Deferred()
 
-        second = yield worker.keepalive_waiter
-        # avoid errors if a third gets fired
-        worker.keepalive_waiter = None
+        second = yield waiter
         yield worker.bf.currentKeepaliveWaiter
 
         self.assertGreater(second, first)
