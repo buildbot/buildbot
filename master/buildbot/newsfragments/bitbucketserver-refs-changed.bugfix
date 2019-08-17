@@ -1,0 +1,1 @@
+Fix handling of the regs_changed event in the BitBucket Server web hook.

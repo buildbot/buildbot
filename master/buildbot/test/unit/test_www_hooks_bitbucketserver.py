@@ -686,6 +686,20 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
             '793d4754230023d85532f9a38dba3290f959beb4')
 
     @defer.inlineCallbacks
+    def testHookWithChangeOnRefsChangedEvent(self):
+
+        request = _prepare_request(
+            pushJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
+
+        yield request.test_render(self.change_hook)
+
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
+        self._checkPush(change)
+        self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
+        self.assertEqual(change['category'], 'push')
+
+    @defer.inlineCallbacks
     def testHookWithChangeOnPushEvent(self):
 
         request = _prepare_request(
@@ -782,7 +796,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     @defer.inlineCallbacks
     def _checkCodebase(self, event_type, expected_codebase):
         payloads = {
-            'repo:push': pushJsonPayload,
+            'repo:refs_changed': pushJsonPayload,
             'pullrequest:updated': pullRequestUpdatedJsonPayload}
         request = _prepare_request(
             payloads[event_type], headers={_HEADER_EVENT: event_type})
@@ -795,7 +809,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     def testHookWithCodebaseValueOnPushEvent(self):
         self.change_hook.dialects = {
             'bitbucketserver': {'codebase': 'super-codebase'}}
-        yield self._checkCodebase('repo:push', 'super-codebase')
+        yield self._checkCodebase('repo:refs_changed', 'super-codebase')
 
     @defer.inlineCallbacks
     def testHookWithCodebaseFunctionOnPushEvent(self):
@@ -803,7 +817,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
             'bitbucketserver': {
                 'codebase':
                     lambda payload: payload['repository']['project']['key']}}
-        yield self._checkCodebase('repo:push', 'CI')
+        yield self._checkCodebase('repo:refs_changed', 'CI')
 
     @defer.inlineCallbacks
     def testHookWithCodebaseValueOnPullEvent(self):
@@ -830,7 +844,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     @defer.inlineCallbacks
     def testHookWithChangeOnCreateTag(self):
         request = _prepare_request(
-            newTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
+            newTagJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -841,7 +855,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteTag(self):
         request = _prepare_request(
-            deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
+            deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -852,7 +866,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteBranch(self):
         request = _prepare_request(
-            deleteBranchJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
+            deleteBranchJsonPayload,
+            headers={_HEADER_EVENT: 'repo:refs_changed'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -863,7 +878,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     @defer.inlineCallbacks
     def testHookWithInvalidContentType(self):
         request = _prepare_request(
-            pushJsonPayload, headers={_HEADER_EVENT: b'repo:push'})
+            pushJsonPayload, headers={_HEADER_EVENT: b'repo:refs_changed'})
         request.received_headers[b'Content-Type'] = b'invalid/content'
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
