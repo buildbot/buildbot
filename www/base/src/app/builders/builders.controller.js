@@ -38,6 +38,9 @@ class Builders {
         , true);
         const buildFetchLimit = $scope.settings.buildFetchLimit.value;
 
+        $scope.page_size = $scope.settings.page_size.value;
+        $scope.currentPage = 1;
+
         const updateTagsFilterFromLocation = function() {
             $scope.tags_filter = $location.search()["tags"];
             if ($scope.tags_filter == null) { $scope.tags_filter = []; }
@@ -153,6 +156,8 @@ class Builders {
         } else {
             $scope.$watch("builders.$resolved", function(resolved) { if (resolved) { return requeryBuilds(); } });
         }
+
+        $scope.searchQuery = '';
 
         $scope.$watch("tags_filter", function() {
             if (builds && $scope.builders.$resolved) {

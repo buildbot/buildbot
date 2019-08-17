@@ -1,5 +1,7 @@
 .container
   .row
+    form(role="search" style="width:150px")
+      input(type="text" ng-model="searchQuery" class="form-control" placeholder="Search for builders")
     table.table.table-hover.table-striped.table-condensed
       tr
           th Builder Name
@@ -37,7 +39,10 @@
             span(ng-show="tags_filter.length > 0")
                 span.label.clickable.label-danger(ng-click="tags_filter = []") x
           th(style="width:20%px;") Workers
-      tr(ng-repeat='builder in builders | filter: isBuilderFiltered | orderBy: "name"')
+      ul(uib-pagination, total-items="(builders | filter: {name: searchQuery} | filter: isBuilderFiltered).length",
+        ng-model="currentPage", class="pagination-sm", boundary-link-numbers="true",
+        max-size=10, items-per-page="page_size")
+      tr(ng-repeat='builder in builders | filter: {name: searchQuery} | filter: isBuilderFiltered | orderBy: "name" | limitTo: page_size :(currentPage-1)*page_size')
           td(style="width:200px")
             a(ui-sref='builder({builder: builder.builderid})')
               | {{ builder.name }}
