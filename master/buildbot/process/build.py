@@ -120,11 +120,10 @@ class Build(properties.PropertiesMixin):
         self.master = builder.master
         self.config_version = builder.config_version
 
+    @defer.inlineCallbacks
     def setLocks(self, lockList):
-        # convert all locks into their real forms
-        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access, self.config_version),
-                       access)
-                      for access in lockList]
+        self.locks = yield self.builder.botmaster.getLockFromLockAccesses(lockList,
+                                                                          self.config_version)
 
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute

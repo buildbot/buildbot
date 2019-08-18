@@ -154,6 +154,7 @@ class AbstractWorker(service.BuildbotService):
             return None
         return self.master.botmaster
 
+    @defer.inlineCallbacks
     def updateLocks(self):
         """Convert the L{LockAccess} objects in C{self.locks} into real lock
         objects, while also maintaining the subscriptions to lock releases."""
@@ -162,9 +163,8 @@ class AbstractWorker(service.BuildbotService):
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = [(self.botmaster.getLockFromLockAccess(a, self.config_version),
-                  a)
-                 for a in self.access]
+        locks = yield self.botmaster.getLockFromLockAccesses(self.access, self.config_version)
+
         self.locks = [(l.getLockForWorker(self.workername), la)
                       for l, la in locks]
         self.lock_subscriptions = [l.subscribeToReleases(self._lockReleased)

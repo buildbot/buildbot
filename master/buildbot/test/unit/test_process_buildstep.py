@@ -157,11 +157,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def test_renderableLocks(self):
-        lock1 = mock.Mock(spec=locks.MasterLock)
-        lock1.name = "masterlock"
-
-        lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "workerlock"
+        lock1 = locks.MasterLock("masterlock")
+        lock2 = locks.WorkerLock("workerlock")
 
         renderedLocks = [False]
 
@@ -195,11 +192,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def test_regularLocks(self):
-        lock1 = mock.Mock(spec=locks.MasterLock)
-        lock1.name = "masterlock"
-
-        lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "workerlock"
+        lock1 = locks.MasterLock("masterlock")
+        lock2 = locks.WorkerLock("workerlock")
 
         self.setupStep(self.FakeBuildStep(
             locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
@@ -609,6 +603,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = NewStyleStep()
         step.master = mock.Mock()
         step.build = mock.Mock()
+        step.build.builder.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
         step.locks = []
         step.renderables = []
         step.build.render = defer.succeed

@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import util
+from buildbot.util import service
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 
@@ -40,6 +41,8 @@ class BaseLock:
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
+        super().__init__()
+
         # Name of the lock
         self.lockName = name
         # Current queue, tuples (waiter, LockAccess, deferred)
@@ -206,11 +209,12 @@ class BaseLock:
         return (owner, access) in self.owners
 
 
-class RealMasterLock(BaseLock):
+class RealMasterLock(BaseLock, service.SharedService):
 
-    def __init__(self, lockid):
-        super().__init__(lockid.name, lockid.maxCount)
-        self.config_version = 0
+    def __init__(self, name):
+        # the caller will want to call updateFromLockId after initialization
+        super().__init__(name, 0)
+        self.config_version = -1
         self._updateDescription()
 
     def _updateDescription(self):
@@ -229,13 +233,16 @@ class RealMasterLock(BaseLock):
         self._updateDescription()
 
 
-class RealWorkerLock:
+class RealWorkerLock(service.SharedService):
 
-    def __init__(self, lockid):
-        self.lockName = lockid.name
-        self.maxCount = lockid.maxCount
-        self.maxCountForWorker = lockid.maxCountForWorker
-        self.config_version = 0
+    def __init__(self, name):
+        super().__init__()
+
+        # the caller will want to call updateFromLockId after initialization
+        self.lockName = name
+        self.maxCount = None
+        self.maxCountForWorker = None
+        self.config_version = -1
         self._updateDescription()
         self.locks = {}
 

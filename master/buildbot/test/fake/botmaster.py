@@ -16,25 +16,18 @@
 
 from twisted.internet import defer
 
-from buildbot.process.botmaster import BotLockTracker
+from buildbot.process import botmaster
 from buildbot.util import service
 
 
-class FakeBotMaster(service.AsyncMultiService):
+class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
 
     def __init__(self):
         super().__init__()
         self.setName("fake-botmaster")
-        self.lock_tracker = BotLockTracker()
         self.builders = {}  # dictionary mapping worker names to builders
         self.buildsStartedForWorkers = []
         self.delayShutdown = False
-
-    def getLockByID(self, lockid, config_version):
-        return self.lock_tracker.getLockByID(lockid, config_version)
-
-    def getLockFromLockAccess(self, access, config_version):
-        return self.getLockByID(access.lockid, config_version)
 
     def getBuildersForWorker(self, workername):
         return self.builders.get(workername, [])

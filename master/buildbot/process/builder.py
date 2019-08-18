@@ -299,9 +299,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             props = setupPropsIfNeeded(props)
             locks = yield props.render(locks)
 
-        locks = [(self.botmaster.getLockFromLockAccess(access, self.config_version),
-                  access)
-                 for access in locks]
+        locks = yield self.botmaster.getLockFromLockAccesses(locks, self.config_version)
+
         if locks:
             can_start = Build._canAcquireLocks(locks, workerforbuilder)
             if can_start is False:
