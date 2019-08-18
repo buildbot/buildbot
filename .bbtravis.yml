@@ -135,7 +135,7 @@ script:
     cmd: make frontend_install_tests
 
   - title: frontend unit tests
-    condition: TESTS == "js_unit" and not TRAVIS_PULL_REQUEST
+    condition: TESTS == "js_unit"
     cmd: make frontend_tests
 
   - title: master and worker tests
