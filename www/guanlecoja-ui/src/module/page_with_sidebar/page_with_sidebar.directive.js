@@ -68,10 +68,10 @@ class _glPageWithSidebar {
             this.$timeout.cancel(this.timeout);
             this.timeout = undefined;
         }
-        return this.timeout = this.$timeout((() => {
+        this.timeout = this.$timeout((() => {
             if (!this.inSidebar && !this.sidebarPinned) {
                 this.sidebarActive = false;
-                return this.activeGroup = null;
+                this.activeGroup = null;
             }
         }
             ), 500);
