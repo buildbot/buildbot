@@ -24,6 +24,10 @@ class Collection {
             constructorImpl(restPath, query, accessor) {
                 let className;
                 this.listener = this.listener.bind(this);
+                this.put = this.put.bind(this);
+                this.add = this.add.bind(this);
+                this.recomputeQuery = this.recomputeQuery.bind(this);
+                this.sendEvents = this.sendEvents.bind(this);
                 this.restPath = restPath;
                 if (query == null) { query = {}; }
                 this.query = query;
