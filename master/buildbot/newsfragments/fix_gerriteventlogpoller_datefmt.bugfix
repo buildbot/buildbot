@@ -1,1 +1,0 @@
-+Fix GerritEventLogPoller was using the wrong date format.

@@ -1,1 +1,0 @@
-:py:class:`~buildbot.util.git.GitStepMixin`: Prevent builders from corrupting temporary ssh data path by using builder name as part of the path

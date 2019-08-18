@@ -10,6 +10,59 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.4.0`` ( ``2019-08-18`` )
+=====================================
+
+Bug fixes
+---------
+
+- +add an index to steps.started_at to boost expensive SQL queries.
+- Fix handling of the regs_changed event in the BitBucket Server web hook.
+- :issue:`4844`: Fix errors when disconnecting a libvirt worker.
+- :issue:`4873`: Fix Bitbucket Cloud hook crash due to changes in their API.
+- +Fix GerritEventLogPoller was using the wrong date format.
+- +Fix janitor Exception when there is no logchunk to delete.
+- Reduced the number of SQL queries triggered by ``getPrevSuccessfulBuild()`` by up to 100.
+- :py:class:`~buildbot.util.git.GitStepMixin`: Prevent builders from corrupting temporary ssh data path by using builder name as part of the path
+- :py:class:`~buildbot.util.git.GitTag`: Allow ``tagName`` to be a renderable
+- Fix Github error reporting to handle exceptions that happen before the http request is sent
+- :py:class:`~buildbot.changes.gitpoller.GitPoller`: Trigger on pushes with no commits when the new revision is not the tip of another branch.
+- :py:class:`~buildbot.steps.source.git.Git`: Fix the invocation of `git submodule foreach` on cleaning
+- Fixed: On reconfig the StatsService would not correctly clear old consumers.
+- :issue:`4765`: Fix various errors in try client with Python 3
+- Prevent accidental start of multiple force builds. (:issue:`4823`)
+- The support for proxying Buildbot frontend to another Buildbot instance during development has been fixed.
+  This feature has been broken since v2.3.0, and is now completely re-implemented for best performance ease of use and maintainability.
+
+Improved Documentation
+----------------------
+
+- :issue:`4939`: Document why some listed icons may not work out-of-the-box when building a custom dashboard
+- Improve Vault secrets management docs entry: includes fixes/additions to example code and emphasize on authorization component re policies and associated tokens. Also clarifies current function re KV v1 and v2 engines apiVersion argument and expected engine paths and the secretsmount argument.
+- Link the documentation of www.port to the capabilities of twisted.application.strports.
+- Move the documentation on how to submit PRs out of the trac wiki to the documentation shipped with Buildbot, update and enhance it.
+
+Features
+--------
+
+- :issue:`4928`: Update buildbot worker image to ubuntu 18.04
+- :py:class:`~buildbot.worker.docker.DockerLatentWorker`: Added support for docker build contexts, `buildargs`, and specifying controlling context
+- The :py:class:`~buildbot.changes.gerritchangesource.GerritChangeFilter` and :py:class:`~buildbot.changes.gerritchangesource.GerritEventLogPoller` now populate the `files` attribute of emitted changes when the `get_files` argument is true. Enabling this feature triggers an additional HTTP request or SSH command to the Gerrit server for every emitted change.
+- Buildbot now warns users who connect using unsupported browsers.
+- Boost janitor speed by using more efficient SQL queries.
+- Scheduler properties are now renderable.
+- :py:class:`~buildbot.steps.python.Sphinx`: Added ``strict_warnings`` option to fail on warnings.
+- UI now shows a paginated view for trigger step sub builds
+
+Deprecations and Removals
+-------------------------
+
+- Support for older browsers that were not working since 2.3.0 has been removed due to technical limitations.
+  Notably, Internet Explorer 11 is no longer supported.
+  Currently supported browsers are Chrome 56, Firefox 52, Edge 13 and Safari 10, newer versions of these browsers and their compatible derivatives.
+  This set of browsers covers 98% of users of buildbot.net.
+
+
 Buildbot ``2.3.1`` ( ``2019-05-22`` )
 =====================================
 

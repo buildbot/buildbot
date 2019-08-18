@@ -1,1 +1,0 @@
-Fix Github error reporting to handle exceptions that happen before the http request is sent
