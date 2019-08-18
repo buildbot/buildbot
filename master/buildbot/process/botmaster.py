@@ -28,6 +28,28 @@ from buildbot.process.workerforbuilder import States
 from buildbot.util import service
 
 
+class BotLockTracker:
+    ''' Tracks real lock instances given lock ID.
+    '''
+
+    def __init__(self):
+        self.locks = {}
+
+    def getLockByID(self, lockid):
+        """Convert a Lock identifier into an actual Lock instance.
+        @param lockid: a locks.MasterLock or locks.WorkerLock instance
+        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
+        """
+        assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
+        if lockid not in self.locks:
+            self.locks[lockid] = lockid.lockClass(lockid)
+        # if the master.cfg file has changed maxCount= on the lock, the next
+        # time a build is started, they'll get a new RealLock instance. Note
+        # that this requires that MasterLock and WorkerLock (marker) instances
+        # be hashable and that they should compare properly.
+        return self.locks[lockid]
+
+
 class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     """This is the master-side service which manages remote buildbot workers.
@@ -47,8 +69,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.watchers = {}
 
-        # self.locks holds the real Lock instances
-        self.locks = {}
+        # self.lock_tracker tracks the real Lock instances
+        self.lock_tracker = BotLockTracker()
 
         self.shuttingDown = False
 
@@ -257,18 +279,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return super().stopService()
 
     def getLockByID(self, lockid):
-        """Convert a Lock identifier into an actual Lock instance.
-        @param lockid: a locks.MasterLock or locks.WorkerLock instance
-        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
-        """
-        assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
-        if lockid not in self.locks:
-            self.locks[lockid] = lockid.lockClass(lockid)
-        # if the master.cfg file has changed maxCount= on the lock, the next
-        # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and WorkerLock (marker) instances
-        # be hashable and that they should compare properly.
-        return self.locks[lockid]
+        return self.lock_tracker.getLockByID(lockid)
 
     def getLockFromLockAccess(self, access):
         # Convert a lock-access object into an actual Lock instance.

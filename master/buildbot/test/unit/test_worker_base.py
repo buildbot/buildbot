@@ -183,20 +183,22 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
     @defer.inlineCallbacks
     def test_constructor_full(self):
-        lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
+        lock1, lock2 = locks.MasterLock('lock1'), locks.MasterLock('lock2')
+        access1, access2 = lock1.access('counting'), lock2.access('counting')
+
         bs = yield self.createWorker('bot', 'pass',
                             max_builds=2,
                             notify_on_missing=['me@me.com'],
                             missing_timeout=120,
                             properties={'a': 'b'},
-                            locks=[lock1, lock2])
+                            locks=[access1, access2])
         yield bs.startService()
 
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
         self.assertEqual(bs.missing_timeout, 120)
         self.assertEqual(bs.properties.getProperty('a'), 'b')
-        self.assertEqual(bs.access, [lock1, lock2])
+        self.assertEqual(bs.access, [access1, access2])
 
     @defer.inlineCallbacks
     def test_constructor_notify_on_missing_not_list(self):
