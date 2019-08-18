@@ -68,36 +68,4 @@ describe('buildsummary controller', function() {
         expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(true);
         buildsummary.toggleDetails();
     });
-
-    it('should provide correct getBuildRequestIDFromURL', function() {
-        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")($scope);
-        $scope.$apply();
-        const { buildsummary } = element.isolateScope();
-        expect(buildsummary.getBuildRequestIDFromURL(`${baseurl}#buildrequests/123`))
-        .toBe(123);
-    });
-
-    it('should provide correct isBuildRequestURL', function() {
-        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")($scope);
-        $scope.$apply();
-        const { buildsummary } = element.isolateScope();
-        expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/123`))
-        .toBe(true);
-        expect(buildsummary.isBuildRequestURL("http://otherdomain:5000/#buildrequests/123"))
-        .toBe(false);
-        expect(buildsummary.isBuildRequestURL(`${baseurl}#builds/123`))
-        .toBe(false);
-        expect(buildsummary.isBuildRequestURL(`${baseurl}#buildrequests/bla`))
-        .toBe(false);
-    });
-
-    it('should provide correct isBuildURL', function() {
-        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")($scope);
-        $scope.$apply();
-        const { buildsummary } = element.isolateScope();
-        expect(buildsummary.isBuildURL(`${baseurl}#builders/123/builds/123`))
-        .toBe(true);
-        expect(buildsummary.isBuildURL(`${baseurl}#builders/sdf/builds/123`))
-        .toBe(false);
-    });
 });
