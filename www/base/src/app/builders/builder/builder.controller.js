@@ -63,7 +63,7 @@ class BuilderController {
                         dl.push(build.control('stop'));
                     }
                 });
-                return $q.when(dl).then(success, failure);
+                $q.when(dl).then(success, failure);
             };
 
             var refreshContextMenu = function() {

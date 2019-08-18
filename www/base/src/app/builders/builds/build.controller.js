@@ -36,7 +36,7 @@ class BuildController {
                 return refreshContextMenu();
             };
 
-            return $scope.build.control('rebuild').then(success, failure);
+            $scope.build.control('rebuild').then(success, failure);
         };
 
         const doStop = function() {
@@ -51,7 +51,7 @@ class BuildController {
                 return refreshContextMenu();
             };
 
-            return $scope.build.control('stop').then(success, failure);
+            $scope.build.control('stop').then(success, failure);
         };
 
         var refreshContextMenu = function() {

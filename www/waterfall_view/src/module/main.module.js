@@ -150,7 +150,7 @@ var WaterfallController = (function() {
                 this.$scope.$watch(
                     () => this.waterfall.style('width')
                 ,
-                    (n, o) => { if (n !== o) { return this.render(); } }
+                    (n, o) => { if (n !== o) { this.render(); } }
                 , true
                 );
 
@@ -218,12 +218,12 @@ var WaterfallController = (function() {
 
         zoomPlus() {
             this.incrementScaleFactor();
-            return this.render();
+            this.render();
         }
 
         zoomMinus() {
             this.decrementScaleFactor();
-            return this.render();
+            this.render();
         }
         /*
          * Increment and decrement the scale factor
@@ -774,7 +774,7 @@ var WaterfallController = (function() {
             // Draw the waterfall
             this.drawBuilds();
             this.drawXAxis();
-            return this.drawYAxis();
+            this.drawYAxis();
         }
     };
     Cls.initClass();

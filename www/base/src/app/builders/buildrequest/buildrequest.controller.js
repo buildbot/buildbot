@@ -34,7 +34,7 @@ class BuildrequestController {
                 return refreshContextMenu();
             };
 
-            return $scope.buildrequest.control('cancel').then(success, failure);
+            $scope.buildrequest.control('cancel').then(success, failure);
         };
 
         var refreshContextMenu = function() {
