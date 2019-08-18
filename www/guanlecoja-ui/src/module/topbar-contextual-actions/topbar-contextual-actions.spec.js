@@ -24,12 +24,12 @@ describe('topbar-contextual-actions', function() {
     it('should load', function() {
         expect(elmBody).toBeDefined();
         // should be empty at init
-        return expect(elmBody.find("li").length).toEqual(0);
+        expect(elmBody.find("li").length).toEqual(0);
     });
 
 
     // create the buttons via API
-    return it('should create buttons', inject(function(glTopbarContextualActionsService) {
+    it('should create buttons', inject(function(glTopbarContextualActionsService) {
         expect(elmBody).toBeDefined();
         let called = 0;
         glTopbarContextualActionsService.setContextualActions([{
@@ -51,7 +51,7 @@ describe('topbar-contextual-actions', function() {
             return $(this).click();
         });
         scope.$digest();
-        return expect(called).toEqual(2);
+        expect(called).toEqual(2);
     })
     );
 });

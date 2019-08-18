@@ -74,14 +74,14 @@ describe('menuService', function() {
         expect(groups.length).toEqual(7);
         expect(groups[0].items.length).toEqual(7);
         expect(namedGroups['bug'].items.length).toEqual(0);
-        return expect(namedGroups['bug'].caption).toEqual('Bugcab');
+        expect(namedGroups['bug'].caption).toEqual('Bugcab');
     })
     );
 
     it('should have the default group set', inject(function(glMenuService) {
         const defaultGroup = glMenuService.getDefaultGroup();
         const groups = glMenuService.getGroups();
-        return expect(defaultGroup).toEqual(groups[0]);
+        expect(defaultGroup).toEqual(groups[0]);
     })
     );
 
@@ -104,11 +104,11 @@ describe('menuService', function() {
                 return groups = glMenuService.getGroups();
             })
         ;
-        return expect(run).toThrow();
+        expect(run).toThrow();
     });
 
     // simple test to make sure the directive loads
-    return it('should remove empty groups', function() {
+    it('should remove empty groups', function() {
 
         // configure the menu a little bit more.. with an erronous state
         angular.mock.module(function(glMenuServiceProvider) {
@@ -117,13 +117,13 @@ describe('menuService', function() {
             return null;
         });
 
-        return inject(function(glMenuService) {
+        inject(function(glMenuService) {
             const groups = glMenuService.getGroups();
             const namedGroups = {};
             for (let g of Array.from(groups)) {
                 namedGroups[g.name] = g;
             }
-            return expect(namedGroups["foo"]).not.toBeDefined();
+            expect(namedGroups["foo"]).not.toBeDefined();
         });
     });
 });

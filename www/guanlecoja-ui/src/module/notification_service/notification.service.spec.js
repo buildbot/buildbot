@@ -6,7 +6,7 @@
 describe('notificationService', function() {
     beforeEach(angular.mock.module("guanlecoja.ui"));
 
-    return it('should add and delete notifications', inject(function(glNotificationService, $timeout) {
+    it('should add and delete notifications', inject(function(glNotificationService, $timeout) {
 
         glNotificationService.notify({msg:"done", title:"finish"});
         expect(glNotificationService.notifications).toEqual([ { id : 1, msg : 'done', title : 'finish' } ]);
@@ -37,7 +37,7 @@ describe('notificationService', function() {
         glNotificationService.notify({msg:"done3", title:"finish", group:"group"});
         glNotificationService.dismiss(9);
         glNotificationService.dismiss(10);
-        return expect(glNotificationService.notifications).toEqual([]);
+        expect(glNotificationService.notifications).toEqual([]);
     })
     );
 });
