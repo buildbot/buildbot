@@ -13,6 +13,11 @@ Release Notes
 Buildbot ``2.4.0`` ( ``2019-08-18`` )
 =====================================
 
+Highlights
+----------
+
+Database upgrade may take a while on larger instances on this release due to newly added index.
+
 Bug fixes
 ---------
 
