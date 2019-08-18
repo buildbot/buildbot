@@ -155,12 +155,12 @@ class BuildController {
 
                 data.getWorkers(build.workerid).onNew = worker => $scope.worker = publicFieldsFilter(worker);
 
-                return data.getBuildrequests(build.buildrequestid).onNew = function(buildrequest) {
+                data.getBuildrequests(build.buildrequestid).onNew = function(buildrequest) {
                     $scope.buildrequest = buildrequest;
-                    return data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
+                    data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
                         $scope.buildset = buildset;
                         if (buildset.parent_buildid) {
-                            return data.getBuilds(buildset.parent_buildid).onNew = build => $scope.parent_build = build;
+                            data.getBuilds(buildset.parent_buildid).onNew = build => $scope.parent_build = build;
                         }
                     };
                 };

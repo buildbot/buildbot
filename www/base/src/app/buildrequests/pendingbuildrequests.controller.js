@@ -16,7 +16,7 @@ class Pendingbuildrequests {
                 buildrequest.properties = response.properties[0];
                 return _.assign($scope.properties, response.properties[0]);
             });
-            return buildrequest.builder = buildersService.getBuilder(buildrequest.builderid);
+            buildrequest.builder = buildersService.getBuilder(buildrequest.builderid);
         };
     }
 }

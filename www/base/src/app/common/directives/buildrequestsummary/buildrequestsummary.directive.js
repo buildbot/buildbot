@@ -31,7 +31,7 @@ class _buildrequestsummary {
             $scope.buildrequest = buildrequest;
             data.getBuildsets(buildrequest.buildsetid).onNew = buildset => $scope.buildset = buildset;
 
-            return $scope.builder = buildersService.getBuilder(buildrequest.builderid);
+            $scope.builder = buildersService.getBuilder(buildrequest.builderid);
         };
     }
 }

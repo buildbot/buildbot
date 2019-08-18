@@ -17,12 +17,12 @@ class LogController {
         const slug = $stateParams.log;
         data.getBuilders(builderid).onNew = function(builder) {
             $scope.builder = (builder = builder);
-            return builder.getBuilds(buildnumber).onNew = function(build) {
+            builder.getBuilds(buildnumber).onNew = function(build) {
                 $scope.build = build;
-                return build.getSteps(stepnumber).onNew = function(step) {
+                build.getSteps(stepnumber).onNew = function(step) {
                     $scope.step = step;
                     faviconService.setFavIcon(step);
-                    return step.getLogs(slug).onNew = function(log) {
+                    step.getLogs(slug).onNew = function(log) {
                         $scope.log = log;
                         glBreadcrumbService.setBreadcrumb([{
                                 caption: "Builders",

@@ -170,7 +170,7 @@ class _buildsummary {
                 if ((buildid == null)) {
                     return;
                 }
-                return data.getBuilds(buildid).onNew = build => self.build = build;
+                data.getBuilds(buildid).onNew = build => self.build = build;
             });
 
             $scope.$watch((() => this.build), function (build) {
@@ -184,7 +184,7 @@ class _buildsummary {
 
                 build.getProperties().onNew = function (properties) {
                     self.properties = properties;
-                    return self.reason = self.getBuildProperty('reason');
+                    self.reason = self.getBuildProperty('reason');
                 };
 
                 $scope.$watch((() => details), function (details) {
@@ -195,7 +195,7 @@ class _buildsummary {
                             step.logs = step.getLogs();
                             // onUpdate is only called onUpdate, not onNew
                             // but we need to update our additional needed attributes
-                            return self.steps.onUpdate(step);
+                            self.steps.onUpdate(step);
                         };
                         self.steps.onUpdate = self.stepUpdated
                     }

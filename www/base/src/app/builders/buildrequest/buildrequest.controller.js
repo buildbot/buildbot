@@ -14,9 +14,9 @@ class BuildrequestController {
                     $stateParams.redirect_to_build);
                 // when a build is discovered, force the tab to go to that build
                 const savedNew = $scope.builds.onNew;
-                return $scope.builds.onNew = function(build) {
+                $scope.builds.onNew = function(build) {
                     build.active = true;
-                    return savedNew(build);
+                    savedNew(build);
                 };
             }
         });
@@ -83,9 +83,9 @@ class BuildrequestController {
                 glBreadcrumbService.setBreadcrumb(breadcrumb);
             };
 
-            return data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
+            data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
                 $scope.buildset = publicFieldsFilter(buildset);
-                return buildset.getProperties().onNew  = properties => $scope.properties = publicFieldsFilter(properties);
+                buildset.getProperties().onNew  = properties => $scope.properties = publicFieldsFilter(properties);
             };
         };
     }

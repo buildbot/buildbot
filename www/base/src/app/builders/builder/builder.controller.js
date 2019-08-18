@@ -167,7 +167,7 @@ class BuilderController {
                     }
                 });
             };
-            return $scope.buildrequests.onChange=refreshContextMenu;
+            $scope.buildrequests.onChange = refreshContextMenu;
         };
     }
 }
