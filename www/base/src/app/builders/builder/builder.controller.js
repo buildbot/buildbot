@@ -118,7 +118,7 @@ class BuilderController {
                 $scope.forceschedulers = forceschedulers;
                 refreshContextMenu();
                 // reinstall contextual actions when coming back from forcesched
-                return $scope.$on('$stateChangeSuccess', () => refreshContextMenu());
+                $scope.$on('$stateChangeSuccess', () => refreshContextMenu());
             };
             $scope.numbuilds = 200;
             if ($stateParams.numbuilds != null) {

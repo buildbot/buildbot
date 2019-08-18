@@ -187,7 +187,7 @@ var WaterfallController = (function() {
                     }
                 };
                 window.bind('keypress', keyHandler);
-                return this.$scope.$on('$destroy', function() {
+                this.$scope.$on('$destroy', function() {
                     window.unbind('keypress', keyHandler);
                     return window.unbind('resize', resizeHandler);
                 });

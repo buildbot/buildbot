@@ -28,7 +28,7 @@ class Logpreview {
                     let pendingRequest = null;
                     $scope.$on('$destroy', function () {
                         if (pendingRequest) {
-                            return pendingRequest.cancel();
+                            pendingRequest.cancel();
                         }
                     });
                     const loading = $sce.trustAs($sce.HTML, "...");

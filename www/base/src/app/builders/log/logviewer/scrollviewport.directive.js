@@ -305,9 +305,9 @@ class Scroll {
                         }
                     });
 
-                    return $scope.$on('$destroy', function() {
+                    $scope.$on('$destroy', function() {
                         $(window).unbind('resize', maybeUpdateView);
-                        return viewport.unbind('scroll', maybeUpdateView);
+                        viewport.unbind('scroll', maybeUpdateView);
                     });
                 };
             }
