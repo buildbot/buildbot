@@ -1,1 +1,1 @@
-Locks will no longer allow extra counting or exclusive claims to be taken if the `maxCount` parameter is changed and the master is reconfigured.
+Locks will no longer allow being acquired more times than the `maxCount` parameter if this parameter is changed during master reconfiguration.
