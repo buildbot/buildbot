@@ -118,15 +118,16 @@ class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
         self.setUpTestReactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
 
+    @defer.inlineCallbacks
     def callAttached(self):
         self.master = fakemaster.make_master(self, wantData=True)
-        self.master.workers.disownServiceParent()
+        yield self.master.workers.disownServiceParent()
         self.workers = bworkermanager.FakeWorkerManager()
-        self.workers.setServiceParent(self.master)
+        yield self.workers.setServiceParent(self.master)
         self.master.workers = self.workers
-        self.wrk.setServiceParent(self.master.workers)
+        yield self.wrk.setServiceParent(self.master.workers)
         self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
-        return self.wrk.attached(self.conn)
+        yield self.wrk.attached(self.conn)
 
 
 class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
@@ -144,14 +145,15 @@ class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
 
 class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.setUpLogging()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
-        self.master.workers.disownServiceParent()
+        yield self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
-        self.workers.setServiceParent(self.master)
+        yield self.workers.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def createWorker(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
@@ -438,7 +440,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         bsmanager = master.workers
         yield master.startService()
         bs = ConcreteWorker('bot', 'pass')
-        bs.setServiceParent(bsmanager)
+        yield bs.setServiceParent(bsmanager)
         self.assertEqual(bs.manager, bsmanager)
         self.assertEqual(bs.parent, bsmanager)
         self.assertEqual(bsmanager.master, master)
@@ -454,7 +456,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield master.startService()
         lock = locks.MasterLock('masterlock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(bsmanager)
+        yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
     def test_setServiceParent_workerLocks(self):
@@ -466,7 +468,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield master.startService()
         lock = locks.WorkerLock('lock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(bsmanager)
+        yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
     def test_startService_getWorkerInfo_empty(self):
@@ -648,31 +650,34 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(worker._paused, False)
 
 
-class TestAbstractLatentWorker(TestReactorMixin, unittest.SynchronousTestCase):
+class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
-        self.master.workers.disownServiceParent()
+        yield self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
-        self.workers.setServiceParent(self.master)
+        yield self.workers.setServiceParent(self.master)
 
+    @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):
         old.parent = self.master
         if existingRegistration:
             old.registration = bworkermanager.FakeWorkerRegistration(old)
         old.missing_timer = mock.Mock(name='missing_timer')
-        self.successResultOf(old.startService())
+        yield old.startService()
 
-        self.successResultOf(old.reconfigServiceWithSibling(new))
+        yield old.reconfigServiceWithSibling(new)
 
+    @defer.inlineCallbacks
     def test_reconfigService(self):
         old = AbstractLatentWorker(
             "name", "password", build_wait_timeout=10)
         new = AbstractLatentWorker(
             "name", "password", build_wait_timeout=30)
 
-        self.do_test_reconfigService(old, new)
+        yield self.do_test_reconfigService(old, new)
 
         self.assertEqual(old.build_wait_timeout, 30)
