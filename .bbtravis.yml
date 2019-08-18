@@ -18,6 +18,7 @@ env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - HYPER_SIZE=m1
+  - CHROME_BIN=/usr/bin/chromium-browser
   matrix:
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
