@@ -60,15 +60,15 @@ class Logpreview {
                         }
                         if (this.log.type === 'h') {
                             pendingRequest = restService.get(`logs/${this.log.logid}/contents`);
-                            return pendingRequest.then(content => {
-                                return this.log.content = $sce.trustAs($sce.HTML, content.logchunks[0].content);
+                            pendingRequest.then(content => {
+                                this.log.content = $sce.trustAs($sce.HTML, content.logchunks[0].content);
                             });
                         } else {
-                            return unwatchLines = $scope.$watch("logpreview.log.num_lines", loadLines);
+                            unwatchLines = $scope.$watch("logpreview.log.num_lines", loadLines);
                         }
                     };
 
-                    return loadLines = num_lines => {
+                    loadLines = num_lines => {
                         let limit, offset;
                         if (this.log.lines.length === 0) {
                             // initial load. only load the last few lines
@@ -108,7 +108,7 @@ class Logpreview {
                             offset,
                             limit
                         });
-                        return pendingRequest.then(content => {
+                        pendingRequest.then(content => {
                             ({
                                 content
                             } = content.logchunks[0]);
@@ -135,7 +135,7 @@ class Logpreview {
                                 number += 1;
                             }
                             this.log.lines.sort((a, b) => a.number - b.number);
-                            return this.log.lines.splice(0, this.log.lines.length - this.settings.maxlines.value);
+                            this.log.lines.splice(0, this.log.lines.length - this.settings.maxlines.value);
                         });
                     };
                 }

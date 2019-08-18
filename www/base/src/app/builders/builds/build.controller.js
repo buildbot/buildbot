@@ -23,11 +23,10 @@ class BuildController {
             refreshContextMenu();
             const success = function(res) {
                 const brid = _.values(res.result[1])[0];
-                return $state.go("buildrequest", {
+                $state.go("buildrequest", {
                     buildrequest: brid,
                     redirect_to_build: true
-                }
-                );
+                });
             };
 
             const failure = function(why) {

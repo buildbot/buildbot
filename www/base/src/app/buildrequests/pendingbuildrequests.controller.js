@@ -14,7 +14,7 @@ class Pendingbuildrequests {
         $scope.buildrequests.onNew = function(buildrequest) {
             restService.get(`buildsets/${buildrequest.buildsetid}/properties`).then(function(response) {
                 buildrequest.properties = response.properties[0];
-                return _.assign($scope.properties, response.properties[0]);
+                _.assign($scope.properties, response.properties[0]);
             });
             buildrequest.builder = buildersService.getBuilder(buildrequest.builderid);
         };

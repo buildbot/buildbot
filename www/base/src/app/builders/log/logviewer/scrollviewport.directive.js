@@ -241,7 +241,7 @@ class Scroll {
                                 topIndex++;
                             }
 
-                            return $timeout(() => maybeUpdateView());
+                            $timeout(() => maybeUpdateView());
                         });
                     };
 

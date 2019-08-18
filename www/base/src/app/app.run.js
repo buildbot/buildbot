@@ -74,7 +74,7 @@ class ReconnectingListener {
                 $rootScope.$broadcast("mq.restored_connection");
 
                 // wait one second before actually reload to let user to see message
-                return $timeout((() => $window.document.location.reload()), 1000);
+                $timeout((() => $window.document.location.reload()), 1000);
             }
             , () =>
                 // error callback: if we cannot connect, we will retry in 3 seconds

@@ -68,9 +68,9 @@ class _nestedexamplefield {
                     $scope.ingredients.choices = [error];
                 }
                 if ($scope.ingredients.choices.length > 0) {
-                    return $scope.ingredients.value = $scope.ingredients.choices[0];
+                    $scope.ingredients.value = $scope.ingredients.choices[0];
                 } else {
-                    return $scope.ingredients.value = "";
+                    $scope.ingredients.value = "";
                 }
             });
         };

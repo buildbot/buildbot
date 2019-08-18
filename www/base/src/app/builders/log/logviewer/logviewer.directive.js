@@ -42,9 +42,9 @@ class Logviewer {
                 });
                 return self.scope.$watch("log.num_lines", function(n, o) {
                     if (self.scope.jumpToLine === "end") {
-                        return self.scope.scroll_position = n;
+                        self.scope.scroll_position = n;
                     } else if (self.scope.jumpToLine !== "none") {
-                        return self.scope.scroll_position = self.scope.jumpToLine;
+                        self.scope.scroll_position = self.scope.jumpToLine;
                     }
                 });
             },
@@ -88,7 +88,7 @@ class Logviewer {
                                     });
                                     offset += 1;
                                 }
-                                return resolve(ret);
+                                resolve(ret);
                             })
                         );
                     }

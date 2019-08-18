@@ -79,7 +79,7 @@ class Data {
                             }
 
                             // fill up the collection with initial data
-                            return collection.initial(datalist);
+                            collection.initial(datalist);
                         })
                     );
 
