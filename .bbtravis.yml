@@ -137,7 +137,7 @@ script:
 
   - title: frontend unit tests
     condition: TESTS == "js_unit"
-    cmd: make frontend_tests
+    cmd: make frontend_tests_headless
 
   - title: master and worker tests
     condition: TESTS == "trial"
