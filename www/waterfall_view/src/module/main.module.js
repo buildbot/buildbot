@@ -251,12 +251,12 @@ var WaterfallController = (function() {
             }
             this.buildLimit = this.builds.length + this.c.limit;
             const builds = this.dataAccessor.getBuilds({limit: this.buildLimit, order: '-started_at'});
-            return builds.onChange = builds => {
+            builds.onChange = builds => {
                 this.builds.close();  // force close the old collection's auto-update
                 this.builds = builds;
                 // renders the new data
                 builds.onChange = this.renderNewData;
-                return builds.onChange();
+                builds.onChange();
             };
         }
 
@@ -601,7 +601,7 @@ var WaterfallController = (function() {
                 .attr('points', points());
 
             // Load steps
-            return build.loadSteps().onChange = function(buildsteps) {
+            build.loadSteps().onChange = function(buildsteps) {
                 // Resize the tooltip
                 height = (buildsteps.length * 15) + 7;
                 tooltip.transition().duration(100)
@@ -613,7 +613,7 @@ var WaterfallController = (function() {
                     const d = new Date((step.complete_at - step.started_at) * 1000);
                     if (d > 0) { return `(${d / 1000}s)`; } else { return ''; }
                 };
-                return tooltip.selectAll('.buildstep')
+                tooltip.selectAll('.buildstep')
                     .data(buildsteps)
                     .enter().append('g')
                     .attr('class', 'buildstep')

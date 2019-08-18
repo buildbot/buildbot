@@ -103,7 +103,7 @@ class BuildController {
             // get the build plus the previous and next
             // note that this registers to the updates for all the builds for that builder
             // need to see how that scales
-            return builder.getBuilds({number__lt: buildnumber + 2, limit: 3, order: '-number'}).onChange = function(builds) {
+            builder.getBuilds({number__lt: buildnumber + 2, limit: 3, order: '-number'}).onChange = function(builds) {
                 $scope.prevbuild = null;
                 $scope.nextbuild = null;
                 let build = null;

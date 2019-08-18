@@ -106,7 +106,10 @@ class Console {
         this.buildrequests = this.dataAccessor.getBuildrequests({limit: this.buildLimit, order: '-submitted_at'});
         this.buildsets = this.dataAccessor.getBuildsets({limit: this.buildLimit, order: '-submitted_at'});
 
-        this.builds.onChange = (this.changes.onChange = (this.buildrequests.onChange = (this.buildsets.onChange = this.onChange)));
+        this.builds.onChange = this.onChange;
+        this.changes.onChange = this.onChange;
+        this.buildrequests.onChange = this.onChange;
+        this.buildsets.onChange = this.onChange;
     }
 
     onChange(s) {
@@ -116,7 +119,7 @@ class Console {
             return;
         }
         if ((this.onchange_debounce == null)) {
-            return this.onchange_debounce = this.$timeout(this._onChange, 100);
+            this.onchange_debounce = this.$timeout(this._onChange, 100);
         }
     }
 

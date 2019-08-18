@@ -93,7 +93,7 @@ class Workers {
                     }
                 }
             }
-            return $scope.worker_infos.sort();
+            $scope.worker_infos.sort();
         };
 
         const byNumber = (a, b) => a.number - b.number;

@@ -61,7 +61,7 @@ class Collection {
 
             then(callback) {
                 console.log("Should not use collection as a promise. Callback will be called several times!");
-                return this.onChange = callback;
+                this.onChange = callback;
             }
 
             getArray() {
@@ -188,7 +188,7 @@ class Collection {
                     }
 
                     if (changed || (opts != null ? opts.initial : undefined)) {
-                        return this.onChange(this);
+                        this.onChange(this);
                     }
                 }
                 , 0);

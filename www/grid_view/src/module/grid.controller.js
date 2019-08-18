@@ -80,8 +80,11 @@ class Grid {
             order: '-buildrequestid'
         });
 
-        this.buildsets.onChange = (this.changes.onChange = (this.builders.onChange =
-            (this.buildrequests.change = (this.builds.onChange = this.onChange))));
+        this.buildsets.onChange = this.onChange;
+        this.changes.onChange = this.onChange;
+        this.builders.onChange = this.onChange;
+        this.buildrequests.change = this.onChange;
+        this.builds.onChange = this.onChange;
     }
 
     dataReady() {
@@ -268,7 +271,7 @@ class Grid {
 
         // change URL without reloading page
         this.$state.transitionTo(this.$state.current, params, {notify: false});
-        return this.onChange();
+        this.onChange();
     }
 
     isBuilderDisplayed(builder) {

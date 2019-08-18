@@ -40,7 +40,7 @@ class forceDialog {
             };
 
             prepareFields(scheduler.all_fields);
-            return angular.extend($scope, {
+            angular.extend($scope, {
                 rootfield: {
                     type: 'nested',
                     layout: 'simple',

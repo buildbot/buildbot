@@ -136,7 +136,7 @@ class BuilderController {
 
             ;
 
-            $scope.builds.onChange= function() {
+            $scope.builds.onChange = function() {
                 refreshContextMenu();
                 if ($scope.builds.length === 0) {
                     return;
