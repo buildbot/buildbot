@@ -342,6 +342,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         finally:
             yield self.initLock.release()
 
+    @defer.inlineCallbacks
     def reconfig(self):
         # this method wraps doConfig, ensuring it is only ever called once at
         # a time, and alerting the user if the reconfig takes too long
@@ -363,10 +364,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         timer = metrics.Timer("BuildMaster.reconfig")
         timer.start()
 
-        d = self.doReconfig()
-
-        @d.addBoth
-        def cleanup(res):
+        try:
+            yield self.doReconfig()
+        except Exception as e:
+            log.err(e, 'while reconfiguring')
+        finally:
             timer.stop()
             self.reconfig_notifier.stop()
             self.reconfig_notifier = None
@@ -374,11 +376,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             if self.reconfig_requested:
                 self.reconfig_requested = False
                 self.reconfig()
-            return res
-
-        d.addErrback(log.err, 'while reconfiguring')
-
-        return d  # for tests
 
     @defer.inlineCallbacks
     def doReconfig(self):
