@@ -378,7 +378,7 @@ class RealLockTests(unittest.TestCase):
         lockid = MasterLock('lock1', maxCount=3)
         lock = RealMasterLock(lockid)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 3)
         self.assertEqual(lock.description, '<MasterLock(lock1, 3)>')
 
@@ -389,7 +389,7 @@ class RealLockTests(unittest.TestCase):
         lockid = MasterLock('lock1', maxCount=4)
         lock.updateFromLockId(lockid, 0)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 4)
         self.assertEqual(lock.description, '<MasterLock(lock1, 4)>')
 
@@ -401,12 +401,12 @@ class RealLockTests(unittest.TestCase):
         lockid = WorkerLock('lock1', maxCount=3)
         lock = RealWorkerLock(lockid)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 3)
         self.assertEqual(lock.description, '<WorkerLock(lock1, 3, {})>')
 
         worker_lock = lock.getLockForWorker('worker1')
-        self.assertEqual(worker_lock.name, 'lock1')
+        self.assertEqual(worker_lock.lockName, 'lock1')
         self.assertEqual(worker_lock.maxCount, 3)
         self.assertTrue(worker_lock.description.startswith(
             '<WorkerLock(lock1, 3)[worker1]'))
@@ -416,7 +416,7 @@ class RealLockTests(unittest.TestCase):
                             maxCountForWorker={'worker2': 5})
         lock = RealWorkerLock(lockid)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 3)
 
         worker_lock = lock.getLockForWorker('worker1')
@@ -434,11 +434,11 @@ class RealLockTests(unittest.TestCase):
         lockid = WorkerLock('lock1', maxCount=5)
         lock.updateFromLockId(lockid, 0)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 5)
         self.assertEqual(lock.description, '<WorkerLock(lock1, 5, {})>')
 
-        self.assertEqual(worker_lock.name, 'lock1')
+        self.assertEqual(worker_lock.lockName, 'lock1')
         self.assertEqual(worker_lock.maxCount, 5)
         self.assertTrue(worker_lock.description.startswith(
             '<WorkerLock(lock1, 5)[worker1]'))

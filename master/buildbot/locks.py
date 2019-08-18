@@ -41,7 +41,7 @@ class BaseLock:
 
     def __init__(self, name, maxCount=1):
         # Name of the lock
-        self.name = name
+        self.lockName = name
         # Current queue, tuples (waiter, LockAccess, deferred)
         self.waiting = []
         # Current owners, tuples (owner, LockAccess)
@@ -214,14 +214,14 @@ class RealMasterLock(BaseLock):
         self._updateDescription()
 
     def _updateDescription(self):
-        self.description = "<MasterLock({}, {})>".format(self.name,
+        self.description = "<MasterLock({}, {})>".format(self.lockName,
                                                          self.maxCount)
 
     def getLockForWorker(self, workername):
         return self
 
     def updateFromLockId(self, lockid, config_version):
-        assert self.name == lockid.name
+        assert self.lockName == lockid.name
         assert isinstance(config_version, int)
 
         self.config_version = config_version
@@ -232,7 +232,7 @@ class RealMasterLock(BaseLock):
 class RealWorkerLock:
 
     def __init__(self, lockid):
-        self.name = lockid.name
+        self.lockName = lockid.name
         self.maxCount = lockid.maxCount
         self.maxCountForWorker = lockid.maxCountForWorker
         self.config_version = 0
@@ -246,23 +246,23 @@ class RealWorkerLock:
         if workername not in self.locks:
             maxCount = self.maxCountForWorker.get(workername,
                                                   self.maxCount)
-            lock = self.locks[workername] = BaseLock(self.name, maxCount)
+            lock = self.locks[workername] = BaseLock(self.lockName, maxCount)
             self._updateDescriptionForLock(lock, workername)
             self.locks[workername] = lock
         return self.locks[workername]
 
     def _updateDescription(self):
         self.description = \
-            "<WorkerLock({}, {}, {})>".format(self.name, self.maxCount,
+            "<WorkerLock({}, {}, {})>".format(self.lockName, self.maxCount,
                                               self.maxCountForWorker)
 
     def _updateDescriptionForLock(self, lock, workername):
         lock.description = \
-            "<WorkerLock({}, {})[{}] {}>".format(lock.name, lock.maxCount,
+            "<WorkerLock({}, {})[{}] {}>".format(lock.lockName, lock.maxCount,
                                                  workername, id(lock))
 
     def updateFromLockId(self, lockid, config_version):
-        assert self.name == lockid.name
+        assert self.lockName == lockid.name
         assert isinstance(config_version, int)
 
         self.config_version = config_version
