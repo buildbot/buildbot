@@ -87,9 +87,9 @@ class workerActionsDialog {
                         p.catch(function(err) {
                             let msg = `unable to ${a} worker ${w.name}:`;
                             msg += err.error.message;
-                            return $scope.error = msg;
+                            $scope.error = msg;
                         });
-                        return dl.push(p);
+                        dl.push(p);
                     }
                 });
                 return $q.all(dl).then(res => modal.modal.close(res.result));

@@ -55,12 +55,12 @@ class BuilderController {
                 const dl = [];
                 $scope.buildrequests.forEach(function(buildrequest) {
                     if (!buildrequest.claimed) {
-                        return dl.push(buildrequest.control('cancel'));
+                        dl.push(buildrequest.control('cancel'));
                     }
                 });
                 $scope.builds.forEach(function(build) {
                     if (!build.complete) {
-                        return dl.push(build.control('stop'));
+                        dl.push(build.control('stop'));
                     }
                 });
                 return $q.when(dl).then(success, failure);
@@ -75,12 +75,12 @@ class BuilderController {
                 let canStop = false;
                 $scope.builds.forEach(function(build) {
                     if (!build.complete) {
-                        return canStop = true;
+                        canStop = true;
                     }
                 });
                 $scope.buildrequests.forEach(function(buildrequest) {
                     if (!buildrequest.claimed) {
-                        return canStop = true;
+                        canStop = true;
                     }
                 });
 
@@ -149,7 +149,7 @@ class BuilderController {
                 let last_started = max_started;
                 let cur_success = 0;
                 let num_builds = 0;
-                return $scope.builds.forEach(function(b) {
+                $scope.builds.forEach(function(b) {
                     if (b.complete_at !== null) {
                         num_builds +=1;
                         if (b.results === 0) {
@@ -162,7 +162,7 @@ class BuilderController {
                             $scope.success_ratio.push({date:last_started, success_ratio: (100 * cur_success) / num_builds});
                             last_started = b.started_at;
                             num_builds = 0;
-                            return cur_success = 0;
+                            cur_success = 0;
                         }
                     }
                 });

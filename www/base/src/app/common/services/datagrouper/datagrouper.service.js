@@ -39,7 +39,7 @@ class dataGrouperService {
                                 group = temp_dict[item2[joinid]] != null ? temp_dict[item2[joinid]] : (temp_dict[item2[joinid]] = []);
                             }
                             if (!Array.from(group).includes(item)) {
-                                return group.push(item);
+                                group.push(item);
                             }
                         }) : undefined
                     ;

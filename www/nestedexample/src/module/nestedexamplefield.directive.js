@@ -43,7 +43,6 @@ class _nestedexamplefield {
             $scope.field.fields.forEach(function(v, i) {
                 if (v.fullName === nameInNestedField) {
                     res = v;
-                    return;
                 }
             });
             return res;
