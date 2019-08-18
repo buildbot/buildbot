@@ -1,0 +1,1 @@
+Locks will no longer allow extra counting or exclusive claims to be taken if the `maxCount` parameter is changed and the master is reconfigured.
