@@ -18,6 +18,7 @@ import json
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet import utils
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 
@@ -74,7 +75,8 @@ class GerritChangeSourceBase(base.ChangeSource):
     def checkConfig(self,
                     gitBaseURL=None,
                     handled_events=("patchset-created", "ref-updated"),
-                    debug=False):
+                    debug=False,
+                    get_files=False):
 
         if gitBaseURL is None:
             config.error("gitBaseURL must be specified")
@@ -82,9 +84,11 @@ class GerritChangeSourceBase(base.ChangeSource):
     def reconfigService(self,
                         gitBaseURL=None,
                         handled_events=("patchset-created", "ref-updated"),
-                        debug=False):
+                        debug=False,
+                        get_files=False):
         self.gitBaseURL = gitBaseURL
         self.handled_events = list(handled_events)
+        self._get_files = get_files
         self.debug = debug
 
     def lineReceived(self, line):
@@ -154,11 +158,19 @@ class GerritChangeSourceBase(base.ChangeSource):
                               event_change['number'])
         return event_change["branch"]
 
+    @defer.inlineCallbacks
     def addChangeFromEvent(self, properties, event):
-
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
-            return self.addChange({
+
+            files = ["unknown"]
+            if self._get_files:
+                files = yield self.getFiles(
+                    change=event_change["number"],
+                    patchset=event["patchSet"]["number"]
+                )
+
+            yield self.addChange({
                 'author': _gerrit_user_to_author(event_change["owner"]),
                 'project': util.bytes2unicode(event_change["project"]),
                 'repository': "{}/{}".format(
@@ -167,7 +179,7 @@ class GerritChangeSourceBase(base.ChangeSource):
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],
-                'files': ["unknown"],
+                'files': files,
                 'category': event["type"],
                 'properties': properties})
 
@@ -298,17 +310,49 @@ class GerritChangeSource(GerritChangeSourceBase):
             self.startStreamProcess()
             self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
+    def _buildGerritCommand(self, *gerrit_args):
+        '''Get an ssh command list which invokes gerrit with the given args on the
+        remote host'''
+
+        cmd = [
+            "ssh",
+            "%s@%s" % (self.username, self.gerritserver),
+            "-p", str(self.gerritport)
+        ]
+
+        if self.identity_file is not None:
+            cmd.extend(["-i", self.identity_file])
+
+        cmd.append("gerrit")
+        cmd.extend(gerrit_args)
+        return cmd
+
     def startStreamProcess(self):
         if self.debug:
             log.msg("starting 'gerrit stream-events'")
+
+        cmd = self._buildGerritCommand("stream-events")
         self.lastStreamProcessStart = util.now()
-        uri = "%s@%s" % (self.username, self.gerritserver)
-        args = [uri, "-p", str(self.gerritport)]
-        if self.identity_file is not None:
-            args = args + ['-i', self.identity_file]
-        self.process = reactor.spawnProcess(
-            self.LocalPP(self), "ssh",
-            ["ssh"] + args + ["gerrit", "stream-events"], env=None)
+        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
+
+    @defer.inlineCallbacks
+    def getFiles(self, change, patchset):
+        cmd = self._buildGerritCommand("query", str(change), "--format", "JSON",
+                                       "--files", "--patch-sets")
+
+        if self.debug:
+            log.msg("querying gerrit for changed files in change %s/%s: %s" %
+                    (change, patchset, cmd))
+
+        out = yield utils.getProcessOutput(cmd[0], cmd[1:], env=None)
+        out = out.splitlines()[0]
+        res = json.loads(bytes2unicode(out))
+
+        if res.get("rowCount") == 0:
+            return ["unknown"]
+
+        patchsets = {i["number"]: i["files"] for i in res["patchSets"]}
+        return [i["file"] for i in patchsets[int(patchset)]]
 
     def activate(self):
         self.wantProcess = True
@@ -386,6 +430,14 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         if 'eventCreatedOn' in event:
             yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
         return res
+
+    @defer.inlineCallbacks
+    def getFiles(self, change, patchset):
+        res = yield self._http.get("/changes/%s/revisions/%s/files/" % (change, patchset))
+        res = yield res.content()
+
+        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
+        return list(json.loads(res))
 
     # FIXME this copy the code from PollingChangeSource
     # but as PollingChangeSource and its subclasses need to be ported to reconfigurability

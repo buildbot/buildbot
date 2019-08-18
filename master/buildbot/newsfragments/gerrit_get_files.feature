@@ -1,0 +1,1 @@
+The :py:class:`~buildbot.changes.gerritchangesource.GerritChangeFilter` and :py:class:`~buildbot.changes.gerritchangesource.GerritEventLogPoller` now populate the `files` attribute of emitted changes when the `get_files` argument is true. Enabling this feature triggers an additional HTTP request or SSH command to the Gerrit server for every emitted change.

@@ -1191,6 +1191,10 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
     event to be handled (optional).
     By default processes `patchset-created` and `ref-updated`
 
+``get_files``
+    Populate the `files` attribute of emitted changes (default `False`).
+    Buildbot will run an extra query command for each handled event to determine the changed files.
+
 ``debug``
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
@@ -1373,6 +1377,10 @@ The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 
 ``gitBaseURL``
     The git URL where Gerrit is accessible via git+ssh protocol
+
+``get_files``
+    Populate the `files` attribute of emitted changes (default `False`).
+    Buildbot will run an extra query command for each handled event to determine the changed files.
 
 ``debug``
     Print Gerrit event in the log (default `False`).
