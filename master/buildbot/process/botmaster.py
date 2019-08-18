@@ -29,25 +29,47 @@ from buildbot.util import service
 
 
 class BotLockTracker:
-    ''' Tracks real lock instances given lock ID.
+    ''' Tracks real lock instances given lock ID and config_version. The latter is used as a way to
+        track most recent properties of real locks.
+
+        This approach is needed because there's no central registry of locks that are used within a
+        Buildbot configuration. All lock accesses bring all lock information with themselves as the
+        lockid member. Therefore, the reconfig process is relatively complicated, because we don't
+        know whether a specific access instance encodes lock information before reconfig or after.
+        Taking into account config_version allows us to know when properties of a lock should be
+        updated.
     '''
 
     def __init__(self):
         self.locks = {}
+        # a map between lock name and a tuple containing lock and the config version
+        self.name_to_worker_lock = {}
+        self.name_to_master_lock = {}
 
-    def getLockByID(self, lockid):
-        """Convert a Lock identifier into an actual Lock instance.
-        @param lockid: a locks.MasterLock or locks.WorkerLock instance
-        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
-        """
-        assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
-        if lockid not in self.locks:
-            self.locks[lockid] = lockid.lockClass(lockid)
-        # if the master.cfg file has changed maxCount= on the lock, the next
-        # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and WorkerLock (marker) instances
-        # be hashable and that they should compare properly.
-        return self.locks[lockid]
+    def getLockByID(self, lockid, config_version):
+        ''' Convert a Lock identifier into an actual Lock instance.
+            @lockid: a locks.MasterLock or locks.WorkerLock instance
+            @config_version: The version of the config from which the list of locks has been
+                acquired by the downstream user.
+            @return: a locks.RealMasterLock or locks.RealWorkerLock instance
+        '''
+        assert isinstance(config_version, int)
+        if isinstance(lockid, locks.MasterLock):
+            return self._getLockByIDForType(lockid, self.name_to_master_lock, config_version)
+        if isinstance(lockid, locks.WorkerLock):
+            return self._getLockByIDForType(lockid, self.name_to_worker_lock, config_version)
+        raise ValueError('invalid lockid type')
+
+    def _getLockByIDForType(self, lockid, name_to_lock, config_version):
+        if lockid.name not in name_to_lock:
+            lock = lockid.lockClass(lockid)
+            name_to_lock[lockid.name] = (lock, config_version)
+        else:
+            lock, prev_config_version = name_to_lock[lockid.name]
+            if config_version > prev_config_version:
+                lock.updateFromLockId(lockid)
+                name_to_lock[lockid.name] = (lock, config_version)
+        return lock
 
 
 class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -278,15 +300,15 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             self.buildrequest_consumer_unclaimed = None
         return super().stopService()
 
-    def getLockByID(self, lockid):
-        return self.lock_tracker.getLockByID(lockid)
+    def getLockByID(self, lockid, config_version):
+        return self.lock_tracker.getLockByID(lockid, config_version)
 
-    def getLockFromLockAccess(self, access):
+    def getLockFromLockAccess(self, access, config_version):
         # Convert a lock-access object into an actual Lock instance.
         if not isinstance(access, locks.LockAccess):
             # Buildbot 0.7.7 compatibility: user did not specify access
             access = access.defaultAccess()
-        lock = self.getLockByID(access.lockid)
+        lock = self.getLockByID(access.lockid, config_version)
         return lock
 
     def maybeStartBuildsForBuilder(self, buildername):

@@ -78,6 +78,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.config = None
         self.builder_status = None
 
+        # Tracks config version for locks
+        self.config_version = None
+
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # find this builder in the config
@@ -96,6 +99,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 description=builder_config.description)
 
         self.config = builder_config
+        self.config_version = self.master.config_version
 
         # allocate  builderid now, so that the builder is visible in the web
         # UI; without this, the builder wouldn't appear until it preformed a
@@ -295,7 +299,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             props = setupPropsIfNeeded(props)
             locks = yield props.render(locks)
 
-        locks = [(self.botmaster.getLockFromLockAccess(access), access)
+        locks = [(self.botmaster.getLockFromLockAccess(access, self.config_version),
+                  access)
                  for access in locks]
         if locks:
             can_start = Build._canAcquireLocks(locks, workerforbuilder)

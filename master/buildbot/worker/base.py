@@ -162,7 +162,8 @@ class AbstractWorker(service.BuildbotService):
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = [(self.botmaster.getLockFromLockAccess(a), a)
+        locks = [(self.botmaster.getLockFromLockAccess(a, self.config_version),
+                  a)
                  for a in self.access]
         self.locks = [(l.getLockForWorker(self.workername), la)
                       for l, la in locks]
@@ -236,6 +237,9 @@ class AbstractWorker(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
+        # tracks config version for locks
+        self.config_version = self.master.config_version
+
         self.updateLocks()
         self.workerid = yield self.master.data.updates.findWorkerId(
             self.name)
@@ -312,6 +316,8 @@ class AbstractWorker(service.BuildbotService):
             self.registration = yield self.master.workers.register(self)
         yield self.registration.update(self, self.master.config)
 
+        # tracks config version for locks
+        self.config_version = self.master.config_version
         self.updateLocks()
 
     @defer.inlineCallbacks

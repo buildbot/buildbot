@@ -111,6 +111,7 @@ class FakeBuilder:
         self.botmaster = master.botmaster
         self.builderid = 83
         self._builders = {}
+        self.config_version = 0
 
     def getBuilderId(self):
         return defer.succeed(self.builderid)
@@ -322,7 +323,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         lock = WorkerLock('lock')
         counting_access = lock.access('counting')
-        real_lock = b.builder.botmaster.getLockByID(lock)
+        real_lock = b.builder.botmaster.getLockByID(lock, 0)
 
         # no locks, so both these pass (call twice to verify there's no
         # state/memory)
@@ -392,7 +393,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         claimCount = [0]
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
+        real_lock = b.builder.botmaster.getLockByID(lock, 0) \
             .getLockForWorker(self.workerforbuilder.worker.workername)
 
         def claim(owner, access):
@@ -429,7 +430,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         lock = WorkerLock('lock', 2)
         claimLog = []
-        realLock = self.master.botmaster.getLockByID(lock) \
+        realLock = self.master.botmaster.getLockByID(lock, 0) \
             .getLockForWorker(self.worker.workername)
 
         def claim(owner, access):
@@ -470,7 +471,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         claimCount = [0]
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
+        real_lock = b.builder.botmaster.getLockByID(lock, 0) \
             .getLockForWorker(self.workerforbuilder.worker.workername)
 
         def claim(owner, access):
@@ -497,7 +498,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
+        real_lock = b.builder.botmaster.getLockByID(lock, 0) \
             .getLockForWorker(self.workerforbuilder.worker.workername)
         b.setLocks([lock_access])
 
@@ -524,7 +525,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
+        real_lock = b.builder.botmaster.getLockByID(lock, 0) \
             .getLockForWorker(self.workerforbuilder.worker.workername)
         b.setLocks([lock_access])
 
@@ -554,7 +555,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
+        real_lock = b.builder.botmaster.getLockByID(lock, 0) \
             .getLockForWorker(self.workerforbuilder.worker.workername)
 
         step = LoggingBuildStep(locks=[lock_access])

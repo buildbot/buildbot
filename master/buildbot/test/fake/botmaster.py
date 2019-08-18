@@ -30,11 +30,11 @@ class FakeBotMaster(service.AsyncMultiService):
         self.buildsStartedForWorkers = []
         self.delayShutdown = False
 
-    def getLockByID(self, lockid):
-        return self.lock_tracker.getLockByID(lockid)
+    def getLockByID(self, lockid, config_version):
+        return self.lock_tracker.getLockByID(lockid, config_version)
 
-    def getLockFromLockAccess(self, access):
-        return self.getLockByID(access.lockid)
+    def getLockFromLockAccess(self, access, config_version):
+        return self.getLockByID(access.lockid, config_version)
 
     def getBuildersForWorker(self, workername):
         return self.builders.get(workername, [])

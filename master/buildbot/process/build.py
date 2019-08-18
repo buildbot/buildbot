@@ -107,6 +107,9 @@ class Build(properties.PropertiesMixin):
         self._locks_released = False
         self._build_finished = False
 
+        # tracks the config version for locks
+        self.config_version = None
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -115,10 +118,12 @@ class Build(properties.PropertiesMixin):
         """
         self.builder = builder
         self.master = builder.master
+        self.config_version = builder.config_version
 
     def setLocks(self, lockList):
         # convert all locks into their real forms
-        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
+        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access, self.config_version),
+                       access)
                       for access in lockList]
 
     def setWorkerEnvironment(self, env):
