@@ -56,7 +56,7 @@ class _nestedexamplefield {
                 $scope.ingredients.value = "";
                 return;
             }
-            return $http.get(ingredientsUrl(pizza)).then(function(r) {
+            $http.get(ingredientsUrl(pizza)).then(function(r) {
                 if (r.status === 200) {
                     if (r.data.error != null) {
                         $scope.ingredients.choices = [r.data.error];

@@ -42,24 +42,24 @@ class _glPageWithSidebar {
 
     toggleSidebarPinned() {
         this.sidebarPinned=!this.sidebarPinned;
-        return this.$window.localStorage.sidebarPinned = this.sidebarPinned.toString();
+        this.$window.localStorage.sidebarPinned = this.sidebarPinned.toString();
     }
 
     toggleGroup(group) {
-        if (this.activeGroup!==group) {
-            return this.activeGroup=group;
+        if (this.activeGroup !== group) {
+            this.activeGroup = group;
         } else {
-            return this.activeGroup=null;
+            this.activeGroup = null;
         }
     }
 
     enterSidebar() {
-        return this.inSidebar = true;
+        this.inSidebar = true;
     }
 
     hideSidebar() {
         this.sidebarActive = false;
-        return this.inSidebar = false;
+        this.inSidebar = false;
     }
 
     leaveSidebar() {
