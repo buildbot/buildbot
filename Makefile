@@ -52,6 +52,10 @@ frontend_tests: frontend_deps
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; yarn run build-dev || exit 1; yarn run test || exit 1) || exit 1; done
 
+frontend_tests_headless: frontend_deps
+	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
+		do (cd $$i; yarn run build-dev || exit 1; yarn run test --browsers BBChromeHeadless || exit 1) || exit 1; done
+
 # rebuild front-end from source
 frontend: frontend_deps
 	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
