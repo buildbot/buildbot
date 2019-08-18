@@ -121,7 +121,7 @@ angular.module('common').directive('fileread', () =>
         // load the file's text via html5 FileReader API
         // note that for simplicity, we don't bother supporting older browsers
         link(scope, element, attributes) {
-            return element.bind("change", function(changeEvent) {
+            element.bind("change", function(changeEvent) {
                 const reader = new FileReader();
                 reader.onload = e =>
                     scope.$apply(() => scope.fileread = e.target.result)

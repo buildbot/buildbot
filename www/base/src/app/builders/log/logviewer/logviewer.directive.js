@@ -110,8 +110,6 @@ class Logviewer {
                 self.elm = elm;
                 self.raw = elm[0];
                 $window.resize(() => self.setHeight(elm));
-
-                return null;
             }
         };
         };
@@ -130,7 +128,7 @@ class Logviewer {
             ],
             link(scope, elm, attr) {
                 ansicodesService.injectStyle();
-                return scope.logviewer.link(scope, elm, attr);
+                scope.logviewer.link(scope, elm, attr);
             }
         };
     }

@@ -141,7 +141,7 @@ class Logpreview {
                 }
             }],
             link(scope, elm, attr) {
-                return ansicodesService.injectStyle();
+                ansicodesService.injectStyle();
             }
         };
     }
