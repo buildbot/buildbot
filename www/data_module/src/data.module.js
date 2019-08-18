@@ -1,11 +1,4 @@
-// Register new module
-class BBData {
-    constructor() {
-        return [];
-    }
-}
-
-angular.module('bbData', new BBData());
+angular.module('bbData', []);
 
 require('./classes/base.service.js');
 require('./classes/builder.service.js');

@@ -4,12 +4,6 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-// Register new module
-class Nestedexample {
-    constructor() { return [
-        'common'
-    ]; }
-}
 
 class Nestedexamplefield {
     constructor() {
@@ -86,6 +80,6 @@ class _nestedexamplefield {
 }
 
 
-angular.module('nestedexample', new Nestedexample())
+angular.module('nestedexample', ['common'])
 .directive('nestedexamplefield', [Nestedexamplefield])
 .controller('_nestedexamplefieldController', ['$scope', '$http', _nestedexamplefield]);

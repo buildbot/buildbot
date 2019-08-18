@@ -13,17 +13,6 @@ import 'guanlecoja-ui';
 import 'buildbot-data-js';
 import _ from 'lodash';
 
-// Register new module
-class WaterfallView {
-    constructor() { return [
-        'ui.router',
-        'ngAnimate',
-        'guanlecoja.ui',
-        'bbData'
-    ]; }
-}
-
-
 var WaterfallController = (function() {
     let self = undefined;
     let Cls = class Waterfall {
@@ -792,9 +781,16 @@ var WaterfallController = (function() {
     return Cls;
 })();
 
-
-angular.module('waterfall_view', new WaterfallView())
-.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', '$location', '$rootScope',
+angular.module('waterfall_view', [
+    'ui.router',
+    'ngAnimate',
+    'guanlecoja.ui',
+    'bbData',
+])
+.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log',
+                                    '$uibModal', 'dataService', 'd3Service', 'dataProcessorService',
+                                    'scaleService', 'bbSettingsService',
+                                    'glTopbarContextualActionsService', '$location', '$rootScope',
                                     WaterfallController])
 .config(['$locationProvider', function($locationProvider) {
     $locationProvider.hashPrefix('');
