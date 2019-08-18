@@ -24,7 +24,7 @@ class LogController {
                     faviconService.setFavIcon(step);
                     return step.getLogs(slug).onNew = function(log) {
                         $scope.log = log;
-                        return glBreadcrumbService.setBreadcrumb([{
+                        glBreadcrumbService.setBreadcrumb([{
                                 caption: "Builders",
                                 sref: "builders"
                             }

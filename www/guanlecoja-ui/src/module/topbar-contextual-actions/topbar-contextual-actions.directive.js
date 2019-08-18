@@ -40,7 +40,7 @@ class glTopbarContextualActions {
     constructor($rootScope) { this.$rootScope = $rootScope; ({}); }
 
     setContextualActions(actions) {
-        return this.$rootScope.$broadcast("glSetContextualActions", actions);
+        this.$rootScope.$broadcast("glSetContextualActions", actions);
     }
 }
 

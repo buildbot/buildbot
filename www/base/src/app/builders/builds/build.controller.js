@@ -33,7 +33,7 @@ class BuildController {
             const failure = function(why) {
                 $scope.is_rebuilding = false;
                 $scope.error = `Cannot rebuild: ${why.error.message}`;
-                return refreshContextMenu();
+                refreshContextMenu();
             };
 
             $scope.build.control('rebuild').then(success, failure);
@@ -48,7 +48,7 @@ class BuildController {
             const failure = function(why) {
                 $scope.is_stopping = false;
                 $scope.error = `Cannot Stop: ${why.error.message}`;
-                return refreshContextMenu();
+                refreshContextMenu();
             };
 
             $scope.build.control('stop').then(success, failure);
@@ -89,7 +89,7 @@ class BuildController {
                     });
                 }
             }
-            return glTopbarContextualActionsService.setContextualActions(actions);
+            glTopbarContextualActionsService.setContextualActions(actions);
         };
         $scope.$watch('build.complete', refreshContextMenu);
 

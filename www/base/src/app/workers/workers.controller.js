@@ -78,7 +78,7 @@ class Workers {
             // reinstall breadcrumb when coming back from forcesched
             const setupGl = function() {
                 glTopbarContextualActionsService.setContextualActions(actions);
-                return glBreadcrumbService.setBreadcrumb(breadcrumb);
+                glBreadcrumbService.setBreadcrumb(breadcrumb);
             };
             $scope.$on('$stateChangeSuccess', setupGl);
             setupGl();

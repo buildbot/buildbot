@@ -43,13 +43,13 @@ class BuilderController {
 
                 const success = function(res) {
                     $scope.is_cancelling = false;
-                    return refreshContextMenu();
+                    refreshContextMenu();
                 };
 
                 const failure = function(why) {
                     $scope.is_cancelling = false;
                     $scope.error = `Cannot cancel: ${why.error.message}`;
-                    return refreshContextMenu();
+                    refreshContextMenu();
                 };
 
                 const dl = [];
@@ -111,7 +111,7 @@ class BuilderController {
                     })
                 );
 
-                return glTopbarContextualActionsService.setContextualActions(actions);
+                glTopbarContextualActionsService.setContextualActions(actions);
             };
 
             builder.getForceschedulers({order:'name'}).onChange = function(forceschedulers) {

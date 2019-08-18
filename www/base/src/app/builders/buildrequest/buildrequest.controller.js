@@ -31,7 +31,7 @@ class BuildrequestController {
             const failure = function(why) {
                 $scope.is_cancelling = false;
                 $scope.error = `Cannot cancel: ${why.error.message}`;
-                return refreshContextMenu();
+                refreshContextMenu();
             };
 
             $scope.buildrequest.control('cancel').then(success, failure);
@@ -58,7 +58,7 @@ class BuildrequestController {
                 }
             }
 
-            return glTopbarContextualActionsService.setContextualActions(actions);
+            glTopbarContextualActionsService.setContextualActions(actions);
         };
         $scope.$watch('buildrequest.complete', refreshContextMenu);
 
@@ -80,7 +80,7 @@ class BuildrequestController {
                     }
                 ];
 
-                return glBreadcrumbService.setBreadcrumb(breadcrumb);
+                glBreadcrumbService.setBreadcrumb(breadcrumb);
             };
 
             return data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
