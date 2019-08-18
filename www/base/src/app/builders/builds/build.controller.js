@@ -143,7 +143,7 @@ class BuildController {
                 var unwatch = $scope.$watch('nextbuild.number', function(n, o) {
                     if (n != null) {
                         $scope.last_build = false;
-                        return unwatch();
+                        unwatch();
                     }
                 });
 

@@ -205,7 +205,7 @@ class _buildsummary {
                 if ((build == null)) {
                     return;
                 }
-                return self.parentbuilder = buildersService.getBuilder(build.builderid);
+                self.parentbuilder = buildersService.getBuilder(build.builderid);
             });
         }
     }

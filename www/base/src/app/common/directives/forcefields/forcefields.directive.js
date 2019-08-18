@@ -98,15 +98,15 @@ angular.module('common').directive('filefield', () =>
             // so to avoid that we go through a safe value, and play the double binding game
             $scope.$watch("field.value", function(value) {
                 if ((value != null ? value.length : undefined) > 10000) {
-                    return $scope.field.safevalue = false;
+                    $scope.field.safevalue = false;
                 } else {
-                    return $scope.field.safevalue = value;
+                    $scope.field.safevalue = value;
                 }
             });
 
-            return $scope.$watch("field.safevalue", function(value) {
+            $scope.$watch("field.safevalue", function(value) {
                 if ((value != null) && (value !== false)) {
-                    return $scope.field.value = value;
+                    $scope.field.value = value;
                 }
             });
         }

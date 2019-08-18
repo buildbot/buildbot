@@ -36,7 +36,7 @@ class Logviewer {
                         const { log } = self.scope;
                         self.scope.raw_url = `api/v2/logs/${log.logid}/raw`;
                         if (log.type === 'h') {
-                            return restService.get(`logs/${log.logid}/contents`).then(content => self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content));
+                            restService.get(`logs/${log.logid}/contents`).then(content => self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content));
                         }
                     }
                 });

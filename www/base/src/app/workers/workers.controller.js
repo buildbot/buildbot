@@ -109,8 +109,7 @@ class Workers {
         }
         dataGrouperService.groupBy($scope.workers, builds, 'workerid', 'builds');
         $scope.settings = bbSettingsService.getSettingsGroup("Workers");
-        $scope.$watch('settings', () => bbSettingsService.save()
-        , true);
+        $scope.$watch('settings', () => { bbSettingsService.save(); }, true);
     }
 }
 

@@ -21,8 +21,7 @@ class _buildrequestsummary {
         _.mixin($scope, resultsService);
         $scope.$watch("buildrequest.claimed", function(n, o) {
             if (n) {  // if it is unclaimed, then claimed, we need to try again
-                return findBuilds($scope,
-                    $scope.buildrequest.buildrequestid);
+                findBuilds($scope, $scope.buildrequest.buildrequestid);
             }
         });
 

@@ -45,7 +45,7 @@ class Logpreview {
                         }
                         // Start fetching lines when the preview is visible.
                         if (n) {
-                            return unwatchLog = $scope.$watch("logpreview.log", fetchLog);
+                            unwatchLog = $scope.$watch("logpreview.log", fetchLog);
                         }
                     });
 

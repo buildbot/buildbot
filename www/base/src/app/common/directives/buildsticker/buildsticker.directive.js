@@ -33,7 +33,7 @@ class _buildsticker {
 
         $scope.$watch('build', function(build) {
             if (!$scope.builder && ((build != null ? build.builderid : undefined) != null)) {
-                return $scope.builder = buildersService.getBuilder(build.builderid);
+                $scope.builder = buildersService.getBuilder(build.builderid);
             }
         });
     }

@@ -294,14 +294,14 @@ class Scroll {
 
                     $scope.$watch($attr.scrollPosition, function(n) {
                         if (n != null) {
-                            return setScrollPosition(n);
+                            setScrollPosition(n);
                         }
                     });
 
                     $scope.$watch($attr.loadAll, function(n) {
                         if (n) {
                             loadAll = true;
-                            return $timeout(maybeUpdateView);
+                            $timeout(maybeUpdateView);
                         }
                     });
 

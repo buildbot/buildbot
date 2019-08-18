@@ -97,7 +97,7 @@ var linkerWithD3= function($scope, d3, $filter, elem) {
         }
 
         // Add the Y Axis
-        return yaxis_g.call(yAxis);
+        yaxis_g.call(yAxis);
     });
 };
 

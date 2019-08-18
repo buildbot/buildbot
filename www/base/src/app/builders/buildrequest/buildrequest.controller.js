@@ -9,9 +9,8 @@ class BuildrequestController {
         $scope.is_cancelling = false;
         $scope.$watch("buildrequest.claimed", function(n, o) {
             if (n) {  // if it is unclaimed, then claimed, we need to try again
-                findBuilds($scope,
-                    $scope.buildrequest.buildrequestid,
-                    $stateParams.redirect_to_build);
+                findBuilds($scope, $scope.buildrequest.buildrequestid,
+                           $stateParams.redirect_to_build);
                 // when a build is discovered, force the tab to go to that build
                 const savedNew = $scope.builds.onNew;
                 $scope.builds.onNew = function(build) {
