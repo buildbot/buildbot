@@ -210,6 +210,7 @@ class RealMasterLock(BaseLock):
 
     def __init__(self, lockid):
         super().__init__(lockid.name, lockid.maxCount)
+        self.config_version = 0
         self._updateDescription()
 
     def _updateDescription(self):
@@ -219,8 +220,11 @@ class RealMasterLock(BaseLock):
     def getLockForWorker(self, workername):
         return self
 
-    def updateFromLockId(self, lockid):
+    def updateFromLockId(self, lockid, config_version):
         assert self.name == lockid.name
+        assert isinstance(config_version, int)
+
+        self.config_version = config_version
         self.setMaxCount(lockid.maxCount)
         self._updateDescription()
 
@@ -231,6 +235,7 @@ class RealWorkerLock:
         self.name = lockid.name
         self.maxCount = lockid.maxCount
         self.maxCountForWorker = lockid.maxCountForWorker
+        self.config_version = 0
         self._updateDescription()
         self.locks = {}
 
@@ -256,8 +261,11 @@ class RealWorkerLock:
             "<WorkerLock({}, {})[{}] {}>".format(lock.name, lock.maxCount,
                                                  workername, id(lock))
 
-    def updateFromLockId(self, lockid):
+    def updateFromLockId(self, lockid, config_version):
         assert self.name == lockid.name
+        assert isinstance(config_version, int)
+
+        self.config_version = config_version
 
         self.maxCount = lockid.maxCount
         self.maxCountForWorker = lockid.maxCountForWorker

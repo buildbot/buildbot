@@ -63,12 +63,12 @@ class BotLockTracker:
     def _getLockByIDForType(self, lockid, name_to_lock, config_version):
         if lockid.name not in name_to_lock:
             lock = lockid.lockClass(lockid)
-            name_to_lock[lockid.name] = (lock, config_version)
+            lock.updateFromLockId(lockid, config_version)
+            name_to_lock[lockid.name] = lock
         else:
-            lock, prev_config_version = name_to_lock[lockid.name]
-            if config_version > prev_config_version:
-                lock.updateFromLockId(lockid)
-                name_to_lock[lockid.name] = (lock, config_version)
+            lock = name_to_lock[lockid.name]
+            if config_version > lock.config_version:
+                lock.updateFromLockId(lockid, config_version)
         return lock
 
 
