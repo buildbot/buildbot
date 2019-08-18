@@ -103,6 +103,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
+        self.config_version = 0  # increased by one on each reconfig
         self.reconfig_active = False
         self.reconfig_requested = False
         self.reconfig_notifier = None
@@ -389,6 +390,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.reactor, self.reactor.getThreadPool(),
                 self.config_loader.loadConfig)
             changes_made = True
+            self.config_version += 1
             self.config = new_config
 
             yield self.reconfigServiceWithBuildbotConfig(new_config)
