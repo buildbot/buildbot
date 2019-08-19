@@ -359,6 +359,7 @@ The available classes are described here:
     as arguments and check if the user can login. You may use it e.g. to check the credentials against an external database or file.
 
     .. code-block:: python
+
         from buildbot.plugins import util
 
         class MyAuth(util.CustomAuth):
