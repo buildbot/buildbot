@@ -302,11 +302,15 @@ The existing :file:`buildbot.tac` for any workers running older versions will ne
 If the loss of cached worker state (e.g., for Source steps in copy mode) is not problematic, the easiest solution is to simply delete the worker directory and re-run ``buildslave create-slave``.
 
 If deleting the worker directory is problematic, the change to :file:`buildbot.tac` is simple.
-On line 3, replace::
+On line 3, replace:
+
+.. code-block:: python
 
     from buildbot.slave.bot import BuildSlave
 
-with::
+with:
+
+.. code-block:: python
 
     from buildslave.bot import BuildSlave
 
@@ -329,29 +333,41 @@ If the loss of cached worker state (e.g., for Source steps in copy mode) is not 
 
 If deleting the worker directory is problematic, you can change :file:`buildbot.tac` in the following way:
 
-1. Replace::
+1. Replace:
+
+   .. code-block:: python
 
        from buildslave.bot import BuildSlave
 
-   with::
+   with:
+
+   .. code-block:: python
 
        from buildbot_worker.bot import Worker
 
-2. Replace::
+2. Replace:
+
+   .. code-block:: python
 
        application = service.Application('buildslave')
 
-   with::
+   with:
+
+   .. code-block:: python
 
        application = service.Application('buildbot-worker')
 
-3. Replace::
+3. Replace:
+
+   .. code-block:: python
 
        s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                       keepalive, usepty, umask=umask, maxdelay=maxdelay,
                       numcpus=numcpus, allow_shutdown=allow_shutdown)
 
-   with::
+   with:
+
+   .. code-block:: python
 
        s = Worker(buildmaster_host, port, slavename, passwd, basedir,
                   keepalive, umask=umask, maxdelay=maxdelay,

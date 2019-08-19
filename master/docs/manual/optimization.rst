@@ -8,7 +8,9 @@ If you're feeling your Buildbot is running a bit slow, here are some tricks that
 Properties load speedup
 -----------------------
 
-For example, if most of your build properties are strings, you can gain an approx. 30% speedup if you put this snippet of code inside your master.cfg file::
+For example, if most of your build properties are strings, you can gain an approx. 30% speedup if you put this snippet of code inside your master.cfg file:
+
+.. code-block:: python
 
     def speedup_json_loads():
         import json, re

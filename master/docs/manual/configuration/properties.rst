@@ -122,7 +122,9 @@ It's also possible to :ref:`create custom renderables <Custom-Renderables>`.
 
     Properties are defined while a build is in progress; their values are not available when the configuration file is parsed.
     This can sometimes confuse newcomers to Buildbot!
-    In particular, the following is a common error::
+    In particular, the following is a common error:
+
+    .. code-block:: python
 
         if Property('release_train') == 'alpha':
             f.addStep(...)
@@ -140,20 +142,26 @@ Please file bugs for any parameters which do not accept renderables.
 Property
 ++++++++
 
-The simplest renderable is :class:`Property`, which renders to the value of the property named by its argument::
+The simplest renderable is :class:`Property`, which renders to the value of the property named by its argument:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
     f.addStep(steps.ShellCommand(command=['echo', 'buildername:',
                                  util.Property('buildername')]))
 
-You can specify a default value by passing a ``default`` keyword argument::
+You can specify a default value by passing a ``default`` keyword argument:
+
+.. code-block:: python
 
     f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
                                  util.Property('warnings', default='none')]))
 
 The default value is used when the property doesn't exist, or when the value is something Python regards as ``False``.
-The ``defaultWhenFalse`` argument can be set to ``False`` to force buildbot to use the default argument only if the parameter is not set::
+The ``defaultWhenFalse`` argument can be set to ``False`` to force buildbot to use the default argument only if the parameter is not set:
+
+.. code-block:: python
 
     f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
                                  util.Property('warnings', default='none',
@@ -161,7 +169,7 @@ The ``defaultWhenFalse`` argument can be set to ``False`` to force buildbot to u
 
 The default value can be a renderable itself, e.g.,
 
-::
+.. code-block:: python
 
     command=util.Property('command', default=util.Property('default-command'))
 
@@ -180,7 +188,7 @@ The more common pattern is to use Python dictionary-style string interpolation b
 In this form, the property name goes in the parentheses, as above.
 A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellCommand(
@@ -266,7 +274,9 @@ Example:
         ]))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
-Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables), are given as subsequent arguments::
+Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables), are given as subsequent arguments:
+
+.. code-block:: python
 
   TODO
 
@@ -285,7 +295,9 @@ Renderer
 While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
 The ``renderer`` decorator creates a renderable object whose rendering is obtained by calling the decorated function when the step it's passed to begins.
 The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.
-For example::
+For example:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -313,7 +325,9 @@ The ``withArgs`` method accepts ``*args`` and ``**kwargs`` arguments which are s
 The original renderable object is not modified.
 Multiple ``withArgs`` calls may be chained.
 The passed ``*args`` and ``**kwargs`` parameters are rendered and the results are passed to the rendered function at the time it is itself rendered.
-For example::
+For example:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -353,7 +367,9 @@ The function must either be a callable object or a renderable producing one.
 When rendered, a ``Transform`` first replaces all of its arguments that are renderables with their renderings, then calls the function, passing it the positional and keyword arguments, and returns the result as its own rendering.
 
 For example, suppose ``my_path`` is a path on the worker, and you want to get it relative to the build directory.
-You can do it like this::
+You can do it like this:
+
+.. code-block:: python
 
     import os.path
     from buildbot.plugins import util
@@ -371,7 +387,9 @@ FlattenList
 +++++++++++
 
 If nested list should be flatten for some renderables, FlattenList could be used.
-For example::
+For example:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellCommand(
@@ -396,7 +414,9 @@ WithProperties
     It exists for compatibility with older configs.
 
 The simplest use of this class is with positional string interpolation.
-Here, ``%s`` is used as a placeholder, and property names are given as subsequent arguments::
+Here, ``%s`` is used as a placeholder, and property names are given as subsequent arguments:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellCommand(
@@ -412,7 +432,7 @@ The more common pattern is to use Python dictionary-style string interpolation b
 In this form, the property name goes in the parentheses, as above.
 A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellCommand(
@@ -452,7 +472,9 @@ If the options described above are not sufficient, more complex substitutions ca
 The :class:`~buildbot.interfaces.IRenderable` interface is simple - objects must provide a `getRenderingFor` method.
 The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return the rendered value or a deferred firing with one.
 Pass instances of the class anywhere other renderables are accepted.
-For example::
+For example:
+
+.. code-block:: python
 
     import time
     from buildbot.interfaces import IRenderable
@@ -470,7 +492,7 @@ For example::
 
 or, more practically,
 
-::
+.. code-block:: python
 
     from buildbot.interfaces import IRenderable
     from zope.interface import implementer
@@ -482,7 +504,9 @@ or, more practically,
             return time.clock()
     ShellCommand(command=['make', util.Interpolate('TIME=%(kw:now)s', now=Now())])
 
-This is equivalent to::
+This is equivalent to:
+
+.. code-block:: python
     
     from buildbot.plugins import util
 
@@ -500,7 +524,9 @@ URL for build
 +++++++++++++
 
 Its common to need to use the URL for the build in a step.
-For this you can use a special custom renderer as following::
+For this you can use a special custom renderer as following:
+
+.. code-block:: python
 
     from buildbot.plugins import *
 

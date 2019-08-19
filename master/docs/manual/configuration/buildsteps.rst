@@ -5,7 +5,9 @@ Build Steps
 
 :class:`BuildStep`\s are usually specified in the buildmaster's configuration file, in a list that goes into the :class:`BuildFactory`.
 The :class:`BuildStep` instances in this list are used as templates to construct new independent copies for each build (so that state can be kept on the :class:`BuildStep` in one build without affecting a later build).
-Each :class:`BuildFactory` can be created with a list of steps, or the factory can be created empty and then steps added to it using the :meth:`addStep` method::
+Each :class:`BuildFactory` can be created with a list of steps, or the factory can be created empty and then steps added to it using the :meth:`addStep` method:
+
+.. code-block:: python
 
     from buildbot.plugins import util, steps
 
@@ -104,7 +106,9 @@ Arguments common to all :class:`BuildStep` subclasses:
     This may be a bit too wide to fit comfortably on the Waterfall display.
 
     All subclasses of :py:class:`BuildStep` will contain the description attributes.
-    Consequently, you could add a :bb:step:`ShellCommand` step like so::
+    Consequently, you could add a :bb:step:`ShellCommand` step like so:
+
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -137,7 +141,9 @@ Arguments common to all :class:`BuildStep` subclasses:
     A step can be optionally hidden from the waterfall and build details web pages.
     To do this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes two parameters -- the results and the :class:`BuildStep` -- and returns a boolean value.
     Steps are always shown while they execute, however after the step has finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden.
-    For example, in order to hide the step if the step has been skipped::
+    For example, in order to hide the step if the step has been skipped:
+
+    .. code-block:: python
 
         factory.addStep(Foo(..., hideStepIf=lambda results, s: results==SKIPPED))
 
@@ -165,7 +171,9 @@ Arguments common to all :class:`BuildStep` subclasses:
     If False, the build summary will never include step summary
     If True, the build summary will always include step summary
     If set to a list (e.g. ``[FAILURE, EXCEPTION]``), it will propagate if the step results id is present in that list.
-    If not set or None, the default is computed according to other BuildStep parameters using following algorithm::
+    If not set or None, the default is computed according to other BuildStep parameters using following algorithm:
+
+    .. code-block:: python
 
         self.updateBuildSummaryPolicy = [EXCEPTION, RETRY, CANCELLED]
         if self.flunkOnFailure or self.haltOnFailure or self.warnOnFailure:
@@ -186,17 +194,23 @@ Source Checkout
 
     Support for the old worker-side source checkout steps was removed in Buildbot-0.9.0.
 
-    The old source steps used to be imported like this::
+    The old source steps used to be imported like this:
+
+    .. code-block:: python
 
         from buildbot.steps.source.oldsource import Git
 
         ... Git ...
 
-    or::
+    or:
+
+    .. code-block:: python
 
         from buildbot.steps.source import Git
 
-    while new source steps are in separate Python modules for each version-control system and, using the plugin infrastructure are available as::
+    while new source steps are in separate Python modules for each version-control system and, using the plugin infrastructure are available as:
+
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -214,7 +228,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
     These two parameters specify the means by which the source is checked out.
     ``mode`` specifies the type of checkout and ``method`` tells about the way to implement it.
 
-    ::
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -289,7 +303,7 @@ The :bb:step:`Mercurial` build step performs a `Mercurial <https://www.mercurial
 Branches are available in two modes: ``dirname``, where the name of the branch is a suffix of the name of the repository, or ``inrepo``, which uses Hg's named-branches support.
 Make sure this setting matches your changehook, if you have that installed.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -501,14 +515,18 @@ The :bb:step:`SVN` step should be created with the ``repourl`` argument:
    For example, if you wanted to check out the trunk repository, you could use ``repourl=Interpolate("http://svn.example.com/repos/%(src::branch)s")``.
    Alternatively, if you are using a remote Subversion repository which is accessible through HTTP at a URL of ``http://svn.example.com/repos``, and you wanted to check out the ``trunk/calc`` sub-tree, you would directly use ``repourl="http://svn.example.com/repos/trunk/calc"`` as an argument to your :bb:step:`SVN` step.
 
-If you are building from multiple branches, then you should create the :bb:step:`SVN` step with the ``repourl`` and provide branch information with :ref:`Interpolate`::
+If you are building from multiple branches, then you should create the :bb:step:`SVN` step with the ``repourl`` and provide branch information with :ref:`Interpolate`:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
     factory.addStep(steps.SVN(mode='incremental',
                     repourl=util.Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
 
-Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without :ref:`Interpolate`::
+Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without :ref:`Interpolate`:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -580,7 +598,7 @@ CVS
 
 The :bb:step:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_ checkout or update.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -649,7 +667,7 @@ The repository-vs-workspace model is similar to Darcs, but it uses a strictly li
 Branches are put in subdirectories.
 This makes it look very much like Mercurial.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -701,7 +719,7 @@ P4
 
 The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ client specification and performs an update.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -739,7 +757,9 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 
 ``p4viewspec``
     This will override any p4branch, p4base, and/or p4extra_views specified.
-    The viewspec will be an array of tuples as follows::
+    The viewspec will be an array of tuples as follows:
+
+    .. code-block:: python
 
         [('//depot/main/','')]
 
@@ -751,7 +771,9 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 
 ``p4viewspec_suffix``
     (optional): The ``p4viewspec`` lets you customize the client spec for a builder but, as the previous example shows, it automatically adds ``...`` at the end of each line.
-    If you need to also specify file-level remappings, you can set the ``p4viewspec_suffix`` to ``None`` so that nothing is added to your viewspec::
+    If you need to also specify file-level remappings, you can set the ``p4viewspec_suffix`` to ``None`` so that nothing is added to your viewspec:
+
+    .. code-block:: python
 
         [('//depot/main/...', '...'),
          ('-//depot/main/config.xml', 'config.xml'),
@@ -793,7 +815,9 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 
 ``p4extra_args``
     (optional): Extra arguments to be added to the P4 command-line for the ``sync`` command.
-    So for instance if you want to sync only to populate a Perforce proxy (without actually syncing files to disk), you can do::
+    So for instance if you want to sync only to populate a Perforce proxy (without actually syncing files to disk), you can do:
+
+    .. code-block:: python
 
         P4(p4extra_args=['-Zproxyload'], ...)
 
@@ -881,7 +905,9 @@ This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automa
 
    You can use the two above Rendereable in conjunction by using the class ``buildbot.process.properties.FlattenList``
 
-For example::
+For example:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -964,7 +990,7 @@ Darcs
 
 The :bb:step:`Darcs` build step performs a `Darcs <http://darcs.net/>`_ checkout or update.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1013,7 +1039,7 @@ Monotone
 
 The :bb:step:`Monotone` build step performs a `Monotone <http://www.monotone.ca/>`_ checkout or update.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1263,7 +1289,9 @@ The :bb:step:`ShellCommand` arguments are:
     All ShellCommands are run by default in the ``workdir``, which defaults to the :file:`build` subdirectory of the worker builder's base directory.
     The absolute path of the workdir will thus be the worker's basedir (set as an option to ``buildbot-worker create-worker``, :ref:`Creating-a-worker`) plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`) plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
 
-    For example::
+    For example:
+
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -1272,7 +1300,9 @@ The :bb:step:`ShellCommand` arguments are:
 
 ``env``
     a dictionary of environment strings which will be added to the child command's environment.
-    For example, to run tests with a different i18n language setting, you might use::
+    For example, to run tests with a different i18n language setting, you might use:
+
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -1281,7 +1311,9 @@ The :bb:step:`ShellCommand` arguments are:
 
     These variable settings will override any existing ones in the worker's environment or the environment specified in the :class:`Builder`.
     The exception is :envvar:`PYTHONPATH`, which is merged with (actually prepended to) any existing :envvar:`PYTHONPATH` setting.
-    The following example will prepend :file:`/home/buildbot/lib/python` to any existing :envvar:`PYTHONPATH`::
+    The following example will prepend :file:`/home/buildbot/lib/python` to any existing :envvar:`PYTHONPATH`:
+
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -1294,7 +1326,7 @@ The :bb:step:`ShellCommand` arguments are:
     Those variables support expansion so that if you just want to prepend :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
     Variables that don't exist on the worker will be replaced by ``""``.
 
-    ::
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -1341,7 +1373,7 @@ The :bb:step:`ShellCommand` arguments are:
     Following is appropriate for logfiles to which the build step will append, where the pre-existing contents are not interesting.
     The default value for ``follow`` is ``False``, which gives the same behavior as just providing a string filename.
 
-    ::
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -1351,7 +1383,7 @@ The :bb:step:`ShellCommand` arguments are:
 
     The above example will add a log named 'triallog' on the master, based on :file:`_trial_temp/test.log` on the worker.
 
-    ::
+    .. code-block:: python
 
         from buildbot.plugins import steps
 
@@ -1428,7 +1460,7 @@ The single :bb:step:`ShellSequence` argument aside from the common parameters is
 
 A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderable the returns a list of :class:`~buildbot.steps.shellsequence.ShellArg` objects.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -1490,7 +1522,7 @@ This is intended to handle the :command:`./configure` step from autoconf-style p
 The default command is :command:`./configure` but you can change this by providing a ``command=`` parameter.
 The arguments are identical to :bb:step:`ShellCommand`.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1569,7 +1601,9 @@ Each step can be optionally given a maximum number of warnings via the maxWarnCo
 If this limit is exceeded, the step will be marked as a failure.
 
 The default regular expression used to detect a warning is ``'.*warning[: ].*'`` , which is fairly liberal and may cause false-positives.
-To use a different regexp, provide a ``warningPattern=`` argument, or use a subclass which sets the ``warningPattern`` attribute::
+To use a different regexp, provide a ``warningPattern=`` argument, or use a subclass which sets the ``warningPattern`` attribute:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1611,7 +1645,9 @@ The default warningPattern regexp only matches the warning text, so line numbers
 To enable line number and file name matching, provide a different regexp and provide a function (callable) as the argument of ``warningExtractor=``.
 The function is called with three arguments: the :class:`BuildStep` object, the line in the log file with the warning, and the ``SRE_Match`` object of the regexp search for ``warningPattern``.
 It should return a tuple ``(filename, linenumber, warning_test)``.
-For example::
+For example:
+
+.. code-block:: python
 
     f.addStep(Compile(command=["make"],
                       warningPattern="^(.\*?):([0-9]+): [Ww]arning: (.\*)$",
@@ -1623,7 +1659,9 @@ For example::
 In projects with source files in multiple directories, it is possible to get full path names for file names matched in the suppression file, as long as the build command outputs the names of directories as they are entered into and left again.
 For this, specify regexps for the arguments ``directoryEnterPattern=`` and ``directoryLeavePattern=``.
 The ``directoryEnterPattern=`` regexp should return the name of the directory entered into in the first matched group.
-The defaults, which are suitable for GNU Make, are these::
+The defaults, which are suitable for GNU Make, are these:
+
+.. code-block:: python
 
     directoryEnterPattern="make.*: Entering directory [\"`'](.*)['`\"]"
     directoryLeavePattern="make.*: Leaving directory"
@@ -1735,7 +1773,9 @@ The available constructor arguments are
     This is a mandatory argument for ``MsBuild4`` and ``MsBuild12`` specifying the target platform such as 'Win32', 'x64' or 'Vista Debug'.
     The last one is an example of driver targets that appear once Windows Driver Kit 8 is installed.
 
-Here is an example on how to drive compilation with Visual Studio 2013::
+Here is an example on how to drive compilation with Visual Studio 2013:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1745,7 +1785,9 @@ Here is an example on how to drive compilation with Visual Studio 2013::
                INCLUDE=[r'C:\3rd-party\libmagic\include'],
                LIB=[r'C:\3rd-party\libmagic\lib-x64']))
 
-Here is a similar example using "MsBuild12"::
+Here is a similar example using "MsBuild12":
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1812,7 +1854,7 @@ This step runs ``robocopy`` on Windows.
 `Robocopy <https://technet.microsoft.com/en-us/library/cc733145.aspx>`_ is available in versions of Windows starting with Windows Vista and Windows Server 2008.
 For previous versions of Windows, it's available as part of the `Windows Server 2003 Resource Kit Tools <https://www.microsoft.com/en-us/download/details.aspx?id=17657>`_.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -1866,7 +1908,7 @@ Note that parameters ``/TEE /NP`` will always be appended to the command to sign
 Test
 ++++
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1883,7 +1925,7 @@ The other arguments are identical to :bb:step:`ShellCommand`.
 TreeSize
 ++++++++
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1898,7 +1940,7 @@ All arguments are identical to :bb:step:`ShellCommand`.
 PerlModuleTest
 ++++++++++++++
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1930,7 +1972,9 @@ The necessary tables can be created automatically by setting ``autoCreateTables`
 One problem with specifying a database is that each reload of the configuration will get a new instance of ``ConnectionPool`` (even if the connection parameters are the same).
 To avoid that Buildbot thinks the builder configuration has changed because of this, use the :class:`steps.mtrlogobserver.EqConnectionPool` subclass of :class:`ConnectionPool`, which implements an equality operation that avoids this problem.
 
-Example use::
+Example use:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -1988,7 +2032,7 @@ SubunitShellCommand
 
 This buildstep is similar to :bb:step:`ShellCommand`, except that it runs the log content through a subunit filter to extract test and failure counts.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2015,7 +2059,7 @@ FileExists
 This step will assert that a given file exists, failing if it does not.
 The filename can be specified with a property.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2030,7 +2074,7 @@ CopyDirectory
 
 This command copies a directory on the worker.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2056,7 +2100,7 @@ RemoveDirectory
 
 This command recursively deletes a directory on the worker.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2071,7 +2115,7 @@ MakeDirectory
 
 This command creates a directory on the worker.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2112,7 +2156,7 @@ To make them useful, you will probably have to copy them to somewhere they can b
 For example if you have server with configured nginx web server, you can place generated docs to it's public folder with command like ``rsync -ad apiref/ dev.example.com:~/usr/share/nginx/www/current-apiref/``.
 You might instead want to bundle them into a tarball and publish it in the same place where the generated install tarball is placed.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2137,7 +2181,7 @@ You must supply the command line to be used.
 The default is ``make pyflakes``, which assumes you have a top-level :file:`Makefile` with a ``pyflakes`` target.
 You might want to use something like ``pyflakes .`` or ``pyflakes src``.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2157,7 +2201,7 @@ It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_ as input 
 
 The :bb:step:`Sphinx` step will run :program:`sphinx-build` or any other program specified in its ``sphinx`` argument and count the various warnings and error it detects.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2202,7 +2246,7 @@ Similarly, the :bb:step:`PyLint` step will run :command:`pylint` and analyze the
 You must supply the command line to be used.
 There is no default.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2250,7 +2294,7 @@ This can be a string (like ``python2.2``) or a list (like ``['python2.3', '-Wall
 Trial creates and switches into a directory named :file:`_trial_temp/` before running the tests, and sends the twisted log (which includes all exceptions) to a file named :file:`test.log`.
 This file will be pulled up to the master where it can be seen as part of the status output.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2278,7 +2322,7 @@ This is a simple built-in step that will remove ``.pyc`` files from the workdir.
 This is useful in builds that update their source (and thus do not automatically delete ``.pyc`` files) but where some part of the build process is dynamically searching for Python modules.
 Notably, trial has a bad habit of finding old test modules.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2307,7 +2351,7 @@ We want to move this file to the buildmaster, into a :file:`/usr/share/nginx/www
 This file will wind up in the worker-side working directory under the name :file:`docs/reference.html`.
 We want to put it into the master-side :file:`/usr/share/nginx/www/ref.html`, and add a link to the HTML status to the uploaded file.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2325,7 +2369,9 @@ Likewise, the ``workersrc=`` argument will be expanded and interpreted relative 
    The copied file will have the same permissions on the master as on the worker, look at the ``mode=`` parameter to set it differently.
 
 To move a file from the master to the worker, use the :bb:step:`FileDownload` command.
-For example, let's assume that some step requires a configuration file that, for whatever reason, could not be recorded in the source code repository or generated on the worker side::
+For example, let's assume that some step requires a configuration file that, for whatever reason, could not be recorded in the source code repository or generated on the worker side:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2371,7 +2417,9 @@ However it does not support the ``maxsize``, ``blocksize`` and ``mode`` argument
 As an example, let's assume an generated project documentation, which consists of many files (like the output of :command:`doxygen` or :command:`epydoc`).
 And let's assume that we run nginx web server on buildmaster host for serving static files.
 We want to move the entire documentation to the buildmaster, into a :file:`/usr/share/nginx/www/docs` directory, and add a link to the uploaded documentation on the HTML status page.
-On the worker-side the directory can be found under :file:`docs`::
+On the worker-side the directory can be found under :file:`docs`:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2400,7 +2448,9 @@ Transferring Multiple Files At Once
 In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files (and directories) in a single :class:`BuildStep`.
 The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``workersrc`` parameter it takes a (plural) ``workersrcs`` parameter.
 This parameter should either be a list, something that can be rendered as a list or a string which will be converted to a list.
-Additionally it supports the ``glob`` parameter if this parameter is set to ``True`` all arguments in ``workersrcs`` will be parsed through ``glob`` and the results will be uploaded to ``masterdest``.::
+Additionally it supports the ``glob`` parameter if this parameter is set to ``True`` all arguments in ``workersrcs`` will be parsed through ``glob`` and the results will be uploaded to ``masterdest``.:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2416,7 +2466,7 @@ The way URLs are added to the step can be customized by extending the :bb:step:`
 The `allUploadsDone` method is called after all files have been uploaded and sets the URL.
 The `uploadDone` method is called once for each uploaded file and can be used to create file-specific links.
 
-::
+.. code-block:: python
 
     import os
 
@@ -2457,7 +2507,7 @@ Transferring Strings
 Sometimes it is useful to transfer a calculated value from the master to the worker.
 Instead of having to create a temporary file and then use FileDownload, you can use one of the string download steps.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -2466,7 +2516,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument, ``s``, representing the string to download instead of a ``mastersrc`` argument.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2480,7 +2530,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
 .. index:: Properties; JSONPropertiesDownload
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2503,7 +2553,7 @@ To be clear, the enclosing :class:`Build` object must still have a worker object
 
 In this example, the step renames a tarball based on the day of the week.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2521,7 +2571,7 @@ In this example, the step renames a tarball based on the day of the week.
 Environment variables constructed using the ``env`` argument support expansion so that if you just want to prepend  :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
 Variables that don't exist on the master will be replaced by ``""``.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2577,7 +2627,9 @@ SetProperty
 .. py:class:: buildbot.steps.master.SetProperty
 
 :bb:step:`SetProperty` takes two arguments of ``property`` and ``value`` where the ``value`` is to be assigned to the ``property`` key.
-It is usually called with the ``value`` argument being specified as a :ref:`Interpolate` object which allows the value to be built from other property values::
+It is usually called with the ``value`` argument being specified as a :ref:`Interpolate` object which allows the value to be built from other property values:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -2641,7 +2693,9 @@ SetPropertyFromCommand
 .. py:class:: buildbot.steps.shell.SetPropertyFromCommand
 
 This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the output of the command into a property.
-It is usually used like this::
+It is usually used like this:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2664,7 +2718,7 @@ It should return a dictionary containing all new properties.
 
 Note that passing in :func:`extract_fn` will set ``includeStderr`` to ``True``.
 
-::
+.. code-block:: python
 
     def glob2list(rc, stdout, stderr):
         jpgs = [l.strip() for l in stdout.split('\n')]
@@ -2673,7 +2727,9 @@ Note that passing in :func:`extract_fn` will set ``includeStderr`` to ``True``.
     f.addStep(SetPropertyFromCommand(command="ls -1 *.jpg", extract_fn=glob2list))
 
 Note that any ordering relationship of the contents of stdout and stderr is lost.
-For example, given::
+For example, given:
+
+.. code-block:: python
 
     f.addStep(SetPropertyFromCommand(
         command="echo output1; echo error >&2; echo output2",
@@ -2698,7 +2754,7 @@ Note that on Windows, environment variables are case-insensitive, but Buildbot p
 The property will have exactly the variable name you specify, even if the underlying environment variable is capitalized differently.
 If, for example, you use ``variables=['Tmp']``, the result will be a property named ``Tmp``, even though the environment variable is displayed as :envvar:`TMP` in the Windows GUI.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -2721,7 +2777,9 @@ Triggering Schedulers
 
 .. py:class:: buildbot.steps.trigger.Trigger
 
-The counterpart to the :bb:Sched:`Triggerable` scheduler is the :bb:step:`Trigger` build step::
+The counterpart to the :bb:Sched:`Triggerable` scheduler is the :bb:step:`Trigger` build step:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2769,7 +2827,9 @@ Hyperlinks are added to the build detail web pages for each triggered build.
     allows control of the properties that are passed to the triggered scheduler.
     The parameter takes a dictionary mapping property names to values.
     You may use :ref:`Interpolate` here to dynamically construct new property values.
-    For the simple case of copying a property, this might look like::
+    For the simple case of copying a property, this might look like:
+
+    .. code-block:: python
 
         set_properties={"my_prop1" : Property("my_prop1"),
                         "my_prop2" : Property("my_prop2")}
@@ -2812,7 +2872,9 @@ These steps work with RPMs and spec files.
 RpmBuild
 ++++++++
 
-The :bb:step:`RpmBuild` step builds RPMs based on a spec file::
+The :bb:step:`RpmBuild` step builds RPMs based on a spec file:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2857,7 +2919,9 @@ The step takes the following parameters
 RpmLint
 +++++++
 
-The :bb:step:`RpmLint` step checks for common problems in RPM packages or spec files::
+The :bb:step:`RpmLint` step checks for common problems in RPM packages or spec files:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2886,7 +2950,9 @@ To use mock your Buildbot user must be added to the ``mock`` group.
 MockBuildSRPM Step
 ++++++++++++++++++
 
-The :bb:step:`MockBuildSRPM` step builds a SourceRPM based on a spec file and optionally a source directory::
+The :bb:step:`MockBuildSRPM` step builds a SourceRPM based on a spec file and optionally a source directory:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2917,7 +2983,9 @@ The step takes the following parameters
 MockRebuild Step
 ++++++++++++++++
 
-The :bb:step:`MockRebuild` step rebuilds a SourceRPM package::
+The :bb:step:`MockRebuild` step rebuilds a SourceRPM package:
+
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2953,7 +3021,7 @@ It populates the chroot with a basic system and the packages listed as build req
 The type of the chroot to build is specified with the ``distribution``, ``distribution`` and ``mirror`` parameter.
 To use pbuilder your Buildbot user must have the right to run :command:`pbuilder` as root using :command:`sudo`.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -2999,7 +3067,7 @@ DebLintian
 The :bb:step:`DebLintian` step checks a build .deb for bugs and policy violations.
 The packages or changes file to test is specified in ``fileloc``
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -3024,7 +3092,7 @@ It specifically excludes any ``.xhtml`` files in the top-level ``sandbox/`` dire
 The step takes a single, optional, parameter: ``python``.
 This specifies the Python executable to use to run Lore.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -3038,7 +3106,7 @@ MaxQ
 MaxQ (http://maxq.tigris.org/) is a web testing tool that allows you to record HTTP sessions and play them back.
 The :bb:step:`MaxQ` step runs this framework.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -3098,7 +3166,9 @@ The parameters are the following:
 When the method is known in advance, class with the name of the method can also be used.
 In this case, it is not necessary to specify the method.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 

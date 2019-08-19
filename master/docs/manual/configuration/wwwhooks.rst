@@ -107,7 +107,9 @@ The GitHub hook has the following parameters:
     If the value is `None` (default), the default class -- :py:class:`buildbot.www.hooks.github.GitHubEventHandler` -- will be used.
     The default class handles `ping`, `push` and `pull_request` events only.
     If you'd like to handle other events (see `Event Types & Payloads <https://developer.github.com/v3/activity/events/types/>`_ for more information), you'd need to subclass ``GitHubEventHandler`` and add handler methods for the corresponding events.
-    For example, if you'd like to handle `blah` events, your code should look something like this::
+    For example, if you'd like to handle `blah` events, your code should look something like this:
+
+    .. code-block:: python
 
         from buildbot.www.hooks.github import GitHubEventHandler
 
@@ -291,7 +293,9 @@ Poller hook
 The poller hook allows you to use GET or POST requests to trigger polling.
 One advantage of this is your buildbot instance can poll at launch (using the pollAtLaunch flag) to get changes that happened while it was down, but then you can still use a commit hook to get fast notification of new changes.
 
-Suppose you have a poller configured like this::
+Suppose you have a poller configured like this:
+
+.. code-block:: python
 
     c['change_source'] = SVNPoller(
         repourl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
@@ -300,7 +304,9 @@ Suppose you have a poller configured like this::
         pollAtLaunch=True,
     )
 
-And you configure your WebStatus to enable this hook::
+And you configure your WebStatus to enable this hook:
+
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'poller': True},
@@ -315,7 +321,9 @@ Then you will be able to trigger a poll of the SVN repository by poking the ``/c
 
 If no ``poller`` argument is provided then the hook will trigger polling of all polling change sources.
 
-You can restrict which pollers the webhook has access to using the ``allowed`` option::
+You can restrict which pollers the webhook has access to using the ``allowed`` option:
+
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
@@ -326,7 +334,7 @@ You can restrict which pollers the webhook has access to using the ``allowed`` o
 GitLab hook
 +++++++++++
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={
@@ -378,7 +386,7 @@ Gitorious Hook
 
 The Gitorious hook is as simple as GitHub one and it also takes no options.
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'gitorious': True},

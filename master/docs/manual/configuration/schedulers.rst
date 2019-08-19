@@ -23,7 +23,9 @@ Configuring Schedulers
 The :bb:cfg:`schedulers` configuration parameter gives a list of scheduler instances, each of which causes builds to be started on a particular set of Builders.
 The two basic scheduler classes you are likely to start with are :bb:sched:`SingleBranchScheduler` and :bb:sched:`Periodic`, but you can write a customized subclass to implement more complicated build scheduling.
 
-Scheduler arguments should always be specified by name (as keyword arguments), to allow for future expansion::
+Scheduler arguments should always be specified by name (as keyword arguments), to allow for future expansion:
+
+.. code-block:: python
 
     sched = SingleBranchScheduler(name="quick", builderNames=['lin', 'win'])
 
@@ -215,12 +217,16 @@ Change Filters
 
 Several schedulers perform filtering on an incoming set of changes.
 The filter can most generically be specified as a :class:`ChangeFilter`.
-Set up a :class:`ChangeFilter` like this::
+Set up a :class:`ChangeFilter` like this:
+
+.. code-block:: python
 
     from buildbot.plugins import util
     my_filter = util.ChangeFilter(project_re="^baseproduct/.*", branch="devel")
 
-and then add it to a scheduler with the ``change_filter`` parameter::
+and then add it to a scheduler with the ``change_filter`` parameter:
+
+.. code-block:: python
 
     sch = SomeSchedulerClass(...,
         change_filter=my_filter)
@@ -243,15 +249,21 @@ There are five attributes of changes on which you can filter:
 ``codebase``
     the change's codebase.
 
-For each attribute, the filter can look for a single, specific value::
+For each attribute, the filter can look for a single, specific value:
+
+.. code-block:: python
 
     my_filter = util.ChangeFilter(project='myproject')
 
-or accept any of a set of values::
+or accept any of a set of values:
+
+.. code-block:: python
 
     my_filter = util.ChangeFilter(project=['myproject', 'jimsproject'])
 
-or apply a regular expression, using the attribute name with a "``_re``" suffix::
+or apply a regular expression, using the attribute name with a "``_re``" suffix:
+
+.. code-block:: python
 
     my_filter = util.ChangeFilter(category_re='.*deve.*')
     # or, to use regular expression flags:
@@ -264,11 +276,15 @@ non-distinct changes should be considered. For example, if a commit is pushed to
 a branch that is not being watched and then later pushed to a watched branch, by
 default, this will be recorded as two separate Changes. In order to record a
 change only the first time the commit appears, you can install a custom
-:class:`ChangeFilter` like this::
+:class:`ChangeFilter` like this:
+
+.. code-block:: python
 
     ChangeFilter(filter_fn = lambda c: c.properties.getProperty('github_distinct')
 
-For anything more complicated, define a Python function to recognize the strings you want::
+For anything more complicated, define a Python function to recognize the strings you want:
+
+.. code-block:: python
 
     def my_branch_fn(branch):
         return branch in branches_to_build and branch not in branches_to_ignore
@@ -369,7 +385,9 @@ The arguments to this scheduler are:
 
        ``None`` is a keyword, not a string, so write ``None`` and not ``"None"``.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers, util
     quick = schedulers.SingleBranchScheduler(
@@ -391,7 +409,9 @@ Each scheduler triggers a different set of Builders, referenced by name.
 
 .. note::
 
-   The old names for this scheduler, ``buildbot.scheduler.Scheduler`` and ``buildbot.schedulers.basic.Scheduler``, are deprecated in favor of using :mod:`buildbot.plugins`::
+   The old names for this scheduler, ``buildbot.scheduler.Scheduler`` and ``buildbot.schedulers.basic.Scheduler``, are deprecated in favor of using :mod:`buildbot.plugins`:
+
+   .. code-block:: python
 
         from buildbot.plugins import schedulers
 
@@ -488,7 +508,9 @@ The keyword arguments to this scheduler are:
     The upstream scheduler to watch.
     Note that this is an *instance*, not the name of the scheduler.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers
     tests = schedulers.SingleBranchScheduler(name="just-tests",
@@ -551,7 +573,9 @@ The arguments to this scheduler are:
 ``periodicBuildTimer``
     The time, in seconds, after which to start a build.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers
     nightly = schedulers.Periodic(name="daily",
@@ -637,7 +661,9 @@ The full list of parameters is:
     The day of the week to start a build, with Monday = 0.
     This defaults to ``*``, meaning every day of the week.
 
-For example, the following :file:`master.cfg` clause will cause a build to be started every night at 3:00am::
+For example, the following :file:`master.cfg` clause will cause a build to be started every night at 3:00am:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers
     c['schedulers'].append(
@@ -646,7 +672,9 @@ For example, the following :file:`master.cfg` clause will cause a build to be st
                            builderNames=['builder1', 'builder2'],
                            hour=3, minute=0))
 
-This scheduler will perform a build each Monday morning at 6:23am and again at 8:23am, but only if someone has committed code in the interim::
+This scheduler will perform a build each Monday morning at 6:23am and again at 8:23am, but only if someone has committed code in the interim:
+
+.. code-block:: python
 
     c['schedulers'].append(
         schedulers.Nightly(name='BeforeWork',
@@ -655,7 +683,9 @@ This scheduler will perform a build each Monday morning at 6:23am and again at 8
                            dayOfWeek=0, hour=[6,8], minute=23,
                            onlyIfChanged=True))
 
-The following runs a build every two hours, using Python's :func:`range` function::
+The following runs a build every two hours, using Python's :func:`range` function:
+
+.. code-block:: python
 
     c.schedulers.append(
         timed.Nightly(name='every2hours',
@@ -663,7 +693,9 @@ The following runs a build every two hours, using Python's :func:`range` functio
             builderNames=['builder1'],
             hour=range(0, 24, 2)))
 
-Finally, this example will run only on December 24th::
+Finally, this example will run only on December 24th:
+
+.. code-block:: python
 
     c['schedulers'].append(
         timed.Nightly(name='SleighPreflightCheck',
@@ -733,7 +765,9 @@ For example, to set up the `jobdir` style of trial build, using a command queue 
     chgrp developers MASTERDIR/jobdir MASTERDIR/jobdir/*
     chmod g+rwx,o-rwx MASTERDIR/jobdir MASTERDIR/jobdir/*
 
-and then use the following scheduler in the buildmaster's config file::
+and then use the following scheduler in the buildmaster's config file:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers
     s = schedulers.Try_Jobdir(name="try1",
@@ -749,14 +783,18 @@ Be sure to watch the :file:`twistd.log` file (:ref:`Logfiles`) as you start usin
 .. note::
 
    Patches in the jobdir are encoded using netstrings, which place an arbitrary upper limit on patch size of 99999 bytes.
-   If your submitted try jobs are rejected with `BadJobfile`, try increasing this limit with a snippet like this in your `master.cfg`::
+   If your submitted try jobs are rejected with `BadJobfile`, try increasing this limit with a snippet like this in your `master.cfg`:
+
+   .. code-block:: python
 
         from twisted.protocols.basic import NetstringReceiver
         NetstringReceiver.MAX_LENGTH = 1000000
 
 To use the username/password form of authentication, create a :class:`Try_Userpass` instance instead.
 It takes the same ``builderNames`` argument as the :class:`Try_Jobdir` form, but accepts an additional ``port`` argument (to specify the TCP port to listen on) and a ``userpass`` list of username/password pairs to accept.
-Remember to use good passwords for this: the security of the worker accounts depends upon it::
+Remember to use good passwords for this: the security of the worker accounts depends upon it:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers
     s = schedulers.Try_Userpass(name="try2",
@@ -804,7 +842,9 @@ The parameters are just the basics:
     See :ref:`reason scheduler argument <Scheduler-Attr-Reason>`.
 
 This class is only useful in conjunction with the :bb:step:`Trigger` step.
-Here is a fully-worked example::
+Here is a fully-worked example:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers, util, steps
 
@@ -890,7 +930,9 @@ The parameters are just the basics:
 This class is only useful in conjunction with the :bb:step:`Trigger` step.
 Note that ``waitForFinish`` is ignored by :bb:step:`Trigger` steps targeting this scheduler.
 
-Here is a fully-worked example::
+Here is a fully-worked example:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers, util, steps
 
@@ -972,7 +1014,9 @@ The scheduler takes the following parameters:
     This defaults to the name of scheduler.
 
 An example may be better than long explanation.
-What you need in your config file is something like::
+What you need in your config file is something like:
+
+.. code-block:: python
 
     from buildbot.plugins import schedulers, util
 
@@ -1033,7 +1077,9 @@ Authorization
 .............
 
 The force scheduler uses the web interface's authorization framework to determine which user has the right to force which build.
-Here is an example of code on how you can define which user has which right::
+Here is an example of code on how you can define which user has which right:
+
+.. code-block:: python
 
     user_mapping = {
         re.compile("project1-builder"): ["project1-maintainer", "john"] ,
@@ -1100,7 +1146,7 @@ All parameter types have a few common arguments:
     This is implemented generically, and all parameters can update others.
     Beware of infinite loops!
 
-    ::
+    .. code-block:: python
 
         c['schedulers'].append(schedulers.ForceScheduler(
         name="custom",
@@ -1136,7 +1182,7 @@ The parameter types are:
 NestedParameter
 ###############
 
-::
+.. code-block:: python
 
     NestedParameter(name="options", label="Build options" layout="vertical", fields=[...]),
 
@@ -1169,7 +1215,7 @@ It adds the following arguments:
 FixedParameter
 ##############
 
-::
+.. code-block:: python
 
     FixedParameter(name="branch", default="trunk"),
 
@@ -1178,7 +1224,7 @@ This parameter type will not be shown on the web form, and always generate a pro
 StringParameter
 ###############
 
-::
+.. code-block:: python
 
     StringParameter(name="pull_url",
         label="optionally give a public Git pull url:",
@@ -1198,7 +1244,7 @@ It adds the following arguments:
 TextParameter
 #############
 
-::
+.. code-block:: python
 
     TextParameter(name="comments",
         label="comments to be displayed to the user of the built binary",
@@ -1226,7 +1272,7 @@ Beware of security issues anyway.
 IntParameter
 ############
 
-::
+.. code-block:: python
 
     IntParameter(name="debug_level",
         label="debug level (1-10)", default=2)
@@ -1236,7 +1282,7 @@ This parameter type accepts an integer value using a text-entry box.
 BooleanParameter
 ################
 
-::
+.. code-block:: python
 
     BooleanParameter(name="force_build_clean",
         label="force a make clean", default=False)
@@ -1247,7 +1293,7 @@ It will be presented as a checkbox.
 UserNameParameter
 #################
 
-::
+.. code-block:: python
 
     UserNameParameter(label="your name:", size=80)
 
@@ -1265,7 +1311,7 @@ If authentication is active, it will use the authenticated user instead of displ
 ChoiceStringParameter
 #####################
 
-::
+.. code-block:: python
 
     ChoiceStringParameter(name="branch",
         choices=["main","devel"], default="main")
@@ -1293,7 +1339,9 @@ Its arguments, in addition to the common options, are:
 
     If true, then the user may select multiple choices.
 
-Example::
+Example:
+
+.. code-block:: python
 
         ChoiceStringParameter(name="forced_tests",
                               label="smoke test campaign to run",
@@ -1314,7 +1362,7 @@ Example::
 CodebaseParameter
 #################
 
-::
+.. code-block:: python
 
     CodebaseParameter(codebase="myrepo")
 
@@ -1408,7 +1456,9 @@ The new parameter is:
    A function to find compatible builds in the build history.
    This function is given the master :py:class:`~buildbot.status.master.Status` instance as first argument, and the current builder name as second argument, or None when forcing all builds.
 
-Example::
+Example:
+
+.. code-block:: python
 
     def get_compatible_builds(status, builder):
         if builder is None: # this is the case for force_build_all
@@ -1450,7 +1500,9 @@ This parameter allows a scheduler to require that a build is assigned to the cho
 The choice is assigned to the `workername` property for the build.
 The :py:class:`~buildbot.builder.enforceChosenWorker` functor must be assigned to the ``canStartBuild`` parameter for the ``Builder``.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import util
 

@@ -147,7 +147,9 @@ We will rely on docker-py to connect our master with docker.
 Now is the time to install it in your master environment.
 
 Before adding the worker to your master configuration, it is possible to validate the previous steps by starting the newly created image interactively.
-To do this, enter the following lines in a Python prompt where docker-py is installed::
+To do this, enter the following lines in a Python prompt where docker-py is installed:
+
+.. code-block:: python
 
     >>> import docker
     >>> docker_socket = 'tcp://localhost:2375'
@@ -162,7 +164,9 @@ To do this, enter the following lines in a Python prompt where docker-py is inst
 
 It is now time to add the new worker to the master configuration under :bb:cfg:`workers`.
 
-The following example will add a Docker latent worker for docker running at the following address: ``tcp://localhost:2375``, the worker name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_worker``::
+The following example will add a Docker latent worker for docker running at the following address: ``tcp://localhost:2375``, the worker name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_worker``:
+
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -438,7 +442,9 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     (optional)
     Basic authorization info to connect to the cluster, as a `{'user': 'username', 'password': 'psw' }` dict.
 
-    Unlike the headers argument, this argument supports secret providers, e.g::
+    Unlike the headers argument, this argument supports secret providers, e.g:
+
+    .. code-block:: python
 
         basicAuth={'user': 'username', 'password': Secret('k8spassword')}
 
@@ -446,7 +452,9 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     (optional)
 
     A bearer token to authenticate to the cluster, as a string.
-    Unlike the headers argument, this argument supports secret providers, e.g::
+    Unlike the headers argument, this argument supports secret providers, e.g:
+
+    .. code-block:: python
 
         bearerToken=Secret('k8s-token')
 
@@ -471,13 +479,17 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
 ``cert``
     (optional)
     Client certificate and key to use to authenticate.
-    This only works if ``txrequests`` is installed::
+    This only works if ``txrequests`` is installed:
+
+    .. code-block:: python
 
         cert=('/path/to/certificate.crt', '/path/to/certificate.key')
 
 ``verify``
     (optional)
-    Path to server certificate authenticate the server::
+    Path to server certificate authenticate the server:
+
+    .. code-block:: python
 
         verify='/path/to/kube_server_certificate.crt'
 

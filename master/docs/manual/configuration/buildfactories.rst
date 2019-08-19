@@ -24,7 +24,9 @@ Defining a Build Factory
 
 A :class:`BuildFactory` defines the steps that every build will follow.
 Think of it as a glorified script.
-For example, a build factory which consists of an SVN checkout followed by a ``make build`` would be configured as follows::
+For example, a build factory which consists of an SVN checkout followed by a ``make build`` would be configured as follows:
+
+.. code-block:: python
 
     from buildbot.plugins import util, steps
 
@@ -32,7 +34,9 @@ For example, a build factory which consists of an SVN checkout followed by a ``m
     f.addStep(steps.SVN(repourl="http://..", mode="incremental"))
     f.addStep(steps.Compile(command=["make", "build"]))
 
-This factory would then be attached to one builder (or several, if desired)::
+This factory would then be attached to one builder (or several, if desired):
+
+.. code-block:: python
 
     c['builders'].append(
         BuilderConfig(name='quick', workernames=['bot1', 'bot2'], factory=f))
@@ -40,7 +44,7 @@ This factory would then be attached to one builder (or several, if desired)::
 It is also possible to pass a list of steps into the :class:`BuildFactory` when it is created.
 Using :meth:`addStep` is usually simpler, but there are cases where it is more convenient to create the list of steps ahead of time, perhaps using some Python tricks to generate the steps.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -50,7 +54,9 @@ Using :meth:`addStep` is usually simpler, but there are cases where it is more c
     ]
     f = util.BuildFactory(all_steps)
 
-Finally, you can also add a sequence of steps all at once::
+Finally, you can also add a sequence of steps all at once:
+
+.. code-block:: python
 
     f.addSteps(all_steps)
 
@@ -59,7 +65,7 @@ Attributes
 
 The following attributes can be set on a build factory after it is created, e.g.,
 
-::
+.. code-block:: python
 
     f = util.BuildFactory()
     f.useProgress = False
@@ -98,7 +104,7 @@ When this script is called with the argument ``--list-stages`` it outputs a newl
 This can be used to generate at runtime a step for each stage in the build.
 Each stage is then run in this example using ``./build.sh --run-stage <stage name>``.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import util, steps
     from buildbot.process import buildstep, logobserver
@@ -178,7 +184,9 @@ These tools both encourage a build process which usually looks like this:
 The Buildbot's :class:`buildbot.process.factory.GNUAutoconf` factory is designed to build projects which use GNU autoconf and/or automake.
 The configuration environment variables, the configure flags, and command lines used for the compile and test are all configurable, in general the default values will be suitable.
 
-Example::
+Example:
+
+.. code-block:: python
 
     f = util.GNUAutoconf(source=source.SVN(repourl=URL, mode="copy"),
                          flags=["--disable-nls"])
