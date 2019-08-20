@@ -98,23 +98,28 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
 ``custom_templates_dir``
     This directory will be parsed for custom angularJS templates to replace the one of the original website templates.
+    You can use this to slightly customize buildbot look for your project, but to add any logic, you will need to create a full-blown plugin.
     if the directory string is relative, it will be joined to the master's basedir.
-    Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override ``views/<filename>.html`` templates in the angularjs templateCache.
-    Unlike with the regular nodejs based angularjs build system, Python only jade interpreter is used to parse the jade templates.
+    Buildbot uses the jade file format natively (which has been renamed 'pug' in the nodejs ecosystem), but you can also use html format if you prefer.
+    
+    Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override templates with the same name in the UI.
+    On the regular nodejs UI build system, we use nodejs's pug module to compile jade into html.
+    For custom_templates, we use the pyjade interpreter to parse the jade templates, before sending them to the UI.
     ``pip install pyjade`` is be required to use jade templates.
-    You can also override plugin's directives, but they have to be in another directory.
+    You can also override plugin's directives, but they have to be in another directory, corresponding to the plugin's name in its ``package.json``.
+    For example:
 
     .. code-block:: none
 
         # replace the template whose source is in:
         # www/base/src/app/builders/build/build.tpl.jade
-        build.jade
+        build.jade  # here we use a jade (aka pug) file
 
         # replace the template whose source is in
-        # www/console_view/src/module/view/builders-header/buildersheader.tpl.jade
-        console_view/buildersheader.html
+        # www/console_view/src/module/view/builders-header/console.tpl.jade
+        console_view/console.html  # here we use html format
 
-    Known differences between nodejs jade and pyjade:
+    Known differences between nodejs's pug and pyjade:
 
         * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
           This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``

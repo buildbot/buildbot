@@ -1,5 +1,5 @@
 {
-    "name": "buildbot-wsgi-dashboards",
+    "name": "wsgi_dashboards",
     "private": true,
     "main": "buildbot_wsgi_dashboards/static/scripts.js",
     "scripts": {

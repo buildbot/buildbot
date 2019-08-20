@@ -1,5 +1,5 @@
 {
-    "name": "buildbot-grid-view",
+    "name": "grid_view",
     "private": true,
     "main": "buildbot_grid_view/static/scripts.js",
     "style": "buildbot_grid_view/static/styles.css",

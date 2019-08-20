@@ -58,7 +58,7 @@ module.exports.createTemplateWebpackConfig = function(options) {
     };
 
     config.optimization = {
-        minimize: isProd,
+        minimize: true,
         minimizer: [
             new TerserPlugin({
                 cache: true,
@@ -151,7 +151,8 @@ module.exports.createTemplateWebpackConfig = function(options) {
             exclude: /node_modules/
         }, {
             test: /\.jade$/,
-            loader: 'pug-loader',
+            loader: path.resolve(__dirname, './ng-template-loader.js'),
+            options,
             exclude: /node_modules/
         }, {
             test: /\.css$/,
@@ -171,14 +172,12 @@ module.exports.createTemplateWebpackConfig = function(options) {
         ...extraRules
     ]};
 
-    // avoid duplicate load of angular in tests
-    if (resolveAngular && isTest) {
-        config.resolve = {
-            alias: {
-              'angular': path.resolve(path.join(__dirname, 'node_modules', 'angular'))
-            },
-        };
-    }
+    // // avoid duplicate load of angular
+    // config.resolve = {
+    //     alias: {
+    //         'angular': path.resolve(path.join(__dirname, '..', '..', 'guanlecoja-ui', 'node_modules', 'angular'))
+    //     },
+    // };
 
     return config;
 };
