@@ -89,7 +89,7 @@ Common uses of the status API are:
 
  * ``getBuild`` in a custom renderable
  * ``MailNotifier`` message formatters (see below for upgrade hints)
- * ``doIf`` functions on steps
+ * ``doStepIf`` functions on steps
 
 Import paths for several classes under the ``buildbot.status`` package but which remain useful have changed.
 Most of these are now available as plugins (see above), but for the remainder, consult the source code.
