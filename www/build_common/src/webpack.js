@@ -172,12 +172,12 @@ module.exports.createTemplateWebpackConfig = function(options) {
         ...extraRules
     ]};
 
-    // // avoid duplicate load of angular
-    // config.resolve = {
-    //     alias: {
-    //         'angular': path.resolve(path.join(__dirname, '..', '..', 'guanlecoja-ui', 'node_modules', 'angular'))
-    //     },
-    // };
+    // avoid duplicate load of angular
+    config.resolve = {
+        alias: {
+            'angular': path.resolve(path.join(__dirname, '..', '..', 'guanlecoja-ui', 'node_modules', 'angular'))
+        },
+    };
 
     return config;
 };
