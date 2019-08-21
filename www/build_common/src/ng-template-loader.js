@@ -8,17 +8,17 @@ var loaderUtils = require("loader-utils");
 */
 
 module.exports = function() {
-  var fn = this.resourcePath;
-  var code = pug.compileFile(fn);
-  content = code();
-	var libraryName = loaderUtils.getOptions(this).libraryName;
+  var fileName = this.resourcePath;
+  var code = pug.compileFile(fileName);
+  var content = code();
+	var pluginName = loaderUtils.getOptions(this).pluginName;
 
-  // compute template name (legacy scheme)
-  tpl_name = path.parse(fn).name.replace(/.tpl$/,'') + ".html";
-  if (libraryName != "buildbot-www") {
-    tpl_name = libraryName + "/" + tpl_name;
+  // compute template name (as defined by ancient gulp based build system)
+  var tplName = path.parse(fileName).name.replace(/.tpl$/,'') + ".html";
+  if (pluginName != "buildbot-www") {
+    tplName = pluginName + "/" + tplName;
   }
   // search for custom_templates (we use T as a short name to avoid consume to much bytes)
-  content = `module.exports = window.T['${tpl_name}'] || ${JSON.stringify(content)};`;
+  content = `module.exports = window.T['${tplName}'] || ${JSON.stringify(content)};`;
   return content;
 }

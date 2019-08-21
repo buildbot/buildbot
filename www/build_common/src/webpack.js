@@ -14,6 +14,7 @@ module.exports.createTemplateWebpackConfig = function(options) {
     const requiredOptions = [
         'dirname',
         'libraryName',
+        'pluginName',
     ]
 
     requiredOptions.forEach((option) => {
@@ -58,7 +59,7 @@ module.exports.createTemplateWebpackConfig = function(options) {
     };
 
     config.optimization = {
-        minimize: true,
+        minimize: isProd,
         minimizer: [
             new TerserPlugin({
                 cache: true,

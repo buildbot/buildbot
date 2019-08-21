@@ -100,7 +100,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
     This directory will be parsed for custom angularJS templates to replace the one of the original website templates.
     You can use this to slightly customize buildbot look for your project, but to add any logic, you will need to create a full-blown plugin.
     if the directory string is relative, it will be joined to the master's basedir.
-    Buildbot uses the jade file format natively (which has been renamed 'pug' in the nodejs ecosystem), but you can also use html format if you prefer.
+    Buildbot uses the jade file format natively (which has been renamed to 'pug' in the nodejs ecosystem), but you can also use html format if you prefer.
     
     Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override templates with the same name in the UI.
     On the regular nodejs UI build system, we use nodejs's pug module to compile jade into html.
