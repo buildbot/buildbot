@@ -529,18 +529,11 @@ The Pushjet specific parameters are:
 IRC Bot
 ~~~~~~~
 
-
 The :bb:reporter:`IRC` reporter creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
 
 The IRC Bot in buildbot nine, is mostly a rewrite, and not all functionality has been ported yet.
 Patches are very welcome for restoring the full functionality.
-
-.. note:: Security Note
-
-    Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
-
-
 
 .. code-block:: python
 
@@ -551,11 +544,13 @@ Patches are very welcome for restoring the full functionality.
                                {"channel": "#example2",
                                 "password": "somesecretpassword"}],
                      password="mysecretnickservpassword",
-                     notify_events={
-                       'exception': 1,
-                       'successToFailure': 1,
-                       'failureToSuccess': 1,
-                     })
+                     authz={('force', 'stop'): "authorizednick"}
+                     notify_events=[
+                       'exception',
+                       'problem',
+                       'recovery',
+                       'worker'
+                     ])
     c['services'].append(irc)
 
 The following parameters are accepted by this class:
@@ -578,13 +573,31 @@ The following parameters are accepted by this class:
     (optional)
     This is a list of person to contact on the IRC server.
 
+``authz``
+    (optional)
+    Authentication list for commands. It must be a dictionary with command names or tuples of command names as keys. There are two special command names: ``''`` (empty string) meaning any harmless command and ``'!'`` for dangerous commands (currently ``force``, ``stop``, and ``shutdown``). The dictionary values are either ``True`` of ``False`` (which allows or deny commands for everybody) or a list of nicknames authorized to issue specified commands. By default, harmless commands are allowed for everybody and the dangerous ones are prohibited.
+
+    A sample ``authz`` parameter may look as follows:
+
+    .. code-block:: python
+
+        authz=(
+          'version': True,
+          '': ['alice', 'bob'],
+          ('force', 'stop'): ['alice'],
+        )
+
+    Anybody will be able to run the ``version`` command, *alice* and *bob* will be allowed to run any safe command and *alice* will also have the right to force and stop builds.
+
+    This parameter replaces older ``allowForce`` and ``allowShutdown``, which have been removed as they were considered a security risk.
+
+    .. note::
+
+        The authorization is purely nick-based, so it only makes sense if the specified nicks are registered to the IRC server.
+
 ``port``
     (optional, default to 6667)
     The port to connect to on the IRC server.
-
-``allowForce``
-    (optional, disabled by default)
-    This allow user to force builds via this bot.
 
 ``tags``
     (optional)
@@ -599,9 +612,9 @@ The following parameters are accepted by this class:
 
 ``notify_events``
     (optional)
-    A dictionary of events to be notified on the IRC channels.
-    At the moment, irc bot can listen to build 'start' and 'finish' events.
-    This parameter can be changed during run-time by sending the ``notify`` command to the bot.
+    A list or set of events to be notified on the IRC channels.
+    At the moment, irc bot can listen to build 'start' and 'finish' events. It can also notify about missing workers and their return.
+    This parameter can be changed during run-time by sending the ``notify`` command to the bot. Note however, that at the buildbot restart or reconfig the notifications listed here will be turned on for the specified channel and nicks. On the other hand, removing events from this parameters will not automatically stop notifications for them (you need to turn them off for every channel with the ``notify`` command).
 
 ``noticeOnChannel``
    (optional, disabled by default)
@@ -635,11 +648,6 @@ The following parameters are accepted by this class:
     The bot can add color to some of its messages.
     You might turn it off by setting this parameter to ``False``.
 
-``allowShutdown``
-    (optional, disabled by default)
-    This allow users to shutdown the master.
-
-
 To use the service, you address messages at the Buildbot, either normally (``botnickname: status``) or with private messages (``/msg botnickname status``).
 The Buildbot will respond in kind.
 
@@ -663,12 +671,6 @@ Some of the commands currently available:
 :samp:`last {BUILDER}`
     Return the results of the last build to run on the given :class:`Builder`.
 
-:samp:`join {CHANNEL}`
-    Join the given IRC channel
-
-:samp:`leave {CHANNEL}`
-    Leave the given IRC channel
-
 :samp:`notify on|off|list {EVENT}`
     Report events relating to builds.
     If the command is issued as a private message, then the report will be sent back as a private message to the user who issued the command.
@@ -676,27 +678,70 @@ Some of the commands currently available:
     Available events to be notified are:
 
     ``started``
-        A build has started
+        A build has started.
 
     ``finished``
-        A build has finished
+        A build has finished.
 
     ``success``
-        A build finished successfully
+        A build finished successfully.
 
     ``failure``
-        A build failed
+        A build failed.
 
     ``exception``
-        A build generated and exception
+        A build generated and exception.
 
-    ``xToY``
-        The previous build was x, but this one is Y, where x and Y are each one of success, warnings, failure, exception (except Y is capitalized).
-        For example: ``successToFailure`` will notify if the previous build was successful, but this one failed
+    ``cancelled``
+        A build was cancelled.
+
+    ``problem``
+        The previous build result was success or warnings, but this one ended with failure or exception.
+
+    ``recovery``
+        This is the opposite of ``problem``: the previous build result was failure or exception and this one ended with success or warnings.
+
+    ``worse``
+        A build state was worse than the previous one (so e.g. it ended with warnings and the previous one was successful).
+
+    ``better``
+        A build state was better than the previous one.
+
+    ``worker``
+        A worker is missing. A notification is also send when the previously reported missing worker connects again.
 
 :samp:`help {COMMAND}`
     Describe a command.
     Use :command:`help commands` to get a list of known commands.
+
+``source``
+    Announce the URL of the Buildbot's home page.
+
+``version``
+    Announce the version of this Buildbot.
+
+Additionally, the config file may specify default notification options as shown in the example earlier.
+
+If explicitly allowed in the ``authz`` config, some additional commands will be available:
+
+:samp:`join {CHANNEL}`
+    Join the given IRC channel
+
+:samp:`leave {CHANNEL}`
+    Leave the given IRC channel
+
+.. index:: Properties; from forced build
+
+:samp:`force build [--codebase={CODEBASE}] [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
+    Tell the given :class:`Builder` to start a build of the latest code.
+    The user requesting the build and *REASON* are recorded in the :class:`Build` status.
+    The Buildbot will announce the build's status when it finishes.The user can specify a branch and/or revision with the optional parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`.
+    The user can also give a list of properties with :samp:`--props={PROP1=VAL1,PROP2=VAL2..}`.
+
+:samp:`stop build {BUILDER} {REASON}`
+    Terminate any running build in the given :class:`Builder`.
+    *REASON* will be added to the build status to explain why it was stopped.
+    You might use this if you committed a bug, corrected it right away, and don't want to wait for the first build (which is destined to fail) to complete before starting the second (hopefully fixed) build.
 
 :samp:`shutdown {ARG}`
     Control the shutdown process of the Buildbot master.
@@ -713,29 +758,6 @@ Some of the commands currently available:
 
     ``now``
         Shutdown immediately without waiting for the builders to finish
-
-``source``
-    Announce the URL of the Buildbot's home page.
-
-``version``
-    Announce the version of this Buildbot.
-
-Additionally, the config file may specify default notification options as shown in the example earlier.
-
-If the ``allowForce=True`` option was used, some additional commands will be available:
-
-.. index:: Properties; from forced build
-
-:samp:`force build [--codebase={CODEBASE}] [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
-    Tell the given :class:`Builder` to start a build of the latest code.
-    The user requesting the build and *REASON* are recorded in the :class:`Build` status.
-    The Buildbot will announce the build's status when it finishes.The user can specify a branch and/or revision with the optional parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`.
-    The user can also give a list of properties with :samp:`--props={PROP1=VAL1,PROP2=VAL2..}`.
-
-:samp:`stop build {BUILDER} {REASON}`
-    Terminate any running build in the given :class:`Builder`.
-    *REASON* will be added to the build status to explain why it was stopped.
-    You might use this if you committed a bug, corrected it right away, and don't want to wait for the first build (which is destined to fail) to complete before starting the second (hopefully fixed) build.
 
 If the `tags` is set (see the tags option in :ref:`Builder-Configuration`) changes related to only builders belonging to those tags of builders will be sent to the channel.
 
