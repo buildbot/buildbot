@@ -48,7 +48,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def makeBot(self, *args, **kwargs):
         if not args:
-            args = ('nick', 'pass', ['#ch'], [], False, [], {})
+            args = ('nick', 'pass', ['#ch'], [], False)
         return irc.IrcStatusBot(*args, **kwargs)
 
     def test_groupDescribe(self):
@@ -68,7 +68,7 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(evts, [('n', '#chan', 'hi')])
 
     def test_groupChat_notice(self):
-        b = self.makeBot('nick', 'pass', ['#ch'], [], True, [], {})
+        b = self.makeBot('nick', 'pass', ['#ch'], [], True)
         b.notice = lambda d, m: evts.append(('n', d, m))
 
         evts = []
@@ -110,7 +110,7 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(c.messages, ['hello'])
 
     def test_privmsg_user_uppercase(self):
-        b = self.makeBot('NICK', 'pass', ['#ch'], [], False, [], {})
+        b = self.makeBot('NICK', 'pass', ['#ch'], [], False)
         b.contactClass = FakeContact
         b.privmsg('jimmy!~foo@bar', 'NICK', 'hello')
 
@@ -161,7 +161,7 @@ class TestIrcStatusBot(unittest.TestCase):
     def test_signedOn(self):
         b = self.makeBot('nick', 'pass',
                          ['#ch1', dict(channel='#ch2', password='sekrits')],
-                         ['jimmy', 'bobby'], False, [], {})
+                         ['jimmy', 'bobby'], False)
         evts = []
 
         def msg(d, m):
@@ -191,6 +191,22 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(sorted(b.contacts.keys()),
                          sorted([('#ch1', None), ('#ch2', None)]))
 
+    def test_userLeft_or_userKicked(self):
+        b = self.makeBot()
+        b.getContact(channel='c', user='u')
+        self.assertIn(('c', 'u'), b.contacts)
+        b.userKicked('u', 'c', 'k', 'm')
+        self.assertNotIn(('c', 'u'), b.contacts)
+
+    def test_userQuit(self):
+        b = self.makeBot()
+        b.getContact(channel='c1', user='u')
+        b.getContact(channel='c2', user='u')
+        b.getContact(user='u')
+        self.assertEquals(len(b.contacts), 3)
+        b.userQuit('u', 'm')
+        self.assertEquals(len(b.contacts), 0)
+
     def test_other(self):
         # these methods just log, but let's get them covered anyway
         b = self.makeBot()
@@ -202,7 +218,7 @@ class TestIrcStatusFactory(unittest.TestCase):
 
     def makeFactory(self, *args, **kwargs):
         if not args:
-            args = ('nick', 'pass', ['ch'], [], [], {})
+            args = ('nick', 'pass', ['ch'], [], [], {}, {})
         return irc.IrcStatusFactory(*args, **kwargs)
 
     def test_shutdown(self):
@@ -255,7 +271,6 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             pm_to_nicks=['pm', 'to', 'nicks'],
             noticeOnChannel=True,
             port=1234,
-            allowForce=True,
             tags=['tags'],
             password=Interpolate('pass'),
             notify_events={'successToFailure': 1, },
@@ -277,26 +292,10 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         self.assertIdentical(p, proto_obj)
         factory.protocol.assert_called_with(
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'], True,
-            ['tags'], {'successToFailure': 1},
+            None, ['tags'], {'successToFailure': 1},
             useColors=False,
             useRevisions=True,
             showBlameList=False)
-
-    def test_allowForce_notBool(self):
-        """
-        When L{IRCClient} is called with C{allowForce} not a boolean,
-        a config error is reported.
-        """
-        with self.assertRaisesConfigError("allowForce must be boolean, not"):
-            self.makeIRC(allowForce=object())
-
-    def test_allowShutdown_notBool(self):
-        """
-        When L{IRCClient} is called with C{allowShutdown} not a boolean,
-        a config error is reported.
-        """
-        with self.assertRaisesConfigError("allowShutdown must be boolean, not"):
-            self.makeIRC(allowShutdown=object())
 
     def test_service(self):
         irc = self.makeIRC()

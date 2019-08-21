@@ -13,13 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+import types
 
 from twisted.application import internet
+from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from twisted.words.protocols import irc
 
 from buildbot import config
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
+from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import ThrottledClientFactory
 from buildbot.util import service
@@ -37,13 +46,137 @@ class UsageError(ValueError):
         super().__init__(string, *more)
 
 
+_irc_colors = (
+    'WHITE',
+    'BLACK',
+    'NAVY_BLUE',
+    'GREEN',
+    'RED',
+    'BROWN',
+    'PURPLE',
+    'OLIVE',
+    'YELLOW',
+    'LIME_GREEN',
+    'TEAL',
+    'AQUA_LIGHT',
+    'ROYAL_BLUE',
+    'HOT_PINK',
+    'DARK_GRAY',
+    'LIGHT_GRAY'
+)
+
+
+class IRCContact(Contact):
+
+    def __init__(self, bot, user=None, channel=None, _reactor=reactor):
+        super().__init__(bot, user, channel, _reactor)
+        self.muted = False
+
+    results_colors = {
+        SUCCESS: 'GREEN',
+        WARNINGS: 'YELLOW',
+        FAILURE: 'RED',
+        EXCEPTION: 'PURPLE',
+        RETRY: 'AQUA_LIGHT',
+        CANCELLED: 'PINK',
+    }
+
+    short_results_descriptions = {
+        SUCCESS: ", Success",
+        WARNINGS: ", Warnings",
+        FAILURE: ", Failure",
+        EXCEPTION: ", Exception",
+        RETRY: ", Retry",
+        CANCELLED: ", Cancelled",
+    }
+
+    def format_build_status(self, build, short=False):
+        br = build['results']
+        if short:
+            text = self.short_results_descriptions[br]
+        else:
+            text = self.results_descriptions[br]
+        if self.bot.useColors:
+            return "\x03{:d}{}\x0f".format(
+                _irc_colors.index(self.results_colors[br]),
+                text)
+        else:
+            return text
+
+    def send(self, message):
+        if self.muted:
+            return
+        if self.channel:
+            if isinstance(message, (list, tuple, types.GeneratorType)):
+                for m in message:
+                    self.bot.groupChat(self.channel, m)
+            else:
+                self.bot.groupChat(self.channel, message)
+        else:
+            if isinstance(message, (list, tuple, types.GeneratorType)):
+                for m in message:
+                    self.bot.chat(self.user, m)
+            else:
+                self.bot.chat(self.user, message)
+
+    def act(self, action):
+        if self.muted:
+            return
+        self.bot.groupDescribe(self.channel, action)
+
+    def handleAction(self, action):
+        # this is sent when somebody performs an action that mentions the
+        # buildbot (like '/me kicks buildbot'). 'self.user' is the name/nick/id of
+        # the person who performed the action, so if their action provokes a
+        # response, they can be named.  This is 100% silly.
+        if not action.endswith("s " + self.bot.nickname):
+            return
+        words = action.split()
+        verb = words[-2]
+        if verb == "kicks":
+            response = "%s back" % verb
+        elif verb == "threatens":
+            response = "hosts a red wedding for %s" % self.user
+        else:
+            response = "%s %s too" % (verb, self.user)
+        self.act(response)
+
+    # IRC only commands
+
+    def command_MUTE(self, args):
+        # The order of these is important! ;)
+        self.send("Shutting up for now.")
+        self.muted = True
+    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
+
+    def command_UNMUTE(self, args):
+        if self.muted:
+            # The order of these is important! ;)
+            self.muted = False
+            self.send("I'm baaaaaaaaaaack!")
+        else:
+            self.send(
+                "You hadn't told me to be quiet, but it's the thought that counts, right?")
+    command_UNMUTE.usage = "unmute - disable a previous 'mute'"
+
+    def command_DESTROY(self, args):
+        if self.bot.nickname not in args:
+            self.act("readies phasers")
+
+    def command_HUSTLE(self, args):
+        self.act("does the hustle")
+    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"
+
+
 class IrcStatusBot(StatusBot, irc.IRCClient):
 
     """I represent the buildbot to an IRC server.
     """
 
+    contactClass = IRCContact
+
     def __init__(self, nickname, password, channels, pm_to_nicks,
-                 noticeOnChannel, *args, **kwargs):
+                 noticeOnChannel, *args, useColors=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.nickname = nickname
         self.channels = channels
@@ -51,6 +184,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         self.password = password
         self.hasQuit = 0
         self.noticeOnChannel = noticeOnChannel
+        self.useColors = useColors
         self._keepAliveCall = task.LoopingCall(
             lambda: self.ping(self.nickname))
 
@@ -135,6 +269,21 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
                                                            kicker,
                                                            message))
 
+    def userLeft(self, user, channel):
+        if user: user = user.lower()
+        if channel: channel = channel.lower()
+        if (channel, user) in self.contacts:
+            del self.contacts[(channel, user)]
+
+    def userKicked(self, kickee, channel, kicker, message):
+        self.userLeft(kickee, channel)
+
+    def userQuit(self, user, quitMessage=None):
+        if user: user = user.lower()
+        for c,u in list(self.contacts):
+            if u == user:
+                del self.contacts[(c,u)]
+
 
 class IrcStatusFactory(ThrottledClientFactory):
     protocol = IrcStatusBot
@@ -142,24 +291,24 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
+    def __init__(self, nickname, password, channels, pm_to_nicks, authz, tags, notify_events,
                  noticeOnChannel=False,
                  useRevisions=False, showBlameList=False,
                  parent=None,
-                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
+                 lostDelay=None, failedDelay=None, useColors=True):
         super().__init__(lostDelay=lostDelay, failedDelay=failedDelay)
         self.nickname = nickname
         self.password = password
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
         self.tags = tags
+        self.authz = authz
         self.parent = parent
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
-        self.allowShutdown = allowShutdown
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -177,7 +326,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.pm_to_nicks,
-                          self.noticeOnChannel,
+                          self.noticeOnChannel, self.authz,
                           self.tags, self.notify_events,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
@@ -207,39 +356,38 @@ class IRC(service.BuildbotService):
     name = "IRC"
     in_test_harness = False
     f = None
-    compare_attrs = ("host", "port", "nick", "password",
-                     "channels", "pm_to_nicks", "allowForce", "useSSL",
+    compare_attrs = ("host", "port", "nick", "password", "authz",
+                     "channels", "pm_to_nicks", "useSSL",
                      "useRevisions", "tags", "useColors",
-                     "lostDelay", "failedDelay", "allowShutdown")
+                     "lostDelay", "failedDelay")
     secrets = ['password']
 
     def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
-                    allowForce=False, tags=None, password=None, notify_events=None,
+                    authz=None, tags=None, password=None, notify_events=None,
                     showBlameList=True, useRevisions=False,
                     useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                    allowShutdown=False, noticeOnChannel=False, **kwargs
+                    noticeOnChannel=False, **kwargs
                     ):
         deprecated_params = list(kwargs)
         if deprecated_params:
             config.error("%s are deprecated" % (",".join(deprecated_params)))
 
-        if allowForce not in (True, False):
-            config.error("allowForce must be boolean, not %r" % (allowForce,))
-        if allowShutdown not in (True, False):
-            config.error("allowShutdown must be boolean, not %r" %
-                         (allowShutdown,))
         if noticeOnChannel not in (True, False):
             config.error("noticeOnChannel must be boolean, not %r" %
                          (noticeOnChannel,))
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             ssl.ensureHasSSL(self.__class__.__name__)
+        if authz is not None:
+            for acl in authz.values():
+                if not isinstance(acl, (list, tuple, bool)):
+                    config.error("authz values must be bool or a list of nicks")
 
     def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
-                        allowForce=False, tags=None, password=None, notify_events=None,
+                        authz=None, tags=None, password=None, notify_events=None,
                         showBlameList=True, useRevisions=False,
                         useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                        allowShutdown=False, noticeOnChannel=False, **kwargs
+                        noticeOnChannel=False, **kwargs
                         ):
 
         # need to stash these so we can detect changes later
@@ -247,17 +395,14 @@ class IRC(service.BuildbotService):
         self.port = port
         self.nick = nick
         self.channels = channels
-        if pm_to_nicks is None:
-            pm_to_nicks = []
+        if pm_to_nicks is None: pm_to_nicks = []
         self.pm_to_nicks = pm_to_nicks
         self.password = password
-        self.allowForce = allowForce
+        self.authz = authz
         self.useRevisions = useRevisions
         self.tags = tags
-        if notify_events is None:
-            notify_events = {}
+        if notify_events is None: notify_events = {}
         self.notify_events = notify_events
-        self.allowShutdown = allowShutdown
         self.noticeOnChannel = noticeOnChannel
 
         # This function is only called in case of reconfig with changes
@@ -267,15 +412,14 @@ class IRC(service.BuildbotService):
             self.f.shutdown()
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
-                                  self.tags, self.notify_events,
+                                  self.authz, self.tags,
+                                  self.notify_events, parent=self,
                                   noticeOnChannel=noticeOnChannel,
-                                  parent=self,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,
                                   lostDelay=lostDelay,
                                   failedDelay=failedDelay,
-                                  useColors=useColors,
-                                  allowShutdown=allowShutdown)
+                                  useColors=useColors)
 
         if useSSL:
             cf = ssl.ClientContextFactory()
