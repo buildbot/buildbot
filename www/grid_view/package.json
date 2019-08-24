@@ -1,4 +1,5 @@
 {
+    "plugin_name": "grid_view",
     "name": "buildbot-grid-view",
     "private": true,
     "main": "buildbot_grid_view/static/scripts.js",

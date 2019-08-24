@@ -1,5 +1,6 @@
 {
     "name": "guanlecoja-ui",
+    "plugin_name": "guanlecoja-ui",
     "description": "Implements generic application base for angular.js, ui.router and bootstrap3, with less, and coffeescript.",
     "version": "2.0.0",
     "license": "MIT",
