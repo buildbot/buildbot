@@ -3,6 +3,9 @@ import 'angular-ui-bootstrap';
 import 'lodash';
 import '@uirouter/angularjs';
 
+if (window.T === undefined){
+    window.T = {}
+}
 angular.module("guanlecoja.ui", ["ui.bootstrap", "ui.router", "ngAnimate"]);
 
 require('./breadcrumb_service/breadcrumb.service.js');
