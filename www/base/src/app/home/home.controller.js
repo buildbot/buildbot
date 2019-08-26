@@ -23,7 +23,7 @@ class Home {
                     if (builder.builds == null) { builder.builds = []; }
                     if (builder.builds.indexOf(build) < 0) {
                         builder.builds.push(build);
-                        return builder.builds.sort(byNumber);
+                        builder.builds.sort(byNumber);
                     }
                 }
             });

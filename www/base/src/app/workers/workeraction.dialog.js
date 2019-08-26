@@ -36,7 +36,7 @@ class WorkerActionState {
                                 const d = $q.defer();
                                 dataService.getWorkers({subscribe: false}).onChange = function(workers) {
                                     workers.then = undefined;  // angular will try to call it if it exists
-                                    return d.resolve(workers);
+                                    d.resolve(workers);
                                 };
                                 return d.promise;
                             }
@@ -87,9 +87,9 @@ class workerActionsDialog {
                         p.catch(function(err) {
                             let msg = `unable to ${a} worker ${w.name}:`;
                             msg += err.error.message;
-                            return $scope.error = msg;
+                            $scope.error = msg;
                         });
-                        return dl.push(p);
+                        dl.push(p);
                     }
                 });
                 return $q.all(dl).then(res => modal.modal.close(res.result));

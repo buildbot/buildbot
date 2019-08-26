@@ -40,7 +40,7 @@ class forceDialog {
             };
 
             prepareFields(scheduler.all_fields);
-            return angular.extend($scope, {
+            angular.extend($scope, {
                 rootfield: {
                     type: 'nested',
                     layout: 'simple',
@@ -63,8 +63,7 @@ class forceDialog {
                     }
 
                     return scheduler.control('force', params)
-                    .then(res => modal.modal.close(res.result)
-                    ,   function(err) {
+                    .then(res => modal.modal.close(res.result), function(err) {
                         $scope.startDisabled = false;
                         if (err === null) {
                             return;
@@ -75,9 +74,8 @@ class forceDialog {
                                 all_fields_by_name[k].errors = v;
                                 all_fields_by_name[k].haserrors = true;
                             }
-                            return null;
                         } else {
-                            return $scope.error = err.error.message;
+                            $scope.error = err.error.message;
                         }
                     });
                 },

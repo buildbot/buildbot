@@ -13,7 +13,7 @@ class SettingsController {
 
         $scope.$watch('settingsGroups', function(newGroups) {
             bbSettingsService.save();
-            return computeMasterCfgSnippet();
+            computeMasterCfgSnippet();
         }
         , true);
         var computeMasterCfgSnippet = function() {

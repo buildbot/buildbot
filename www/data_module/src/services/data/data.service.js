@@ -79,7 +79,7 @@ class Data {
                             }
 
                             // fill up the collection with initial data
-                            return collection.initial(datalist);
+                            collection.initial(datalist);
                         })
                     );
 
@@ -149,7 +149,7 @@ class Data {
                                 return ENDPOINTS.forEach(e => {
                                     // capitalize endpoint names
                                     const E = dataUtilsService.capitalize(e);
-                                    return this.prototype[`get${E}`] = function(...args) {
+                                    this.prototype[`get${E}`] = function(...args) {
                                         let query;
                                         [args, query] = Array.from(dataUtilsService.splitOptions(args));
                                         if (query.subscribe == null) { query.subscribe = true; }
@@ -235,7 +235,7 @@ class Data {
                     let idCounter = 1;
                     response.forEach(function(d) {
                         if (!d.hasOwnProperty(id)) {
-                            return d[id] = idCounter++;
+                            d[id] = idCounter++;
                         }
                     });
 

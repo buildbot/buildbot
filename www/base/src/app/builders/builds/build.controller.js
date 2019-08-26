@@ -23,20 +23,19 @@ class BuildController {
             refreshContextMenu();
             const success = function(res) {
                 const brid = _.values(res.result[1])[0];
-                return $state.go("buildrequest", {
+                $state.go("buildrequest", {
                     buildrequest: brid,
                     redirect_to_build: true
-                }
-                );
+                });
             };
 
             const failure = function(why) {
                 $scope.is_rebuilding = false;
                 $scope.error = `Cannot rebuild: ${why.error.message}`;
-                return refreshContextMenu();
+                refreshContextMenu();
             };
 
-            return $scope.build.control('rebuild').then(success, failure);
+            $scope.build.control('rebuild').then(success, failure);
         };
 
         const doStop = function() {
@@ -48,10 +47,10 @@ class BuildController {
             const failure = function(why) {
                 $scope.is_stopping = false;
                 $scope.error = `Cannot Stop: ${why.error.message}`;
-                return refreshContextMenu();
+                refreshContextMenu();
             };
 
-            return $scope.build.control('stop').then(success, failure);
+            $scope.build.control('stop').then(success, failure);
         };
 
         var refreshContextMenu = function() {
@@ -89,7 +88,7 @@ class BuildController {
                     });
                 }
             }
-            return glTopbarContextualActionsService.setContextualActions(actions);
+            glTopbarContextualActionsService.setContextualActions(actions);
         };
         $scope.$watch('build.complete', refreshContextMenu);
 
@@ -103,7 +102,7 @@ class BuildController {
             // get the build plus the previous and next
             // note that this registers to the updates for all the builds for that builder
             // need to see how that scales
-            return builder.getBuilds({number__lt: buildnumber + 2, limit: 3, order: '-number'}).onChange = function(builds) {
+            builder.getBuilds({number__lt: buildnumber + 2, limit: 3, order: '-number'}).onChange = function(builds) {
                 $scope.prevbuild = null;
                 $scope.nextbuild = null;
                 let build = null;
@@ -144,7 +143,7 @@ class BuildController {
                 var unwatch = $scope.$watch('nextbuild.number', function(n, o) {
                     if (n != null) {
                         $scope.last_build = false;
-                        return unwatch();
+                        unwatch();
                     }
                 });
 
@@ -155,12 +154,12 @@ class BuildController {
 
                 data.getWorkers(build.workerid).onNew = worker => $scope.worker = publicFieldsFilter(worker);
 
-                return data.getBuildrequests(build.buildrequestid).onNew = function(buildrequest) {
+                data.getBuildrequests(build.buildrequestid).onNew = function(buildrequest) {
                     $scope.buildrequest = buildrequest;
-                    return data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
+                    data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
                         $scope.buildset = buildset;
                         if (buildset.parent_buildid) {
-                            return data.getBuilds(buildset.parent_buildid).onNew = build => $scope.parent_build = build;
+                            data.getBuilds(buildset.parent_buildid).onNew = build => $scope.parent_build = build;
                         }
                     };
                 };

@@ -13,17 +13,6 @@ import 'guanlecoja-ui';
 import 'buildbot-data-js';
 import _ from 'lodash';
 
-// Register new module
-class WaterfallView {
-    constructor() { return [
-        'ui.router',
-        'ngAnimate',
-        'guanlecoja.ui',
-        'bbData'
-    ]; }
-}
-
-
 var WaterfallController = (function() {
     let self = undefined;
     let Cls = class Waterfall {
@@ -161,7 +150,7 @@ var WaterfallController = (function() {
                 this.$scope.$watch(
                     () => this.waterfall.style('width')
                 ,
-                    (n, o) => { if (n !== o) { return this.render(); } }
+                    (n, o) => { if (n !== o) { this.render(); } }
                 , true
                 );
 
@@ -198,7 +187,7 @@ var WaterfallController = (function() {
                     }
                 };
                 window.bind('keypress', keyHandler);
-                return this.$scope.$on('$destroy', function() {
+                this.$scope.$on('$destroy', function() {
                     window.unbind('keypress', keyHandler);
                     return window.unbind('resize', resizeHandler);
                 });
@@ -229,12 +218,12 @@ var WaterfallController = (function() {
 
         zoomPlus() {
             this.incrementScaleFactor();
-            return this.render();
+            this.render();
         }
 
         zoomMinus() {
             this.decrementScaleFactor();
-            return this.render();
+            this.render();
         }
         /*
          * Increment and decrement the scale factor
@@ -262,12 +251,12 @@ var WaterfallController = (function() {
             }
             this.buildLimit = this.builds.length + this.c.limit;
             const builds = this.dataAccessor.getBuilds({limit: this.buildLimit, order: '-started_at'});
-            return builds.onChange = builds => {
+            builds.onChange = builds => {
                 this.builds.close();  // force close the old collection's auto-update
                 this.builds = builds;
                 // renders the new data
                 builds.onChange = this.renderNewData;
-                return builds.onChange();
+                builds.onChange();
             };
         }
 
@@ -612,7 +601,7 @@ var WaterfallController = (function() {
                 .attr('points', points());
 
             // Load steps
-            return build.loadSteps().onChange = function(buildsteps) {
+            build.loadSteps().onChange = function(buildsteps) {
                 // Resize the tooltip
                 height = (buildsteps.length * 15) + 7;
                 tooltip.transition().duration(100)
@@ -624,7 +613,7 @@ var WaterfallController = (function() {
                     const d = new Date((step.complete_at - step.started_at) * 1000);
                     if (d > 0) { return `(${d / 1000}s)`; } else { return ''; }
                 };
-                return tooltip.selectAll('.buildstep')
+                tooltip.selectAll('.buildstep')
                     .data(buildsteps)
                     .enter().append('g')
                     .attr('class', 'buildstep')
@@ -785,16 +774,23 @@ var WaterfallController = (function() {
             // Draw the waterfall
             this.drawBuilds();
             this.drawXAxis();
-            return this.drawYAxis();
+            this.drawYAxis();
         }
     };
     Cls.initClass();
     return Cls;
 })();
 
-
-angular.module('waterfall_view', new WaterfallView())
-.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', '$location', '$rootScope',
+angular.module('waterfall_view', [
+    'ui.router',
+    'ngAnimate',
+    'guanlecoja.ui',
+    'bbData',
+])
+.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log',
+                                    '$uibModal', 'dataService', 'd3Service', 'dataProcessorService',
+                                    'scaleService', 'bbSettingsService',
+                                    'glTopbarContextualActionsService', '$location', '$rootScope',
                                     WaterfallController])
 .config(['$locationProvider', function($locationProvider) {
     $locationProvider.hashPrefix('');

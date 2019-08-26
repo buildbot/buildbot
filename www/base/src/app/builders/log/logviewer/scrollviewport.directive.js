@@ -117,7 +117,7 @@ class Scroll {
                                 if (!result._height_changing) {
                                     $timeout(function() {
                                         result.height(result._height * rowHeight);
-                                        return result._height_changing = false;
+                                        result._height_changing = false;
                                     });
                                 }
                                 return result._height_changing = true;
@@ -210,7 +210,7 @@ class Scroll {
                                 endIndex = buffer.length;
                             }
                         }
-                        return loadView(topIndex, endIndex);
+                        loadView(topIndex, endIndex);
                     };
 
                     // load some lines to the DOM using the data source, making sure it is not already loaded
@@ -233,7 +233,7 @@ class Scroll {
                         loading(true);
 
                         let previousElemIndex = findElement(topIndex);
-                        return datasource.get(topIndex, endIndex - topIndex).then(function(d) {
+                        datasource.get(topIndex, endIndex - topIndex).then(function(d) {
                             loading(false);
                             for (let item of Array.from(d)) {
                                 insertItem(previousElemIndex, topIndex, item);
@@ -241,7 +241,7 @@ class Scroll {
                                 topIndex++;
                             }
 
-                            return $timeout(() => maybeUpdateView());
+                            $timeout(() => maybeUpdateView());
                         });
                     };
 
@@ -294,20 +294,20 @@ class Scroll {
 
                     $scope.$watch($attr.scrollPosition, function(n) {
                         if (n != null) {
-                            return setScrollPosition(n);
+                            setScrollPosition(n);
                         }
                     });
 
                     $scope.$watch($attr.loadAll, function(n) {
                         if (n) {
                             loadAll = true;
-                            return $timeout(maybeUpdateView);
+                            $timeout(maybeUpdateView);
                         }
                     });
 
-                    return $scope.$on('$destroy', function() {
+                    $scope.$on('$destroy', function() {
                         $(window).unbind('resize', maybeUpdateView);
-                        return viewport.unbind('scroll', maybeUpdateView);
+                        viewport.unbind('scroll', maybeUpdateView);
                     });
                 };
             }

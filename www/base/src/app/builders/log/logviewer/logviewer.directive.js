@@ -36,15 +36,15 @@ class Logviewer {
                         const { log } = self.scope;
                         self.scope.raw_url = `api/v2/logs/${log.logid}/raw`;
                         if (log.type === 'h') {
-                            return restService.get(`logs/${log.logid}/contents`).then(content => self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content));
+                            restService.get(`logs/${log.logid}/contents`).then(content => self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content));
                         }
                     }
                 });
                 return self.scope.$watch("log.num_lines", function(n, o) {
                     if (self.scope.jumpToLine === "end") {
-                        return self.scope.scroll_position = n;
+                        self.scope.scroll_position = n;
                     } else if (self.scope.jumpToLine !== "none") {
-                        return self.scope.scroll_position = self.scope.jumpToLine;
+                        self.scope.scroll_position = self.scope.jumpToLine;
                     }
                 });
             },
@@ -88,7 +88,7 @@ class Logviewer {
                                     });
                                     offset += 1;
                                 }
-                                return resolve(ret);
+                                resolve(ret);
                             })
                         );
                     }
@@ -110,8 +110,6 @@ class Logviewer {
                 self.elm = elm;
                 self.raw = elm[0];
                 $window.resize(() => self.setHeight(elm));
-
-                return null;
             }
         };
         };
@@ -130,7 +128,7 @@ class Logviewer {
             ],
             link(scope, elm, attr) {
                 ansicodesService.injectStyle();
-                return scope.logviewer.link(scope, elm, attr);
+                scope.logviewer.link(scope, elm, attr);
             }
         };
     }

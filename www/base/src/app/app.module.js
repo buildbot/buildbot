@@ -6,21 +6,16 @@ import 'angular-ui-bootstrap';
 import 'guanlecoja-ui';
 import 'buildbot-data-js';
 
-class App {
-    constructor() { return [
-        'buildbot_config',
-        'ngAnimate',
-        'ui.bootstrap',
-        'ui.router',
-        'RecursionHelper',
-        'guanlecoja.ui',
-        'bbData',
-        'btorfs.multiselect'
-    ]; }
-}
-
-
-angular.module('app', new App());
+angular.module('app', [
+    'buildbot_config',
+    'ngAnimate',
+    'ui.bootstrap',
+    'ui.router',
+    'RecursionHelper',
+    'guanlecoja.ui',
+    'bbData',
+    'btorfs.multiselect',
+]);
 
 // require common module first because it declares a new module other files will need
 require('./common/common.module.js');

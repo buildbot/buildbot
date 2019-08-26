@@ -25,7 +25,9 @@ class _glTopbarContextualActions {
 
         $scope.$on("glSetContextualActions", function(e, data) {
             for (let item of Array.from(data)) {
-                if (item.extra_class == null) { item.extra_class = ""; }
+                if (item.extra_class == null) {
+                    item.extra_class = "";
+                }
             }
 
             return $scope.actions = data;
@@ -38,7 +40,7 @@ class glTopbarContextualActions {
     constructor($rootScope) { this.$rootScope = $rootScope; ({}); }
 
     setContextualActions(actions) {
-        return this.$rootScope.$broadcast("glSetContextualActions", actions);
+        this.$rootScope.$broadcast("glSetContextualActions", actions);
     }
 }
 

@@ -78,7 +78,7 @@ describe('page with sidebar', function() {
                 $timeout(function() {
                     const ret = [];
                     for (let i = 0, end = num - 1, asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) { ret.push({v: (index + i)}); }
-                    return d.resolve(ret);
+                    d.resolve(ret);
                 });
                 return d.promise;
             }
@@ -119,7 +119,8 @@ describe('page with sidebar', function() {
     })
     );
 
-    it('several scroll loads several screens, and paddings are cleaned out', inject(function($timeout) {
+    it('several scroll loads several screens, and paddings are cleaned out',
+       inject(function($timeout) {
         // initial load
         $timeout.flush();
 

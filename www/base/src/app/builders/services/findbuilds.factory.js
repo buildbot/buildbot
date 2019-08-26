@@ -9,7 +9,7 @@ class FindBuilds {
             // get the builds that are addressing this buildrequestid
             const data = dataService.open().closeOnDestroy($scope);
             $scope.builds = data.getBuilds({buildrequestid});
-            return $scope.builds.onNew  = function(build) {
+            $scope.builds.onNew  = function(build) {
                 if (build.results !== RESULTS.RETRY) {
                     if (redirect_to_build) {
                         $state.go("build", {
@@ -21,7 +21,7 @@ class FindBuilds {
                     }
 
                     // we found a candidate build, no need to keep registered to the stream of builds
-                    return $scope.builds.close();
+                    $scope.builds.close();
                 }
             };
         };

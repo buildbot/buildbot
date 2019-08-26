@@ -17,7 +17,7 @@ class buildersService {
         const data = dataService.open();
         const cache = {};
         /* make only one full list of builders. this is much faster than querying builders one by one*/
-        let builders = data.getBuilders().onNew = builder => {
+        data.getBuilders().onNew = builder => {
             let id = builder.builderid
             if (cache.hasOwnProperty(id)) {
                 _.assign(cache[id], builder)

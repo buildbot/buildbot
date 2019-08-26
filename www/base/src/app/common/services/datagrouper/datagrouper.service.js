@@ -25,10 +25,10 @@ class dataGrouperService {
                     if (temp_dict.hasOwnProperty(item[joinid])) {
                         item[attribute] = temp_dict[item[joinid]];
                     }
-                    return onNew(item);
+                    onNew(item);
                 };
                 if (joinlist != null) {
-                    return collection2.onNew  = item =>
+                    collection2.onNew = item =>
                         item[joinlist] != null ? item[joinlist].forEach(function(item2) {
                             // the collection1 might not be yet loaded, so we need to store the worker list
                             let group;
@@ -39,12 +39,12 @@ class dataGrouperService {
                                 group = temp_dict[item2[joinid]] != null ? temp_dict[item2[joinid]] : (temp_dict[item2[joinid]] = []);
                             }
                             if (!Array.from(group).includes(item)) {
-                                return group.push(item);
+                                group.push(item);
                             }
                         }) : undefined
                     ;
                 } else {
-                    return collection2.onNew = function(item) {
+                    collection2.onNew = function(item) {
                         // the collection1 might not be yet loaded, so we need to store the worker list
                         let group;
                         if (collection1.hasOwnProperty(item[joinid])) {
@@ -53,7 +53,7 @@ class dataGrouperService {
                         } else {
                             group = temp_dict[item[joinid]] != null ? temp_dict[item[joinid]] : (temp_dict[item[joinid]] = []);
                         }
-                        return group.push(item);
+                        group.push(item);
                     };
                 }
             }

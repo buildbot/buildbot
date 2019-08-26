@@ -4,12 +4,6 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-// Register new module
-class Nestedexample {
-    constructor() { return [
-        'common'
-    ]; }
-}
 
 class Nestedexamplefield {
     constructor() {
@@ -43,7 +37,6 @@ class _nestedexamplefield {
             $scope.field.fields.forEach(function(v, i) {
                 if (v.fullName === nameInNestedField) {
                     res = v;
-                    return;
                 }
             });
             return res;
@@ -63,7 +56,7 @@ class _nestedexamplefield {
                 $scope.ingredients.value = "";
                 return;
             }
-            return $http.get(ingredientsUrl(pizza)).then(function(r) {
+            $http.get(ingredientsUrl(pizza)).then(function(r) {
                 if (r.status === 200) {
                     if (r.data.error != null) {
                         $scope.ingredients.choices = [r.data.error];
@@ -75,9 +68,9 @@ class _nestedexamplefield {
                     $scope.ingredients.choices = [error];
                 }
                 if ($scope.ingredients.choices.length > 0) {
-                    return $scope.ingredients.value = $scope.ingredients.choices[0];
+                    $scope.ingredients.value = $scope.ingredients.choices[0];
                 } else {
-                    return $scope.ingredients.value = "";
+                    $scope.ingredients.value = "";
                 }
             });
         };
@@ -87,6 +80,6 @@ class _nestedexamplefield {
 }
 
 
-angular.module('nestedexample', new Nestedexample())
+angular.module('nestedexample', ['common'])
 .directive('nestedexamplefield', [Nestedexamplefield])
 .controller('_nestedexamplefieldController', ['$scope', '$http', _nestedexamplefield]);

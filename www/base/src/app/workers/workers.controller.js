@@ -78,7 +78,7 @@ class Workers {
             // reinstall breadcrumb when coming back from forcesched
             const setupGl = function() {
                 glTopbarContextualActionsService.setContextualActions(actions);
-                return glBreadcrumbService.setBreadcrumb(breadcrumb);
+                glBreadcrumbService.setBreadcrumb(breadcrumb);
             };
             $scope.$on('$stateChangeSuccess', setupGl);
             setupGl();
@@ -93,7 +93,7 @@ class Workers {
                     }
                 }
             }
-            return $scope.worker_infos.sort();
+            $scope.worker_infos.sort();
         };
 
         const byNumber = (a, b) => a.number - b.number;
@@ -109,8 +109,7 @@ class Workers {
         }
         dataGrouperService.groupBy($scope.workers, builds, 'workerid', 'builds');
         $scope.settings = bbSettingsService.getSettingsGroup("Workers");
-        $scope.$watch('settings', () => bbSettingsService.save()
-        , true);
+        $scope.$watch('settings', () => { bbSettingsService.save(); }, true);
     }
 }
 

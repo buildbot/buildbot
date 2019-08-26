@@ -33,7 +33,8 @@ class _loginbar {
         $scope.config = config;
         // as the loginbar is never reloaded, we need to update the redirect
         // when the hash changes
-        $scope.$watch((() => document.location.hash), () => $scope.redirect = document.location.hash.substr(1));
+        $scope.$watch((() => document.location.hash),
+                      () => $scope.redirect = document.location.hash.substr(1));
         _.assign($scope, config.user);
     }
 }

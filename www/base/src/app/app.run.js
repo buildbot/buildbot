@@ -59,7 +59,7 @@ class ReconnectingListener {
         // we avoid to do that polling if the tab is hidden
         $window.document.addEventListener("visibilitychange", function() {
             if (!$window.document.hidden && reconnecting) {
-                return reloadWhenReady();
+                reloadWhenReady();
             }
         });
 
@@ -69,12 +69,12 @@ class ReconnectingListener {
             if ($window.document.hidden) {
                 return;
             }
-            return $http.get($window.document.location.href).then(function() {
+            $http.get($window.document.location.href).then(function() {
                 // send event to connectionstatus directive
                 $rootScope.$broadcast("mq.restored_connection");
 
                 // wait one second before actually reload to let user to see message
-                return $timeout((() => $window.document.location.reload()), 1000);
+                $timeout((() => $window.document.location.reload()), 1000);
             }
             , () =>
                 // error callback: if we cannot connect, we will retry in 3 seconds

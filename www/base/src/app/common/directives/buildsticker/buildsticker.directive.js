@@ -28,12 +28,12 @@ class _buildsticker {
         const data = dataService.open().closeOnDestroy($scope);
         $scope.$watch("buildid", function(buildid) {
             if ((buildid == null)) { return; }
-            return data.getBuilds(buildid).onNew = build => $scope.build = build;
+            data.getBuilds(buildid).onNew = build => $scope.build = build;
         });
 
         $scope.$watch('build', function(build) {
             if (!$scope.builder && ((build != null ? build.builderid : undefined) != null)) {
-                return $scope.builder = buildersService.getBuilder(build.builderid);
+                $scope.builder = buildersService.getBuilder(build.builderid);
             }
         });
     }
