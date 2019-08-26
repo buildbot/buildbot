@@ -1,0 +1,1 @@
+allow committer of a change to be null for new setups (:issue:`4987`)
