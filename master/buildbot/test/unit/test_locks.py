@@ -375,48 +375,45 @@ class BaseLockTests(unittest.TestCase):
 class RealLockTests(unittest.TestCase):
 
     def test_master_lock_init_from_lockid(self):
-        lockid = MasterLock('lock1', maxCount=3)
-        lock = RealMasterLock(lockid)
+        lock = RealMasterLock('lock1')
+        lock.updateFromLockId(MasterLock('lock1', maxCount=3), 0)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 3)
         self.assertEqual(lock.description, '<MasterLock(lock1, 3)>')
 
     def test_master_lock_update_from_lockid(self):
-        lockid = MasterLock('lock1', maxCount=3)
-        lock = RealMasterLock(lockid)
+        lock = RealMasterLock('lock1')
+        lock.updateFromLockId(MasterLock('lock1', maxCount=3), 0)
+        lock.updateFromLockId(MasterLock('lock1', maxCount=4), 0)
 
-        lockid = MasterLock('lock1', maxCount=4)
-        lock.updateFromLockId(lockid)
-
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 4)
         self.assertEqual(lock.description, '<MasterLock(lock1, 4)>')
 
         with self.assertRaises(AssertionError):
-            lockid = MasterLock('lock2', maxCount=4)
-            lock.updateFromLockId(lockid)
+            lock.updateFromLockId(MasterLock('lock2', maxCount=4), 0)
 
     def test_worker_lock_init_from_lockid(self):
-        lockid = WorkerLock('lock1', maxCount=3)
-        lock = RealWorkerLock(lockid)
+        lock = RealWorkerLock('lock1')
+        lock.updateFromLockId(WorkerLock('lock1', maxCount=3), 0)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 3)
         self.assertEqual(lock.description, '<WorkerLock(lock1, 3, {})>')
 
         worker_lock = lock.getLockForWorker('worker1')
-        self.assertEqual(worker_lock.name, 'lock1')
+        self.assertEqual(worker_lock.lockName, 'lock1')
         self.assertEqual(worker_lock.maxCount, 3)
         self.assertTrue(worker_lock.description.startswith(
             '<WorkerLock(lock1, 3)[worker1]'))
 
     def test_worker_lock_init_from_lockid_count_for_worker(self):
-        lockid = WorkerLock('lock1', maxCount=3,
-                            maxCountForWorker={'worker2': 5})
-        lock = RealWorkerLock(lockid)
+        lock = RealWorkerLock('lock1')
+        lock.updateFromLockId(WorkerLock('lock1', maxCount=3,
+                                         maxCountForWorker={'worker2': 5}), 0)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 3)
 
         worker_lock = lock.getLockForWorker('worker1')
@@ -425,27 +422,25 @@ class RealLockTests(unittest.TestCase):
         self.assertEqual(worker_lock.maxCount, 5)
 
     def test_worker_lock_update_from_lockid(self):
-        lockid = WorkerLock('lock1', maxCount=3)
-        lock = RealWorkerLock(lockid)
+        lock = RealWorkerLock('lock1')
+        lock.updateFromLockId(WorkerLock('lock1', maxCount=3), 0)
 
         worker_lock = lock.getLockForWorker('worker1')
         self.assertEqual(worker_lock.maxCount, 3)
 
-        lockid = WorkerLock('lock1', maxCount=5)
-        lock.updateFromLockId(lockid)
+        lock.updateFromLockId(WorkerLock('lock1', maxCount=5), 0)
 
-        self.assertEqual(lock.name, 'lock1')
+        self.assertEqual(lock.lockName, 'lock1')
         self.assertEqual(lock.maxCount, 5)
         self.assertEqual(lock.description, '<WorkerLock(lock1, 5, {})>')
 
-        self.assertEqual(worker_lock.name, 'lock1')
+        self.assertEqual(worker_lock.lockName, 'lock1')
         self.assertEqual(worker_lock.maxCount, 5)
         self.assertTrue(worker_lock.description.startswith(
             '<WorkerLock(lock1, 5)[worker1]'))
 
         with self.assertRaises(AssertionError):
-            lockid = WorkerLock('lock2', maxCount=4)
-            lock.updateFromLockId(lockid)
+            lock.updateFromLockId(WorkerLock('lock2', maxCount=4), 0)
 
     @parameterized.expand([
         (True, True, True),
@@ -467,9 +462,9 @@ class RealLockTests(unittest.TestCase):
         if worker_count_after:
             max_count_after = {'worker1': 7}
 
-        lockid = WorkerLock('lock1', maxCount=3,
-                            maxCountForWorker=max_count_before)
-        lock = RealWorkerLock(lockid)
+        lock = RealWorkerLock('lock1')
+        lock.updateFromLockId(WorkerLock('lock1', maxCount=3,
+                                         maxCountForWorker=max_count_before), 0)
 
         if acquire_before:
             worker_lock = lock.getLockForWorker('worker1')
@@ -478,7 +473,7 @@ class RealLockTests(unittest.TestCase):
 
         lockid = WorkerLock('lock1', maxCount=4,
                             maxCountForWorker=max_count_after)
-        lock.updateFromLockId(lockid)
+        lock.updateFromLockId(lockid, 0)
 
         if not acquire_before:
             worker_lock = lock.getLockForWorker('worker1')

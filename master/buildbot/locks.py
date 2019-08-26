@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import util
+from buildbot.util import service
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 
@@ -40,8 +41,10 @@ class BaseLock:
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
+        super().__init__()
+
         # Name of the lock
-        self.name = name
+        self.lockName = name
         # Current queue, tuples (waiter, LockAccess, deferred)
         self.waiting = []
         # Current owners, tuples (owner, LockAccess)
@@ -206,31 +209,40 @@ class BaseLock:
         return (owner, access) in self.owners
 
 
-class RealMasterLock(BaseLock):
+class RealMasterLock(BaseLock, service.SharedService):
 
-    def __init__(self, lockid):
-        super().__init__(lockid.name, lockid.maxCount)
+    def __init__(self, name):
+        # the caller will want to call updateFromLockId after initialization
+        super().__init__(name, 0)
+        self.config_version = -1
         self._updateDescription()
 
     def _updateDescription(self):
-        self.description = "<MasterLock({}, {})>".format(self.name,
+        self.description = "<MasterLock({}, {})>".format(self.lockName,
                                                          self.maxCount)
 
     def getLockForWorker(self, workername):
         return self
 
-    def updateFromLockId(self, lockid):
-        assert self.name == lockid.name
+    def updateFromLockId(self, lockid, config_version):
+        assert self.lockName == lockid.name
+        assert isinstance(config_version, int)
+
+        self.config_version = config_version
         self.setMaxCount(lockid.maxCount)
         self._updateDescription()
 
 
-class RealWorkerLock:
+class RealWorkerLock(service.SharedService):
 
-    def __init__(self, lockid):
-        self.name = lockid.name
-        self.maxCount = lockid.maxCount
-        self.maxCountForWorker = lockid.maxCountForWorker
+    def __init__(self, name):
+        super().__init__()
+
+        # the caller will want to call updateFromLockId after initialization
+        self.lockName = name
+        self.maxCount = None
+        self.maxCountForWorker = None
+        self.config_version = -1
         self._updateDescription()
         self.locks = {}
 
@@ -241,23 +253,26 @@ class RealWorkerLock:
         if workername not in self.locks:
             maxCount = self.maxCountForWorker.get(workername,
                                                   self.maxCount)
-            lock = self.locks[workername] = BaseLock(self.name, maxCount)
+            lock = self.locks[workername] = BaseLock(self.lockName, maxCount)
             self._updateDescriptionForLock(lock, workername)
             self.locks[workername] = lock
         return self.locks[workername]
 
     def _updateDescription(self):
         self.description = \
-            "<WorkerLock({}, {}, {})>".format(self.name, self.maxCount,
+            "<WorkerLock({}, {}, {})>".format(self.lockName, self.maxCount,
                                               self.maxCountForWorker)
 
     def _updateDescriptionForLock(self, lock, workername):
         lock.description = \
-            "<WorkerLock({}, {})[{}] {}>".format(lock.name, lock.maxCount,
+            "<WorkerLock({}, {})[{}] {}>".format(lock.lockName, lock.maxCount,
                                                  workername, id(lock))
 
-    def updateFromLockId(self, lockid):
-        assert self.name == lockid.name
+    def updateFromLockId(self, lockid, config_version):
+        assert self.lockName == lockid.name
+        assert isinstance(config_version, int)
+
+        self.config_version = config_version
 
         self.maxCount = lockid.maxCount
         self.maxCountForWorker = lockid.maxCountForWorker

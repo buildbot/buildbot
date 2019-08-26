@@ -179,7 +179,12 @@ class TestLibVirtWorker(unittest.TestCase):
     def setup_canStartBuild(self):
         bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
+
+        bs.parent = mock.Mock()
+        bs.config_version = 0
+        bs.parent.master.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
         bs.updateLocks()
+
         return bs
 
     @defer.inlineCallbacks

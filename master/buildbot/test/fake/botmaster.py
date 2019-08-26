@@ -16,30 +16,18 @@
 
 from twisted.internet import defer
 
+from buildbot.process import botmaster
 from buildbot.util import service
 
 
-class FakeBotMaster(service.AsyncMultiService):
+class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
 
     def __init__(self):
         super().__init__()
         self.setName("fake-botmaster")
-        self.locks = {}
         self.builders = {}  # dictionary mapping worker names to builders
         self.buildsStartedForWorkers = []
         self.delayShutdown = False
-
-    def getLockByID(self, lockid):
-        if lockid not in self.locks:
-            self.locks[lockid] = lockid.lockClass(lockid)
-        # if the master.cfg file has changed maxCount= on the lock, the next
-        # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and WorkerLock (marker) instances
-        # be hashable and that they should compare properly.
-        return self.locks[lockid]
-
-    def getLockFromLockAccess(self, access):
-        return self.getLockByID(access.lockid)
 
     def getBuildersForWorker(self, workername):
         return self.builders.get(workername, [])
