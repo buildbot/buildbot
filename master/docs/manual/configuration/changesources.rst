@@ -1191,6 +1191,10 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
     event to be handled (optional).
     By default processes `patchset-created` and `ref-updated`
 
+``get_files``
+    Populate the `files` attribute of emitted changes (default `False`).
+    Buildbot will run an extra query command for each handled event to determine the changed files.
+
 ``debug``
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
@@ -1374,6 +1378,10 @@ The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 ``gitBaseURL``
     The git URL where Gerrit is accessible via git+ssh protocol
 
+``get_files``
+    Populate the `files` attribute of emitted changes (default `False`).
+    Buildbot will run an extra query command for each handled event to determine the changed files.
+
 ``debug``
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
@@ -1452,7 +1460,9 @@ Files
 ~~~~~
 
 It also has a list of :attr:`files`, which are just the tree-relative filenames of any files that were added, deleted, or modified for this :class:`Change`.
-These filenames are used by the :func:`fileIsImportant` function (in the scheduler) to decide whether it is worth triggering a new build or not, e.g. the function could use the following function to only run a build if a C file were checked in::
+These filenames are used by the :func:`fileIsImportant` function (in the scheduler) to decide whether it is worth triggering a new build or not, e.g. the function could use the following function to only run a build if a C file were checked in:
+
+.. code-block:: python
 
     def has_C_files(change):
         for name in change.files:

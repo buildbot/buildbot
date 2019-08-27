@@ -20,7 +20,7 @@ class LinePlot {
             },
             template: require('./lineplot.tpl.jade'),
             link(scope, elem, attrs){
-                return d3Service.get().then(d3 => linkerWithD3(scope, d3, $filter, elem));
+                d3Service.get().then(d3 => linkerWithD3(scope, d3, $filter, elem));
             }
         };
     }
@@ -30,7 +30,7 @@ class LinePlot {
 // we try to be generic enough to try and hope this can be reused for other kind of plot
 // while not over-engineer it too much
 
-var linkerWithD3= function($scope, d3, $filter, elem) {
+var linkerWithD3 = function($scope, d3, $filter, elem) {
     let x, xaccessor, xscaledaccessor, y, yaccessor, yscaledaccessor;
     const margin = {
         top: 40,
@@ -97,7 +97,7 @@ var linkerWithD3= function($scope, d3, $filter, elem) {
         }
 
         // Add the Y Axis
-        return yaxis_g.call(yAxis);
+        yaxis_g.call(yAxis);
     });
 };
 

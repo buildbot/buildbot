@@ -1,1 +1,0 @@
-:issue:`4844`: Fix errors when disconnecting a libvirt worker.

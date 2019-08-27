@@ -515,8 +515,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.locks = yield self.build.render(self.locks)
 
         # convert all locks into their real form
-        self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
-                      for access in self.locks]
+        botmaster = self.build.builder.botmaster
+        self.locks = yield botmaster.getLockFromLockAccesses(self.locks, self.build.config_version)
+
         # then narrow WorkerLocks down to the worker that this build is being
         # run on
         self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker),

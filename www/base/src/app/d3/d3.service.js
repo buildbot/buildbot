@@ -14,7 +14,9 @@ class D3 {
             d.resolve(module);
         });
 
-        return {get() { return d.promise; }};
+        return {
+            get() { return d.promise; }
+        };
     }
 }
 

@@ -12,7 +12,9 @@ Reporters
 
 The Buildmaster has a variety of ways to present build status to various users.
 Each such delivery method is a `Reporter Target` object in the configuration's ``services`` list.
-To add reporter targets, you just append more objects to this list::
+To add reporter targets, you just append more objects to this list:
+
+.. code-block:: python
 
     c['services'] = []
 
@@ -68,7 +70,7 @@ TODO: or subclass MailNotifier and override getRecipients()
 The following simple example will send an email upon the completion of each build, to just those developers whose :class:`Change`\s were included in the build.
 The email contains a description of the :class:`Build`, its results, and URLs where more information can be obtained.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
@@ -76,13 +78,17 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
     c['services'].append(mn)
 
 To get a simple one-message-per-build (say, for a mailing list), use the following form instead.
-This form does not send mail to individual developers (and thus does not need the ``lookup=`` argument, explained below), instead it only ever sends mail to the `extra recipients` named in the arguments::
+This form does not send mail to individual developers (and thus does not need the ``lookup=`` argument, explained below), instead it only ever sends mail to the `extra recipients` named in the arguments:
+
+.. code-block:: python
 
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,
                                 extraRecipients=['listaddr@example.org'])
 
-If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smtpPassword``::
+If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smtpPassword``:
+
+.. code-block:: python
 
     mn = reporters.MailNotifier(fromaddr="myuser@example.com",
                                 sendToInterestedUsers=False,
@@ -95,7 +101,9 @@ If your SMTP host requires authentication before it allows you to send emails, t
 
    If for some reasons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :contrib-src:`master/contrib/check_smtp.py` to see if it works at all.
 
-If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
+If you want to require Transport Layer Security (TLS), then you can also set ``useTls``:
+
+.. code-block:: python
 
     mn = reporters.MailNotifier(fromaddr="myuser@example.com",
                                 sendToInterestedUsers=False,
@@ -111,7 +119,9 @@ If you want to require Transport Layer Security (TLS), then you can also set ``u
 In some cases it is desirable to have different information then what is provided in a standard MailNotifier message.
 For this purpose MailNotifier provides the argument ``messageFormatter`` (an instance of ``MessageFormatter``) which allows for the creation of messages with unique content.
 
-For example, if only short emails are desired (e.g., for delivery to phones)::
+For example, if only short emails are desired (e.g., for delivery to phones):
+
+.. code-block:: python
 
     from buildbot.plugins import reporters
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
@@ -120,7 +130,9 @@ For example, if only short emails are desired (e.g., for delivery to phones)::
                                 extraRecipients=['listaddr@example.org'],
                                 messageFormatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
 
-Another example of a function delivering a customized html email is given below::
+Another example of a function delivering a customized html email is given below:
+
+.. code-block:: python
 
     from buildbot.plugins import reporters
 
@@ -177,7 +189,9 @@ MailNotifier arguments
     ``warnings``
         Equivalent to (``warnings``, ``failing``).
 
-    Set these shortcuts as actual strings in the configuration::
+    Set these shortcuts as actual strings in the configuration:
+
+    .. code-block:: python
 
         from buildbot.plugins import reporters
         mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
@@ -450,7 +464,7 @@ To use this reporter, you need to generate and application on the Pushover websi
 The following simple example will send a Pushover notification upon the completion of each build.
 The notification contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaced with proper ones obtained from the Pushover website for your application.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
     pn = reporters.PushoverNotifier(user_key="1234", api_token='abcd')
@@ -528,7 +542,7 @@ Patches are very welcome for restoring the full functionality.
 
 
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
     irc = reporters.IRC("irc.example.org", "botnickname",
@@ -850,7 +864,7 @@ HttpStatusPush
 .. @cindex HttpStatusPush
 .. @stindex buildbot.reporters.HttpStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
     sp = reporters.HttpStatusPush(serverUrl="http://example.com/submit")
@@ -915,7 +929,7 @@ GitHubStatusPush
 .. @cindex GitHubStatusPush
 .. py:class:: buildbot.reporters.github.GitHubStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters, util
 
@@ -961,7 +975,7 @@ GitHubCommentPush
 .. @cindex GitHubCommentPush
 .. py:class:: buildbot.reporters.github.GitHubCommentPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters, util
 
@@ -1034,7 +1048,7 @@ BitbucketServerStatusPush
 .. @cindex BitbucketServerStatusPush
 .. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
 
@@ -1079,7 +1093,7 @@ BitbucketServerPRCommentPush
 .. @cindex BitbucketServerPRCommentPush
 .. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerPRCommentPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
 
@@ -1133,7 +1147,7 @@ BitbucketStatusPush
 
 .. py:class:: buildbot.reporters.bitbucket.BitbucketStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
     bs = reporters.BitbucketStatusPush('oauth_key', 'oauth_secret')
@@ -1170,7 +1184,7 @@ GitLabStatusPush
 .. @cindex GitLabStatusPush
 .. py:class:: buildbot.reporters.gitlab.GitLabStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
 
@@ -1205,7 +1219,7 @@ HipchatStatusPush
 .. @cindex HipchatStatusPush
 .. py:class:: buildbot.reporters.hipchat.HipchatStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
 
@@ -1373,7 +1387,7 @@ ZulipStatusPush
 .. @cindex ZulipStatusPush
 .. py:class:: buildbot.reporters.zulip.ZulipStatusPush
 
-::
+.. code-block:: python
 
     from buildbot.plugins import reporters
 

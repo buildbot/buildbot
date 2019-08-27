@@ -24,7 +24,9 @@ If you *are* comfortable writing Python code, however, you can use all the power
 The ``BuildmasterConfig`` name is the only one which matters: all other names defined during the execution of the file are discarded.
 When parsing the config file, the Buildmaster generally compares the old configuration with the new one and performs the minimum set of actions necessary to bring the Buildbot up to date: :class:`Builder`\s which are not changed are left untouched, and :class:`Builder`\s which are modified get to keep their old event history.
 
-The beginning of the :file:`master.cfg` file typically starts with something like::
+The beginning of the :file:`master.cfg` file typically starts with something like:
+
+.. code-block:: python
 
     BuildmasterConfig = c = {}
 
@@ -57,7 +59,9 @@ The following symbols are automatically available for use in the configuration f
     the base directory for the buildmaster.
     This string has not been expanded, so it may start with a tilde.
     It needs to be expanded before use.
-    The config file is located in::
+    The config file is located in:
+
+    .. code-block:: python
 
         os.path.expanduser(os.path.join(basedir, 'master.cfg'))
 

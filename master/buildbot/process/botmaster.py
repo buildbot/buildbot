@@ -28,7 +28,53 @@ from buildbot.process.workerforbuilder import States
 from buildbot.util import service
 
 
-class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+class LockRetrieverMixin:
+
+    @defer.inlineCallbacks
+    def getLockByID(self, lockid, config_version):
+        ''' Convert a Lock identifier into an actual Lock instance.
+            @lockid: a locks.MasterLock or locks.WorkerLock instance
+            @config_version: The version of the config from which the list of locks has been
+                acquired by the downstream user.
+            @return: a locks.RealMasterLock or locks.RealWorkerLock instance
+
+            The real locks are tracked using lock ID and config_version. The latter is used as a
+            way to track most recent properties of real locks.
+
+            This approach is needed because there's no central registry of lock access instances
+            that are used within a Buildbot master.cfg (like there is for e.g c['builders']). All
+            lock accesses bring all lock information with themselves as the lockid member.
+            Therefore, the reconfig process is relatively complicated, because we don't know
+            whether a specific access instance encodes lock information before reconfig or after.
+            Taking into account config_version allows us to know when properties of a lock should
+            be updated.
+
+            Note that the user may create multiple lock ids with different maxCount values. It's
+            unspecified which maxCount value the real lock will have.
+        '''
+        assert isinstance(config_version, int)
+        lock = yield lockid.lockClass.getService(self, lockid.name)
+
+        if config_version > lock.config_version:
+            lock.updateFromLockId(lockid, config_version)
+        return lock
+
+    def getLockFromLockAccess(self, access, config_version):
+        # Convert a lock-access object into an actual Lock instance.
+        if not isinstance(access, locks.LockAccess):
+            # Buildbot 0.7.7 compatibility: user did not specify access
+            access = access.defaultAccess()
+        return self.getLockByID(access.lockid, config_version)
+
+    @defer.inlineCallbacks
+    def getLockFromLockAccesses(self, accesses, config_version):
+        # converts locks to their real forms
+        locks = yield defer.gatherResults([self.getLockFromLockAccess(access, config_version)
+                                           for access in accesses])
+        return zip(locks, accesses)
+
+
+class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, LockRetrieverMixin):
 
     """This is the master-side service which manages remote buildbot workers.
     It provides them with Workers, and distributes build requests to
@@ -46,9 +92,6 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # which is the master-side object that defines and controls a build.
 
         self.watchers = {}
-
-        # self.locks holds the real Lock instances
-        self.locks = {}
 
         self.shuttingDown = False
 
@@ -255,28 +298,6 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
         return super().stopService()
-
-    def getLockByID(self, lockid):
-        """Convert a Lock identifier into an actual Lock instance.
-        @param lockid: a locks.MasterLock or locks.WorkerLock instance
-        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
-        """
-        assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
-        if lockid not in self.locks:
-            self.locks[lockid] = lockid.lockClass(lockid)
-        # if the master.cfg file has changed maxCount= on the lock, the next
-        # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and WorkerLock (marker) instances
-        # be hashable and that they should compare properly.
-        return self.locks[lockid]
-
-    def getLockFromLockAccess(self, access):
-        # Convert a lock-access object into an actual Lock instance.
-        if not isinstance(access, locks.LockAccess):
-            # Buildbot 0.7.7 compatibility: user did not specify access
-            access = access.defaultAccess()
-        lock = self.getLockByID(access.lockid)
-        return lock
 
     def maybeStartBuildsForBuilder(self, buildername):
         """

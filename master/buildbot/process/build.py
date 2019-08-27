@@ -107,6 +107,9 @@ class Build(properties.PropertiesMixin):
         self._locks_released = False
         self._build_finished = False
 
+        # tracks the config version for locks
+        self.config_version = None
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -115,11 +118,12 @@ class Build(properties.PropertiesMixin):
         """
         self.builder = builder
         self.master = builder.master
+        self.config_version = builder.config_version
 
+    @defer.inlineCallbacks
     def setLocks(self, lockList):
-        # convert all locks into their real forms
-        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
-                      for access in lockList]
+        self.locks = yield self.builder.botmaster.getLockFromLockAccesses(lockList,
+                                                                          self.config_version)
 
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
@@ -267,6 +271,8 @@ class Build(properties.PropertiesMixin):
                 tags = self.getProperty(
                     self.VIRTUAL_BUILDERTAGS_PROP,
                     self.builder.config.tags)
+                if type(tags) == type([]) and '_virtual_' not in tags:
+                    tags.append('_virtual_')
 
                 self.master.data.updates.updateBuilderInfo(self._builderid,
                                                            description,

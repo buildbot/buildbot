@@ -312,20 +312,19 @@ class TestReconfig(RunFakeMasterTestCase):
         return stepcontrollers, master, config_dict, lock, builder_ids
 
     @parameterized.expand([
-        (3, util.MasterLock, 'counting', 1, 2, 1, 3),
-        (3, util.WorkerLock, 'counting', 1, 2, 1, 3),
-        (3, util.MasterLock, 'counting', 2, 1, 2, 3),
-        (3, util.WorkerLock, 'counting', 2, 1, 2, 3),
-        (2, util.MasterLock, 'exclusive', 1, 2, 1, 2),
-        (2, util.WorkerLock, 'exclusive', 1, 2, 1, 2),
-        (2, util.MasterLock, 'exclusive', 2, 1, 1, 2),
-        (2, util.WorkerLock, 'exclusive', 2, 1, 1, 2),
+        (3, util.MasterLock, 'counting', 1, 2, 1, 2),
+        (3, util.WorkerLock, 'counting', 1, 2, 1, 2),
+        (3, util.MasterLock, 'counting', 2, 1, 2, 2),
+        (3, util.WorkerLock, 'counting', 2, 1, 2, 2),
+        (2, util.MasterLock, 'exclusive', 1, 2, 1, 1),
+        (2, util.WorkerLock, 'exclusive', 1, 2, 1, 1),
+        (2, util.MasterLock, 'exclusive', 2, 1, 1, 1),
+        (2, util.WorkerLock, 'exclusive', 2, 1, 1, 1),
     ])
     @defer.inlineCallbacks
     def test_changing_max_lock_count_does_not_break_builder_locks(
             self, builder_count, lock_cls, mode, max_count_before,
             max_count_after, allowed_builds_before, allowed_builds_after):
-        # TODO: the test currently demonstrates broken behavior
         '''
         Check that Buildbot does not allow extra claims on a claimed lock after
         a reconfig that changed the maxCount of that lock. Some Buildbot
@@ -360,25 +359,23 @@ class TestReconfig(RunFakeMasterTestCase):
             yield flushEventualQueue()
 
         builds = yield master.data.get(("builds",))
-        self.assertEqual(len(builds), allowed_builds_after)
-        for b in builds:
+        for b in builds[allowed_builds_after:]:
             self.assertEqual(b['results'], SUCCESS)
 
     @parameterized.expand([
-        (3, util.MasterLock, 'counting', 1, 2, 1, 3),
-        (3, util.WorkerLock, 'counting', 1, 2, 1, 3),
-        (3, util.MasterLock, 'counting', 2, 1, 2, 3),
-        (3, util.WorkerLock, 'counting', 2, 1, 2, 3),
-        (2, util.MasterLock, 'exclusive', 1, 2, 1, 2),
-        (2, util.WorkerLock, 'exclusive', 1, 2, 1, 2),
-        (2, util.MasterLock, 'exclusive', 2, 1, 1, 2),
-        (2, util.WorkerLock, 'exclusive', 2, 1, 1, 2),
+        (3, util.MasterLock, 'counting', 1, 2, 1, 2),
+        (3, util.WorkerLock, 'counting', 1, 2, 1, 2),
+        (3, util.MasterLock, 'counting', 2, 1, 2, 2),
+        (3, util.WorkerLock, 'counting', 2, 1, 2, 2),
+        (2, util.MasterLock, 'exclusive', 1, 2, 1, 1),
+        (2, util.WorkerLock, 'exclusive', 1, 2, 1, 1),
+        (2, util.MasterLock, 'exclusive', 2, 1, 1, 1),
+        (2, util.WorkerLock, 'exclusive', 2, 1, 1, 1),
     ])
     @defer.inlineCallbacks
     def test_changing_max_lock_count_does_not_break_step_locks(
             self, builder_count, lock_cls, mode, max_count_before,
             max_count_after, allowed_steps_before, allowed_steps_after):
-        # TODO: the test currently demonstrates broken behavior
         '''
         Check that Buildbot does not allow extra claims on a claimed lock after
         a reconfig that changed the maxCount of that lock. Some Buildbot

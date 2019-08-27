@@ -123,7 +123,7 @@ class ansicodesService {
                 node = document.createElement('style');
                 node.id = "ansicolors";
                 node.innerHTML = this.generateStyle();
-                return document.body.appendChild(node);
+                document.body.appendChild(node);
             },
 
             generateStyle() {

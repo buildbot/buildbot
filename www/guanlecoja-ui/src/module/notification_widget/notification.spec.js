@@ -24,18 +24,18 @@ describe('notification', function() {
     it('should load', function() {
         expect(elmBody).toBeDefined();
         // if there is an ul, the sidebar has been created
-        return expect(elmBody.find("ul").length).toBeGreaterThan(0);
+        expect(elmBody.find("ul").length).toBeGreaterThan(0);
     });
 
     // simple test to make sure the directive loads
-    return it('should dismiss pass through', inject(function(glNotificationService) {
+    it('should dismiss pass through', inject(function(glNotificationService) {
         let called = false;
         const e =
             {stopPropagation() { return called = true; }};
         spyOn(glNotificationService, "dismiss").and.returnValue(null);
         scope.n.dismiss(2, e);
         expect(glNotificationService.dismiss).toHaveBeenCalledWith(2);
-        return expect(called).toBe(true);
+        expect(called).toBe(true);
     })
     );
 });

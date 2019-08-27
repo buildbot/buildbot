@@ -18,7 +18,7 @@ class FaviconService {
                     return;
                 }
 
-                return $http.get("img/icon16.svg").then(function(data) {
+                $http.get("img/icon16.svg").then(function(data) {
                     // if there is a build or step associated to this page
                     // we color the icon with result's color
                     // We the raster the SVG to PNG, so that it can be displayed as favicon
@@ -46,7 +46,7 @@ class FaviconService {
                     };
 
                     img.crossOrigin = 'Anonymous';
-                    return img.src = url;
+                    img.src = url;
                 });
             }
         };

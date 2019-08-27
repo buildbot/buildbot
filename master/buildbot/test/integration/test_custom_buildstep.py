@@ -164,7 +164,10 @@ class RunSteps(unittest.TestCase, TestReactorMixin):
 
         self.builder = builder.Builder('test')
         self.builder._builderid = 80
+        self.builder.config_version = 0
         self.builder.master = self.master
+        self.builder.botmaster = mock.Mock()
+        self.builder.botmaster.getLockFromLockAccesses = lambda l, c: []
         yield self.builder.startService()
 
         self.factory = factory.BuildFactory()  # will have steps added later

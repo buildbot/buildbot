@@ -1,1 +1,0 @@
-+add an index to steps.started_at to boost expensive SQL queries.

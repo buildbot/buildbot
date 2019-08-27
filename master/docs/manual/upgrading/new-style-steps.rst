@@ -52,7 +52,9 @@ If your custom buildstep implements the ``start`` method, then rename that metho
 The value of the Deferred should be the result of the step (one of the codes in :py:mod:`buildbot.process.results`), or a Twisted failure instance to complete the step as EXCEPTION.
 The new ``run`` method should *not* call ``self.finished`` or ``self.failed``, instead signalling the same via Deferred.
 
-For example, the following old-style ``start`` method ::
+For example, the following old-style ``start`` method :
+
+.. code-block:: python
 
 
     def start(self):  ## old style
@@ -61,7 +63,9 @@ For example, the following old-style ``start`` method ::
         d.addCallback(lambda res: self.convertResult(cmd))
         d.addErrback(self.failed)
 
-Becomes ::
+Becomes :
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):  ## new style
@@ -89,7 +93,9 @@ The following methods now return a Deferred:
 
 Any custom code in a new-style step that calls these methods must handle the resulting Deferred.
 In some cases, that means that the calling method's signature will change.
-For example ::
+For example :
+
+.. code-block:: python
 
     def summarize(self):  ## old-style
         for m in self.MESSAGES:
@@ -99,7 +105,9 @@ For example ::
 
 Is a synchronous function, not returning a Deferred.
 However, when converted to a new-style test, it must handle Deferreds from the methods it calls, so it must be asynchronous.
-Syntactically, ``inlineCallbacks`` makes the change fairly simple::
+Syntactically, ``inlineCallbacks`` makes the change fairly simple:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def summarize(self):  ## new-style

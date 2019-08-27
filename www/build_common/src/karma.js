@@ -38,6 +38,18 @@ module.exports.createTemplateKarmaConfig = function(config, options) {
         // Hide webpack build information from output
         webpackMiddleware: {
             noInfo: 'errors-only'
-        }
+        },
+
+        customLaunchers: {
+            BBChromeHeadless: {
+                base: 'ChromeHeadless',
+                flags: [
+                    '--headless',
+                    '--disable-gpu',
+                    '--no-sandbox',
+                    '--window-size=1024,768',
+                ],
+            }
+        },
     });
 }

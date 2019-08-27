@@ -5,14 +5,14 @@
  */
 // a simple service to abstract breadcrumb configuration
 class glBreadcrumb {
-    constructor($rootScope) { this.$rootScope = $rootScope; ({}); }
+    constructor($rootScope) {
+        this.$rootScope = $rootScope;
+    }
 
     setBreadcrumb(breadcrumb) {
-        return this.$rootScope.$broadcast("glBreadcrumb", breadcrumb);
+        this.$rootScope.$broadcast("glBreadcrumb", breadcrumb);
     }
 }
-
-
 
 angular.module('guanlecoja.ui')
 .service('glBreadcrumbService', ['$rootScope', glBreadcrumb]);

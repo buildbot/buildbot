@@ -77,7 +77,7 @@ The next argument specifies the type of the EC2 virtual machine (available optio
 Here is the simplest example of configuring an EC2 latent worker.
 It specifies all necessary remaining values explicitly in the instantiation.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -108,7 +108,7 @@ You can make an :file:`.aws` directory in the home folder of the user running th
 In that directory, create a file called :file:`credentials`.
 The format of the file should be as follows, replacing ``identifier`` and ``secret_identifier`` with the credentials obtained before.
 
-::
+.. code-block:: python
 
     [default]
     aws_access_key_id = identifier
@@ -117,7 +117,7 @@ The format of the file should be as follows, replacing ``identifier`` and ``secr
 If you are using IAM roles, no config file is required.
 Then you can instantiate the worker as follows.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -136,7 +136,7 @@ In all cases, the AMI that sorts last by its location (the S3 bucket and manifes
 
 One available filter is to specify the acceptable AMI owners, by AWS account number (the 12 digit number, usually rendered in AWS with hyphens like "1234-5678-9012", should be entered as in integer).
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     bot1 = worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -150,7 +150,7 @@ One available filter is to specify the acceptable AMI owners, by AWS account num
 
 The other available filter is to provide a regular expression string that will be matched against each AMI's location (the S3 bucket and manifest name).
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     bot1 = worker.EC2LatentWorker(
@@ -165,7 +165,7 @@ The other available filter is to provide a regular expression string that will b
 The regular expression can specify a group, which will be preferred for the sorting.
 Only the first group is used; subsequent groups are ignored.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     bot1 = worker.EC2LatentWorker(
@@ -180,7 +180,7 @@ Only the first group is used; subsequent groups are ignored.
 If the group can be cast to an integer, it will be.
 This allows 10 to sort after 1, for instance.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     bot1 = worker.EC2LatentWorker(
@@ -196,7 +196,7 @@ In addition to using the password as a handshake between the master and the work
 This is possible with AWS EC2 by using the Elastic IP feature.
 To configure, generate a Elastic IP in AWS, and then specify it in your configuration using the ``elastic_ip`` argument.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -214,7 +214,7 @@ One other way to configure a worker is by settings AWS tags.
 They can for example be used to have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy.
 To get Buildbot to tag the latent worker specify the tag keys and values in your configuration using the ``tags`` argument.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -231,7 +231,7 @@ If the worker needs access to additional AWS resources, you can also enable your
 To use this capability, you must first create an instance profile separately in AWS.
 Then specify its name on EC2LatentWorker via instance_profile_name.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -247,7 +247,7 @@ You may also supply your own boto3.Session object to allow for more flexible ses
 To use this capability, you must first create a boto3.Session object.
 Then provide it to EC2LatentWorker via ``session`` argument.
 
-::
+.. code-block:: python
 
     import boto3
     from buildbot.plugins import worker
@@ -279,7 +279,7 @@ This follows the AWS API syntax, essentially acting as a passthrough.
 The only distinction is that the volumes default to deleting on termination to avoid leaking volume resources when workers are terminated.
 See boto documentation for further details.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -308,7 +308,7 @@ You must also specify security groups created within your VPC as opposed to clas
 This can be done by passing the ids of the vpc security groups.
 Note, when using a VPC, you can not specify classic EC2 security groups (as specified by security_name).
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -326,7 +326,7 @@ Spot instances
 If you would prefer to use spot instances for running your builds, you can accomplish that by passing in a True value to the ``spot_instance`` parameter to the :class:`~buildbot.worker.ec2.EC2LatentWorker` constructor.
 Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`` in order to limit your builds' budget consumption.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import worker
     c['workers'] = [

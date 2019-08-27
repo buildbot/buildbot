@@ -18,18 +18,19 @@ env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - HYPER_SIZE=m1
+  - CHROME_BIN=/usr/bin/chromium-browser
   matrix:
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m1
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m2
   - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
-  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.4
+  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
@@ -135,8 +136,8 @@ script:
     cmd: make frontend_install_tests
 
   - title: frontend unit tests
-    condition: TESTS == "js_unit" and not TRAVIS_PULL_REQUEST
-    cmd: make frontend_tests
+    condition: TESTS == "js_unit"
+    cmd: make frontend_tests_headless
 
   - title: master and worker tests
     condition: TESTS == "trial"

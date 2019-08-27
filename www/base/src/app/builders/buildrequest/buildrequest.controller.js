@@ -9,14 +9,13 @@ class BuildrequestController {
         $scope.is_cancelling = false;
         $scope.$watch("buildrequest.claimed", function(n, o) {
             if (n) {  // if it is unclaimed, then claimed, we need to try again
-                findBuilds($scope,
-                    $scope.buildrequest.buildrequestid,
-                    $stateParams.redirect_to_build);
+                findBuilds($scope, $scope.buildrequest.buildrequestid,
+                           $stateParams.redirect_to_build);
                 // when a build is discovered, force the tab to go to that build
                 const savedNew = $scope.builds.onNew;
-                return $scope.builds.onNew = function(build) {
+                $scope.builds.onNew = function(build) {
                     build.active = true;
-                    return savedNew(build);
+                    savedNew(build);
                 };
             }
         });
@@ -31,10 +30,10 @@ class BuildrequestController {
             const failure = function(why) {
                 $scope.is_cancelling = false;
                 $scope.error = `Cannot cancel: ${why.error.message}`;
-                return refreshContextMenu();
+                refreshContextMenu();
             };
 
-            return $scope.buildrequest.control('cancel').then(success, failure);
+            $scope.buildrequest.control('cancel').then(success, failure);
         };
 
         var refreshContextMenu = function() {
@@ -58,7 +57,7 @@ class BuildrequestController {
                 }
             }
 
-            return glTopbarContextualActionsService.setContextualActions(actions);
+            glTopbarContextualActionsService.setContextualActions(actions);
         };
         $scope.$watch('buildrequest.complete', refreshContextMenu);
 
@@ -80,12 +79,12 @@ class BuildrequestController {
                     }
                 ];
 
-                return glBreadcrumbService.setBreadcrumb(breadcrumb);
+                glBreadcrumbService.setBreadcrumb(breadcrumb);
             };
 
-            return data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
+            data.getBuildsets(buildrequest.buildsetid).onNew = function(buildset) {
                 $scope.buildset = publicFieldsFilter(buildset);
-                return buildset.getProperties().onNew  = properties => $scope.properties = publicFieldsFilter(properties);
+                buildset.getProperties().onNew  = properties => $scope.properties = publicFieldsFilter(properties);
             };
         };
     }

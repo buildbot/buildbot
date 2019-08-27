@@ -43,27 +43,27 @@ class BuilderController {
 
                 const success = function(res) {
                     $scope.is_cancelling = false;
-                    return refreshContextMenu();
+                    refreshContextMenu();
                 };
 
                 const failure = function(why) {
                     $scope.is_cancelling = false;
                     $scope.error = `Cannot cancel: ${why.error.message}`;
-                    return refreshContextMenu();
+                    refreshContextMenu();
                 };
 
                 const dl = [];
                 $scope.buildrequests.forEach(function(buildrequest) {
                     if (!buildrequest.claimed) {
-                        return dl.push(buildrequest.control('cancel'));
+                        dl.push(buildrequest.control('cancel'));
                     }
                 });
                 $scope.builds.forEach(function(build) {
                     if (!build.complete) {
-                        return dl.push(build.control('stop'));
+                        dl.push(build.control('stop'));
                     }
                 });
-                return $q.when(dl).then(success, failure);
+                $q.when(dl).then(success, failure);
             };
 
             var refreshContextMenu = function() {
@@ -75,12 +75,12 @@ class BuilderController {
                 let canStop = false;
                 $scope.builds.forEach(function(build) {
                     if (!build.complete) {
-                        return canStop = true;
+                        canStop = true;
                     }
                 });
                 $scope.buildrequests.forEach(function(buildrequest) {
                     if (!buildrequest.claimed) {
-                        return canStop = true;
+                        canStop = true;
                     }
                 });
 
@@ -111,14 +111,14 @@ class BuilderController {
                     })
                 );
 
-                return glTopbarContextualActionsService.setContextualActions(actions);
+                glTopbarContextualActionsService.setContextualActions(actions);
             };
 
             builder.getForceschedulers({order:'name'}).onChange = function(forceschedulers) {
                 $scope.forceschedulers = forceschedulers;
                 refreshContextMenu();
                 // reinstall contextual actions when coming back from forcesched
-                return $scope.$on('$stateChangeSuccess', () => refreshContextMenu());
+                $scope.$on('$stateChangeSuccess', () => refreshContextMenu());
             };
             $scope.numbuilds = 200;
             if ($stateParams.numbuilds != null) {
@@ -136,7 +136,7 @@ class BuilderController {
 
             ;
 
-            $scope.builds.onChange= function() {
+            $scope.builds.onChange = function() {
                 refreshContextMenu();
                 if ($scope.builds.length === 0) {
                     return;
@@ -149,7 +149,7 @@ class BuilderController {
                 let last_started = max_started;
                 let cur_success = 0;
                 let num_builds = 0;
-                return $scope.builds.forEach(function(b) {
+                $scope.builds.forEach(function(b) {
                     if (b.complete_at !== null) {
                         num_builds +=1;
                         if (b.results === 0) {
@@ -162,12 +162,12 @@ class BuilderController {
                             $scope.success_ratio.push({date:last_started, success_ratio: (100 * cur_success) / num_builds});
                             last_started = b.started_at;
                             num_builds = 0;
-                            return cur_success = 0;
+                            cur_success = 0;
                         }
                     }
                 });
             };
-            return $scope.buildrequests.onChange=refreshContextMenu;
+            $scope.buildrequests.onChange = refreshContextMenu;
         };
     }
 }

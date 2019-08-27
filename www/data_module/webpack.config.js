@@ -17,6 +17,7 @@ module.exports = function() {
             [basename]: './src/data.module.js',
         },
         libraryName: pkg.name,
+        pluginName: pkg.plugin_name,
         dirname: __dirname,
         isTest: isTest,
         isProd: isProd,

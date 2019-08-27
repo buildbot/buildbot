@@ -103,7 +103,7 @@ m.controller("dummyController", function($scope, $state, glBreadcrumbService, gl
     glNotificationService.notify({msg:`You just transitioned to ${$scope.stateName}!`},
                                 {title:"State transitions", group:"state"});
 
-    return glBreadcrumbService.setBreadcrumb([
+    glBreadcrumbService.setBreadcrumb([
         {caption: _.capitalize($state.current.data.group)}
     , {
         caption: _.capitalize($state.current.name),

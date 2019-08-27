@@ -17,7 +17,9 @@ Programmatic Configuration Generation
 -------------------------------------
 
 Bearing in mind that ``master.cfg`` is a Python file, large configurations can be shortened considerably by judicious use of Python loops.
-For example, the following will generate a builder for each of a range of supported versions of Python::
+For example, the following will generate a builder for each of a range of supported versions of Python:
+
+.. code-block:: python
 
     pythons = ['python2.4', 'python2.5', 'python2.6', 'python2.7',
                'python3.2', 'python3.3']
@@ -62,7 +64,9 @@ Arguments for the callable are:
     The number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
 
 It should return true if the requests can be merged, and False otherwise.
-For example::
+For example:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -91,9 +95,9 @@ In many cases, the details of the :bb:rtype:`sourcestamp` and :bb:rtype:`buildre
 
 In the following example, only :bb:rtype:`buildrequest` with the same "reason" are merged; thus developers forcing builds for different reasons will see distinct builds.
 
-Note the use of the :py:meth:`buildrequest.BuildRequest.canBeCollapsed` method to access the source stamp compatibility algorithm.
+Note the use of the :py:meth:`buildrequest.BuildRequest.canBeCollapsed` method to access the source stamp compatibility algorithm:
 
-::
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -113,7 +117,9 @@ Buildrequests will all have the same sourcestamp, but probably different propert
 
     In most of the cases, just setting collapseRequests=False for triggered builders will do the trick.
 
-In other cases, ``parent_buildid`` from buildset can be used::
+In other cases, ``parent_buildid`` from buildset can be used:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -135,7 +141,9 @@ If it's necessary to perform some extended operation to determine whether two re
 
     Again, the number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
 
-For example::
+For example:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -159,7 +167,9 @@ It should return a list of the same :class:`Builder` objects, in the desired ord
 It may also remove items from the list if builds should not be started on those builders.
 If necessary, this function can return its results via a Deferred (it is called with ``maybeDeferred``).
 
-A simple ``prioritizeBuilders`` implementation might look like this::
+A simple ``prioritizeBuilders`` implementation might look like this:
+
+.. code-block:: python
 
     def prioritizeBuilders(buildmaster, builders):
         """Prioritize builders.  'finalRelease' builds have the highest
@@ -205,7 +215,9 @@ Build Priority Functions
 When a builder has multiple pending build requests, it uses a ``nextBuild`` function to decide which build it should start first.
 This function is given two parameters: the :class:`Builder`, and a list of :class:`BuildRequest` objects representing pending build requests.
 
-A simple function to prioritize release builds over other builds might look like this::
+A simple function to prioritize release builds over other builds might look like this:
+
+.. code-block:: python
 
    def nextBuild(bldr, requests):
        for r in requests:
@@ -213,7 +225,9 @@ A simple function to prioritize release builds over other builds might look like
                return r
        return requests[0]
 
-If some non-immediate result must be calculated, the ``nextBuild`` function can also return a Deferred::
+If some non-immediate result must be calculated, the ``nextBuild`` function can also return a Deferred:
+
+.. code-block:: python
 
     def nextBuild(bldr, requests):
         d = get_request_priorities(requests)
@@ -223,7 +237,9 @@ If some non-immediate result must be calculated, the ``nextBuild`` function can 
         d.addCallback(pick)
         return d
 
-The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`::
+The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`:
+
+.. code-block:: python
 
     ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
@@ -348,7 +364,9 @@ One common layout is to have all the various projects that share a repository ge
                /3_2_2
                /3_3_0
 
-To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing else), we would use the following, using the default ``split_file``::
+To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing else), we would use the following, using the default ``split_file``:
+
+.. code-block:: python
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller(
@@ -375,7 +393,9 @@ It may also return ``None`` to indicate that the file is of no interest.
    The function should return ``branches/3_3`` rather than just ``3_3`` because the SVN checkout step, will append the branch name to the ``baseURL``, which requires that we keep the ``branches`` component in there.
    Other VC schemes use a different approach towards branches and may not require this artifact.
 
-If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming scheme, the following function will work::
+If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming scheme, the following function will work:
+
+.. code-block:: python
 
     def split_file_branches(path):
         pieces = path.split('/')
@@ -388,7 +408,9 @@ If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming schem
             return None
 
 In fact, this is the definition of the provided ``split_file_branches`` function.
-So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, we would use this::
+So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, we would use this:
+
+.. code-block:: python
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
@@ -397,7 +419,9 @@ So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, 
 Changes for all sorts of branches (with names like ``"branches/1.5.x"``, and ``None`` to indicate the trunk) will be delivered to the Schedulers.
 Each Scheduler is then free to use or ignore each branch as it sees fit.
 
-If you have multiple projects in the same repository your split function can attach a project name to the Change to help the Scheduler filter out unwanted changes::
+If you have multiple projects in the same repository your split function can attach a project name to the Change to help the Scheduler filter out unwanted changes:
+
+.. code-block:: python
 
     from buildbot.plugins import util
     def split_file_projects_branches(path):
@@ -413,7 +437,9 @@ If you have multiple projects in the same repository your split function can att
         return f
 
 Again, this is provided by default.
-To use it you would do this::
+To use it you would do this:
+
+.. code-block:: python
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
@@ -440,7 +466,9 @@ The 1.5.x branch version of this file would have a URL of ``http://divmod.org/sv
 The whole Nevow trunk would be checked out with ``http://divmod.org/svn/Divmod/trunk/Nevow``, while the Quotient trunk would be checked out using ``http://divmod.org/svn/Divmod/trunk/Quotient``.
 
 Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about the Nevow trunk.
-This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlier::
+This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlier:
+
+.. code-block:: python
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
@@ -449,7 +477,7 @@ But what happens when we want to track multiple Nevow branches?
 We have to point our ``repourl=`` high enough to see all those branches, but we also don't want to include Quotient changes (since we're only building Nevow).
 To accomplish this, we must rely upon the ``split_file`` function to help us tell the difference between files that belong to Nevow and those that belong to Quotient, as well as figuring out which branch each one is on.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod",
@@ -471,7 +499,9 @@ The ``my_file_splitter`` function will be called with repository-relative pathna
 :file:`branches/1.5.x/Quotient/setup.py`
     This is also a Quotient file, which should be ignored.
 
-The following definition for :meth:`my_file_splitter` will do the job::
+The following definition for :meth:`my_file_splitter` will do the job:
+
+.. code-block:: python
 
     def my_file_splitter(path):
         pieces = path.split('/')
@@ -489,7 +519,9 @@ The following definition for :meth:`my_file_splitter` will do the job::
             return None # wrong project
         return dict(branch=branch, path='/'.join(pieces))
 
-If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply::
+If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply:
+
+.. code-block:: python
 
     return dict(project=projectname, branch=branch, path='/'.join(pieces))
 
@@ -600,7 +632,9 @@ Each step can affect the results of the build, but in general there is little in
 
 By setting the factory's ``buildClass`` attribute to a different class, you can instantiate a different build class.
 This might be useful, for example, to create a build class that dynamically determines which steps to run.
-The skeleton of such a project would look like::
+The skeleton of such a project would look like:
+
+.. code-block:: python
 
     class DynamicBuild(Build):
         # override some methods
@@ -628,7 +662,9 @@ Note that the value must be returned immediately - Deferreds are not supported.
 
 This can be useful, for example, in scenarios with multiple repositories submitting changes to Buildbot.
 In this case you likely will want to have a dedicated workdir per repository, since otherwise a sourcing step with mode = "update" will fail as a workdir with a working copy of repository A can't be "updated" for changes from a repository B.
-Here is an example how you can achieve workdir-per-repo::
+Here is an example how you can achieve workdir-per-repo:
+
+.. code-block:: python
 
         def workdir(source_stamps):
             return hashlib.md5(source_stamps[0].repository).hexdigest()[:8]
@@ -684,7 +720,9 @@ Writing BuildStep Constructors
 Build steps act as their own factories, so their constructors are a bit more complex than necessary.
 The configuration file instantiates a :class:`~buildbot.process.buildstep.BuildStep` object, but the step configuration must be re-used for multiple builds, so Buildbot needs some way to create more steps.
 
-Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
+Consider the use of a :class:`BuildStep` in :file:`master.cfg`:
+
+.. code-block:: python
 
     f.addStep(MyStep(someopt="stuff", anotheropt=1))
 
@@ -696,7 +734,9 @@ When writing a new step class, then, keep in mind are that you cannot do anythin
 It is customary to call the parent class's constructor with all otherwise-unspecified keyword arguments.
 Keep a ``**kwargs`` argument on the end of your options, and pass that up to the parent class's constructor.
 
-The whole thing looks like this::
+The whole thing looks like this:
+
+.. code-block:: python
 
     class Frobnify(LoggingBuildStep):
         def __init__(self,
@@ -740,7 +780,9 @@ The :bb:step:`ShellCommand` class implements this ``run`` method, and in most ca
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the worker, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
+To spawn a command in the worker, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`:
+
+.. code-block:: python
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
@@ -752,7 +794,9 @@ This class provides a method to handle the myriad constructor arguments related 
 This mixin is the recommended method of implementing custom shell-based steps.
 The older pattern of subclassing ``ShellCommand`` is no longer recommended.
 
-A simple example of a step using the shell mixin is::
+A simple example of a step using the shell mixin is:
+
+.. code-block:: python
 
     class RunCleanup(buildstep.ShellMixin, buildstep.BuildStep):
         def __init__(self, cleanupScript='./cleanup.sh', **kwargs):
@@ -817,7 +861,9 @@ Writing Log Files
 ~~~~~~~~~~~~~~~~~
 
 Most commonly, logfiles come from commands run on the worker.
-Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method::
+Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
@@ -829,12 +875,16 @@ Internally, these are configured by supplying the :class:`~buildbot.process.remo
 The name passed to :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` must match that configured in the command.
 In this case, ``stdio`` is the default.
 
-If the log file was already added by another part of the step, it can be retrieved with :meth:`~buildbot.process.buildstep.BuildStep.getLog`::
+If the log file was already added by another part of the step, it can be retrieved with :meth:`~buildbot.process.buildstep.BuildStep.getLog`:
+
+.. code-block:: python
 
     stdioLog = self.getLog('stdio')
 
 Less frequently, some master-side processing produces a log file.
-If this log file is short and easily stored in memory, this is as simple as a call to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`::
+If this log file is short and easily stored in memory, this is as simple as a call to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
@@ -845,7 +895,9 @@ If this log file is short and easily stored in memory, this is as simple as a ca
 
 Note that the log contents must be a unicode string.
 
-Longer logfiles can be constructed line-by-line using the ``add`` methods of the log file::
+Longer logfiles can be constructed line-by-line using the ``add`` methods of the log file:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
@@ -936,7 +988,9 @@ It has a mode flag named ``finished`` to ignore everything after the ``====`` ma
 Each time it identifies a test has been completed, it increments its counter and delivers the new progress value to the step with ``self.step.setProgress``.
 This helps Buildbot to determine the ETA for the step.
 
-To connect this parser into the :bb:step:`Trial` build step, ``Trial.__init__`` ends with the following clause::
+To connect this parser into the :bb:step:`Trial` build step, ``Trial.__init__`` ends with the following clause:
+
+.. code-block:: python
 
     # this counter will feed Progress along the 'test cases' metric
     counter = TrialTestCaseCounter()
@@ -951,7 +1005,9 @@ Using Properties
 
 In custom :class:`BuildSteps`, you can get and set the build properties with the :meth:`getProperty` and :meth:`setProperty` methods.
 Each takes a string for the name of the property, and returns or accepts an arbitrary JSON-able (lists, dicts, strings, and numbers) object.
-For example::
+For example:
+
+.. code-block:: python
 
     class MakeTarball(ShellCommand):
         def start(self):
@@ -988,7 +1044,9 @@ For example, a step that uploads a build result to an external service might inc
 
 To set one of these links, the :class:`BuildStep` should call the :meth:`~buildbot.process.buildstep.BuildStep.addURL` method with the name of the link and the target URL.
 Multiple URLs can be set.
-For example::
+For example:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
@@ -1008,7 +1066,9 @@ Example output:
     ...
     ... build log without details (those are in the above logs directory) ...
 
-Log observer implementation::
+Log observer implementation:
+
+.. code-block:: python
 
     c = BuildmasterConfig = {}
     c['titleURL'] = 'https://my-buildbot.example.com/'
@@ -1215,7 +1275,9 @@ To run a Framboozle-enabled test suite, you just run the 'framboozler' command f
 The 'framboozler' command emits a bunch of stuff to stdout, but the most interesting bit is that it emits the line "FNURRRGH!" every time it finishes running a test case You'd like to have a test-case counting LogObserver that watches for these lines and counts them, because counting them will help the buildbot more accurately calculate how long the build will take, and this will let you know exactly how long you can sneak out of the office for your hang-gliding lessons without anyone noticing that you're gone.
 
 This will involve writing a new :class:`BuildStep` (probably named "Framboozle") which inherits from :bb:step:`ShellCommand`.
-The :class:`BuildStep` class definition itself will look something like this::
+The :class:`BuildStep` class definition itself will look something like this:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -1246,7 +1308,9 @@ You have a number of different options:
 Inclusion in the :file:`master.cfg` file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like::
+The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like:
+
+.. code-block:: python
 
     f = BuildFactory()
     f.addStep(SVN(repourl="stuff"))
@@ -1278,14 +1342,18 @@ Or add something like this to something like your :file:`~/.bashrc` or :file:`~/
 
     export PYTHONPATH=~/lib/python
 
-Once we've done this, our :file:`master.cfg` can look like::
+Once we've done this, our :file:`master.cfg` can look like:
+
+.. code-block:: python
 
     from framboozle import Framboozle
     f = BuildFactory()
     f.addStep(SVN(repourl="stuff"))
     f.addStep(Framboozle())
 
-or::
+or:
+
+.. code-block:: python
 
     import framboozle
     f = BuildFactory()
@@ -1363,7 +1431,9 @@ Where:
 * ``framboozle:Framboozle`` consists of two parts: ``framboozle`` is the name of the Python module where to look for ``Framboozle`` class, which implements the plugin
 * ``Framboozle`` is the name of the plugin.
 
-  This will allow users of your plugin to use it just like any other Buildbot plugins::
+  This will allow users of your plugin to use it just like any other Buildbot plugins:
+
+  .. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1380,7 +1450,9 @@ Submit the code for inclusion in the Buildbot distribution
 Make a fork of buildbot on http://github.com/buildbot/buildbot or post a patch in a bug at http://trac.buildbot.net/.
 In either case, post a note about your patch to the mailing list, so others can provide feedback and, eventually, commit it.
 
-When it's committed to the master, the usage is the same as in the previous approach::
+When it's committed to the master, the usage is the same as in the previous approach:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 

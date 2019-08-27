@@ -42,7 +42,7 @@ class _basefield {
                 }
                 if (errors.length>0) {
                     $scope.field.errors = `bad autopopulate configuration: ${errors}`;
-                    return $scope.field.haserrors = true;
+                    $scope.field.haserrors = true;
                 }
             });
         }

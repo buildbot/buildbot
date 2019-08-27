@@ -91,6 +91,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.build_status.properties = props
         self.properties = props
         self.master = None
+        self.config_version = 0
 
     def getSourceStamp(self, codebase):
         if codebase in self.sources:

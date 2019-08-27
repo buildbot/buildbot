@@ -154,6 +154,7 @@ class AbstractWorker(service.BuildbotService):
             return None
         return self.master.botmaster
 
+    @defer.inlineCallbacks
     def updateLocks(self):
         """Convert the L{LockAccess} objects in C{self.locks} into real lock
         objects, while also maintaining the subscriptions to lock releases."""
@@ -162,8 +163,8 @@ class AbstractWorker(service.BuildbotService):
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = [(self.botmaster.getLockFromLockAccess(a), a)
-                 for a in self.access]
+        locks = yield self.botmaster.getLockFromLockAccesses(self.access, self.config_version)
+
         self.locks = [(l.getLockForWorker(self.workername), la)
                       for l, la in locks]
         self.lock_subscriptions = [l.subscribeToReleases(self._lockReleased)
@@ -236,6 +237,9 @@ class AbstractWorker(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
+        # tracks config version for locks
+        self.config_version = self.master.config_version
+
         self.updateLocks()
         self.workerid = yield self.master.data.updates.findWorkerId(
             self.name)
@@ -312,6 +316,8 @@ class AbstractWorker(service.BuildbotService):
             self.registration = yield self.master.workers.register(self)
         yield self.registration.update(self, self.master.config)
 
+        # tracks config version for locks
+        self.config_version = self.master.config_version
         self.updateLocks()
 
     @defer.inlineCallbacks
@@ -669,8 +675,9 @@ class AbstractWorker(service.BuildbotService):
 
 class Worker(AbstractWorker):
 
+    @defer.inlineCallbacks
     def detached(self):
-        super().detached()
+        yield super().detached()
         self.botmaster.workerLost(self)
         self.startMissingTimer()
 

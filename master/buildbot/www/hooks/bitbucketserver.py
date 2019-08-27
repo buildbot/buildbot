@@ -68,7 +68,16 @@ class BitbucketServerEventHandler:
 
         return payload
 
+    def handle_repo_refs_changed(self, payload):
+        return self._handle_repo_refs_changed_common(payload)
+
     def handle_repo_push(self, payload):
+        # repo:push works exactly like repo:refs_changed, but is no longer documented (not even
+        # in the historical documentation of old versions of Bitbucket Server). The old code path
+        # has been preserved for backwards compatibility.
+        return self._handle_repo_refs_changed_common(payload)
+
+    def _handle_repo_refs_changed_common(self, payload):
         changes = []
         project = payload['repository']['project']['name']
         repo_url = payload['repository']['links']['self'][0]['href']

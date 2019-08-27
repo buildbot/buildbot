@@ -189,6 +189,7 @@ class FakeMaster(service.MasterService):
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()
         self.next_objectid = 0
+        self.config_version = 0
 
         def getObjectId(sched_name, class_name):
             k = (sched_name, class_name)

@@ -15,6 +15,7 @@ module.exports = function() {
             scripts: './src/module/main.module.js',
         },
         libraryName: pkg.name,
+        pluginName: pkg.plugin_name,
         dirname: __dirname,
         isTest: isTest,
         isProd: isProd,

@@ -2,8 +2,7 @@ class Changes {
     constructor($log, $scope, dataService, bbSettingsService,
         $location, $rootScope) {
         $scope.settings = bbSettingsService.getSettingsGroup("Changes");
-        $scope.$watch('settings', () => bbSettingsService.save()
-        , true);
+        $scope.$watch('settings', () => { bbSettingsService.save(); }, true);
         const changesFetchLimit = $scope.settings.changesFetchLimit.value;
 
         const data = dataService.open().closeOnDestroy($scope);

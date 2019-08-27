@@ -13,17 +13,6 @@ import 'guanlecoja-ui';
 import 'buildbot-data-js';
 import _ from 'lodash';
 
-// Register new module
-class WaterfallView {
-    constructor() { return [
-        'ui.router',
-        'ngAnimate',
-        'guanlecoja.ui',
-        'bbData'
-    ]; }
-}
-
-
 var WaterfallController = (function() {
     let self = undefined;
     let Cls = class Waterfall {
@@ -118,6 +107,7 @@ var WaterfallController = (function() {
             this.$scope.builders = (this.builders = this.all_builders);
             this.buildLimit = this.c.limit;
             this.$scope.builds = (this.builds = this.dataAccessor.getBuilds({limit: this.buildLimit, order: '-started_at'}));
+            this.$scope.masters = this.dataAccessor.getMasters();
 
             d3Service.get().then(d3 => {
 
@@ -131,6 +121,15 @@ var WaterfallController = (function() {
                     this.$scope.builders = this.all_builders;
                 } else {
                     this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
+                }
+                if (this.s.show_old_builders.value) {
+                    const ret = [];
+                    for (let builder of this.$scope.builders) {
+                        if (this.hasActiveMaster(builder)) {
+                            ret.push(builder);
+                        }
+                    }
+                    this.$scope.builders = this.builders = ret;
                 }
                 // Add builder status to builders
                 this.dataProcessorService.addStatus(this.builders);
@@ -151,7 +150,7 @@ var WaterfallController = (function() {
                 this.$scope.$watch(
                     () => this.waterfall.style('width')
                 ,
-                    (n, o) => { if (n !== o) { return this.render(); } }
+                    (n, o) => { if (n !== o) { this.render(); } }
                 , true
                 );
 
@@ -188,7 +187,7 @@ var WaterfallController = (function() {
                     }
                 };
                 window.bind('keypress', keyHandler);
-                return this.$scope.$on('$destroy', function() {
+                this.$scope.$on('$destroy', function() {
                     window.unbind('keypress', keyHandler);
                     return window.unbind('resize', resizeHandler);
                 });
@@ -199,15 +198,32 @@ var WaterfallController = (function() {
             });
         }
 
+        hasActiveMaster(builder) {
+            let active = false;
+            if ((builder.masterids == null)) {
+                return false;
+            }
+            for (let mid of Array.from(builder.masterids)) {
+                const m = this.$scope.masters.get(mid);
+                if ((m != null) && m.active) {
+                    active = true;
+                }
+            }
+            if (builder.tags.includes('_virtual_')) {
+                active = true;
+            }
+            return active;
+        }
+
 
         zoomPlus() {
             this.incrementScaleFactor();
-            return this.render();
+            this.render();
         }
 
         zoomMinus() {
             this.decrementScaleFactor();
-            return this.render();
+            this.render();
         }
         /*
          * Increment and decrement the scale factor
@@ -235,12 +251,12 @@ var WaterfallController = (function() {
             }
             this.buildLimit = this.builds.length + this.c.limit;
             const builds = this.dataAccessor.getBuilds({limit: this.buildLimit, order: '-started_at'});
-            return builds.onChange = builds => {
+            builds.onChange = builds => {
                 this.builds.close();  // force close the old collection's auto-update
                 this.builds = builds;
                 // renders the new data
                 builds.onChange = this.renderNewData;
-                return builds.onChange();
+                builds.onChange();
             };
         }
 
@@ -585,7 +601,7 @@ var WaterfallController = (function() {
                 .attr('points', points());
 
             // Load steps
-            return build.loadSteps().onChange = function(buildsteps) {
+            build.loadSteps().onChange = function(buildsteps) {
                 // Resize the tooltip
                 height = (buildsteps.length * 15) + 7;
                 tooltip.transition().duration(100)
@@ -597,7 +613,7 @@ var WaterfallController = (function() {
                     const d = new Date((step.complete_at - step.started_at) * 1000);
                     if (d > 0) { return `(${d / 1000}s)`; } else { return ''; }
                 };
-                return tooltip.selectAll('.buildstep')
+                tooltip.selectAll('.buildstep')
                     .data(buildsteps)
                     .enter().append('g')
                     .attr('class', 'buildstep')
@@ -706,6 +722,15 @@ var WaterfallController = (function() {
             } else {
                 this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
             }
+            if (this.s.show_old_builders.value) {
+                const ret = [];
+                for (let builder of this.$scope.builders) {
+                    if (this.hasActiveMaster(builder)) {
+                        ret.push(builder);
+                    }
+                }
+                this.$scope.builders = this.builders = ret;
+            }
             var all_tags = [];
             for (let builder of this.builders) {
                 for (let tag of builder.tags) {
@@ -749,16 +774,23 @@ var WaterfallController = (function() {
             // Draw the waterfall
             this.drawBuilds();
             this.drawXAxis();
-            return this.drawYAxis();
+            this.drawYAxis();
         }
     };
     Cls.initClass();
     return Cls;
 })();
 
-
-angular.module('waterfall_view', new WaterfallView())
-.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log', '$uibModal', 'dataService', 'd3Service', 'dataProcessorService', 'scaleService', 'bbSettingsService', 'glTopbarContextualActionsService', '$location', '$rootScope',
+angular.module('waterfall_view', [
+    'ui.router',
+    'ngAnimate',
+    'guanlecoja.ui',
+    'bbData',
+])
+.controller('waterfallController', ['$rootElement', '$scope', '$q', '$timeout', '$window', '$log',
+                                    '$uibModal', 'dataService', 'd3Service', 'dataProcessorService',
+                                    'scaleService', 'bbSettingsService',
+                                    'glTopbarContextualActionsService', '$location', '$rootScope',
                                     WaterfallController])
 .config(['$locationProvider', function($locationProvider) {
     $locationProvider.hashPrefix('');

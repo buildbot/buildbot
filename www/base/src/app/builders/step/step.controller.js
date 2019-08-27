@@ -12,10 +12,10 @@ class StepController {
         data.getBuilders(builderid).then(function(builders) {
             let builder;
             $scope.builder = (builder = builders[0]);
-            return builder.getBuilds(buildnumber).then(function(builds) {
+            builder.getBuilds(buildnumber).then(function(builds) {
                 let build;
                 $scope.build = (build = builds[0]);
-                return build.getSteps(stepnumber).then(function(steps) {
+                build.getSteps(stepnumber).then(function(steps) {
                     const step = steps[0];
                     faviconService.setFavIcon(step);
                     glBreadcrumbService.setBreadcrumb([{
@@ -36,7 +36,7 @@ class StepController {
                     }
                     ]);
                     step.loadLogs();
-                    return $scope.step = publicFieldsFilter(step);
+                    $scope.step = publicFieldsFilter(step);
                 });
             });
         });

@@ -21,7 +21,6 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
-from buildbot import locks
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.process.properties import Properties
@@ -279,8 +278,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     def test_canStartBuild_cant_acquire_locks_but_no_locks(self):
         yield self.makeBuilder()
 
-        self.bldr.botmaster.getLockFromLockAccess = \
-            mock.Mock(return_value='dummy')
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
 
         wfb = mock.Mock()
         wfb.worker = FakeWorker('worker')
@@ -295,12 +293,7 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     def test_canStartBuild_with_locks(self):
         yield self.makeBuilder()
 
-        self.bldr.botmaster.getLockFromLockAccess = \
-            mock.Mock(return_value='dummy')
-
-        lock1 = mock.Mock(spec=locks.MasterLock)
-        lock1.name = "masterlock"
-        self.bldr.config.locks = [lock1]
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[mock.Mock()])
 
         wfb = mock.Mock()
         wfb.worker = FakeWorker('worker')
@@ -315,26 +308,14 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     def test_canStartBuild_with_renderable_locks(self):
         yield self.makeBuilder()
 
-        self.bldr.botmaster.getLockFromLockAccess = \
-            mock.Mock(return_value='dummy')
-
-        self.bldr.botmaster.getLockFromLockAccess = \
-            mock.Mock(return_value='dummy')
-
-        lock1 = mock.Mock(spec=locks.MasterLock)
-        lock1.name = "masterlock"
-
-        lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "workerlock"
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[mock.Mock()])
 
         renderedLocks = [False]
 
         @renderer
         def rendered_locks(props):
             renderedLocks[0] = True
-            access1 = locks.LockAccess(lock1, 'counting')
-            access2 = locks.LockAccess(lock2, 'exclusive')
-            return [access1, access2]
+            return [mock.Mock()]
 
         self.bldr.config.locks = rendered_locks
 

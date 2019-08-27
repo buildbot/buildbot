@@ -42,24 +42,24 @@ class _glPageWithSidebar {
 
     toggleSidebarPinned() {
         this.sidebarPinned=!this.sidebarPinned;
-        return this.$window.localStorage.sidebarPinned = this.sidebarPinned.toString();
+        this.$window.localStorage.sidebarPinned = this.sidebarPinned.toString();
     }
 
     toggleGroup(group) {
-        if (this.activeGroup!==group) {
-            return this.activeGroup=group;
+        if (this.activeGroup !== group) {
+            this.activeGroup = group;
         } else {
-            return this.activeGroup=null;
+            this.activeGroup = null;
         }
     }
 
     enterSidebar() {
-        return this.inSidebar = true;
+        this.inSidebar = true;
     }
 
     hideSidebar() {
         this.sidebarActive = false;
-        return this.inSidebar = false;
+        this.inSidebar = false;
     }
 
     leaveSidebar() {
@@ -68,10 +68,10 @@ class _glPageWithSidebar {
             this.$timeout.cancel(this.timeout);
             this.timeout = undefined;
         }
-        return this.timeout = this.$timeout((() => {
+        this.timeout = this.$timeout((() => {
             if (!this.inSidebar && !this.sidebarPinned) {
                 this.sidebarActive = false;
-                return this.activeGroup = null;
+                this.activeGroup = null;
             }
         }
             ), 500);

@@ -24,11 +24,11 @@ describe('topbar', function() {
     it('should load', function() {
         expect(elmBody).toBeDefined();
         // if there is an ul, the sidebar has been created
-        return expect(elmBody.find("ul").length).toBeGreaterThan(0);
+        expect(elmBody.find("ul").length).toBeGreaterThan(0);
     });
 
     // simple test to make sure the directive loads
-    return it('should update breadcrumb upon messages', inject(function($location){
+    it('should update breadcrumb upon messages', inject(function($location){
         $location.hash = () => "bar/";
         scope.$broadcast("$stateChangeStart",
             {name: "foo"});
@@ -39,7 +39,7 @@ describe('topbar', function() {
             sref: "foo"
         }
         ]);
-        return expect(scope.breadcrumb).toEqual([ { caption : 'bar', sref : 'foo' } ]);
+        expect(scope.breadcrumb).toEqual([ { caption : 'bar', sref : 'foo' } ]);
     })
     );
 });

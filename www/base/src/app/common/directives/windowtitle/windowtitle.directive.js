@@ -12,14 +12,14 @@ class WindowTitle {
                     faviconService.setFavIcon();
                     if (toState.data && toState.data.pageTitle) {
                         if (typeof(toState.data.pageTitle) === "function") {
-                            return $window.document.title = toState.data.pageTitle($stateParams);
+                            $window.document.title = toState.data.pageTitle($stateParams);
                         } else {
-                            return $window.document.title = toState.data.pageTitle;
+                            $window.document.title = toState.data.pageTitle;
                         }
                     } else if (toState.data && toState.data.caption) {
-                        return $window.document.title = `Buildbot: ${toState.data.caption}`;
+                        $window.document.title = `Buildbot: ${toState.data.caption}`;
                     } else {
-                        return $window.document.title = 'Buildbot';
+                        $window.document.title = 'Buildbot';
                     }
                 })
             ;
