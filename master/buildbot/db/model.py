@@ -370,7 +370,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('author', sa.String(255), nullable=False),
 
         # committer's name
-        sa.Column('committer', sa.String(255), nullable=False),
+        sa.Column('committer', sa.String(255), nullable=True),
 
         # commit comment
         sa.Column('comments', sa.Text, nullable=False),
