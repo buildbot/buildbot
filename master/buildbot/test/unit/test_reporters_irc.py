@@ -29,11 +29,11 @@ from buildbot.util import service
 
 class FakeContact(service.AsyncService):
 
-    def __init__(self, bot, user=None, channel=None):
+    def __init__(self, bot, user, channel=None):
         super().__init__()
         self.bot = bot
         self.user = user
-        self.channel = channel
+        self.channel = mock.Mock()
         self.messages = []
         self.actions = []
 
@@ -49,7 +49,9 @@ class TestIrcStatusBot(unittest.TestCase):
     def makeBot(self, *args, **kwargs):
         if not args:
             args = ('nick', 'pass', ['#ch'], [], False)
-        return irc.IrcStatusBot(*args, **kwargs)
+        bot = irc.IrcStatusBot(*args, **kwargs)
+        bot.parent = mock.Mock()
+        return bot
 
     def test_groupDescribe(self):
         b = self.makeBot()
@@ -64,7 +66,7 @@ class TestIrcStatusBot(unittest.TestCase):
         b.msg = lambda d, m: evts.append(('n', d, m))
 
         evts = []
-        b.groupChat('#chan', 'hi')
+        b.groupSend('#chan', 'hi')
         self.assertEqual(evts, [('n', '#chan', 'hi')])
 
     def test_groupChat_notice(self):
@@ -72,23 +74,23 @@ class TestIrcStatusBot(unittest.TestCase):
         b.notice = lambda d, m: evts.append(('n', d, m))
 
         evts = []
-        b.groupChat('#chan', 'hi')
+        b.groupSend('#chan', 'hi')
         self.assertEqual(evts, [('n', '#chan', 'hi')])
 
-    def test_chat(self):
+    def test_msg(self):
         b = self.makeBot()
         b.msg = lambda d, m: evts.append(('m', d, m))
 
         evts = []
-        b.chat('nick', 'hi')
+        b.msg('nick', 'hi')
         self.assertEqual(evts, [('m', 'nick', 'hi')])
 
     def test_getContact(self):
         b = self.makeBot()
 
-        c1 = b.getContact(channel='c1')
-        c2 = b.getContact(channel='c2')
-        c1b = b.getContact(channel='c1')
+        c1 = b.getContact(user='u1', channel='c1')
+        c2 = b.getContact(user='u1', channel='c2')
+        c1b = b.getContact(user='u1', channel='c1')
 
         self.assertIdentical(c1, c1b)
         self.assertIsInstance(c2, words.Contact)
@@ -188,8 +190,8 @@ class TestIrcStatusBot(unittest.TestCase):
         b = self.makeBot()
         b.joined('#ch1')
         b.joined('#ch2')
-        self.assertEqual(sorted(b.contacts.keys()),
-                         sorted([('#ch1', None), ('#ch2', None)]))
+        self.assertEqual(sorted(b.channels.keys()),
+                         sorted(['#ch1', '#ch2']))
 
     def test_userLeft_or_userKicked(self):
         b = self.makeBot()

@@ -46,31 +46,16 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         # I think the 'bot' part of this is actually going away ...
         # TO REMOVE:
 
-        self.bot = mock.Mock(name='IRCStatusBot-instance')
-        self.bot.commandPrefix = ''
-        self.bot.commandSuffix = None
+        self.bot = words.StatusBot(notify_events = {'success': 1, 'failure': 1})
+        self.bot.channelClass = irc.IRCChannel
+        self.bot.contactClass = irc.IRCContact
         self.bot.nickname = 'nick'
-        self.bot.authz  = {}
-        self.bot.notify_events = {'success': 1, 'failure': 1}
-        self.bot.useRevisions = False
-        self.bot.useColors = False
-        self.bot.allowShutdown = False
-        self.bot.showBlameList = False
-        self.bot.reported_builds = {}
 
         # fake out subscription/unsubscription
         self.subscribed = False
 
-        def subscribe(contact):
-            self.subscribed = True
-        self.bot.status.subscribe = subscribe
-
-        def unsubscribe(contact):
-            self.subscribed = False
-        self.bot.status.unsubscribe = unsubscribe
-
         # fake out clean shutdown
-        self.bot.master = self.master
+        self.bot.parent = self
         self.bot.master.botmaster = mock.Mock(
             name='IRCStatusBot-instance.master.botmaster')
         self.bot.master.botmaster.shuttingDown = False
@@ -83,9 +68,9 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
             self.bot.master.botmaster.shuttingDown = False
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = irc.IRCContact(self.bot, user='me', channel='#buildbot',
-                                     _reactor=self.reactor)
-        self.contact.setServiceParent(self.master)
+        self.contact = irc.IRCContact(self.bot, user='me', channel='#buildbot')
+        self.bot.reactor = self.reactor
+        self.contact.channel.setServiceParent(self.master)
         return self.master.startService()
 
     def patch_send(self):
@@ -96,7 +81,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
                 msg = msg,
             for m in msg:
                 self.sent.append(m)
-        self.contact.send = send
+        self.contact.channel.send = send
 
     def patch_act(self):
         self.actions = []
@@ -148,7 +133,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_mute(self):
         yield self.do_test_command('mute')
-        self.assertTrue(self.contact.muted)
+        self.assertTrue(self.contact.channel.muted)
 
     @defer.inlineCallbacks
     def test_command_notify0(self):
@@ -156,30 +141,30 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         yield self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
         yield self.do_test_command('notify', args="on")
         self.assertEqual(
-            self.sent, ["The following events are being notified: finished, started"])
+            self.sent, ["The following events are being notified: finished, started."])
         yield self.do_test_command('notify', args="off")
         self.assertEqual(
-            self.sent, ['The following events are being notified: '])
+            self.sent, ['No events are being notified.'])
         yield self.do_test_command('notify', args="on started")
         self.assertEqual(
-            self.sent, ["The following events are being notified: started"])
+            self.sent, ["The following events are being notified: started."])
         yield self.do_test_command('notify', args="off started")
         self.assertEqual(
-            self.sent, ['The following events are being notified: '])
+            self.sent, ['No events are being notified.'])
         yield self.assertFailure(
             self.do_test_command('notify', args="off finished"),
             KeyError)
         yield self.do_test_command('notify', args="list")
         self.assertEqual(
-            self.sent, ['The following events are being notified: '])
+            self.sent, ['No events are being notified.'])
 
     @defer.inlineCallbacks
     def notify_build_test(self, notify_args):
         self.bot.tags = None
         yield self.test_command_watch_builder0()
         yield self.do_test_command('notify', args=notify_args)
-        buildStarted = self.contact.subscribed[0].callback
-        buildFinished = self.contact.subscribed[1].callback
+        buildStarted = self.contact.channel.subscribed[0].callback
+        buildFinished = self.contact.channel.subscribed[1].callback
         for buildid in (13, 14, 16):
             self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
             build = yield self.master.db.builds.getBuild(buildid)
@@ -197,14 +182,14 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_unmute(self):
-        self.contact.muted = True
+        self.contact.channel.muted = True
         yield self.do_test_command('unmute')
-        self.assertFalse(self.contact.muted)
+        self.assertFalse(self.contact.channel.muted)
 
     @defer.inlineCallbacks
     def test_command_unmute_not_muted(self):
         yield self.do_test_command('unmute')
-        self.assertFalse(self.contact.muted)
+        self.assertFalse(self.contact.channel.muted)
         self.assertIn("hadn't told me to be quiet", self.sent[0])
 
     @defer.inlineCallbacks
@@ -604,11 +589,11 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
 
         def groupChat(dest, msg):
             events.append((dest, msg))
-        self.contact.bot.groupChat = groupChat
+        self.contact.bot.groupSend = groupChat
 
         self.contact.send("unmuted")
         self.contact.send("unmuted, unicode \N{SNOWMAN}")
-        self.contact.muted = True
+        self.contact.channel.muted = True
         self.contact.send("muted")
 
         self.assertEqual(events, [
@@ -625,7 +610,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
 
         self.contact.act("unmuted")
         self.contact.act("unmuted, unicode \N{SNOWMAN}")
-        self.contact.muted = True
+        self.contact.channel.muted = True
         self.contact.act("muted")
 
         self.assertEqual(events, [
@@ -719,10 +704,10 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         build = yield self.master.db.builds.getBuild(13)
 
         self.bot.tags = None
-        self.contact.notify_for = lambda _: True
+        self.contact.channel.notify_for = lambda _: True
         self.contact.useRevisions = False
 
-        self.contact.buildStarted(build)
+        self.contact.channel.buildStarted(build)
         self.assertEqual(
             self.sent.pop(),
             "Build [#3](http://localhost:8080/#builders/23/builds/3) of `builder1` started.")

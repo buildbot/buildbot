@@ -114,7 +114,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         tboid = yield master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramBotResource')
         yield self.insertTestData([
             fakedb.ObjectState(objectid=tboid, name='notify_contacts',
-                               value_json='[[123456789, 123456789, ["started", "finished"]]]'),
+                               value_json='[[123456789,  ["started", "finished"]]]'),
         ])
 
         # create a telegram bot service
@@ -171,7 +171,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
     @defer.inlineCallbacks
     def testState(self):
         tb = self.master.config.services['TelegramBot']
-        yield tb.bot.loadNotifyContacts()
+        yield tb.bot.loadNotifyEvents()
         c = tb.bot.getContact(123456789, 123456789)
-        self.assertEquals(c.notify_events, {'started', 'finished'})
+        self.assertEquals(c.channel.notify_events, {'started', 'finished'})
 

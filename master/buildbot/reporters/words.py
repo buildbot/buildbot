@@ -107,8 +107,259 @@ def dangerousCommand(method):
     return method
 
 
-class Contact(service.AsyncService):
+def convertTime(seconds):
+    if seconds <= 1:
+        return "a moment"
+    if seconds < 20:
+        return "{:d} seconds".format(seconds)
+    if seconds < 55:
+        return "{:d} seconds".format(round(seconds / 10) * 10)
+    minutes = round(seconds / 60)
+    if minutes == 1:
+        return "a minute"
+    if minutes < 20:
+        return "{:d} minutes".format(minutes)
+    if minutes < 55:
+        return "{:d} minutes".format(round(minutes / 10) * 10)
+    hours = round(minutes / 60)
+    if hours == 1:
+        return "an hour"
+    if hours < 24:
+        return "{:d} hours".format(hours)
+    days = (hours+6) // 24
+    if days == 1:
+        return "a day"
+    if days < 30:
+        return "{:d} days".format(days)
+    months = int((days+10) / 30.5)
+    if months == 1:
+        return "a month"
+    if months < 12:
+        return "{} months".format(months)
+    years = round(days / 365.25)
+    if years == 1:
+        return "a year"
+    return "{} years".format(years)
 
+
+class Channel(service.AsyncService):
+    """This class holds what should be shared between users on a single channel"""
+
+    def __init__(self, bot, channel):
+        self.bot = bot
+        self.id = channel
+        self.notify_events = set()
+        self.subscribed = []
+        self.build_subscriptions = []
+        self.reported_builds = []  # tuples (when, buildername, buildnum)
+        self.useRevisions = bot.useRevisions
+
+    def send(self, message):
+        if isinstance(message, (list, tuple, types.GeneratorType)):
+            message = "\n".join(message)
+        return self.bot.send_message(self.id, message)
+
+    def stopService(self):
+        self.remove_all_notification_events()
+
+    def validate_notification_event(self, event):
+        if not re.compile("^(started|finished|success|warnings|failure|exception|"
+                          "problem|recovery|worse|better|"
+                          # this is deprecated list 
+                          "(success|warnings|failure|exception)To"
+                          "(Success|Warnings|Failure|Exception))$").match(event):
+            raise UsageError("Try '"+self.bot.commandPrefix+"notify on|off _EVENT_'.")
+
+    def list_notified_events(self):
+        if self.notify_events:
+            self.send("The following events are being notified: {}."
+                      .format(", ".join(sorted(self.notify_events))))
+        else:
+            self.send("No events are being notified.")
+
+    def notify_for(self, *events):
+        for event in events:
+            if event in self.notify_events:
+                return True
+        return False
+
+    @defer.inlineCallbacks
+    def subscribe_to_build_events(self):
+        startConsuming = self.master.mq.startConsuming
+
+        def buildStarted(key, msg):
+            return self.buildStarted(msg)
+
+        def buildFinished(key, msg):
+            return self.buildFinished(msg)
+
+        for e, f in (("new", buildStarted),             # BuilderStarted
+                     ("finished", buildFinished)):      # BuilderFinished
+            handle = yield startConsuming(f, ('builders', None, 'builds', None, e))
+            self.subscribed.append(handle)
+
+    def unsubscribe_from_build_events(self):
+        # Cancel all the subscriptions we have
+        old_list, self.subscribed = self.subscribed, []
+        for handle in old_list:
+            handle.stopConsuming()
+
+    def add_notification_events(self, events):
+        for event in events:
+            self.validate_notification_event(event)
+            self.notify_events.add(event)
+
+        if not self.subscribed:
+            self.subscribe_to_build_events()
+
+    def remove_notification_events(self, events):
+        for event in events:
+            self.validate_notification_event(event)
+            self.notify_events.remove(event)
+
+            if not self.notify_events:
+                self.unsubscribe_from_build_events()
+
+    def remove_all_notification_events(self):
+        self.notify_events = set()
+
+        if self.subscribed:
+            self.unsubscribe_from_build_events()
+
+    def shouldReportBuild(self, builder, buildnum):
+        """Returns True if this build should be reported for this contact
+        (eliminating duplicates), and also records the report for later"""
+
+        for w, b, n in self.reported_builds:
+            if b == builder and n == buildnum:
+                return False
+        self.reported_builds.append([util.now(), builder, buildnum])
+
+        # clean the reported builds
+        horizon = util.now() - 60
+        while self.reported_builds and self.reported_builds[0][0] < horizon:
+            self.reported_builds.pop(0)
+
+        # and return True, since this is a new one
+        return True
+
+    @defer.inlineCallbacks
+    def buildStarted(self, build):
+        builder = yield self.bot.getBuilder(builderid=build['builderid'])
+        builderName = builder['name']
+        buildNumber = build['number']
+        log.msg('[Contact] Builder {} started'.format(builder['name'], ))
+
+        # only notify about builders we are interested in
+        if (self.bot.tags is not None and
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
+            log.msg('Not notifying for a build that does not match any tags')
+            return
+
+        if not self.notify_for('started'):
+            return
+
+        if self.useRevisions:
+            revisions = yield self.getRevisionsForBuild(build)
+            r = "Build containing revision(s) {} on {} started" \
+                .format(','.join(revisions), builderName)
+        else:
+            # Abbreviate long lists of changes to simply two
+            # revisions, and the number of additional changes.
+            # TODO: We can't get the list of the changes related to a build in
+            # nine
+            changes_str = ""
+
+            url = utils.getURLForBuild(self.master, builder['builderid'], build['number'])
+            r = "Build [#{:d}]({}) of `{}` started".format(buildNumber, url, builderName)
+            if changes_str:
+                r += " ({})".format(changes_str)
+
+        self.send(r+'.')
+
+    @defer.inlineCallbacks
+    def buildFinished(self, build, watched=False):
+        builder = yield self.bot.getBuilder(builderid=build['builderid'])
+        builderName = builder['name']
+        buildNumber = build['number']
+
+        # only notify about builders we are interested in
+        if (self.bot.tags is not None and
+                not self.bot.builderMatchesAnyTag(builder.get('tags', []))):
+            log.msg('Not notifying for a build that does not match any tags')
+            return
+
+        if not (watched or (yield self.notify_for_finished(build))):
+            return
+
+        if not self.shouldReportBuild(builderName, buildNumber):
+            return
+
+        url = utils.getURLForBuild(self.master, builder['builderid'], buildNumber)
+
+        if self.useRevisions:
+            revisions = yield self.getRevisionsForBuild(build)
+            r = "Build on `{}` containing revision(s) {} {}" \
+                .format(builderName, ','.join(revisions), self.bot.format_build_status(build))
+        else:
+            r = "Build [#{:d}]({}) of `{}` {}" \
+                .format(buildNumber, url, builderName, self.bot.format_build_status(build))
+
+        s = build.get('status_string')
+        if build['results'] != SUCCESS and s is not None:
+            r += ": " + s
+        else:
+            r += "."
+
+        # FIXME: where do we get the list of changes for a build ?
+        # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
+        #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+        self.send(r)
+
+    @defer.inlineCallbacks
+    def notify_for_finished(self, build):
+        if self.notify_for('finished'):
+            return True
+
+        result = build['results']
+        result_name = statusToString(result)
+        if self.notify_for(result_name):
+            return True
+
+        if result in (SUCCESS, WARNINGS, FAILURE, EXCEPTION):
+            prev_build = yield self.master.data.get(
+                ('builders', build['builderid'], 'builds', build['number'] - 1))
+            if prev_build:
+                prev_result = prev_build['results']
+
+                if prev_result in (SUCCESS, WARNINGS, FAILURE, EXCEPTION):
+                    if self.notify_for('better') and result < prev_result:
+                        return True
+                    if self.notify_for('worse') and result > prev_result:
+                        return True
+
+                    if self.notify_for('problem') \
+                            and prev_result in (SUCCESS, WARNINGS) \
+                            and result in (FAILURE, EXCEPTION):
+                        return True
+
+                    if self.notify_for('recovery') \
+                            and prev_result in (FAILURE, EXCEPTION) \
+                            and result in (SUCCESS, WARNINGS):
+                        return True
+
+                    # DEPRECATED
+                    required_notification_control_string = ''.join(
+                        (statusToString(prev_result).lower(),
+                         'To',
+                         result_name.capitalize()))
+                    if (self.notify_for(required_notification_control_string)):
+                        return True
+
+        return False
+
+
+class Contact:
     """I hold the state for a single user's interaction with the buildbot.
 
     There will be one instance of me for each user who interacts personally
@@ -116,32 +367,28 @@ class Contact(service.AsyncService):
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, bot, user=None, channel=None, _reactor=reactor):
+    def __init__(self, bot, user, channel=None):
         """
         :param StatusBot bot: StatusBot this Contact belongs to
         :param user: User ID representing this contact
         :param channel: Channel this contact is on (None is used for privmsgs)
         """
-        assert user or channel, "At least one of user or channel must be set"
-
-        if user and channel:
-            self.name = "Contact(channel={}, name={})".format(channel, user)
-        elif channel:
-            self.name = "Contact(channel={})".format(channel, )
-        elif user:
-            self.name = "Contact(name={})".format(user, )
+        if channel is None:
+            channel = user
+        self.name = "Contact({}, {})".format(user, channel)
         super().__init__()
-        self.bot = bot
-        self.notify_events = set()
-        self.subscribed = []
-        self.build_subscriptions = []
-        self.useRevisions = bot.useRevisions
 
         self.user = user
-        self.channel = channel
+        self.channel = bot.getChannel(channel)
         self._next_HELLO = 'yes?'
 
-        self.reactor = _reactor
+    @property
+    def bot(self):
+        return self.channel.bot
+
+    @property
+    def master(self):
+        return self.channel.bot.master
 
     @staticmethod
     def overrideCommand(meth):
@@ -156,26 +403,13 @@ class Contact(service.AsyncService):
             except AttributeError: pass
         return meth
 
-    results_descriptions = {
-        SUCCESS: "completed successfully",
-        WARNINGS: "completed with warnings",
-        FAILURE: "failed",
-        EXCEPTION: "stopped with exception",
-        RETRY: "has been retried",
-        CANCELLED: "was cancelled",
-    }
-
-    def format_build_status(self, build, short=False):
-        """ Optionally add color to the message """
-        return self.results_descriptions[build['results']]
-
     @property
     def userid(self):
         return self.user
 
     @property
     def channelid(self):
-        return self.channel if self.channel is not None else self.user
+        return self.channel.channel if self.channel is not None else self.user
 
     # Silliness
 
@@ -191,9 +425,7 @@ class Contact(service.AsyncService):
     # Communication with the user
 
     def send(self, message):
-        if isinstance(message, (list, tuple, types.GeneratorType)):
-            message = "\n".join(message)
-        return self.bot.send_message(self.channel, message)
+        self.channel.send(message)
 
     def access_denied(self, *args):
         self.send("Thou shall not pass, {}!!!".format(self.user))
@@ -265,121 +497,12 @@ class Contact(service.AsyncService):
 
         return defer.succeed(None)
 
-    def startService(self):
-        if self.channel and self.user is None:
-            self.add_notification_events(self.bot.notify_events)
-        return super().startService()
-
-    def stopService(self):
-        self.remove_all_notification_events()
-
     def doSilly(self, message):
         response = self.silly[message]
         when = 0.5
         for r in response:
-            self.reactor.callLater(when, self.send, r)
+            self.bot.reactor.callLater(when, self.send, r)
             when += 2.5
-
-    def builderMatchesAnyTag(self, builder_tags):
-        return any(tag for tag in builder_tags if tag in self.bot.tags)
-
-    @defer.inlineCallbacks
-    def getBuilder(self, buildername=None, builderid=None):
-        if buildername:
-            bdicts = yield self.master.data.get(('builders',),
-                                                filters=[resultspec.Filter('name', 'eq', [buildername])])
-            if bdicts:
-                # Could there be more than one? One is enough.
-                bdict = bdicts[0]
-            else:
-                bdict = None
-        elif builderid:
-            bdict = yield self.master.data.get(('builders', builderid))
-        else:
-            raise UsageError("no builder specified")
-
-        if bdict is None:
-            if buildername:
-                which = buildername
-            else:
-                which = 'number {}'.format(builderid)
-            raise UsageError("no such builder '{}'".format(which))
-        return bdict
-
-    def getAllBuilders(self):
-        d = self.master.data.get(('builders',))
-        return d
-
-    @defer.inlineCallbacks
-    def getOnlineBuilders(self):
-        all_workers = yield self.master.data.get(('workers',))
-        online_builderids = set()
-        for worker in all_workers:
-            connected = worker['connected_to']
-            if not connected:
-                continue
-            builders = worker['configured_on']
-            builderids = [builder['builderid'] for builder in builders]
-            online_builderids.update(builderids)
-        return list(online_builderids)
-
-    @defer.inlineCallbacks
-    def getRevisionsForBuild(self, bdict):
-        # FIXME: Need to get revision info! (build -> buildreq -> buildset ->
-        # sourcestamps)
-        return ["TODO"]
-
-    def convertTime(self, seconds):
-        if seconds <= 1:
-            return "a moment"
-        if seconds < 20:
-            return "{:d} seconds".format(seconds)
-        if seconds < 55:
-            return "{:d} seconds".format(round(seconds / 10) * 10)
-        minutes = round(seconds / 60)
-        if minutes == 1:
-            return "a minute"
-        if minutes < 20:
-            return "{:d} minutes".format(minutes)
-        if minutes < 55:
-            return "{:d} minutes".format(round(minutes / 10) * 10)
-        hours = round(minutes / 60)
-        if hours == 1:
-            return "an hour"
-        if hours < 24:
-            return "{:d} hours".format(hours)
-        days = (hours+6) // 24
-        if days == 1:
-            return "a day"
-        if days < 30:
-            return "{:d} days".format(days)
-        months = int((days+10) / 30.5)
-        if months == 1:
-            return "a month"
-        if months < 12:
-            return "{} months".format(months)
-        years = round(days / 365.25)
-        if years == 1:
-            return "a year"
-        return "{} years".format(years)
-
-    def shouldReportBuild(self, builder, buildnum):
-        """Returns True if this build should be reported for this contact
-        (eliminating duplicates), and also records the report for later"""
-        reported_builds = self.bot.reported_builds.setdefault(self.channelid, [])
-
-        for w, b, n in reported_builds:
-            if b == builder and n == buildnum:
-                return False
-        reported_builds.append([util.now(), builder, buildnum])
-
-        # clean the reported builds
-        horizon = util.now() - 60
-        while reported_builds and reported_builds[0][0] < horizon:
-            reported_builds.pop(0)
-
-        # and return True, since this is a new one
-        return True
 
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
@@ -406,8 +529,8 @@ class Contact(service.AsyncService):
             raise UsageError("Try '"+self.bot.commandPrefix+"list builders'.")
 
         if args[0] == 'builders':
-            bdicts = yield self.getAllBuilders()
-            online_builderids = yield self.getOnlineBuilders()
+            bdicts = yield self.bot.getAllBuilders()
+            online_builderids = yield self.bot.getOnlineBuilders()
 
             response = ["Configured builders:"]
             for bdict in bdicts:
@@ -430,77 +553,16 @@ class Contact(service.AsyncService):
             raise UsageError("Try '"+self.bot.commandPrefix+"status _builder_'.")
         results = []
         if which == "all":
-            bdicts = yield self.getAllBuilders()
+            bdicts = yield self.bot.getAllBuilders()
             for bdict in bdicts:
-                status = yield self.get_status(bdict['name'], short=True)
+                status = yield self.bot.getBuildStatus(bdict['name'], short=True)
                 results.append(status)
         else:
-            status = yield self.get_status(which)
+            status = yield self.bot.getBuildStatus(which)
             results.append(status)
         if results:
             self.send(results)
     command_STATUS.usage = "status [_which_] - List status of a builder (or all builders)"
-
-    def validate_notification_event(self, event):
-        if not re.compile("^(started|finished|success|warnings|failure|exception|"
-                          "problem|recovery|worse|better|"
-                          # this is deprecated list 
-                          "(success|warnings|failure|exception)To"
-                          "(Success|Warnings|Failure|Exception))$").match(event):
-            raise UsageError("Try '"+self.bot.commandPrefix+"notify on|off _EVENT_'.")
-
-    def list_notified_events(self):
-        self.send("The following events are being notified: {}"
-                  .format(", ".join(sorted(self.notify_events))))
-
-    def notify_for(self, *events):
-        for event in events:
-            if event in self.notify_events:
-                return True
-        return False
-
-    @defer.inlineCallbacks
-    def subscribe_to_build_events(self):
-        startConsuming = self.master.mq.startConsuming
-
-        def buildStarted(key, msg):
-            return self.buildStarted(msg)
-
-        def buildFinished(key, msg):
-            return self.buildFinished(msg)
-
-        for e, f in (("new", buildStarted),             # BuilderStarted
-                     ("finished", buildFinished)):      # BuilderFinished
-            handle = yield startConsuming(f, ('builders', None, 'builds', None, e))
-            self.subscribed.append(handle)
-
-    def unsubscribe_from_build_events(self):
-        # Cancel all the subscriptions we have
-        old_list, self.subscribed = self.subscribed, []
-        for handle in old_list:
-            handle.stopConsuming()
-
-    def add_notification_events(self, events):
-        for event in events:
-            self.validate_notification_event(event)
-            self.notify_events.add(event)
-
-        if not self.subscribed:
-            self.subscribe_to_build_events()
-
-    def remove_notification_events(self, events):
-        for event in events:
-            self.validate_notification_event(event)
-            self.notify_events.remove(event)
-
-            if not self.notify_events:
-                self.unsubscribe_from_build_events()
-
-    def remove_all_notification_events(self):
-        self.notify_events = set()
-
-        if self.subscribed:
-            self.unsubscribe_from_build_events()
 
     def command_NOTIFY(self, args, **kwargs):
         """notify me about build events"""
@@ -514,24 +576,24 @@ class Contact(service.AsyncService):
         if action in ("on", "on-quiet"):
             if not events:
                 events = ('started', 'finished')
-            self.add_notification_events(events)
+            self.channel.add_notification_events(events)
 
             if action == "on":
-                self.list_notified_events()
-            self.bot.saveNotifyContacts()
+                self.channel.list_notified_events()
+            self.bot.saveNotifyEvents()
 
         elif action in ("off", "off-quiet"):
             if events:
-                self.remove_notification_events(events)
+                self.channel.remove_notification_events(events)
             else:
-                self.remove_all_notification_events()
+                self.channel.remove_all_notification_events()
 
             if action == "off":
-                self.list_notified_events()
-            self.bot.saveNotifyContacts()
+                self.channel.list_notified_events()
+            self.bot.saveNotifyEvents()
 
         elif action == "list":
-            self.list_notified_events()
+            self.channel.list_notified_events()
 
         else:
             raise UsageError("Try '"+self.bot.commandPrefix+"notify on|off|list [_EVENT_]'.")
@@ -539,27 +601,6 @@ class Contact(service.AsyncService):
     command_NOTIFY.usage = ("notify on|off|list [_EVENT_] ... - notify me about build events;"
                             "  event should be one or more of: 'started', 'finished', 'failure',"
                             " 'success', 'exception', 'problem', 'recovery', 'better', or 'worse'")
-
-    def getRunningBuilds(self, builderid):
-        d = self.master.data.get(('builds',),
-                                 filters=[resultspec.Filter('builderid', 'eq', [builderid]),
-                                          resultspec.Filter('complete', 'eq', [False])])
-        return d
-
-    def getLastCompletedBuild(self, builderid):
-        d = self.master.data.get(('builds',),
-                                 filters=[resultspec.Filter('builderid', 'eq', [builderid]),
-                                          resultspec.Filter('complete', 'eq', [True])],
-                                 order=['-number'],
-                                 limit=1)
-
-        @d.addCallback
-        def listAsOneOrNone(res):
-            if res:
-                return res[0]
-            return None
-
-        return d
 
     @defer.inlineCallbacks
     def command_WATCH(self, args, **kwargs):
@@ -569,29 +610,29 @@ class Contact(service.AsyncService):
             raise UsageError("Try '"+self.bot.commandPrefix+"watch _builder_'.")
 
         which = args[0]
-        builder = yield self.getBuilder(buildername=which)
+        builder = yield self.bot.getBuilder(buildername=which)
 
         # Get current builds on this builder.
-        builds = yield self.getRunningBuilds(builder['builderid'])
+        builds = yield self.bot.getRunningBuilds(builder['builderid'])
         if not builds:
             self.send("There are no currently running builds.")
             return
 
         def watchForCompleteEvent(key, msg):
             if key[-1] in ('finished', 'complete'):
-                return self.buildFinished(msg, watched=True)
+                return self.channel.buildFinished(msg, watched=True)
 
         for build in builds:
             startConsuming = self.master.mq.startConsuming
             handle = yield startConsuming(
                 watchForCompleteEvent,
                 ('builds', str(build['buildid']), None))
-            self.build_subscriptions.append((build['buildid'], handle))
+            self.channel.build_subscriptions.append((build['buildid'], handle))
 
             url = utils.getURLForBuild(self.master, builder['builderid'], build['number'])
 
-            if self.useRevisions:
-                revisions = yield self.getRevisionsForBuild(build)
+            if self.bot.useRevisions:
+                revisions = yield self.bot.getRevisionsForBuild(build)
                 r = "Watching build on `{}` containing revision(s) {} until it finishes..." \
                     .format(which, ','.join(revisions))
             else:
@@ -600,121 +641,6 @@ class Contact(service.AsyncService):
 
             self.send(r)
     command_WATCH.usage = "watch _which_ - announce the completion of an active build"
-
-    @defer.inlineCallbacks
-    def buildStarted(self, build):
-        builder = yield self.getBuilder(builderid=build['builderid'])
-        builderName = builder['name']
-        buildNumber = build['number']
-        log.msg('[Contact] Builder {} started'.format(builder['name'], ))
-
-        # only notify about builders we are interested in
-        if (self.bot.tags is not None and
-                not self.builderMatchesAnyTag(builder.get('tags', []))):
-            log.msg('Not notifying for a build that does not match any tags')
-            return
-
-        if not self.notify_for('started'):
-            return
-
-        if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(build)
-            r = "Build containing revision(s) {} on {} started" \
-                .format(','.join(revisions), builderName)
-        else:
-            # Abbreviate long lists of changes to simply two
-            # revisions, and the number of additional changes.
-            # TODO: We can't get the list of the changes related to a build in
-            # nine
-            changes_str = ""
-
-            url = utils.getURLForBuild(self.master, builder['builderid'], build['number'])
-            r = "Build [#{:d}]({}) of `{}` started".format(buildNumber, url, builderName)
-            if changes_str:
-                r += " ({})".format(changes_str)
-
-        self.send(r+'.')
-
-    @defer.inlineCallbacks
-    def buildFinished(self, build, watched=False):
-        builder = yield self.getBuilder(builderid=build['builderid'])
-        builderName = builder['name']
-        buildNumber = build['number']
-
-        # only notify about builders we are interested in
-        if (self.bot.tags is not None and
-                not self.builderMatchesAnyTag(builder.get('tags', []))):
-            log.msg('Not notifying for a build that does not match any tags')
-            return
-
-        if not (watched or (yield self.notify_for_finished(build))):
-            return
-
-        if not self.shouldReportBuild(builderName, buildNumber):
-            return
-
-        url = utils.getURLForBuild(self.master, builder['builderid'], buildNumber)
-
-        if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(build)
-            r = "Build on `{}` containing revision(s) {} {}" \
-                .format(builderName, ','.join(revisions), self.format_build_status(build))
-        else:
-            r = "Build [#{:d}]({}) of `{}` {}" \
-                .format(buildNumber, url, builderName, self.format_build_status(build))
-
-        s = build.get('status_string')
-        if build['results'] != SUCCESS and s is not None:
-            r += ": " + s
-        else:
-            r += "."
-
-        # FIXME: where do we get the list of changes for a build ?
-        # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
-        #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
-        self.send(r)
-
-    @defer.inlineCallbacks
-    def notify_for_finished(self, build):
-        if self.notify_for('finished'):
-            return True
-
-        result = build['results']
-        result_name = statusToString(result)
-        if self.notify_for(result_name):
-            return True
-
-        if result in (SUCCESS, WARNINGS, FAILURE, EXCEPTION):
-            prev_build = yield self.master.data.get(
-                ('builders', build['builderid'], 'builds', build['number'] - 1))
-            if prev_build:
-                prev_result = prev_build['results']
-
-                if prev_result in (SUCCESS, WARNINGS, FAILURE, EXCEPTION):
-                    if self.notify_for('better') and result < prev_result:
-                        return True
-                    if self.notify_for('worse') and result > prev_result:
-                        return True
-
-                    if self.notify_for('problem') \
-                            and prev_result in (SUCCESS, WARNINGS) \
-                            and result in (FAILURE, EXCEPTION):
-                        return True
-
-                    if self.notify_for('recovery') \
-                            and prev_result in (FAILURE, EXCEPTION) \
-                            and result in (SUCCESS, WARNINGS):
-                        return True
-
-                    # DEPRECATED
-                    required_notification_control_string = ''.join(
-                        (statusToString(prev_result).lower(),
-                         'To',
-                         result_name.capitalize()))
-                    if (self.notify_for(required_notification_control_string)):
-                        return True
-
-        return False
 
     @defer.inlineCallbacks
     @dangerousCommand
@@ -733,7 +659,7 @@ class Contact(service.AsyncService):
         opts.parseOptions(args)
 
         builderName = opts['builder']
-        builder = yield self.getBuilder(buildername=builderName)
+        builder = yield self.bot.getBuilder(buildername=builderName)
         branch = opts['branch']
         revision = opts['revision']
         codebase = opts['codebase']
@@ -814,9 +740,9 @@ class Contact(service.AsyncService):
         r = "stopped: by {}: {}".format(self.describeUser(), reason)
 
         # find an in-progress build
-        builder = yield self.getBuilder(buildername=which)
+        builder = yield self.bot.getBuilder(buildername=which)
         builderid = builder['builderid']
-        builds = yield self.getRunningBuilds(builderid)
+        builds = yield self.bot.getRunningBuilds(builderid)
 
         if not builds:
             self.send("Sorry, no build is currently running.")
@@ -826,9 +752,9 @@ class Contact(service.AsyncService):
             num = bdict['number']
 
             yield self.master.data.control('stop', {'reason': r},
-                                           ('builders', builderid, 'builds', num))
-            if self.useRevisions:
-                revisions = yield self.getRevisionsForBuild(bdict)
+                                               ('builders', builderid, 'builds', num))
+            if self.bot.useRevisions:
+                revisions = yield self.bot.getRevisionsForBuild(bdict)
                 response = "Build containing revision(s) {} interrupted".format(','.join(
                     revisions))
             else:
@@ -838,60 +764,6 @@ class Contact(service.AsyncService):
 
     command_STOP.usage = "stop build _which_ _reason_ - Stop a running build"
 
-    def getCurrentBuildstep(self, build):
-        d = self.master.data.get(('builds', build['buildid'], 'steps'),
-                                 filters=[
-                                     resultspec.Filter('complete', 'eq', [False])],
-                                 order=['number'],
-                                 limit=1)
-        return d
-
-    @defer.inlineCallbacks
-    def get_status(self, which, short=False):
-        response = '`{}`: '.format(which)
-
-        builder = yield self.getBuilder(buildername=which)
-        builderid = builder['builderid']
-        runningBuilds = yield self.getRunningBuilds(builderid)
-
-        if not runningBuilds:
-            onlineBuilders = yield self.getOnlineBuilders()
-            if builderid in onlineBuilders:
-                response += "idle 😴"
-                lastBuild = yield self.getLastCompletedBuild(builderid)
-                if lastBuild:
-                    complete_at = lastBuild['complete_at']
-                    if complete_at:
-                        complete_at = util.datetime2epoch(complete_at)
-                        ago = self.convertTime(int(self.reactor.seconds() -
-                                                   complete_at))
-                    else:
-                        ago = "??"
-                    status = self.format_build_status(lastBuild, short=short)
-                    if not short:
-                        status = ", " + status
-                        if lastBuild['results'] != SUCCESS:
-                            status += ": " + lastBuild['status_string']
-                    response += ': last build {} ago{}'.format(ago, status)
-            else:
-                response += "offline 💀"
-        else:
-            response += "running 🤠:"
-            buildInfo = []
-            for build in runningBuilds:
-                step = yield self.getCurrentBuildstep(build)
-                if step:
-                    s = "({})".format(step[-1]['state_string'])
-                else:
-                    s = "(no current step)"
-                bnum = build['number']
-                url = utils.getURLForBuild(self.master, builderid, bnum)
-                buildInfo.append("build [#{:d}]({}) {}".format(bnum, url, s))
-
-            response += ' ' + ', '.join(buildInfo)
-
-        return response
-
     @defer.inlineCallbacks
     def command_LAST(self, args, **kwargs):
         """list last build status for a builder"""
@@ -899,9 +771,9 @@ class Contact(service.AsyncService):
         args = self.splitArgs(args)
 
         if not args:
-            builders = yield self.getAllBuilders()
+            builders = yield self.bot.getAllBuilders()
         elif len(args) == 1:
-            builder = yield self.getBuilder(buildername=args[0])
+            builder = yield self.bot.getBuilder(buildername=args[0])
             if not builder:
                 raise UsageError("no such builder")
             builders = [builder]
@@ -911,18 +783,18 @@ class Contact(service.AsyncService):
         messages = []
 
         for builder in builders:
-            lastBuild = yield self.getLastCompletedBuild(builder['builderid'])
+            lastBuild = yield self.bot.getLastCompletedBuild(builder['builderid'])
             if not lastBuild:
                 status = "no builds run since last restart"
             else:
                 complete_at = lastBuild['complete_at']
                 if complete_at:
                     complete_at = util.datetime2epoch(complete_at)
-                    ago = self.convertTime(int(self.reactor.seconds() -
+                    ago = convertTime(int(self.bot.reactor.seconds() -
                                                complete_at))
                 else:
                     ago = "??"
-                status = self.format_build_status(lastBuild)
+                status = self.bot.format_build_status(lastBuild)
                 status = 'last build {} ({} ago)'.format(status, ago)
                 if lastBuild['results'] != SUCCESS:
                     status += ': {}'.format(lastBuild['state_string'])
@@ -1000,11 +872,11 @@ class Contact(service.AsyncService):
 
     def command_DANCE(self, args, **kwargs):
         """dance, dance academy..."""
-        self.reactor.callLater(1.0, self.send, "<(^.^<)")
-        self.reactor.callLater(2.0, self.send, "<(^.^)>")
-        self.reactor.callLater(3.0, self.send, "(>^.^)>")
-        self.reactor.callLater(3.5, self.send, "(7^.^)7")
-        self.reactor.callLater(5.0, self.send, "(>^.^<)")
+        self.bot.reactor.callLater(1.0, self.send, "<(^.^<)")
+        self.bot.reactor.callLater(2.0, self.send, "<(^.^)>")
+        self.bot.reactor.callLater(3.0, self.send, "(>^.^)>")
+        self.bot.reactor.callLater(3.5, self.send, "(7^.^)7")
+        self.bot.reactor.callLater(5.0, self.send, "(>^.^<)")
 
     @dangerousCommand
     def command_SHUTDOWN(self, args, **kwargs):
@@ -1013,7 +885,7 @@ class Contact(service.AsyncService):
         if args not in ('check', 'start', 'stop', 'now'):
             raise UsageError("Try '"+self.bot.commandPrefix+"shutdown check|start|stop|now'.")
 
-        botmaster = self.master.botmaster
+        botmaster = self.channel.master.botmaster
         shuttingDown = botmaster.shuttingDown
 
         if args == 'check':
@@ -1035,7 +907,7 @@ class Contact(service.AsyncService):
                 botmaster.cancelCleanShutdown()
         elif args == 'now':
             self.send("Stopping buildbot.")
-            self.reactor.stop()
+            self.bot.reactor.stop()
     command_SHUTDOWN.usage = {
         None: "shutdown check|start|stop|now - shutdown the buildbot master",
         "check": "shutdown check - check if the buildbot master is running or shutting down",
@@ -1049,16 +921,15 @@ class StatusBot(service.AsyncMultiService):
     """ Abstract status bot """
 
     contactClass = Contact
+    channelClass = Channel
 
     commandPrefix = ''
     commandSuffix = None
 
     def __init__(self, authz=None, tags=None, notify_events=None,
-                 useRevisions=False, showBlameList=False,
-                 categories=None  # deprecated
-                 ):
+                 useRevisions=False, showBlameList=False):
         super().__init__()
-        self.tags = tags or categories
+        self.tags = tags
         if notify_events is None:
             notify_events = {}
         self.notify_events = notify_events
@@ -1066,7 +937,8 @@ class StatusBot(service.AsyncMultiService):
         self.showBlameList = showBlameList
         self.authz = self._expand_authz(authz)
         self.contacts = {}
-        self.reported_builds = {}  # tuples (when, buildername, buildnum) for each channel/user
+        self.channels = {}
+        self.reactor = reactor
 
     @staticmethod
     def _expand_authz(authz):
@@ -1080,41 +952,49 @@ class StatusBot(service.AsyncMultiService):
                 expanded_authz[cmd.upper()] = val
         return expanded_authz
 
-    def getContact(self, user=None, channel=None):
+    def getContact(self, user, channel=None):
         """ get a Contact instance for ``user`` on ``channel`` """
         try:
             return self.contacts[(channel, user)]
         except KeyError:
             new_contact = self.contactClass(self, user=user, channel=channel)
             self.contacts[(channel, user)] = new_contact
-            new_contact.setServiceParent(self)
             return new_contact
+
+    def getChannel(self, channel):
+        try:
+            return self.channels[channel]
+        except KeyError:
+            new_channel = self.channelClass(self, channel)
+            self.channels[channel] = new_channel
+            new_channel.setServiceParent(self)
+            return new_channel
 
     def _getObjectId(self):
         return self.master.db.state.getObjectId(
             self.nickname, '{0.__module__}.{0.__name__}'.format(self.__class__))
 
     @defer.inlineCallbacks
-    def loadNotifyContacts(self):
+    def loadNotifyEvents(self):
         objectid = yield self._getObjectId()
         notify_contacts = yield self.master.db.state.getState(objectid, 'notify_contacts', None)
         if notify_contacts is not None:
-            for user, channel, events in notify_contacts:
-                contact = self.getContact(user, channel)
+            for c, e in notify_contacts:
+                channel = self.getChannel(c)
                 try:
-                    contact.add_notification_events(events)
+                    channel.add_notification_events(e)
                 except UsageError:
                     pass
 
     @defer.inlineCallbacks
-    def saveNotifyContacts(self):
+    def saveNotifyEvents(self):
         objectid = yield self._getObjectId()
-        notify_contacts = [(contact.userid, contact.channelid, list(contact.notify_events))
-                           for contact in self.contacts.values() if contact.userid is not None]
+        notify_contacts = [(channel.id, list(channel.notify_events))
+                           for channel in self.channels.values()]
         yield self.master.db.state.setState(objectid, 'notify_contacts', notify_contacts)
 
     def startService(self):
-        self.loadNotifyContacts()
+        self.loadNotifyEvents()
         return super().startService()
 
     def send_message(self, channel, message):
@@ -1126,6 +1006,143 @@ class StatusBot(service.AsyncMultiService):
         except AttributeError:
             name = self.__class__.__name__
         log.msg("{}: {}".format(name, msg))
+
+    def builderMatchesAnyTag(self, builder_tags):
+        return any(tag for tag in builder_tags if tag in self.tags)
+
+    def getRunningBuilds(self, builderid):
+        d = self.master.data.get(('builds',),
+                                 filters=[resultspec.Filter('builderid', 'eq', [builderid]),
+                                          resultspec.Filter('complete', 'eq', [False])])
+        return d
+
+    def getLastCompletedBuild(self, builderid):
+        d = self.master.data.get(('builds',),
+                                 filters=[resultspec.Filter('builderid', 'eq', [builderid]),
+                                          resultspec.Filter('complete', 'eq', [True])],
+                                 order=['-number'],
+                                 limit=1)
+
+        @d.addCallback
+        def listAsOneOrNone(res):
+            if res:
+                return res[0]
+            return None
+
+        return d
+
+    def getCurrentBuildstep(self, build):
+        d = self.master.data.get(('builds', build['buildid'], 'steps'),
+                                 filters=[
+                                     resultspec.Filter('complete', 'eq', [False])],
+                                 order=['number'],
+                                 limit=1)
+        return d
+
+    @defer.inlineCallbacks
+    def getBuildStatus(self, which, short=False):
+        response = '`{}`: '.format(which)
+
+        builder = yield self.getBuilder(buildername=which)
+        builderid = builder['builderid']
+        runningBuilds = yield self.getRunningBuilds(builderid)
+
+        if not runningBuilds:
+            onlineBuilders = yield self.getOnlineBuilders()
+            if builderid in onlineBuilders:
+                response += "idle 😴"
+                lastBuild = yield self.getLastCompletedBuild(builderid)
+                if lastBuild:
+                    complete_at = lastBuild['complete_at']
+                    if complete_at:
+                        complete_at = util.datetime2epoch(complete_at)
+                        ago = convertTime(int(self.reactor.seconds() -
+                                                   complete_at))
+                    else:
+                        ago = "??"
+                    status = self.format_build_status(lastBuild, short=short)
+                    if not short:
+                        status = ", " + status
+                        if lastBuild['results'] != SUCCESS:
+                            status += ": " + lastBuild['status_string']
+                    response += ': last build {} ago{}'.format(ago, status)
+            else:
+                response += "offline 💀"
+        else:
+            response += "running 🤠:"
+            buildInfo = []
+            for build in runningBuilds:
+                step = yield self.getCurrentBuildstep(build)
+                if step:
+                    s = "({})".format(step[-1]['state_string'])
+                else:
+                    s = "(no current step)"
+                bnum = build['number']
+                url = utils.getURLForBuild(self.master, builderid, bnum)
+                buildInfo.append("build [#{:d}]({}) {}".format(bnum, url, s))
+
+            response += ' ' + ', '.join(buildInfo)
+
+        return response
+
+    @defer.inlineCallbacks
+    def getBuilder(self, buildername=None, builderid=None):
+        if buildername:
+            bdicts = yield self.master.data.get(('builders',),
+                                                filters=[resultspec.Filter('name', 'eq', [buildername])])
+            if bdicts:
+                # Could there be more than one? One is enough.
+                bdict = bdicts[0]
+            else:
+                bdict = None
+        elif builderid:
+            bdict = yield self.master.data.get(('builders', builderid))
+        else:
+            raise UsageError("no builder specified")
+
+        if bdict is None:
+            if buildername:
+                which = buildername
+            else:
+                which = 'number {}'.format(builderid)
+            raise UsageError("no such builder '{}'".format(which))
+        return bdict
+
+    def getAllBuilders(self):
+        d = self.master.data.get(('builders',))
+        return d
+
+    @defer.inlineCallbacks
+    def getOnlineBuilders(self):
+        all_workers = yield self.master.data.get(('workers',))
+        online_builderids = set()
+        for worker in all_workers:
+            connected = worker['connected_to']
+            if not connected:
+                continue
+            builders = worker['configured_on']
+            builderids = [builder['builderid'] for builder in builders]
+            online_builderids.update(builderids)
+        return list(online_builderids)
+
+    @defer.inlineCallbacks
+    def getRevisionsForBuild(self, bdict):
+        # FIXME: Need to get revision info! (build -> buildreq -> buildset ->
+        # sourcestamps)
+        return ["TODO"]
+
+    results_descriptions = {
+        SUCCESS: "completed successfully",
+        WARNINGS: "completed with warnings",
+        FAILURE: "failed",
+        EXCEPTION: "stopped with exception",
+        RETRY: "has been retried",
+        CANCELLED: "was cancelled",
+    }
+
+    def format_build_status(self, build, short=False):
+        """ Optionally add color to the message """
+        return self.results_descriptions[build['results']]
 
 
 class ThrottledClientFactory(protocol.ClientFactory):

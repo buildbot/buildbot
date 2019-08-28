@@ -67,35 +67,39 @@ class TestTelegramContact(unittest.TestCase, TestReactorMixin):
         def send_sticker(self, chat, sticker, **kwargs):
             pass
 
+        def getChannel(self, channel):
+            return telegram.TelegramChannel(self, channel)
+
     def setUp(self):
         self.setUpTestReactor()
         self.bot = self.FakeBot()
 
     def testDescribeUser(self):
-        contact = telegram.TelegramContact(self.bot, USER, USER, self.reactor)
+        contact = telegram.TelegramContact(self.bot, USER, USER)
         self.assertEquals(contact.describeUser(), "Harry Potter (@harrypotter)")
 
     def testDescribeUserInGroup(self):
-        contact = telegram.TelegramContact(self.bot, USER, CHAT, self.reactor)
+        contact = telegram.TelegramContact(self.bot, USER, CHAT)
         self.assertEquals(contact.describeUser(), "Harry Potter (@harrypotter) on 'Hogwards'")
 
 
     @defer.inlineCallbacks
     def test_command_dance(self):
-        contact = telegram.TelegramContact(self.bot, USER, USER, self.reactor)
+        self.bot.reactor = self.reactor
+        contact = telegram.TelegramContact(self.bot, USER, USER)
         yield contact.command_DANCE('')
         self.assertEqual(self.bot.sent[0][0], USER['id'])
 
     @defer.inlineCallbacks
     def test_commmand_commands_botfather(self):
-        contact = telegram.TelegramContact(self.bot, USER, CHAT, self.reactor)
+        contact = telegram.TelegramContact(self.bot, USER, CHAT)
         yield contact.command_COMMANDS('botfather')
         self.assertEqual(self.bot.sent[0][0], CHAT['id'])
         self.assertRegex(self.bot.sent[0][1], r"^\w+ - \S+")
 
     @defer.inlineCallbacks
     def test_command_getid(self):
-        contact = telegram.TelegramContact(self.bot, USER, CHAT, self.reactor)
+        contact = telegram.TelegramContact(self.bot, USER, CHAT)
         yield contact.command_GETID('')
         self.assertIn(str(USER['id']), self.bot.sent[0][1])
         self.assertIn(str(CHAT['id']), self.bot.sent[1][1])

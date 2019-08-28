@@ -16,7 +16,6 @@
 import types
 
 from twisted.application import internet
-from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from twisted.words.protocols import irc
@@ -28,6 +27,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters.words import Channel
 from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import ThrottledClientFactory
@@ -66,63 +66,41 @@ _irc_colors = (
 )
 
 
-class IRCContact(Contact):
+class IRCChannel(Channel):
 
-    def __init__(self, bot, user=None, channel=None, _reactor=reactor):
-        super().__init__(bot, user, channel, _reactor)
+    def __init__(self, bot, channel):
+        super().__init__(bot, channel)
         self.muted = False
 
-    results_colors = {
-        SUCCESS: 'GREEN',
-        WARNINGS: 'YELLOW',
-        FAILURE: 'RED',
-        EXCEPTION: 'PURPLE',
-        RETRY: 'AQUA_LIGHT',
-        CANCELLED: 'PINK',
-    }
-
-    short_results_descriptions = {
-        SUCCESS: ", Success",
-        WARNINGS: ", Warnings",
-        FAILURE: ", Failure",
-        EXCEPTION: ", Exception",
-        RETRY: ", Retry",
-        CANCELLED: ", Cancelled",
-    }
-
-    def format_build_status(self, build, short=False):
-        br = build['results']
-        if short:
-            text = self.short_results_descriptions[br]
-        else:
-            text = self.results_descriptions[br]
-        if self.bot.useColors:
-            return "\x03{:d}{}\x0f".format(
-                _irc_colors.index(self.results_colors[br]),
-                text)
-        else:
-            return text
-
     def send(self, message):
+        if self.id[0] in irc.CHANNEL_PREFIXES:
+            send = self.bot.groupSend
+        else:
+            send = self.bot.msg
         if self.muted:
             return
-        if self.channel:
-            if isinstance(message, (list, tuple, types.GeneratorType)):
-                for m in message:
-                    self.bot.groupChat(self.channel, m)
-            else:
-                self.bot.groupChat(self.channel, message)
+        if isinstance(message, (list, tuple, types.GeneratorType)):
+            for m in message:
+                send(self.id, m)
         else:
-            if isinstance(message, (list, tuple, types.GeneratorType)):
-                for m in message:
-                    self.bot.chat(self.user, m)
-            else:
-                self.bot.chat(self.user, message)
+            send(self.id, message)
 
     def act(self, action):
         if self.muted:
             return
-        self.bot.groupDescribe(self.channel, action)
+        self.bot.groupDescribe(self.id, action)
+
+
+class IRCContact(Contact):
+
+    def __init__(self, bot, user=None, channel=None):
+        super().__init__(bot, user, channel)
+
+    def send(self, message):
+        return self.channel.send(message)
+
+    def act(self, action):
+        return self.channel.act(action)
 
     def handleAction(self, action):
         # this is sent when somebody performs an action that mentions the
@@ -146,13 +124,13 @@ class IRCContact(Contact):
     def command_MUTE(self, args):
         # The order of these is important! ;)
         self.send("Shutting up for now.")
-        self.muted = True
+        self.channel.muted = True
     command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
 
     def command_UNMUTE(self, args):
-        if self.muted:
+        if self.channel.muted:
             # The order of these is important! ;)
-            self.muted = False
+            self.channel.muted = False
             self.send("I'm baaaaaaaaaaack!")
         else:
             self.send(
@@ -174,12 +152,13 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
     """
 
     contactClass = IRCContact
+    channelClass = IRCChannel
 
-    def __init__(self, nickname, password, channels, pm_to_nicks,
+    def __init__(self, nickname, password, join_channels, pm_to_nicks,
                  noticeOnChannel, *args, useColors=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.nickname = nickname
-        self.channels = channels
+        self.join_channels = join_channels
         self.pm_to_nicks = pm_to_nicks
         self.password = password
         self.hasQuit = 0
@@ -198,19 +177,16 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         super().connectionLost(reason)
 
     # The following methods are called when we write something.
-    def groupChat(self, channel, message):
+    def groupSend(self, channel, message):
         if self.noticeOnChannel:
             self.notice(channel, message)
         else:
             self.msg(channel, message)
 
-    def chat(self, user, message):
-        self.msg(user, message)
-
     def groupDescribe(self, channel, action):
         self.describe(channel, action)
 
-    def getContact(self, user=None, channel=None):
+    def getContact(self, user, channel=None):
         # nicknames and channel names are case insensitive
         if user:
             user = user.lower()
@@ -245,7 +221,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
     def signedOn(self):
         if self.password:
             self.msg("Nickserv", "IDENTIFY " + self.password)
-        for c in self.channels:
+        for c in self.join_channels:
             if isinstance(c, dict):
                 channel = c.get('channel', None)
                 password = c.get('password', None)
@@ -254,12 +230,14 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
                 password = None
             self.join(channel=channel, key=password)
         for c in self.pm_to_nicks:
-            self.getContact(c)
+            contact = self.getContact(c)
+            contact.channel.add_notification_events(self.notify_events)
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
         # trigger contact constructor, which in turn subscribes to notify events
-        self.getContact(channel=channel)
+        channel = self.getChannel(channel=channel)
+        channel.add_notification_events(self.notify_events)
 
     def left(self, channel):
         self.log("I have left %s" % (channel,))
@@ -284,6 +262,37 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             if u == user:
                 del self.contacts[(c,u)]
 
+    results_colors = {
+        SUCCESS: 'GREEN',
+        WARNINGS: 'YELLOW',
+        FAILURE: 'RED',
+        EXCEPTION: 'PURPLE',
+        RETRY: 'AQUA_LIGHT',
+        CANCELLED: 'PINK',
+    }
+
+    short_results_descriptions = {
+        SUCCESS: ", Success",
+        WARNINGS: ", Warnings",
+        FAILURE: ", Failure",
+        EXCEPTION: ", Exception",
+        RETRY: ", Retry",
+        CANCELLED: ", Cancelled",
+    }
+
+    def format_build_status(self, build, short=False):
+        br = build['results']
+        if short:
+            text = self.short_results_descriptions[br]
+        else:
+            text = self.results_descriptions[br]
+        if self.bot.useColors:
+            return "\x03{:d}{}\x0f".format(
+                _irc_colors.index(self.results_colors[br]),
+                text)
+        else:
+            return text
+
 
 class IrcStatusFactory(ThrottledClientFactory):
     protocol = IrcStatusBot
@@ -291,7 +300,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, pm_to_nicks, authz, tags, notify_events,
+    def __init__(self, nickname, password, join_channels, pm_to_nicks, authz, tags, notify_events,
                  noticeOnChannel=False,
                  useRevisions=False, showBlameList=False,
                  parent=None,
@@ -299,7 +308,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         super().__init__(lostDelay=lostDelay, failedDelay=failedDelay)
         self.nickname = nickname
         self.password = password
-        self.channels = channels
+        self.join_channels = join_channels
         self.pm_to_nicks = pm_to_nicks
         self.tags = tags
         self.authz = authz
@@ -325,7 +334,7 @@ class IrcStatusFactory(ThrottledClientFactory):
             self.p.disownServiceParent()
 
         p = self.protocol(self.nickname, self.password,
-                          self.channels, self.pm_to_nicks,
+                          self.join_channels, self.pm_to_nicks,
                           self.noticeOnChannel, self.authz,
                           self.tags, self.notify_events,
                           useColors=self.useColors,
@@ -394,7 +403,7 @@ class IRC(service.BuildbotService):
         self.host = host
         self.port = port
         self.nick = nick
-        self.channels = channels
+        self.join_channels = channels
         if pm_to_nicks is None: pm_to_nicks = []
         self.pm_to_nicks = pm_to_nicks
         self.password = password
@@ -411,7 +420,7 @@ class IRC(service.BuildbotService):
         if self.f is not None:
             self.f.shutdown()
         self.f = IrcStatusFactory(self.nick, self.password,
-                                  self.channels, self.pm_to_nicks,
+                                  self.join_channels, self.pm_to_nicks,
                                   self.authz, self.tags,
                                   self.notify_events, parent=self,
                                   noticeOnChannel=noticeOnChannel,

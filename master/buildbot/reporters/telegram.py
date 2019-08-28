@@ -32,6 +32,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters.words import Channel
 from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.util import bytes2unicode
@@ -40,39 +41,43 @@ from buildbot.util import service
 from buildbot.util import unicode2bytes
 
 
+class TelegramChannel(Channel):
+
+    def __init__(self, bot, channel):
+        if isinstance(channel, dict):
+            super().__init__(bot, channel['id'])
+            self._channel = channel
+        else:
+            super().__init__(bot, channel)
+            self._channel = {'id': channel}
+
+    def __getitem__(self, item):
+        return self._channel[item]
+
+    def get(self, item, default=None):
+        return self._channel.get(item, default)
+
+    def update(self, src):
+        self._channel.update(src)
+
+    def list_notified_events(self):
+        if self.notify_events:
+            self.send("The following events are being notified: {}."
+                      .format(", ".join(sorted(
+                    "_{}_".format(n) for n in self.notify_events))))
+        else:
+            self.send("No events are being notified.")
+
+
 class TelegramContact(Contact):
 
-    def __init__(self, bot, user=None, channel=None, _reactor=reactor):
-        super().__init__(bot, user, channel, _reactor)
+    def __init__(self, bot, user=None, channel=None):
+        super().__init__(bot, user, channel)
         self.partial = ''
-
-    results_emoji = {
-        SUCCESS: ' ✅',
-        WARNINGS: ' ⚠️',
-        FAILURE: '❗',
-        EXCEPTION: ' ‼️',
-        RETRY: ' 🔄',
-        CANCELLED: ' 🚫',
-    }
-
-    def format_build_status(self, build, short=False):
-        br = build['results']
-        if short:
-            return self.results_emoji[br]
-        else:
-            return self.results_descriptions[br] + \
-                   self.results_emoji[br]
 
     @property
     def chatid(self):
-        return self.channel['id']
-
-    @property
-    def channelid(self):
-        if isinstance(self.channel, dict):
-            return self.channel['id']
-        else:
-            return self.channel
+        return self.channel.id
 
     @property
     def userid(self):
@@ -101,8 +106,7 @@ class TelegramContact(Contact):
         except KeyError:
             pass
 
-        if isinstance(self.channel, dict) and \
-                self.channel['id'] != self.user['id']:
+        if self.channel.id != self.user['id']:
             chat_title = self.channel.get('title')
             if chat_title: user += " on '{}'".format(chat_title)
 
@@ -190,12 +194,12 @@ class TelegramContact(Contact):
         msg = yield self.bot.send_message(chat, "**<(^.^<)**")
         if msg is not None:
             mid = msg['message_id']
-            self.reactor.callLater(1.0, self.bot.edit_message, chat, mid, "**<(^.^)>**")
-            self.reactor.callLater(2.0, self.bot.edit_message, chat, mid, "**(>^.^)>**")
-            self.reactor.callLater(2.5, self.bot.edit_message, chat, mid, "**(7^.^)7**")
-            self.reactor.callLater(4.0, self.bot.edit_message, chat, mid, "**(>^.^<)**")
-            self.reactor.callLater(5.0, self.bot.delete_message, chat, mid)
-            self.reactor.callLater(5.5, self.bot.send_sticker, chat, random.choice((
+            self.bot.reactor.callLater(1.0, self.bot.edit_message, chat, mid, "**<(^.^)>**")
+            self.bot.reactor.callLater(2.0, self.bot.edit_message, chat, mid, "**(>^.^)>**")
+            self.bot.reactor.callLater(2.5, self.bot.edit_message, chat, mid, "**(7^.^)7**")
+            self.bot.reactor.callLater(4.0, self.bot.edit_message, chat, mid, "**(>^.^<)**")
+            self.bot.reactor.callLater(5.0, self.bot.delete_message, chat, mid)
+            self.bot.reactor.callLater(5.5, self.bot.send_sticker, chat, random.choice((
                 'CAADAgAD9wEAAsoDBgtCnbBFfI8M_BYE',
                 'CAADAgADQQIAArnzlwuD160COMLwKRYE')))
 
@@ -206,14 +210,14 @@ class TelegramContact(Contact):
             self.send("Your ID is {}.".format(self.userid))
         else:
             yield self.send("{}, your ID is {}.".format(self.user_name, self.userid))
-            self.send("This {} ID is {}.".format(self.channel['type'], self.chatid))
+            self.send("This {} ID is {}.".format(self.channel.get('type', "group"), self.chatid))
     command_GETID.usage = "getid - get user and chat ID that can be put in the master configuration file"
 
     @defer.inlineCallbacks
     def get_running_builders(self):
         builders = []
-        for bdict in (yield self.getAllBuilders()):
-            if (yield self.getRunningBuilds(bdict['builderid'])):
+        for bdict in (yield self.bot.getAllBuilders()):
+            if (yield self.bot.getRunningBuilds(bdict['builderid'])):
                 builders.append(bdict['name'])
         return builders
 
@@ -237,19 +241,6 @@ class TelegramContact(Contact):
             else:
                 self.send("There are no currently running builds.")
 
-    def list_notified_events(self):
-        if self.chatid == self.userid:
-            text = "You will be notified about "
-        else:
-            text = "In this group, {} will be notified about "\
-                .format(self.user_full_name)
-        if not self.notify_events:
-            text += "no events."
-        else:
-            text += "the following events: " + ", ".join(sorted(
-                "_{}_".format(n) for n in self.notify_events)) + "."
-        self.send(text)
-
     @Contact.overrideCommand
     def command_NOTIFY(self, args, tmessage, tquery=None, **kwargs):
         if args:
@@ -263,8 +254,10 @@ class TelegramContact(Contact):
         else:
             keyboard = [
                 [
-                    self.query_button("{} {}".format(e.capitalize(), '🔔' if e in self.notify_events else '🔕'),
-                                      '/notify {}-quiet {}'.format('off' if e in self.notify_events else 'on', e))
+                    self.query_button("{} {}".format(e.capitalize(),
+                                                     '🔔' if e in self.channel.notify_events else '🔕'),
+                                      '/notify {}-quiet {}'.format(
+                                          'off' if e in self.channel.notify_events else 'on', e))
                     for e in evs
                 ]
                 for evs in (('started', 'finished'), ('success', 'failure'), ('warnings', 'exception'),
@@ -274,17 +267,9 @@ class TelegramContact(Contact):
         if tquery:
             self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'], keyboard)
         else:
-            if self.chatid == self.userid:
-                self.bot.send_message(self.channel, "This is a list of your notifications. "
-                                                    "Click to turn them on/off:",
-                                      reply_markup={'inline_keyboard': keyboard})
-            else:
-                username = self.user.get('username')
-                username = " ({})".format(username) if username is not None else ''
-                self.bot.send_message(self.channel, "This is a list of notifications for {}. "
-                                                    "You{} can click to turn them on/off:"
-                                                    .format(self.user_full_name, username),
-                                      reply_markup={'inline_keyboard': keyboard})
+            self.bot.send_message(self.channel, "Here available notifications and their current state. "
+                                                "Click to turn them on/off:",
+                                  reply_markup={'inline_keyboard': keyboard})
 
     @Contact.overrideCommand
     def command_FORCE(self, args, **kwargs):
@@ -357,6 +342,7 @@ class TelegramBotResource(StatusBot, resource.Resource):
     """
 
     contactClass = TelegramContact
+    channelClass = TelegramChannel
     commandPrefix = '/'
 
     query_cache = {}
@@ -374,12 +360,34 @@ class TelegramBotResource(StatusBot, resource.Resource):
         self.http_client = outgoing_http
         self.token = token
 
-        for c in chat_ids:
-            self.getContact(channel=c)
+        self.chat_ids = chat_ids
 
         self.nickname = None
 
-    def getContact(self, user=None, channel=None):
+    def startService(self):
+        super().startService()
+        for c in self.chat_ids:
+            channel = self.getChannel(c)
+            channel.add_notification_events(self.notify_events, True)
+
+    results_emoji = {
+        SUCCESS: ' ✅',
+        WARNINGS: ' ⚠️',
+        FAILURE: '❗',
+        EXCEPTION: ' ‼️',
+        RETRY: ' 🔄',
+        CANCELLED: ' 🚫',
+    }
+
+    def format_build_status(self, build, short=False):
+        br = build['results']
+        if short:
+            return self.results_emoji[br]
+        else:
+            return self.results_descriptions[br] + \
+                   self.results_emoji[br]
+
+    def getContact(self, user, channel=None):
         """ get a Contact instance for ``user`` on ``channel`` """
         uid = None if user is None else \
             user['id'] if isinstance(user, dict) else user
@@ -393,16 +401,22 @@ class TelegramBotResource(StatusBot, resource.Resource):
                 else:
                     contact.user = user
             if isinstance(channel, dict):
-                if isinstance(contact.channel, dict):
-                    contact.channel.update(channel)
-                else:
-                    contact.channel = channel
+                contact.channel.update(channel)
             return contact
         except KeyError:
             new_contact = self.contactClass(self, user=user, channel=channel)
             self.contacts[(cid, uid)] = new_contact
-            new_contact.setServiceParent(self)
             return new_contact
+
+    def getChannel(self, channel):
+        cid = channel['id'] if isinstance(channel, dict) else channel
+        try:
+            return self.channels[cid]
+        except KeyError:
+            new_channel = self.channelClass(self, channel)
+            self.channels[cid] = new_channel
+            new_channel.setServiceParent(self)
+            return new_channel
 
     def render_GET(self, request):
         return self.render_POST(request)
@@ -547,7 +561,7 @@ class TelegramBotResource(StatusBot, resource.Resource):
 
     @defer.inlineCallbacks
     def send_message(self, channel, message, parse_mode='Markdown', **kwargs):
-        chat = channel['id'] if isinstance(channel, dict) else channel
+        chat = channel['id'] if isinstance(channel, (dict, TelegramChannel)) else channel
         params = dict(chat_id=chat, text=message)
         if parse_mode is not None:
             params['parse_mode'] = parse_mode
