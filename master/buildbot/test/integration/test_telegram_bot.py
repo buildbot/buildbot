@@ -68,7 +68,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
             self.master, self, base_url)
         # This is necessary as Telegram will make requests in the reconfig
         http.expect("post", "/setWebhook",
-                    params={'url': bytes2unicode(self.bot_url)},
+                    json={'url': bytes2unicode(self.bot_url)},
                     content_json={'ok': 1})
         return http
 
@@ -198,4 +198,4 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
             notify=['admin@worker.org'],
         )
         self.assertEquals(self.sent_messages[-1][1],
-                          "Worker local1 is missing. It was seen last at long time ago.")
+                          "Worker local1 is missing. It was seen last on long time ago.")

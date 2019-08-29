@@ -287,7 +287,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             text = self.short_results_descriptions[br]
         else:
             text = self.results_descriptions[br]
-        if self.bot.useColors:
+        if self.useColors:
             return "\x03{:d}{}\x0f".format(
                 _irc_colors.index(self.results_colors[br]),
                 text)

@@ -21,10 +21,107 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
+from buildbot.process.results import SUCCESS
 from buildbot.reporters import irc
 from buildbot.reporters import words
+from buildbot.test.unit.test_reporters_words import ContactMixin
 from buildbot.test.util import config
 from buildbot.util import service
+
+
+class TestIrcContact(ContactMixin):
+    channelClass = irc.IRCChannel
+    contactClass = irc.IRCContact
+
+    def setUp(self):
+        super().setUp()
+
+    def patch_act(self):
+        self.actions = []
+
+        def act(msg):
+            self.actions.append(msg)
+        self.contact.act = act
+
+    @defer.inlineCallbacks
+    def test_command_mute(self):
+        yield self.do_test_command('mute')
+        self.assertTrue(self.contact.channel.muted)
+
+    @defer.inlineCallbacks
+    def test_command_unmute(self):
+        self.contact.channel.muted = True
+        yield self.do_test_command('unmute')
+        self.assertFalse(self.contact.channel.muted)
+
+    @defer.inlineCallbacks
+    def test_command_unmute_not_muted(self):
+        yield self.do_test_command('unmute')
+        self.assertFalse(self.contact.channel.muted)
+        self.assertIn("hadn't told me to be quiet", self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_destroy(self):
+        self.patch_act()
+        yield self.do_test_command('destroy', exp_usage=False)
+        self.assertEqual(self.actions, ['readies phasers'])
+
+    @defer.inlineCallbacks
+    def test_command_hustle(self):
+        self.patch_act()
+        yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
+        self.assertEqual(self.actions, ['does the hustle'])
+
+    def test_send(self):
+        events = []
+
+        def groupChat(dest, msg):
+            events.append((dest, msg))
+        self.contact.bot.groupSend = groupChat
+
+        self.contact.send("unmuted")
+        self.contact.send("unmuted, unicode \N{SNOWMAN}")
+        self.contact.channel.muted = True
+        self.contact.send("muted")
+
+        self.assertEqual(events, [
+            ('#buildbot', 'unmuted'),
+            ('#buildbot', 'unmuted, unicode \u2603'),
+        ])
+
+    def test_handleAction_ignored(self):
+        self.patch_act()
+        self.contact.handleAction('waves hi')
+        self.assertEqual(self.actions, [])
+
+    def test_handleAction_kick(self):
+        self.patch_act()
+        self.contact.handleAction('kicks nick')
+        self.assertEqual(self.actions, ['kicks back'])
+
+    def test_handleAction_stupid(self):
+        self.patch_act()
+        self.contact.handleAction('stupids nick')
+        self.assertEqual(self.actions, ['stupids me too'])
+
+    def test_act(self):
+        events = []
+
+        def groupDescribe(dest, msg):
+            events.append((dest, msg))
+        self.contact.bot.groupDescribe = groupDescribe
+
+        self.contact.act("unmuted")
+        self.contact.act("unmuted, unicode \N{SNOWMAN}")
+        self.contact.channel.muted = True
+        self.contact.act("muted")
+
+        self.assertEqual(events, [
+            ('#buildbot', 'unmuted'),
+            ('#buildbot', 'unmuted, unicode \u2603'),
+        ])
+
+
 
 
 class FakeContact(service.AsyncService):
@@ -215,6 +312,22 @@ class TestIrcStatusBot(unittest.TestCase):
         b = self.makeBot()
         b.left('#ch1')
         b.kickedFrom('#ch1', 'dustin', 'go away!')
+
+    def test_format_build_status(self):
+        b = self.makeBot()
+        self.assertEquals(b.format_build_status({'results': SUCCESS}),
+                          "completed successfully")
+
+    def test_format_build_status_short(self):
+        b = self.makeBot()
+        self.assertEquals(b.format_build_status({'results': SUCCESS}, True),
+                          ", Success")
+
+    def test_format_build_status_colors(self):
+        b = self.makeBot()
+        b.useColors = True
+        self.assertEquals(b.format_build_status({'results': SUCCESS}),
+                          "\x033completed successfully\x0f")
 
 
 class TestIrcStatusFactory(unittest.TestCase):

@@ -21,7 +21,6 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
-from buildbot.reporters import irc
 from buildbot.reporters import words
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -29,7 +28,13 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 
 
-class TestContactChannel(TestReactorMixin, unittest.TestCase):
+class ContactMixin(TestReactorMixin):
+    botClass = words.StatusBot
+
+    channelClass = words.Channel
+    contactClass = words.Contact
+    USER = "me"
+    CHANNEL = "#buildbot"
 
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
@@ -43,12 +48,9 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
             self.master.db.builders.addTestBuilder(
                 builderid=builderid, name=name)
 
-        # I think the 'bot' part of this is actually going away ...
-        # TO REMOVE:
-
-        self.bot = words.StatusBot(notify_events = {'success': 1, 'failure': 1})
-        self.bot.channelClass = irc.IRCChannel
-        self.bot.contactClass = irc.IRCContact
+        self.bot = self.botClass(notify_events={'success': 1, 'failure': 1})
+        self.bot.channelClass = self.channelClass
+        self.bot.contactClass = self.contactClass
         self.bot.nickname = 'nick'
 
         # fake out subscription/unsubscription
@@ -57,7 +59,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         # fake out clean shutdown
         self.bot.parent = self
         self.bot.master.botmaster = mock.Mock(
-            name='IRCStatusBot-instance.master.botmaster')
+            name='StatusBot-instance.master.botmaster')
         self.bot.master.botmaster.shuttingDown = False
 
         def cleanShutdown():
@@ -68,7 +70,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
             self.bot.master.botmaster.shuttingDown = False
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = irc.IRCContact(self.bot, user='me', channel='#buildbot')
+        self.contact = self.contactClass(self.bot, user=self.USER, channel=self.CHANNEL)
         self.bot.reactor = self.reactor
         self.contact.channel.setServiceParent(self.master)
         return self.master.startService()
@@ -83,40 +85,50 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
                 self.sent.append(m)
         self.contact.channel.send = send
 
-    def patch_act(self):
-        self.actions = []
-
-        def act(msg):
-            self.actions.append(msg)
-        self.contact.act = act
-
     @defer.inlineCallbacks
     def do_test_command(self, command, args='', clock_ticks=None,
-                        exp_usage=True, exp_UsageError=False, allowShutdown=False,
-                        shuttingDown=False):
+                        exp_usage=True, exp_UsageError=False,
+                        shuttingDown=False, **kwargs):
         cmd = getattr(self.contact, 'command_' + command.upper())
 
         if exp_usage:
             self.assertTrue(hasattr(cmd, 'usage'))
 
         self.patch_send()
-        self.patch_act()
-        self.bot.allowShutdown = allowShutdown
         self.bot.master.botmaster.shuttingDown = shuttingDown
 
         if exp_UsageError:
             try:
-                yield cmd(args)
+                yield cmd(args, **kwargs)
             except words.UsageError:
                 return
             else:
                 self.fail("no UsageError")
         else:
-            cmd(args)
+            cmd(args, **kwargs)
         if clock_ticks:
             self.reactor.pump(clock_ticks)
 
-    # tests
+    def setupSomeBuilds(self):
+        self.master.db.insertTestData([
+            # Three builds on builder#0, One build on builder#1
+            fakedb.Build(id=13, masterid=88, workerid=13,
+                         builderid=self.BUILDER_IDS[0],
+                         buildrequestid=82, number=3),
+            fakedb.Build(id=14, masterid=88, workerid=13,
+                         builderid=self.BUILDER_IDS[0],
+                         buildrequestid=83, number=4),
+            fakedb.Build(id=15, masterid=88, workerid=13,
+                         builderid=self.BUILDER_IDS[1],
+                         buildrequestid=84, number=5),
+            fakedb.Build(id=16, masterid=88, workerid=13,
+                         builderid=self.BUILDER_IDS[0],
+                         buildrequestid=85, number=6),
+        ])
+        self.master.db.builds.finishBuild(buildid=14, results=SUCCESS)
+
+
+class TestContact(ContactMixin, unittest.TestCase):
 
     def test_doSilly(self):
         self.patch_send()
@@ -129,11 +141,6 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
 
     # TODO: remaining commands
     # (all depend on status, which interface will change soon)
-
-    @defer.inlineCallbacks
-    def test_command_mute(self):
-        yield self.do_test_command('mute')
-        self.assertTrue(self.contact.channel.muted)
 
     @defer.inlineCallbacks
     def test_command_notify0(self):
@@ -186,19 +193,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         yield self.do_test_command('notify', args='on worker')
         missing_worker = self.contact.channel.subscribed[2].callback
         missing_worker('key', dict(name="work", last_connection="sometime"))
-        self.assertEquals(self.sent[1], "Worker work is missing. It was seen last at sometime.")
-
-    @defer.inlineCallbacks
-    def test_command_unmute(self):
-        self.contact.channel.muted = True
-        yield self.do_test_command('unmute')
-        self.assertFalse(self.contact.channel.muted)
-
-    @defer.inlineCallbacks
-    def test_command_unmute_not_muted(self):
-        yield self.do_test_command('unmute')
-        self.assertFalse(self.contact.channel.muted)
-        self.assertIn("hadn't told me to be quiet", self.sent[0])
+        self.assertEquals(self.sent[1], "Worker work is missing. It was seen last on sometime.")
 
     @defer.inlineCallbacks
     def test_command_help_noargs(self):
@@ -281,39 +276,33 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_shutdown(self):
         yield self.do_test_command('shutdown', exp_UsageError=True)
-        self.assertEqual(self.bot.allowShutdown, False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
     @defer.inlineCallbacks
     def test_command_shutdown_check_running(self):
-        yield self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=False)
-        self.assertEqual(self.bot.allowShutdown, True)
+        yield self.do_test_command('shutdown', args='check', shuttingDown=False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
         self.assertIn('buildbot is running', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_shutdown_check_shutting_down(self):
-        yield self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=True)
-        self.assertEqual(self.bot.allowShutdown, True)
+        yield self.do_test_command('shutdown', args='check', shuttingDown=True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
         self.assertIn('buildbot is shutting down', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_shutdown_start(self):
-        yield self.do_test_command('shutdown', args='start', allowShutdown=True, shuttingDown=False)
-        self.assertEqual(self.bot.allowShutdown, True)
+        yield self.do_test_command('shutdown', args='start', shuttingDown=False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
 
     @defer.inlineCallbacks
     def test_command_shutdown_stop(self):
-        yield self.do_test_command('shutdown', args='stop', allowShutdown=True, shuttingDown=True)
-        self.assertEqual(self.bot.allowShutdown, True)
+        yield self.do_test_command('shutdown', args='stop', shuttingDown=True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
     @defer.inlineCallbacks
     def test_command_shutdown_now(self):
-        yield self.do_test_command('shutdown', args='now', allowShutdown=True)
-        self.assertEqual(self.bot.allowShutdown, True)
+        yield self.do_test_command('shutdown', args='now')
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
         self.assertTrue(self.reactor.stop_called)
 
@@ -328,19 +317,9 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         self.assertIn('Buildbot commands', self.sent[0])
 
     @defer.inlineCallbacks
-    def test_command_destroy(self):
-        yield self.do_test_command('destroy', exp_usage=False)
-        self.assertEqual(self.actions, ['readies phasers'])
-
-    @defer.inlineCallbacks
     def test_command_dance(self):
         yield self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
         self.assertTrue(self.sent)  # doesn't matter what it sent
-
-    @defer.inlineCallbacks
-    def test_command_hustle(self):
-        yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
-        self.assertEqual(self.actions, ['does the hustle'])
 
     @defer.inlineCallbacks
     def test_command_hello(self):
@@ -359,6 +338,18 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
             self.assertIn('%s [offline]' % builder, self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_list_workers(self):
+        workers = ['worker1', 'worker2']
+        for worker in workers:
+            self.master.db.workers.db.insertTestData([
+                fakedb.Worker(name=worker)
+            ])
+        yield self.do_test_command('list', args='workers')
+        self.assertEqual(len(self.sent), 1)
+        for worker in workers:
+            self.assertIn('%s [offline]' % worker, self.sent[0])
 
     def setup_multi_builders(self):
         # Make first builder configured, but not connected
@@ -410,7 +401,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_status_builder0_offline(self):
         yield self.do_test_command('status', args=self.BUILDER_NAMES[0])
-        self.assertEqual(self.sent, ['`%s`: offline 💀' % self.BUILDER_NAMES[0]])
+        self.assertEqual(self.sent, ['`%s`: offline' % self.BUILDER_NAMES[0]])
 
     @defer.inlineCallbacks
     def test_command_status_builder0_running(self):
@@ -432,7 +423,21 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_last(self):
         self.setupSomeBuilds()
+        self.setup_multi_builders()
+        # Also set the connectedness:
+        self.master.db.insertTestData([
+            fakedb.ConnectedWorker(id=113, masterid=13, workerid=2)
+        ])
         yield self.do_test_command('last')
+        self.assertEqual(len(self.sent), 1)
+        sent = self.sub_seconds(self.sent)
+        self.assertIn(
+            '`builder1`: last build completed successfully (N seconds ago)', sent)
+
+    @defer.inlineCallbacks
+    def test_command_last_all(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('last', args='all')
         self.assertEqual(len(self.sent), 2)
         sent = self.sub_seconds(self.sent)
         self.assertIn(
@@ -470,24 +475,6 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         self.assertIn('There are no currently running builds.', self.sent[0])
-
-    def setupSomeBuilds(self):
-        self.master.db.insertTestData([
-            # Three builds on builder#0, One build on builder#1
-            fakedb.Build(id=13, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[0],
-                         buildrequestid=82, number=3),
-            fakedb.Build(id=14, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[0],
-                         buildrequestid=83, number=4),
-            fakedb.Build(id=15, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[1],
-                         buildrequestid=84, number=5),
-            fakedb.Build(id=16, masterid=88, workerid=13,
-                         builderid=self.BUILDER_IDS[0],
-                         buildrequestid=85, number=6),
-        ])
-        self.master.db.builds.finishBuild(buildid=14, results=SUCCESS)
 
     @defer.inlineCallbacks
     def test_command_watch_builder0(self):
@@ -592,40 +579,6 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
     #             args='build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 %s REASON'
     #               % self.BUILDER_NAMES[0])
 
-    def test_send(self):
-        events = []
-
-        def groupChat(dest, msg):
-            events.append((dest, msg))
-        self.contact.bot.groupSend = groupChat
-
-        self.contact.send("unmuted")
-        self.contact.send("unmuted, unicode \N{SNOWMAN}")
-        self.contact.channel.muted = True
-        self.contact.send("muted")
-
-        self.assertEqual(events, [
-            ('#buildbot', 'unmuted'),
-            ('#buildbot', 'unmuted, unicode \u2603'),
-        ])
-
-    def test_act(self):
-        events = []
-
-        def groupDescribe(dest, msg):
-            events.append((dest, msg))
-        self.contact.bot.groupDescribe = groupDescribe
-
-        self.contact.act("unmuted")
-        self.contact.act("unmuted, unicode \N{SNOWMAN}")
-        self.contact.channel.muted = True
-        self.contact.act("muted")
-
-        self.assertEqual(events, [
-            ('#buildbot', 'unmuted'),
-            ('#buildbot', 'unmuted, unicode \u2603'),
-        ])
-
     @defer.inlineCallbacks
     def test_handleMessage_silly(self):
         silly_prompt = list(self.contact.silly)[0]
@@ -678,21 +631,6 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         yield self.contact.handleMessage('testy boom')
 
         self.assertEqual(self.sent, ["oh noes"])
-
-    def test_handleAction_ignored(self):
-        self.patch_act()
-        self.contact.handleAction('waves hi')
-        self.assertEqual(self.actions, [])
-
-    def test_handleAction_kick(self):
-        self.patch_act()
-        self.contact.handleAction('kicks nick')
-        self.assertEqual(self.actions, ['kicks back'])
-
-    def test_handleAction_stupid(self):
-        self.patch_act()
-        self.contact.handleAction('stupids nick')
-        self.assertEqual(self.actions, ['stupids me too'])
 
     @defer.inlineCallbacks
     def test_unclosed_quote(self):
@@ -760,7 +698,7 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
     authz2 = {
         'shutdown': False,
         '': False,
-        '!': True}
+        '*': True}
 
     def test_getCommandMethod_exclamation(self):
         self.bot.authz = words.StatusBot._expand_authz(self.authz2)
@@ -776,6 +714,9 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         self.patch_send()
         self.contact.access_denied()
         self.assertIn("not pass", self.sent[0])
+
+    def test_convertTime(self):
+        self.assertEquals(words.convertTime(53611200), "2 years")
 
 
 class FakeContact:

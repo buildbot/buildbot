@@ -137,8 +137,9 @@ class Channel(service.AsyncService):
     """
 
     def __init__(self, bot, channel):
-        self.bot = bot
+        self.name = "Channel({})".format(channel)
         self.id = channel
+        self.bot = bot
         self.notify_events = set()
         self.subscribed = []
         self.build_subscriptions = []
@@ -358,7 +359,7 @@ class Channel(service.AsyncService):
 
     def workerMissing(self, worker):
         if self.notify_for('worker'):
-            self.send("Worker {name} is missing. It was seen last at {last_connection}.".format(**worker))
+            self.send("Worker {name} is missing. It was seen last on {last_connection}.".format(**worker))
 
 
 class Contact:
@@ -377,9 +378,6 @@ class Contact:
         """
         if channel is None:
             channel = user
-        self.name = "Contact({}, {})".format(user, channel)
-        super().__init__()
-
         self.user = user
         self.channel = bot.getChannel(channel)
         self._next_HELLO = 'yes?'
@@ -409,10 +407,6 @@ class Contact:
     def userid(self):
         return self.user
 
-    @property
-    def channelid(self):
-        return self.channel.channel if self.channel is not None else self.user
-
     # Silliness
 
     silly = {
@@ -427,10 +421,10 @@ class Contact:
     # Communication with the user
 
     def send(self, message, **kwargs):
-        self.channel.send(message, **kwargs)
+        return self.channel.send(message, **kwargs)
 
     def access_denied(self, *args, **kwargs):
-        self.send("Thou shall not pass, {}!!!".format(self.user))
+        return self.send("Thou shall not pass, {}!!!".format(self.user))
 
     # Main dispatchers for incoming messages
 
@@ -445,10 +439,10 @@ class Contact:
             acl = get_authz(command)
             if acl is None:
                 if command in dangerous_commands:
-                    acl = False
+                    acl = get_authz('!', False)
                 else:
                     acl = get_authz('', True)
-                acl = get_authz('!', acl)
+                acl = get_authz('*', acl)
             if isinstance(acl, (list, tuple)):
                 acl = self.userid in acl
             if not acl:
@@ -534,7 +528,7 @@ class Contact:
             bdicts = yield self.bot.getAllBuilders()
             online_builderids = yield self.bot.getOnlineBuilders()
 
-            response = ["Configured builders:"]
+            response = ["I found the following builders:"]
             for bdict in bdicts:
                 response.append(bdict['name'])
                 if bdict['builderid'] not in online_builderids:
@@ -544,10 +538,11 @@ class Contact:
         elif args[0] == 'workers':
             workers = yield self.master.data.get(('workers',))
 
-            response = ["Configured workers:"]
+            response = ["I found the following workers:"]
             for worker in workers:
                 response.append(worker['name'])
-                if not worker['connected_to']:
+                if not worker['configured_on'] or \
+                        not worker['connected_to']:
                     response.append("[offline]")
             self.send(' '.join(response))
             return
@@ -559,16 +554,23 @@ class Contact:
         """list status of a builder (or all builders)"""
         args = self.splitArgs(args)
         if not args:
-            which = "all"
+            which = ""
         elif len(args) == 1:
             which = args[0]
         else:
             raise UsageError("Try '"+self.bot.commandPrefix+"status _builder_'.")
         results = []
-        if which == "all":
-            bdicts = yield self.bot.getAllBuilders()
-            for bdict in bdicts:
-                status = yield self.bot.getBuildStatus(bdict['name'], short=True)
+        if which == "":
+            builders = yield self.bot.getAllBuilders()
+            online_builderids = yield self.bot.getOnlineBuilders()
+            for builder in builders:
+                if builder['builderid'] in online_builderids:
+                    status = yield self.bot.getBuildStatus(builder['name'], short=True)
+                    results.append(status)
+        elif which == "all":
+            builders = yield self.bot.getAllBuilders()
+            for builder in builders:
+                status = yield self.bot.getBuildStatus(builder['name'], short=True)
                 results.append(status)
         else:
             status = yield self.bot.getBuildStatus(which)
@@ -785,11 +787,17 @@ class Contact:
 
         if not args:
             builders = yield self.bot.getAllBuilders()
+            online_builderids = yield self.bot.getOnlineBuilders()
+            builders = [b for b in builders if b['builderid'] in online_builderids]
         elif len(args) == 1:
-            builder = yield self.bot.getBuilder(buildername=args[0])
-            if not builder:
-                raise UsageError("no such builder")
-            builders = [builder]
+            arg = args[0]
+            if arg == 'all':
+                builders = yield self.bot.getAllBuilders()
+            else:
+                builder = yield self.bot.getBuilder(buildername=arg)
+                if not builder:
+                    raise UsageError("no such builder")
+                builders = [builder]
         else:
             raise UsageError("Try '"+self.bot.commandPrefix+"last _builder_'.")
 
@@ -826,7 +834,7 @@ class Contact:
         return commands
 
     def describeUser(self):
-        if self.channel:
+        if self.channel != self.user:
             return "User <{}> on {}".format(self.user, self.channel)
         return "User <{}>".format(self.user)
 
@@ -938,6 +946,10 @@ class StatusBot(service.AsyncMultiService):
 
     commandPrefix = ''
     commandSuffix = None
+
+    offline_string = "offline"
+    idle_string = "idle"
+    running_string = "running:"
 
     def __init__(self, authz=None, tags=None, notify_events=None,
                  useRevisions=False, showBlameList=False):
@@ -1062,7 +1074,7 @@ class StatusBot(service.AsyncMultiService):
         if not runningBuilds:
             onlineBuilders = yield self.getOnlineBuilders()
             if builderid in onlineBuilders:
-                response += "idle 😴"
+                response += self.idle_string
                 lastBuild = yield self.getLastCompletedBuild(builderid)
                 if lastBuild:
                     complete_at = lastBuild['complete_at']
@@ -1079,9 +1091,9 @@ class StatusBot(service.AsyncMultiService):
                             status += ": " + lastBuild['status_string']
                     response += '  last build {} ago{}'.format(ago, status)
             else:
-                response += "offline 💀"
+                response += self.offline_string
         else:
-            response += "running 🤠:"
+            response += self.running_string
             buildInfo = []
             for build in runningBuilds:
                 step = yield self.getCurrentBuildstep(build)

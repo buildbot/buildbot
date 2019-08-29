@@ -18,7 +18,6 @@ import json
 import random
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import resource
 from twisted.web import server
@@ -46,19 +45,19 @@ class TelegramChannel(Channel):
     def __init__(self, bot, channel):
         if isinstance(channel, dict):
             super().__init__(bot, channel['id'])
-            self._channel = channel
+            self.chat = channel
         else:
             super().__init__(bot, channel)
-            self._channel = {'id': channel}
+            self.chat = {'id': channel}
 
     def __getitem__(self, item):
-        return self._channel[item]
+        return self.chat[item]
 
     def get(self, item, default=None):
-        return self._channel.get(item, default)
+        return self.chat.get(item, default)
 
     def update(self, src):
-        self._channel.update(src)
+        self.chat.update(src)
 
     def list_notified_events(self):
         if self.notify_events:
@@ -106,7 +105,7 @@ class TelegramContact(Contact):
         except KeyError:
             pass
 
-        if self.channel.id != self.user['id']:
+        if self.channel.id != self.userid:
             chat_title = self.channel.get('title')
             if chat_title: user += " on '{}'".format(chat_title)
 
@@ -141,6 +140,7 @@ class TelegramContact(Contact):
         self.send(
             "⛔  ACCESS DENIED  ⛔\n\n" +
             random.choice((
+                "You are simply not allowed to to this!",
                 "Go outside and relax...",
                 "Please proceed to the extermination zone →",
                 "This incident has ben reported to NSA!",
@@ -149,22 +149,21 @@ class TelegramContact(Contact):
     def query_button(self, caption, payload):
         if isinstance(payload, str) and len(payload) < 64:
             return {'text': caption, 'callback_data': payload}
-        n = 0
+        key = hash(repr(payload))
         while True:
-            key = hash(payload)
             cached = self.bot.query_cache.get(key)
             if cached is None:
                 self.bot.query_cache[key] = payload
                 break
             elif cached == payload:
                 break
-            n += 1
+            key += 1
         return {'text': caption, 'callback_data': key}
 
     @defer.inlineCallbacks
     def command_START(self, args, **kwargs):
         yield self.command_HELLO(args)
-        self.reactor.callLater(0.2, self.command_HELP, '')
+        self.bot.reactor.callLater(0.2, self.command_HELP, '')
 
     def command_NAY(self, args, **kwargs):
         """forget the current command"""
@@ -236,21 +235,23 @@ class TelegramContact(Contact):
             bdicts = yield self.bot.getAllBuilders()
             online_builderids = yield self.bot.getOnlineBuilders()
 
-            response = ["Configured builders:"]
+            response = ["I found the following **builders**:"]
             for bdict in bdicts:
                 response.append("`{}`".format(bdict['name']))
                 if bdict['builderid'] not in online_builderids:
-                    response[-1] += " ☠️"
+                    response[-1] += " ❌"
             self.send(response)
 
         elif args[0] == 'workers':
             workers = yield self.master.data.get(('workers',))
 
-            response = ["Configured workers:"]
+            response = ["I found the following **workers**:"]
             for worker in workers:
                 response.append("`{}`".format(worker['name']))
+                if not worker['configured_on']:
+                    response[-1] += " ❌"
                 if not worker['connected_to']:
-                    response[-1] += " ☠️"
+                    response[-1] += " ⚠️"
             self.send(response)
 
     @defer.inlineCallbacks
@@ -279,12 +280,15 @@ class TelegramContact(Contact):
                 self.send("There are no currently running builds.")
 
     @Contact.overrideCommand
-    def command_NOTIFY(self, args, tmessage, tquery=None, **kwargs):
+    def command_NOTIFY(self, args, tquery=None, **kwargs):
         if args:
-            if args == 'list':
+            want_list = args == 'list'
+            if want_list and tquery:
                 self.bot.delete_message(self.chatid, tquery['message']['message_id'])
+
             super().command_NOTIFY(args)
-            if not tquery or args == 'list':
+
+            if want_list or not tquery:
                 return
 
         keyboard = [
@@ -375,6 +379,10 @@ class TelegramBotResource(StatusBot, resource.Resource):
     contactClass = TelegramContact
     channelClass = TelegramChannel
     commandPrefix = '/'
+
+    offline_string = "offline ❌"
+    idle_string = "idle 💤"
+    running_string = "running 🌀:"
 
     query_cache = {}
 
@@ -568,10 +576,11 @@ class TelegramBotResource(StatusBot, resource.Resource):
             self.log("ERROR: cannot send '{}' to telegram: {}".format(path, err))
 
     def set_webhook(self, url, certificate=None):
-        self.log("Setting up webhook to: {}".format(url))
         if not certificate:
+            self.log("Setting up webhook to: {}".format(url))
             self._post('/setWebhook', json=dict(url=url))
         else:
+            self.log("Setting up webhook to: {} (custom certificate)".format(url))
             if not hasattr(certificate, 'read'):
                 certificate = io.BytesIO(unicode2bytes(certificate))
                 certificate.name = 'certificate.pem'
@@ -601,8 +610,10 @@ class TelegramBotResource(StatusBot, resource.Resource):
         return (yield self._post('/sendMessage', json=params))
 
     @defer.inlineCallbacks
-    def edit_message(self, chat, msg, message, **kwargs):
+    def edit_message(self, chat, msg, message, parse_mode='Markdown', **kwargs):
         params = dict(chat_id=chat, message_id=msg, text=message)
+        if parse_mode is not None:
+            params['parse_mode'] = parse_mode
         params.update(kwargs)
         return (yield self._post('/editMessageText', json=params))
 
@@ -697,13 +708,13 @@ class TelegramBot(service.BuildbotService):
                                        tags=tags, notify_events=notify_events,
                                        useRevisions=useRevisions,
                                        showBlameList=showBlameList)
+        if bot_username is None:
+            yield self.bot.set_nickname()
+        else:
+            self.bot.nickname = bot_username
         self.bot.setServiceParent(self)
         bot_path = 'bot' + bot_token
         root.putChild(unicode2bytes(bot_path), self.bot)
         url = bytes2unicode(self.master.config.buildbotURL)
         if not url.endswith('/'): url += '/'
         self.bot.set_webhook(url + bot_path, certificate)
-        if bot_username is None:
-            yield self.bot.set_nickname()
-        else:
-            self.bot.nickname = bot_username
