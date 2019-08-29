@@ -102,48 +102,39 @@ dangerous_commands = []
 def dangerousCommand(method):
     command = method.__name__
     if not command.startswith('command_'):
-        raise ValueError('@dangerous can be used only for commands')
+        raise ValueError('@dangerousCommand can be used only for commands')
     dangerous_commands.append(command[8:])
     return method
 
 
 def convertTime(seconds):
-    if seconds <= 1:
-        return "a moment"
-    if seconds < 20:
-        return "{:d} seconds".format(seconds)
-    if seconds < 55:
-        return "{:d} seconds".format(round(seconds / 10) * 10)
+    if seconds <= 1: return "a moment"
+    if seconds < 20: return "{:d} seconds".format(seconds)
+    if seconds < 55: return "{:d} seconds".format(round(seconds / 10) * 10)
     minutes = round(seconds / 60)
-    if minutes == 1:
-        return "a minute"
-    if minutes < 20:
-        return "{:d} minutes".format(minutes)
-    if minutes < 55:
-        return "{:d} minutes".format(round(minutes / 10) * 10)
+    if minutes == 1: return "a minute"
+    if minutes < 20: return "{:d} minutes".format(minutes)
+    if minutes < 55: return "{:d} minutes".format(round(minutes / 10) * 10)
     hours = round(minutes / 60)
-    if hours == 1:
-        return "an hour"
-    if hours < 24:
-        return "{:d} hours".format(hours)
+    if hours == 1: return "an hour"
+    if hours < 24: return "{:d} hours".format(hours)
     days = (hours+6) // 24
-    if days == 1:
-        return "a day"
-    if days < 30:
-        return "{:d} days".format(days)
+    if days == 1: return "a day"
+    if days < 30: return "{:d} days".format(days)
     months = int((days+10) / 30.5)
-    if months == 1:
-        return "a month"
-    if months < 12:
-        return "{} months".format(months)
+    if months == 1: return "a month"
+    if months < 12: return "{} months".format(months)
     years = round(days / 365.25)
-    if years == 1:
-        return "a year"
+    if years == 1: return "a year"
     return "{} years".format(years)
 
 
 class Channel(service.AsyncService):
-    """This class holds what should be shared between users on a single channel"""
+    """
+    This class holds what should be shared between users on a single channel.
+    In particular it is responsible for maintaining notification states and
+    send notifications.
+    """
 
     def __init__(self, bot, channel):
         self.bot = bot
@@ -154,17 +145,18 @@ class Channel(service.AsyncService):
         self.reported_builds = []  # tuples (when, buildername, buildnum)
         self.useRevisions = bot.useRevisions
 
-    def send(self, message):
+    def send(self, message, **kwargs):
         if isinstance(message, (list, tuple, types.GeneratorType)):
             message = "\n".join(message)
-        return self.bot.send_message(self.id, message)
+        return self.bot.send_message(self.id, message, **kwargs)
 
     def stopService(self):
-        self.remove_all_notification_events()
+        if self.subscribed:
+            self.unsubscribe_from_build_events()
 
     def validate_notification_event(self, event):
         if not re.compile("^(started|finished|success|warnings|failure|exception|"
-                          "problem|recovery|worse|better|"
+                          "problem|recovery|worse|better|worker|"
                           # this is deprecated list 
                           "(success|warnings|failure|exception)To"
                           "(Success|Warnings|Failure|Exception))$").match(event):
@@ -193,10 +185,16 @@ class Channel(service.AsyncService):
         def buildFinished(key, msg):
             return self.buildFinished(msg)
 
+        def workerMissing(key, msg):
+            return self.workerMissing(msg)
+
         for e, f in (("new", buildStarted),             # BuilderStarted
                      ("finished", buildFinished)):      # BuilderFinished
             handle = yield startConsuming(f, ('builders', None, 'builds', None, e))
             self.subscribed.append(handle)
+
+        handle = yield startConsuming(workerMissing, ('workers', None, 'missing'))
+        self.subscribed.append(handle)
 
     def unsubscribe_from_build_events(self):
         # Cancel all the subscriptions we have
@@ -358,6 +356,10 @@ class Channel(service.AsyncService):
 
         return False
 
+    def workerMissing(self, worker):
+        if self.notify_for('worker'):
+            self.send("Worker {name} is missing. It was seen last at {last_connection}.".format(**worker))
+
 
 class Contact:
     """I hold the state for a single user's interaction with the buildbot.
@@ -414,20 +416,20 @@ class Contact:
     # Silliness
 
     silly = {
-        "What happen ?": ["Somebody set up us the bomb."],
-        "It's You !!": ["How are you gentlemen !!",
-                        "All your base are belong to us.",
-                        "You are on the way to destruction."],
-        "What you say !!": ["You have no chance to survive make your time.",
-                            "HA HA HA HA ...."],
+        "What happens?": ["Somebody set up us the bomb."],
+        "It's You!": ["How are you gentlemen!!",
+                      "All your base are belong to us.",
+                      "You are on the way to destruction."],
+        "What you say!": ["You have no chance to survive make your time.",
+                          "HA HA HA HA ...."],
     }
 
     # Communication with the user
 
-    def send(self, message):
-        self.channel.send(message)
+    def send(self, message, **kwargs):
+        self.channel.send(message, **kwargs)
 
-    def access_denied(self, *args):
+    def access_denied(self, *args, **kwargs):
         self.send("Thou shall not pass, {}!!!".format(self.user))
 
     # Main dispatchers for incoming messages
@@ -523,10 +525,10 @@ class Contact:
 
     @defer.inlineCallbacks
     def command_LIST(self, args, **kwargs):
-        """list configured builders"""
+        """list configured builders or workers"""
         args = self.splitArgs(args)
         if not args:
-            raise UsageError("Try '"+self.bot.commandPrefix+"list builders'.")
+            raise UsageError("Try '"+self.bot.commandPrefix+"list builders|workers'.")
 
         if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -538,7 +540,18 @@ class Contact:
                 if bdict['builderid'] not in online_builderids:
                     response.append("[offline]")
             self.send(' '.join(response))
+
+        elif args[0] == 'workers':
+            workers = yield self.master.data.get(('workers',))
+
+            response = ["Configured workers:"]
+            for worker in workers:
+                response.append(worker['name'])
+                if not worker['connected_to']:
+                    response.append("[offline]")
+            self.send(' '.join(response))
             return
+
     command_LIST.usage = "list builders - List configured builders"
 
     @defer.inlineCallbacks
@@ -978,13 +991,16 @@ class StatusBot(service.AsyncMultiService):
     def loadNotifyEvents(self):
         objectid = yield self._getObjectId()
         notify_contacts = yield self.master.db.state.getState(objectid, 'notify_contacts', None)
-        if notify_contacts is not None:
-            for c, e in notify_contacts:
-                channel = self.getChannel(c)
-                try:
-                    channel.add_notification_events(e)
-                except UsageError:
-                    pass
+        try:
+            if notify_contacts is not None:
+                for c, e in notify_contacts:
+                    channel = self.getChannel(c)
+                    try:
+                        channel.add_notification_events(e)
+                    except UsageError:
+                        pass
+        except Exception as err:
+            log.err(err, 'loadNotifyEvents')
 
     @defer.inlineCallbacks
     def saveNotifyEvents(self):
@@ -993,11 +1009,7 @@ class StatusBot(service.AsyncMultiService):
                            for channel in self.channels.values()]
         yield self.master.db.state.setState(objectid, 'notify_contacts', notify_contacts)
 
-    def startService(self):
-        self.loadNotifyEvents()
-        return super().startService()
-
-    def send_message(self, channel, message):
+    def send_message(self, channel, message, **kwargs):
         raise NotImplementedError()
 
     def log(self, msg):
@@ -1065,7 +1077,7 @@ class StatusBot(service.AsyncMultiService):
                         status = ", " + status
                         if lastBuild['results'] != SUCCESS:
                             status += ": " + lastBuild['status_string']
-                    response += ': last build {} ago{}'.format(ago, status)
+                    response += '  last build {} ago{}'.format(ago, status)
             else:
                 response += "offline 💀"
         else:

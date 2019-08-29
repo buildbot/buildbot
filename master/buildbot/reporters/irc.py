@@ -72,7 +72,7 @@ class IRCChannel(Channel):
         super().__init__(bot, channel)
         self.muted = False
 
-    def send(self, message):
+    def send(self, message, **kwargs):
         if self.id[0] in irc.CHANNEL_PREFIXES:
             send = self.bot.groupSend
         else:
@@ -232,6 +232,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         for c in self.pm_to_nicks:
             contact = self.getContact(c)
             contact.channel.add_notification_events(self.notify_events)
+        self.loadNotifyEvents()
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))

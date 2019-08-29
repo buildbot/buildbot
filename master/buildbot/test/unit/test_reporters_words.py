@@ -181,6 +181,14 @@ class TestContactChannel(TestReactorMixin, unittest.TestCase):
         self.notify_build_test("on")
 
     @defer.inlineCallbacks
+    def test_notify_missing_worker(self):
+        self.patch_send()
+        yield self.do_test_command('notify', args='on worker')
+        missing_worker = self.contact.channel.subscribed[2].callback
+        missing_worker('key', dict(name="work", last_connection="sometime"))
+        self.assertEquals(self.sent[1], "Worker work is missing. It was seen last at sometime.")
+
+    @defer.inlineCallbacks
     def test_command_unmute(self):
         self.contact.channel.muted = True
         yield self.do_test_command('unmute')

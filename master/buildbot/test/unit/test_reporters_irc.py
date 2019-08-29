@@ -51,6 +51,7 @@ class TestIrcStatusBot(unittest.TestCase):
             args = ('nick', 'pass', ['#ch'], [], False)
         bot = irc.IrcStatusBot(*args, **kwargs)
         bot.parent = mock.Mock()
+        bot.parent.master.db.state.getState = lambda *args, **kwargs: None
         return bot
 
     def test_groupDescribe(self):

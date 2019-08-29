@@ -24,6 +24,7 @@ from twisted.web.http_headers import Headers
 from twisted.web.iweb import IBodyProducer
 from zope.interface import implementer
 
+from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
 from buildbot.mq import connector as mqconnector
 from buildbot.reporters import telegram
@@ -73,17 +74,25 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpRealDatabase(table_names=['objects', 'object_state'],
+        yield self.setUpRealDatabase(table_names=['objects', 'object_state', 'masters',
+                                                  'workers', 'configured_workers', 'connected_workers',
+                                                  'builder_masters', 'builders'],
                                      sqlite_memory=False)
         master = fakemaster.FakeMaster(reactor)
+
+        master.data = dataconnector.DataConnector()
+        master.data.setServiceParent(master)
+
         master.config.db = dict(db_url=self.db_url)
         master.db = dbconnector.DBConnector('basedir')
         master.db.setServiceParent(master)
         yield master.db.setup(check_version=False)
+
         master.config.mq = dict(type='simple')
         master.mq = mqconnector.MQConnector()
         master.mq.setServiceParent(master)
         master.mq.setup()
+
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
             debug=True,
@@ -111,20 +120,20 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
         self.agent = client.Agent(reactor)
 
-        tboid = yield master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramBotResource')
-        yield self.insertTestData([
-            fakedb.ObjectState(objectid=tboid, name='notify_contacts',
-                               value_json='[[123456789,  ["started", "finished"]]]'),
-        ])
-
         # create a telegram bot service
         tb = master.config.services['TelegramBot'] = telegram.TelegramBot(
-            bot_token='12345:secret', bot_username="testbot"
+            bot_token='12345:secret', bot_username="testbot", chat_ids=[-123456],  notify_events=['worker']
         )
         tb._get_http = self.get_http
         tb.setServiceParent(self.master)
         self.bot_url = self.url + b"bot12345:secret"
+
         yield tb.startService()
+
+        self.sent_messages = []
+        def send_message(chat, message, **kwargs):
+            self.sent_messages.append((chat, message))
+        tb.bot.send_message = send_message
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -153,25 +162,40 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
             }
         }))
 
-        tb = self.master.config.services['TelegramBot']
-
-        sent_messages = []
-        def send_message(chat, message):
-            sent_messages.append((chat,  message))
-        tb.bot.send_message = send_message
-
         pg = yield self.agent.request(b'POST', self.bot_url,
                                       Headers({'Content-Type': ['application/json']}),
                                       BytesProducer(payload))
         self.assertEqual(pg.code, 202,
                          "did not get 202 response for '{}'".format(bytes2unicode(self.bot_url)))
-        self.assertIn('123456789', sent_messages[0][1])
-        self.assertIn('-12345678', sent_messages[1][1])
+        self.assertIn('123456789', self.sent_messages[0][1])
+        self.assertIn('-12345678', self.sent_messages[1][1])
 
     @defer.inlineCallbacks
     def testState(self):
+        tboid = yield self.master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramBotResource')
+        yield self.insertTestData([
+            fakedb.ObjectState(objectid=tboid, name='notify_contacts',
+                               value_json='[[123456789,  ["started", "finished"]]]'),
+        ])
+
         tb = self.master.config.services['TelegramBot']
         yield tb.bot.loadNotifyEvents()
         c = tb.bot.getContact(123456789, 123456789)
         self.assertEquals(c.channel.notify_events, {'started', 'finished'})
 
+    @defer.inlineCallbacks
+    def test_missing_worker(self):
+        yield self.insertTestData([fakedb.Worker(name='local1'),])
+
+        tb = self.master.config.services['TelegramBot']
+        channel = tb.bot.getChannel(-123456)
+        self.assertEquals(channel.notify_events, {'worker'})
+
+        yield self.master.data.updates.workerMissing(
+            workerid='local1',
+            masterid=self.master.masterid,
+            last_connection='long time ago',
+            notify=['admin@worker.org'],
+        )
+        self.assertEquals(self.sent_messages[-1][1],
+                          "Worker local1 is missing. It was seen last at long time ago.")

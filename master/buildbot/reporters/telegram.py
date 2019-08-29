@@ -62,11 +62,11 @@ class TelegramChannel(Channel):
 
     def list_notified_events(self):
         if self.notify_events:
-            self.send("The following events are being notified: {}."
-                      .format(", ".join(sorted(
-                    "_{}_".format(n) for n in self.notify_events))))
+            self.send("The following events are being notified:\n{}"
+                      .format("\n".join(sorted(
+                          "🔔 **{}**".format(n) for n in self.notify_events))))
         else:
-            self.send("No events are being notified.")
+            self.send("🔕 No events are being notified.")
 
 
 class TelegramContact(Contact):
@@ -115,29 +115,36 @@ class TelegramContact(Contact):
     _scared_users = {}
 
     _stop_phrase = (
+        ("👾  Do it not, you can!  👾", 'CAADAgADAxgAAkKvaQABG4A6r70tTawWBA'),
         ("👹  You shall not pass!!!  👹", 'CAADAgAD1AIAAmMr4gkRoBV--rBVehYE'),
-        ("👾  Do it not, you can!  👾", 'CAADAgADAxgAAkKvaQABG4A6r70tTawWBA')
     )
 
     @defer.inlineCallbacks
-    def access_denied(self, *args):
+    def access_denied(self, *args, tmessage, **kwargs):
         uid = self.user['id']
         if uid == self.channel['id']:
             text, sticker = random.choice(self._stop_phrase)
-            self.send("{}".format(text))
             now = util.now()
             # clean users scared some time ago
-            horizon = now - 600
+            horizon = now - 120
             for u,t in list(self._scared_users.items()):
                 if t < horizon:
                     del self._scared_users[u]
             if self._scared_users.get(uid) is None:
                 self._scared_users[uid] = now
-                self.bot.send_sticker(uid, sticker)
-        else:
-            fullname = self.user_full_name
-            self.send("⛔  Sorry {}, you are not allowed do this!  ⛔"
-                      .format(fullname))
+                yield self.send(
+                    "{}".format(text),
+                    reply_to_message_id=tmessage['message_id'])
+                yield self.bot.send_sticker(uid, sticker)
+                return
+
+        self.send(
+            "⛔  ACCESS DENIED  ⛔\n\n" +
+            random.choice((
+                "Go outside and relax...",
+                "Please proceed to the extermination zone →",
+                "This incident has ben reported to NSA!",
+            )), reply_to_message_id=tmessage['message_id'])
 
     def query_button(self, caption, payload):
         if isinstance(payload, str) and len(payload) < 64:
@@ -191,7 +198,7 @@ class TelegramContact(Contact):
     @Contact.overrideCommand
     def command_DANCE(self, args, **kwargs):
         chat = self.channel['id']
-        msg = yield self.bot.send_message(chat, "**<(^.^<)**")
+        msg = yield self.send( "**<(^.^<)**")
         if msg is not None:
             mid = msg['message_id']
             self.bot.reactor.callLater(1.0, self.bot.edit_message, chat, mid, "**<(^.^)>**")
@@ -214,6 +221,39 @@ class TelegramContact(Contact):
     command_GETID.usage = "getid - get user and chat ID that can be put in the master configuration file"
 
     @defer.inlineCallbacks
+    @Contact.overrideCommand
+    def command_LIST(self, args, **kwargs):
+        args = self.splitArgs(args)
+        if not args:
+                keyboard = [
+                    [self.query_button("👷️ Builders", '/list builders')],
+                    [self.query_button("⚙ Workers", '/list workers')],
+                ]
+                self.send("What do you want to list?",
+                          reply_markup={'inline_keyboard': keyboard})
+
+        elif args[0] == 'builders':
+            bdicts = yield self.bot.getAllBuilders()
+            online_builderids = yield self.bot.getOnlineBuilders()
+
+            response = ["Configured builders:"]
+            for bdict in bdicts:
+                response.append("`{}`".format(bdict['name']))
+                if bdict['builderid'] not in online_builderids:
+                    response[-1] += " ☠️"
+            self.send(response)
+
+        elif args[0] == 'workers':
+            workers = yield self.master.data.get(('workers',))
+
+            response = ["Configured workers:"]
+            for worker in workers:
+                response.append("`{}`".format(worker['name']))
+                if not worker['connected_to']:
+                    response[-1] += " ☠️"
+            self.send(response)
+
+    @defer.inlineCallbacks
     def get_running_builders(self):
         builders = []
         for bdict in (yield self.bot.getAllBuilders()):
@@ -233,47 +273,39 @@ class TelegramContact(Contact):
                     [self.query_button("🔎 " + b, '/watch {}'.format(b))]
                     for b in builders
                 ]
-                self.bot.send_message(self.channel,
-                                      "Which builder do you want to watch?",
-                                      reply_markup={
-                                          'inline_keyboard': keyboard
-                                      })
+                self.send("Which builder do you want to watch?",
+                          reply_markup={'inline_keyboard': keyboard})
             else:
                 self.send("There are no currently running builds.")
 
     @Contact.overrideCommand
     def command_NOTIFY(self, args, tmessage, tquery=None, **kwargs):
         if args:
+            if args == 'list':
+                self.bot.delete_message(self.chatid, tquery['message']['message_id'])
             super().command_NOTIFY(args)
-            if not tquery:
+            if not tquery or args == 'list':
                 return
 
-        if args == 'list':
-            self.bot.delete_message(self.chatid, tquery['message']['message_id'])
-            keyboard = None
-        else:
-            keyboard = [
-                [
-                    self.query_button("{} {}".format(e.capitalize(),
-                                                     '🔔' if e in self.channel.notify_events else '🔕'),
-                                      '/notify {}-quiet {}'.format(
-                                          'off' if e in self.channel.notify_events else 'on', e))
-                    for e in evs
-                ]
-                for evs in (('started', 'finished'), ('success', 'failure'), ('warnings', 'exception'),
-                            ('problem', 'recovery'), ('worse', 'better'))
-            ] + [[self.query_button("Done", '/notify list')]]
+        keyboard = [
+            [
+                self.query_button("{} {}".format(e.capitalize(),
+                                                 '🔔' if e in self.channel.notify_events else '🔕'),
+                                  '/notify {}-quiet {}'.format(
+                                      'off' if e in self.channel.notify_events else 'on', e))
+                if e is not None else self.query_button("Hide...", '/notify list')
+                for e in evs
+            ]
+            for evs in (('started', 'finished'), ('success', 'failure'), ('warnings', 'exception'),
+                        ('problem', 'recovery'), ('worse', 'better'), ('worker', None))
+        ]
 
         if tquery:
             self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'], keyboard)
         else:
-            self.bot.send_message(self.channel, "Here available notifications and their current state. "
-                                                "Click to turn them on/off:",
-                                  reply_markup={'inline_keyboard': keyboard})
-
-    @Contact.overrideCommand
-    def command_FORCE(self, args, **kwargs):
-        super().command_FORCE(args)
+            self.send("Here are available notifications and their current state. "
+                      "Click to turn them on/off.",
+                      reply_markup={'inline_keyboard': keyboard})
 
     @defer.inlineCallbacks
     @Contact.overrideCommand
@@ -291,11 +323,8 @@ class TelegramContact(Contact):
                     [self.query_button("🚫 " + b, '/stop build {}'.format(b))]
                     for b in builders
                 ]
-                self.bot.send_message(self.channel,
-                                      "Select builder to stop...",
-                                      reply_markup={
-                                          'inline_keyboard': keyboard
-                                      })
+                self.send("Select builder to stop...",
+                          reply_markup={'inline_keyboard': keyboard})
         else:  # len(argv) == 1
             self.partial = '/stop ' + args + ' '
             kwargs = {}
@@ -311,10 +340,8 @@ class TelegramContact(Contact):
                     voc = ", now reply to this message and"
             else:
                 voc = ", now"
-            self.bot.send_message(self.channel,
-                                  "Great{} give me the reason to stop build on `{}`..."
-                                  .format(voc, argv[0]), **kwargs)
-
+            self.send("Great{} give me the reason to stop build on `{}`..."
+                      .format(voc, argv[0]), **kwargs)
 
     @Contact.overrideCommand
     def command_SHUTDOWN(self, args, **kwargs):
@@ -328,11 +355,15 @@ class TelegramContact(Contact):
              self.query_button("‼️ Shutdown Now", '/shutdown now')
         ]]
         text = "Buildbot is currently shutting down.\n\n" if shuttingDown else ""
-        self.bot.send_message(self.channel,
-                              text + "What do you want to do?",
-                              reply_markup={
-                                  'inline_keyboard': keyboard
-                              })
+        self.send(text + "What do you want to do?",
+                  reply_markup={'inline_keyboard': keyboard})
+
+    @defer.inlineCallbacks
+    @Contact.overrideCommand
+    def command_FORCE(self, args, **kwargs):
+        args = args.replace("—", "--")
+        super().command_FORCE(args)
+        scheds = yield self.master.data.get(('forceschedulers',))
 
 
 class TelegramBotResource(StatusBot, resource.Resource):
@@ -368,7 +399,8 @@ class TelegramBotResource(StatusBot, resource.Resource):
         super().startService()
         for c in self.chat_ids:
             channel = self.getChannel(c)
-            channel.add_notification_events(self.notify_events, True)
+            channel.add_notification_events(self.notify_events)
+        self.loadNotifyEvents()
 
     results_emoji = {
         SUCCESS: ' ✅',
