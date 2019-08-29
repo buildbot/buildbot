@@ -205,7 +205,7 @@ For more advanced configurations, the parameter can be a list of change sources:
     source1 = ...
     source2 = ...
     c['change_source'] = [
-        source1, source1
+        source1, source2
     ]
 
 Repository and Project
