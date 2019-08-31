@@ -438,12 +438,12 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_last_all(self):
         self.setupSomeBuilds()
         yield self.do_test_command('last', args='all')
-        self.assertEqual(len(self.sent), 2)
+        self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
         self.assertIn(
-            '`builder1`: last build completed successfully (N seconds ago)', sent)
+            '`builder1`: last build completed successfully (N seconds ago)', sent[0])
         self.assertIn(
-            '`builder2`: no builds run since last restart', sent)
+            '`builder2`: no builds run since last restart', sent[0])
 
     @defer.inlineCallbacks
     def test_command_last_builder_bogus(self):

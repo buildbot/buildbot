@@ -147,8 +147,6 @@ class Channel(service.AsyncService):
         self.useRevisions = bot.useRevisions
 
     def send(self, message, **kwargs):
-        if isinstance(message, (list, tuple, types.GeneratorType)):
-            message = "\n".join(message)
         return self.bot.send_message(self.id, message, **kwargs)
 
     def stopService(self):
@@ -274,7 +272,7 @@ class Channel(service.AsyncService):
             if changes_str:
                 r += " ({})".format(changes_str)
 
-        self.send(r+'.')
+        self.send(r + ".")
 
     @defer.inlineCallbacks
     def buildFinished(self, build, watched=False):
@@ -559,24 +557,24 @@ class Contact:
             which = args[0]
         else:
             raise UsageError("Try '"+self.bot.commandPrefix+"status _builder_'.")
-        results = []
+        response = []
         if which == "":
             builders = yield self.bot.getAllBuilders()
             online_builderids = yield self.bot.getOnlineBuilders()
             for builder in builders:
                 if builder['builderid'] in online_builderids:
                     status = yield self.bot.getBuildStatus(builder['name'], short=True)
-                    results.append(status)
+                    response.append(status)
         elif which == "all":
             builders = yield self.bot.getAllBuilders()
             for builder in builders:
                 status = yield self.bot.getBuildStatus(builder['name'], short=True)
-                results.append(status)
+                response.append(status)
         else:
             status = yield self.bot.getBuildStatus(which)
-            results.append(status)
-        if results:
-            self.send(results)
+            response.append(status)
+        if response:
+            self.send('\n'.join(response))
     command_STATUS.usage = "status [_which_] - List status of a builder (or all builders)"
 
     def command_NOTIFY(self, args, **kwargs):
@@ -821,7 +819,7 @@ class Contact:
                     status += ': {}'.format(lastBuild['state_string'])
             messages.append("`{}`: {}".format(builder['name'], status))
         if messages:
-            self.send(messages)
+            self.send('\n'.join(messages))
 
     command_LAST.usage = "last [_which_] - list last build status for builder _which_"
 
@@ -846,14 +844,14 @@ class Contact:
         lp = len(self.bot.commandPrefix)
         if not args:
             commands = self.build_commands()
-            results = []
+            response = []
             for command in commands:
                 meth = self.getCommandMethod(command[lp:], True)
                 doc = getattr(meth, '__doc__', None)
                 if doc:
-                    results.append("{} - {}".format(command, doc))
-            if results:
-                self.send(results)
+                    response.append("{} - {}".format(command, doc))
+            if response:
+                self.send('\n'.join(response))
             return
         command = args[0]
         if command.startswith(self.bot.commandPrefix):

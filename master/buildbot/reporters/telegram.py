@@ -178,7 +178,7 @@ class TelegramContact(Contact):
         if args.lower() == 'botfather':
             lp = len(self.bot.commandPrefix)
             commands = self.build_commands()
-            results = []
+            response = []
             for command in commands:
                 command = command[lp:]
                 if command == 'start':
@@ -187,9 +187,9 @@ class TelegramContact(Contact):
                 doc = getattr(meth, '__doc__', None)
                 if not doc:
                     doc = command
-                results.append("{} - {}".format(command, doc))
-            if results:
-                self.send(results)
+                response.append("{} - {}".format(command, doc))
+            if response:
+                self.send('\n'.join(response))
         else:
             return super().command_COMMANDS(args)
 
@@ -240,7 +240,7 @@ class TelegramContact(Contact):
                 response.append("`{}`".format(bdict['name']))
                 if bdict['builderid'] not in online_builderids:
                     response[-1] += " ❌"
-            self.send(response)
+            self.send('\n'.join(response))
 
         elif args[0] == 'workers':
             workers = yield self.master.data.get(('workers',))
@@ -252,7 +252,7 @@ class TelegramContact(Contact):
                     response[-1] += " ❌"
                 if not worker['connected_to']:
                     response[-1] += " ⚠️"
-            self.send(response)
+            self.send('\n'.join(response))
 
     @defer.inlineCallbacks
     def get_running_builders(self):

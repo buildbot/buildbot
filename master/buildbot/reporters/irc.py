@@ -77,12 +77,7 @@ class IRCChannel(Channel):
             send = self.bot.groupSend
         else:
             send = self.bot.msg
-        if self.muted:
-            return
-        if isinstance(message, (list, tuple, types.GeneratorType)):
-            for m in message:
-                send(self.id, m)
-        else:
+        if not self.muted:
             send(self.id, message)
 
     def act(self, action):
