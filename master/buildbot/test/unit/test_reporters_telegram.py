@@ -258,7 +258,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('stop', 'build builder1')
         self.assertIn("give me the reason", self.sent[0][1])
-        self.assertEquals(self.contact.partial, "/stop build builder1 ")
+        self.assertEquals(self.contact.partial, "/stop build builder1")
 
     @defer.inlineCallbacks
     def test_command_notify_no_args(self):
@@ -495,7 +495,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                json={'callback_query_id': 123456},
                                content_json={'ok': 1})
         request = self.request_query("100")
-        bot.process_incoming(request)
+        bot.process_webhook_request(request)
         self.assertEquals(bot.getContact(self.USER['id'], self.CHANNEL['id']).messages, ["good"])
 
     def test_parse_query_cached_dict(self):
@@ -508,7 +508,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                json={'callback_query_id': 123456, 'text': "hello"},
                                content_json={'ok': 1})
         request = self.request_query("100")
-        bot.process_incoming(request)
+        bot.process_webhook_request(request)
         self.assertEquals(bot.getContact(self.USER['id'], self.CHANNEL['id']).messages, ["good"])
 
     def test_parse_query_explicit(self):
@@ -521,7 +521,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                json={'callback_query_id': 123456},
                                content_json={'ok': 1})
         request = self.request_query("good")
-        bot.process_incoming(request)
+        bot.process_webhook_request(request)
         self.assertEquals(bot.getContact(self.USER['id'], self.CHANNEL['id']).messages, ["good"])
 
     def test_parse_query_bad(self):
@@ -538,4 +538,4 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                            'text': "Sorry, button is no longer valid!"},
                                content_json={'ok': 1})
         request = self.request_query("101")
-        bot.process_incoming(request)
+        bot.process_webhook_request(request)

@@ -74,10 +74,10 @@ class UsageError(ValueError):
 class ForceOptions(usage.Options):
     optParameters = [
         ["builder", None, None, "which Builder to start"],
-        ["codebase", None, "default", "which codebase to build"],
+        ["codebase", None, "", "which codebase to build"],
         ["branch", None, "master", "which branch to build"],
         ["revision", None, "HEAD", "which revision to build"],
-        ["project", None, "default", "which project to build"],
+        ["project", None, "", "which project to build"],
         ["reason", None, None, "the reason for starting the build"],
         ["props", None, None,
          "A set of properties made available in the build environment, "
@@ -719,7 +719,10 @@ class Contact:
                     self.send("sorry, bad property name='{}', value='{}'"
                               .format(pname, pvalue))
                     return
-                properties.setProperty(pname, pvalue, "Force Build chat")
+                properties.setProperty(pname, pvalue, "Force Build Chat")
+
+        properties.setProperty("reason", reason, "Force Build Chat")
+        properties.setProperty("owner", self.describeUser(), "Force Build Chat")
 
         reason = "forced: by {}: {}".format(self.describeUser(), reason)
         try:
@@ -730,12 +733,14 @@ class Contact:
                                                        sourcestamps=[{
                                                            'codebase': codebase, 'branch': branch,
                                                            'revision': revision, 'project': project,
-                                                           'repository': "null"}],
+                                                           'repository': ""}],
                                                        reason=reason,
                                                        properties=properties.asDict(),
                                                        waited_for=False)
         except AssertionError as e:
             self.send("I can't: " + str(e))
+        else:
+            self.send("Force build successfully requested.")
 
     command_FORCE.usage = ("force build [--codebase=CODEBASE] [--branch=branch] [--revision=revision]"
                            " [--props=prop1=val1,prop2=val2...] _which_ _reason_ - Force a build")
