@@ -351,6 +351,14 @@ class TestContact(ContactMixin, unittest.TestCase):
         for worker in workers:
             self.assertIn('%s [offline]' % worker, self.sent[0])
 
+    @defer.inlineCallbacks
+    def test_command_list_changes(self):
+        self.master.db.workers.db.insertTestData([
+            fakedb.Change()
+        ])
+        yield self.do_test_command('list', args='2 changes')
+        self.assertEqual(len(self.sent), 1)
+
     def setup_multi_builders(self):
         # Make first builder configured, but not connected
         # Make second builder configured and connected

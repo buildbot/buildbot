@@ -17,7 +17,6 @@
 import random
 import re
 import shlex
-import types
 
 from twisted.internet import defer
 from twisted.internet import protocol
@@ -155,7 +154,7 @@ class Channel(service.AsyncService):
 
     def validate_notification_event(self, event):
         if not re.compile("^(started|finished|success|warnings|failure|exception|"
-                          "problem|recovery|worse|better|worker|"
+                          "cancelled|problem|recovery|worse|better|worker|"
                           # this is deprecated list 
                           "(success|warnings|failure|exception)To"
                           "(Success|Warnings|Failure|Exception))$").match(event):
@@ -323,16 +322,22 @@ class Channel(service.AsyncService):
         if self.notify_for(result_name):
             return True
 
-        if result in (SUCCESS, WARNINGS, FAILURE, EXCEPTION):
+        if result in self.bot.results_severity and \
+                (self.notify_for('better', 'worse', 'problem', 'recovery') or
+                        any('To' in e for e in self.notify_events)):
             prev_build = yield self.master.data.get(
                 ('builders', build['builderid'], 'builds', build['number'] - 1))
             if prev_build:
                 prev_result = prev_build['results']
 
-                if prev_result in (SUCCESS, WARNINGS, FAILURE, EXCEPTION):
-                    if self.notify_for('better') and result < prev_result:
+                if prev_result in self.bot.results_severity:
+                    result_severity = self.bot.results_severity.index(result)
+                    prev_result_severity = self.bot.results_severity.index(prev_result)
+                    if self.notify_for('better') and \
+                            result_severity < prev_result_severity:
                         return True
-                    if self.notify_for('worse') and result > prev_result:
+                    if self.notify_for('worse') and \
+                            result_severity > prev_result_severity:
                         return True
 
                     if self.notify_for('problem') \
@@ -545,7 +550,31 @@ class Contact:
             self.send(' '.join(response))
             return
 
-    command_LIST.usage = "list builders - List configured builders"
+        else:
+            try:
+                num = int(args[0])
+            except ValueError:
+                num = 5
+            else:
+                del args[0]
+
+            if args[0] == 'changes':
+                changes = yield self.master.db.changes.getRecentChanges(num)
+
+                response = ["I found the following recent changes:"]
+                for change in reversed(changes):
+                    change['comment'] = change['comments'].split('\n')[0]
+                    change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
+                    response.append(
+                        "{comment})\n"
+                        "Author: {author}\n"
+                        "Date: {date}\n"
+                        "Repository: {repository}\n"
+                        "Branch: {branch}\n"
+                        "Revision: {revision}\n".format(**change))
+                self.send('\n\n'.join(response))
+
+    command_LIST.usage = "list builders|workers|changes - List configured builders, workers, or 5 recent changes"
 
     @defer.inlineCallbacks
     def command_STATUS(self, args, **kwargs):
@@ -1096,7 +1125,9 @@ class StatusBot(service.AsyncMultiService):
                     if not short:
                         status = ", " + status
                         if lastBuild['results'] != SUCCESS:
-                            status += ": " + lastBuild['status_string']
+                            status_string = lastBuild.get('status_string')
+                            if status_string:
+                                status += ": " + status_string
                     response += '  last build {} ago{}'.format(ago, status)
             else:
                 response += self.offline_string
@@ -1171,6 +1202,10 @@ class StatusBot(service.AsyncMultiService):
         RETRY: "has been retried",
         CANCELLED: "was cancelled",
     }
+
+    results_severity = (
+        SUCCESS, WARNINGS, FAILURE, CANCELLED, EXCEPTION
+    )
 
     def format_build_status(self, build, short=False):
         """ Optionally add color to the message """

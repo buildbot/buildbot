@@ -185,7 +185,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_nay(self):
-        yield self.do_test_command('nay')
+        yield self.do_test_command('nay', tmessage={})
 
     @defer.inlineCallbacks
     def test_command_dance(self):
@@ -218,6 +218,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list')
         self.assertButton('/list builders')
         self.assertButton('/list workers')
+        self.assertButton('/list changes')
 
     @defer.inlineCallbacks
     def test_command_list_builders(self):
@@ -237,6 +238,14 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
             self.assertIn('`%s` ❌' % worker, self.sent[0][1])
+
+    @defer.inlineCallbacks
+    def test_command_list_changes(self):
+        self.master.db.workers.db.insertTestData([
+            fakedb.Change()
+        ])
+        yield self.do_test_command('list', args='2 changes')
+        self.assertEqual(len(self.sent), 1)
 
     @defer.inlineCallbacks
     def test_command_watch(self):

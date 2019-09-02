@@ -176,8 +176,13 @@ class TelegramContact(Contact):
         yield self.command_HELLO(args)
         self.bot.reactor.callLater(0.2, self.command_HELP, '')
 
-    def command_NAY(self, args, **kwargs):
+    def command_NAY(self, args, tmessage, **kwargs):
         """forget the current command"""
+        replied_message = tmessage.get('reply_to_message')
+        if replied_message:
+            if 'reply_markup' in replied_message:
+                self.bot.edit_keyboard(self.channel.id,
+                                       replied_message['message_id'])
         if self.userid == self.channel.id:
             self.send("Never mind...")
         else:
@@ -238,6 +243,7 @@ class TelegramContact(Contact):
                 keyboard = [
                     [self.query_button("👷️ Builders", '/list builders')],
                     [self.query_button("⚙ Workers", '/list workers')],
+                    [self.query_button("📄 Changes", '/list changes')],
                 ]
                 self.send("What do you want to list?",
                           reply_markup={'inline_keyboard': keyboard})
@@ -264,6 +270,30 @@ class TelegramContact(Contact):
                 if not worker['connected_to']:
                     response[-1] += " ⚠️"
             self.send('\n'.join(response))
+
+        else:
+            try:
+                num = int(args[0])
+            except ValueError:
+                num = 5
+            else:
+                del args[0]
+
+            if args[0] == 'changes':
+                changes = yield self.master.db.changes.getRecentChanges(num)
+
+                response = ["I found the following recent **changes**:"]
+                for change in reversed(changes):
+                    change['comment'] = change['comments'].split('\n')[0]
+                    change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
+                    response.append(
+                        "[{comment}]({revlink})\n"
+                        "_Author_: {author}\n"
+                        "_Date_: {date}\n"
+                        "_Repository_: {repository}\n"
+                        "_Branch_: {branch}\n"
+                        "_Revision_: {revision}\n".format(**change))
+                self.send('\n\n'.join(response))
 
     @defer.inlineCallbacks
     def get_running_builders(self):
@@ -308,12 +338,11 @@ class TelegramContact(Contact):
                                                  '🔔' if e in self.channel.notify_events else '🔕'),
                                   '/notify {}-quiet {}'.format(
                                       'off' if e in self.channel.notify_events else 'on', e))
-                if e is not None else self.query_button("Hide...", '/notify list')
                 for e in evs
             ]
             for evs in (('started', 'finished'), ('success', 'failure'), ('warnings', 'exception'),
-                        ('problem', 'recovery'), ('worse', 'better'), ('worker', None))
-        ]
+                        ('problem', 'recovery'), ('worse', 'better'), ('cancelled', 'worker'))
+        ] + [[self.query_button("Hide...", '/notify list')]]
 
         if tquery:
             self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'], keyboard)
