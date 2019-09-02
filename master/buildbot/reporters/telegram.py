@@ -19,9 +19,11 @@ import random
 import shlex
 
 from twisted.internet import defer
+from twisted.internet import task
 from twisted.python import log
 from twisted.web import resource
 from twisted.web import server
+
 
 from buildbot import config
 from buildbot import util
@@ -581,7 +583,7 @@ class TelegramContact(Contact):
     command_FORCE.usage = "force - Force a build"
 
 
-class TelegramBotResource(StatusBot, resource.Resource):
+class TelegramStatusBot(StatusBot):
     """
     I represent the buildbot to
     a some web-hooks based chat.
@@ -603,11 +605,11 @@ class TelegramBotResource(StatusBot, resource.Resource):
             return '@' + self.nickname
         return None
 
-    def __init__(self, token, outgoing_http, chat_ids, *args, **kwargs):
-        StatusBot.__init__(self, *args, **kwargs)
-        resource.Resource.__init__(self)
+    def __init__(self, token, outgoing_http, chat_ids, *args, retry_delay=30, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.http_client = outgoing_http
+        self.retry_delay = retry_delay
         self.token = token
 
         self.chat_ids = chat_ids
@@ -668,28 +670,6 @@ class TelegramBotResource(StatusBot, resource.Resource):
             self.channels[cid] = new_channel
             new_channel.setServiceParent(self)
             return new_channel
-
-    def render_GET(self, request):
-        return self.render_POST(request)
-
-    def render_POST(self, request):
-        try:
-            d = self.process_webhook_request(request)
-        except Exception:
-            d = defer.fail()
-
-        def ok(_):
-            request.setResponseCode(202)
-            request.finish()
-
-        def err(why):
-            log.err(why, "processing telegram request")
-            request.setResponseCode(500)
-            request.finish()
-
-        d.addCallbacks(ok, err)
-
-        return server.NOT_DONE_YET
 
     def get_update(self, request):
         content = request.content.read()
@@ -773,37 +753,47 @@ class TelegramBotResource(StatusBot, resource.Resource):
             d = contact.handleMessage(text, **data)
         return d
 
-    def process_webhook_request(self, request):
-        update = self.get_update(request)
-        return self.process_update(update)
-
     @defer.inlineCallbacks
     def _post(self, path, **kwargs):
         try:
             res = yield self.http_client.post(path, **kwargs)
             ans = yield res.json()
             if not ans.get('ok'):
-                raise ValueError("({}) {}".format(res.code, ans.get('description')))
-            else:
-                return ans.get('result')
+                raise ValueError("[{}] {}".format(res.code, ans.get('description')))
+        except AssertionError as err:
+            # just for tests
+            raise err
         except Exception as err:
-            self.log("ERROR: cannot send '{}' to telegram: {}".format(path, err))
-
-    def set_webhook(self, url, certificate=None):
-        if not certificate:
-            self.log("Setting up webhook to: {}".format(url))
-            self._post('/setWebhook', json=dict(url=url))
+            self.log("ERROR: cannot send telegram request {}: {}".format(path, err))
         else:
-            self.log("Setting up webhook to: {} (custom certificate)".format(url))
-            if not hasattr(certificate, 'read'):
-                certificate = io.BytesIO(unicode2bytes(certificate))
-                certificate.name = 'certificate.pem'
-            self._post('/setWebhook', data=dict(url=url),
-                       files=dict(certificate=certificate))
+            return ans.get('result', True)
+
+    @defer.inlineCallbacks
+    def _post_until_success(self, path, **kwargs):
+        logme = True
+        while True:
+            try:
+                res = yield self.http_client.post(path, **kwargs)
+                ans = yield res.json()
+                if not ans.get('ok'):
+                    self.log("ERROR: cannot send telegram request {}: "
+                             "[{}] {}".format(path, res.code, ans.get('description')))
+                    return
+            except AssertionError as err:
+                # just for tests
+                raise err
+            except Exception as err:
+                msg = "ERROR: cannot send telegram request {} (will try again): {}".format(path, err)
+                if logme:
+                    self.log(msg)
+                    logme = False
+                yield task.deferLater(self.reactor, self.retry_delay, lambda: None)
+            else:
+                return ans.get('result', True)
 
     @defer.inlineCallbacks
     def set_nickname(self):
-        res = yield self._post('/getMe')
+        res = yield self._post_until_success('/getMe')
         if res:
             self.nickname = res.get('username')
 
@@ -850,6 +840,97 @@ class TelegramBotResource(StatusBot, resource.Resource):
         return (yield self._post('/sendSticker', json=params))
 
 
+class TelegramBotResource(TelegramStatusBot, resource.Resource):
+
+    def __init__(self, *args, **kwargs):
+        TelegramStatusBot.__init__(self, *args, **kwargs)
+        resource.Resource.__init__(self)
+
+    def render_GET(self, request):
+        return self.render_POST(request)
+
+    def render_POST(self, request):
+        try:
+            d = self.process_webhook_request(request)
+        except Exception:
+            d = defer.fail()
+
+        def ok(_):
+            request.setResponseCode(202)
+            request.finish()
+
+        def err(why):
+            log.err(why, "processing telegram request")
+            request.setResponseCode(500)
+            request.finish()
+
+        d.addCallbacks(ok, err)
+
+        return server.NOT_DONE_YET
+
+    def process_webhook_request(self, request):
+        update = self.get_update(request)
+        return self.process_update(update)
+
+    def set_webhook(self, url, certificate=None):
+        if not certificate:
+            self.log("Setting up webhook to: {}".format(url))
+            self._post_until_success('/setWebhook', json=dict(url=url))
+        else:
+            self.log("Setting up webhook to: {} (custom certificate)".format(url))
+            filename = getattr(certificate, 'name', "certificate.pem")
+            if hasattr(certificate, 'read'):
+                # we may be trying several times, so we need to store the certificate content
+                certificate = certificate.read()
+            certificate = io.BytesIO(unicode2bytes(certificate))
+            certificate.name = filename
+            self._post_until_success('/setWebhook', data=dict(url=url),
+                                     files=dict(certificate=certificate))
+
+
+class TelegramPollingBot(TelegramStatusBot):
+    name = "TelegramPollingBot"
+
+    def __init__(self, *args, poll_timeout=120, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.poll_timeout = poll_timeout
+
+    def startService(self):
+        super().startService()
+        self.do_polling()
+
+    @defer.inlineCallbacks
+    def do_polling(self):
+        yield self._post_until_success('/deleteWebhook')
+        offset = 0
+        kwargs = {'json': {'timeout': self.poll_timeout}}
+        logme = True
+        while self.running:
+            if offset:
+                kwargs['json']['offset'] = offset
+            try:
+                res = yield self.http_client.post('/getUpdates',
+                                                  timeout=self.poll_timeout+5,
+                                                  **kwargs)
+                ans = yield res.json()
+                if not ans.get('ok'):
+                    raise ValueError("[{}] {}".format(res.code, ans.get('description')))
+                else:
+                    updates = ans.get('result')
+            except Exception as err:
+                msg = "ERROR: cannot send telegram request /getUpdates (will try again): {}".format(err)
+                if logme:
+                    self.log(msg)
+                    logme = False
+                yield task.deferLater(self.reactor, self.retry_delay, lambda: None)
+            else:
+                logme = True
+                if updates:
+                    offset = max(update['update_id'] for update in updates) + 1
+                    for update in updates:
+                        self.process_update(update)
+
+
 class TelegramBot(service.BuildbotService):
     name = "TelegramBot"
 
@@ -858,7 +939,8 @@ class TelegramBot(service.BuildbotService):
     compare_attrs = ["bot_token", "chat_ids", "authz",
                      "tags", "notify_events",
                      "showBlameList", "useRevisions",
-                     "certificate"]
+                     "certificate", "usePolling",
+                     "pollTimeout", "retryDelay"]
     secrets = ["bot_token"]
 
     def __init__(self, *args, **kwargs):
@@ -866,11 +948,18 @@ class TelegramBot(service.BuildbotService):
         self.www = get_plugins('www', None, load_now=True)
         self.bot = None
 
+    def _get_http(self, bot_token):
+        base_url = "https://api.telegram.org/bot" + bot_token
+        return httpclientservice.HTTPClientService.getService(
+            self.master, base_url)
+
     def checkConfig(self, bot_token, chat_ids=None, authz=None,
                     bot_username=None, tags=None, notify_events=None,
                     showBlameList=True, useRevisions=False,
-                    certificate=None, **kwargs
-                    ):
+                    certificate=None, usePolling=False,
+                    pollTimeout=120, retryDelay=30
+                   ):
+        super().checkConfig(self.name)
 
         if authz is not None:
             for acl in authz.values():
@@ -880,16 +969,12 @@ class TelegramBot(service.BuildbotService):
         if isinstance(certificate, io.TextIOBase):
             config.error("certificate file must be open in binary mode")
 
-    def _get_http(self, bot_token):
-        base_url = "https://api.telegram.org/bot" + bot_token
-        return httpclientservice.HTTPClientService.getService(
-            self.master, base_url)
-
     @defer.inlineCallbacks
     def reconfigService(self, bot_token, chat_ids=None, authz=None,
                         bot_username=None, tags=None, notify_events=None,
                         showBlameList=True, useRevisions=False,
-                        certificate=None, **kwargs
+                        certificate=None, usePolling=False,
+                        pollTimeout=120, retryDelay=30
                         ):
         # need to stash these so we can detect changes later
         self.bot_token = bot_token
@@ -903,6 +988,9 @@ class TelegramBot(service.BuildbotService):
             notify_events = set()
         self.notify_events = notify_events
         self.certificate = certificate
+        self.usePolling = usePolling
+        self.pollTimeout = pollTimeout
+        self.retryDelay = retryDelay
 
         # This function is only called in case of reconfig with changes
         # We don't try to be smart here. Just restart the bot if config has
@@ -918,17 +1006,31 @@ class TelegramBot(service.BuildbotService):
             self.bot.stopService()
             root.delEntity(unicode2bytes('bot' + self.bot.token))
 
-        self.bot = TelegramBotResource(bot_token, http, chat_ids, authz,
-                                       tags=tags, notify_events=notify_events,
-                                       useRevisions=useRevisions,
-                                       showBlameList=showBlameList)
-        if bot_username is None:
-            yield self.bot.set_nickname()
+        if usePolling:
+            self.bot = TelegramPollingBot(bot_token, http, chat_ids, authz,
+                                          tags=tags, notify_events=notify_events,
+                                          useRevisions=useRevisions,
+                                          showBlameList=showBlameList,
+                                          poll_timeout=self.pollTimeout,
+                                          retry_delay=self.retryDelay)
         else:
+            self.bot = TelegramBotResource(bot_token, http, chat_ids, authz,
+                                           tags=tags, notify_events=notify_events,
+                                           useRevisions=useRevisions,
+                                           showBlameList=showBlameList,
+                                           retry_delay=self.retryDelay)
+        if bot_username is not None:
             self.bot.nickname = bot_username
+        else:
+            yield self.bot.set_nickname()
+            if self.bot.nickname is None:
+                raise RuntimeError("No bot username specified and I cannot get it from Telegram")
+
         self.bot.setServiceParent(self)
-        bot_path = 'bot' + bot_token
-        root.putChild(unicode2bytes(bot_path), self.bot)
-        url = bytes2unicode(self.master.config.buildbotURL)
-        if not url.endswith('/'): url += '/'
-        self.bot.set_webhook(url + bot_path, certificate)
+
+        if not usePolling:
+            bot_path = 'bot' + bot_token
+            root.putChild(unicode2bytes(bot_path), self.bot)
+            url = bytes2unicode(self.master.config.buildbotURL)
+            if not url.endswith('/'): url += '/'
+            self.bot.set_webhook(url + bot_path, certificate)

@@ -67,6 +67,8 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, base_url)
         # This is necessary as Telegram will make requests in the reconfig
+        http.expect("post", "/getMe",
+                    content_json={'ok': 1, 'result': {'username': 'testbot'}})
         http.expect("post", "/setWebhook",
                     json={'url': bytes2unicode(self.bot_url)},
                     content_json={'ok': 1})
@@ -122,7 +124,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
         # create a telegram bot service
         tb = master.config.services['TelegramBot'] = telegram.TelegramBot(
-            bot_token='12345:secret', bot_username="testbot", chat_ids=[-123456],  notify_events=['worker']
+            bot_token='12345:secret', chat_ids=[-123456],  notify_events=['worker']
         )
         tb._get_http = self.get_http
         tb.setServiceParent(self.master)
@@ -138,7 +140,6 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
     @defer.inlineCallbacks
     def tearDown(self):
         if self.master:
-            yield self.master.config.services['TelegramBot'].stopService()
             yield self.master.www.stopService()
 
     @defer.inlineCallbacks
