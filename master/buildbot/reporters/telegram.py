@@ -34,9 +34,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters.words import Channel
 from buildbot.reporters.words import Contact
-from buildbot.reporters.words import ForceOptions
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import UsageError
+from buildbot.schedulers.forcesched import CollectedValidationError
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
@@ -71,11 +71,19 @@ class TelegramChannel(Channel):
             self.send("🔕 No events are being notified.")
 
 
+def collect_fields(fields):
+    for field in fields:
+            if field['fullName']:
+                yield field
+            if 'fields' in field:
+                yield from collect_fields(field['fields'])
+
+
 class TelegramContact(Contact):
 
     def __init__(self, bot, user=None, channel=None):
         super().__init__(bot, user, channel)
-        self.partial = ''
+        self.template = None
 
     @property
     def chatid(self):
@@ -168,12 +176,13 @@ class TelegramContact(Contact):
         yield self.command_HELLO(args)
         self.bot.reactor.callLater(0.2, self.command_HELP, '')
 
-    def command_NAY(self, args, partial=None, **kwargs):
+    def command_NAY(self, args, **kwargs):
         """forget the current command"""
-        if partial:
-            self.send("Cancelling command '{}'.".format(partial))
-        self.partial = ''
-    command_NAY.usage = "nay - forget the command we are currently discussing"
+        if self.userid == self.channel.id:
+            self.send("Never mind...")
+        else:
+            self.send("Never mind, {}...".format(self.user_name))
+    command_NAY.usage = "nay - never mind the command we are currently discussing"
 
     @Contact.overrideCommand
     def command_COMMANDS(self, args, **kwargs):
@@ -313,21 +322,33 @@ class TelegramContact(Contact):
                       "Click to turn them on/off.",
                       reply_markup={'inline_keyboard': keyboard})
 
-    def ask_for_reply(self, prompt, greeting='Great'):
+    def ask_for_reply(self, prompt, greeting='Ok'):
         kwargs = {}
         if self.userid != self.chatid:
             username = self.user.get('username', '')
             if username:
-                voc = " @{}, now".format(username)
+                if greeting:
+                    prompt = "{} @{}, now {}...".format(greeting, username, prompt)
+                else:
+                    prompt = "@{}, now {}...".format(username, prompt)
                 kwargs['reply_markup'] = {
                     'force_reply': True,
                     'selective': True
                 }
             else:
-                voc = ", now reply to this message and"
+                if greeting:
+                    prompt = "{}, now reply to this message and {}...".format(greeting, prompt)
+                else:
+                    prompt = "Reply to this message and {}...".format(prompt)
         else:
-            voc = ", now"
-        self.send("{}{} {}...".format(greeting, voc, prompt), **kwargs)
+            if greeting:
+                prompt = "{}, now {}...".format(greeting, prompt)
+            else:
+                prompt = prompt[0].upper() + prompt[1:] + "..."
+            kwargs['reply_markup'] = {
+                'force_reply': True
+            }
+        self.send(prompt, **kwargs)
 
     @defer.inlineCallbacks
     @Contact.overrideCommand
@@ -348,7 +369,7 @@ class TelegramContact(Contact):
                 self.send("Select builder to stop...",
                           reply_markup={'inline_keyboard': keyboard})
         else:  # len(argv) == 1
-            self.partial = '/stop ' + args
+            self.template = '/stop ' + args + ' {}'
             self.ask_for_reply("give me the reason to stop build on `{}`".format(argv[0]))
 
     @Contact.overrideCommand
@@ -367,129 +388,168 @@ class TelegramContact(Contact):
                   reply_markup={'inline_keyboard': keyboard})
 
     @defer.inlineCallbacks
-    @Contact.overrideCommand
     def command_FORCE(self, args, tquery=None, partial=None, **kwargs):
+        """force a build"""
 
-        #TODO This should read force schedulers configuration
-        # and present corresponding dialog options to the user
-        # data = yield self.master.data.get(('forceschedulers',))
-        # scheds = [s for s in self.master.config.schedulers if isinstance(s, ForceScheduler)]
-
-        args = args.replace("—", "--")
+        forceschedulers = yield self.master.data.get(('forceschedulers',))
+        forceschedulers = dict((s['name'], s) for s in forceschedulers)
 
         argv = self.splitArgs(args)
+
+        try:
+            sched = argv[0]
+        except IndexError:
+            if len(forceschedulers) == 1:
+                sched = next(iter(forceschedulers))
+            else:
+                keyboard = [
+                    [self.query_button(s['label'], '/force {}'.format(s['name']))]
+                    for s in forceschedulers.values()
+                ]
+                self.send("Which force scheduler do you want to activate?",
+                          reply_markup={'inline_keyboard': keyboard})
+                return
+        else:
+            if sched in forceschedulers:
+                del argv[0]
+            elif len(forceschedulers) == 1:
+                sched = next(iter(forceschedulers))
+        try:
+            scheduler = forceschedulers[sched]
+        except KeyError:
+            raise UsageError("Try '/force' and follow the instructions"
+                             " (no force scheduler {})".format(sched))
+
+        try:
+            task = argv.pop(0)
+        except IndexError:
+            task = 'config'
+
+        if tquery and task != 'config':
+            self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'])
+
         if len(argv) == 0:
-            builders = yield self.bot.getAllBuilders()
-            online_builderids = yield self.bot.getOnlineBuilders()
             keyboard = [
-                [self.query_button(b['name'], '/force config {}'.format(b['name']))]
-                for b in builders if b['builderid'] in online_builderids
+                [self.query_button(b, '/force {} {} {}'.format(sched, task, b))]
+                for b in scheduler['builder_names']
             ]
             self.send("Which builder do you want to start?",
                       reply_markup={'inline_keyboard': keyboard})
             return
 
-        if tquery:
-            self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'])
-
-        task = argv.pop(0)
-        if len(argv) < 1:
-            raise UsageError("Try '/force' and follow the instructions")
-
-        params = None
-        props = {}
-
-        if task == 'answer':
+        if task == 'ask':
             try:
-                params = self._force_params
-                what = self._force_asking
-                props = self._force_props
-                del self._force_params, self._force_asking, self._force_props
-            except AttributeError:
+                what = argv.pop(0)
+            except IndexError:
                 raise UsageError("Try '/force' and follow the instructions")
-            else:
-                answer = args[6:].strip()
-                if what == 'prop:':
-                    task = 'ask'
-                    what = what + answer
-                else:
-                    if what.startswith('prop:'):
-                        prop = what.split(':', 1)[1]
-                        props[prop] = answer
-                    else:
-                        params[what] = answer
-                    if props:
-                        params['props'] = ','.join("{}={}".format(*p)
-                                                   for p in props.items())
-                    argv = ["--{}={}".format(k,v)
-                            for (k,v) in params.items()
-                            if v is not None]
-                    if what == 'reason':
-                        task = 'build'
-                        args = "build " + " ".join(shlex.quote(a) for a in argv)
-                    else:
-                        task = 'config'
-        elif task == 'ask':
-            what = argv.pop(0)
+        else:
+            what = None # silence PyCharm warnings
 
-        if task == 'build':
-            yield super().command_FORCE(args)
-            return
-
-        if params is None:
-            opts = ForceOptions()
-            opts.parseOptions(argv)
-            params = dict(opts)
-            if params['props']:
-                props = dict(p.split('=', 1) for p in params['props'].split(','))
+        bldr = argv.pop(0)
+        if bldr not in scheduler['builder_names']:
+            raise UsageError("Try '/force' and follow the instructions (`{}` not configured for _{}_ scheduler)"
+                             .format(bldr, scheduler['label']))
 
         try:
-            if task == 'ask':
-                greeting = "Great"
-                if what.startswith('prop:'):
-                    prop = what.split(':', 1)[1]
-                    if not prop:
-                        prompt = "enter the property name"
-                    else:
-                        prompt = "enter the new value of property _{}_".format(prop)
-                        greeting = "Thank you"
-                elif what == "reason":
-                    prompt = "give me the reason for this build"
+            params = dict(arg.split('=', 1) for arg in argv)
+        except ValueError as err:
+            raise UsageError("Try '/force' and follow the instructions ({})".format(err))
+
+        all_fields = list(collect_fields(scheduler['all_fields']))
+        required_params = [f['fullName'] for f in all_fields
+                           if f['required'] and f['fullName'] not in ('username', 'owner')]
+        missing_params = [p for p in required_params if p not in params]
+
+        if task == 'build':
+            #TODO This should probably be moved to the upper class,
+            # however, it will change the force command totally
+
+            try:
+                # sched = argv[0]
+                # if sched in data:
+                #     del data[0]
+                # elif len(data) == 1:
+                #     sched = next(iter(data))
+                # else:
+                #     raise ValueError(sched)
+                # builder_name = argv.pop(0)
+
+                if missing_params:
+                    # raise UsageError
+                    task = 'config'
                 else:
-                    prompt = "enter the new " + what
+                    builder = yield self.bot.getBuilder(buildername=bldr)
+                    try:
+                        scheduler = self.master.config.schedulers[sched]
+                    except KeyError:
+                        raise ValueError("There is no force scheduler '{}'".format(sched))
+                    try:
+                        yield scheduler.force(builderid=builder['builderid'],
+                                              owner=self.describeUser(),
+                                              **params)
+                    except CollectedValidationError as err:
+                        raise ValueError(err.errors)
+                    else:
+                        self.send("Force build successfully requested.")
+                    return
 
-                self._force_params = params
-                self._force_asking = what
-                self._force_props = props
-                self.partial = '/force answer'
-                self.ask_for_reply(prompt, greeting)
+            except (IndexError, ValueError) as err:
+                raise UsageError("Try '/force' and follow the instructions ({})".format(err))
 
-            elif task == 'config':
-                msg = "{}, you are about to start a new build on `{builder}`!\n\n" \
-                      "The current build parameters are:\n" \
-                      "Codebase: `{codebase}`\n" \
-                      "Branch: `{branch}`\n" \
-                      "Revision: `{revision}`\n" \
-                      "Project: `{project}`\n\n" \
-                      "What do you want to do?".format(self.user_full_name, **params)
-                if props:
-                    msg += "\nCustom build properties:"
-                    for p in props.items():
-                        msg += "\n  _{}_={}".format(*p)
+        if task == 'config':
 
-                args = ' '.join(shlex.quote(a) for a in argv)
-                keyboard = [
-                    [self.query_button("Change Codebase", '/force ask codebase {}'.format(args))],
-                    [self.query_button("Change Branch", '/force ask branch {}'.format(args))],
-                    [self.query_button("Change Revision", '/force ask revision {}'.format(args))],
-                    [self.query_button("Change Project", '/force ask project {}'.format(args))],
-                    [self.query_button("Set Property", '/force ask prop: {}'.format(args))],
-                    [self.query_button("🚀 Proceed!", '/force ask reason {}'.format(args))],
-                ]
-                self.send(msg, reply_markup={'inline_keyboard': keyboard})
+            msg = "{}, you are about to start a new build on `{}`!"\
+                .format(self.user_full_name, bldr)
 
-        except IndexError:
+            keyboard = []
+            args = ' '.join(shlex.quote("{}={}".format(*p)) for p in params.items())
+
+            fields = [f for f in all_fields if f['type'] != 'fixed'
+                      and f['fullName'] not in ('username', 'owner')]
+
+            if fields:
+                msg += "\n\nThe current build parameters are:"
+                for field in fields:
+                    if field['type'] == 'nested':
+                        msg += "\n{}".format(field['label'])
+                    else:
+                        field_name = field['fullName']
+                        value = params.get(field_name, field['default']).strip()
+                        msg += "\n    {} `{}`".format(field['label'], value)
+                        if value: key = "Change "
+                        else: key = "Set "
+                        key += field_name.replace('_', ' ').title()
+                        if field_name in missing_params:
+                            key = "⚠️ " + key
+                            msg += " ⚠️"
+                        keyboard.append(
+                            [self.query_button(key, '/force {} ask {} {} {}'
+                                               .format(sched, field_name, bldr, args))]
+                        )
+
+            msg += "\n\nWhat do you want to do?"
+            if missing_params:
+                msg += " You must set values for all parameters marked with ⚠️"
+
+            if not missing_params:
+                keyboard.append(
+                    [self.query_button("🚀 Start Build", '/force {} build {} {}'
+                                       .format(sched, bldr, args))],
+                )
+
+            self.send(msg, reply_markup={'inline_keyboard': keyboard})
+
+        elif task == 'ask':
+            prompt = "enter the new value for the " + what.replace('_', ' ').lower()
+            args = ' '.join(shlex.quote("{}={}".format(*p)) for p in params.items()
+                            if p[0] != what)
+            self.template = '/force {} config {} {} {}={{}}'.format(sched, bldr, args, what)
+            self.ask_for_reply(prompt, '')
+
+        else:
             raise UsageError("Try '/force' and follow the instructions")
+
+    command_FORCE.usage = "force - Force a build"
 
 
 class TelegramBotResource(StatusBot, resource.Resource):
@@ -675,15 +735,13 @@ class TelegramBotResource(StatusBot, resource.Resource):
 
         contact = self.getContact(user=user, channel=chat)
         data['tmessage'] = message
-        partial = ''
-        if contact.partial:
-            data['partial'] = contact.partial
-            partial = contact.partial + ' '
-            contact.partial = ''
+        template, contact.template = contact.template, None
         if text.startswith(self.commandPrefix):
             d = contact.handleMessage(text, **data)
         else:
-            d = contact.handleMessage(partial + text, **data)
+            if template:
+                text = template.format(shlex.quote(text))
+            d = contact.handleMessage(text, **data)
         return d
 
     def process_webhook_request(self, request):

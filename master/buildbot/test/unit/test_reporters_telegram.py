@@ -185,9 +185,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_nay(self):
-        self.contact.partial = 'prefix'
         yield self.do_test_command('nay')
-        self.assertEqual(self.contact.partial, '')
 
     @defer.inlineCallbacks
     def test_command_dance(self):
@@ -258,7 +256,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('stop', 'build builder1')
         self.assertIn("give me the reason", self.sent[0][1])
-        self.assertEquals(self.contact.partial, "/stop build builder1")
+        self.assertEquals(self.contact.template, "/stop build builder1 {}")
 
     @defer.inlineCallbacks
     def test_command_notify_no_args(self):
@@ -328,7 +326,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             self.bot = bot
             self.user = user
             self.channel = channel
-            self.partial = ''
+            self.template = None
             self.messages = []
 
         def handleMessage(self, message, **kwargs):

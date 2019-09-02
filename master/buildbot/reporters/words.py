@@ -873,6 +873,11 @@ class Contact:
             else:
                 k = tuple(args[1:])  # command arg subarg ...
             doc = doc.get(k, None)
+        elif callable(doc):
+            try:
+                doc = doc(*args[1:])
+            except (TypeError, ValueError):
+                doc = None
         if doc:
             self.send("Usage: {}{}".format(self.bot.commandPrefix, doc))
         else:
