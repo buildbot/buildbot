@@ -156,7 +156,7 @@ class Boolean(Instance):
 class Identifier(Type):
 
     name = "identifier"
-    identRe = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
+    identRe = re.compile('^[a-zA-Z_-][a-zA-Z0-9._-]*$')
     ramlType = "string"
 
     def __init__(self, len=None, **kwargs):
