@@ -317,6 +317,19 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.assertButton('/shutdown now')
 
 
+class TestPollingBot(telegram.TelegramPollingBot):
+
+    def __init__(self, updates, *args, **kwargs):
+        self.__updates = updates
+        super().__init__(*args, **kwargs)
+
+    def process_update(self, update):
+        self.__updates -= 1
+        if not self.__updates:
+            self.running = False
+        return super().process_update(update)
+
+
 class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     USER = TestTelegramContact.USER
@@ -546,3 +559,47 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                content_json={'ok': 1})
         request = self.request_query("101")
         bot.process_webhook_request(request)
+
+    def makePollingBot(self, updates, chat_ids=None, authz=None, *args, **kwargs):
+        if chat_ids is None:
+            chat_ids = []
+        http = self.setupFakeHttp()
+        
+        return TestPollingBot(updates, '12345:secret', http, chat_ids, authz, *args, **kwargs)
+
+    @defer.inlineCallbacks
+    def test_polling(self):
+        bot = self.makePollingBot(2)
+        bot.running = True
+        bot.http_client.expect("post", "/deleteWebhook", content_json={"ok": 1})
+        bot.http_client.expect(
+            "post", "/getUpdates",
+            json={'timeout': bot.poll_timeout},
+            content_json={
+                'ok': 1,
+                'result': [{
+                        "update_id": 10000,
+                        "message": {
+                            "message_id": 123,
+                            "from": self.USER,
+                            "chat": self.CHANNEL,
+                            "date": 1566688888,
+                            "text": "ignore"}}]})
+        bot.http_client.expect(
+            "post", "/getUpdates",
+            json={'timeout': bot.poll_timeout, "offset": 10001},
+            content_json={
+                'ok': 1,
+                'result': [{
+                        "update_id": 10001,
+                        "message": {
+                            "message_id": 124,
+                            "from": self.USER,
+                            "chat": self.CHANNEL,
+                            "date": 1566688889,
+                            "text": "/hello"}}]})
+        bot.http_client.expect(
+            "post", "/sendMessage",
+            json={'chat_id': -12345678, 'text': 'yes?', 'parse_mode': 'Markdown'},
+            content_json={'ok': 1, 'result': {'message_id': 125}})
+        yield bot.do_polling()

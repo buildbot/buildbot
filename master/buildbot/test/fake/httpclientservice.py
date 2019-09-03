@@ -110,7 +110,7 @@ class HTTPClientService(service.SharedService):
         self.case.assertEqual(0, len(self._expected),
                               "expected more http requests:\n {!r}".format(self._expected))
 
-    def _doRequest(self, method, ep, params=None, data=None, json=None, files=None):
+    def _doRequest(self, method, ep, params=None, data=None, json=None, files=None, timeout=None):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",

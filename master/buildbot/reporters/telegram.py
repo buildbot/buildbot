@@ -917,6 +917,8 @@ class TelegramPollingBot(TelegramStatusBot):
                     raise ValueError("[{}] {}".format(res.code, ans.get('description')))
                 else:
                     updates = ans.get('result')
+            except AssertionError as err:
+                raise err
             except Exception as err:
                 msg = "ERROR: cannot send telegram request /getUpdates (will try again): {}".format(err)
                 if logme:
