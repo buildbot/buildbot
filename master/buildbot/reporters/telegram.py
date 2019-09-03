@@ -249,6 +249,24 @@ class TelegramContact(Contact):
                 ]
                 self.send("What do you want to list?",
                           reply_markup={'inline_keyboard': keyboard})
+                return
+
+        all = False
+        num = 5
+        try:
+            num = int(args[0])
+            del args[0]
+        except ValueError:
+            if args[0] == 'all':
+                all = True
+                del args[0]
+        except IndexError:
+            pass
+
+        if all: num = 20
+
+        if not args:
+            raise UsageError("Try '"+self.bot.commandPrefix+"list [all|N] builders|workers|changes'.")
 
         elif args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -256,9 +274,10 @@ class TelegramContact(Contact):
 
             response = ["I found the following **builders**:"]
             for bdict in bdicts:
-                response.append("`{}`".format(bdict['name']))
-                if bdict['builderid'] not in online_builderids:
-                    response[-1] += " ❌"
+                if bdict['builderid'] in online_builderids:
+                    response.append("`{}`".format(bdict['name']))
+                elif all:
+                    response.append("`{}` ❌".format(bdict['name']))
             self.send('\n'.join(response))
 
         elif args[0] == 'workers':
@@ -266,36 +285,29 @@ class TelegramContact(Contact):
 
             response = ["I found the following **workers**:"]
             for worker in workers:
-                response.append("`{}`".format(worker['name']))
-                if not worker['configured_on']:
-                    response[-1] += " ❌"
-                if not worker['connected_to']:
-                    response[-1] += " ⚠️"
+                if worker['configured_on']:
+                    response.append("`{}`".format(worker['name']))
+                    if not worker['connected_to']:
+                        response[-1] += " ⚠️"
+                elif all:
+                    response.append("`{}` ❌".format(worker['name']))
             self.send('\n'.join(response))
 
-        else:
-            try:
-                num = int(args[0])
-            except ValueError:
-                num = 5
-            else:
-                del args[0]
+        elif args[0] == 'changes':
+            changes = yield self.master.db.changes.getRecentChanges(num)
 
-            if args[0] == 'changes':
-                changes = yield self.master.db.changes.getRecentChanges(num)
-
-                response = ["I found the following recent **changes**:"]
-                for change in reversed(changes):
-                    change['comment'] = change['comments'].split('\n')[0]
-                    change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
-                    response.append(
-                        "[{comment}]({revlink})\n"
-                        "_Author_: {author}\n"
-                        "_Date_: {date}\n"
-                        "_Repository_: {repository}\n"
-                        "_Branch_: {branch}\n"
-                        "_Revision_: {revision}\n".format(**change))
-                self.send('\n\n'.join(response))
+            response = ["I found the following recent **changes**:"]
+            for change in reversed(changes):
+                change['comment'] = change['comments'].split('\n')[0]
+                change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
+                response.append(
+                    "[{comment}]({revlink})\n"
+                    "_Author_: {author}\n"
+                    "_Date_: {date}\n"
+                    "_Repository_: {repository}\n"
+                    "_Branch_: {branch}\n"
+                    "_Revision_: {revision}\n".format(**change))
+            self.send('\n\n'.join(response))
 
     @defer.inlineCallbacks
     def get_running_builders(self):
@@ -621,7 +633,7 @@ class TelegramStatusBot(StatusBot):
         for c in self.chat_ids:
             channel = self.getChannel(c)
             channel.add_notification_events(self.notify_events)
-        self.loadNotifyEvents()
+        self.loadState()
 
     results_emoji = {
         SUCCESS: ' ✅',

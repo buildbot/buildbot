@@ -143,6 +143,7 @@ class Channel(service.AsyncService):
         self.subscribed = []
         self.build_subscriptions = []
         self.reported_builds = []  # tuples (when, buildername, buildnum)
+        self.missing_workers = set()
         self.useRevisions = bot.useRevisions
 
     def send(self, message, **kwargs):
@@ -183,15 +184,18 @@ class Channel(service.AsyncService):
         def buildFinished(key, msg):
             return self.buildFinished(msg)
 
-        def workerMissing(key, msg):
-            return self.workerMissing(msg)
+        def workerEvent(key, msg):
+            if key[2] == 'missing':
+                return self.workerMissing(msg)
+            if key[2] == 'connected':
+                return self.workerConnected(msg)
 
         for e, f in (("new", buildStarted),             # BuilderStarted
                      ("finished", buildFinished)):      # BuilderFinished
             handle = yield startConsuming(f, ('builders', None, 'builds', None, e))
             self.subscribed.append(handle)
 
-        handle = yield startConsuming(workerMissing, ('workers', None, 'missing'))
+        handle = yield startConsuming(workerEvent, ('workers', None, None))
         self.subscribed.append(handle)
 
     def unsubscribe_from_build_events(self):
@@ -361,8 +365,18 @@ class Channel(service.AsyncService):
         return False
 
     def workerMissing(self, worker):
+        self.missing_workers.add(worker['workerid'])
         if self.notify_for('worker'):
-            self.send("Worker {name} is missing. It was seen last on {last_connection}.".format(**worker))
+            self.send("Worker `{name}` is missing. It was seen last on {last_connection}.".format(**worker))
+        self.bot.saveMissingWorkers()
+
+    def workerConnected(self, worker):
+        workerid = worker['workerid']
+        if workerid in self.missing_workers:
+            self.missing_workers.remove(workerid)
+            if self.notify_for('worker'):
+                self.send("Worker `{name}` is back online.".format(**worker))
+            self.bot.saveMissingWorkers()
 
 
 class Contact:
@@ -524,8 +538,23 @@ class Contact:
     def command_LIST(self, args, **kwargs):
         """list configured builders or workers"""
         args = self.splitArgs(args)
+
+        all = False
+        num = 5
+        try:
+            num = int(args[0])
+            del args[0]
+        except ValueError:
+            if args[0] == 'all':
+                all = True
+                del args[0]
+        except IndexError:
+            pass
+
+        if all: num = 20
+
         if not args:
-            raise UsageError("Try '"+self.bot.commandPrefix+"list builders|workers'.")
+            raise UsageError("Try '"+self.bot.commandPrefix+"list [all|N] builders|workers|changes'.")
 
         if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -533,8 +562,10 @@ class Contact:
 
             response = ["I found the following builders:"]
             for bdict in bdicts:
-                response.append(bdict['name'])
-                if bdict['builderid'] not in online_builderids:
+                if bdict['builderid'] in online_builderids:
+                    response.append(bdict['name'])
+                elif all:
+                    response.append(bdict['name'])
                     response.append("[offline]")
             self.send(' '.join(response))
 
@@ -543,38 +574,34 @@ class Contact:
 
             response = ["I found the following workers:"]
             for worker in workers:
-                response.append(worker['name'])
-                if not worker['configured_on'] or \
-                        not worker['connected_to']:
+                if worker['configured_on']:
+                    response.append(worker['name'])
+                    if worker['connected_to']:
+                        response.append("[disconnected]")
+                elif all:
+                    response.append(worker['name'])
                     response.append("[offline]")
             self.send(' '.join(response))
             return
 
-        else:
-            try:
-                num = int(args[0])
-            except ValueError:
-                num = 5
-            else:
-                del args[0]
+        elif args[0] == 'changes':
+            changes = yield self.master.db.changes.getRecentChanges(num)
 
-            if args[0] == 'changes':
-                changes = yield self.master.db.changes.getRecentChanges(num)
+            response = ["I found the following recent changes:"]
+            for change in reversed(changes):
+                change['comment'] = change['comments'].split('\n')[0]
+                change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
+                response.append(
+                    "{comment})\n"
+                    "Author: {author}\n"
+                    "Date: {date}\n"
+                    "Repository: {repository}\n"
+                    "Branch: {branch}\n"
+                    "Revision: {revision}\n".format(**change))
+            self.send('\n\n'.join(response))
 
-                response = ["I found the following recent changes:"]
-                for change in reversed(changes):
-                    change['comment'] = change['comments'].split('\n')[0]
-                    change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
-                    response.append(
-                        "{comment})\n"
-                        "Author: {author}\n"
-                        "Date: {date}\n"
-                        "Repository: {repository}\n"
-                        "Branch: {branch}\n"
-                        "Revision: {revision}\n".format(**change))
-                self.send('\n\n'.join(response))
-
-    command_LIST.usage = "list builders|workers|changes - List configured builders, workers, or 5 recent changes"
+    command_LIST.usage = "list [all|N] builders|workers|changes - " \
+                         "list configured builders, workers, or N recent changes"
 
     @defer.inlineCallbacks
     def command_STATUS(self, args, **kwargs):
@@ -604,7 +631,7 @@ class Contact:
             response.append(status)
         if response:
             self.send('\n'.join(response))
-    command_STATUS.usage = "status [_which_] - List status of a builder (or all builders)"
+    command_STATUS.usage = "status [_which_] - list status of a builder (or all builders)"
 
     def command_NOTIFY(self, args, **kwargs):
         """notify me about build events"""
@@ -1032,31 +1059,50 @@ class StatusBot(service.AsyncMultiService):
             new_channel.setServiceParent(self)
             return new_channel
 
-    def _getObjectId(self):
+    def _get_object_id(self):
         return self.master.db.state.getObjectId(
             self.nickname, '{0.__module__}.{0.__name__}'.format(self.__class__))
 
     @defer.inlineCallbacks
-    def loadNotifyEvents(self):
-        objectid = yield self._getObjectId()
-        notify_contacts = yield self.master.db.state.getState(objectid, 'notify_contacts', None)
+    def _save_channels_state(self, attr, json_type=None):
+        if json_type is None:
+            json_type = lambda x: x
+        data = [(channel.id, json_type(getattr(channel, attr)))
+                 for channel in self.channels.values()]
         try:
-            if notify_contacts is not None:
-                for c, e in notify_contacts:
-                    channel = self.getChannel(c)
-                    try:
-                        channel.add_notification_events(e)
-                    except UsageError:
-                        pass
+            objectid = yield self._get_object_id()
+            yield self.master.db.state.setState(objectid, attr, data)
         except Exception as err:
-            log.err(err, 'loadNotifyEvents')
+            log.err(err, "saveState '{}'".format(attr))
+
+    @defer.inlineCallbacks
+    def _load_channels_state(self, attr, setter):
+        try:
+            objectid = yield self._get_object_id()
+            data = yield self.master.db.state.getState(objectid, attr, ())
+        except Exception as err:
+            log.err(err, "loadState ({})".format(attr))
+        else:
+            if data is not None:
+                for c, d in data:
+                    try:
+                        setter(self.getChannel(c), d)
+                    except Exception as err:
+                        log.err(err, "loadState '{}' ({})".format(attr, c))
+
+
+    @defer.inlineCallbacks
+    def loadState(self):
+        yield self._load_channels_state('notify_events', lambda c,e: c.add_notification_events(e))
+        yield self._load_channels_state('missing_workers', lambda c,w: c.missing_workers.update(w))
 
     @defer.inlineCallbacks
     def saveNotifyEvents(self):
-        objectid = yield self._getObjectId()
-        notify_contacts = [(channel.id, list(channel.notify_events))
-                           for channel in self.channels.values()]
-        yield self.master.db.state.setState(objectid, 'notify_contacts', notify_contacts)
+        yield self._save_channels_state('notify_events', list)
+
+    @defer.inlineCallbacks
+    def saveMissingWorkers(self):
+        yield self._save_channels_state('missing_workers', list)
 
     def send_message(self, channel, message, **kwargs):
         raise NotImplementedError()

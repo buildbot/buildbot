@@ -172,20 +172,45 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         self.assertIn('-12345678', self.sent_messages[1][1])
 
     @defer.inlineCallbacks
-    def testState(self):
+    def testLoadState(self):
         tboid = yield self.master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramBotResource')
         yield self.insertTestData([
-            fakedb.ObjectState(objectid=tboid, name='notify_contacts',
-                               value_json='[[123456789,  ["started", "finished"]]]'),
+            fakedb.ObjectState(objectid=tboid, name='notify_events',
+                               value_json='[[123456789, ["started", "finished"]]]'),
+            fakedb.ObjectState(objectid=tboid, name='missing_workers',
+                               value_json='[[123456789, [12]]]'),
         ])
 
         tb = self.master.config.services['TelegramBot']
-        yield tb.bot.loadNotifyEvents()
+        yield tb.bot.loadState()
         c = tb.bot.getContact(123456789, 123456789)
         self.assertEquals(c.channel.notify_events, {'started', 'finished'})
+        self.assertEquals(c.channel.missing_workers, {12})
 
     @defer.inlineCallbacks
-    def test_missing_worker(self):
+    def testSaveState(self):
+        tb = self.master.config.services['TelegramBot']
+        tboid = yield self.master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramBotResource')
+
+        notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())
+        missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())
+        self.assertNotIn([99, ['cancelled']], notify_events)
+        self.assertNotIn([99, [13]], missing_workers)
+
+        c = tb.bot.getChannel(99)
+        c.notify_events = {'cancelled'}
+        c.missing_workers = {13}
+        yield tb.bot.saveNotifyEvents()
+        yield tb.bot.saveMissingWorkers()
+
+        notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())
+        missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())
+        self.assertIn([99, ['cancelled']], notify_events)
+        self.assertIn([99, [13]], missing_workers)
+
+
+    @defer.inlineCallbacks
+    def testMissingWorker(self):
         yield self.insertTestData([fakedb.Worker(name='local1'),])
 
         tb = self.master.config.services['TelegramBot']
@@ -198,5 +223,13 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
             last_connection='long time ago',
             notify=['admin@worker.org'],
         )
-        self.assertEquals(self.sent_messages[-1][1],
-                          "Worker local1 is missing. It was seen last on long time ago.")
+        self.assertEquals(self.sent_messages[0][1],
+                          "Worker `local1` is missing. It was seen last on long time ago.")
+
+        yield self.master.data.updates.workerConnected(
+            workerid='local1',
+            masterid=self.master.masterid,
+            workerinfo={},
+        )
+        self.assertEquals(self.sent_messages[1][1],
+                          "Worker `local1` is back online.")

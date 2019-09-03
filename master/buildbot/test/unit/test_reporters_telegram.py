@@ -222,7 +222,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_builders(self):
-        yield self.do_test_command('list', 'builders')
+        yield self.do_test_command('list', 'all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
             self.assertIn('`%s` ❌' % builder, self.sent[0][1])
@@ -234,7 +234,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             self.master.db.workers.db.insertTestData([
                 fakedb.Worker(name=worker)
             ])
-        yield self.do_test_command('list', args='workers')
+        yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
             self.assertIn('`%s` ❌' % worker, self.sent[0][1])
@@ -398,7 +398,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot = self.makeBot()
         bot.http_client.expect("post", "/setWebhook",
                                data={'url': 'our.webhook'},
-                               files={'certificate': "this is certificate"},
+                               files={'certificate': b"this is certificate"},
                                content_json={'ok': 1})
         yield bot.set_webhook('our.webhook', "this is certificate")
 

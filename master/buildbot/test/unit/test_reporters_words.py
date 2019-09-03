@@ -52,6 +52,7 @@ class ContactMixin(TestReactorMixin):
         self.bot.channelClass = self.channelClass
         self.bot.contactClass = self.contactClass
         self.bot.nickname = 'nick'
+        self.missing_workers = set()
 
         # fake out subscription/unsubscription
         self.subscribed = False
@@ -192,8 +193,19 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.patch_send()
         yield self.do_test_command('notify', args='on worker')
         missing_worker = self.contact.channel.subscribed[2].callback
-        missing_worker('key', dict(name="work", last_connection="sometime"))
-        self.assertEquals(self.sent[1], "Worker work is missing. It was seen last on sometime.")
+        missing_worker((None, None, 'missing'), dict(workerid=1, name="work", last_connection="sometime"))
+        self.assertEquals(self.sent[1], "Worker `work` is missing. It was seen last on sometime.")
+        self.assertIn(1, self.contact.channel.missing_workers)
+
+    @defer.inlineCallbacks
+    def test_notify_worker_is_back(self):
+        self.patch_send()
+        yield self.do_test_command('notify', args='on worker')
+        self.contact.channel.missing_workers.add(1)
+        missing_worker = self.contact.channel.subscribed[2].callback
+        missing_worker((None, None, 'connected'), dict(workerid=1, name="work", last_connection="sometime"))
+        self.assertEquals(self.sent[1], "Worker `work` is back online.")
+        self.assertNotIn(1, self.contact.channel.missing_workers)
 
     @defer.inlineCallbacks
     def test_command_help_noargs(self):
@@ -334,7 +346,7 @@ class TestContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_builders(self):
-        yield self.do_test_command('list', args='builders')
+        yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
             self.assertIn('%s [offline]' % builder, self.sent[0])
@@ -346,7 +358,7 @@ class TestContact(ContactMixin, unittest.TestCase):
             self.master.db.workers.db.insertTestData([
                 fakedb.Worker(name=worker)
             ])
-        yield self.do_test_command('list', args='workers')
+        yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
             self.assertIn('%s [offline]' % worker, self.sent[0])
@@ -379,7 +391,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_list_builders_not_connected(self):
         self.setup_multi_builders()
 
-        yield self.do_test_command('list', args='builders')
+        yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         self.assertIn('%s [offline]' % self.BUILDER_NAMES[0], self.sent[0])
         self.assertIn('%s [offline]' % self.BUILDER_NAMES[1], self.sent[0])
@@ -393,7 +405,7 @@ class TestContact(ContactMixin, unittest.TestCase):
             fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)
         ])
 
-        yield self.do_test_command('list', args='builders')
+        yield self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         self.assertIn('%s [offline]' % self.BUILDER_NAMES[0], self.sent[0])
         self.assertNotIn('%s [offline]' % self.BUILDER_NAMES[1], self.sent[0])

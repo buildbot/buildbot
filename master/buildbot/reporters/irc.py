@@ -227,7 +227,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         for c in self.pm_to_nicks:
             contact = self.getContact(c)
             contact.channel.add_notification_events(self.notify_events)
-        self.loadNotifyEvents()
+        self.loadState()
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
