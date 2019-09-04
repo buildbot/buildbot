@@ -25,8 +25,8 @@ from buildbot.reporters import telegram
 from buildbot.reporters import words
 from buildbot.schedulers import forcesched
 from buildbot.test.fake import fakedb
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.unit.test_reporters_words import ContactMixin
 from buildbot.test.util.misc import TestReactorMixin
@@ -178,8 +178,8 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         key = hash(repr(payload))
         self.bot.query_cache[key] = "something other"
         result = self.contact.query_button("Hello", payload)
-        self.assertEquals(result, {'text': "Hello", 'callback_data': key+1})
-        self.assertEquals(self.bot.query_cache[key+1], payload)
+        self.assertEquals(result, {'text': "Hello", 'callback_data': key + 1})
+        self.assertEquals(self.bot.query_cache[key + 1], payload)
 
     @defer.inlineCallbacks
     def test_command_start(self):
@@ -282,6 +282,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_notify_list_with_query(self):
         self.patch_send()
+
         def delete_message(chat, msg):
             delete_message.msg = msg
         delete_message.msg = None
@@ -295,6 +296,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_notify_toggle(self):
         self.patch_send()
+
         def edit_keyboard(chat, msg, keyboard):
             self.sent.append((chat, None, {
                 'reply_markup': {'inline_keyboard': keyboard}}))
@@ -435,6 +437,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.make_forcescheduler()
 
         force_args = {}
+
         def force(**kwargs):
             force_args.update(kwargs)
         self.schedulers[0].force = force
@@ -450,6 +453,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             'second_repository': 'repository2.git'  # fixed param
         }
         self.assertEqual(force_args, expected)
+
 
 class TestPollingBot(telegram.TelegramPollingBot):
 
@@ -698,7 +702,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         if chat_ids is None:
             chat_ids = []
         http = self.setupFakeHttp()
-        
+
         return TestPollingBot(updates, '12345:secret', http, chat_ids, authz, *args, **kwargs)
 
     @defer.inlineCallbacks

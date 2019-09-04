@@ -33,9 +33,6 @@ class TestIrcContact(ContactMixin):
     channelClass = irc.IRCChannel
     contactClass = irc.IRCContact
 
-    def setUp(self):
-        super().setUp()
-
     def patch_act(self):
         self.actions = []
 
@@ -120,8 +117,6 @@ class TestIrcContact(ContactMixin):
             ('#buildbot', 'unmuted'),
             ('#buildbot', 'unmuted, unicode \u2603'),
         ])
-
-
 
 
 class FakeContact(service.AsyncService):

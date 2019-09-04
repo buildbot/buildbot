@@ -24,7 +24,6 @@ from twisted.python import log
 from twisted.web import resource
 from twisted.web import server
 
-
 from buildbot import config
 from buildbot import util
 from buildbot.plugins.db import get_plugins
@@ -76,10 +75,10 @@ class TelegramChannel(Channel):
 
 def collect_fields(fields):
     for field in fields:
-            if field['fullName']:
-                yield field
-            if 'fields' in field:
-                yield from collect_fields(field['fields'])
+        if field['fullName']:
+            yield field
+        if 'fields' in field:
+            yield from collect_fields(field['fields'])
 
 
 class TelegramContact(Contact):
@@ -121,7 +120,8 @@ class TelegramContact(Contact):
 
         if self.channel.id != self.userid:
             chat_title = self.channel.get('title')
-            if chat_title: user += " on '{}'".format(chat_title)
+            if chat_title:
+                user += " on '{}'".format(chat_title)
 
         return user
 
@@ -140,7 +140,7 @@ class TelegramContact(Contact):
             now = util.now()
             # clean users scared some time ago
             horizon = now - 120
-            for u,t in list(self._scared_users.items()):
+            for u, t in list(self._scared_users.items()):
                 if t < horizon:
                     del self._scared_users[u]
             if self._scared_users.get(uid) is None:
@@ -216,7 +216,7 @@ class TelegramContact(Contact):
     @Contact.overrideCommand
     def command_DANCE(self, args, **kwargs):
         chat = self.channel['id']
-        msg = yield self.send( "**<(^.^<)**")
+        msg = yield self.send("**<(^.^<)**")
         if msg is not None:
             mid = msg['message_id']
             self.bot.reactor.callLater(1.0, self.bot.edit_message, chat, mid, "**<(^.^)>**")
@@ -243,14 +243,14 @@ class TelegramContact(Contact):
     def command_LIST(self, args, **kwargs):
         args = self.splitArgs(args)
         if not args:
-                keyboard = [
-                    [self.query_button("👷️ Builders", '/list builders')],
-                    [self.query_button("⚙ Workers", '/list workers')],
-                    [self.query_button("📄 Changes", '/list changes')],
-                ]
-                self.send("What do you want to list?",
-                          reply_markup={'inline_keyboard': keyboard})
-                return
+            keyboard = [
+                [self.query_button("👷️ Builders", '/list builders')],
+                [self.query_button("⚙ Workers", '/list workers')],
+                [self.query_button("📄 Changes", '/list changes')],
+            ]
+            self.send("What do you want to list?",
+                      reply_markup={'inline_keyboard': keyboard})
+            return
 
         all = False
         num = 5
@@ -264,12 +264,13 @@ class TelegramContact(Contact):
         except IndexError:
             pass
 
-        if all: num = 20
+        if all:
+            num = 20
 
         if not args:
-            raise UsageError("Try '"+self.bot.commandPrefix+"list [all|N] builders|workers|changes'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
 
-        elif args[0] == 'builders':
+        if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
             online_builderids = yield self.bot.getOnlineBuilders()
 
@@ -399,11 +400,11 @@ class TelegramContact(Contact):
     def command_STOP(self, args, **kwargs):
         argv = self.splitArgs(args)
         if len(argv) >= 3 or \
-                len(argv) > 0 and argv[0] != 'build':
+                argv and argv[0] != 'build':
             super().command_STOP(args)
             return
         argv = argv[1:]
-        if len(argv) == 0:
+        if not argv:
             builders = yield self.get_running_builders()
             if builders:
                 keyboard = [
@@ -438,7 +439,7 @@ class TelegramContact(Contact):
         forceschedulers = yield self.master.data.get(('forceschedulers',))
         forceschedulers = dict((s['name'], s) for s in forceschedulers)
 
-        if len(forceschedulers) == 0:
+        if not forceschedulers:
             raise UsageError("no force schedulers configured for use by /force")
 
         argv = self.splitArgs(args)
@@ -474,7 +475,7 @@ class TelegramContact(Contact):
         if tquery and task != 'config':
             self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'])
 
-        if len(argv) == 0:
+        if not argv:
             keyboard = [
                 [self.query_button(b, '/force {} {} {}'.format(sched, task, b))]
                 for b in scheduler['builder_names']
@@ -489,7 +490,7 @@ class TelegramContact(Contact):
             except IndexError:
                 raise UsageError("Try '/force' and follow the instructions")
         else:
-            what = None # silence PyCharm warnings
+            what = None  # silence PyCharm warnings
 
         bldr = argv.pop(0)
         if bldr not in scheduler['builder_names']:
@@ -507,19 +508,10 @@ class TelegramContact(Contact):
         missing_params = [p for p in required_params if p not in params]
 
         if task == 'build':
-            #TODO This should probably be moved to the upper class,
+            # TODO This should probably be moved to the upper class,
             # however, it will change the force command totally
 
             try:
-                # sched = argv[0]
-                # if sched in data:
-                #     del data[0]
-                # elif len(data) == 1:
-                #     sched = next(iter(data))
-                # else:
-                #     raise ValueError(sched)
-                # builder_name = argv.pop(0)
-
                 if missing_params:
                     # raise UsageError
                     task = 'config'
@@ -568,8 +560,10 @@ class TelegramContact(Contact):
                         field_name = field['fullName']
                         value = params.get(field_name, field['default']).strip()
                         msg += "\n    {} `{}`".format(field['label'], value)
-                        if value: key = "Change "
-                        else: key = "Set "
+                        if value:
+                            key = "Change "
+                        else:
+                            key = "Set "
                         key += field_name.replace('_', ' ').title()
                         if field_name in missing_params:
                             key = "⚠️ " + key
@@ -931,13 +925,12 @@ class TelegramPollingBot(TelegramStatusBot):
                 kwargs['json']['offset'] = offset
             try:
                 res = yield self.http_client.post('/getUpdates',
-                                                  timeout=self.poll_timeout+5,
+                                                  timeout=self.poll_timeout + 5,
                                                   **kwargs)
                 ans = yield res.json()
                 if not ans.get('ok'):
                     raise ValueError("[{}] {}".format(res.code, ans.get('description')))
-                else:
-                    updates = ans.get('result')
+                updates = ans.get('result')
             except AssertionError as err:
                 raise err
             except Exception as err:
@@ -980,8 +973,7 @@ class TelegramBot(service.BuildbotService):
                     bot_username=None, tags=None, notify_events=None,
                     showBlameList=True, useRevisions=False,
                     certificate=None, usePolling=False,
-                    pollTimeout=120, retryDelay=30
-                   ):
+                    pollTimeout=120, retryDelay=30):
         super().checkConfig(self.name)
 
         if authz is not None:
@@ -997,8 +989,7 @@ class TelegramBot(service.BuildbotService):
                         bot_username=None, tags=None, notify_events=None,
                         showBlameList=True, useRevisions=False,
                         certificate=None, usePolling=False,
-                        pollTimeout=120, retryDelay=30
-                        ):
+                        pollTimeout=120, retryDelay=30):
         # need to stash these so we can detect changes later
         self.bot_token = bot_token
         if chat_ids is None:
@@ -1055,5 +1046,6 @@ class TelegramBot(service.BuildbotService):
             bot_path = 'bot' + bot_token
             root.putChild(unicode2bytes(bot_path), self.bot)
             url = bytes2unicode(self.master.config.buildbotURL)
-            if not url.endswith('/'): url += '/'
+            if not url.endswith('/'):
+                url += '/'
             self.bot.set_webhook(url + bot_path, certificate)

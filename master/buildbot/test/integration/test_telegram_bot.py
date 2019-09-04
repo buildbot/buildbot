@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+
 import mock
 
 from twisted.internet import defer
@@ -124,7 +125,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
         # create a telegram bot service
         tb = master.config.services['TelegramBot'] = telegram.TelegramBot(
-            bot_token='12345:secret', chat_ids=[-123456],  notify_events=['worker']
+            bot_token='12345:secret', chat_ids=[-123456], notify_events=['worker']
         )
         tb._get_http = self.get_http
         tb.setServiceParent(self.master)
@@ -133,6 +134,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         yield tb.startService()
 
         self.sent_messages = []
+
         def send_message(chat, message, **kwargs):
             self.sent_messages.append((chat, message))
         tb.bot.send_message = send_message
@@ -208,10 +210,9 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         self.assertIn([99, ['cancelled']], notify_events)
         self.assertIn([99, [13]], missing_workers)
 
-
     @defer.inlineCallbacks
     def testMissingWorker(self):
-        yield self.insertTestData([fakedb.Worker(name='local1'),])
+        yield self.insertTestData([fakedb.Worker(name='local1')])
 
         tb = self.master.config.services['TelegramBot']
         channel = tb.bot.getChannel(-123456)

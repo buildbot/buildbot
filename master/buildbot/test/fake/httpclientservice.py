@@ -119,13 +119,14 @@ class HTTPClientService(service.SharedService):
             # ensure that the json is really jsonable
             jsonmodule.dumps(json, default=toJson)
         if files is not None:
-            files = dict((k, v.read()) for (k,v) in files.items())
+            files = dict((k, v.read()) for (k, v) in files.items())
         if not self._expected:
             raise AssertionError(
                 "Not expecting a request, while we got: "
                 "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}".format(
                     method, ep, params, data, json, files))
         expect = self._expected.pop(0)
+        # pylint: disable=too-many-boolean-expressions
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
                 expect['data'] != data or expect['json'] != json or expect['files'] != files):
             raise AssertionError(

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import types
-
 from twisted.application import internet
 from twisted.internet import task
 from twisted.python import log
@@ -244,8 +242,10 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
                                                            message))
 
     def userLeft(self, user, channel):
-        if user: user = user.lower()
-        if channel: channel = channel.lower()
+        if user:
+            user = user.lower()
+        if channel:
+            channel = channel.lower()
         if (channel, user) in self.contacts:
             del self.contacts[(channel, user)]
 
@@ -253,10 +253,11 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         self.userLeft(kickee, channel)
 
     def userQuit(self, user, quitMessage=None):
-        if user: user = user.lower()
-        for c,u in list(self.contacts):
+        if user:
+            user = user.lower()
+        for c, u in list(self.contacts):
             if u == user:
-                del self.contacts[(c,u)]
+                del self.contacts[(c, u)]
 
     results_colors = {
         SUCCESS: 'GREEN',
@@ -400,13 +401,15 @@ class IRC(service.BuildbotService):
         self.port = port
         self.nick = nick
         self.join_channels = channels
-        if pm_to_nicks is None: pm_to_nicks = []
+        if pm_to_nicks is None:
+            pm_to_nicks = []
         self.pm_to_nicks = pm_to_nicks
         self.password = password
         self.authz = authz
         self.useRevisions = useRevisions
         self.tags = tags
-        if notify_events is None: notify_events = {}
+        if notify_events is None:
+            notify_events = {}
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
 

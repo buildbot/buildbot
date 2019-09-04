@@ -32,9 +32,9 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
-from buildbot.process.results import statusToString
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.util import service
 
@@ -98,6 +98,7 @@ class ForceOptions(usage.Options):
 
 dangerous_commands = []
 
+
 def dangerousCommand(method):
     command = method.__name__
     if not command.startswith('command_'):
@@ -107,24 +108,37 @@ def dangerousCommand(method):
 
 
 def convertTime(seconds):
-    if seconds <= 1: return "a moment"
-    if seconds < 20: return "{:d} seconds".format(seconds)
-    if seconds < 55: return "{:d} seconds".format(round(seconds / 10) * 10)
+    if seconds <= 1:
+        return "a moment"
+    if seconds < 20:
+        return "{:d} seconds".format(seconds)
+    if seconds < 55:
+        return "{:d} seconds".format(round(seconds / 10) * 10)
     minutes = round(seconds / 60)
-    if minutes == 1: return "a minute"
-    if minutes < 20: return "{:d} minutes".format(minutes)
-    if minutes < 55: return "{:d} minutes".format(round(minutes / 10) * 10)
+    if minutes == 1:
+        return "a minute"
+    if minutes < 20:
+        return "{:d} minutes".format(minutes)
+    if minutes < 55:
+        return "{:d} minutes".format(round(minutes / 10) * 10)
     hours = round(minutes / 60)
-    if hours == 1: return "an hour"
-    if hours < 24: return "{:d} hours".format(hours)
-    days = (hours+6) // 24
-    if days == 1: return "a day"
-    if days < 30: return "{:d} days".format(days)
-    months = int((days+10) / 30.5)
-    if months == 1: return "a month"
-    if months < 12: return "{} months".format(months)
+    if hours == 1:
+        return "an hour"
+    if hours < 24:
+        return "{:d} hours".format(hours)
+    days = (hours + 6) // 24
+    if days == 1:
+        return "a day"
+    if days < 30:
+        return "{:d} days".format(days)
+    months = int((days + 10) / 30.5)
+    if months == 1:
+        return "a month"
+    if months < 12:
+        return "{} months".format(months)
     years = round(days / 365.25)
-    if years == 1: return "a year"
+    if years == 1:
+        return "a year"
     return "{} years".format(years)
 
 
@@ -156,10 +170,10 @@ class Channel(service.AsyncService):
     def validate_notification_event(self, event):
         if not re.compile("^(started|finished|success|warnings|failure|exception|"
                           "cancelled|problem|recovery|worse|better|worker|"
-                          # this is deprecated list 
+                          # this is deprecated list
                           "(success|warnings|failure|exception)To"
                           "(Success|Warnings|Failure|Exception))$").match(event):
-            raise UsageError("Try '"+self.bot.commandPrefix+"notify on|off _EVENT_'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off _EVENT_'.")
 
     def list_notified_events(self):
         if self.notify_events:
@@ -328,7 +342,7 @@ class Channel(service.AsyncService):
 
         if result in self.bot.results_severity and \
                 (self.notify_for('better', 'worse', 'problem', 'recovery') or
-                        any('To' in e for e in self.notify_events)):
+                 any('To' in e for e in self.notify_events)):
             prev_build = yield self.master.data.get(
                 ('builders', build['builderid'], 'builds', build['number'] - 1))
             if prev_build:
@@ -414,10 +428,14 @@ class Contact:
         except AttributeError:
             pass
         else:
-            try: meth.__doc__ = base_meth.__doc__
-            except AttributeError: pass
-            try: meth.usage = base_meth.usage
-            except AttributeError: pass
+            try:
+                meth.__doc__ = base_meth.__doc__
+            except AttributeError:
+                pass
+            try:
+                meth.usage = base_meth.usage
+            except AttributeError:
+                pass
         return meth
 
     @property
@@ -551,10 +569,11 @@ class Contact:
         except IndexError:
             pass
 
-        if all: num = 20
+        if all:
+            num = 20
 
         if not args:
-            raise UsageError("Try '"+self.bot.commandPrefix+"list [all|N] builders|workers|changes'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
 
         if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -612,7 +631,7 @@ class Contact:
         elif len(args) == 1:
             which = args[0]
         else:
-            raise UsageError("Try '"+self.bot.commandPrefix+"status _builder_'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "status _builder_'.")
         response = []
         if which == "":
             builders = yield self.bot.getAllBuilders()
@@ -638,7 +657,7 @@ class Contact:
         args = self.splitArgs(args)
 
         if not args:
-            raise UsageError("Try '"+self.bot.commandPrefix+"notify on|off|list [_EVENT_]'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off|list [_EVENT_]'.")
         action = args.pop(0)
         events = args
 
@@ -665,7 +684,7 @@ class Contact:
             self.channel.list_notified_events()
 
         else:
-            raise UsageError("Try '"+self.bot.commandPrefix+"notify on|off|list [_EVENT_]'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off|list [_EVENT_]'.")
 
     command_NOTIFY.usage = ("notify on|off|list [_EVENT_] ... - notify me about build events;"
                             "  event should be one or more of: 'started', 'finished', 'failure',"
@@ -676,7 +695,7 @@ class Contact:
         """announce the completion of an active build"""
         args = self.splitArgs(args)
         if len(args) != 1:
-            raise UsageError("Try '"+self.bot.commandPrefix+"watch _builder_'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "watch _builder_'.")
 
         which = args[0]
         builder = yield self.bot.getBuilder(buildername=which)
@@ -807,7 +826,7 @@ class Contact:
         """stop a running build"""
         args = self.splitArgs(args)
         if len(args) < 3 or args[0] != 'build':
-            raise UsageError("Try '"+self.bot.commandPrefix+"stop build _which_ _reason_'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "stop build _which_ _reason_'.")
         which = args[1]
         reason = ' '.join(args[2:])
 
@@ -826,7 +845,7 @@ class Contact:
             num = bdict['number']
 
             yield self.master.data.control('stop', {'reason': r},
-                                               ('builders', builderid, 'builds', num))
+                                           ('builders', builderid, 'builds', num))
             if self.bot.useRevisions:
                 revisions = yield self.bot.getRevisionsForBuild(bdict)
                 response = "Build containing revision(s) {} interrupted".format(','.join(
@@ -858,7 +877,7 @@ class Contact:
                     raise UsageError("no such builder")
                 builders = [builder]
         else:
-            raise UsageError("Try '"+self.bot.commandPrefix+"last _builder_'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "last _builder_'.")
 
         messages = []
 
@@ -871,7 +890,7 @@ class Contact:
                 if complete_at:
                     complete_at = util.datetime2epoch(complete_at)
                     ago = convertTime(int(self.bot.reactor.seconds() -
-                                               complete_at))
+                                          complete_at))
                 else:
                     ago = "??"
                 status = self.bot.format_build_status(lastBuild)
@@ -968,7 +987,7 @@ class Contact:
         """shutdown the buildbot master"""
         # FIXME: NEED TO THINK ABOUT!
         if args not in ('check', 'start', 'stop', 'now'):
-            raise UsageError("Try '"+self.bot.commandPrefix+"shutdown check|start|stop|now'.")
+            raise UsageError("Try '" + self.bot.commandPrefix + "shutdown check|start|stop|now'.")
 
         botmaster = self.channel.master.botmaster
         shuttingDown = botmaster.shuttingDown
@@ -1036,7 +1055,7 @@ class StatusBot(service.AsyncMultiService):
         expanded_authz = {}
         for cmds, val in authz.items():
             if not isinstance(cmds, (tuple, list)):
-                cmds = cmds,
+                cmds = (cmds,)
             for cmd in cmds:
                 expanded_authz[cmd.upper()] = val
         return expanded_authz
@@ -1068,7 +1087,7 @@ class StatusBot(service.AsyncMultiService):
         if json_type is None:
             json_type = lambda x: x
         data = [(channel.id, json_type(getattr(channel, attr)))
-                 for channel in self.channels.values()]
+                for channel in self.channels.values()]
         try:
             objectid = yield self._get_object_id()
             yield self.master.db.state.setState(objectid, attr, data)
@@ -1092,8 +1111,8 @@ class StatusBot(service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def loadState(self):
-        yield self._load_channels_state('notify_events', lambda c,e: c.add_notification_events(e))
-        yield self._load_channels_state('missing_workers', lambda c,w: c.missing_workers.update(w))
+        yield self._load_channels_state('notify_events', lambda c, e: c.add_notification_events(e))
+        yield self._load_channels_state('missing_workers', lambda c, w: c.missing_workers.update(w))
 
     @defer.inlineCallbacks
     def saveNotifyEvents(self):
@@ -1153,6 +1172,7 @@ class StatusBot(service.AsyncMultiService):
         builderid = builder['builderid']
         runningBuilds = yield self.getRunningBuilds(builderid)
 
+        # pylint: disable=too-many-nested-blocks
         if not runningBuilds:
             onlineBuilders = yield self.getOnlineBuilders()
             if builderid in onlineBuilders:
@@ -1163,7 +1183,7 @@ class StatusBot(service.AsyncMultiService):
                     if complete_at:
                         complete_at = util.datetime2epoch(complete_at)
                         ago = convertTime(int(self.reactor.seconds() -
-                                                   complete_at))
+                                              complete_at))
                     else:
                         ago = "??"
                     status = self.format_build_status(lastBuild, short=short)

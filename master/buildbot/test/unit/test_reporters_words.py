@@ -81,7 +81,7 @@ class ContactMixin(TestReactorMixin):
 
         def send(msg):
             if not isinstance(msg, (list, tuple)):
-                msg = msg,
+                msg = (msg,)
             for m in msg:
                 self.sent.append(m)
         self.contact.channel.send = send
@@ -518,7 +518,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(
-                "Build [#6](http://localhost:8080/#builders/23/builds/6) of `builder1` completed successfully.",
+            "Build [#6](http://localhost:8080/#builders/23/builds/6) of `builder1` completed successfully.",
             self.sent)
 
     @defer.inlineCallbacks
