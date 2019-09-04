@@ -1090,7 +1090,6 @@ class StatusBot(service.AsyncMultiService):
                     except Exception as err:
                         log.err(err, "loadState '{}' ({})".format(attr, c))
 
-
     @defer.inlineCallbacks
     def loadState(self):
         yield self._load_channels_state('notify_events', lambda c,e: c.add_notification_events(e))

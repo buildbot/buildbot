@@ -19,8 +19,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import util
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.reporters import telegram
 from buildbot.reporters import words
+from buildbot.schedulers import forcesched
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
@@ -316,6 +319,137 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.assertButton('/shutdown stop')
         self.assertButton('/shutdown now')
 
+    def allSchedulers(self):
+        return self.schedulers
+
+    def make_forcescheduler(self, two=False):
+        scheduler = forcesched.ForceScheduler(
+            name='force1',
+            builderNames=['builder1', 'builder2'],
+            codebases=[
+                forcesched.CodebaseParameter('',
+                    branch=forcesched.StringParameter(
+                        name='branch',
+                        default="master"),
+                    repository=forcesched.FixedParameter(
+                        name="repository",
+                        default="repository.git")),
+                forcesched.CodebaseParameter('second',
+                    branch=forcesched.StringParameter(
+                        name='branch',
+                        default="master"),
+                    repository=forcesched.FixedParameter(
+                        name="repository",
+                        default="repository2.git"))],
+            reason=forcesched.StringParameter(
+                name='reason',
+                required=True))
+        self.schedulers = [scheduler]
+        if two:
+            scheduler2 = forcesched.ForceScheduler(
+                name='force2',
+                builderNames=['builder2'])
+            self.schedulers.append(scheduler2)
+        self.bot.master.allSchedulers = self.allSchedulers
+
+    @defer.inlineCallbacks
+    def test_command_force_noargs_multiple_schedulers(self):
+        self.make_forcescheduler(two=True)
+        yield self.do_test_command('force')
+        self.assertButton('/force force1')
+        self.assertButton('/force force2')
+
+    @defer.inlineCallbacks
+    def test_command_force_noargs(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force')
+        self.assertButton('/force force1 config builder1')
+        self.assertButton('/force force1 config builder2')
+
+    @defer.inlineCallbacks
+    def test_command_force_only_scheduler(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1')
+        self.assertButton('/force force1 config builder1')
+        self.assertButton('/force force1 config builder2')
+
+    @defer.inlineCallbacks
+    def test_command_force_bad_scheduler(self):
+        self.make_forcescheduler(two=True)
+        yield self.do_test_command('force', 'force3', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_force_bad_builder(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 config builder0', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_force_bad_command(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 bad builder1', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_force_only_bad_command(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'bad builder1', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_force_config(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 config builder1')
+        self.assertButton('/force force1 ask reason builder1 ')
+        self.assertButton('/force force1 ask branch builder1 ')
+        self.assertButton('/force force1 ask project builder1 ')
+        self.assertButton('/force force1 ask revision builder1 ')
+        self.assertButton('/force force1 ask second_branch builder1 ')
+        self.assertButton('/force force1 ask second_project builder1 ')
+        self.assertButton('/force force1 ask second_revision builder1 ')
+
+    @defer.inlineCallbacks
+    def test_command_force_config_more(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 config builder1 branch=master')
+        self.assertButton('/force force1 ask reason builder1 branch=master')
+
+    @defer.inlineCallbacks
+    def test_command_force_config_nothing_missing(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 config builder1 reason=Ok')
+        self.assertButton('/force force1 build builder1 reason=Ok')
+
+    @defer.inlineCallbacks
+    def test_command_force_ask(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 ask reason builder1 branch=master')
+        self.assertEqual(self.contact.template,
+                         '/force force1 config builder1 branch=master reason={}')
+
+    @defer.inlineCallbacks
+    def test_command_force_build_missing(self):
+        self.make_forcescheduler()
+        yield self.do_test_command('force', 'force1 build builder1')
+        self.assertButton('/force force1 ask reason builder1 ')
+
+    @defer.inlineCallbacks
+    def test_command_force_build(self):
+        self.make_forcescheduler()
+
+        force_args = {}
+        def force(**kwargs):
+            force_args.update(kwargs)
+        self.schedulers[0].force = force
+
+        yield self.do_test_command('force', 'force1 build builder1 reason=Good')
+        self.assertEqual(self.sent[0][1], "Force build successfully requested.")
+
+        expected = {
+            'builderid': 23,
+            'owner': "Harry Potter (@harrypotter) on 'Hogwards'",
+            'reason': 'Good',
+            'repository': 'repository.git',         # fixed param
+            'second_repository': 'repository2.git'  # fixed param
+        }
+        self.assertEqual(force_args, expected)
 
 class TestPollingBot(telegram.TelegramPollingBot):
 
@@ -603,3 +737,13 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             json={'chat_id': -12345678, 'text': 'yes?', 'parse_mode': 'Markdown'},
             content_json={'ok': 1, 'result': {'message_id': 125}})
         yield bot.do_polling()
+
+    def test_format_build_status(self):
+        bot = self.makeBot()
+        build = {'results': SUCCESS}
+        self.assertEqual(bot.format_build_status(build), "completed successfully ✅")
+
+    def test_format_build_status_short(self):
+        bot = self.makeBot()
+        build = {'results': WARNINGS}
+        self.assertEqual(bot.format_build_status(build, short=True), " ⚠️")

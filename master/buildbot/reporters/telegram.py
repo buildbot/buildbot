@@ -39,6 +39,7 @@ from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import UsageError
 from buildbot.schedulers.forcesched import CollectedValidationError
+from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
@@ -437,6 +438,9 @@ class TelegramContact(Contact):
         forceschedulers = yield self.master.data.get(('forceschedulers',))
         forceschedulers = dict((s['name'], s) for s in forceschedulers)
 
+        if len(forceschedulers) == 0:
+            raise UsageError("no force schedulers configured for use by /force")
+
         argv = self.splitArgs(args)
 
         try:
@@ -457,11 +461,10 @@ class TelegramContact(Contact):
                 del argv[0]
             elif len(forceschedulers) == 1:
                 sched = next(iter(forceschedulers))
-        try:
-            scheduler = forceschedulers[sched]
-        except KeyError:
-            raise UsageError("Try '/force' and follow the instructions"
-                             " (no force scheduler {})".format(sched))
+            else:
+                raise UsageError("Try '/force' and follow the instructions"
+                                 " (no force scheduler {})".format(sched))
+        scheduler = forceschedulers[sched]
 
         try:
             task = argv.pop(0)
@@ -521,10 +524,16 @@ class TelegramContact(Contact):
                     # raise UsageError
                     task = 'config'
                 else:
+                    params.update(dict(
+                        (f['fullName'], f['default']) for f in all_fields
+                        if f['type'] == 'fixed' and f['fullName'] not in ('username', 'owner')
+                    ))
+
                     builder = yield self.bot.getBuilder(buildername=bldr)
-                    try:
-                        scheduler = self.master.config.schedulers[sched]
-                    except KeyError:
+                    for scheduler in self.master.allSchedulers():
+                        if scheduler.name == sched and isinstance(scheduler, ForceScheduler):
+                            break
+                    else:
                         raise ValueError("There is no force scheduler '{}'".format(sched))
                     try:
                         yield scheduler.force(builderid=builder['builderid'],
