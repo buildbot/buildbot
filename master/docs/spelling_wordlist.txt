@@ -449,6 +449,7 @@ lifecycle
 lighttpd
 lineboundaries
 linenumber
+Linter
 linux
 listdir
 localhost
