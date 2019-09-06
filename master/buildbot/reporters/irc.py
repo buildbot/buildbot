@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.application import internet
+from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
 from twisted.words.protocols import irc
@@ -29,6 +30,7 @@ from buildbot.reporters.words import Channel
 from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import ThrottledClientFactory
+from buildbot.reporters.words import dangerousCommand
 from buildbot.util import service
 from buildbot.util import ssl
 
@@ -112,27 +114,74 @@ class IRCContact(Contact):
             response = "%s %s too" % (verb, self.user)
         self.act(response)
 
+    @defer.inlineCallbacks
+    def op_required(self, command):
+        if self.channel.id != self.user and \
+                self.user not in self.bot.authz.get(command.upper(), ()):
+            ops = yield self.bot.getChannelOps(self.channel.id)
+            return self.user not in ops
+        return False
+
     # IRC only commands
 
-    def command_MUTE(self, args):
+    @dangerousCommand
+    def command_JOIN(self, args, **kwargs):
+        """join a channel"""
+        args = self.splitArgs(args)
+        for channel in args:
+            self.bot.join(channel)
+    command_JOIN.usage = "join #channel - join a channel #channel"
+
+    @dangerousCommand
+    def command_LEAVE(self, args, **kwargs):
+        """join a channel"""
+        args = self.splitArgs(args)
+        for channel in args:
+            self.bot.leave(channel)
+    command_LEAVE.usage = "leave #channel - leave a channel #channel"
+
+    @defer.inlineCallbacks
+    def command_MUTE(self, args, **kwargs):
+        if (yield self.op_required('mute')):
+            self.send("Only channel operators or explicitly allowed users "
+                      "can mute me here, {}... Blah, blah, blah...".format(self.user))
+            return
         # The order of these is important! ;)
         self.send("Shutting up for now.")
         self.channel.muted = True
     command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
 
-    def command_UNMUTE(self, args):
+    @defer.inlineCallbacks
+    def command_UNMUTE(self, args, **kwargs):
         if self.channel.muted:
+            if (yield self.op_required('mute')):
+                return
             # The order of these is important! ;)
             self.channel.muted = False
             self.send("I'm baaaaaaaaaaack!")
         else:
             self.send(
-                "You hadn't told me to be quiet, but it's the thought that counts, right?")
+                "No one had told me to be quiet, but it's the thought that counts, right?")
     command_UNMUTE.usage = "unmute - disable a previous 'mute'"
+
+    @defer.inlineCallbacks
+    @Contact.overrideCommand
+    def command_NOTIFY(self, args, **kwargs):
+        if self.channel.id != self.user:
+            argv = self.splitArgs(args)
+            if argv and argv[0] in ('on', 'off') and \
+                    (yield self.op_required('notify')):
+                self.send("Only channel operators can change notified events for this channel. "
+                          "And you, {}, are neither!"
+                          .format(self.user))
+                return
+        super().command_NOTIFY(args, **kwargs)
 
     def command_DESTROY(self, args):
         if self.bot.nickname not in args:
             self.act("readies phasers")
+        else:
+            self.send("Better destroy yourself, {}!".format(self.user))
 
     def command_HUSTLE(self, args):
         self.act("does the hustle")
@@ -159,6 +208,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         self.useColors = useColors
         self._keepAliveCall = task.LoopingCall(
             lambda: self.ping(self.nickname))
+        self._channel_names = {}
 
     def connectionMade(self):
         super().connectionMade()
@@ -226,6 +276,36 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             contact = self.getContact(c)
             contact.channel.add_notification_events(self.notify_events)
         self.loadState()
+
+    def getNames(self, channel):
+        channel = channel.lower()
+        d = defer.Deferred()
+        callbacks = self._channel_names.setdefault(channel, ([], []))[0]
+        callbacks.append(d)
+        self.sendLine("NAMES {}".format(channel))
+        return d
+
+    def irc_RPL_NAMREPLY(self, prefix, params):
+        channel = params[2].lower()
+        if channel not in self._channel_names:
+            return
+        nicks = params[3].split(' ')
+        nicklist = self._channel_names[channel][1]
+        nicklist += nicks
+
+    def irc_RPL_ENDOFNAMES(self, prefix, params):
+        channel = params[1].lower()
+        try:
+            callbacks, namelist = self._channel_names.pop(channel)
+        except KeyError:
+            return
+        for cb in callbacks:
+            cb.callback(namelist)
+
+    @defer.inlineCallbacks
+    def getChannelOps(self, channel):
+        names = yield self.getNames(channel)
+        return [n[1:] for n in names if n[0] in '@&~%']
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
@@ -387,7 +467,8 @@ class IRC(service.BuildbotService):
         if authz is not None:
             for acl in authz.values():
                 if not isinstance(acl, (list, tuple, bool)):
-                    config.error("authz values must be bool or a list of nicks")
+                    config.error(
+                        "authz values must be bool or a list of nicks")
 
     def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
                         authz=None, tags=None, password=None, notify_events=None,

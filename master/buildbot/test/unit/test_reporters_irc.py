@@ -29,7 +29,7 @@ from buildbot.test.util import config
 from buildbot.util import service
 
 
-class TestIrcContact(ContactMixin):
+class TestIrcContact(ContactMixin, unittest.TestCase):
     channelClass = irc.IRCChannel
     contactClass = irc.IRCContact
 
@@ -39,6 +39,24 @@ class TestIrcContact(ContactMixin):
         def act(msg):
             self.actions.append(msg)
         self.contact.act = act
+
+    @defer.inlineCallbacks
+    def test_op_required_authz(self):
+        self.bot.authz = self.bot._expand_authz({
+            ('mute', 'unmute'): [self.USER]
+        })
+        self.bot.getChannelOps = lambda channel: ['channelop']
+        self.assertFalse((yield self.contact.op_required('mute')))
+
+    @defer.inlineCallbacks
+    def test_op_required_operator(self):
+        self.bot.getChannelOps = lambda channel: [self.USER]
+        self.assertFalse((yield self.contact.op_required('command')))
+
+    @defer.inlineCallbacks
+    def test_op_required_unauthorized(self):
+        self.bot.getChannelOps = lambda channel: ['channelop']
+        self.assertTrue((yield self.contact.op_required('command')))
 
     @defer.inlineCallbacks
     def test_command_mute(self):
@@ -323,6 +341,34 @@ class TestIrcStatusBot(unittest.TestCase):
         b.useColors = True
         self.assertEquals(b.format_build_status({'results': SUCCESS}),
                           "\x033completed successfully\x0f")
+
+    def test_getNames(self):
+        b = self.makeBot()
+        b.sendLine = lambda *args: None
+        d = b.getNames('#channel')
+        names = []
+
+        def cb(n):
+            names.extend(n)
+        d.addCallback(cb)
+
+        b.irc_RPL_NAMREPLY('', ('test', '=', '#channel', 'user1 user2'))
+        b.irc_RPL_ENDOFNAMES('', ('test', '#channel'))
+        self.assertEqual(names, ['user1', 'user2'])
+
+    def test_getChannelOps(self):
+        b = self.makeBot()
+        b.sendLine = lambda *args: None
+        d = b.getChannelOps('#channel')
+        names = []
+
+        def cb(n):
+            names.extend(n)
+        d.addCallback(cb)
+
+        b.irc_RPL_NAMREPLY('', ('test', '=', '#channel', 'user1 @user2'))
+        b.irc_RPL_ENDOFNAMES('', ('test', '#channel'))
+        self.assertEqual(names, ['user2'])
 
 
 class TestIrcStatusFactory(unittest.TestCase):

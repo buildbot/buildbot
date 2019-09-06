@@ -1010,15 +1010,19 @@ class TelegramBot(service.BuildbotService):
         # We don't try to be smart here. Just restart the bot if config has
         # changed.
 
-        if 'base' not in self.www:
-            raise RuntimeError("could not find buildbot-www; is it installed?")
-        root = self.www.get('base').resource
+        if not usePolling:
+            if 'base' not in self.www:
+                raise RuntimeError("could not find buildbot-www; is it installed?")
+            root = self.www.get('base').resource
+        else:
+            root = None
 
         http = yield self._get_http(bot_token)
 
         if self.bot is not None:
             self.bot.stopService()
-            root.delEntity(unicode2bytes('bot' + self.bot.token))
+            if root is not None:
+                root.delEntity(unicode2bytes('bot' + self.bot.token))
 
         if usePolling:
             self.bot = TelegramPollingBot(bot_token, http, chat_ids, authz,
