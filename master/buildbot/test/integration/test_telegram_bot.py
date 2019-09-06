@@ -212,14 +212,14 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def testMissingWorker(self):
-        yield self.insertTestData([fakedb.Worker(name='local1')])
+        yield self.insertTestData([fakedb.Worker(id=1, name='local1')])
 
         tb = self.master.config.services['TelegramBot']
         channel = tb.bot.getChannel(-123456)
         self.assertEquals(channel.notify_events, {'worker'})
 
         yield self.master.data.updates.workerMissing(
-            workerid='local1',
+            workerid=1,
             masterid=self.master.masterid,
             last_connection='long time ago',
             notify=['admin@worker.org'],
@@ -228,7 +228,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
                           "Worker `local1` is missing. It was seen last on long time ago.")
 
         yield self.master.data.updates.workerConnected(
-            workerid='local1',
+            workerid=1,
             masterid=self.master.masterid,
             workerinfo={},
         )

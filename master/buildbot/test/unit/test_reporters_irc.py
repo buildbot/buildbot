@@ -60,20 +60,23 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_mute(self):
+        self.bot.getChannelOps = lambda channel: [self.USER]
         yield self.do_test_command('mute')
         self.assertTrue(self.contact.channel.muted)
 
     @defer.inlineCallbacks
     def test_command_unmute(self):
+        self.bot.getChannelOps = lambda channel: [self.USER]
         self.contact.channel.muted = True
         yield self.do_test_command('unmute')
         self.assertFalse(self.contact.channel.muted)
 
     @defer.inlineCallbacks
     def test_command_unmute_not_muted(self):
+        self.bot.getChannelOps = lambda channel: [self.USER]
         yield self.do_test_command('unmute')
         self.assertFalse(self.contact.channel.muted)
-        self.assertIn("hadn't told me to be quiet", self.sent[0])
+        self.assertIn("No one had told me to be quiet", self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_destroy(self):

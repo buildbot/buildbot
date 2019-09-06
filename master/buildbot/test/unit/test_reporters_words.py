@@ -573,8 +573,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('stop', args="build %s 'i have a reason'" % self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
-        self.assertRegex(self.sent[0], r'Build \[#3\].* of `builder1` interrupted')
-        self.assertRegex(self.sent[1], r'Build \[#6\].* of `builder1` interrupted')
+        self.assertRegex(self.sent[0], r'Build \[#[36]\].* of `builder1` interrupted')
+        self.assertRegex(self.sent[1], r'Build \[#[63]\].* of `builder1` interrupted')
 
     @defer.inlineCallbacks
     def test_command_force_no_args(self):
