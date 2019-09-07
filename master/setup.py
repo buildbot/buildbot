@@ -338,6 +338,7 @@ setup_args = {
             ('buildbot.reporters.bitbucketserver', ['BitbucketServerStatusPush', 'BitbucketServerPRCommentPush']),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
+            ('buildbot.reporters.telegram', ['TelegramBot']),
             ('buildbot.reporters.zulip', ['ZulipStatusPush']),
         ]),
         ('buildbot.util', [
