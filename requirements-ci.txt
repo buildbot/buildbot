@@ -19,7 +19,7 @@ cookies==2.2.1
 cryptography==2.7
 decorator==4.4.0
 dicttoxml==1.7.4
-docutils==0.15
+docutils==0.15.2
 enum34==1.1.6
 flake8==3.7.8
 funcparserlib==0.3.6
