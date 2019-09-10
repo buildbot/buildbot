@@ -46,6 +46,7 @@ class TestHgPollerBase(gpo.GetProcessOutputMixin,
         self.setUpGetProcessOutput()
         yield self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
+        self.remote_hgweb = 'http://example.com/foo/baz/rev/{}'
         self.repo_ready = True
 
         def _isRepositoryReady():
@@ -55,7 +56,9 @@ class TestHgPollerBase(gpo.GetProcessOutputMixin,
                                         usetimestamps=self.usetimestamps,
                                         workdir='/some/dir',
                                         branches=self.branches,
-                                        bookmarks=self.bookmarks)
+                                        bookmarks=self.bookmarks,
+                                        revlink=lambda branch, revision:
+                                            self.remote_hgweb.format(revision))
         self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
@@ -137,6 +140,7 @@ class TestHgPollerBranches(TestHgPollerBase):
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
         self.assertEqual(change['revision'], '784bd')
+        self.assertEqual(change['revlink'], 'http://example.com/foo/baz/rev/784bd')
         self.assertEqual(change['comments'], 'Comment')
 
 
