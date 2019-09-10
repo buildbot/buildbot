@@ -143,7 +143,7 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         self.assertEqual(client.call_args_create_container[0]['volumes'],
                          ['/opt/webapp'])
         self.assertEqual(client.call_args_create_host_config[0]['binds'],
-                         {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
+                         ["/src/webapp:/opt/webapp"])
 
     def test_volume_ro_rw(self):
         bs = self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
@@ -156,8 +156,7 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         self.assertEqual(client.call_args_create_container[0]['volumes'],
                          ['/opt/webapp', '/backup'])
         self.assertEqual(client.call_args_create_host_config[0]['binds'],
-                         {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
-                          '~': {'bind': '/backup', 'ro': False}})
+                         ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
 
     def test_volume_bad_format(self):
         with self.assertRaises(config.ConfigErrors):

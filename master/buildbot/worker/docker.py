@@ -188,23 +188,19 @@ class DockerLatentWorker(DockerBaseWorker,
 
     def _thd_parse_volumes(self, volumes):
         volume_list = []
-        binds = {}
         for volume_string in (volumes or []):
             try:
-                bind, volume = volume_string.split(":", 1)
+                _, volume = volume_string.split(":", 1)
             except ValueError:
                 config.error("Invalid volume definition for docker "
                              "%s. Skipping..." % volume_string)
                 continue
 
-            ro = False
             if volume.endswith(':ro') or volume.endswith(':rw'):
-                ro = volume[-2:] == 'ro'
                 volume = volume[:-3]
 
             volume_list.append(volume)
-            binds[bind] = {'bind': volume, 'ro': ro}
-        return volume_list, binds
+        return volume_list, volumes
 
     def _getDockerClient(self):
         if docker.version[0] == '1':
