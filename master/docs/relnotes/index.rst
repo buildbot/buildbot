@@ -10,6 +10,23 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.4.1`` ( ``2019-09-11`` )
+=====================================
+
+Bug fixes
+---------
+
+- allow committer of a change to be null for new setups (:issue:`4987`)
+- custom_templates are now working again.
+- Locks will no longer allow being acquired more times than the `maxCount` parameter if this parameter is changed during master reconfiguration.
+
+Features
+--------
+
+- Improve log cleaning performance by using delete with join on supported databases.
+- Hiding/showing of inactive builders is now possible in Waterfall view.
+
+
 Buildbot ``2.4.0`` ( ``2019-08-18`` )
 =====================================
 
