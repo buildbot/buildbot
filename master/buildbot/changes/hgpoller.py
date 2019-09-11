@@ -50,9 +50,6 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        if name is None:
-            name = repourl
-
         self.repourl = repourl
 
         if branch and branches:
@@ -63,6 +60,13 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             self.branches = branches or []
 
         self.bookmarks = bookmarks or []
+
+        if name is None:
+            name = repourl
+            if self.bookmarks:
+                name += "_" + "_".join(self.bookmarks)
+            if self.branches:
+                name += "_" + "_".join(self.branches)
 
         if not self.branches and not self.bookmarks:
             self.branches = ['default']
