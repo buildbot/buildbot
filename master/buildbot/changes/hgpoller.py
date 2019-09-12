@@ -284,8 +284,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
         # revsets are inclusive. Strip the already-known "current" changeset.
-        del revNodeList[0]
-
+        if revNodeList:
+            del revNodeList[0]
+        # empty revNodeList probably means the branch has changed head (strip of force push?)
+        # @TODO in that case, we should produce a change for that new rev
         log.msg('hgpoller: processing %d changes in branch %r: %r in %r'
                 % (len(revNodeList), branch, revNodeList, self._absWorkdir()))
         for rev, node in revNodeList:
