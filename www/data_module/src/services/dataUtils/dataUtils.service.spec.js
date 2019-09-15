@@ -64,10 +64,16 @@ describe('Data utils service', function() {
             expect(result.test("asd/1/new")).toBeTruthy();
 
             result = dataUtilsService.socketPathRE('asd/1/bnm/*/*').source;
-            expect(result).toBe('^asd\\/1\\/bnm\\/[^\\/]+\\/[^\\/]+$');
+            expect([
+                '^asd\\/1\\/bnm\\/[^\\/]+\\/[^\\/]+$',
+                '^asd\\/1\\/bnm\\/[^/]+\\/[^/]+$'
+            ]).toContain(result);
 
             result = dataUtilsService.socketPathRE('asd/1/*').source;
-            expect(result).toBe('^asd\\/1\\/[^\\/]+$');
+            expect([
+                '^asd\\/1\\/[^\\/]+$',
+                '^asd\\/1\\/[^/]+$'
+            ]).toContain(result);
         })
     );
 
