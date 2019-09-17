@@ -722,12 +722,12 @@ class TestContact(ContactMixin, unittest.TestCase):
             "Build [#3](http://localhost:8080/#builders/23/builds/3) of `builder1` started.")
 
     def test_getCommandMethod_authz_default(self):
-        self.bot.authz = words.StatusBot._expand_authz(None)
+        self.bot.authz = words.StatusBot.expand_authz(None)
         meth = self.contact.getCommandMethod('shutdown')
         self.assertEqual(meth, self.contact.access_denied)
 
     def test_getCommandMethod_ignore_authz(self):
-        self.bot.authz = words.StatusBot._expand_authz(None)
+        self.bot.authz = words.StatusBot.expand_authz(None)
         meth = self.contact.getCommandMethod('shutdown', True)
         self.assertNotEqual(meth, self.contact.access_denied)
 
@@ -738,23 +738,23 @@ class TestContact(ContactMixin, unittest.TestCase):
         '': False}
 
     def test_getCommandMethod_explicit_allow(self):
-        self.bot.authz = words.StatusBot._expand_authz(self.authz1)
+        self.bot.authz = words.StatusBot.expand_authz(self.authz1)
         meth = self.contact.getCommandMethod('force')
         self.assertNotEqual(meth, self.contact.access_denied)
 
     def test_getCommandMethod_explicit_disallow(self):
-        self.bot.authz = words.StatusBot._expand_authz(self.authz1)
+        self.bot.authz = words.StatusBot.expand_authz(self.authz1)
         meth = self.contact.getCommandMethod('shutdown')
         self.assertEqual(meth, self.contact.access_denied)
 
     def test_getCommandMethod_explicit_multi(self):
-        self.bot.authz = words.StatusBot._expand_authz(self.authz1)
+        self.bot.authz = words.StatusBot.expand_authz(self.authz1)
         self.assertIn('DANCE', self.bot.authz)
         meth = self.contact.getCommandMethod('dance')
         self.assertNotEqual(meth, self.contact.access_denied)
 
     def test_getCommandMethod_explicit_default(self):
-        self.bot.authz = words.StatusBot._expand_authz(self.authz1)
+        self.bot.authz = words.StatusBot.expand_authz(self.authz1)
         meth = self.contact.getCommandMethod('help')
         self.assertEqual(meth, self.contact.access_denied)
 
@@ -764,12 +764,12 @@ class TestContact(ContactMixin, unittest.TestCase):
         '*': True}
 
     def test_getCommandMethod_exclamation(self):
-        self.bot.authz = words.StatusBot._expand_authz(self.authz2)
+        self.bot.authz = words.StatusBot.expand_authz(self.authz2)
         meth = self.contact.getCommandMethod('help')
         self.assertNotEqual(meth, self.contact.access_denied)
 
     def test_getCommandMethod_exclamation_override(self):
-        self.bot.authz = words.StatusBot._expand_authz(self.authz2)
+        self.bot.authz = words.StatusBot.expand_authz(self.authz2)
         meth = self.contact.getCommandMethod('shutdown')
         self.assertEqual(meth, self.contact.access_denied)
 

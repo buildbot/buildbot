@@ -20,6 +20,7 @@ from twisted.application import internet
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.config import ConfigErrors
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import irc
@@ -42,7 +43,7 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_op_required_authz(self):
-        self.bot.authz = self.bot._expand_authz({
+        self.bot.authz = self.bot.expand_authz({
             ('mute', 'unmute'): [self.USER]
         })
         self.bot.getChannelOps = lambda channel: ['channelop']
@@ -480,7 +481,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         self.assertIdentical(p, proto_obj)
         factory.protocol.assert_called_with(
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'], True,
-            None, ['tags'], {'successToFailure': 1},
+            {}, ['tags'], {'successToFailure': 1},
             useColors=False,
             useRevisions=True,
             showBlameList=False)
@@ -490,3 +491,35 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         # just put it through its paces
         irc.startService()
         return irc.stopService()
+
+    # deprecated
+    @defer.inlineCallbacks
+    def test_allowForce_allowShutdown(self):
+        s = self.makeIRC(
+            host='host',
+            nick='nick',
+            channels=['channels'],
+            allowForce=True,
+            allowShutdown=False)
+        yield s.startService()
+        self.assertEqual(words.StatusBot.expand_authz(s.authz), {'FORCE': True, 'STOP': True, 'SHUTDOWN': False})
+
+    # deprecated
+    def test_allowForce_with_authz(self):
+        with self.assertRaises(ConfigErrors):
+            self.makeIRC(
+                host='host',
+                nick='nick',
+                channels=['channels'],
+                allowForce=True,
+                authz={'force': [12345]})
+
+    # deprecated
+    def test_allowShutdown_with_authz(self):
+        with self.assertRaises(ConfigErrors):
+            self.makeIRC(
+                host='host',
+                nick='nick',
+                channels=['channels'],
+                allowForce=True,
+                authz={'': [12345]})

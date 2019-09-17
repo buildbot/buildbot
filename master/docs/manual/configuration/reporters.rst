@@ -589,7 +589,7 @@ The following parameters are accepted by this class:
 
     Anybody will be able to run the ``version`` command, *alice* and *bob* will be allowed to run any safe command and *alice* will also have the right to force and stop builds.
 
-    This parameter replaces older ``allowForce`` and ``allowShutdown``, which have been removed as they were considered a security risk.
+    This parameter replaces older ``allowForce`` and ``allowShutdown``, which are deprecated as they were considered a security risk.
 
     .. note::
 
@@ -647,6 +647,21 @@ The following parameters are accepted by this class:
     (optional, enabled by default)
     The bot can add color to some of its messages.
     You might turn it off by setting this parameter to ``False``.
+
+The following parameters are deprecated. You must not use them if you use the new ``authz`` parameter.
+
+.. note:: Security Note
+
+    Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
+    Use ``authz`` to give explicit list of nicks who are allowed to do this.
+
+``allowForce``
+    (deprecated, disabled by default)
+    This allow all users to force and stop builds via this bot.
+
+``allowShutdown``
+    (deprecated, disabled by default)
+    This allow all users to shutdown the master.
 
 To use the service, you address messages at the Buildbot, either normally (``botnickname: status``) or with private messages (``/msg botnickname status``).
 The Buildbot will respond in kind.

@@ -1043,13 +1043,13 @@ class StatusBot(service.AsyncMultiService):
         self.notify_events = notify_events
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
-        self.authz = self._expand_authz(authz)
+        self.authz = self.expand_authz(authz)
         self.contacts = {}
         self.channels = {}
         self.reactor = reactor
 
     @staticmethod
-    def _expand_authz(authz):
+    def expand_authz(authz):
         if authz is None:
             authz = {}
         expanded_authz = {}

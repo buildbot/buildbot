@@ -445,18 +445,35 @@ class IRC(service.BuildbotService):
     compare_attrs = ("host", "port", "nick", "password", "authz",
                      "channels", "pm_to_nicks", "useSSL",
                      "useRevisions", "tags", "useColors",
+                     "allowForce", "allowShutdown",
                      "lostDelay", "failedDelay")
     secrets = ['password']
 
     def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
-                    authz=None, tags=None, password=None, notify_events=None,
+                    allowForce=None, tags=None, password=None, notify_events=None,
                     showBlameList=True, useRevisions=False,
                     useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                    noticeOnChannel=False, **kwargs
+                    allowShutdown=None, noticeOnChannel=False, authz=None, **kwargs
                     ):
         deprecated_params = list(kwargs)
         if deprecated_params:
             config.error("%s are deprecated" % (",".join(deprecated_params)))
+
+        # deprecated
+        if allowForce is not None:
+            if authz is not None:
+                config.error("If you specify authz, you must not use allowForce anymore")
+            if allowForce not in (True, False):
+                config.error("allowForce must be boolean, not %r" % (allowForce,))
+            log.msg('IRC: allowForce is deprecated: use authz instead')
+        if allowShutdown is not None:
+            if authz is not None:
+                config.error("If you specify authz, you must not use allowShutdown anymore")
+            if allowShutdown not in (True, False):
+                config.error("allowShutdown must be boolean, not %r" %
+                             (allowShutdown,))
+            log.msg('IRC: allowShutdown is deprecated: use authz instead')
+        # ###
 
         if noticeOnChannel not in (True, False):
             config.error("noticeOnChannel must be boolean, not %r" %
@@ -471,10 +488,10 @@ class IRC(service.BuildbotService):
                         "authz values must be bool or a list of nicks")
 
     def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
-                        authz=None, tags=None, password=None, notify_events=None,
+                        allowForce=None, tags=None, password=None, notify_events=None,
                         showBlameList=True, useRevisions=False,
                         useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                        noticeOnChannel=False, **kwargs
+                        allowShutdown=None, noticeOnChannel=False, authz=None, **kwargs
                         ):
 
         # need to stash these so we can detect changes later
@@ -486,13 +503,23 @@ class IRC(service.BuildbotService):
             pm_to_nicks = []
         self.pm_to_nicks = pm_to_nicks
         self.password = password
-        self.authz = authz
+        if authz is None:
+            self.authz = {}
+        else:
+            self.authz = authz
         self.useRevisions = useRevisions
         self.tags = tags
         if notify_events is None:
             notify_events = {}
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
+
+        # deprecated...
+        if allowForce is not None:
+            self.authz[('force', 'stop')] = allowForce
+        if allowShutdown is not None:
+            self.authz[('shutdown')] = allowShutdown
+        # ###
 
         # This function is only called in case of reconfig with changes
         # We don't try to be smart here. Just restart the bot if config has
