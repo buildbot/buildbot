@@ -778,9 +778,6 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.contact.access_denied()
         self.assertIn("not pass", self.sent[0])
 
-    def test_convertTime(self):
-        self.assertEquals(words.convertTime(53611200), "2 years")
-
     @defer.inlineCallbacks
     def test_bot_loadState(self):
         boid = yield self.bot._get_object_id()
