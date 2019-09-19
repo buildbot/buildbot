@@ -1,0 +1,1 @@
+DockerLatentWorker: Allow to bind the same volume twice into a worker's container, Buildbot now requires 'docker-py' (nowadays 'docker') version 1.2.3+ from 2015.
