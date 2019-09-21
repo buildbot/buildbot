@@ -88,7 +88,9 @@ class IRCChannel(Channel):
 
 class IRCContact(Contact):
 
-    def __init__(self, bot, user=None, channel=None):
+    def __init__(self, bot, user, channel=None):
+        if channel is None:
+            channel = user
         super().__init__(bot, user, channel)
 
     def send(self, message):
@@ -109,18 +111,17 @@ class IRCContact(Contact):
         if verb == "kicks":
             response = "%s back" % verb
         elif verb == "threatens":
-            response = "hosts a red wedding for %s" % self.user
+            response = "hosts a red wedding for %s" % self.user_id
         else:
-            response = "%s %s too" % (verb, self.user)
+            response = "%s %s too" % (verb, self.user_id)
         self.act(response)
 
     @defer.inlineCallbacks
     def op_required(self, command):
-        if self.channel.id != self.user and \
-                self.user not in self.bot.authz.get(command.upper(), ()):
-            ops = yield self.bot.getChannelOps(self.channel.id)
-            return self.user not in ops
-        return False
+        if self.is_private_chat or self.user_id in self.bot.authz.get(command.upper(), ()):
+            return False
+        ops = yield self.bot.getChannelOps(self.channel.id)
+        return self.user_id not in ops
 
     # IRC only commands
 
@@ -144,7 +145,7 @@ class IRCContact(Contact):
     def command_MUTE(self, args, **kwargs):
         if (yield self.op_required('mute')):
             self.send("Only channel operators or explicitly allowed users "
-                      "can mute me here, {}... Blah, blah, blah...".format(self.user))
+                      "can mute me here, {}... Blah, blah, blah...".format(self.user_id))
             return
         # The order of these is important! ;)
         self.send("Shutting up for now.")
@@ -167,21 +168,29 @@ class IRCContact(Contact):
     @defer.inlineCallbacks
     @Contact.overrideCommand
     def command_NOTIFY(self, args, **kwargs):
-        if self.channel.id != self.user:
+        if not self.is_private_chat:
             argv = self.splitArgs(args)
             if argv and argv[0] in ('on', 'off') and \
                     (yield self.op_required('notify')):
                 self.send("Only channel operators can change notified events for this channel. "
                           "And you, {}, are neither!"
-                          .format(self.user))
+                          .format(self.user_id))
                 return
         super().command_NOTIFY(args, **kwargs)
+
+    def command_DANCE(self, args, **kwargs):
+        """dance, dance academy..."""
+        self.bot.reactor.callLater(1.0, self.send, "<(^.^<)")
+        self.bot.reactor.callLater(2.0, self.send, "<(^.^)>")
+        self.bot.reactor.callLater(3.0, self.send, "(>^.^)>")
+        self.bot.reactor.callLater(3.5, self.send, "(7^.^)7")
+        self.bot.reactor.callLater(5.0, self.send, "(>^.^<)")
 
     def command_DESTROY(self, args):
         if self.bot.nickname not in args:
             self.act("readies phasers")
         else:
-            self.send("Better destroy yourself, {}!".format(self.user))
+            self.send("Better destroy yourself, {}!".format(self.user_id))
 
     def command_HUSTLE(self, args):
         self.act("does the hustle")
@@ -231,10 +240,10 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     def getContact(self, user, channel=None):
         # nicknames and channel names are case insensitive
-        if user:
-            user = user.lower()
-        if channel:
-            channel = channel.lower()
+        user = user.lower()
+        if channel is None:
+            channel = user
+        channel = channel.lower()
         return super().getContact(user, channel)
 
     # the following irc.IRCClient methods are called when we have input

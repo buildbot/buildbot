@@ -185,7 +185,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
         tb = self.master.config.services['TelegramBot']
         yield tb.bot.loadState()
-        c = tb.bot.getContact(123456789, 123456789)
+        c = tb.bot.getContact({'id': 123456789}, {'id': 123456789})
         self.assertEquals(c.channel.notify_events, {'started', 'finished'})
         self.assertEquals(c.channel.missing_workers, {12})
 

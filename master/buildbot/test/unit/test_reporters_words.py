@@ -129,6 +129,22 @@ class ContactMixin(TestReactorMixin):
         ])
         self.master.db.builds.finishBuild(buildid=14, results=SUCCESS)
 
+    def setup_multi_builders(self):
+        # Make first builder configured, but not connected
+        # Make second builder configured and connected
+        self.master.db.insertTestData([
+            fakedb.Worker(id=1, name='linux1', info={}),  # connected one
+            fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
+            fakedb.BuilderMaster(
+                id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
+            fakedb.BuilderMaster(
+                id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
+            fakedb.ConfiguredWorker(id=14013,
+                                    workerid=2, buildermasterid=4012),
+            fakedb.ConfiguredWorker(id=14013,
+                                    workerid=1, buildermasterid=4013),
+        ])
+
 
 class TestContact(ContactMixin, unittest.TestCase):
 
@@ -346,11 +362,6 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.assertIn('Buildbot commands', self.sent[0])
 
     @defer.inlineCallbacks
-    def test_command_dance(self):
-        yield self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
-        self.assertTrue(self.sent)  # doesn't matter what it sent
-
-    @defer.inlineCallbacks
     def test_command_hello(self):
         yield self.do_test_command('hello', exp_usage=False)
         self.assertEqual(self.sent, ['yes?'])
@@ -381,7 +392,7 @@ class TestContact(ContactMixin, unittest.TestCase):
             self.assertIn('%s [offline]' % worker, self.sent[0])
 
     @defer.inlineCallbacks
-    def test_command_list_online(self):
+    def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
         self.master.db.insertTestData([
@@ -389,8 +400,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         ])
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('linux1 [disconnected]', self.sent[0])
-        self.assertNotIn('linux2 [disconnected]', self.sent[0])
+        self.assertNotIn('linux1 [disconnected]', self.sent[0])
+        self.assertIn('linux2 [disconnected]', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
@@ -399,22 +410,6 @@ class TestContact(ContactMixin, unittest.TestCase):
         ])
         yield self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 1)
-
-    def setup_multi_builders(self):
-        # Make first builder configured, but not connected
-        # Make second builder configured and connected
-        self.master.db.insertTestData([
-            fakedb.Worker(id=1, name='linux1', info={}),  # connected one
-            fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
-            fakedb.BuilderMaster(
-                id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
-            fakedb.BuilderMaster(
-                id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
-            fakedb.ConfiguredWorker(id=14013,
-                                    workerid=2, buildermasterid=4012),
-            fakedb.ConfiguredWorker(id=14013,
-                                    workerid=1, buildermasterid=4013),
-        ])
 
     @defer.inlineCallbacks
     def test_command_list_builders_not_connected(self):
@@ -791,9 +786,9 @@ class TestContact(ContactMixin, unittest.TestCase):
 
 class FakeContact:
 
-    def __init__(self, bot, user=None, channel=None):
+    def __init__(self, bot, user, channel):
         self.bot = bot
-        self.user = user
+        self.user_id = user
         self.channel = channel
         self.messages = []
         self.actions = []

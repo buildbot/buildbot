@@ -114,6 +114,11 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
         self.assertEqual(self.actions, ['readies phasers'])
 
     @defer.inlineCallbacks
+    def test_command_dance(self):
+        yield self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
+        self.assertTrue(self.sent)  # doesn't matter what it sent
+
+    @defer.inlineCallbacks
     def test_command_hustle(self):
         self.patch_act()
         yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
@@ -174,7 +179,7 @@ class FakeContact(service.AsyncService):
     def __init__(self, bot, user, channel=None):
         super().__init__()
         self.bot = bot
-        self.user = user
+        self.user_id = user
         self.channel = mock.Mock()
         self.messages = []
         self.actions = []
@@ -327,7 +332,7 @@ class TestIrcStatusBot(unittest.TestCase):
         ])
         self.assertEqual(sorted(b.contacts.keys()),
                          # channels don't get added until joined() is called
-                         sorted([(None, 'jimmy'), (None, 'bobby')]))
+                         sorted([('jimmy', 'jimmy'), ('bobby', 'bobby')]))
 
     def test_joined(self):
         b = self.makeBot()

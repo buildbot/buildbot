@@ -366,15 +366,13 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, bot, user, channel=None):
+    def __init__(self, bot, user, channel):
         """
         :param StatusBot bot: StatusBot this Contact belongs to
         :param user: User ID representing this contact
-        :param channel: Channel this contact is on (None is used for privmsgs)
+        :param channel: Channel this contact is on
         """
-        if channel is None:
-            channel = user
-        self.user = user
+        self.user_id = user
         self.channel = bot.getChannel(channel)
         self._next_HELLO = 'yes?'
 
@@ -385,6 +383,10 @@ class Contact:
     @property
     def master(self):
         return self.channel.bot.master
+
+    @property
+    def is_private_chat(self):
+        return self.user_id == self.channel.id
 
     @staticmethod
     def overrideCommand(meth):
@@ -403,10 +405,6 @@ class Contact:
                 pass
         return meth
 
-    @property
-    def userid(self):
-        return self.user
-
     # Silliness
 
     silly = {
@@ -424,7 +422,7 @@ class Contact:
         return self.channel.send(message, **kwargs)
 
     def access_denied(self, *args, **kwargs):
-        return self.send("Thou shall not pass, {}!!!".format(self.user))
+        return self.send("Thou shall not pass, {}!!!".format(self.user_id))
 
     # Main dispatchers for incoming messages
 
@@ -444,7 +442,7 @@ class Contact:
                     acl = get_authz('', True)
                 acl = get_authz('*', acl)
             if isinstance(acl, (list, tuple)):
-                acl = self.userid in acl
+                acl = self.user_id in acl
             if not acl:
                 return self.access_denied
         return method
@@ -560,7 +558,7 @@ class Contact:
             for worker in workers:
                 if worker['configured_on']:
                     response.append(worker['name'])
-                    if worker['connected_to']:
+                    if not worker['connected_to']:
                         response.append("[disconnected]")
                 elif all:
                     response.append(worker['name'])
@@ -877,9 +875,9 @@ class Contact:
         return commands
 
     def describeUser(self):
-        if self.channel != self.user:
-            return "User <{}> on {}".format(self.user, self.channel)
-        return "User <{}>".format(self.user)
+        if self.channel != self.user_id:
+            return "User <{}> on {}".format(self.user_id, self.channel)
+        return "User <{}>".format(self.user_id)
 
     # commands
 
@@ -938,14 +936,6 @@ class Contact:
         str = "Buildbot commands: " + ", ".join(commands)
         self.send(str)
     command_COMMANDS.usage = "commands - List available commands"
-
-    def command_DANCE(self, args, **kwargs):
-        """dance, dance academy..."""
-        self.bot.reactor.callLater(1.0, self.send, "<(^.^<)")
-        self.bot.reactor.callLater(2.0, self.send, "<(^.^)>")
-        self.bot.reactor.callLater(3.0, self.send, "(>^.^)>")
-        self.bot.reactor.callLater(3.5, self.send, "(7^.^)7")
-        self.bot.reactor.callLater(5.0, self.send, "(>^.^<)")
 
     @dangerousCommand
     def command_SHUTDOWN(self, args, **kwargs):
@@ -1025,7 +1015,7 @@ class StatusBot(service.AsyncMultiService):
                 expanded_authz[cmd.upper()] = val
         return expanded_authz
 
-    def getContact(self, user, channel=None):
+    def getContact(self, user, channel):
         """ get a Contact instance for ``user`` on ``channel`` """
         try:
             return self.contacts[(channel, user)]
@@ -1087,7 +1077,7 @@ class StatusBot(service.AsyncMultiService):
     def saveMissingWorkers(self):
         yield self._save_channels_state('missing_workers', list)
 
-    def send_message(self, channel, message, **kwargs):
+    def send_message(self, chat, message, **kwargs):
         raise NotImplementedError()
 
     def log(self, msg):

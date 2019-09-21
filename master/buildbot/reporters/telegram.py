@@ -25,7 +25,6 @@ from twisted.web import resource
 from twisted.web import server
 
 from buildbot import config
-from buildbot import util
 from buildbot.plugins.db import get_plugins
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
@@ -48,21 +47,9 @@ from buildbot.util import unicode2bytes
 class TelegramChannel(Channel):
 
     def __init__(self, bot, channel):
-        if isinstance(channel, dict):
-            super().__init__(bot, channel['id'])
-            self.chat = channel
-        else:
-            super().__init__(bot, channel)
-            self.chat = {'id': channel}
-
-    def __getitem__(self, item):
-        return self.chat[item]
-
-    def get(self, item, default=None):
-        return self.chat.get(item, default)
-
-    def update(self, src):
-        self.chat.update(src)
+        assert isinstance(channel, dict), "channel must be a dict provided by Telegram API"
+        super().__init__(bot, channel['id'])
+        self.chat_info = channel
 
     def list_notified_events(self):
         if self.notify_events:
@@ -84,81 +71,52 @@ def collect_fields(fields):
 class TelegramContact(Contact):
 
     def __init__(self, bot, user=None, channel=None):
-        super().__init__(bot, user, channel)
+        assert isinstance(user, dict), "user must be a dict provided by Telegram API"
+        assert isinstance(channel, dict), "channel must be a dict provided by Telegram API"
+        self.user_info = user
+        super().__init__(bot, user['id'], channel)
         self.template = None
 
     @property
-    def chatid(self):
+    def chat_id(self):
         return self.channel.id
 
     @property
-    def userid(self):
-        if isinstance(self.user, dict):
-            return self.user['id']
-        else:
-            return self.user
-
-    @property
     def user_full_name(self):
-        fullname = " ".join((self.user['first_name'],
-                             self.user.get('last_name', ''))).strip()
+        fullname = " ".join((self.user_info['first_name'],
+                             self.user_info.get('last_name', ''))).strip()
         return fullname
 
     @property
     def user_name(self):
-        return self.user['first_name']
+        return self.user_info['first_name']
 
     def describeUser(self):
-        if not isinstance(self.user, dict):
-            return self.user
-
         user = self.user_full_name
         try:
-            user += ' (@{})'.format(self.user['username'])
+            user += ' (@{})'.format(self.user_info['username'])
         except KeyError:
             pass
 
-        if self.channel.id != self.userid:
-            chat_title = self.channel.get('title')
+        if not self.is_private_chat:
+            chat_title = self.channel.chat_info.get('title')
             if chat_title:
                 user += " on '{}'".format(chat_title)
 
         return user
 
-    _scared_users = {}
+    ACCESS_DENIED_MESSAGES = [
+        "🧙‍♂️ You shall not pass! 👹",
+        "😨 Oh NO! You are simply not allowed to to this! 😢",
+        "⛔ You cannot do this. Better go outside and relax... 🌳",
+        "⛔ ACCESS DENIED! This incident has ben reported to NSA, KGB, and George Soros! 🕵",
+        "🚫 Unauthorized access detected! Your device will explode in 3... 2... 1... 💣",
+        "☢ Radiation level too high! Continuation of the procedure forbidden! 🛑",
+    ]
 
-    _stop_phrase = (
-        ("👾  Do it not, you can!  👾", 'CAADAgADAxgAAkKvaQABG4A6r70tTawWBA'),
-        ("👹  You shall not pass!!!  👹", 'CAADAgAD1AIAAmMr4gkRoBV--rBVehYE'),
-    )
-
-    @defer.inlineCallbacks
     def access_denied(self, *args, tmessage, **kwargs):
-        uid = self.user['id']
-        if uid == self.channel['id']:
-            text, sticker = random.choice(self._stop_phrase)
-            now = util.now()
-            # clean users scared some time ago
-            horizon = now - 120
-            for u, t in list(self._scared_users.items()):
-                if t < horizon:
-                    del self._scared_users[u]
-            if self._scared_users.get(uid) is None:
-                self._scared_users[uid] = now
-                yield self.send(
-                    "{}".format(text),
-                    reply_to_message_id=tmessage['message_id'])
-                yield self.bot.send_sticker(uid, sticker)
-                return
-
         self.send(
-            "⛔  ACCESS DENIED  ⛔\n\n" +
-            random.choice((
-                "You are simply not allowed to to this!",
-                "Go outside and relax...",
-                "Please proceed to the extermination zone →",
-                "This incident has ben reported to NSA!",
-            )), reply_to_message_id=tmessage['message_id'])
+            random.choice(self.ACCESS_DENIED_MESSAGES), reply_to_message_id=tmessage['message_id'])
 
     def query_button(self, caption, payload):
         if isinstance(payload, str) and len(payload) < 64:
@@ -186,7 +144,7 @@ class TelegramContact(Contact):
             if 'reply_markup' in replied_message:
                 self.bot.edit_keyboard(self.channel.id,
                                        replied_message['message_id'])
-        if self.userid == self.channel.id:
+        if self.is_private_chat:
             self.send("Never mind...")
         else:
             self.send("Never mind, {}...".format(self.user_name))
@@ -213,29 +171,13 @@ class TelegramContact(Contact):
             return super().command_COMMANDS(args)
 
     @defer.inlineCallbacks
-    @Contact.overrideCommand
-    def command_DANCE(self, args, **kwargs):
-        chat = self.channel['id']
-        msg = yield self.send("**<(^.^<)**")
-        if msg is not None:
-            mid = msg['message_id']
-            self.bot.reactor.callLater(1.0, self.bot.edit_message, chat, mid, "**<(^.^)>**")
-            self.bot.reactor.callLater(2.0, self.bot.edit_message, chat, mid, "**(>^.^)>**")
-            self.bot.reactor.callLater(2.5, self.bot.edit_message, chat, mid, "**(7^.^)7**")
-            self.bot.reactor.callLater(4.0, self.bot.edit_message, chat, mid, "**(>^.^<)**")
-            self.bot.reactor.callLater(5.0, self.bot.delete_message, chat, mid)
-            self.bot.reactor.callLater(5.5, self.bot.send_sticker, chat, random.choice((
-                'CAADAgAD9wEAAsoDBgtCnbBFfI8M_BYE',
-                'CAADAgADQQIAArnzlwuD160COMLwKRYE')))
-
-    @defer.inlineCallbacks
     def command_GETID(self, args, **kwargs):
         """get user and chat ID"""
-        if self.userid == self.chatid:
-            self.send("Your ID is {}.".format(self.userid))
+        if self.is_private_chat:
+            self.send("Your ID is {}.".format(self.user_id))
         else:
-            yield self.send("{}, your ID is {}.".format(self.user_name, self.userid))
-            self.send("This {} ID is {}.".format(self.channel.get('type', "group"), self.chatid))
+            yield self.send("{}, your ID is {}.".format(self.user_name, self.user_id))
+            self.send("This {} ID is {}.".format(self.channel.chat_info.get('type', "group"), self.chat_id))
     command_GETID.usage = "getid - get user and chat ID that can be put in the master configuration file"
 
     @defer.inlineCallbacks
@@ -296,9 +238,11 @@ class TelegramContact(Contact):
             self.send('\n'.join(response))
 
         elif args[0] == 'changes':
-            changes = yield self.master.db.changes.getRecentChanges(num)
-
             response = ["I found the following recent **changes**:"]
+            if num > 10:
+                response[0] = response[0][:-1] + " (I cannot list more than 10):"
+                num = 10
+            changes = yield self.master.db.changes.getRecentChanges(num)
             for change in reversed(changes):
                 change['comment'] = change['comments'].split('\n')[0]
                 change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
@@ -341,7 +285,7 @@ class TelegramContact(Contact):
         if args:
             want_list = args == 'list'
             if want_list and tquery:
-                self.bot.delete_message(self.chatid, tquery['message']['message_id'])
+                self.bot.delete_message(self.chat_id, tquery['message']['message_id'])
 
             super().command_NOTIFY(args)
 
@@ -361,7 +305,7 @@ class TelegramContact(Contact):
         ] + [[self.query_button("Hide...", '/notify list')]]
 
         if tquery:
-            self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'], keyboard)
+            self.bot.edit_keyboard(self.chat_id, tquery['message']['message_id'], keyboard)
         else:
             self.send("Here are available notifications and their current state. "
                       "Click to turn them on/off.",
@@ -369,8 +313,8 @@ class TelegramContact(Contact):
 
     def ask_for_reply(self, prompt, greeting='Ok'):
         kwargs = {}
-        if self.userid != self.chatid:
-            username = self.user.get('username', '')
+        if not self.is_private_chat:
+            username = self.user_info.get('username', '')
             if username:
                 if greeting:
                     prompt = "{} @{}, now {}...".format(greeting, username, prompt)
@@ -421,14 +365,18 @@ class TelegramContact(Contact):
     def command_SHUTDOWN(self, args, **kwargs):
         if args:
             return super().command_SHUTDOWN(args)
-        shuttingDown = self.master.botmaster.shuttingDown
-        keyboard = [[
-             self.query_button("🔙 Stop Shutdown", '/shutdown stop')
-             if shuttingDown else
-             self.query_button("↘️ Begin Shutdown", '/shutdown start'),
-             self.query_button("‼️ Shutdown Now", '/shutdown now')
-        ]]
-        text = "Buildbot is currently shutting down.\n\n" if shuttingDown else ""
+        if self.master.botmaster.shuttingDown:
+            keyboard = [[
+                 self.query_button("🔙 Stop Shutdown", '/shutdown stop'),
+                 self.query_button("‼️ Shutdown Now", '/shutdown now')
+            ]]
+            text = "Buildbot is currently shutting down.\n\n"
+        else:
+            keyboard = [[
+                 self.query_button("↘️ Begin Shutdown", '/shutdown start'),
+                 self.query_button("‼️ Shutdown Now", '/shutdown now')
+            ]]
+            text = ""
         self.send(text + "What do you want to do?",
                   reply_markup={'inline_keyboard': keyboard})
 
@@ -473,7 +421,7 @@ class TelegramContact(Contact):
             task = 'config'
 
         if tquery and task != 'config':
-            self.bot.edit_keyboard(self.chatid, tquery['message']['message_id'])
+            self.bot.edit_keyboard(self.chat_id, tquery['message']['message_id'])
 
         if not argv:
             keyboard = [
@@ -655,29 +603,29 @@ class TelegramStatusBot(StatusBot):
             return self.results_descriptions[br] + \
                    self.results_emoji[br]
 
-    def getContact(self, user, channel=None):
+    def getContact(self, user, channel):
         """ get a Contact instance for ``user`` on ``channel`` """
-        uid = None if user is None else \
-            user['id'] if isinstance(user, dict) else user
-        cid = None if channel is None else \
-            channel['id'] if isinstance(channel, dict) else channel
+        assert isinstance(user, dict), "user must be a dict provided by Telegram API"
+        assert isinstance(channel, dict), "channel must be a dict provided by Telegram API"
+
+        uid = user['id']
+        cid = channel['id']
         try:
             contact = self.contacts[(cid, uid)]
-            if isinstance(user, dict):
-                if isinstance(contact.user, dict):
-                    contact.user.update(user)
-                else:
-                    contact.user = user
-            if isinstance(channel, dict):
-                contact.channel.update(channel)
-            return contact
         except KeyError:
-            new_contact = self.contactClass(self, user=user, channel=channel)
-            self.contacts[(cid, uid)] = new_contact
-            return new_contact
+            contact = self.contactClass(self, user=user, channel=channel)
+            self.contacts[(cid, uid)] = contact
+        else:
+            if isinstance(user, dict):
+                contact.user_info.update(user)
+            if isinstance(channel, dict):
+                contact.channel.chat_info.update(channel)
+        return contact
 
     def getChannel(self, channel):
-        cid = channel['id'] if isinstance(channel, dict) else channel
+        if not isinstance(channel, dict):
+            channel = {'id': channel}
+        cid = channel['id']
         try:
             return self.channels[cid]
         except KeyError:
@@ -820,8 +768,9 @@ class TelegramStatusBot(StatusBot):
         return (yield self._post('/answerCallbackQuery', json=params))
 
     @defer.inlineCallbacks
-    def send_message(self, channel, message, parse_mode='Markdown', **kwargs):
-        chat = channel['id'] if isinstance(channel, (dict, TelegramChannel)) else channel
+    def send_message(self, chat, message, parse_mode='Markdown', **kwargs):
+        if len(message) > 4096:
+            message = message[:4095] + '…'
         params = dict(chat_id=chat, text=message)
         if parse_mode is not None:
             params['parse_mode'] = parse_mode
