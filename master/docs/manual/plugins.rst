@@ -55,13 +55,13 @@ Web interface plugins are not used directly: as described in :doc:`web server co
 Finding Plugins
 ===============
 
-Buildbot maintains a list of plugins at http://trac.buildbot.net/wiki/Plugins.
+Buildbot maintains a list of plugins at https://github.com/buildbot/buildbot/wiki/PluginList.
 
 Developing Plugins
 ==================
 
 :ref:`Plugin-Module` contains all necessary information for you to develop new plugins.
-Please edit http://trac.buildbot.net/wiki/Plugins to add a link to your plugin!
+Please edit https://github.com/buildbot/buildbot/wiki/PluginList to add a link to your plugin!
 
 Plugins of note
 ===============
