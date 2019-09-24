@@ -42,7 +42,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                  workdir=None, pollInterval=10 * 60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='', pollinterval=-2,
-                 encoding='utf-8', name=None, pollAtLaunch=False):
+                 encoding='utf-8', name=None, pollAtLaunch=False,
+                 revlink=lambda branch, revision: ('')
+                 ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -65,6 +67,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         if not self.branches and not self.bookmarks:
             self.branches = ['default']
 
+        if not callable(revlink):
+            config.error(
+                "You need to provide a valid callable for revlink")
+
         super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
         self.encoding = encoding
         self.lastChange = time.time()
@@ -77,6 +83,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.project = project
         self.initLock = defer.DeferredLock()
         self.lastRev = {}
+        self.revlink_callable = revlink
 
         if self.workdir is None:
             config.error("workdir is mandatory for now in HgPoller")
@@ -284,6 +291,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 author=author,
                 committer=None,
                 revision=str(node),
+                revlink=self.revlink_callable(branch, str(node)),
                 files=files,
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,

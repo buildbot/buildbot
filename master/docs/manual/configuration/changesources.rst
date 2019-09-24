@@ -1002,6 +1002,11 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     Set encoding will be used to parse author's name and commit message.
     Default encoding is ``'utf-8'``.
 
+``revlink``
+    A function that maps branch and revision to a valid url (e.g. hgweb), stored along with the change.
+    This function must be a callable which takes two arguments, the branch and the revision.
+    Defaults to lambda branch, revision: (u'')
+
 A configuration for the Mercurial poller might look like this:
 
 .. code-block:: python

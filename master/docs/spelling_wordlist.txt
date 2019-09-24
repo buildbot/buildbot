@@ -359,6 +359,7 @@ hardcodes
 hardcoding
 hasn
 Hassler
+hgweb
 highlevel
 hipchat
 Hipchat
