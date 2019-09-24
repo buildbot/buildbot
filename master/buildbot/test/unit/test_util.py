@@ -102,6 +102,51 @@ class TestHumanReadableDelta(unittest.TestCase):
         self.assertEqual('1 days, 1 seconds', result)
 
 
+class TestFuzzyInterval(unittest.TestCase):
+
+    def test_moment(self):
+        self.assertEqual(util.fuzzyInterval(1), "a moment")
+
+    def test_seconds(self):
+        self.assertEqual(util.fuzzyInterval(17), "17 seconds")
+
+    def test_seconds_rounded(self):
+        self.assertEqual(util.fuzzyInterval(48), "50 seconds")
+
+    def test_minute(self):
+        self.assertEqual(util.fuzzyInterval(58), "a minute")
+
+    def test_minutes(self):
+        self.assertEqual(util.fuzzyInterval(3 * 60 + 24), "3 minutes")
+
+    def test_minutes_rounded(self):
+        self.assertEqual(util.fuzzyInterval(32 * 60 + 24), "30 minutes")
+
+    def test_hour(self):
+        self.assertEqual(util.fuzzyInterval(3600 + 1200), "an hour")
+
+    def test_hours(self):
+        self.assertEqual(util.fuzzyInterval(9 * 3600 - 720), "9 hours")
+
+    def test_day(self):
+        self.assertEqual(util.fuzzyInterval(32 * 3600 + 124), "a day")
+
+    def test_days(self):
+        self.assertEqual(util.fuzzyInterval((19 + 24) * 3600 + 124), "2 days")
+
+    def test_month(self):
+        self.assertEqual(util.fuzzyInterval(36 * 24 * 3600 + 124), "a month")
+
+    def test_months(self):
+        self.assertEqual(util.fuzzyInterval(86 * 24 * 3600 + 124), "3 months")
+
+    def test_year(self):
+        self.assertEqual(util.fuzzyInterval(370 * 24 * 3600), "a year")
+
+    def test_years(self):
+        self.assertEqual(util.fuzzyInterval((2 * 365 + 96) * 24 * 3600), "2 years")
+
+
 class safeTranslate(unittest.TestCase):
 
     def test_str_good(self):

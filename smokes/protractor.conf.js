@@ -21,7 +21,7 @@ exports.config = {
             // minimal supported browser size for tests
             // if smaller we start need to scroll for clicking buttons
             args: [
-                '--window-size=1024,768',
+                '--window-size=1200,1024',
                 '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/56.0.2924.87"',
             ]
         }
