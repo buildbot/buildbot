@@ -70,11 +70,10 @@ def collect_fields(fields):
 
 class TelegramContact(Contact):
 
-    def __init__(self, bot, user=None, channel=None):
+    def __init__(self, user, channel=None):
         assert isinstance(user, dict), "user must be a dict provided by Telegram API"
-        assert isinstance(channel, dict), "channel must be a dict provided by Telegram API"
         self.user_info = user
-        super().__init__(bot, user['id'], channel)
+        super().__init__(user['id'], channel)
         self.template = None
 
     @property
@@ -613,8 +612,11 @@ class TelegramStatusBot(StatusBot):
         try:
             contact = self.contacts[(cid, uid)]
         except KeyError:
-            contact = self.contactClass(self, user=user, channel=channel)
-            self.contacts[(cid, uid)] = contact
+            valid = self.isValidUser(uid)
+            contact = self.contactClass(user=user,
+                                        channel=self.getChannel(channel, valid))
+            if valid:
+                self.contacts[(cid, uid)] = contact
         else:
             if isinstance(user, dict):
                 contact.user_info.update(user)
@@ -622,7 +624,7 @@ class TelegramStatusBot(StatusBot):
                 contact.channel.chat_info.update(channel)
         return contact
 
-    def getChannel(self, channel):
+    def getChannel(self, channel, valid=True):
         if not isinstance(channel, dict):
             channel = {'id': channel}
         cid = channel['id']
@@ -630,8 +632,9 @@ class TelegramStatusBot(StatusBot):
             return self.channels[cid]
         except KeyError:
             new_channel = self.channelClass(self, channel)
-            self.channels[cid] = new_channel
-            new_channel.setServiceParent(self)
+            if valid:
+                self.channels[cid] = new_channel
+                new_channel.setServiceParent(self)
             return new_channel
 
     def get_update(self, request):

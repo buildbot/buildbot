@@ -72,7 +72,8 @@ class ContactMixin(TestReactorMixin):
             self.bot.master.botmaster.shuttingDown = False
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = self.contactClass(self.bot, user=self.USER, channel=self.CHANNEL)
+        self.contact = self.contactClass(user=self.USER,
+                                         channel=self.bot.getChannel(self.CHANNEL))
         self.bot.reactor = self.reactor
         self.contact.channel.setServiceParent(self.master)
         return self.master.startService()
@@ -151,18 +152,6 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_channel_service(self):
         self.assertTrue(self.contact.channel.running)
         self.contact.channel.stopService()
-
-    def test_doSilly(self):
-        self.patch_send()
-        silly_prompt, silly_response = list(self.contact.silly.items())[0]
-
-        self.contact.doSilly(silly_prompt)
-        self.reactor.pump([0.5] * 20)
-
-        self.assertEqual(self.sent, silly_response)
-
-    # TODO: remaining commands
-    # (all depend on status, which interface will change soon)
 
     @defer.inlineCallbacks
     def test_command_notify0(self):
@@ -363,8 +352,6 @@ class TestContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_hello(self):
-        yield self.do_test_command('hello', exp_usage=False)
-        self.assertEqual(self.sent, ['yes?'])
         yield self.do_test_command('hello', exp_usage=False)
         self.assertIn(self.sent[0], words.GREETINGS)
 
@@ -638,14 +625,6 @@ class TestContact(ContactMixin, unittest.TestCase):
                  .format(self.BUILDER_NAMES[0]))
 
     @defer.inlineCallbacks
-    def test_handleMessage_silly(self):
-        silly_prompt = list(self.contact.silly)[0]
-        self.contact.doSilly = mock.Mock()
-        yield self.contact.handleMessage(silly_prompt)
-
-        self.contact.doSilly.assert_called_with(silly_prompt)
-
-    @defer.inlineCallbacks
     def test_handleMessage_short_command(self):
         self.contact.command_TESTY = mock.Mock()
         yield self.contact.handleMessage('testy')
@@ -782,19 +761,3 @@ class TestContact(ContactMixin, unittest.TestCase):
         ])
         yield self.bot.loadState()
         self.assertEqual(self.bot.channels['#channel1'].notify_events, {'warnings'})
-
-
-class FakeContact:
-
-    def __init__(self, bot, user, channel):
-        self.bot = bot
-        self.user_id = user
-        self.channel = channel
-        self.messages = []
-        self.actions = []
-
-    def handleMessage(self, message):
-        self.messages.append(message)
-
-    def handleAction(self, data):
-        self.actions.append(data)

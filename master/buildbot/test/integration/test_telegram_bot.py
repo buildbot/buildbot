@@ -199,7 +199,11 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         self.assertNotIn([99, ['cancelled']], notify_events)
         self.assertNotIn([99, [13]], missing_workers)
 
+        tb.bot.getChannel(98)  # this channel should not be saved
         c = tb.bot.getChannel(99)
+        self.assertIn(98, tb.bot.channels)
+        self.assertIn(99, tb.bot.channels)
+
         c.notify_events = {'cancelled'}
         c.missing_workers = {13}
         yield tb.bot.saveNotifyEvents()
@@ -207,6 +211,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
         notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())
         missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())
+        self.assertNotIn(98, (c for c, _ in notify_events))
         self.assertIn([99, ['cancelled']], notify_events)
         self.assertIn([99, [13]], missing_workers)
 

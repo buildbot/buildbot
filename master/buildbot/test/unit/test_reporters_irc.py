@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+import sys
+
 import mock
 
 from twisted.application import internet
@@ -176,9 +178,8 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
 class FakeContact(service.AsyncService):
 
-    def __init__(self, bot, user, channel=None):
+    def __init__(self, user, channel=None):
         super().__init__()
-        self.bot = bot
         self.user_id = user
         self.channel = mock.Mock()
         self.messages = []
@@ -250,6 +251,27 @@ class TestIrcStatusBot(unittest.TestCase):
         c1b = b.getContact(user='U1')
 
         self.assertIdentical(c1, c1b)
+
+    def test_getContact_invalid(self):
+        b = self.makeBot()
+        b.authz = {'': None}
+
+        u = b.getContact(user='u0', channel='c0')
+        self.assertNotIn(('c0', 'u0'), b.contacts)
+        self.assertNotIn('c0', b.channels)
+
+        self.assertEqual(sys.getrefcount(u), 2)  # local, sys
+        c = u.channel
+        self.assertEqual(sys.getrefcount(c), 3)  # local, contact, sys
+        del u
+        self.assertEqual(sys.getrefcount(c), 2)  # local, sys
+
+    def test_getContact_valid(self):
+        b = self.makeBot()
+        b.authz = {'': None, 'command': ['u0']}
+
+        b.getContact(user='u0', channel='c0')
+        self.assertIn(('c0', 'u0'), b.contacts)
 
     def test_privmsg_user(self):
         b = self.makeBot()

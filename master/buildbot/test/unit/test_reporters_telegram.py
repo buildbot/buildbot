@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+import sys
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -31,6 +32,26 @@ from buildbot.test.unit.test_reporters_words import ContactMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+
+
+class FakeChannel(service.AsyncService):
+    pass
+
+
+class FakeContact:
+
+    def __init__(self, user=None, channel=None):
+        super().__init__()
+        self.user_id = user['id']
+        self.user_info = user
+        self.channel = FakeChannel
+        self.channel.chat_info = channel.chat_info
+        self.template = None
+        self.messages = []
+
+    def handleMessage(self, message, **kwargs):
+        self.messages.append(message)
+        return defer.succeed(message)
 
 
 class TestTelegramContact(ContactMixin, unittest.TestCase):
@@ -94,7 +115,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     def setUp(self):
         ContactMixin.setUp(self)
-        self.contact1 = self.contactClass(self.bot, user=self.USER, channel=self.PRIVATE)
+        self.contact1 = self.contactClass(user=self.USER, channel=self.channelClass(self.bot, self.PRIVATE))
         self.contact1.channel.setServiceParent(self.master)
 
     def test_list_notified_events(self):
@@ -502,25 +523,6 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
-    class FakeChannel(service.AsyncService):
-        pass
-
-    class FakeContact:
-
-        def __init__(self, bot, user=None, channel=None):
-            super().__init__()
-            self.bot = bot
-            self.user_id = user['id']
-            self.user_info = user
-            self.channel = TestTelegramService.FakeChannel
-            self.channel.chat_info = channel
-            self.template = None
-            self.messages = []
-
-        def handleMessage(self, message, **kwargs):
-            self.messages.append(message)
-            return defer.succeed(message)
-
     def setupFakeHttp(self):
         return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://api.telegram.org/bot12345:secret'))
@@ -538,6 +540,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         c1b = bot.getContact(self.USER, self.PRIVATE)
         self.assertIs(c1, c1b)
         self.assertIsInstance(c2, words.Contact)
+        self.assertIn((-12345678, 123456789), bot.contacts)
+        self.assertEqual({123456789, -12345678}, set(bot.channels.keys()))
 
     def test_getContact_update(self):
         try:
@@ -550,6 +554,27 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             self.assertEquals(contact.user_info['username'], "dirtyharry")
         finally:
             self.USER['username'] = "harrypotter"
+
+    def test_getContact_invalid(self):
+        bot = self.makeBot()
+        bot.authz = {'': None}
+
+        u = bot.getContact(user=self.USER, channel=self.CHANNEL)
+        self.assertNotIn((-12345678, 123456789), bot.contacts)
+        self.assertNotIn(-12345678, bot.channels)
+
+        self.assertEqual(sys.getrefcount(u), 2)  # local, sys
+        c = u.channel
+        self.assertEqual(sys.getrefcount(c), 3)  # local, contact, sys
+        del u
+        self.assertEqual(sys.getrefcount(c), 2)  # local, sys
+
+    def test_getContact_valid(self):
+        bot = self.makeBot()
+        bot.authz = {'': None, 'command': 123456789}
+
+        bot.getContact(user=self.USER, channel=self.CHANNEL)
+        self.assertIn((-12345678, 123456789), bot.contacts)
 
     @defer.inlineCallbacks
     def test_set_webhook(self):
@@ -655,7 +680,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     def test_render_POST(self):
         # This actually also tests process_incoming
         bot = self.makeBot()
-        bot.contactClass = self.FakeContact
+        bot.contactClass = FakeContact
         request = self.request_message("test")
         bot.render_POST(request)
         contact = bot.getContact(self.USER, self.CHANNEL)
@@ -663,7 +688,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     def test_parse_query_cached(self):
         bot = self.makeBot()
-        bot.contactClass = self.FakeContact
+        bot.contactClass = FakeContact
         bot.query_cache.update({
             100: "good"
         })
@@ -676,7 +701,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     def test_parse_query_cached_dict(self):
         bot = self.makeBot()
-        bot.contactClass = self.FakeContact
+        bot.contactClass = FakeContact
         bot.query_cache = {
             100: {'command': "good", 'notify': "hello"}
         }
@@ -689,7 +714,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     def test_parse_query_explicit(self):
         bot = self.makeBot()
-        bot.contactClass = self.FakeContact
+        bot.contactClass = FakeContact
         bot.query_cache = {
             100: "bad"
         }
@@ -702,7 +727,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     def test_parse_query_bad(self):
         bot = self.makeBot()
-        bot.contactClass = self.FakeContact
+        bot.contactClass = FakeContact
         bot.query_cache.update({
             100: "bad"
         })
@@ -753,10 +778,10 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                             "from": self.USER,
                             "chat": self.CHANNEL,
                             "date": 1566688889,
-                            "text": "/hello"}}]})
+                            "text": "/nay"}}]})
         bot.http_client.expect(
             "post", "/sendMessage",
-            json={'chat_id': -12345678, 'text': 'yes?', 'parse_mode': 'Markdown'},
+            json={'chat_id': -12345678, 'text': 'Never mind, Harry...', 'parse_mode': 'Markdown'},
             content_json={'ok': 1, 'result': {'message_id': 125}})
         yield bot.do_polling()
 

@@ -366,15 +366,14 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, bot, user, channel):
+    def __init__(self, user, channel):
         """
         :param StatusBot bot: StatusBot this Contact belongs to
         :param user: User ID representing this contact
         :param channel: Channel this contact is on
         """
         self.user_id = user
-        self.channel = bot.getChannel(channel)
-        self._next_HELLO = 'yes?'
+        self.channel = channel
 
     @property
     def bot(self):
@@ -405,17 +404,6 @@ class Contact:
                 pass
         return meth
 
-    # Silliness
-
-    silly = {
-        "What happens?": ["Somebody set up us the bomb."],
-        "It's You!": ["How are you gentlemen!!",
-                      "All your base are belong to us.",
-                      "You are on the way to destruction."],
-        "What you say!": ["You have no chance to survive make your time.",
-                          "HA HA HA HA ...."],
-    }
-
     # Communication with the user
 
     def send(self, message, **kwargs):
@@ -443,16 +431,14 @@ class Contact:
                 acl = get_authz('*', acl)
             if isinstance(acl, (list, tuple)):
                 acl = self.user_id in acl
+            elif acl not in (True, False, None):
+                acl = self.user_id == acl
             if not acl:
                 return self.access_denied
         return method
 
     def handleMessage(self, message, **kwargs):
         message = message.lstrip()
-        if message in self.silly:
-            self.doSilly(message)
-            return defer.succeed(None)
-
         parts = message.split(' ', 1)
         if len(parts) == 1:
             parts = parts + ['']
@@ -462,7 +448,7 @@ class Contact:
         if cmd_suffix and cmd.endswith(cmd_suffix):
             cmd = cmd[:-len(cmd_suffix)]
 
-        log.msg("chat bot command", cmd)
+        self.bot.log("received command `{}`".format(cmd))
 
         if cmd.startswith(self.bot.commandPrefix):
             meth = self.getCommandMethod(cmd[len(self.bot.commandPrefix):])
@@ -491,13 +477,6 @@ class Contact:
 
         return defer.succeed(None)
 
-    def doSilly(self, message):
-        response = self.silly[message]
-        when = 0.5
-        for r in response:
-            self.bot.reactor.callLater(when, self.send, r)
-            when += 2.5
-
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
@@ -508,8 +487,7 @@ class Contact:
 
     def command_HELLO(self, args, **kwargs):
         """say hello"""
-        self.send(self._next_HELLO)
-        self._next_HELLO = random.choice(GREETINGS)
+        self.send(random.choice(GREETINGS))
 
     def command_VERSION(self, args, **kwargs):
         """show buildbot version"""
@@ -727,11 +705,11 @@ class Contact:
         pname_validate = self.master.config.validation['property_name']
         pval_validate = self.master.config.validation['property_value']
         if branch and not branch_validate.match(branch):
-            log.msg("bad branch '{}'".format(branch))
+            self.bot.log("bad branch '{}'".format(branch))
             self.send("sorry, bad branch '{}'".format(branch))
             return
         if revision and not revision_validate.match(revision):
-            log.msg("bad revision '{}'".format(revision))
+            self.bot.log("bad revision '{}'".format(revision))
             self.send("sorry, bad revision '{}'".format(revision))
             return
 
@@ -752,8 +730,8 @@ class Contact:
                 pvalue = pdict[prop]
                 if not pname_validate.match(pname) \
                         or not pval_validate.match(pvalue):
-                    log.msg("bad property name='{}', value='{}'"
-                            .format(pname, pvalue))
+                    self.bot.log("bad property name='{}', value='{}'"
+                                 .format(pname, pvalue))
                     self.send("sorry, bad property name='{}', value='{}'"
                               .format(pname, pvalue))
                     return
@@ -1015,22 +993,35 @@ class StatusBot(service.AsyncMultiService):
                 expanded_authz[cmd.upper()] = val
         return expanded_authz
 
+    def isValidUser(self, user):
+        for auth in self.authz.values():
+            if auth is True \
+                    or (isinstance(auth, (list, tuple)) and user in auth)\
+                    or user == auth:
+                return True
+        # If user is in '', we have already returned; otherwise check if defaults apply
+        return '' not in self.authz
+
     def getContact(self, user, channel):
         """ get a Contact instance for ``user`` on ``channel`` """
         try:
             return self.contacts[(channel, user)]
         except KeyError:
-            new_contact = self.contactClass(self, user=user, channel=channel)
-            self.contacts[(channel, user)] = new_contact
+            valid = self.isValidUser(user)
+            new_contact = self.contactClass(user=user,
+                                            channel=self.getChannel(channel, valid))
+            if valid:
+                self.contacts[(channel, user)] = new_contact
             return new_contact
 
-    def getChannel(self, channel):
+    def getChannel(self, channel, valid=True):
         try:
             return self.channels[channel]
         except KeyError:
             new_channel = self.channelClass(self, channel)
-            self.channels[channel] = new_channel
-            new_channel.setServiceParent(self)
+            if valid:
+                self.channels[channel] = new_channel
+                new_channel.setServiceParent(self)
             return new_channel
 
     def _get_object_id(self):
@@ -1041,8 +1032,8 @@ class StatusBot(service.AsyncMultiService):
     def _save_channels_state(self, attr, json_type=None):
         if json_type is None:
             json_type = lambda x: x
-        data = [(channel.id, json_type(getattr(channel, attr)))
-                for channel in self.channels.values()]
+        data = [(k, v) for k, v in ((channel.id, json_type(getattr(channel, attr)))
+                                    for channel in self.channels.values()) if v]
         try:
             objectid = yield self._get_object_id()
             yield self.master.db.state.setState(objectid, attr, data)

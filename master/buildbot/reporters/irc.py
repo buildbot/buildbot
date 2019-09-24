@@ -88,13 +88,10 @@ class IRCChannel(Channel):
 
 class IRCContact(Contact):
 
-    def __init__(self, bot, user, channel=None):
+    def __init__(self, user, channel=None):
         if channel is None:
             channel = user
-        super().__init__(bot, user, channel)
-
-    def send(self, message):
-        return self.channel.send(message)
+        super().__init__(user, channel)
 
     def act(self, action):
         return self.channel.act(action)
