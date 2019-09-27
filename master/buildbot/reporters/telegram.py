@@ -185,16 +185,18 @@ class TelegramContact(Contact):
         args = self.splitArgs(args)
         if not args:
             keyboard = [
-                [self.query_button("👷️ Builders", '/list builders')],
-                [self.query_button("⚙ Workers", '/list workers')],
-                [self.query_button("📄 Changes", '/list changes')],
+                [self.query_button("👷️ Builders", '/list builders'),
+                 self.query_button("👷️ (including old ones)", '/list all builders')],
+                [self.query_button("⚙ Workers", '/list workers'),
+                 self.query_button("⚙ (including old ones)", '/list all workers')],
+                [self.query_button("📄 Changes (last 10)", '/list changes')],
             ]
             self.send("What do you want to list?",
                       reply_markup={'inline_keyboard': keyboard})
             return
 
         all = False
-        num = 5
+        num = 10
         try:
             num = int(args[0])
             del args[0]
@@ -204,9 +206,6 @@ class TelegramContact(Contact):
                 del args[0]
         except IndexError:
             pass
-
-        if all:
-            num = 20
 
         if not args:
             raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
@@ -237,11 +236,28 @@ class TelegramContact(Contact):
             self.send('\n'.join(response))
 
         elif args[0] == 'changes':
-            response = ["I found the following recent **changes**:"]
-            if num > 10:
-                response[0] = response[0][:-1] + " (I cannot list more than 10):"
-                num = 10
-            changes = yield self.master.db.changes.getRecentChanges(num)
+
+            wait_message = yield self.send("⏳ Getting your changes...")
+
+            if all:
+                changes = yield self.master.db.changes.getChanges()
+                self.bot.delete_message(self.channel.id, wait_message['message_id'])
+                num = len(changes)
+                if num > 50:
+                    keyboard = [
+                        [self.query_button("‼ Yes, flood me with all of them!", '/list {} changes'.format(num))],
+                        [self.query_button("✅ No, just show last 50", '/list 50 changes')]
+                    ]
+                    self.send("I found {} changes. Do you really want me to list them all?".format(num),
+                              reply_markup={'inline_keyboard': keyboard})
+                    return
+
+            else:
+                changes = yield self.master.db.changes.getRecentChanges(num)
+                self.bot.delete_message(self.channel.id, wait_message['message_id'])
+
+            response = ["I found the following recent **changes**:\n"]
+
             for change in reversed(changes):
                 change['comment'] = change['comments'].split('\n')[0]
                 change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
@@ -252,7 +268,7 @@ class TelegramContact(Contact):
                     "_Repository_: {repository}\n"
                     "_Branch_: {branch}\n"
                     "_Revision_: {revision}\n".format(**change))
-            self.send('\n\n'.join(response))
+            self.send('\n'.join(response))
 
     @defer.inlineCallbacks
     def get_running_builders(self):
@@ -694,15 +710,12 @@ class TelegramStatusBot(StatusBot):
             if 'reply_to_message' in original_message:
                 message['reply_to_message'] = original_message['reply_to_message']
 
+        chat = message['chat']
+
         user = message.get('from')
         if user is None:
             self.log('no user in incoming telegram message')
             return defer.succeed('no user')
-
-        chat = message.get('chat')
-        if chat is None:
-            self.log('no chat in telegram message')
-            return defer.succeed('no chat in the message')
 
         text = message.get('text')
         if not text:
@@ -771,14 +784,36 @@ class TelegramStatusBot(StatusBot):
         return (yield self._post('/answerCallbackQuery', json=params))
 
     @defer.inlineCallbacks
-    def send_message(self, chat, message, parse_mode='Markdown', **kwargs):
-        if len(message) > 4096:
-            message = message[:4095] + '…'
-        params = dict(chat_id=chat, text=message)
-        if parse_mode is not None:
-            params['parse_mode'] = parse_mode
-        params.update(kwargs)
-        return (yield self._post('/sendMessage', json=params))
+    def send_message(self, chat, message, parse_mode='Markdown',
+                     reply_to_message_id=None, reply_markup=None,
+                     **kwargs):
+        first = True
+        result = None
+
+        message = message.strip()
+        while message:
+            params = dict(chat_id=chat)
+            if parse_mode is not None:
+                params['parse_mode'] = parse_mode
+            if first and reply_to_message_id is not None:
+                params['reply_to_message_id'] = reply_to_message_id
+
+            if len(message) <= 4096:
+                params['text'], message = message, None
+            else:
+                n = message[:4096].rfind('\n')
+                n = n + 1 if n != -1 else 4096
+                params['text'], message = message[:n].rstrip(), message[n:].lstrip()
+                first = False
+
+            if not message and reply_markup is not None:
+                params['reply_markup'] = reply_markup
+
+            params.update(kwargs)
+
+            result = yield self._post('/sendMessage', json=params)
+
+        return result
 
     @defer.inlineCallbacks
     def edit_message(self, chat, msg, message, parse_mode='Markdown', **kwargs):

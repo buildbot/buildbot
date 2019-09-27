@@ -455,27 +455,32 @@ class Contact:
         else:
             meth = None
 
-        if not meth and message[-1] == '!':
-            self.send("What you say!")
-            return defer.succeed(None)
+        if not meth:
+            if message[-1] == '!':
+                self.send("What you say!")
+                return defer.succeed(None)
+            elif cmd.startswith(self.bot.commandPrefix):
+                self.send("I don't get this '{}'...".format(cmd))
+                meth = self.command_COMMANDS
+            else:
+                if self.is_private_chat:
+                    self.send("Say what?")
+                return defer.succeed(None)
 
-        if meth:
-            d = defer.maybeDeferred(meth, args.strip(), **kwargs)
+        d = defer.maybeDeferred(meth, args.strip(), **kwargs)
 
-            @d.addErrback
-            def usageError(f):
-                f.trap(UsageError)
-                self.send(str(f.value))
+        @d.addErrback
+        def usageError(f):
+            f.trap(UsageError)
+            self.send(str(f.value))
 
-            @d.addErrback
-            def logErr(f):
-                log.err(f)
-                self.send("Something bad happened (see logs)")
+        @d.addErrback
+        def logErr(f):
+            log.err(f)
+            self.send("Something bad happened (see logs)")
 
-            d.addErrback(log.err)
-            return d
-
-        return defer.succeed(None)
+        d.addErrback(log.err)
+        return d
 
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
@@ -499,7 +504,7 @@ class Contact:
         args = self.splitArgs(args)
 
         all = False
-        num = 5
+        num = 10
         try:
             num = int(args[0])
             del args[0]
@@ -509,9 +514,6 @@ class Contact:
                 del args[0]
         except IndexError:
             pass
-
-        if all:
-            num = 20
 
         if not args:
             raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
@@ -545,6 +547,12 @@ class Contact:
             return
 
         elif args[0] == 'changes':
+            if all:
+                self.send("Do you really want me to list all changes? It can be thousands!\n"
+                          "If you want to be flooded, specify the maximum number of changes to show.\n"
+                          "Right now, I will show up to 100 recent changes.")
+                num = 100
+
             changes = yield self.master.db.changes.getRecentChanges(num)
 
             response = ["I found the following recent changes:"]

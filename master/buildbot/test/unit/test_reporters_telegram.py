@@ -268,7 +268,15 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             fakedb.Change()
         ])
         yield self.do_test_command('list', args='2 changes')
-        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(len(self.sent), 2)
+
+    @defer.inlineCallbacks
+    def test_command_list_changes_long(self):
+        self.master.db.workers.db.insertTestData([
+            fakedb.Change() for i in range(200)
+        ])
+        yield self.do_test_command('list', args='all changes')
+        self.assertIn('reply_markup', self.sent[1][2])
 
     @defer.inlineCallbacks
     def test_command_watch(self):
@@ -602,6 +610,35 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                content_json={'ok': 1, 'result': {'message_id': 9876}})
         m = yield bot.send_message(1234, 'Hello')
         self.assertEqual(m['message_id'], 9876)
+
+    @defer.inlineCallbacks
+    def test_send_message_long(self):
+        bot = self.makeBot()
+
+        text1 = '\n'.join("{:039d}".format(i + 1) for i in range(102))
+        text2 = '\n'.join("{:039d}".format(i + 1) for i in range(102, 204))
+        text3 = '\n'.join("{:039d}".format(i + 1) for i in range(204, 250))
+
+        bot.http_client.expect("post", "/sendMessage",
+                               json={'chat_id': 1234, 'text': text1,
+                                     'parse_mode': 'Markdown',
+                                     'reply_to_message_id': 1000},
+                               content_json={'ok': 1, 'result': {'message_id': 1001}})
+        bot.http_client.expect("post", "/sendMessage",
+                               json={'chat_id': 1234, 'text': text2,
+                                     'parse_mode': 'Markdown'},
+                               content_json={'ok': 1, 'result': {'message_id': 1002}})
+        bot.http_client.expect("post", "/sendMessage",
+                               json={'chat_id': 1234, 'text': text3,
+                                     'parse_mode': 'Markdown',
+                                     'reply_markup': {'inline_keyboard': 'keyboard'}},
+                               content_json={'ok': 1, 'result': {'message_id': 1003}})
+
+        text = '\n'.join("{:039d}".format(i + 1) for i in range(250))
+        m = yield bot.send_message(1234, text,
+                                   reply_markup={'inline_keyboard': 'keyboard'},
+                                   reply_to_message_id=1000)
+        self.assertEqual(m['message_id'], 1003)
 
     @defer.inlineCallbacks
     def test_edit_message(self):
