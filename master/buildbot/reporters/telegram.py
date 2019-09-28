@@ -399,8 +399,12 @@ class TelegramContact(Contact):
     def command_FORCE(self, args, tquery=None, partial=None, **kwargs):
         """force a build"""
 
-        forceschedulers = yield self.master.data.get(('forceschedulers',))
-        forceschedulers = dict((s['name'], s) for s in forceschedulers)
+        try:
+            forceschedulers = yield self.master.data.get(('forceschedulers',))
+        except AttributeError:
+            forceschedulers = None
+        else:
+            forceschedulers = dict((s['name'], s) for s in forceschedulers)
 
         if not forceschedulers:
             raise UsageError("no force schedulers configured for use by /force")

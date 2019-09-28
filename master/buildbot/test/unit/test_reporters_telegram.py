@@ -193,7 +193,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_nay(self):
-        yield self.do_test_command('nay', tmessage={})
+        yield self.do_test_command('nay', contact=self.contact1, tmessage={})
 
     @defer.inlineCallbacks
     def test_command_nay_reply_markup(self):
@@ -204,13 +204,24 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             }})
 
     @defer.inlineCallbacks
+    def test_commmand_commands(self):
+        yield self.do_test_command('commands')
+        self.assertEqual(self.sent[0][0], self.CHANNEL['id'])
+
+    @defer.inlineCallbacks
     def test_commmand_commands_botfather(self):
         yield self.do_test_command('commands', 'botfather')
         self.assertEqual(self.sent[0][0], self.CHANNEL['id'])
         self.assertRegex(self.sent[0][1], r"^\w+ - \S+")
 
     @defer.inlineCallbacks
-    def test_command_getid(self):
+    def test_command_getid_private(self):
+        yield self.do_test_command('getid', contact=self.contact1)
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn(str(self.USER['id']), self.sent[0][1])
+
+    @defer.inlineCallbacks
+    def test_command_getid_group(self):
         yield self.do_test_command('getid')
         self.assertIn(str(self.USER['id']), self.sent[0][1])
         self.assertIn(str(self.CHANNEL['id']), self.sent[1][1])
@@ -283,6 +294,10 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('watch')
         self.assertButton('/watch builder1')
+
+    @defer.inlineCallbacks
+    def test_command_watch_no_builds(self):
+        yield self.do_test_command('watch')
 
     @defer.inlineCallbacks
     def test_command_stop_no_args(self):
@@ -405,6 +420,10 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
                 builderNames=['builder2'])
             self.schedulers.append(scheduler2)
         self.bot.master.allSchedulers = self.allSchedulers
+
+    @defer.inlineCallbacks
+    def test_command_force_no_schedulers(self):
+        yield self.do_test_command('force', exp_UsageError=True)
 
     @defer.inlineCallbacks
     def test_command_force_noargs_multiple_schedulers(self):
@@ -714,6 +733,13 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.assertEquals(update['message']['from'], self.USER)
         self.assertEquals(update['message']['chat'], self.CHANNEL)
 
+    def test_get_update_bad_content_type(self):
+        bot = self.makeBot()
+        request = self.request_message("test")
+        request.received_headers[b'Content-Type'] = b"application/data"
+        with self.assertRaises(ValueError):
+            bot.get_update(request)
+
     def test_render_POST(self):
         # This actually also tests process_incoming
         bot = self.makeBot()
@@ -831,3 +857,94 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot = self.makeBot()
         build = {'results': WARNINGS}
         self.assertEqual(bot.format_build_status(build, short=True), " ⚠️")
+
+    class HttpServiceWithErrors(fakehttpclientservice.HTTPClientService):
+
+        def __init__(self, skip, errs, *args, **kwargs):
+            self.__skip = skip
+            self.__errs = errs
+            self.succeeded = False
+            super().__init__(*args, **kwargs)
+
+        def post(self, ep, **kwargs):
+            if self.__skip:
+                self.__skip -= 1
+            else:
+                if self.__errs:
+                    self.__errs -= 1
+                    raise RuntimeError("{}".format(self.__errs + 1))
+                self.succeeded = True
+            return super().post(ep, **kwargs)
+
+    def setupFakeHttpWithErrors(self, skip, errs):
+        return self.successResultOf(self.HttpServiceWithErrors.getFakeService(
+            self.master, self, skip, errs, 'https://api.telegram.org/bot12345:secret'))
+
+    @defer.inlineCallbacks
+    def test_post_until_success_not_ok(self):
+        bot = self.makeBot()
+        bot.http_client.expect(
+            "post", "/post",
+            content_json={'ok': 0})
+
+        def log(msg):
+            logs.append(msg)
+        logs = []
+        bot.log = log
+
+        yield bot._post_until_success("/post")
+        self.assertIn("ERROR", logs[0])
+
+    def test_post_until_success_need_repeat(self):
+        bot = self.makeBot()
+        bot.reactor = self.reactor
+        bot.http_client = self.setupFakeHttpWithErrors(0, 2)
+        bot.http_client.expect(
+            "post", "/post",
+            content_json={'ok': 1})
+
+        def log(msg):
+            logs.append(msg)
+        logs = []
+        bot.log = log
+
+        bot._post_until_success("/post")
+        self.assertIn("ERROR", logs[0])
+
+        for i in range(2):
+            self.reactor.pump([30.] * 3)
+
+        self.assertTrue(bot.http_client.succeeded)
+
+    def test_polling_need_repeat(self):
+        bot = self.makePollingBot(1)
+        bot.reactor = self.reactor
+        bot.http_client = self.setupFakeHttpWithErrors(1, 2)
+        bot.running = True
+        bot.http_client.expect("post", "/deleteWebhook", content_json={"ok": 1})
+        bot.http_client.expect(
+            "post", "/getUpdates",
+            json={'timeout': bot.poll_timeout},
+            content_json={
+                'ok': 1,
+                'result': [{
+                        "update_id": 10000,
+                        "message": {
+                            "message_id": 123,
+                            "from": self.USER,
+                            "chat": self.CHANNEL,
+                            "date": 1566688888,
+                            "text": "ignore"}}]})
+
+        def log(msg):
+            logs.append(msg)
+        logs = []
+        bot.log = log
+
+        bot.do_polling()
+        self.assertIn("ERROR", logs[0])
+
+        for i in range(2):
+            self.reactor.pump([30.] * 3)
+
+        self.assertTrue(bot.http_client.succeeded)

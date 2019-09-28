@@ -89,10 +89,13 @@ class ContactMixin(TestReactorMixin):
         self.contact.channel.send = send
 
     @defer.inlineCallbacks
-    def do_test_command(self, command, args='', clock_ticks=None,
+    def do_test_command(self, command, args='', contact=None, clock_ticks=None,
                         exp_usage=True, exp_UsageError=False,
                         shuttingDown=False, **kwargs):
-        cmd = getattr(self.contact, 'command_' + command.upper())
+        if contact is None:
+            contact = self.contact
+
+        cmd = getattr(contact, 'command_' + command.upper())
 
         if exp_usage:
             self.assertTrue(hasattr(cmd, 'usage'))

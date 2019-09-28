@@ -70,9 +70,13 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         # This is necessary as Telegram will make requests in the reconfig
         http.expect("post", "/getMe",
                     content_json={'ok': 1, 'result': {'username': 'testbot'}})
-        http.expect("post", "/setWebhook",
-                    json={'url': bytes2unicode(self.bot_url)},
-                    content_json={'ok': 1})
+        if bot_token == 'poll':
+            http.expect("post", "/deleteWebhook",
+                        content_json={'ok': 1})
+        else:
+            http.expect("post", "/setWebhook",
+                        json={'url': bytes2unicode(self.bot_url)},
+                        content_json={'ok': 1})
         return http
 
     @defer.inlineCallbacks
