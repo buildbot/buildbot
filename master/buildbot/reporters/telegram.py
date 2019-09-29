@@ -677,7 +677,7 @@ class TelegramStatusBot(StatusBot):
         if message is None:
             query = update.get('callback_query')
             if query is None:
-                self.log('telegram bot: no message')
+                self.log('No message in Telegram update object')
                 return defer.succeed('no message')
             original_message = query.get('message', {})
             data = query.get('data', 0)
@@ -718,7 +718,7 @@ class TelegramStatusBot(StatusBot):
 
         user = message.get('from')
         if user is None:
-            self.log('no user in incoming telegram message')
+            self.log('No user in incoming message')
             return defer.succeed('no user')
 
         text = message.get('text')
@@ -747,7 +747,7 @@ class TelegramStatusBot(StatusBot):
             # just for tests
             raise err
         except Exception as err:
-            self.log("ERROR: cannot send telegram request {}: {}".format(path, err))
+            self.log("ERROR: cannot send Telegram request {}: {}".format(path, err))
         else:
             return ans.get('result', True)
 
@@ -759,14 +759,14 @@ class TelegramStatusBot(StatusBot):
                 res = yield self.http_client.post(path, **kwargs)
                 ans = yield res.json()
                 if not ans.get('ok'):
-                    self.log("ERROR: cannot send telegram request {}: "
+                    self.log("ERROR: cannot send Telegram request {}: "
                              "[{}] {}".format(path, res.code, ans.get('description')))
                     return
             except AssertionError as err:
                 # just for tests
                 raise err
             except Exception as err:
-                msg = "ERROR: cannot send telegram request {} (will try again): {}".format(path, err)
+                msg = "ERROR: cannot send Telegram request {} (will try again): {}".format(path, err)
                 if logme:
                     self.log(msg)
                     logme = False
@@ -791,7 +791,6 @@ class TelegramStatusBot(StatusBot):
     def send_message(self, chat, message, parse_mode='Markdown',
                      reply_to_message_id=None, reply_markup=None,
                      **kwargs):
-        first = True
         result = None
 
         message = message.strip()
@@ -799,8 +798,9 @@ class TelegramStatusBot(StatusBot):
             params = dict(chat_id=chat)
             if parse_mode is not None:
                 params['parse_mode'] = parse_mode
-            if first and reply_to_message_id is not None:
+            if reply_to_message_id is not None:
                 params['reply_to_message_id'] = reply_to_message_id
+                reply_to_message_id = None  # we only mark first message as a reply
 
             if len(message) <= 4096:
                 params['text'], message = message, None
@@ -808,7 +808,6 @@ class TelegramStatusBot(StatusBot):
                 n = message[:4096].rfind('\n')
                 n = n + 1 if n != -1 else 4096
                 params['text'], message = message[:n].rstrip(), message[n:].lstrip()
-                first = False
 
             if not message and reply_markup is not None:
                 params['reply_markup'] = reply_markup
@@ -925,7 +924,7 @@ class TelegramPollingBot(TelegramStatusBot):
             except AssertionError as err:
                 raise err
             except Exception as err:
-                msg = "ERROR: cannot send telegram request /getUpdates (will try again): {}".format(err)
+                msg = "ERROR: cannot send Telegram request /getUpdates (will try again): {}".format(err)
                 if logme:
                     self.log(msg)
                     logme = False

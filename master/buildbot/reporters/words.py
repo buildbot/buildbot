@@ -448,7 +448,7 @@ class Contact:
         if cmd_suffix and cmd.endswith(cmd_suffix):
             cmd = cmd[:-len(cmd_suffix)]
 
-        self.bot.log("received command `{}`".format(cmd))
+        self.bot.log("Received command `{}` from {}".format(cmd, self.describeUser()))
 
         if cmd.startswith(self.bot.commandPrefix):
             meth = self.getCommandMethod(cmd[len(self.bot.commandPrefix):])
@@ -713,12 +713,12 @@ class Contact:
         pname_validate = self.master.config.validation['property_name']
         pval_validate = self.master.config.validation['property_value']
         if branch and not branch_validate.match(branch):
-            self.bot.log("bad branch '{}'".format(branch))
-            self.send("sorry, bad branch '{}'".format(branch))
+            self.bot.log("Force: bad branch '{}'".format(branch))
+            self.send("Sorry, bad branch '{}'".format(branch))
             return
         if revision and not revision_validate.match(revision):
-            self.bot.log("bad revision '{}'".format(revision))
-            self.send("sorry, bad revision '{}'".format(revision))
+            self.bot.log("Force: bad revision '{}'".format(revision))
+            self.send("Sorry, bad revision '{}'".format(revision))
             return
 
         properties = Properties()
@@ -738,9 +738,9 @@ class Contact:
                 pvalue = pdict[prop]
                 if not pname_validate.match(pname) \
                         or not pval_validate.match(pvalue):
-                    self.bot.log("bad property name='{}', value='{}'"
+                    self.bot.log("Force: bad property name='{}', value='{}'"
                                  .format(pname, pvalue))
-                    self.send("sorry, bad property name='{}', value='{}'"
+                    self.send("Sorry, bad property name='{}', value='{}'"
                               .format(pname, pvalue))
                     return
                 properties.setProperty(pname, pvalue, "Force Build Chat")
@@ -861,9 +861,9 @@ class Contact:
         return commands
 
     def describeUser(self):
-        if self.channel != self.user_id:
-            return "User <{}> on {}".format(self.user_id, self.channel)
-        return "User <{}>".format(self.user_id)
+        if self.is_private_chat:
+            return self.user_id
+        return "{} on {}".format(self.user_id, self.channel.id)
 
     # commands
 
@@ -962,7 +962,6 @@ class Contact:
 
 
 class StatusBot(service.AsyncMultiService):
-
     """ Abstract status bot """
 
     contactClass = Contact
@@ -1081,10 +1080,10 @@ class StatusBot(service.AsyncMultiService):
 
     def log(self, msg):
         try:
-            name = self.parent.name
+            name = "{},{}".format(self.parent.name, self.__class__.__name__)
         except AttributeError:
             name = self.__class__.__name__
-        log.msg("{}: {}".format(name, msg))
+        log.callWithContext({"system": name}, log.msg, msg)
 
     def builderMatchesAnyTag(self, builder_tags):
         return any(tag for tag in builder_tags if tag in self.tags)

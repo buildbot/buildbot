@@ -314,13 +314,13 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         return [n[1:] for n in names if n[0] in '@&~%']
 
     def joined(self, channel):
-        self.log("I have joined %s" % (channel,))
+        self.log("Joined %s" % (channel,))
         # trigger contact constructor, which in turn subscribes to notify events
         channel = self.getChannel(channel=channel)
         channel.add_notification_events(self.notify_events)
 
     def left(self, channel):
-        self.log("I have left %s" % (channel,))
+        self.log("Left %s" % (channel,))
 
     def kickedFrom(self, channel, kicker, message):
         self.log("I have been kicked from %s by %s: %s" % (channel,
