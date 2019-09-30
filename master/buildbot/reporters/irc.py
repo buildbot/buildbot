@@ -15,6 +15,7 @@
 
 from twisted.application import internet
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from twisted.words.protocols import irc
@@ -177,11 +178,11 @@ class IRCContact(Contact):
 
     def command_DANCE(self, args, **kwargs):
         """dance, dance academy..."""
-        self.bot.reactor.callLater(1.0, self.send, "<(^.^<)")
-        self.bot.reactor.callLater(2.0, self.send, "<(^.^)>")
-        self.bot.reactor.callLater(3.0, self.send, "(>^.^)>")
-        self.bot.reactor.callLater(3.5, self.send, "(7^.^)7")
-        self.bot.reactor.callLater(5.0, self.send, "(>^.^<)")
+        reactor.callLater(1.0, self.send, "<(^.^<)")
+        reactor.callLater(2.0, self.send, "<(^.^)>")
+        reactor.callLater(3.0, self.send, "(>^.^)>")
+        reactor.callLater(3.5, self.send, "(7^.^)7")
+        reactor.callLater(5.0, self.send, "(>^.^<)")
 
     def command_DESTROY(self, args):
         if self.bot.nickname not in args:

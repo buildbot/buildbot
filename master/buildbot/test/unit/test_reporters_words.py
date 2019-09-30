@@ -18,6 +18,7 @@ import re
 import mock
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -42,6 +43,10 @@ class ContactMixin(TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.patch(reactor, 'callLater', self.reactor.callLater)
+        self.patch(reactor, 'seconds', self.reactor.seconds)
+        self.patch(reactor, 'stop', self.reactor.stop)
+
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
 
@@ -74,7 +79,6 @@ class ContactMixin(TestReactorMixin):
 
         self.contact = self.contactClass(user=self.USER,
                                          channel=self.bot.getChannel(self.CHANNEL))
-        self.bot.reactor = self.reactor
         self.contact.channel.setServiceParent(self.master)
         return self.master.startService()
 
@@ -702,11 +706,6 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.bot.authz = words.StatusBot.expand_authz(None)
         meth = self.contact.getCommandMethod('shutdown')
         self.assertEqual(meth, self.contact.access_denied)
-
-    def test_getCommandMethod_ignore_authz(self):
-        self.bot.authz = words.StatusBot.expand_authz(None)
-        meth = self.contact.getCommandMethod('shutdown', True)
-        self.assertNotEqual(meth, self.contact.access_denied)
 
     authz1 = {
         'force': ['me'],

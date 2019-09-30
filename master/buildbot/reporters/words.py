@@ -23,10 +23,13 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python import usage
+from twisted.web import resource
+from twisted.web import server
 
 from buildbot import util
 from buildbot import version
 from buildbot.data import resultspec
+from buildbot.plugins.db import get_plugins
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
@@ -37,6 +40,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 
@@ -414,27 +418,26 @@ class Contact:
 
     # Main dispatchers for incoming messages
 
-    def getCommandMethod(self, command, ignore_authz=False):
+    def getCommandMethod(self, command):
         command = command.upper()
         try:
             method = getattr(self, 'command_' + command)
         except AttributeError:
-            return
-        if not ignore_authz:
-            get_authz = self.bot.authz.get
-            acl = get_authz(command)
-            if acl is None:
-                if command in dangerous_commands:
-                    acl = get_authz('!', False)
-                else:
-                    acl = get_authz('', True)
-                acl = get_authz('*', acl)
-            if isinstance(acl, (list, tuple)):
-                acl = self.user_id in acl
-            elif acl not in (True, False, None):
-                acl = self.user_id == acl
-            if not acl:
-                return self.access_denied
+            return None
+        get_authz = self.bot.authz.get
+        acl = get_authz(command)
+        if acl is None:
+            if command in dangerous_commands:
+                acl = get_authz('!', False)
+            else:
+                acl = get_authz('', True)
+            acl = get_authz('*', acl)
+        if isinstance(acl, (list, tuple)):
+            acl = self.user_id in acl
+        elif acl not in (True, False, None):
+            acl = self.user_id == acl
+        if not acl:
+            return self.access_denied
         return method
 
     def handleMessage(self, message, **kwargs):
@@ -838,7 +841,7 @@ class Contact:
                 complete_at = lastBuild['complete_at']
                 if complete_at:
                     complete_at = util.datetime2epoch(complete_at)
-                    ago = util.fuzzyInterval(int(self.bot.reactor.seconds() -
+                    ago = util.fuzzyInterval(int(reactor.seconds() -
                                                  complete_at))
                 else:
                     ago = "??"
@@ -852,11 +855,12 @@ class Contact:
 
     command_LAST.usage = "last [_which_] - list last build status for builder _which_"
 
-    def build_commands(self):
+    @classmethod
+    def build_commands(cls):
         commands = []
-        for k in dir(self):
+        for k in dir(cls):
             if k.startswith('command_'):
-                commands.append(self.bot.commandPrefix + k[8:].lower())
+                commands.append(k[8:].lower())
         commands.sort()
         return commands
 
@@ -870,12 +874,11 @@ class Contact:
     def command_HELP(self, args, **kwargs):
         """give help for a command or one of it's arguments"""
         args = self.splitArgs(args)
-        lp = len(self.bot.commandPrefix)
         if not args:
             commands = self.build_commands()
             response = []
             for command in commands:
-                meth = self.getCommandMethod(command[lp:], True)
+                meth = getattr(self, 'command_' + command.upper())
                 doc = getattr(meth, '__doc__', None)
                 if doc:
                     response.append("{} - {}".format(command, doc))
@@ -884,8 +887,8 @@ class Contact:
             return
         command = args[0]
         if command.startswith(self.bot.commandPrefix):
-            command = command[lp:]
-        meth = self.getCommandMethod(command, True)
+            command = command[len(self.bot.commandPrefix):]
+        meth = getattr(self, 'command_' + command.upper(), None)
         if not meth:
             raise UsageError("There is no such command '{}'.".format(args[0]))
         doc = getattr(meth, 'usage', None)
@@ -919,7 +922,7 @@ class Contact:
     def command_COMMANDS(self, args, **kwargs):
         """list available commands"""
         commands = self.build_commands()
-        str = "Buildbot commands: " + ", ".join(commands)
+        str = "Buildbot commands: " + ", ".join(self.bot.commandPrefix + c for c in commands)
         self.send(str)
     command_COMMANDS.usage = "commands - List available commands"
 
@@ -952,7 +955,7 @@ class Contact:
                 botmaster.cancelCleanShutdown()
         elif args == 'now':
             self.send("Stopping buildbot.")
-            self.bot.reactor.stop()
+            reactor.stop()
     command_SHUTDOWN.usage = {
         None: "shutdown check|start|stop|now - shutdown the buildbot master",
         "check": "shutdown check - check if the buildbot master is running or shutting down",
@@ -986,7 +989,6 @@ class StatusBot(service.AsyncMultiService):
         self.authz = self.expand_authz(authz)
         self.contacts = {}
         self.channels = {}
-        self.reactor = reactor
 
     @staticmethod
     def expand_authz(authz):
@@ -1135,7 +1137,7 @@ class StatusBot(service.AsyncMultiService):
                     complete_at = lastBuild['complete_at']
                     if complete_at:
                         complete_at = util.datetime2epoch(complete_at)
-                        ago = util.fuzzyInterval(int(self.reactor.seconds() -
+                        ago = util.fuzzyInterval(int(reactor.seconds() -
                                                      complete_at))
                     else:
                         ago = "??"
@@ -1245,3 +1247,56 @@ class ThrottledClientFactory(protocol.ClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         reactor.callLater(self.failedDelay, connector.connect)
+
+
+class WebhookBotMixin(resource.Resource):
+    """
+    This is a mixin to be used by chat bots based on web-hooks
+    """
+
+    def __init__(self, path):
+        resource.Resource.__init__(self)
+        www = get_plugins('www', None, load_now=True)
+        if 'base' not in www:
+            raise RuntimeError("could not find buildbot-www; is it installed?")
+        self._root = www.get('base').resource
+        self.path = path
+
+    def startService(self):
+        self._root.putChild(unicode2bytes(self.path), self)
+        try:
+            super().startService()
+        except AttributeError:
+            pass
+
+    def stopService(self):
+        try:
+            super().stopService()
+        except AttributeError:
+            pass
+        self._root.delEntity(unicode2bytes(self.path))
+
+    def render_GET(self, request):
+        return self.render_POST(request)
+
+    def render_POST(self, request):
+        try:
+            d = self.process_webhook(request)
+        except Exception:
+            d = defer.fail()
+
+        def ok(_):
+            request.setResponseCode(202)
+            request.finish()
+
+        def err(why):
+            log.err(why, "processing telegram request")
+            request.setResponseCode(500)
+            request.finish()
+
+        d.addCallbacks(ok, err)
+
+        return server.NOT_DONE_YET
+
+    def process_webhook(self, request):
+        raise NotImplementedError()

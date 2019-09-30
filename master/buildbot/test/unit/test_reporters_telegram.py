@@ -17,6 +17,7 @@ import json
 import sys
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
@@ -547,6 +548,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.patch(reactor, 'callLater', self.reactor.callLater)
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -759,7 +761,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                json={'callback_query_id': 123456},
                                content_json={'ok': 1})
         request = self.request_query("100")
-        bot.process_webhook_request(request)
+        bot.process_webhook(request)
         self.assertEquals(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
     def test_parse_query_cached_dict(self):
@@ -772,7 +774,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                json={'callback_query_id': 123456, 'text': "hello"},
                                content_json={'ok': 1})
         request = self.request_query("100")
-        bot.process_webhook_request(request)
+        bot.process_webhook(request)
         self.assertEquals(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
     def test_parse_query_explicit(self):
@@ -785,7 +787,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                                json={'callback_query_id': 123456},
                                content_json={'ok': 1})
         request = self.request_query("good")
-        bot.process_webhook_request(request)
+        bot.process_webhook(request)
         self.assertEquals(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
     def test_parse_query_bad(self):
@@ -802,7 +804,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                            'text': "Sorry, button is no longer valid!"},
                                content_json={'ok': 1})
         request = self.request_query("101")
-        bot.process_webhook_request(request)
+        bot.process_webhook(request)
 
     def makePollingBot(self, updates, chat_ids=None, authz=None, *args, **kwargs):
         if chat_ids is None:
@@ -881,7 +883,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             self.master, self, skip, errs, 'https://api.telegram.org/bot12345:secret'))
 
     @defer.inlineCallbacks
-    def test_post_until_success_not_ok(self):
+    def test_post_not_ok(self):
         bot = self.makeBot()
         bot.http_client.expect(
             "post", "/post",
@@ -892,12 +894,11 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         logs = []
         bot.log = log
 
-        yield bot._post_until_success("/post")
+        yield bot.post("/post")
         self.assertIn("ERROR", logs[0])
 
-    def test_post_until_success_need_repeat(self):
+    def test_post_need_repeat(self):
         bot = self.makeBot()
-        bot.reactor = self.reactor
         bot.http_client = self.setupFakeHttpWithErrors(0, 2)
         bot.http_client.expect(
             "post", "/post",
@@ -908,11 +909,10 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         logs = []
         bot.log = log
 
-        bot._post_until_success("/post")
+        bot.post("/post")
         self.assertIn("ERROR", logs[0])
 
-        for i in range(2):
-            self.reactor.pump([30.] * 3)
+        self.reactor.pump(3 * [30.])
 
         self.assertTrue(bot.http_client.succeeded)
 
@@ -944,7 +944,6 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.do_polling()
         self.assertIn("ERROR", logs[0])
 
-        for i in range(2):
-            self.reactor.pump([30.] * 3)
+        self.reactor.pump(3 * [30.])
 
         self.assertTrue(bot.http_client.succeeded)

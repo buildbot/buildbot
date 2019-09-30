@@ -64,7 +64,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def get_http(self, bot_token):
-        base_url = "https://api.telegram.org/bot" + bot_token
+        base_url = "https://api.telegram.org/telegram" + bot_token
         http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, base_url)
         # This is necessary as Telegram will make requests in the reconfig
@@ -133,7 +133,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         )
         tb._get_http = self.get_http
         tb.setServiceParent(self.master)
-        self.bot_url = self.url + b"bot12345:secret"
+        self.bot_url = self.url + b"telegram12345:secret"
 
         yield tb.startService()
 

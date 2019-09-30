@@ -19,13 +19,9 @@ import random
 import shlex
 
 from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.web import resource
-from twisted.web import server
+from twisted.internet import reactor
 
 from buildbot import config
-from buildbot.plugins.db import get_plugins
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -36,8 +32,10 @@ from buildbot.reporters.words import Channel
 from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import UsageError
+from buildbot.reporters.words import WebhookBotMixin
 from buildbot.schedulers.forcesched import CollectedValidationError
 from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.util import asyncSleep
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
@@ -134,7 +132,7 @@ class TelegramContact(Contact):
     @defer.inlineCallbacks
     def command_START(self, args, **kwargs):
         yield self.command_HELLO(args)
-        self.bot.reactor.callLater(0.2, self.command_HELP, '')
+        reactor.callLater(0.2, self.command_HELP, '')
 
     def command_NAY(self, args, tmessage, **kwargs):
         """forget the current command"""
@@ -149,21 +147,24 @@ class TelegramContact(Contact):
             self.send("Never mind, {}...".format(self.user_name))
     command_NAY.usage = "nay - never mind the command we are currently discussing"
 
+    @classmethod
+    def describe_commands(cls):
+        commands = cls.build_commands()
+        response = []
+        for command in commands:
+            if command == 'start':
+                continue
+            meth = getattr(cls, 'command_' + command.upper())
+            doc = getattr(meth, '__doc__', None)
+            if not doc:
+                doc = command
+            response.append("{} - {}".format(command, doc))
+        return response
+
     @Contact.overrideCommand
     def command_COMMANDS(self, args, **kwargs):
         if args.lower() == 'botfather':
-            lp = len(self.bot.commandPrefix)
-            commands = self.build_commands()
-            response = []
-            for command in commands:
-                command = command[lp:]
-                if command == 'start':
-                    continue
-                meth = self.getCommandMethod(command, True)
-                doc = getattr(meth, '__doc__', None)
-                if not doc:
-                    doc = command
-                response.append("{} - {}".format(command, doc))
+            response = self.describe_commands()
             if response:
                 self.send('\n'.join(response))
         else:
@@ -657,19 +658,6 @@ class TelegramStatusBot(StatusBot):
                 new_channel.setServiceParent(self)
             return new_channel
 
-    def get_update(self, request):
-        content = request.content.read()
-        content = bytes2unicode(content)
-        content_type = request.getHeader(b'Content-Type')
-        content_type = bytes2unicode(content_type)
-        if content_type is not None and \
-                content_type.startswith('application/json'):
-            update = json.loads(content)
-        else:
-            raise ValueError('Unknown content type: {}'
-                             .format(content_type))
-        return update
-
     def process_update(self, update):
         data = {}
 
@@ -737,46 +725,31 @@ class TelegramStatusBot(StatusBot):
         return d
 
     @defer.inlineCallbacks
-    def _post(self, path, **kwargs):
-        try:
-            res = yield self.http_client.post(path, **kwargs)
-            ans = yield res.json()
-            if not ans.get('ok'):
-                raise ValueError("[{}] {}".format(res.code, ans.get('description')))
-        except AssertionError as err:
-            # just for tests
-            raise err
-        except Exception as err:
-            self.log("ERROR: cannot send Telegram request {}: {}".format(path, err))
-        else:
-            return ans.get('result', True)
-
-    @defer.inlineCallbacks
-    def _post_until_success(self, path, **kwargs):
+    def post(self, path, **kwargs):
         logme = True
         while True:
             try:
                 res = yield self.http_client.post(path, **kwargs)
-                ans = yield res.json()
-                if not ans.get('ok'):
-                    self.log("ERROR: cannot send Telegram request {}: "
-                             "[{}] {}".format(path, res.code, ans.get('description')))
-                    return
             except AssertionError as err:
                 # just for tests
                 raise err
             except Exception as err:
-                msg = "ERROR: cannot send Telegram request {} (will try again): {}".format(path, err)
+                msg = "ERROR: problem sending Telegram request {} (will try again): {}".format(path, err)
                 if logme:
                     self.log(msg)
                     logme = False
-                yield task.deferLater(self.reactor, self.retry_delay, lambda: None)
+                yield asyncSleep(self.retry_delay)
             else:
+                ans = yield res.json()
+                if not ans.get('ok'):
+                    self.log("ERROR: cannot send Telegram request {}: "
+                             "[{}] {}".format(path, res.code, ans.get('description')))
+                    return None
                 return ans.get('result', True)
 
     @defer.inlineCallbacks
     def set_nickname(self):
-        res = yield self._post_until_success('/getMe')
+        res = yield self.post('/getMe')
         if res:
             self.nickname = res.get('username')
 
@@ -785,7 +758,7 @@ class TelegramStatusBot(StatusBot):
         params = dict(callback_query_id=query_id)
         if notify is not None:
             params.update(dict(text=notify))
-        return (yield self._post('/answerCallbackQuery', json=params))
+        return (yield self.post('/answerCallbackQuery', json=params))
 
     @defer.inlineCallbacks
     def send_message(self, chat, message, parse_mode='Markdown',
@@ -814,7 +787,7 @@ class TelegramStatusBot(StatusBot):
 
             params.update(kwargs)
 
-            result = yield self._post('/sendMessage', json=params)
+            result = yield self.post('/sendMessage', json=params)
 
         return result
 
@@ -824,73 +797,67 @@ class TelegramStatusBot(StatusBot):
         if parse_mode is not None:
             params['parse_mode'] = parse_mode
         params.update(kwargs)
-        return (yield self._post('/editMessageText', json=params))
+        return (yield self.post('/editMessageText', json=params))
 
     @defer.inlineCallbacks
     def edit_keyboard(self, chat, msg, keyboard=None):
         params = dict(chat_id=chat, message_id=msg)
         if keyboard is not None:
             params['reply_markup'] = {'inline_keyboard': keyboard}
-        return (yield self._post('/editMessageReplyMarkup', json=params))
+        return (yield self.post('/editMessageReplyMarkup', json=params))
 
     @defer.inlineCallbacks
     def delete_message(self, chat, msg):
         params = dict(chat_id=chat, message_id=msg)
-        return (yield self._post('/deleteMessage', json=params))
+        return (yield self.post('/deleteMessage', json=params))
 
     @defer.inlineCallbacks
     def send_sticker(self, chat, sticker, **kwargs):
         params = dict(chat_id=chat, sticker=sticker)
         params.update(kwargs)
-        return (yield self._post('/sendSticker', json=params))
+        return (yield self.post('/sendSticker', json=params))
 
 
-class TelegramBotResource(TelegramStatusBot, resource.Resource):
+class TelegramBotResource(WebhookBotMixin, TelegramStatusBot):
 
-    def __init__(self, *args, **kwargs):
-        TelegramStatusBot.__init__(self, *args, **kwargs)
-        resource.Resource.__init__(self)
+    def __init__(self, token, *args, certificate=None, **kwargs):
+        TelegramStatusBot.__init__(self, token, *args, **kwargs)
+        WebhookBotMixin.__init__(self, 'telegram' + token)
+        self._certificate = certificate
 
-    def render_GET(self, request):
-        return self.render_POST(request)
+    def startService(self):
+        super().startService()
+        url = bytes2unicode(self.master.config.buildbotURL)
+        if not url.endswith('/'):
+            url += '/'
+        self.set_webhook(url + self.path, self._certificate)
 
-    def render_POST(self, request):
-        try:
-            d = self.process_webhook_request(request)
-        except Exception:
-            d = defer.fail()
-
-        def ok(_):
-            request.setResponseCode(202)
-            request.finish()
-
-        def err(why):
-            log.err(why, "processing telegram request")
-            request.setResponseCode(500)
-            request.finish()
-
-        d.addCallbacks(ok, err)
-
-        return server.NOT_DONE_YET
-
-    def process_webhook_request(self, request):
+    def process_webhook(self, request):
         update = self.get_update(request)
         return self.process_update(update)
+
+    def get_update(self, request):
+        content = request.content.read()
+        content = bytes2unicode(content)
+        content_type = request.getHeader(b'Content-Type')
+        content_type = bytes2unicode(content_type)
+        if content_type is not None and \
+                content_type.startswith('application/json'):
+            update = json.loads(content)
+        else:
+            raise ValueError('Unknown content type: {}'
+                             .format(content_type))
+        return update
 
     def set_webhook(self, url, certificate=None):
         if not certificate:
             self.log("Setting up webhook to: {}".format(url))
-            self._post_until_success('/setWebhook', json=dict(url=url))
+            self.post('/setWebhook', json=dict(url=url))
         else:
             self.log("Setting up webhook to: {} (custom certificate)".format(url))
-            filename = getattr(certificate, 'name', "certificate.pem")
-            if hasattr(certificate, 'read'):
-                # we may be trying several times, so we need to store the certificate content
-                certificate = certificate.read()
             certificate = io.BytesIO(unicode2bytes(certificate))
-            certificate.name = filename
-            self._post_until_success('/setWebhook', data=dict(url=url),
-                                     files=dict(certificate=certificate))
+            self.post('/setWebhook', data=dict(url=url),
+                      files=dict(certificate=certificate))
 
 
 class TelegramPollingBot(TelegramStatusBot):
@@ -906,7 +873,7 @@ class TelegramPollingBot(TelegramStatusBot):
 
     @defer.inlineCallbacks
     def do_polling(self):
-        yield self._post_until_success('/deleteWebhook')
+        yield self.post('/deleteWebhook')
         offset = 0
         kwargs = {'json': {'timeout': self.poll_timeout}}
         logme = True
@@ -915,7 +882,7 @@ class TelegramPollingBot(TelegramStatusBot):
                 kwargs['json']['offset'] = offset
             try:
                 res = yield self.http_client.post('/getUpdates',
-                                                  timeout=self.poll_timeout + 5,
+                                                  timeout=self.poll_timeout + 2,
                                                   **kwargs)
                 ans = yield res.json()
                 if not ans.get('ok'):
@@ -928,7 +895,7 @@ class TelegramPollingBot(TelegramStatusBot):
                 if logme:
                     self.log(msg)
                     logme = False
-                yield task.deferLater(self.reactor, self.retry_delay, lambda: None)
+                yield asyncSleep(self.retry_delay)
             else:
                 logme = True
                 if updates:
@@ -951,7 +918,6 @@ class TelegramBot(service.BuildbotService):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.www = get_plugins('www', None, load_now=True)
         self.bot = None
 
     def _get_http(self, bot_token):
@@ -1000,19 +966,10 @@ class TelegramBot(service.BuildbotService):
         # We don't try to be smart here. Just restart the bot if config has
         # changed.
 
-        if not usePolling:
-            if 'base' not in self.www:
-                raise RuntimeError("could not find buildbot-www; is it installed?")
-            root = self.www.get('base').resource
-        else:
-            root = None
-
         http = yield self._get_http(bot_token)
 
         if self.bot is not None:
             self.bot.stopService()
-            if root is not None:
-                root.delEntity(unicode2bytes('bot' + self.bot.token))
 
         if usePolling:
             self.bot = TelegramPollingBot(bot_token, http, chat_ids, authz,
@@ -1026,7 +983,8 @@ class TelegramBot(service.BuildbotService):
                                            tags=tags, notify_events=notify_events,
                                            useRevisions=useRevisions,
                                            showBlameList=showBlameList,
-                                           retry_delay=self.retryDelay)
+                                           retry_delay=self.retryDelay,
+                                           certificate=self.certificate)
         if bot_username is not None:
             self.bot.nickname = bot_username
         else:
@@ -1035,11 +993,3 @@ class TelegramBot(service.BuildbotService):
                 raise RuntimeError("No bot username specified and I cannot get it from Telegram")
 
         self.bot.setServiceParent(self)
-
-        if not usePolling:
-            bot_path = 'bot' + bot_token
-            root.putChild(unicode2bytes(bot_path), self.bot)
-            url = bytes2unicode(self.master.config.buildbotURL)
-            if not url.endswith('/'):
-                url += '/'
-            self.bot.set_webhook(url + bot_path, certificate)

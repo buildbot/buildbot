@@ -794,7 +794,7 @@ Telegram Bot
 
 Buildbot offers a bot, similar to the :bb:reporter:`IRC` for Telegram mobile and desktop messaging app. The bot can notify users and groups about build events, respond to status queries, or force and stop builds on request (if allowed to).
 
-In order to use this reporter, you must first speak to BotFather_ and create a `new telegram bot <https://core.telegram.org/bots#creating-a-new-bot>`. A quick step-by-step procedure is as follows:
+In order to use this reporter, you must first speak to BotFather_ and create a `new telegram bot <https://core.telegram.org/bots#creating-a-new-bot>`_. A quick step-by-step procedure is as follows:
 
 1. Start a chat with BotFather_.
 
@@ -808,22 +808,13 @@ In order to use this reporter, you must first speak to BotFather_ and create a `
 
 6. Optionally, you may type ``/setcommands``, select the username of your new bot and paste the following text:
 
-   .. code-block:: text
+    .. jinja:: telegram
 
-        commands - list available commands
-        force - force a build
-        getid - get user and chat ID
-        help - give help for a command or one of it's arguments
-        last - list last build status for a builder
-        list - list configured builders or workers
-        nay - forget the current command
-        notify - notify me about build events
-        shutdown - shutdown the buildbot master
-        source - the source code for buildbot
-        status - list status of a builder (or all builders)
-        stop - stop a running build
-        version - show buildbot version
-        watch - announce the completion of an active build
+        .. code-block:: text
+
+        {% for line in commands|sort %}
+            {{ line -}}
+        {% endfor %}
 
    If you do this, Telegram will provide hints about your bot commands.
 
