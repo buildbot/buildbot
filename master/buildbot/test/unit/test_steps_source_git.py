@@ -3916,6 +3916,138 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
+    def test_commit_empty_disallow(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
+                           emptyCommits='disallow'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'commit', '-m', 'my commit', '-m', '42'])
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_commit_empty_allow(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
+                           emptyCommits='create-empty-commit'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'commit', '-m', 'my commit', '-m', '42', '--allow-empty'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_commit_empty_ignore_withcommit(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
+                           emptyCommits='ignore'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'status', '--porcelain=v1'])
+            + ExpectShell.log('stdio',
+                              stdout='MM file2.txt\n?? file3.txt')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'commit', '-m', 'my commit', '-m', '42'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_commit_empty_ignore_withoutcommit(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
+                           emptyCommits='ignore'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'status', '--porcelain=v1'])
+            + ExpectShell.log('stdio',
+                              stdout='?? file3.txt')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_commit_empty_ignore_witherror(self):
+        self.setupStep(
+            self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
+                           emptyCommits='ignore'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'symbolic-ref', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='refs/head/myBranch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'add', 'file1.txt', 'file2.txt'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'status', '--porcelain=v1'])
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
     def test_detached_head(self):
         self.setupStep(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
