@@ -1146,6 +1146,12 @@ The GitCommit step takes the following arguments:
 ``config``
     (optional) A dict of git configuration settings to pass to the remote git commands.
 
+``emptyCommits``
+    (optional) One of the values ``disallow`` (default), ``create-empty-commit``, and ``ignore``. Decides the behavior when there is nothing to be committed.
+    The value ``disallow`` will make the buildstep fail.
+    The value ``create-empty-commit`` will create an empty commit.
+    The value ``ignore`` will create no commit.
+
 .. bb:step:: GitPush
 
 GitPush
