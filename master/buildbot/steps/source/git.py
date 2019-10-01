@@ -74,10 +74,15 @@ class Git(Source, GitStepMixin):
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
-                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, **kwargs):
+                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, supportsProgress=None, **kwargs):
 
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
+
+        self.supportsProgress = supportsProgress
+
+        if supportsProgress:
+            progress = True
 
         self.branch = branch
         self.method = method
@@ -684,7 +689,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     renderables = ['paths', 'messages']
 
     def __init__(self, workdir=None, paths=None, messages=None, env=None,
-                 timeout=20 * 60, logEnviron=True,
+                 timeout=20 * 60, logEnviron=True, emptyCommits='disallow',
                  config=None, **kwargs):
 
         self.workdir = workdir
@@ -694,6 +699,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.timeout = timeout
         self.logEnviron = logEnviron
         self.config = config
+        self.emptyCommits = emptyCommits
         # The repourl, sshPrivateKey and sshHostKey attributes are required by
         # GitStepMixin, but aren't needed by git add and commit operations
         self.repourl = " "
@@ -716,6 +722,10 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         if not isinstance(self.paths, list):
             bbconfig.error('GitCommit: paths must be a list')
+
+        if self.emptyCommits not in ('disallow', 'create-empty-commit', 'ignore'):
+            bbconfig.error('GitCommit: emptyCommits must be one of "disallow", '
+                           '"create-empty-commit" and "ignore"')
 
     @defer.inlineCallbacks
     def run(self):
@@ -741,11 +751,29 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
             raise buildstep.BuildStepFailed
 
     @defer.inlineCallbacks
+    def _checkHasSomethingToCommit(self):
+        cmd = ['status', '--porcelain=v1']
+        stdout = yield self._dovccmd(cmd, collectStdout=True)
+
+        for line in stdout.splitlines(False):
+            if line[0] in 'MADRCU':
+                return True
+        return False
+
+    @defer.inlineCallbacks
     def _doCommit(self):
+        if self.emptyCommits == 'ignore':
+            has_commit = yield self._checkHasSomethingToCommit()
+            if not has_commit:
+                return 0
+
         cmd = ['commit']
 
         for message in self.messages:
             cmd.extend(['-m', message])
+
+        if self.emptyCommits == 'create-empty-commit':
+            cmd.extend(['--allow-empty'])
 
         ret = yield self._dovccmd(cmd)
         return ret

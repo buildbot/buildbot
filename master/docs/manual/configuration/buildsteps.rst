@@ -399,6 +399,7 @@ The Git step takes the following arguments:
 ``progress`` (optional)
    Passes the (``--progress``) flag to (:command:`git fetch`).
    This solves issues of long fetches being killed due to lack of output, but requires Git 1.7.2 or later.
+   Its value is True on Git 1.7.2 or later.
 
 ``retryFetch`` (optional, default: ``False``)
    If true, if the ``git fetch`` fails then Buildbot retries to fetch again instead of failing the entire source checkout.
@@ -1144,6 +1145,12 @@ The GitCommit step takes the following arguments:
 
 ``config``
     (optional) A dict of git configuration settings to pass to the remote git commands.
+
+``emptyCommits``
+    (optional) One of the values ``disallow`` (default), ``create-empty-commit``, and ``ignore``. Decides the behavior when there is nothing to be committed.
+    The value ``disallow`` will make the buildstep fail.
+    The value ``create-empty-commit`` will create an empty commit.
+    The value ``ignore`` will create no commit.
 
 .. bb:step:: GitPush
 
