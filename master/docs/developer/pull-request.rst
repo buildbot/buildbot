@@ -59,7 +59,7 @@ How to create a pull request
 
 .. note::
 
-   See ​`this github guide <https://help.github.com/en/articles/fork-a-repo>`_ which offers a more generic description of this process.
+   See `this github guide <https://help.github.com/en/articles/fork-a-repo>`_ which offers a more generic description of this process.
 
 * Sign up for a free account at ​http://github.com, if you don't already have one.
 
