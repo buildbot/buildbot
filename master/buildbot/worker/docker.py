@@ -271,6 +271,7 @@ class DockerLatentWorker(DockerBaseWorker,
                 lines = docker_client.build(
                     fileobj=BytesIO(dockerfile.encode('utf-8')),
                     tag=image,
+                    buildargs=buildargs
                 )
 
             for line in lines:
