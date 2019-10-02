@@ -350,9 +350,11 @@ class TelegramContact(Contact):
                 prompt = "{}, now {}...".format(greeting, prompt)
             else:
                 prompt = prompt[0].upper() + prompt[1:] + "..."
-            kwargs['reply_markup'] = {
-                'force_reply': True
-            }
+            # Telegram seems to have a bug, which causes reply request to pop sometimes again.
+            # So we do not force reply to avoid it...
+            # kwargs['reply_markup'] = {
+            #     'force_reply': True
+            # }
         self.send(prompt, **kwargs)
 
     @defer.inlineCallbacks
