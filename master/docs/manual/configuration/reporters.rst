@@ -828,7 +828,7 @@ After setting up the bot in Telegram, you should configure it in Buildbot.
 
     from buildbot.plugins import reporters
     telegram = reporters.TelegramBot(
-            bot_token='bot_token_given_by_bothfather',
+            bot_token='bot_token_given_by_botfather',
             bot_username'username_set_in_botfather_bot',
             chat_ids=[-1234567],
             authz={('force', 'stop'): "authorizednick"}
@@ -896,18 +896,17 @@ The following parameters are accepted by this class:
     Whether or not to display the revision leading to the build the messages are about.
     (useRevisions functionality is not yet implemented)
 
+``useWebhook``
+    (optional, disabled by default)
+    By default this bot receives messages from Telegram through polling. You can configure it to use a  web-hook, which may be more efficient. However, this requires the web frontend of the Buildbot to be configured and accessible through HTTPS (not HTTP) on a public IP and port number 443, 80, 88, or 8443. Furthermore, the Buildbot configuration option :bb:cfg:`buildbotURL` must be correctly set. If you are using HTTP authentication, please ensure that the location *buildbotURL*\ ``/telegram``\ *bot_token* (e.g. ``https://buildbot.example.com/telegram123456:secret``) is accessible by everybody.
+
 ``certificate``
     (optional)
-    A content of the SSL certificate of a certificate file open in binary mode. This is necessary if the access to the Buildbot web interface is through HTTPS protocol with self-signed certificate and ``userPolling`` is not set to ``True``.
-
-
-``usePolling``
-    (optional, disabled by default)
-    By default this bot receives messages from Telegram through web-hooks. However, this requires the web frontend of the Buildbot to be configured and accessible through HTTPS (not HTTP) on a public IP and port number 443, 80, 88, or 8443. Furthermore, the Buildbot configuration option :bb:cfg:`buildbotURL` must be correctly set. If this is not possible, :bb:reporter:`TelegramBot` can use polling to receive messages from Telegram. Set ``usePolling`` to ``True`` to do so.
+    A content of the SSL certificate of a certificate file open in binary mode. This is necessary if the access to the Buildbot web interface is through HTTPS protocol with self-signed certificate and ``userWebhook`` is set to ``True``.
 
 ``pollTimeout``
     (optional)
-    The default time the bot should wait for Telegram to respond to polling using `long polling <https://en.wikipedia.org/wiki/Push_technology#Long_polling>`.
+    The time the bot should wait for Telegram to respond to polling using `long polling <https://en.wikipedia.org/wiki/Push_technology#Long_polling>`_.
 
 ``retryDelay``
     (optional)

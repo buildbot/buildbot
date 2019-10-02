@@ -914,7 +914,7 @@ class TelegramBot(service.BuildbotService):
     compare_attrs = ["bot_token", "chat_ids", "authz",
                      "tags", "notify_events",
                      "showBlameList", "useRevisions",
-                     "certificate", "usePolling",
+                     "certificate", "useWebhook",
                      "pollTimeout", "retryDelay"]
     secrets = ["bot_token"]
 
@@ -930,7 +930,7 @@ class TelegramBot(service.BuildbotService):
     def checkConfig(self, bot_token, chat_ids=None, authz=None,
                     bot_username=None, tags=None, notify_events=None,
                     showBlameList=True, useRevisions=False,
-                    certificate=None, usePolling=False,
+                    useWebhook=False, certificate=None,
                     pollTimeout=120, retryDelay=30):
         super().checkConfig(self.name)
 
@@ -946,7 +946,7 @@ class TelegramBot(service.BuildbotService):
     def reconfigService(self, bot_token, chat_ids=None, authz=None,
                         bot_username=None, tags=None, notify_events=None,
                         showBlameList=True, useRevisions=False,
-                        certificate=None, usePolling=False,
+                        useWebhook=False, certificate=None,
                         pollTimeout=120, retryDelay=30):
         # need to stash these so we can detect changes later
         self.bot_token = bot_token
@@ -959,8 +959,8 @@ class TelegramBot(service.BuildbotService):
         if notify_events is None:
             notify_events = set()
         self.notify_events = notify_events
+        self.useWebhook = useWebhook
         self.certificate = certificate
-        self.usePolling = usePolling
         self.pollTimeout = pollTimeout
         self.retryDelay = retryDelay
 
@@ -973,7 +973,7 @@ class TelegramBot(service.BuildbotService):
         if self.bot is not None:
             self.bot.stopService()
 
-        if usePolling:
+        if not useWebhook:
             self.bot = TelegramPollingBot(bot_token, http, chat_ids, authz,
                                           tags=tags, notify_events=notify_events,
                                           useRevisions=useRevisions,
