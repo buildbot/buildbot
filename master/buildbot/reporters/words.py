@@ -479,10 +479,10 @@ class Contact:
 
         @d.addErrback
         def logErr(f):
-            log.err(f)
+            self.bot.log_err(f)
             self.send("Something bad happened (see logs)")
 
-        d.addErrback(log.err)
+        d.addErrback(self.bot.log_err)
         return d
 
     def splitArgs(self, args):
@@ -1047,7 +1047,7 @@ class StatusBot(service.AsyncMultiService):
             objectid = yield self._get_object_id()
             yield self.master.db.state.setState(objectid, attr, data)
         except Exception as err:
-            log.err(err, "saveState '{}'".format(attr))
+            self.log_err(err, "saveState '{}'".format(attr))
 
     @defer.inlineCallbacks
     def _load_channels_state(self, attr, setter):
@@ -1055,14 +1055,14 @@ class StatusBot(service.AsyncMultiService):
             objectid = yield self._get_object_id()
             data = yield self.master.db.state.getState(objectid, attr, ())
         except Exception as err:
-            log.err(err, "loadState ({})".format(attr))
+            self.log_err(err, "loadState ({})".format(attr))
         else:
             if data is not None:
                 for c, d in data:
                     try:
                         setter(self.getChannel(c), d)
                     except Exception as err:
-                        log.err(err, "loadState '{}' ({})".format(attr, c))
+                        self.log_err(err, "loadState '{}' ({})".format(attr, c))
 
     @defer.inlineCallbacks
     def loadState(self):
@@ -1086,6 +1086,13 @@ class StatusBot(service.AsyncMultiService):
         except AttributeError:
             name = self.__class__.__name__
         log.callWithContext({"system": name}, log.msg, msg)
+
+    def log_err(self, error=None, why=None):
+        try:
+            name = "{},{}".format(self.parent.name, self.__class__.__name__)
+        except AttributeError:
+            name = self.__class__.__name__
+        log.callWithContext({"system": name}, log.err, error, why)
 
     def builderMatchesAnyTag(self, builder_tags):
         return any(tag for tag in builder_tags if tag in self.tags)
@@ -1289,8 +1296,12 @@ class WebhookBotMixin(resource.Resource):
             request.setResponseCode(202)
             request.finish()
 
-        def err(why):
-            log.err(why, "processing telegram request")
+        def err(error):
+            try:
+                name = "{},{}".format(self.parent.name, self.__class__.__name__)
+            except AttributeError:
+                name = self.__class__.__name__
+            log.callWithContext({"system": name}, log.err, error, "processing telegram request")
             request.setResponseCode(500)
             request.finish()
 
