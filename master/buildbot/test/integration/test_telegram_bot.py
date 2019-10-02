@@ -129,7 +129,8 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
         # create a telegram bot service
         tb = master.config.services['TelegramBot'] = telegram.TelegramBot(
-            bot_token='12345:secret', chat_ids=[-123456], notify_events=['worker']
+            bot_token='12345:secret', useWebhook=True,
+            chat_ids=[-123456], notify_events=['worker']
         )
         tb._get_http = self.get_http
         tb.setServiceParent(self.master)
