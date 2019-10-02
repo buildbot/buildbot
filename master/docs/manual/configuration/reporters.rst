@@ -902,7 +902,7 @@ The following parameters are accepted by this class:
 
 ``certificate``
     (optional)
-    A content of the SSL certificate of a certificate file open in binary mode. This is necessary if the access to the Buildbot web interface is through HTTPS protocol with self-signed certificate and ``userWebhook`` is set to ``True``.
+    A content of your server SSL certificate. This is necessary if the access to the Buildbot web interface is through HTTPS protocol with self-signed certificate and ``userWebhook`` is set to ``True``.
 
 ``pollTimeout``
     (optional)

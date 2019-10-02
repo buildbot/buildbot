@@ -1080,19 +1080,21 @@ class StatusBot(service.AsyncMultiService):
     def send_message(self, chat, message, **kwargs):
         raise NotImplementedError()
 
-    def log(self, msg):
+    def _get_log_system(self, source):
+        if source is None:
+            source = self.__class__.__name__
         try:
-            name = "{},{}".format(self.parent.name, self.__class__.__name__)
+            parent = self.parent.name
         except AttributeError:
-            name = self.__class__.__name__
-        log.callWithContext({"system": name}, log.msg, msg)
+            parent = '-'
+        name = "{},{}".format(parent, source)
+        return name
 
-    def log_err(self, error=None, why=None):
-        try:
-            name = "{},{}".format(self.parent.name, self.__class__.__name__)
-        except AttributeError:
-            name = self.__class__.__name__
-        log.callWithContext({"system": name}, log.err, error, why)
+    def log(self, msg, source=None):
+        log.callWithContext({"system": self._get_log_system(source)}, log.msg, msg)
+
+    def log_err(self, error=None, why=None, source=None):
+        log.callWithContext({"system": (self._get_log_system(source))}, log.err, error, why)
 
     def builderMatchesAnyTag(self, builder_tags):
         return any(tag for tag in builder_tags if tag in self.tags)
@@ -1256,9 +1258,11 @@ class ThrottledClientFactory(protocol.ClientFactory):
         reactor.callLater(self.failedDelay, connector.connect)
 
 
-class WebhookBotMixin(resource.Resource):
+class WebhookResource(resource.Resource, service.AsyncService):
     """
-    This is a mixin to be used by chat bots based on web-hooks
+    This is a service be used by chat bots based on web-hooks.
+    It automatically sets and deletes the resource and calls ``process_webhook``
+    method of its parent.
     """
 
     def __init__(self, path):
@@ -1288,7 +1292,7 @@ class WebhookBotMixin(resource.Resource):
 
     def render_POST(self, request):
         try:
-            d = self.process_webhook(request)
+            d = self.parent.process_webhook(request)
         except Exception:
             d = defer.fail()
 
@@ -1298,16 +1302,12 @@ class WebhookBotMixin(resource.Resource):
 
         def err(error):
             try:
-                name = "{},{}".format(self.parent.name, self.__class__.__name__)
+                self.parent.log_err(error, "processing telegram request", self.__class__.__name__)
             except AttributeError:
-                name = self.__class__.__name__
-            log.callWithContext({"system": name}, log.err, error, "processing telegram request")
+                log.err(error, "processing telegram request")
             request.setResponseCode(500)
             request.finish()
 
         d.addCallbacks(ok, err)
 
         return server.NOT_DONE_YET
-
-    def process_webhook(self, request):
-        raise NotImplementedError()

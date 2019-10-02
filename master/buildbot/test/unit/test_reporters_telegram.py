@@ -560,7 +560,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         if chat_ids is None:
             chat_ids = []
         http = self.setupFakeHttp()
-        return telegram.TelegramBotResource('12345:secret', http, chat_ids, authz, *args, **kwargs)
+        return telegram.TelegramWebhookBot('12345:secret', http, chat_ids, authz, *args, **kwargs)
 
     def test_getContact(self):
         bot = self.makeBot()
@@ -747,7 +747,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot = self.makeBot()
         bot.contactClass = FakeContact
         request = self.request_message("test")
-        bot.render_POST(request)
+        bot.webhook.render_POST(request)
         contact = bot.getContact(self.USER, self.CHANNEL)
         self.assertEquals(contact.messages, ["test"])
 

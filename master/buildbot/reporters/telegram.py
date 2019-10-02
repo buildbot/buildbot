@@ -32,7 +32,7 @@ from buildbot.reporters.words import Channel
 from buildbot.reporters.words import Contact
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import UsageError
-from buildbot.reporters.words import WebhookBotMixin
+from buildbot.reporters.words import WebhookResource
 from buildbot.schedulers.forcesched import CollectedValidationError
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.util import asyncSleep
@@ -569,10 +569,6 @@ class TelegramContact(Contact):
 
 
 class TelegramStatusBot(StatusBot):
-    """
-    I represent the buildbot to
-    a some web-hooks based chat.
-    """
 
     contactClass = TelegramContact
     channelClass = TelegramChannel
@@ -820,19 +816,21 @@ class TelegramStatusBot(StatusBot):
         return (yield self.post('/sendSticker', json=params))
 
 
-class TelegramBotResource(WebhookBotMixin, TelegramStatusBot):
+class TelegramWebhookBot(TelegramStatusBot):
+    name = "TelegramWebhookBot"
 
     def __init__(self, token, *args, certificate=None, **kwargs):
         TelegramStatusBot.__init__(self, token, *args, **kwargs)
-        WebhookBotMixin.__init__(self, 'telegram' + token)
         self._certificate = certificate
+        self.webhook = WebhookResource('telegram' + token)
+        self.webhook.setServiceParent(self)
 
     def startService(self):
         super().startService()
         url = bytes2unicode(self.master.config.buildbotURL)
         if not url.endswith('/'):
             url += '/'
-        self.set_webhook(url + self.path, self._certificate)
+        self.set_webhook(url + self.webhook.path, self._certificate)
 
     def process_webhook(self, request):
         update = self.get_update(request)
@@ -981,12 +979,12 @@ class TelegramBot(service.BuildbotService):
                                           poll_timeout=self.pollTimeout,
                                           retry_delay=self.retryDelay)
         else:
-            self.bot = TelegramBotResource(bot_token, http, chat_ids, authz,
-                                           tags=tags, notify_events=notify_events,
-                                           useRevisions=useRevisions,
-                                           showBlameList=showBlameList,
-                                           retry_delay=self.retryDelay,
-                                           certificate=self.certificate)
+            self.bot = TelegramWebhookBot(bot_token, http, chat_ids, authz,
+                                          tags=tags, notify_events=notify_events,
+                                          useRevisions=useRevisions,
+                                          showBlameList=showBlameList,
+                                          retry_delay=self.retryDelay,
+                                          certificate=self.certificate)
         if bot_username is not None:
             self.bot.nickname = bot_username
         else:
