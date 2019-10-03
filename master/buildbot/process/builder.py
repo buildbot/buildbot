@@ -222,7 +222,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 #
                 # Therefore, when we see that we're already attached, we can
                 # just ignore it.
-                return defer.succeed(self)
+                return self
 
         wfb = workerforbuilder.WorkerForBuilder()
         wfb.setBuilder(self)
