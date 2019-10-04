@@ -3,7 +3,7 @@ Submitting Pull Requests
 
 As Buildbot is used by software developers, it tends to receive a significant number of patches.
 The most effective way to make sure your patch gets noticed and merged is to submit it via GitHub.
-This assumes some familiarity with git, but not too much. Note that GitHub has some great `​Git guides <http://github.com/guides>`_ to get you started.
+This assumes some familiarity with git, but not too much. Note that GitHub has some great `Git guides <http://github.com/guides>`_ to get you started.
 
 Guidelines
 ----------
@@ -59,11 +59,11 @@ How to create a pull request
 
 .. note::
 
-   See ​`this github guide <https://help.github.com/en/articles/fork-a-repo>`_ which offers a more generic description of this process.
+   See `this github guide <https://help.github.com/en/articles/fork-a-repo>`_ which offers a more generic description of this process.
 
-* Sign up for a free account at ​http://github.com, if you don't already have one.
+* Sign up for a free account at http://github.com, if you don't already have one.
 
-* Go to ​http://github.com/buildbot/buildbot and click “fork”.
+* Go to http://github.com/buildbot/buildbot and click “fork”.
   This will create your own public copy of the latest Buildbot source.
 
 * Clone your forked repository on your local machine, so you can do your changes.
