@@ -853,7 +853,7 @@ The following parameters are accepted by this class:
 
 ``chat_ids``
     (optional)
-    List of numeric chats IDs to send notifications specified in the ``notify_events`` parameter. To get the numeric chat ids talk to your bot or add it to a Telegram group and issue ``/getid`` command.
+    List of chats IDs to send notifications specified in the ``notify_events`` parameter. For channels it should have form ``@channelusername`` and for private chats and groups it should be a numeric ID. To get it, talk to your bot or add it to a Telegram group and issue ``/getid`` command.
 
 .. note::
 
