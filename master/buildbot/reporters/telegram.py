@@ -969,7 +969,7 @@ class TelegramBot(service.BuildbotService):
         http = yield self._get_http(bot_token)
 
         if self.bot is not None:
-            self.bot.stopService()
+            self.removeService(self.bot)
 
         if not useWebhook:
             self.bot = TelegramPollingBot(bot_token, http, chat_ids, authz,
