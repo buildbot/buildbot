@@ -324,8 +324,11 @@ class Git(Source, GitStepMixin):
             # progress information to the log. This can solve issues with
             # long fetches killed due to lack of output, but only works
             # with Git 1.7.2 or later.
-            if self.supportsProgress and self.prog:
-                command.append('--progress')
+            if self.prog:
+                if self.supportsProgress:
+                    command.append('--progress')
+                else:
+                    print("Git versions < 1.7.2 don't support progress")
 
             yield self._dovccmd(command)
 
@@ -382,8 +385,11 @@ class Git(Source, GitStepMixin):
             command += ['--origin', self.origin]
         command += [self.repourl, '.']
 
-        if self.supportsProgress and self.prog:
-            command.append('--progress')
+        if self.prog:
+            if self.supportsProgress:
+                command.append('--progress')
+            else:
+                print("Git versions < 1.7.2 don't support progress")
         if self.retry:
             abandonOnFailure = (self.retry[1] <= 0)
         else:
