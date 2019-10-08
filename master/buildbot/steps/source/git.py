@@ -72,21 +72,15 @@ class Git(Source, GitStepMixin):
                    "codebase", "mode", "method", "origin"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
-                 reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
+                 reference=None, submodules=False, shallow=False, progress=True, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
-                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, supportsProgress=None, **kwargs):
+                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, **kwargs):
 
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
 
-        self.supportsProgress = supportsProgress
-
-        if supportsProgress:
-            progress = True
-
         self.branch = branch
         self.method = method
-        self.prog = progress
         self.repourl = repourl
         self.reference = reference
         self.retryFetch = retryFetch
@@ -94,6 +88,7 @@ class Git(Source, GitStepMixin):
         self.shallow = shallow
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
+        self.prog = progress
         self.getDescription = getDescription
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
@@ -329,7 +324,7 @@ class Git(Source, GitStepMixin):
             # progress information to the log. This can solve issues with
             # long fetches killed due to lack of output, but only works
             # with Git 1.7.2 or later.
-            if self.prog:
+            if self.supportsProgress and self.prog:
                 command.append('--progress')
 
             yield self._dovccmd(command)
@@ -387,7 +382,7 @@ class Git(Source, GitStepMixin):
             command += ['--origin', self.origin]
         command += [self.repourl, '.']
 
-        if self.prog:
+        if self.supportsProgress and self.prog:
             command.append('--progress')
         if self.retry:
             abandonOnFailure = (self.retry[1] <= 0)
