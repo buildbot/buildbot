@@ -50,7 +50,7 @@ class TestGitHub(test_steps_source_git.TestGit):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'refs/pull/1234/merge'])
+                                 'refs/pull/1234/merge', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
