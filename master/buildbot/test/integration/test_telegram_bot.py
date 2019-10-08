@@ -151,7 +151,6 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def testWebhook(self):
-
         payload = unicode2bytes(json.dumps({
             "update_id": 12345,
             "message": {
@@ -177,6 +176,14 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
                          "did not get 202 response for '{}'".format(bytes2unicode(self.bot_url)))
         self.assertIn('123456789', self.sent_messages[0][1])
         self.assertIn('-12345678', self.sent_messages[1][1])
+
+    @defer.inlineCallbacks
+    def testReconfig(self):
+        tb = self.master.config.services['TelegramBot']
+        yield tb.reconfigService(
+            bot_token='12345:secret', useWebhook=True,
+            chat_ids=[-123456], notify_events=['problem']
+        )
 
     @defer.inlineCallbacks
     def testLoadState(self):
