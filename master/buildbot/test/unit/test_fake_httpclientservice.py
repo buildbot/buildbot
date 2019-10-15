@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -39,7 +36,7 @@ class myTestedService(service.BuildbotService):
             raise Exception("%d: server did not succeed" % (res.code))
         res_json = yield res.json()
         # res.json() returns a deferred to represent the time needed to fetch the entire body
-        defer.returnValue(res_json)
+        return res_json
 
 
 class Test(unittest.SynchronousTestCase):

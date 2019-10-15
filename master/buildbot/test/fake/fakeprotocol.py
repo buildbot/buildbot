@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -24,7 +22,7 @@ from buildbot.worker.protocols import base
 class FakeConnection(base.Connection):
 
     def __init__(self, master, worker):
-        base.Connection.__init__(self, master, worker)
+        super().__init__(master, worker)
         self._connected = True
         self.remoteCalls = []
         self.builders = {}  # { name : isBusy }

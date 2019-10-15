@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -22,12 +20,14 @@ from twisted.trial import unittest
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.fake import fakedb
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www.authz import endpointmatchers
 
 
-class EndpointBase(www.WwwTestMixin, unittest.TestCase):
+class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/a/b/')
         self.db = self.master.db
         self.matcher = self.makeMatcher()
@@ -45,7 +45,7 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
 
     def insertData(self):
         self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch=u'secret'),
+            fakedb.SourceStamp(id=13, branch='secret'),
             fakedb.Build(
                 id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
             fakedb.BuildRequest(id=16, buildsetid=17),
@@ -55,7 +55,7 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
         ])
 
 
-class ValidEndpointMixin(object):
+class ValidEndpointMixin:
 
     @defer.inlineCallbacks
     def test_invalidPath(self):
@@ -136,7 +136,7 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
         return endpointmatchers.ForceBuildEndpointMatcher(builder="builder", role="owner")
 
     def insertData(self):
-        EndpointBase.insertData(self)
+        super().insertData()
         self.master.allSchedulers = lambda: [
             ForceScheduler(name="sched1", builderNames=["builder"])]
 

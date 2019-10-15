@@ -13,20 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.wamp import connector
 
 
-class FakeConfig(object):
+class FakeConfig:
     mq = dict(type='wamp', router_url="wss://foo", realm="bb")
 
 
@@ -37,7 +35,7 @@ class FakeService(service.AsyncMultiService):
 
     def __init__(self, url, realm, make, extra=None,
                  debug=False, debug_wamp=False, debug_app=False):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.make = make
         self.extra = extra
 
@@ -54,11 +52,12 @@ class TestedWampConnector(connector.WampConnector):
     serviceClass = FakeService
 
 
-class WampConnector(unittest.TestCase):
+class WampConnector(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        master = fakemaster.make_master()
+        self.setUpTestReactor()
+        master = fakemaster.make_master(self)
         self.connector = TestedWampConnector()
         yield self.connector.setServiceParent(master)
         yield master.startService()

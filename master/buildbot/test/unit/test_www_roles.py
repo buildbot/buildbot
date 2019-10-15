@@ -12,9 +12,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -111,5 +108,5 @@ class RolesFromUsername(unittest.TestCase, ConfigErrorsMixin):
         self.assertEqual(ret, ["developers", "integrators"])
 
     def test_badUsernames(self):
-        self.assertRaisesConfigError('Usernames cannot be None',
-            lambda: roles.RolesFromUsername(roles=[], usernames=[None]))
+        with self.assertRaisesConfigError('Usernames cannot be None'):
+            roles.RolesFromUsername(roles=[], usernames=[None])

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -23,10 +21,11 @@ from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import pathmatch
 
 
-class EndpointMixin(interfaces.InterfaceTests):
+class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
 
     # class being tested
@@ -37,8 +36,9 @@ class EndpointMixin(interfaces.InterfaceTests):
     resourceTypeClass = None
 
     def setUpEndpoint(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                             wantData=True, testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
+                                             wantData=True)
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data
@@ -63,7 +63,7 @@ class EndpointMixin(interfaces.InterfaceTests):
             self.matcher[pp] = self.ep
 
         self.pathArgs = [
-            set([arg.split(':', 1)[1] for arg in pp if ':' in arg])
+            {arg.split(':', 1)[1] for arg in pp if ':' in arg}
             for pp in pathPatterns if pp is not None]
 
     def tearDownEndpoint(self):
@@ -74,23 +74,20 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     # call methods, with extra checks
 
+    @defer.inlineCallbacks
     def callGet(self, path, resultSpec=None):
         self.assertIsInstance(path, tuple)
         if resultSpec is None:
             resultSpec = resultspec.ResultSpec()
         endpoint, kwargs = self.matcher[path]
         self.assertIdentical(endpoint, self.ep)
-        d = endpoint.get(resultSpec, kwargs)
-        self.assertIsInstance(d, defer.Deferred)
+        rv = yield endpoint.get(resultSpec, kwargs)
 
-        @d.addCallback
-        def checkNumber(rv):
-            if self.ep.isCollection:
-                self.assertIsInstance(rv, (list, base.ListResult))
-            else:
-                self.assertIsInstance(rv, (dict, type(None)))
-            return rv
-        return d
+        if self.ep.isCollection:
+            self.assertIsInstance(rv, (list, base.ListResult))
+        else:
+            self.assertIsInstance(rv, (dict, type(None)))
+        return rv
 
     def callControl(self, action, args, path):
         self.assertIsInstance(path, tuple)

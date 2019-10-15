@@ -13,13 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 version = "1.10.6"
 
 
-class Client(object):
+class Client:
     latest = None
 
     def __init__(self, base_url):

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import sqlalchemy as sa
 from sqlalchemy.engine.reflection import Inspector
 
@@ -201,8 +198,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             ).order_by(c.id)
             self.assertEqual(
                 q.execute().fetchall(), [
-                    (30, u'worker-1', u'{}'),
-                    (31, u'worker-2', u'{"a": 1}'),
+                    (30, 'worker-1', '{}'),
+                    (31, 'worker-2', '{"a": 1}'),
                 ])
 
             # 'builds' table contents.
@@ -217,8 +214,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # have no reference to it.
             self.assertEqual(
                 q.execute().fetchall(), [
-                    (10, 2, None, 3, None, 1, 0, None, u'state', None),
-                    (11, 1, None, 4, 31, 2, 1000, None, u'state2', None),
+                    (10, 2, None, 3, None, 1, 0, None, 'state', None),
+                    (11, 1, None, 4, 31, 2, 1000, None, 'state2', None),
                 ])
 
         yield self.do_test_migration(44, 45, setup_thd, verify_thd)
@@ -308,8 +305,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             ).order_by(c.id)
             self.assertEqual(
                 q.execute().fetchall(), [
-                    (30, u'worker-1', u'{}'),
-                    (31, u'worker-2', u'{"a": 1}'),
+                    (30, 'worker-1', '{}'),
+                    (31, 'worker-2', '{"a": 1}'),
                 ])
 
             # 'builds' table contents.
@@ -322,8 +319,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             ).order_by(c.id)
             self.assertEqual(
                 q.execute().fetchall(), [
-                    (40, 1, None, 20, 30, 10, 1000, None, u'state', None),
-                    (41, 2, 50, 21, None, 11, 2000, 3000, u'state 2', 9),
+                    (40, 1, None, 20, 30, 10, 1000, None, 'state', None),
+                    (41, 2, 50, 21, None, 11, 2000, 3000, 'state 2', 9),
                 ])
 
             # 'configured_workers' table contents.
@@ -359,35 +356,35 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 if not name:
                     return
                 self.assertTrue(
-                    u"slave" not in name.lower(),
-                    msg=u"'slave'-named {type} in table '{table}': "
-                        u"'{name}'".format(
+                    "slave" not in name.lower(),
+                    msg="'slave'-named {type} in table '{table}': "
+                        "'{name}'".format(
                         type=item_type, table=table_name,
                         name=name))
 
             # Check every table.
             for table_name in inspector.get_table_names():
                 # Check table name.
-                check_name(table_name, table_name, u"table name")
+                check_name(table_name, table_name, "table name")
 
                 # Check column names.
                 for column_info in inspector.get_columns(table_name):
-                    check_name(column_info['name'], table_name, u"column")
+                    check_name(column_info['name'], table_name, "column")
 
                 # Check foreign key names.
                 for fk_info in inspector.get_foreign_keys(table_name):
-                    check_name(fk_info['name'], table_name, u"foreign key")
+                    check_name(fk_info['name'], table_name, "foreign key")
 
                 # Check indexes names.
                 for index_info in inspector.get_indexes(table_name):
-                    check_name(index_info['name'], table_name, u"index")
+                    check_name(index_info['name'], table_name, "index")
 
                 # Check primary keys constraints names.
                 pk_info = inspector.get_pk_constraint(table_name)
-                check_name(pk_info.get('name'), table_name, u"primary key")
+                check_name(pk_info.get('name'), table_name, "primary key")
 
             # Test that no "slave"-named items present in schema
             for name in inspector.get_schema_names():
-                self.assertTrue(u"slave" not in name.lower())
+                self.assertTrue("slave" not in name.lower())
 
         return self.do_test_migration(44, 45, setup_thd, verify_thd)

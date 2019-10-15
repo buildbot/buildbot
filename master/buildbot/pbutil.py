@@ -17,10 +17,6 @@
 """Base classes handy for use with PB clients.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import protocol
 from twisted.python import log
 from twisted.spread import pb
@@ -69,12 +65,12 @@ class ReconnectingPBClientFactory(PBClientFactory,
     """
 
     def __init__(self):
-        PBClientFactory.__init__(self)
+        super().__init__()
         self._doingLogin = False
         self._doingGetPerspective = False
 
     def clientConnectionFailed(self, connector, reason):
-        PBClientFactory.clientConnectionFailed(self, connector, reason)
+        super().clientConnectionFailed(connector, reason)
         # Twisted-1.3 erroneously abandons the connection on non-UserErrors.
         # To avoid this bug, don't upcall, and implement the correct version
         # of the method here.
@@ -83,14 +79,13 @@ class ReconnectingPBClientFactory(PBClientFactory,
             self.retry()
 
     def clientConnectionLost(self, connector, reason):
-        PBClientFactory.clientConnectionLost(self, connector, reason,
-                                             reconnecting=True)
+        super().clientConnectionLost(connector, reason, reconnecting=True)
         RCF = protocol.ReconnectingClientFactory
         RCF.clientConnectionLost(self, connector, reason)
 
     def clientConnectionMade(self, broker):
         self.resetDelay()
-        PBClientFactory.clientConnectionMade(self, broker)
+        super().clientConnectionMade(broker)
         if self._doingLogin:
             self.doLogin(self._root)
         if self._doingGetPerspective:
@@ -138,13 +133,11 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def gotPerspective(self, perspective):
         """The remote avatar or perspective (obtained each time this factory
         connects) is now available."""
-        pass
 
     def gotRootObject(self, root):
         """The remote root object (obtained each time this factory connects)
         is now available. This method will be called each time the connection
         is established and the object reference is retrieved."""
-        pass
 
     def failedToGetPerspective(self, why):
         """The login process failed, most likely because of an authorization
@@ -172,6 +165,6 @@ def decode(data, encoding='utf-8', errors='strict'):
         return bytes2unicode(data, encoding, errors)
     if data_type in (dict, list, tuple):
         if data_type == dict:
-            data = iteritems(data)
+            data = data.items()
         return data_type(map(decode, data))
     return data

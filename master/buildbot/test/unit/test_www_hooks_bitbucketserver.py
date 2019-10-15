@@ -14,24 +14,21 @@
 # Copyright Buildbot Team Members
 # Copyright Mamba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 from io import BytesIO
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
+from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucketserver import _HEADER_EVENT
 
 _CT_JSON = b'application/json'
 
-pushJsonPayload = u"""
+pushJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -86,7 +83,7 @@ pushJsonPayload = u"""
 }
 """
 
-pullRequestCreatedJsonPayload = u"""
+pullRequestCreatedJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -191,7 +188,7 @@ pullRequestCreatedJsonPayload = u"""
 }
 """
 
-pullRequestUpdatedJsonPayload = u"""
+pullRequestUpdatedJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -296,7 +293,7 @@ pullRequestUpdatedJsonPayload = u"""
 }
 """
 
-pullRequestRejectedJsonPayload = u"""
+pullRequestRejectedJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -401,7 +398,7 @@ pullRequestRejectedJsonPayload = u"""
 }
 """
 
-pullRequestFulfilledJsonPayload = u"""
+pullRequestFulfilledJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -506,7 +503,7 @@ pullRequestFulfilledJsonPayload = u"""
 }
 """
 
-deleteTagJsonPayload = u"""
+deleteTagJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -554,7 +551,7 @@ deleteTagJsonPayload = u"""
 }
 """
 
-deleteBranchJsonPayload = u"""
+deleteBranchJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -602,7 +599,7 @@ deleteBranchJsonPayload = u"""
 }
 """
 
-newTagJsonPayload = u"""
+newTagJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -656,7 +653,7 @@ def _prepare_request(payload, headers=None, change_dict=None):
     request = FakeRequest(change_dict)
     request.uri = b"/change_hook/bitbucketserver"
     request.method = b"POST"
-    if isinstance(payload, text_type):
+    if isinstance(payload, str):
         payload = unicode2bytes(payload)
     request.content = BytesIO(payload)
     request.received_headers[b'Content-Type'] = _CT_JSON
@@ -664,11 +661,13 @@ def _prepare_request(payload, headers=None, change_dict=None):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
+                                            TestReactorMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucketserver': {}}, master=fakeMasterForHooks())
+            dialects={'bitbucketserver': {}}, master=fakeMasterForHooks(self))
 
     def _checkPush(self, change):
         self.assertEqual(
@@ -687,6 +686,20 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             '793d4754230023d85532f9a38dba3290f959beb4')
 
     @defer.inlineCallbacks
+    def testHookWithChangeOnRefsChangedEvent(self):
+
+        request = _prepare_request(
+            pushJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
+
+        yield request.test_render(self.change_hook)
+
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
+        self._checkPush(change)
+        self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
+        self.assertEqual(change['category'], 'push')
+
+    @defer.inlineCallbacks
     def testHookWithChangeOnPushEvent(self):
 
         request = _prepare_request(
@@ -694,8 +707,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'push')
@@ -732,8 +745,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/pull-requests/21/merge')
         self.assertEqual(change['category'], 'pull-created')
@@ -746,8 +759,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/pull-requests/21/merge')
         self.assertEqual(change['category'], 'pull-updated')
@@ -760,8 +773,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'pull-rejected')
@@ -774,8 +787,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/heads/master')
         self.assertEqual(change['category'], 'pull-fulfilled')
@@ -783,20 +796,20 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def _checkCodebase(self, event_type, expected_codebase):
         payloads = {
-            'repo:push': pushJsonPayload,
+            'repo:refs_changed': pushJsonPayload,
             'pullrequest:updated': pullRequestUpdatedJsonPayload}
         request = _prepare_request(
             payloads[event_type], headers={_HEADER_EVENT: event_type})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self.assertEqual(change['codebase'], expected_codebase)
 
     @defer.inlineCallbacks
     def testHookWithCodebaseValueOnPushEvent(self):
         self.change_hook.dialects = {
             'bitbucketserver': {'codebase': 'super-codebase'}}
-        yield self._checkCodebase('repo:push', 'super-codebase')
+        yield self._checkCodebase('repo:refs_changed', 'super-codebase')
 
     @defer.inlineCallbacks
     def testHookWithCodebaseFunctionOnPushEvent(self):
@@ -804,7 +817,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             'bitbucketserver': {
                 'codebase':
                     lambda payload: payload['repository']['project']['key']}}
-        yield self._checkCodebase('repo:push', 'CI')
+        yield self._checkCodebase('repo:refs_changed', 'CI')
 
     @defer.inlineCallbacks
     def testHookWithCodebaseValueOnPullEvent(self):
@@ -825,16 +838,16 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
             pushJsonPayload, headers={_HEADER_EVENT: 'invented:event'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b"Unknown event: invented_event")
 
     @defer.inlineCallbacks
     def testHookWithChangeOnCreateTag(self):
         request = _prepare_request(
-            newTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
+            newTagJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/tags/1.0.0')
         self.assertEqual(change['category'], 'push')
@@ -842,10 +855,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteTag(self):
         request = _prepare_request(
-            deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
+            deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:refs_changed'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/tags/1.0.0')
         self.assertEqual(change['category'], 'ref-deleted')
@@ -853,10 +866,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteBranch(self):
         request = _prepare_request(
-            deleteBranchJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
+            deleteBranchJsonPayload,
+            headers={_HEADER_EVENT: 'repo:refs_changed'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496758965')
         self.assertEqual(change['category'], 'ref-deleted')
@@ -864,9 +878,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithInvalidContentType(self):
         request = _prepare_request(
-            pushJsonPayload, headers={_HEADER_EVENT: b'repo:push'})
+            pushJsonPayload, headers={_HEADER_EVENT: b'repo:refs_changed'})
         request.received_headers[b'Content-Type'] = b'invalid/content'
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written,
                          b"Unknown content type: invalid/content")

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,8 +23,10 @@ from buildbot.test.util import endpoint
 
 expected_default = {
     'all_fields': [{'columns': 1,
+                    'autopopulate': None,
                     'default': '',
                     'fields': [{'default': '',
+                                'autopopulate': None,
                                 'fullName': 'username',
                                 'hide': False,
                                 'label': 'Your name:',
@@ -40,6 +40,7 @@ expected_default = {
                                 'tablabel': 'Your name:',
                                 'type': 'username'},
                                {'default': 'force build',
+                                'autopopulate': None,
                                 'fullName': 'reason',
                                 'hide': False,
                                 'label': 'reason',
@@ -65,6 +66,7 @@ expected_default = {
                    {'columns': 2,
                     'default': '',
                     'fields': [{'default': '',
+                                'autopopulate': None,
                                 'fullName': 'branch',
                                 'hide': False,
                                 'label': 'Branch:',
@@ -77,6 +79,7 @@ expected_default = {
                                 'tablabel': 'Branch:',
                                 'type': 'text'},
                                {'default': '',
+                                'autopopulate': None,
                                 'fullName': 'project',
                                 'hide': False,
                                 'label': 'Project:',
@@ -89,6 +92,7 @@ expected_default = {
                                 'tablabel': 'Project:',
                                 'type': 'text'},
                                {'default': '',
+                                'autopopulate': None,
                                 'fullName': 'repository',
                                 'hide': False,
                                 'label': 'Repository:',
@@ -101,6 +105,7 @@ expected_default = {
                                 'tablabel': 'Repository:',
                                 'type': 'text'},
                                {'default': '',
+                                'autopopulate': None,
                                 'fullName': 'revision',
                                 'hide': False,
                                 'label': 'Revision:',
@@ -112,6 +117,7 @@ expected_default = {
                                 'size': 10,
                                 'tablabel': 'Revision:',
                                 'type': 'text'}],
+                    'autopopulate': None,
                     'fullName': None,
                     'hide': False,
                     'label': '',
@@ -123,10 +129,10 @@ expected_default = {
                     'required': False,
                     'tablabel': '',
                     'type': 'nested'}],
-    'builder_names': [u'builder'],
-    'button_name': u'defaultforce',
-    'label': u'defaultforce',
-    'name': u'defaultforce',
+    'builder_names': ['builder'],
+    'button_name': 'defaultforce',
+    'label': 'defaultforce',
+    'name': 'defaultforce',
     'enabled': True}
 
 

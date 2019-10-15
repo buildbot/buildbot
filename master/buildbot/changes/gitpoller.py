@@ -13,13 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import quote as urlquote
-from future.utils import itervalues
-
 import os
 import re
+import stat
+from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -28,6 +25,10 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
+from buildbot.util import private_tempdir
+from buildbot.util.git import GitMixin
+from buildbot.util.git import getSshKnownHostsContents
+from buildbot.util.misc import writeLocalFile
 from buildbot.util.state import StateMixin
 
 
@@ -36,7 +37,7 @@ class GitError(Exception):
     """Raised when git exits with code 128."""
 
 
-class GitPoller(base.PollingChangeSource, StateMixin):
+class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
@@ -44,7 +45,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project", "pollAtLaunch",
-                     "buildPushesWithNoCommits")
+                     "buildPushesWithNoCommits", "sshPrivateKey", "sshHostKey",
+                     "sshKnownHosts")
+
+    secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
@@ -52,7 +56,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8', name=None, pollAtLaunch=False,
-                 buildPushesWithNoCommits=False, only_tags=False):
+                 buildPushesWithNoCommits=False, only_tags=False,
+                 sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -61,9 +66,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if name is None:
             name = repourl
 
-        base.PollingChangeSource.__init__(self, name=name,
-                                          pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch)
+        super().__init__(name=name,
+                         pollInterval=pollInterval,
+                         pollAtLaunch=pollAtLaunch,
+                         sshPrivateKey=sshPrivateKey,
+                         sshHostKey=sshHostKey,
+                         sshKnownHosts=sshKnownHosts)
 
         if project is None:
             project = ''
@@ -92,6 +100,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
+        self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
+        self.sshKnownHosts = sshKnownHosts
+        self.setupGit(logname='GitPoller')
 
         if fetch_refspec is not None:
             config.error("GitPoller: fetch_refspec is no longer supported. "
@@ -100,21 +112,31 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
 
+    @defer.inlineCallbacks
+    def _checkGitFeatures(self):
+        stdout = yield self._dovccmd('--version', [])
+
+        self.parseGitFeatures(stdout)
+        if not self.gitInstalled:
+            raise EnvironmentError('Git is not installed')
+
+        if (self.sshPrivateKey is not None and
+                not self.supportsSshPrivateKeyAsEnvOption):
+            raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
+
+    @defer.inlineCallbacks
     def activate(self):
         # make our workdir absolute, relative to the master's basedir
         if not os.path.isabs(self.workdir):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg("gitpoller: using workdir '{}'".format(self.workdir))
 
-        d = self.getState('lastRev', {})
+        try:
+            self.lastRev = yield self.getState('lastRev', {})
 
-        @d.addCallback
-        def setLastRev(lastRev):
-            self.lastRev = lastRev
-        d.addCallback(lambda _: base.PollingChangeSource.activate(self))
-        d.addErrback(log.err, 'while initializing GitPoller repository')
-
-        return d
+            super().activate()
+        except Exception as e:
+            log.err(e, 'while initializing GitPoller repository')
 
     def describe(self):
         str = ('GitPoller watching the remote git repository ' +
@@ -157,27 +179,33 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return branch
 
     def _trackerBranch(self, branch):
-        return u"refs/buildbot/{}/{}".format(urlquote(self.repourl, ''),
-                                        self._removeHeads(branch))
+        # manually quote tilde for Python 3.7
+        url = urlquote(self.repourl, '').replace('~', '%7E')
+        return "refs/buildbot/{}/{}".format(url, self._removeHeads(branch))
 
     @defer.inlineCallbacks
     def poll(self):
+        yield self._checkGitFeatures()
+
         try:
             yield self._dovccmd('init', ['--bare', self.workdir])
         except GitError as e:
             log.msg(e.args[0])
             return
 
-        branches = self.branches
+        branches = self.branches if self.branches else []
+        remote_refs = yield self._getBranches()
         if branches is True or callable(branches):
-            branches = yield self._getBranches()
             if callable(self.branches):
-                branches = [b for b in branches if self.branches(b)]
+                branches = [b for b in remote_refs if self.branches(b)]
             else:
-                branches = [b for b in branches if self._headsFilter(b)]
+                branches = [b for b in remote_refs if self._headsFilter(b)]
+        elif branches and remote_refs:
+            remote_branches = [self._removeHeads(b) for b in remote_refs]
+            branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
-            u'+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
+            '+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
             for branch in branches
         ]
 
@@ -258,6 +286,14 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
 
     @defer.inlineCallbacks
+    def _get_commit_committer(self, rev):
+        args = ['--no-walk', r'--format=%cN <%cE>', rev, '--']
+        res = yield self._dovccmd('log', args, path=self.workdir)
+        if not res:
+            raise EnvironmentError('could not get commit committer for rev')
+        return res
+
+    @defer.inlineCallbacks
     def _process_changes(self, newRev, branch):
         """
         Read changes since last change.
@@ -270,26 +306,11 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         # initial run, don't parse all history
         if not self.lastRev:
             return
-        rebuild = False
-        if newRev in itervalues(self.lastRev):
-            if self.buildPushesWithNoCommits:
-                existingRev = self.lastRev.get(branch)
-                if existingRev is None:
-                    # This branch was completely unknown, rebuild
-                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
-                            newRev, branch))
-                    rebuild = True
-                elif existingRev != newRev:
-                    # This branch is known, but it now points to a different
-                    # commit than last time we saw it, rebuild.
-                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
-                            newRev, branch))
-                    rebuild = True
 
         # get the change list
         revListArgs = (['--format=%H', '{}'.format(newRev)] +
                        ['^' + rev
-                        for rev in sorted(itervalues(self.lastRev))] +
+                        for rev in sorted(self.lastRev.values())] +
                        ['--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
@@ -298,8 +319,19 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList = results.split()
         revList.reverse()
 
-        if rebuild and not revList:
-            revList = [newRev]
+        if self.buildPushesWithNoCommits and not revList:
+            existingRev = self.lastRev.get(branch)
+            if existingRev != newRev:
+                revList = [newRev]
+                if existingRev is None:
+                    # This branch was completely unknown, rebuild
+                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
+                        newRev, branch))
+                else:
+                    # This branch is known, but it now points to a different
+                    # commit than last time we saw it, rebuild.
+                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
+                        newRev, branch))
 
         self.changeCount = len(revList)
         self.lastRev[branch] = newRev
@@ -312,6 +344,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             dl = defer.DeferredList([
                 self._get_commit_timestamp(rev),
                 self._get_commit_author(rev),
+                self._get_commit_committer(rev),
                 self._get_commit_files(rev),
                 self._get_commit_comments(rev),
             ], consumeErrors=True)
@@ -327,38 +360,85 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
 
-            timestamp, author, files, comments = [r[1] for r in results]
+            timestamp, author, committer, files, comments = [r[1] for r in results]
 
             yield self.master.data.updates.addChange(
                 author=author,
+                committer=committer,
                 revision=bytes2unicode(rev, encoding=self.encoding),
                 files=files, comments=comments, when_timestamp=timestamp,
                 branch=bytes2unicode(self._removeHeads(branch)),
                 project=self.project,
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
-                category=self.category, src=u'git')
+                category=self.category, src='git')
 
+    def _isSshPrivateKeyNeededForCommand(self, command):
+        commandsThatNeedKey = [
+            'fetch',
+            'ls-remote',
+        ]
+        if self.sshPrivateKey is not None and command in commandsThatNeedKey:
+            return True
+        return False
+
+    def _downloadSshPrivateKey(self, keyPath):
+        # We change the permissions of the key file to be user-readable only so
+        # that ssh does not complain. This is not used for security because the
+        # parent directory will have proper permissions.
+        writeLocalFile(keyPath, self.sshPrivateKey, mode=stat.S_IRUSR)
+
+    def _downloadSshKnownHosts(self, path):
+        if self.sshKnownHosts is not None:
+            contents = self.sshKnownHosts
+        else:
+            contents = getSshKnownHostsContents(self.sshHostKey)
+        writeLocalFile(path, contents)
+
+    def _getSshPrivateKeyPath(self, ssh_data_path):
+        return os.path.join(ssh_data_path, 'ssh-key')
+
+    def _getSshKnownHostsPath(self, ssh_data_path):
+        return os.path.join(ssh_data_path, 'ssh-known-hosts')
+
+    @defer.inlineCallbacks
     def _dovccmd(self, command, args, path=None):
-        d = utils.getProcessOutputAndValue(self.gitbin,
-            [command] + args, path=path, env=os.environ)
+        if self._isSshPrivateKeyNeededForCommand(command):
+            with private_tempdir.PrivateTemporaryDirectory(
+                    dir=self.workdir, prefix='.buildbot-ssh') as tmp_path:
+                stdout = yield self._dovccmdImpl(command, args, path, tmp_path)
+        else:
+            stdout = yield self._dovccmdImpl(command, args, path, None)
+        return stdout
 
-        def _convert_nonzero_to_failure(res,
-                                        command,
-                                        args,
-                                        path):
-            "utility to handle the result of getProcessOutputAndValue"
-            (stdout, stderr, code) = res
-            stdout = bytes2unicode(stdout, self.encoding)
-            stderr = bytes2unicode(stderr, self.encoding)
-            if code != 0:
-                if code == 128:
-                    raise GitError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                   command, args, path, self.repourl, code, stderr))
-                raise EnvironmentError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                       command, args, path, self.repourl, code, stderr))
-            return stdout.strip()
-        d.addCallback(_convert_nonzero_to_failure,
-                      command,
-                      args,
-                      path)
-        return d
+    @defer.inlineCallbacks
+    def _dovccmdImpl(self, command, args, path, ssh_workdir):
+        full_args = []
+        full_env = os.environ.copy()
+
+        if self._isSshPrivateKeyNeededForCommand(command):
+            key_path = self._getSshPrivateKeyPath(ssh_workdir)
+            self._downloadSshPrivateKey(key_path)
+
+            known_hosts_path = None
+            if self.sshHostKey is not None or self.sshKnownHosts is not None:
+                known_hosts_path = self._getSshKnownHostsPath(ssh_workdir)
+                self._downloadSshKnownHosts(known_hosts_path)
+
+            self.adjustCommandParamsForSshPrivateKey(full_args, full_env,
+                                                     key_path, None,
+                                                     known_hosts_path)
+
+        full_args += [command] + args
+
+        res = yield utils.getProcessOutputAndValue(self.gitbin,
+            full_args, path=path, env=full_env)
+        (stdout, stderr, code) = res
+        stdout = bytes2unicode(stdout, self.encoding)
+        stderr = bytes2unicode(stderr, self.encoding)
+        if code != 0:
+            if code == 128:
+                raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
+                               full_args, path, self.repourl, code, stderr))
+            raise EnvironmentError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
+                                   full_args, path, self.repourl, code, stderr))
+        return stdout.strip()

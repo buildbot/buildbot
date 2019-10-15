@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import string_types
-
 import base64
 import binascii
 import os
@@ -161,7 +156,7 @@ class _BaseManhole(service.AsyncMultiService):
         # c = conchc.SSHPublicKeyDatabase() # ~/.ssh/authorized_keys
         # and I can't get UNIXPasswordDatabase to work
 
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         if isinstance(port, int):
             port = "tcp:%d" % port
         self.port = port  # for comparison later
@@ -210,7 +205,7 @@ class _BaseManhole(service.AsyncMultiService):
         else:
             via = "via telnet"
         log.msg("Manhole listening %s on port %s" % (via, self.port))
-        return service.AsyncMultiService.startService(self)
+        return super().startService()
 
 
 class TelnetManhole(_BaseManhole, ComparableMixin):
@@ -240,7 +235,7 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
         c.addUser(unicode2bytes(username), unicode2bytes(password))
 
-        _BaseManhole.__init__(self, port, c)
+        super().__init__(port, c)
 
 
 class PasswordManhole(_BaseManhole, ComparableMixin):
@@ -276,7 +271,7 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
         c.addUser(unicode2bytes(username), unicode2bytes(password))
 
-        _BaseManhole.__init__(self, port, c, ssh_hostkey_dir)
+        super().__init__(port, c, ssh_hostkey_dir)
 
 
 class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
@@ -312,7 +307,7 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
         # basedir
         self.keyfile = keyfile
         c = AuthorizedKeysChecker(keyfile)
-        _BaseManhole.__init__(self, port, c, ssh_hostkey_dir)
+        super().__init__(port, c, ssh_hostkey_dir)
 
 
 class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
@@ -337,7 +332,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
         if not manhole_ssh:
             config.error("cryptography required for ssh mahole.")
 
-        _BaseManhole.__init__(self, port, checker)
+        super().__init__(port, checker)
 
 # utility functions for the manhole
 
@@ -353,7 +348,7 @@ def show(x):
             continue
         if k[:2] == '__' and k[-2:] == '__':
             continue
-        if isinstance(v, string_types):
+        if isinstance(v, str):
             if len(v) > 80 - maxlen - 5:
                 v = repr(v[:80 - maxlen - 5]) + "..."
         elif isinstance(v, (int, type(None))):

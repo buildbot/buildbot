@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-
 from twisted.trial import unittest
 
 from buildbot.changes.changes import Change
@@ -27,6 +23,7 @@ from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
 
@@ -59,9 +56,11 @@ class RepoURL(unittest.TestCase):
             {'a': "repo download test/bla 564/12"}, ["test/bla 564/12"])
 
 
-class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
+               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.shouldRetry = False
         self.logEnviron = True
         return self.setUpSourceStep()
@@ -136,8 +135,8 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
         ]
-        for i in range(len(commands)):
-            self.expectCommands(commands[i] + (which_fail == i and 1 or 0))
+        for i, command in enumerate(commands):
+            self.expectCommands(command + (which_fail == i and 1 or 0))
             if which_fail == i and breakatfail:
                 break
 

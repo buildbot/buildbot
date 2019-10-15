@@ -13,28 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.properties import Properties
+from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.test.fake.reactor import TestReactor
-from buildbot.util.eventual import _setReactor
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
 
-class FakeBuild(object):
-    def render(self, r):
-        if isinstance(r, str):
-            return "rendered:" + r
-        return r
-
-
-class FakeBot(object):
+class FakeBot:
     info = {}
 
     def notifyOnDisconnect(self, n):
@@ -47,21 +39,20 @@ class FakeBot(object):
         self.n()
 
 
-class TestMarathonLatentWorker(unittest.SynchronousTestCase):
+class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
     def setUp(self):
-        self.reactor = TestReactor()
-        _setReactor(self.reactor)
+        self.setUpTestReactor()
         self.build = Properties(
             image="busybox:latest", builder="docker_worker")
         self.worker = None
 
     def tearDown(self):
         if self.worker is not None:
-            class FakeResult(object):
+            class FakeResult:
                 code = 200
             self._http.delete = lambda _: defer.succeed(FakeResult())
             self.worker.master.stopService()
-        _setReactor(None)
+        self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
 
     def test_constructor_normal(self):
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo',
@@ -73,7 +64,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
-        master = fakemaster.make_master(testcase=self, wantData=True)
+        master = fakemaster.make_master(self, wantData=True)
         self._http = self.successResultOf(
             fakehttpclientservice.HTTPClientService.getFakeService(
                 master, self, 'tcp://marathon.local', auth=kwargs.get(
@@ -109,17 +100,17 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass"
                 }
             },
             code=201,
             content_json={'Id': 'id'})
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         self.successResultOf(d)
@@ -146,18 +137,18 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass"
                 }
             },
             code=201,
             content_json={'Id': 'id'})
 
-        worker.substantiate(None, FakeBuild())
+        worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertEqual(worker.instance, {'Id': 'id'})
         # teardown makes sure all containers are cleaned up
 
@@ -178,11 +169,11 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass"
                 }
             },
@@ -191,7 +182,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         self._http.expect(
             method='delete',
             ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(.1)
         self.failureResultOf(d)
         self.assertEqual(worker.instance, None)
@@ -226,18 +217,18 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",
                     'PARAMETER': 'foo'
                 }
             },
             code=201,
             content_json={'Id': 'id'})
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         self.successResultOf(d)

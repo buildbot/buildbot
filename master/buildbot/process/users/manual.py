@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import string_types
-
 from twisted.internet import defer
 from twisted.python import log
 
@@ -57,7 +53,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             # list, alternating ident, uid
             formatted_results += "user(s) added:\n"
             for user in results:
-                if isinstance(user, string_types):
+                if isinstance(user, str):
                     formatted_results += "identifier: %s\n" % user
                 else:
                     formatted_results += "uid: %d\n\n" % user
@@ -188,7 +184,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                             results.append(result)
                             uid = result
         results = self.formatResults(op, results)
-        defer.returnValue(results)
+        return results
 
 
 class CommandlineUserManager(service.AsyncMultiService):
@@ -199,7 +195,7 @@ class CommandlineUserManager(service.AsyncMultiService):
     """
 
     def __init__(self, username=None, passwd=None, port=None):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         assert username and passwd, ("A username and password pair must be given "
                                      "to connect and use `buildbot user`")
         self.username = username
@@ -217,7 +213,7 @@ class CommandlineUserManager(service.AsyncMultiService):
                                                            self.username,
                                                            self.passwd,
                                                            factory)
-        return service.AsyncMultiService.startService(self)
+        return super().startService()
 
     def stopService(self):
         d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)

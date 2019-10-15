@@ -50,7 +50,7 @@ Identifier
 
 .. _type-identifier:
 
-An "identifier" is a nonempty unicode string of limited length, containing only ASCII alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
+An "identifier" is a nonempty unicode string of limited length, containing only UTF-8 alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
 Wherever an identifier is used, the documentation will give the maximum length in characters.
 The function :py:func:`buildbot.util.identifiers.isIdentifier` is useful to verify a well-formed identifier.
 
@@ -775,6 +775,7 @@ changes
     * ``changeid`` (the ID of this change)
     * ``parent_changeids`` (list of ID; change's parents)
     * ``author`` (unicode; the author of the change)
+    * ``committer`` (unicode; the committer of the change)
     * ``files`` (list of unicode; source-code filenames changed)
     * ``comments`` (unicode; user comments)
     * ``is_dir`` (deprecated)
@@ -807,10 +808,12 @@ changes
 
         return the last changeID which matches the repository/project/codebase
 
-    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
+    .. py:method:: addChange(author=None, committer=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
 
         :param author: the author of this change
         :type author: unicode string
+        :param committer: the committer of this change
+        :type committer: unicode string
         :param files: a list of filenames that were changed
         :type branch: list of unicode strings
         :param comments: user comments on the change
@@ -912,6 +915,13 @@ changes
 
         Get the "blame" list of changes for a build.
 
+    .. py:method:: getBuildsForChange(changeid)
+
+        :param changeid: ID of the change
+        :returns: list of buildDict via Deferred
+
+        Get builds related to a change
+
     .. py:method:: getChangeFromSSid(sourcestampid)
 
         :param sourcestampid: ID of the sourcestampid
@@ -936,7 +946,7 @@ changesources
 
     An instance of this class is available at ``master.db.changesources``.
 
-    Changesources are identified by their changesourceid, which can be objtained from :py:meth:`findChangeSourceId`.
+    Changesources are identified by their changesourceid, which can be obtained from :py:meth:`findChangeSourceId`.
 
     Changesources are represented by dictionaries with the following keys:
 
@@ -1005,7 +1015,7 @@ schedulers
 
     An instance of this class is available at ``master.db.schedulers``.
 
-    Schedulers are identified by their schedulerid, which can be objtained from :py:meth:`findSchedulerId`.
+    Schedulers are identified by their schedulerid, which can be obtained from :py:meth:`findSchedulerId`.
 
     Schedulers are represented by dictionaries with the following keys:
 

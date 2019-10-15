@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 try:
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
-    print("Please install buildbot_pkg module in order to install that package, or use the pre-build .whl modules available on pypi", file=sys.stderr)
+    print('Please install buildbot_pkg module in order to install that '
+          'package, or use the pre-build .whl modules available on pypi',
+          file=sys.stderr)
     sys.exit(1)
 
 setup_www_plugin(
@@ -17,7 +15,6 @@ setup_www_plugin(
     author=u'Ion Alberdi',
     author_email=u'ialberdi@intel.com',
     url='http://buildbot.net/',
-    license='GNU GPL',
     version='0.0.1',
     packages=['buildbot_nestedexample'],
     install_requires=[
@@ -33,4 +30,7 @@ setup_www_plugin(
         [buildbot.www]
         nestedexample = buildbot_nestedexample:ep
     """,
+    classifiers=[
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
+    ],
 )

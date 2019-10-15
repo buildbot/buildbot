@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
@@ -24,14 +21,16 @@ from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.protocols import base
 from buildbot.worker.protocols import pb
 
 
-class TestListener(unittest.TestCase):
+class TestListener(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
 
     def makeListener(self):
         listener = pb.Listener()
@@ -88,17 +87,19 @@ class TestListener(unittest.TestCase):
 
 
 class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
-                        unittest.TestCase):
+                        TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
         self.conn = pb.Connection(self.master, mock.Mock(), mock.Mock())
 
 
-class TestConnection(unittest.TestCase):
+class TestConnection(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
         self.mind = mock.Mock()
         self.worker = mock.Mock()
 
@@ -375,7 +376,8 @@ class Test_wrapRemoteException(unittest.TestCase):
                 raise twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None)
 
-        self.assertRaises(pb._NoSuchMethod, f)
+        with self.assertRaises(pb._NoSuchMethod):
+            f()
 
     def test_raises_unknown(self):
         class Error(Exception):
@@ -385,7 +387,8 @@ class Test_wrapRemoteException(unittest.TestCase):
             with pb._wrapRemoteException():
                 raise Error()
 
-        self.assertRaises(Error, f)
+        with self.assertRaises(Error):
+            f()
 
     def test_raises_RemoteError(self):
         def f():
@@ -393,4 +396,5 @@ class Test_wrapRemoteException(unittest.TestCase):
                 raise twisted_pb.RemoteError(
                     'twisted.spread.flavors.ProtocolError', None, None)
 
-        self.assertRaises(twisted_pb.RemoteError, f)
+        with self.assertRaises(twisted_pb.RemoteError):
+            f()

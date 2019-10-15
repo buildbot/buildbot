@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 import weakref
@@ -34,10 +32,11 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.test.fake.machine import FakeMachineManager
 from buildbot.util import service
 
 
-class FakeCache(object):
+class FakeCache:
 
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
     I{does} do the weakref part, to catch un-weakref-able objects."""
@@ -60,7 +59,7 @@ class FakeCache(object):
         pass
 
 
-class FakeCaches(object):
+class FakeCaches:
 
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
@@ -108,7 +107,7 @@ class FakeStatus(service.BuildbotService):
 
 
 @implementer(interfaces.IBuilderStatus)
-class FakeBuilderStatus(object):
+class FakeBuilderStatus:
 
     def __init__(self, master=None, buildername="Builder"):
         if master:
@@ -152,7 +151,7 @@ class FakeBuilderStatus(object):
         pass
 
 
-class FakeLogRotation(object):
+class FakeLogRotation:
     rotateLength = 42
     maxRotatedFiles = 42
 
@@ -166,8 +165,9 @@ class FakeMaster(service.MasterService):
     - Non-caching implementation for C{self.caches}
     """
 
-    def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
-        service.MasterService.__init__(self)
+    def __init__(self, reactor,
+                 master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+        super().__init__()
         self._master_id = master_id
         self.reactor = reactor
         self.objectids = {}
@@ -184,9 +184,12 @@ class FakeMaster(service.MasterService):
         self.masterid = master_id
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self)
+        self.machine_manager = FakeMachineManager()
+        self.machine_manager.setServiceParent(self)
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()
         self.next_objectid = 0
+        self.config_version = 0
 
         def getObjectId(sched_name, class_name):
             k = (sched_name, class_name)
@@ -207,9 +210,16 @@ class FakeMaster(service.MasterService):
 # Leave this alias, in case we want to add more behavior later
 
 
-def make_master(wantMq=False, wantDb=False, wantData=False,
-                testcase=None, url=None, **kwargs):
-    master = FakeMaster(**kwargs)
+def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
+                wantRealReactor=False, url=None, **kwargs):
+    if wantRealReactor:
+        _reactor = reactor
+    else:
+        assert testcase is not None, "need testcase for fake reactor"
+        # The test case must inherit from TestReactorMixin and setup it.
+        _reactor = testcase.reactor
+
+    master = FakeMaster(_reactor, **kwargs)
     if url:
         master.buildbotURL = url
     if wantData:

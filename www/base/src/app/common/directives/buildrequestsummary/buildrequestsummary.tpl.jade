@@ -4,7 +4,7 @@ div
   div(ng-if="!builds")
     .panel.panel-default.results_PENDING(style="margin-bottom:0px;opacity:.7")
       .panel-heading.no-select
-          .flex-row
+          .flex-row(ng-if="buildrequest.$resolved")
               .flex-grow-1
                 a(ui-sref="builder({builder:buildrequest.builderid})")
                     | {{builder.name}}
@@ -23,3 +23,5 @@ div
                       | #{' '}{{buildrequest.state_string}}#{' '}
                     .label(ng-class="results2class(buildrequest)")
                       | {{results2text(buildrequest)}}
+          .flex-row(ng-if="!buildrequest.$resolved")
+            | loading buildrequests details...

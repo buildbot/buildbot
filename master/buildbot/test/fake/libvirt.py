@@ -13,11 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
-
-class Domain(object):
+class Domain:
 
     def __init__(self, name, conn):
         self.conn = conn
@@ -38,7 +35,7 @@ class Domain(object):
         del self.conn[self._name]
 
 
-class Connection(object):
+class Connection:
 
     def __init__(self, uri):
         self.uri = uri

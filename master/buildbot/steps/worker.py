@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 import stat
@@ -25,7 +23,6 @@ from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util import bytes2unicode
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class WorkerBuildStep(buildstep.BuildStep):
@@ -44,7 +41,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
     descriptionDone = ['Set']
 
     def __init__(self, variables, source="WorkerEnvironment", **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.variables = variables
         self.source = source
 
@@ -86,7 +83,7 @@ class FileExists(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, file, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.file = file
 
     def start(self):
@@ -125,7 +122,7 @@ class CopyDirectory(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, src, dest, timeout=None, maxTime=None, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.src = src
         self.dest = dest
         self.timeout = timeout
@@ -157,12 +154,12 @@ class CopyDirectory(WorkerBuildStep):
     def getResultSummary(self):
         src = bytes2unicode(self.src, errors='replace')
         dest = bytes2unicode(self.dest, errors='replace')
-        copy = u"{} to {}".format(src, dest)
+        copy = "{} to {}".format(src, dest)
         if self.results == SUCCESS:
-            rv = u'Copied ' + copy
+            rv = 'Copied ' + copy
         else:
-            rv = u'Copying ' + copy + ' failed.'
-        return {u'step': rv}
+            rv = 'Copying ' + copy + ' failed.'
+        return {'step': rv}
 
 
 class RemoveDirectory(WorkerBuildStep):
@@ -180,7 +177,7 @@ class RemoveDirectory(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, dir, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.dir = dir
 
     def start(self):
@@ -213,7 +210,7 @@ class MakeDirectory(WorkerBuildStep):
     flunkOnFailure = True
 
     def __init__(self, dir, **kwargs):
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.dir = dir
 
     def start(self):
@@ -232,6 +229,9 @@ class MakeDirectory(WorkerBuildStep):
 
 
 class CompositeStepMixin():
+
+    def workerPathToMasterPath(self, path):
+        return os.path.join(*self.worker.path_module.split(path))
 
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
@@ -323,14 +323,18 @@ class CompositeStepMixin():
         return self.runRemoteCommand('uploadFile', args,
                                      abandonOnFailure=abandonOnFailure,
                                      evaluateCommand=commandComplete)
-    deprecatedWorkerClassMethod(locals(), getFileContentFromWorker)
 
-    def downloadFileContentToWorker(self, workerdest, strfile, abandonOnFailure=False, mode=None):
+    def downloadFileContentToWorker(self, workerdest, strfile,
+                                    abandonOnFailure=False, mode=None,
+                                    workdir=None):
+        if workdir is None:
+            workdir = self.workdir
+
         self.checkWorkerHasCommand("downloadFile")
         fileReader = remotetransfer.StringFileReader(strfile)
         # default arguments
         args = {
-            'workdir': self.workdir,
+            'workdir': workdir,
             'maxsize': None,
             'mode': mode,
             'reader': fileReader,

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 import sys
 
@@ -34,6 +31,7 @@ from buildbot.scripts import upgrade_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -77,49 +75,44 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     # tests
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_success(self):
         self.patchFunctions()
-        d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 0)
-            self.assertInStdout('upgrade complete')
-        return d
+        self.assertEqual(rv, 0)
+        self.assertInStdout('upgrade complete')
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_quiet(self):
         self.patchFunctions()
-        d = upgrade_master.upgradeMaster(mkconfig(quiet=True), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(quiet=True), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 0)
-            self.assertWasQuiet()
-        return d
+        self.assertEqual(rv, 0)
+        self.assertWasQuiet()
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_bad_basedir(self):
         self.patchFunctions(basedirOk=False)
-        d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 1)
-        return d
+        self.assertEqual(rv, 1)
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_bad_config(self):
         self.patchFunctions(configOk=False)
-        d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 1)
-        return d
+        self.assertEqual(rv, 1)
 
 
 class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
-                                 misc.StdoutAssertionsMixin, unittest.TestCase):
+                                 misc.StdoutAssertionsMixin,
+                                 TestReactorMixin,
+                                 unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()

@@ -2,3 +2,5 @@
 ./build
 _build
 node_modules
+docs/manual/mydashboard.html
+docs/manual/mydashboard.py

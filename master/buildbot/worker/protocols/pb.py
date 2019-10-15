@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import itervalues
-
 import contextlib
 
 from twisted.internet import defer
@@ -33,7 +28,7 @@ class Listener(base.Listener):
     name = "pbListener"
 
     def __init__(self):
-        base.Listener.__init__(self)
+        super().__init__()
 
         # username : (password, portstr, PBManager registration)
         self._registrations = {}
@@ -56,7 +51,7 @@ class Listener(base.Listener):
                 reg = self.master.pbmanager.register(
                     portStr, username, password, self._getPerspective)
                 self._registrations[username] = (password, portStr, reg)
-                defer.returnValue(reg)
+                return reg
 
     @defer.inlineCallbacks
     def _getPerspective(self, mind, workerName):
@@ -78,7 +73,7 @@ class Listener(base.Listener):
 
         # return the Connection as the perspective
         if accepted:
-            defer.returnValue(conn)
+            return conn
         else:
             # TODO: return something more useful
             raise RuntimeError("rejecting duplicate worker")
@@ -109,7 +104,6 @@ class FileWriterProxy(ReferenceableProxy):
 
 class _NoSuchMethod(Exception):
     """Rewrapped pb.NoSuchMethod remote exception"""
-    pass
 
 
 @contextlib.contextmanager
@@ -118,10 +112,9 @@ def _wrapRemoteException():
         yield
     except pb.RemoteError as ex:
         if ex.remoteType in (b'twisted.spread.flavors.NoSuchMethod',
-                             u'twisted.spread.flavors.NoSuchMethod'):
+                             'twisted.spread.flavors.NoSuchMethod'):
             raise _NoSuchMethod(ex)
-        else:
-            raise
+        raise
 
 
 class Connection(base.Connection, pb.Avatar):
@@ -134,7 +127,7 @@ class Connection(base.Connection, pb.Avatar):
     info = None
 
     def __init__(self, master, worker, mind):
-        base.Connection.__init__(self, master, worker)
+        super().__init__(master, worker)
         self.mind = mind
 
     # methods called by the PBManager
@@ -146,7 +139,7 @@ class Connection(base.Connection, pb.Avatar):
         # worker
         yield self.worker.attached(self)
         # and then return a reference to the avatar
-        defer.returnValue(self)
+        return self
 
     def detached(self, mind):
         self.stopKeepaliveTimer()
@@ -201,7 +194,7 @@ class Connection(base.Connection, pb.Avatar):
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
                 info = yield self.mind.callRemote('getWorkerInfo')
-            defer.returnValue(decode(info))
+            return decode(info)
         except _NoSuchMethod:
             yield self.remotePrint(
                 "buildbot-slave detected, failing back to deprecated buildslave API. "
@@ -222,7 +215,7 @@ class Connection(base.Connection, pb.Avatar):
             if "slave_commands" in info:
                 assert "worker_commands" not in info
                 info["worker_commands"] = info.pop("slave_commands")
-                defer.returnValue(info)
+                return info
 
             # Old version buildslave - need to retrieve list of supported
             # commands and version using separate requests.
@@ -239,16 +232,13 @@ class Connection(base.Connection, pb.Avatar):
             except _NoSuchMethod:
                 log.msg("Worker.getVersion is unavailable - ignoring")
 
-            defer.returnValue(decode(info))
+            return decode(info)
 
+    @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
-        d = self.mind.callRemote('setBuilderList', builders)
-
-        @d.addCallback
-        def cache_builders(builders):
-            self.builders = builders
-            return builders
-        return d
+        builders = yield self.mind.callRemote('setBuilderList', builders)
+        self.builders = builders
+        return builders
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         workerforbuilder = self.builders.get(builderName)
@@ -268,14 +258,14 @@ class Connection(base.Connection, pb.Avatar):
                 with _wrapRemoteException():
                     yield self.mind.callRemote('shutdown')
                     # successful shutdown request
-                    defer.returnValue(True)
+                    return True
             except _NoSuchMethod:
                 # fall through to the old way
-                defer.returnValue(False)
+                return False
 
             except pb.PBConnectionLost:
                 # the worker is gone, so call it finished
-                defer.returnValue(True)
+                return True
 
         if (yield new_way()):
             return  # done!
@@ -285,7 +275,7 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the worker buildbot process to exit.
         def old_way():
             d = None
-            for b in itervalues(self.worker.workerforbuilders):
+            for b in self.worker.workerforbuilders.values():
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break

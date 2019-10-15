@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 
@@ -32,7 +30,7 @@ from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 
 
-class MessageFormatterBase(object):
+class MessageFormatterBase:
     template_filename = 'default_mail.txt'
     template_type = 'plain'
 
@@ -97,11 +95,12 @@ class MessageFormatter(MessageFormatterBase):
         if template_name is not None:
             config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
             template_filename = template_name
-        MessageFormatterBase.__init__(self,
-                                      template_dir=template_dir,
-                                      template_filename=template_filename, template=template,
-                                      subject_filename=subject_filename, subject=subject,
-                                      template_type=template_type, ctx=ctx)
+        super().__init__(template_dir=template_dir,
+                         template_filename=template_filename,
+                         template=template,
+                         subject_filename=subject_filename,
+                         subject=subject,
+                         template_type=template_type, ctx=ctx)
         self.wantProperties = wantProperties
         self.wantSteps = wantSteps
         self.wantLogs = wantLogs
@@ -211,7 +210,7 @@ class MessageFormatter(MessageFormatterBase):
                    )
         yield self.buildAdditionalContext(master, ctx)
         msgdict = self.renderMessage(ctx)
-        defer.returnValue(msgdict)
+        return msgdict
 
 
 class MessageFormatterMissingWorker(MessageFormatterBase):
@@ -224,4 +223,4 @@ class MessageFormatterMissingWorker(MessageFormatterBase):
                    worker=worker)
         yield self.buildAdditionalContext(master, ctx)
         msgdict = self.renderMessage(ctx)
-        defer.returnValue(msgdict)
+        return msgdict

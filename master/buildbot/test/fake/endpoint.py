@@ -13,12 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 # This is a static resource type and set of endpoints used as common data by
 # tests.
-from future.utils import itervalues
-
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -42,7 +38,7 @@ class TestsEndpoint(base.Endpoint):
 
     def get(self, resultSpec, kwargs):
         # results are sorted by ID for test stability
-        return defer.succeed(sorted(itervalues(testData), key=lambda v: v['id']))
+        return defer.succeed(sorted(testData.values(), key=lambda v: v['id']))
 
 
 class RawTestsEndpoint(base.Endpoint):

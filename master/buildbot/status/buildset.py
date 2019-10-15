@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from zope.interface import implementer
@@ -55,10 +53,10 @@ class BuildSetStatus:
 
         @d.addCallback
         def get_objects(brdicts):
-            return dict([
-                (brd['buildername'], BuildRequestStatus(brd['buildername'],
-                                                        brd['brid'], self.status))
-                for brd in brdicts])
+            return {
+                brd['buildername']: BuildRequestStatus(brd['buildername'],
+                                                       brd['brid'], self.status)
+                for brd in brdicts}
         return d
 
     def getBuilderNames(self):

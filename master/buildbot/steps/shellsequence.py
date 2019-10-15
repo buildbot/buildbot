@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import string_types
-
 import copy
 
 from twisted.internet import defer
@@ -40,7 +35,7 @@ class ShellArg(results.ResultComputingConfigMixin):
                          "must not be None" % (name,))
         self.command = command
         self.logfile = logfile
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             if k not in self.resultConfig:
                 config.error("the parameter '%s' is not "
                              "handled by ShellArg" % (k,))
@@ -49,11 +44,11 @@ class ShellArg(results.ResultComputingConfigMixin):
 
     def validateAttributes(self):
         # only make the check if we have a list
-        if not isinstance(self.command, (string_types, list)):
+        if not isinstance(self.command, (str, list)):
             config.error("%s is an invalid command, "
                          "it must be a string or a list" % (self.command,))
         if isinstance(self.command, list):
-            if not all([isinstance(x, string_types) for x in self.command]):
+            if not all([isinstance(x, str) for x in self.command]):
                 config.error("%s must only have strings in it" %
                              (self.command,))
         runConfParams = [(p_attr, getattr(self, p_attr))
@@ -69,7 +64,7 @@ class ShellArg(results.ResultComputingConfigMixin):
         for p_attr in self.publicAttributes:
             res = yield build.render(getattr(self, p_attr))
             setattr(rv, p_attr, res)
-        defer.returnValue(rv)
+        return rv
 
 
 class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
@@ -79,7 +74,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     def __init__(self, commands=None, **kwargs):
         self.commands = commands
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def shouldRunTheCommand(self, cmd):
         return bool(cmd)
@@ -92,19 +87,19 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
         terminate = False
         if commands is None:
             log.msg("After rendering, ShellSequence `commands` is None")
-            defer.returnValue(results.EXCEPTION)
+            return results.EXCEPTION
         overall_result = results.SUCCESS
         for arg in commands:
             if not isinstance(arg, ShellArg):
                 log.msg("After rendering, ShellSequence `commands` list "
                         "contains something that is not a ShellArg")
-                defer.returnValue(results.EXCEPTION)
+                return results.EXCEPTION
             try:
                 arg.validateAttributes()
             except config.ConfigErrors as e:
                 log.msg("After rendering, ShellSequence `commands` is "
                         "invalid: %s" % (e,))
-                defer.returnValue(results.EXCEPTION)
+                return results.EXCEPTION
 
             # handle the command from the arg
             command = arg.command
@@ -121,7 +116,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
                 arg, cmd.results(), overall_result)
             if terminate:
                 break
-        defer.returnValue(overall_result)
+        return overall_result
 
     def run(self):
         return self.runShellSequence(self.commands)

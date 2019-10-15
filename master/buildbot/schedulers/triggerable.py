@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 from twisted.internet import defer
 from twisted.python import failure
 from zope.interface import implementer
@@ -33,7 +29,7 @@ class Triggerable(base.BaseScheduler):
     compare_attrs = base.BaseScheduler.compare_attrs + ('reason',)
 
     def __init__(self, name, builderNames, reason=None, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
         self.reason = reason
@@ -55,7 +51,7 @@ class Triggerable(base.BaseScheduler):
             reason = set_props.getProperty('reason')
 
         if reason is None:
-            reason = u"The Triggerable scheduler named '%s' triggered this build" % self.name
+            reason = "The Triggerable scheduler named '%s' triggered this build" % self.name
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
@@ -80,7 +76,7 @@ class Triggerable(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield base.BaseScheduler.startService(self)
+        yield super().startService()
         self._updateWaiters.start()
 
     @defer.inlineCallbacks
@@ -96,11 +92,11 @@ class Triggerable(base.BaseScheduler):
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
-            for d, brids in itervalues(self._waiters):
+            for d, brids in self._waiters.values():
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
-        yield base.BaseScheduler.stopService(self)
+        yield super().stopService()
 
     @debounce.method(wait=0)
     @defer.inlineCallbacks

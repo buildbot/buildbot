@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -28,15 +25,18 @@ from buildbot.process.results import Results
 from buildbot.steps import mswin
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
+class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
+                         unittest.TestCase):
 
     """
     Test L{Robocopy} command building.
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

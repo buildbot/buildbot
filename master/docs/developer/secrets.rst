@@ -61,12 +61,13 @@ Vault provider
 .. code-block:: python
 
     c['secretsProviders'] = [secrets.SecretInVault(vaultToken=open('VAULT_TOKEN').read(),
-                                                vaultServer="http://localhost:8200"
-                                                )]
+                                                vaultServer="http://localhost:8200",
+                                                apiVersion=2)]
 
 In the master configuration, the provider is instantiated through a Buildbot service secret manager with the Vault token and the Vault server address.
 Vault secrets provider accesses the Vault backend asking the key wanted by Buildbot and returns the contained text value.
 SecretInVAult provider allows Buildbot to read secrets in the Vault.
+Currently only v1 and v2 of the Key-Value backends are supported.
 
 Interpolate secret
 ``````````````````

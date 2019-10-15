@@ -13,17 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import string_types
-
 import re
 from email import charset
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from email.utils import parseaddr
 from io import BytesIO
 
 from twisted.internet import defer
@@ -121,7 +117,7 @@ class MailNotifier(NotifierBase):
                         "extra recipient {} is not a valid email".format(r))
 
         if lookup is not None:
-            if not isinstance(lookup, string_types):
+            if not isinstance(lookup, str):
                 assert interfaces.IEmailLookup.providedBy(lookup)
 
         if extraHeaders:
@@ -156,7 +152,7 @@ class MailNotifier(NotifierBase):
         self.fromaddr = fromaddr
         self.relayhost = relayhost
         if lookup is not None:
-            if isinstance(lookup, string_types):
+            if isinstance(lookup, str):
                 lookup = Domain(str(lookup))
         self.lookup = lookup
         self.extraHeaders = extraHeaders
@@ -235,19 +231,19 @@ class MailNotifier(NotifierBase):
         # interpolation if only one build was given
         if self.extraHeaders:
             extraHeaders = self.extraHeaders
-            if len(builds) == 1:
+            if builds is not None and len(builds) == 1:
                 props = Properties.fromDict(builds[0]['properties'])
                 props.master = self.master
                 extraHeaders = yield props.render(extraHeaders)
 
-            for k, v in iteritems(extraHeaders):
+            for k, v in extraHeaders.items():
                 if k in m:
                     twlog.msg("Warning: Got header " + k +
                               " in self.extraHeaders "
                               "but it already exists in the Message - "
                               "not adding it.")
                 m[k] = v
-        defer.returnValue(m)
+        return m
 
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type='plain', builderName=None,
@@ -300,7 +296,7 @@ class MailNotifier(NotifierBase):
                 else:
                     twlog.msg("INVALID EMAIL: {}".format(r))
 
-        defer.returnValue(recipients)
+        return recipients
 
     def processRecipients(self, blamelist, m):
         to_recipients = set(blamelist)
@@ -329,9 +325,10 @@ class MailNotifier(NotifierBase):
         useAuth = self.smtpUser and self.smtpPassword
 
         s = unicode2bytes(s)
+        recipients = [parseaddr(r)[1] for r in recipients]
         sender_factory = ESMTPSenderFactory(
             unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
-            self.fromaddr, recipients, BytesIO(s),
+            parseaddr(self.fromaddr)[1], recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 

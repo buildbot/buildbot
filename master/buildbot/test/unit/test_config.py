@@ -18,12 +18,6 @@
 # and builtins module on Python 3, because we need to override
 # the actual native open method.
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import PY3
-from future.utils import iteritems
-
 import os
 import re
 import textwrap
@@ -51,7 +45,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 try:
     # Python 2
@@ -86,7 +79,7 @@ global_defaults = dict(
 class FakeChangeSource(changes_base.ChangeSource):
 
     def __init__(self):
-        changes_base.ChangeSource.__init__(self, name='FakeChangeSource')
+        super().__init__(name='FakeChangeSource')
 
 
 class FakeStatusReceiver(status_base.StatusReceiver):
@@ -94,14 +87,27 @@ class FakeStatusReceiver(status_base.StatusReceiver):
 
 
 @implementer(interfaces.IScheduler)
-class FakeScheduler(object):
+class FakeScheduler:
 
     def __init__(self, name):
         self.name = name
 
 
-class FakeBuilder(object):
+class FakeBuilder:
 
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+@implementer(interfaces.IWorker)
+class FakeWorker:
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+@implementer(interfaces.IMachine)
+class FakeMachine:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -166,19 +172,19 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
-        for file, contents in iteritems(other_files):
+        for file, contents in other_files.items():
             with open(file, "w") as f:
                 f.write(contents)
 
     def test_loadConfig_missing_file(self):
-        self.assertRaisesConfigError(
-            re.compile("configuration file .* does not exist"),
-            lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                re.compile("configuration file .* does not exist")):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_missing_basedir(self):
-        self.assertRaisesConfigError(
-            re.compile("basedir .* does not exist"),
-            lambda: config.loadConfigDict(os.path.join(self.basedir, 'NO'), 'test.cfg'))
+        with self.assertRaisesConfigError(
+                re.compile("basedir .* does not exist")):
+            config.loadConfigDict(os.path.join(self.basedir, 'NO'), 'test.cfg')
 
     def test_loadConfig_open_error(self):
         """
@@ -195,39 +201,41 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         self.patch(builtins, "open", raise_IOError)
 
         # check that we got the expected ConfigError exception
-        self.assertRaisesConfigError(
-            re.compile("unable to open configuration file .*: error_msg"),
-            lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                re.compile("unable to open configuration file .*: error_msg")):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_parse_error(self):
         self.install_config_file('def x:\nbar')
-        self.assertRaisesConfigError(
-            re.compile("encountered a SyntaxError while parsing config file:"),
-            lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(re.compile(
+                "encountered a SyntaxError while parsing config file:")):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = { 'multiMaster': True }
                 config.error('oh noes!')""")
-        self.assertRaisesConfigError("oh noes",
-                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError("oh noes"):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_eval_otherError(self):
         self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = { 'multiMaster': True }
                 raise ValueError('oh noes')""")
-        self.assertRaisesConfigError("error while parsing config file: oh noes (traceback in logfile)",
-                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                "error while parsing config file: oh noes (traceback in logfile)"):
+            config.loadConfigDict(self.basedir, self.filename)
 
         [error] = self.flushLoggedErrors(ValueError)
         self.assertEqual(error.value.args, ("oh noes",))
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
-        self.assertRaisesConfigError("does not define 'BuildmasterConfig'",
-                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                "does not define 'BuildmasterConfig'"):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_with_local_import(self):
         self.install_config_file("""\
@@ -278,7 +286,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
-        for file, contents in iteritems(other_files):
+        for file, contents in other_files.items():
             with open(file, "w") as f:
                 f.write(contents)
     # tests
@@ -302,9 +310,9 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         )
         expected.update(global_defaults)
         expected['buildbotNetUsageData'] = 'basic'
-        got = dict([
-            (attr, getattr(cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(cfg, attr)
+            for attr, exp in expected.items()}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
@@ -337,16 +345,17 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.install_config_file("""\
                 BuildmasterConfig = dict(foo=10)
                 """)
-        self.assertRaisesConfigError("Unknown BuildmasterConfig key foo",
-                                     config.FileLoader(self.basedir, self.filename).loadConfig)
+        with self.assertRaisesConfigError("Unknown BuildmasterConfig key foo"):
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_unknown_keys(self):
         self.patch_load_helpers()
         self.install_config_file("""\
                 BuildmasterConfig = dict(foo=10, bar=20)
                 """)
-        self.assertRaisesConfigError("Unknown BuildmasterConfig keys bar, foo",
-                                     config.FileLoader(self.basedir, self.filename).loadConfig)
+        with self.assertRaisesConfigError(
+                "Unknown BuildmasterConfig keys bar, foo"):
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_success(self):
         self.patch_load_helpers()
@@ -366,6 +375,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.load_builders.called)
         self.assertTrue(rv.load_workers.called)
         self.assertTrue(rv.load_change_sources.called)
+        self.assertTrue(rv.load_machines.called)
         self.assertTrue(rv.load_user_managers.called)
 
         self.assertTrue(rv.check_single_master.called)
@@ -373,6 +383,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.check_locks.called)
         self.assertTrue(rv.check_builders.called)
         self.assertTrue(rv.check_ports.called)
+        self.assertTrue(rv.check_machines.called)
 
     def test_preChangeGenerator(self):
         cfg = config.MasterConfig()
@@ -384,10 +395,10 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             'when_timestamp': None,
             'branch': None,
             'category': None,
-            'revlink': u'',
+            'revlink': '',
             'properties': {},
-            'repository': u'',
-            'project': u'',
+            'repository': '',
+            'project': '',
             'codebase': None},
             cfg.preChangeGenerator())
 
@@ -405,9 +416,9 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def assertResults(self, **expected):
         self.assertFalse(self.errors, self.errors.errors)
-        got = dict([
-            (attr, getattr(self.cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(self.cfg, attr)
+            for attr, exp in expected.items()}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
 
@@ -434,17 +445,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_global(self.filename,
                              dict(protocols="test"))
         self.assertConfigError(self.errors, "c['protocols'] must be dict")
-
-    def test_load_global_when_slavePortnum_and_protocols_set(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
-            self.cfg.load_global(self.filename,
-                                 dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
-        self.assertConfigError(self.errors,
-                               "Both c['slavePortnum'] and c['protocols']['pb']['port']"
-                               " defined, recommended to remove slavePortnum and leave"
-                               " only c['protocols']['pb']['port']")
 
     def test_load_global_protocols_key_int(self):
         self.cfg.load_global(self.filename,
@@ -572,20 +572,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_global(self.filename,
                              dict(prioritizeBuilders='yes'))
         self.assertConfigError(self.errors, "must be a callable")
-
-    def test_load_global_slavePortnum_int(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
-            self.do_test_load_global(dict(slavePortnum=123),
-                                     protocols={'pb': {'port': 'tcp:123'}})
-
-    def test_load_global_slavePortnum_str(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
-            self.do_test_load_global(dict(slavePortnum='udp:123'),
-                                     protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_protocols_str(self):
         self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),
@@ -836,22 +822,22 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers_not_identifiers(self):
-        for name in (u"123 no initial digits", u"spaces not allowed",
-                     u'a/b', u'\N{SNOWMAN}', u"a.b.c.d", u"a-b_c.d9",):
+        for name in ("123 no initial digits", "spaces not allowed",
+                     'a/b', "a.b.c.d", "a-b_c.d9",):
             self.cfg.load_workers(self.filename,
                                   dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is not an identifier")
             self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers_too_long(self):
-        name = u"a" * 51
+        name = "a" * 51
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
         self.assertConfigError(self.errors, "is longer than")
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers_empty(self):
-        name = u""
+        name = ""
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
         self.errors.errors[:] = self.errors.errors[
@@ -864,37 +850,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_workers(self.filename,
                               dict(workers=[wrk]))
         self.assertResults(workers=[wrk])
-
-    def test_load_workers_old_api(self):
-        w = worker.Worker("name", 'x')
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-            self.cfg.load_workers(self.filename, dict(slaves=[w]))
-        self.assertResults(workers=[w])
-
-    def test_load_workers_new_api(self):
-        w = worker.Worker("name", 'x')
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.cfg.load_workers(self.filename, dict(workers=[w]))
-        self.assertResults(workers=[w])
-
-    def test_load_workers_old_and_new_api(self):
-        w1 = worker.Worker("name1", 'x')
-        w2 = worker.Worker("name2", 'x')
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-            self.cfg.load_workers(self.filename, dict(slaves=[w1],
-                                                      workers=[w2]))
-
-        self.assertConfigError(
-            self.errors,
-            "Use of c['workers'] and c['slaves'] at the same time "
-            "is not supported")
-        self.errors.errors[:] = []  # clear out the errors
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})
@@ -916,6 +871,27 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_change_sources(self.filename,
                                      dict(change_source=[chsrc]))
         self.assertResults(change_sources=[chsrc])
+
+    def test_load_machines_defaults(self):
+        self.cfg.load_machines(self.filename, {})
+        self.assertResults(machines=[])
+
+    def test_load_machines_not_instance(self):
+        self.cfg.load_machines(self.filename,
+                               dict(machines=[mock.Mock()]))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_machines_single(self):
+        mm = FakeMachine(name='a')
+        self.cfg.load_machines(self.filename,
+                               dict(machines=mm))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_machines_list(self):
+        mm = FakeMachine()
+        self.cfg.load_machines(self.filename,
+                               dict(machines=[mm]))
+        self.assertResults(machines=[mm])
 
     def test_load_user_managers_defaults(self):
         self.cfg.load_user_managers(self.filename, {})
@@ -1035,17 +1011,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_services_badservice(self):
 
-        class MyService(object):
+        class MyService:
             pass
         myService = MyService()
         self.cfg.load_services(self.filename, dict(
             services=[myService]))
-        if PY3:
-            errMsg = ("<class 'buildbot.test.unit.test_config."
-                      "MasterConfig_loaders.test_load_services_badservice."
-                      "<locals>.MyService'> ")
-        else:
-            errMsg = "<class 'buildbot.test.unit.test_config.MyService'> "
+        errMsg = ("<class 'buildbot.test.unit.test_config."
+                  "MasterConfig_loaders.test_load_services_badservice."
+                  "<locals>.MyService'> ")
         errMsg += "object should be an instance of buildbot.util.service.BuildbotService"
         self.assertConfigError(self.errors, errMsg)
 
@@ -1125,8 +1098,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            lock = mock.Mock(spec=locks.MasterLock)
-            lock.name = name
+            lock = locks.MasterLock(name)
             if bare_builder_lock:
                 return lock
             return locks.LockAccess(lock, "counting", _skipChecks=True)
@@ -1287,6 +1259,25 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                                "Some of ports in c['protocols'] duplicated")
 
+    def test_check_machines_unknown_name(self):
+        self.cfg.workers = [
+            FakeWorker(name='wa', machine_name='unk')
+        ]
+        self.cfg.machines = [
+            FakeMachine(name='a')
+        ]
+        self.cfg.check_machines()
+        self.assertConfigError(self.errors, 'uses unknown machine')
+
+    def test_check_machines_duplicate_name(self):
+        self.cfg.machines = [
+            FakeMachine(name='a'),
+            FakeMachine(name='a')
+        ]
+        self.cfg.check_machines()
+        self.assertConfigError(self.errors,
+                               'duplicate machine name')
+
 
 class MasterConfig_old_worker_api(unittest.TestCase):
 
@@ -1294,13 +1285,6 @@ class MasterConfig_old_worker_api(unittest.TestCase):
 
     def setUp(self):
         self.cfg = config.MasterConfig()
-
-    def test_worker_old_api(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"'slaves' attribute is deprecated, "
-                                r"use 'workers' instead"):
-            self.assertEqual(self.cfg.slaves, [])
 
     def test_workers_new_api(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
@@ -1314,118 +1298,111 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     # utils
 
     def assertAttributes(self, cfg, **expected):
-        got = dict([
-            (attr, getattr(cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(cfg, attr)
+            for attr, exp in expected.items()}
         self.assertEqual(got, expected)
 
     # tests
 
     def test_no_name(self):
-        self.assertRaisesConfigError(
-            "builder's name is required",
-            lambda: config.BuilderConfig(
-                factory=self.factory, workernames=['a']))
+        with self.assertRaisesConfigError("builder's name is required"):
+            config.BuilderConfig(factory=self.factory, workernames=['a'])
 
     def test_reserved_name(self):
-        self.assertRaisesConfigError(
-            "builder names must not start with an underscore: '_a'",
-            lambda: config.BuilderConfig(name='_a',
-                                         factory=self.factory, workernames=['a']))
+        with self.assertRaisesConfigError(
+                "builder names must not start with an underscore: '_a'"):
+            config.BuilderConfig(name='_a', factory=self.factory,
+                                 workernames=['a'])
 
     def test_utf8_name(self):
-        self.assertRaisesConfigError(
-            "builder names must be unicode or ASCII",
-            lambda: config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
-                                         factory=self.factory, workernames=['a']))
+        with self.assertRaisesConfigError(
+                "builder names must be unicode or ASCII"):
+            config.BuilderConfig(name="\N{SNOWMAN}".encode('utf-8'),
+                                 factory=self.factory, workernames=['a'])
 
     def test_no_factory(self):
-        self.assertRaisesConfigError(
-            "builder 'a' has no factory",
-            lambda: config.BuilderConfig(
-                name='a', workernames=['a']))
+        with self.assertRaisesConfigError("builder 'a' has no factory"):
+            config.BuilderConfig(name='a', workernames=['a'])
 
     def test_wrong_type_factory(self):
-        self.assertRaisesConfigError(
-            "builder 'a's factory is not",
-            lambda: config.BuilderConfig(
-                factory=[], name='a', workernames=['a']))
+        with self.assertRaisesConfigError("builder 'a's factory is not"):
+            config.BuilderConfig(factory=[], name='a', workernames=['a'])
 
     def test_no_workernames(self):
-        self.assertRaisesConfigError(
-            "builder 'a': at least one workername is required",
-            lambda: config.BuilderConfig(
-                name='a', factory=self.factory))
+        with self.assertRaisesConfigError(
+                "builder 'a': at least one workername is required"):
+            config.BuilderConfig(name='a', factory=self.factory)
 
     def test_bogus_workernames(self):
-        self.assertRaisesConfigError(
-            "workernames must be a list or a string",
-            lambda: config.BuilderConfig(
-                name='a', workernames={1: 2}, factory=self.factory))
+        with self.assertRaisesConfigError(
+                "workernames must be a list or a string"):
+            config.BuilderConfig(name='a', workernames={1: 2},
+                                 factory=self.factory)
 
     def test_bogus_workername(self):
-        self.assertRaisesConfigError(
-            "workername must be a string",
-            lambda: config.BuilderConfig(
-                name='a', workername=1, factory=self.factory))
+        with self.assertRaisesConfigError("workername must be a string"):
+            config.BuilderConfig(name='a', workername=1, factory=self.factory)
 
     def test_bogus_category(self):
         with assertProducesWarning(
                 config.ConfigWarning,
                 message_pattern=r"builder categories are deprecated and should be replaced with"):
-            self.assertRaisesConfigError(
-                "category must be a string",
-                lambda: config.BuilderConfig(category=13,
-                                             name='a', workernames=['a'], factory=self.factory))
+            with self.assertRaisesConfigError("category must be a string"):
+                config.BuilderConfig(category=13,
+                                     name='a', workernames=['a'],
+                                     factory=self.factory)
 
     def test_tags_must_be_list(self):
-        self.assertRaisesConfigError(
-            "tags must be a list",
-            lambda: config.BuilderConfig(tags='abc',
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("tags must be a list"):
+            config.BuilderConfig(tags='abc',
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_tags_must_be_list_of_str(self):
-        self.assertRaisesConfigError(
-            "tags list contains something that is not a string",
-            lambda: config.BuilderConfig(tags=['abc', 13],
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError(
+                "tags list contains something that is not a string"):
+            config.BuilderConfig(tags=['abc', 13],
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_tags_no_tag_dupes(self):
-        self.assertRaisesConfigError(
-            "builder 'a': tags list contains duplicate tags: abc",
-            lambda: config.BuilderConfig(tags=['abc', 'bca', 'abc'],
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError(
+                "builder 'a': tags list contains duplicate tags: abc"):
+            config.BuilderConfig(tags=['abc', 'bca', 'abc'],
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_tags_no_categories_too(self):
-        self.assertRaisesConfigError(
-            "categories are deprecated and replaced by tags; you should only specify tags",
-            lambda: config.BuilderConfig(tags=['abc'],
-                                         category='def',
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError(
+                "categories are deprecated and replaced by tags; you should only specify tags"):
+            config.BuilderConfig(tags=['abc'], category='def',
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_nextWorker(self):
-        self.assertRaisesConfigError(
-            "nextWorker must be a callable",
-            lambda: config.BuilderConfig(nextWorker="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("nextWorker must be a callable"):
+            config.BuilderConfig(nextWorker="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_nextBuild(self):
-        self.assertRaisesConfigError(
-            "nextBuild must be a callable",
-            lambda: config.BuilderConfig(nextBuild="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("nextBuild must be a callable"):
+            config.BuilderConfig(nextBuild="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_canStartBuild(self):
-        self.assertRaisesConfigError(
-            "canStartBuild must be a callable",
-            lambda: config.BuilderConfig(canStartBuild="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("canStartBuild must be a callable"):
+            config.BuilderConfig(canStartBuild="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_env(self):
-        self.assertRaisesConfigError(
-            "builder's env must be a dictionary",
-            lambda: config.BuilderConfig(env="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("builder's env must be a dictionary"):
+            config.BuilderConfig(env="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_defaults(self):
         cfg = config.BuilderConfig(
@@ -1446,10 +1423,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_unicode_name(self):
         cfg = config.BuilderConfig(
-            name=u'a \N{SNOWMAN} c', workername='a', factory=self.factory)
+            name='a \N{SNOWMAN} c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
-                              name=u'a \N{SNOWMAN} c')
+                              name='a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(
@@ -1507,19 +1484,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                    'workernames': ['s1'],
                                                    })
 
-    def test_init_workername_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workername_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', slavename='a', factory=self.factory)
+    def test_init_workername_keyword(self):
+        cfg = config.BuilderConfig(name='a b c', workername='a',
+                                   factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
@@ -1530,19 +1497,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workernames_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workernames=['a'], factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workernames_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavenames' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', slavenames=['a'], factory=self.factory)
+    def test_init_workernames_keyword(self):
+        cfg = config.BuilderConfig(name='a b c', workernames=['a'],
+                                   factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
@@ -1553,36 +1510,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_workernames_old_api(self):
+    def test_init_workerbuilddir_keyword(self):
         cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            names_new = cfg.workernames
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavenames' attribute is deprecated"):
-            names_old = cfg.slavenames
-
-        self.assertEqual(names_old, ['a'])
-        self.assertIdentical(names_new, names_old)
-
-    def test_init_workerbuilddir_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                workerbuilddir="dir")
-
-        self.assertEqual(cfg.workerbuilddir, 'dir')
-
-    def test_init_workerbuilddir_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavebuilddir' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                slavebuilddir='dir')
+            name='a b c', workername='a', factory=self.factory,
+            workerbuilddir="dir")
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
@@ -1593,40 +1524,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_next_worker_old_api(self):
+    def test_init_next_worker_keyword(self):
         f = lambda: None
         cfg = config.BuilderConfig(
             name='a b c', workername='a', factory=self.factory,
             nextWorker=f)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = cfg.nextWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'nextSlave' attribute is deprecated"):
-            old = cfg.nextSlave
-
-        self.assertIdentical(old, f)
-        self.assertIdentical(new, old)
-
-    def test_init_next_worker_new_api_no_warns(self):
-        f = lambda: None
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                nextWorker=f)
-
-        self.assertEqual(cfg.nextWorker, f)
-
-    def test_init_next_worker_old_api_warns(self):
-        f = lambda: None
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'nextSlave' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                nextSlave=f)
 
         self.assertEqual(cfg.nextWorker, f)
 
@@ -1645,16 +1547,13 @@ class FakeService(service.ReconfigurableServiceMixin,
     succeed = True
     call_index = 1
 
+    @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
-            self, new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
         if not self.succeed:
-            @d.addCallback
-            def fail(_):
-                raise ValueError("oh noes")
-        return d
+            raise ValueError("oh noes")
 
 
 class FakeMultiService(service.ReconfigurableServiceMixin,
@@ -1662,21 +1561,18 @@ class FakeMultiService(service.ReconfigurableServiceMixin,
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = True
-        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
-            self, new_config)
+        d = super().reconfigServiceWithBuildbotConfig(new_config)
         return d
 
 
 class ReconfigurableServiceMixin(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def test_service(self):
         svc = FakeService()
-        d = svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+        yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
-        @d.addCallback
-        def check(_):
-            self.assertTrue(svc.called)
-        return d
+        self.assertTrue(svc.called)
 
     @defer.inlineCallbacks
     def test_service_failure(self):
@@ -1689,6 +1585,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         else:
             self.fail("should have raised ValueError")
 
+    @defer.inlineCallbacks
     def test_multiservice(self):
         svc = FakeMultiService()
         ch1 = FakeService()
@@ -1697,16 +1594,14 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         ch2.setServiceParent(svc)
         ch3 = FakeService()
         ch3.setServiceParent(ch2)
-        d = svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+        yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
-        @d.addCallback
-        def check(_):
-            self.assertTrue(svc.called)
-            self.assertTrue(ch1.called)
-            self.assertTrue(ch2.called)
-            self.assertTrue(ch3.called)
-        return d
+        self.assertTrue(svc.called)
+        self.assertTrue(ch1.called)
+        self.assertTrue(ch2.called)
+        self.assertTrue(ch3.called)
 
+    @defer.inlineCallbacks
     def test_multiservice_priority(self):
         parent = FakeMultiService()
         svc128 = FakeService()
@@ -1719,14 +1614,11 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             svc.setServiceParent(parent)
             services.append(svc)
 
-        d = parent.reconfigServiceWithBuildbotConfig(mock.Mock())
+        yield parent.reconfigServiceWithBuildbotConfig(mock.Mock())
 
-        @d.addCallback
-        def check(_):
-            prio_order = [svc.called for svc in services]
-            called_order = sorted(prio_order)
-            self.assertEqual(prio_order, called_order)
-        return d
+        prio_order = [s.called for s in services]
+        called_order = sorted(prio_order)
+        self.assertEqual(prio_order, called_order)
 
     @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):

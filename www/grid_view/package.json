@@ -1,20 +1,28 @@
 {
+    "plugin_name": "grid_view",
     "name": "buildbot-grid-view",
-    "dependencies": {
-        "guanlecoja": "~0.8.0",
-        "gulp": "~3.9.0"
+    "private": true,
+    "main": "buildbot_grid_view/static/scripts.js",
+    "style": "buildbot_grid_view/static/styles.css",
+    "scripts": {
+        "build": "rimraf buildbot_grid_view/static && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf buildbot_grid_view/static && webpack --bail --progress --profile --env dev",
+        "dev": "webpack --bail --progress --profile --watch --env dev",
+        "test": "karma start",
+        "test-watch": "karma start --auto-watch --no-single-run"
     },
-    "coffeelintConfig": {
-        "indentation" : {
-            "level" : "error",
-            "value" : 4
-        },
-        "max_line_length": {
-            "level": "ignore"
-        },
-        "line_endings" : {
-            "value" : "unix",
-            "level" : "error"
-        }
+    "devDependencies": {
+        "angular-mocks": "1.7.8",
+        "buildbot-build-common": "link:../build_common",
+        "lodash": "^4.17.11",
+        "rimraf": "^2.6.3"
+    },
+    "dependencies": {
+        "angular": "1.7.8",
+        "angular-animate": "1.7.8",
+        "angular-ui-bootstrap": "^2.5.6",
+        "buildbot-data-js": "link:../data_module",
+        "guanlecoja-ui": "link:../guanlecoja-ui",
+        "jquery": "^3.4.0"
     }
 }

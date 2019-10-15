@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.trial import unittest
@@ -42,22 +39,23 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
     def test_basic(self):
         def thd():
             workersInDB = ['foo', 'bar']
-            self.dbConfig.set(u"workers", workersInDB)
-            workers = self.dbConfig.get(u"workers")
+            self.dbConfig.set("workers", workersInDB)
+            workers = self.dbConfig.get("workers")
             self.assertEqual(workers, workersInDB)
 
         return threads.deferToThread(thd)
 
     def test_default(self):
         def thd():
-            workers = self.dbConfig.get(u"workers", "default")
+            workers = self.dbConfig.get("workers", "default")
             self.assertEqual(workers, "default")
 
         return threads.deferToThread(thd)
 
     def test_error(self):
         def thd():
-            self.assertRaises(KeyError, self.dbConfig.get, u"workers")
+            with self.assertRaises(KeyError):
+                self.dbConfig.get("workers")
 
         return threads.deferToThread(thd)
 
@@ -88,34 +86,38 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
     def test_default(self):
         def thd():
             db = self.createDbConfig()
-            self.assertEqual("foo", db.get(u"workers", "foo"))
+            self.assertEqual("foo", db.get("workers", "foo"))
 
         return threads.deferToThread(thd)
 
     def test_error(self):
         def thd():
             db = self.createDbConfig()
-            self.assertRaises(KeyError, db.get, u"workers")
+            with self.assertRaises(KeyError):
+                db.get("workers")
 
         return threads.deferToThread(thd)
 
     def test_bad_url(self):
         def thd():
             db = self.createDbConfig("garbage://")
-            self.assertRaises(KeyError, db.get, u"workers")
+            with self.assertRaises(KeyError):
+                db.get("workers")
 
         return threads.deferToThread(thd)
 
     def test_bad_url2(self):
         def thd():
             db = self.createDbConfig("trash")
-            self.assertRaises(KeyError, db.get, u"workers")
+            with self.assertRaises(KeyError):
+                db.get("workers")
 
         return threads.deferToThread(thd)
 
     def test_bad_url3(self):
         def thd():
             db = self.createDbConfig("sqlite://bad")
-            self.assertRaises(KeyError, db.get, u"workers")
+            with self.assertRaises(KeyError):
+                db.get("workers")
 
         return threads.deferToThread(thd)

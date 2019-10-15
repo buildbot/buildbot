@@ -16,9 +16,6 @@
 Test clean shutdown functionality of the master
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.cred import credentials
@@ -29,7 +26,7 @@ from twisted.trial import unittest
 from buildbot import pbmanager
 
 
-class FakeMaster(object):
+class FakeMaster:
     initLock = defer.DeferredLock()
 
     def addService(self, svc):
@@ -66,6 +63,7 @@ class TestPBManager(unittest.TestCase):
         self.assertEqual(
             repr(reg), '<pbmanager.Registration for x on tcp:0:interface=127.0.0.1>')
 
+    @defer.inlineCallbacks
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
         reg = self.pbm.register(
@@ -80,23 +78,18 @@ class TestPBManager(unittest.TestCase):
         # dynamically allocated port number which is buried out of reach;
         # however, we can try the requestAvatar and requestAvatarId methods.
 
-        d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+        username = yield disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
 
-        def check_avatarid(username):
-            self.assertEqual(username, b'boris')
-        d.addCallback(check_avatarid)
-        d.addCallback(lambda _:
-                      disp.requestAvatar(b'boris', mock.Mock(), pb.IPerspective))
+        self.assertEqual(username, b'boris')
+        avatar = yield disp.requestAvatar(b'boris', mock.Mock(), pb.IPerspective)
 
-        def check_avatar(avatar):
-            (iface, persp, detach_fn) = avatar
-            self.assertTrue(persp.is_my_persp)
-            self.assertIn('boris', self.connections)
-        d.addCallback(check_avatar)
+        (iface, persp, detach_fn) = avatar
+        self.assertTrue(persp.is_my_persp)
+        self.assertIn('boris', self.connections)
 
-        d.addCallback(lambda _: reg.unregister())
-        return d
+        yield reg.unregister()
 
+    @defer.inlineCallbacks
     def test_double_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
         reg1 = self.pbm.register(portstr, "boris", "pass", None)
@@ -109,21 +102,16 @@ class TestPBManager(unittest.TestCase):
         self.assertIn('boris', disp.users)
         self.assertIn('ivona', disp.users)
 
-        d = reg1.unregister()
+        yield reg1.unregister()
 
-        def check_boris_gone(_):
-            self.assertEqual(len(self.pbm.dispatchers), 1)
-            self.assertIn(portstr, self.pbm.dispatchers)
-            disp = self.pbm.dispatchers[portstr]
-            self.assertNotIn('boris', disp.users)
-            self.assertIn('ivona', disp.users)
-        d.addCallback(check_boris_gone)
-        d.addCallback(lambda _: reg2.unregister())
+        self.assertEqual(len(self.pbm.dispatchers), 1)
+        self.assertIn(portstr, self.pbm.dispatchers)
+        disp = self.pbm.dispatchers[portstr]
+        self.assertNotIn('boris', disp.users)
+        self.assertIn('ivona', disp.users)
+        yield reg2.unregister()
 
-        def check_dispatcher_gone(_):
-            self.assertEqual(len(self.pbm.dispatchers), 0)
-        d.addCallback(check_dispatcher_gone)
-        return d
+        self.assertEqual(len(self.pbm.dispatchers), 0)
 
     @defer.inlineCallbacks
     def test_requestAvatarId_noinitLock(self):

@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-from future.utils import text_type
-
 import re
 
 from twisted.internet import defer
@@ -27,7 +22,7 @@ from buildbot import util
 from buildbot.util import lineboundaries
 
 
-class Log(object):
+class Log:
     _byType = {}
 
     def __init__(self, master, name, type, logid, decoder):
@@ -57,7 +52,7 @@ class Log(object):
 
     @classmethod
     def new(cls, master, name, type, logid, logEncoding):
-        type = text_type(type)
+        type = str(type)
         try:
             subcls = cls._byType[type]
         except KeyError:
@@ -124,7 +119,7 @@ class PlainLog(Log):
         super(PlainLog, self).__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
-            if not isinstance(lines, text_type):
+            if not isinstance(lines, str):
                 lines = self.decoder(lines)
             self.subPoint.deliver(None, lines)
             return self.addRawLines(lines)
@@ -169,7 +164,7 @@ class StreamLog(Log):
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
-                if not isinstance(lines, text_type):
+                if not isinstance(lines, str):
                     lines = self.decoder(lines)
                 # deliver the un-annotated version to subscribers
                 self.subPoint.deliver(stream, lines)
@@ -191,7 +186,7 @@ class StreamLog(Log):
 
     @defer.inlineCallbacks
     def finish(self):
-        for lbf in itervalues(self.lbfs):
+        for lbf in self.lbfs.values():
             yield lbf.flush()
         yield super(StreamLog, self).finish()
 

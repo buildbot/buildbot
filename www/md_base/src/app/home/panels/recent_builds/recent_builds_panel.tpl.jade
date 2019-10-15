@@ -1,5 +1,0 @@
-div.no-build(ng-if="recent_builds.length == 0")
-  | No completed builds yet. Go to
-  a(ui-sref="builds") builds panel
-  |  to trigger a build.
-build-item(ng-repeat="build in recent.builds", build="build", show-builder="recent.showBuilders")

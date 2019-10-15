@@ -20,13 +20,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import print_function
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.internet.base import _ThreePhaseEvent
 from twisted.internet.interfaces import IReactorCore
 from twisted.internet.interfaces import IReactorThreads
 from twisted.internet.task import Clock
+from twisted.python import log
 from twisted.python.failure import Failure
 from zope.interface import implementer
 
@@ -36,13 +37,14 @@ from zope.interface import implementer
 
 
 @implementer(IReactorCore)
-class CoreReactor(object):
+class CoreReactor:
 
     """
     Partial implementation of ``IReactorCore``.
     """
 
     def __init__(self):
+        super().__init__()
         self._triggers = {}
 
     def addSystemEventTrigger(self, phase, eventType, f, *args, **kw):
@@ -63,7 +65,7 @@ class CoreReactor(object):
         f(*args, **kwargs)
 
 
-class NonThreadPool(object):
+class NonThreadPool:
 
     """
     A stand-in for ``twisted.python.threadpool.ThreadPool`` so that the
@@ -100,7 +102,7 @@ class NonThreadPool(object):
 
 
 @implementer(IReactorThreads)
-class NonReactor(object):
+class NonReactor:
 
     """
     A partial implementation of ``IReactorThreads`` which fits into
@@ -117,5 +119,57 @@ class NonReactor(object):
 class TestReactor(NonReactor, CoreReactor, Clock):
 
     def __init__(self):
-        Clock.__init__(self)
-        CoreReactor.__init__(self)
+        super().__init__()
+
+        # whether there are calls that should run right now
+        self._pendingCurrentCalls = False
+        self.stop_called = False
+
+    def _executeCurrentDelayedCalls(self):
+        while self.getDelayedCalls():
+            first = sorted(self.getDelayedCalls(),
+                           key=lambda a: a.getTime())[0]
+            if first.getTime() > self.seconds():
+                break
+            self.advance(0)
+
+        self._pendingCurrentCalls = False
+
+    @defer.inlineCallbacks
+    def _catchPrintExceptions(self, what, *a, **kw):
+        try:
+            r = what(*a, **kw)
+            if isinstance(r, defer.Deferred):
+                yield r
+        except Exception as e:
+            log.msg('Unhandled exception from deferred when doing '
+                    'TestReactor.advance()', e)
+            raise
+
+    def callLater(self, when, what, *a, **kw):
+        # Buildbot often uses callLater(0, ...) to defer execution of certain
+        # code to the next iteration of the reactor. This means that often
+        # there are pending callbacks registered to the reactor that might
+        # block other code from proceeding unless the test reactor has an
+        # iteration. To avoid deadlocks in tests we give the real reactor a
+        # chance to advance the test reactor whenever we detect that there
+        # are callbacks that should run in the next iteration of the test
+        # reactor.
+        #
+        # Additionally, we wrap all calls with a function that prints any
+        # unhandled exceptions
+        if when <= 0 and not self._pendingCurrentCalls:
+            reactor.callLater(0, self._executeCurrentDelayedCalls)
+
+        return super().callLater(when, self._catchPrintExceptions,
+                                 what, *a, **kw)
+
+    def stop(self):
+        # first fire pending calls until the current time. Note that the real
+        # reactor only advances until the current time in the case of shutdown.
+        self.advance(0)
+
+        # then, fire the shutdown event
+        self.fireSystemEvent('shutdown')
+
+        self.stop_called = True

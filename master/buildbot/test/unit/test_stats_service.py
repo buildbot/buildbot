@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import mock
 
@@ -33,16 +31,18 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
 from buildbot.test.util import logging
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestStatsServicesBase(unittest.TestCase):
+class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
 
-    BUILDER_NAMES = [u'builder1', u'builder2']
+    BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [1, 2]
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True,
-                                             wantData=True, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
+                                             wantDb=True)
 
         for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):
             self.master.db.builders.addTestBuilder(
@@ -85,12 +85,20 @@ class TestStatsServicesConfiguration(TestStatsServicesBase):
         self.stats_service.reconfigService(new_storage_backends)
         self.checkEqual(new_storage_backends)
 
+    def test_reconfig_with_consumers(self):
+        backend = fakestats.FakeStatsStorageService(name='One')
+        backend.captures = [capture.CaptureProperty('test_builder', 'test')]
+        new_storage_backends = [backend]
+
+        self.stats_service.reconfigService(new_storage_backends)
+        self.stats_service.reconfigService(new_storage_backends)
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+
     def test_bad_configuration(self):
         # Reconfigure with a bad configuration.
         new_storage_backends = [mock.Mock()]
-        self.assertRaises(TypeError,
-                          self.stats_service.reconfigService,
-                          new_storage_backends)
+        with self.assertRaises(TypeError):
+            self.stats_service.reconfigService(new_storage_backends)
 
     def checkEqual(self, new_storage_backends):
         # Check whether the new_storage_backends was set in reconfigService
@@ -116,10 +124,9 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             # consume it somehow to please pylint
             [influxdb]
         except ImportError:
-            self.assertRaises(config.ConfigErrors,
-                              lambda: InfluxStorageService(
-                                  "fake_url", "fake_port", "fake_user", "fake_password",
-                                  "fake_db", captures))
+            with self.assertRaises(config.ConfigErrors):
+                InfluxStorageService("fake_url", "fake_port", "fake_user",
+                                     "fake_password", "fake_db", captures)
 
         # if instead influxdb is installed, then initialize it - no errors
         # should be realized
@@ -189,7 +196,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
     """
 
     def setUp(self):
-        TestStatsServicesBase.setUp(self)
+        super().setUp()
         self.routingKey = (
             "builders", self.BUILDER_IDS[0], "builds", 1, "finished")
         self.master.mq.verifyMessages = False
@@ -218,7 +225,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             started_at=build['started_at'],
             complete=True,
             complete_at=build['complete_at'],
-            state_string=u'',
+            state_string='',
             results=0,
         )
 
@@ -286,8 +293,9 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
         cap = self.fake_storage_service.captures[0]
-        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           CaptureCallbackError)
+        yield self.assertFailure(cap.consume(self.routingKey,
+                                             self.get_dict(build)),
+                                 CaptureCallbackError)
 
     @defer.inlineCallbacks
     def test_property_capturing_alt_callback(self):
@@ -390,8 +398,8 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     def test_build_duration_report_in_error(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: capture.CaptureBuildDuration('builder1', report_in='foobar'))
+        with self.assertRaises(config.ConfigErrors):
+            capture.CaptureBuildDuration('builder1', report_in='foobar')
 
     @defer.inlineCallbacks
     def test_build_duration_capturing_alt_callback(self):
@@ -421,19 +429,22 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
         cap = self.fake_storage_service.captures[0]
-        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           CaptureCallbackError)
+        yield self.assertFailure(cap.consume(self.routingKey,
+                                             self.get_dict(build)),
+                                 CaptureCallbackError)
 
         self.setupFakeStorage([capture.CaptureBuildEndTime('builder1', cb)])
         cap = self.fake_storage_service.captures[0]
-        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           CaptureCallbackError)
+        yield self.assertFailure(cap.consume(self.routingKey,
+                                             self.get_dict(build)),
+                                 CaptureCallbackError)
 
         self.setupFakeStorage(
             [capture.CaptureBuildDuration('builder1', callback=cb)])
         cap = self.fake_storage_service.captures[0]
-        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           CaptureCallbackError)
+        yield self.assertFailure(cap.consume(self.routingKey,
+                                             self.get_dict(build)),
+                                 CaptureCallbackError)
 
     @defer.inlineCallbacks
     def test_yield_metrics_value(self):
@@ -536,4 +547,5 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         cap = self.fake_storage_service.captures[0]
-        self.assertFailure(cap.consume(routingKey, msg), CaptureCallbackError)
+        yield self.assertFailure(cap.consume(routingKey, msg),
+                                 CaptureCallbackError)

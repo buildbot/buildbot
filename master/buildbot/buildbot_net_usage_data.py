@@ -15,14 +15,9 @@
 
 """
 This files implement buildbotNetUsageData options
-It uses urllib2 instead of requests in order to avoid requiring another dependency for statistics feature.
-urllib2 supports http_proxy already urllib2 is blocking and thus everything is done from a thread.
+It uses urllib instead of requests in order to avoid requiring another dependency for statistics feature.
+urllib supports http_proxy already. urllib is blocking and thus everything is done from a thread.
 """
-
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib import error as urllib_error
-from future.moves.urllib import request as urllib_request
 
 import hashlib
 import inspect
@@ -30,6 +25,8 @@ import json
 import os
 import platform
 import socket
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from twisted.internet import threads
 from twisted.python import log

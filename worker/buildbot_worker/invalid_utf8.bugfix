@@ -1,0 +1,2 @@
+- Fixed escaping of invalid UTF-8 sequences in log files that are
+  being watched by the worker (:issue:`4744`).

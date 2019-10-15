@@ -13,11 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
+from builtins import int
 
 from twisted.python import util
-from builtins import int
-from future.utils import PY3
 
 
 def onlyOnce(fn):
@@ -34,21 +32,6 @@ def onlyOnce(fn):
 # patch module.  This will help cut down on unnecessary imports where the
 # patches are not needed, and also avoid problems with patches importing
 # private things in external libraries that no longer exist.
-
-
-@onlyOnce
-def patch_python14653():
-    # this bug was fixed in Python 2.7.4: http://bugs.python.org/issue14653
-    if sys.version_info[:3] < (2, 7, 4):
-        from buildbot.monkeypatches import python14653
-        python14653.patch()
-
-
-@onlyOnce
-def patch_twisted9127():
-    if PY3:
-        from buildbot.monkeypatches import twisted9127
-        twisted9127.patch()
 
 
 @onlyOnce
@@ -127,6 +110,3 @@ def patch_all(for_tests=False):
         patch_mysqlclient_warnings()
         patch_config_for_unit_tests()
         patch_unittest_testcase()
-
-    patch_python14653()
-    patch_twisted9127()

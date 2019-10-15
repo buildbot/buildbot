@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 import textwrap
@@ -30,7 +28,7 @@ from buildbot.steps.source.base import Source
 
 
 @implementer(IRenderable)
-class RepoDownloadsFromProperties(util.ComparableMixin, object):
+class RepoDownloadsFromProperties(util.ComparableMixin):
     parse_download_re = (re.compile(r"repo download ([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+)/([0-9]+/[0-9]+)"),
@@ -70,7 +68,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
 
 
 @implementer(IRenderable)
-class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
+class RepoDownloadsFromChangeSource(util.ComparableMixin):
     compare_attrs = ('codebase',)
 
     def __init__(self, codebase=None):
@@ -171,7 +169,7 @@ class Repo(Source):
         self.repoDownloads = repoDownloads
         self.depth = depth
         self.syncQuietly = syncQuietly
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         assert self.manifestURL is not None
 

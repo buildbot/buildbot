@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
 
 from twisted.internet import defer
 
@@ -46,8 +43,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
     OTHER_MASTER_ID = 93
 
     def setUpScheduler(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantDb=True, wantMq=True, wantData=True)
+        self.master = fakemaster.make_master(self, wantDb=True, wantMq=True,
+                                             wantData=True)
 
     def tearDownScheduler(self):
         pass
@@ -123,16 +120,15 @@ class SchedulerMixin(interfaces.InterfaceTests):
         def patch(meth):
             oldMethod = getattr(scheduler, meth)
 
+            @defer.inlineCallbacks
             def newMethod():
                 self._parentMethodCalled = False
-                d = defer.maybeDeferred(oldMethod)
+                rv = yield defer.maybeDeferred(oldMethod)
 
-                @d.addCallback
-                def check(rv):
-                    self.assertTrue(self._parentMethodCalled,
-                                    "'%s' did not call its parent" % meth)
-                    return rv
-                return d
+                self.assertTrue(self._parentMethodCalled,
+                    "'%s' did not call its parent" % meth)
+                return rv
+
             setattr(scheduler, meth, newMethod)
 
             oldParent = getattr(base.BaseScheduler, meth)
@@ -195,7 +191,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         assert len(builderids) == len(builderNames)
         bsid = next(self._bsidGenerator)
         brids = dict(zip(builderids, self._bridGenerator))
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                     waited_for=False, properties=None,

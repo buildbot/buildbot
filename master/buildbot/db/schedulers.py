@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import sqlalchemy as sa
 import sqlalchemy.exc
 
@@ -33,6 +29,7 @@ class SchedulerAlreadyClaimedError(Exception):
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    # returns a Deferred that returns None
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
@@ -40,6 +37,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q, enabled=int(v))
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def classifyChanges(self, schedulerid, classifications):
         def thd(conn):
             tbl = self.db.model.scheduler_changes
@@ -47,7 +45,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             upd_q = tbl.update(
                 ((tbl.c.schedulerid == schedulerid) &
                  (tbl.c.changeid == sa.bindparam('wc_changeid'))))
-            for changeid, important in iteritems(classifications):
+            for changeid, important in classifications.items():
                 transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type
@@ -69,6 +67,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 transaction.commit()
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def flushChangeClassifications(self, schedulerid, less_than=None):
         def thd(conn):
             sch_ch_tbl = self.db.model.scheduler_changes
@@ -79,6 +78,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q).close()
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     def getChangeClassifications(self, schedulerid, branch=-1,
                                  repository=-1, project=-1,
                                  codebase=-1):
@@ -111,8 +111,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
                 whereclause=wc)
-            return dict([(r.changeid, [False, True][r.important])
-                         for r in conn.execute(q)])
+            return {r.changeid: [False, True][r.important]
+                    for r in conn.execute(q)}
         return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):
@@ -126,6 +126,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 name_hash=name_hash,
             ))
 
+    # returns a Deferred that returns None
     def setSchedulerMaster(self, schedulerid, masterid):
         def thd(conn):
             sch_mst_tbl = self.db.model.scheduler_masters
@@ -164,8 +165,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def getScheduler(self, schedulerid):
         sch = yield self.getSchedulers(_schedulerid=schedulerid)
         if sch:
-            defer.returnValue(sch[0])
+            return sch[0]
 
+    # returns a Deferred that returns a value
     def getSchedulers(self, active=None, masterid=None, _schedulerid=None):
         def thd(conn):
             sch_tbl = self.db.model.schedulers

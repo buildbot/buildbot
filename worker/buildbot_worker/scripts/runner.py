@@ -160,7 +160,7 @@ class CreateWorkerOptions(MakerBase):
         else:
             master, port = master_arg.split(":")
 
-        if len(master) < 1:
+        if not master:
             raise usage.UsageError("invalid <master> argument '{}'".format(
                                    master_arg))
         try:

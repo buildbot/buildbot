@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 
@@ -25,7 +23,7 @@ from buildbot.util.logger import Logger
 log = Logger()
 
 
-class LineBoundaryFinder(object):
+class LineBoundaryFinder:
 
     __slots__ = ['partialLine', 'callback', 'warned']
     # split at reasonable line length.

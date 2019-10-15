@@ -13,12 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import lrange
-
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.data import resultspec
@@ -28,12 +23,14 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 TIME1 = 1304262222
 TIME2 = 1304262223
 TIME3 = 1304262224
 TIME4 = 1304262235
+CREATED_AT = 927845299
 
 
 class Tests(interfaces.InterfaceTests):
@@ -138,7 +135,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string=u'build 5', results=None))
+                                     state_string='build 5', results=None))
 
     @defer.inlineCallbacks
     def test_getBuild_missing(self):
@@ -189,6 +186,50 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[50], self.threeBdicts[51]])
 
+    def test_signature_getBuildsForChange(self):
+        @self.assertArgSpecMatches(self.db.builds.getBuildsForChange)
+        def getBuildsForChange(self, changeid):
+            pass
+
+    @defer.inlineCallbacks
+    def do_test_getBuildsForChange(self, rows, changeid, expected):
+        yield self.insertTestData(rows)
+
+        builds = yield self.db.builds.getBuildsForChange(changeid)
+
+        self.assertEqual(sorted(builds), sorted(expected))
+
+    def test_getBuildsForChange_OneCodebase(self):
+        rows = [fakedb.Master(id=88, name="bar"),
+                fakedb.Worker(id=13, name='one'),
+                fakedb.Builder(id=77, name='A'),
+                fakedb.SourceStamp(id=234, created_at=CREATED_AT,
+                                   revision="aaa"),
+                fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
+                fakedb.Buildset(id=30, reason='foo',
+                                submitted_at=1300305712, results=1),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+                fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                    priority=13, submitted_at=1300305712, results=1,
+                                    complete=0, complete_at=None),
+                fakedb.Build(id=50, buildrequestid=19, number=5, masterid=88,
+                             builderid=77, state_string="test", workerid=13,
+                             started_at=1304262222, results=1), ]
+
+        expected = [{
+            'id': 50,
+            'number': 5,
+            'builderid': 77,
+            'buildrequestid': 19,
+            'workerid': 13,
+            'masterid': 88,
+            'started_at': epoch2datetime(1304262222),
+            'complete_at': None,
+            'state_string': 'test',
+            'results': 1}]
+
+        return self.do_test_getBuildsForChange(rows, 14, expected)
+
     @defer.inlineCallbacks
     def test_getBuilds_complete(self):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
@@ -200,65 +241,64 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addBuild_first(self):
-        clock = task.Clock()
-        clock.advance(TIME1)
+        self.reactor.advance(TIME1)
         yield self.insertTestData(self.backgroundData)
         id, number = yield self.db.builds.addBuild(builderid=77,
-                                                   buildrequestid=41, workerid=13, masterid=88,
-                                                   state_string=u'test test2', _reactor=clock)
+                                                   buildrequestid=41,
+                                                   workerid=13, masterid=88,
+                                                   state_string='test test2')
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': u'test test2',
+                                 'complete_at': None, 'state_string': 'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
     def test_addBuild_existing(self):
-        clock = task.Clock()
-        clock.advance(TIME1)
+        self.reactor.advance(TIME1)
         yield self.insertTestData(self.backgroundData + [
             fakedb.Build(number=10, buildrequestid=41, builderid=77,
                          masterid=88, workerid=13),
         ])
         id, number = yield self.db.builds.addBuild(builderid=77,
-                                                   buildrequestid=41, workerid=13, masterid=88,
-                                                   state_string=u'test test2', _reactor=clock)
+                                                   buildrequestid=41,
+                                                   workerid=13, masterid=88,
+                                                   state_string='test test2')
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 11)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': u'test test2',
+                                 'complete_at': None, 'state_string': 'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
     def test_setBuildStateString(self):
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
         yield self.db.builds.setBuildStateString(buildid=50,
-                                                 state_string=u'test test2')
+                                                 state_string='test test2')
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string=u'test test2', results=None))
+                                     state_string='test test2', results=None))
 
     @defer.inlineCallbacks
     def test_finishBuild(self):
-        clock = task.Clock()
-        clock.advance(TIME4)
+        self.reactor.advance(TIME4)
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
-        yield self.db.builds.finishBuild(buildid=50, results=7, _reactor=clock)
+        yield self.db.builds.finishBuild(buildid=50, results=7)
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1),
                                      complete_at=epoch2datetime(TIME4),
-                                     state_string=u'build 5',
+                                     state_string='build 5',
                                      results=7))
 
     @defer.inlineCallbacks
@@ -301,12 +341,11 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addBuild_existing_race(self):
-        clock = task.Clock()
-        clock.advance(TIME1)
+        self.reactor.advance(TIME1)
         yield self.insertTestData(self.backgroundData)
 
         # add new builds at *just* the wrong time, repeatedly
-        numbers = lrange(1, 8)
+        numbers = list(range(1, 8))
 
         def raceHook(conn):
             if not numbers:
@@ -317,8 +356,9 @@ class RealTests(Tests):
                           'started_at': TIME1, 'state_string': "hi"})
 
         id, number = yield self.db.builds.addBuild(builderid=77,
-                                                   buildrequestid=41, workerid=13, masterid=88,
-                                                   state_string=u'test test2', _reactor=clock,
+                                                   buildrequestid=41,
+                                                   workerid=13, masterid=88,
+                                                   state_string='test test2',
                                                    _race_hook=raceHook)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
@@ -326,7 +366,7 @@ class RealTests(Tests):
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': u'test test2',
+                                 'complete_at': None, 'state_string': 'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
@@ -430,10 +470,11 @@ class RealTests(Tests):
                          [self.threeBdicts[50], self.threeBdicts[51]])
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
@@ -443,15 +484,14 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['builds', 'builders', 'masters', 'buildrequests',
-                         'buildsets', 'workers', 'build_properties'])
+                         'buildsets', 'workers', 'build_properties', 'changes',
+                         'sourcestamps', 'buildset_sourcestamps', 'patches'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.builds = builds.BuildsConnectorComponent(self.db)
-        return d
+        self.db.builds = builds.BuildsConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

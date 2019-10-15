@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from random import choice
 from string import ascii_lowercase
 
@@ -58,7 +55,6 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             random_length = 65535
             random_string = ''.join(choice(ascii_lowercase)
                                     for byte in range(random_length))
-            random_string = random_string.encode("ascii")
 
             # Verify column type is text
             change_properties = sautils.Table(

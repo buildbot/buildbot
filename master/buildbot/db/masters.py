@@ -13,12 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import sqlalchemy as sa
-
-from twisted.internet import reactor
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
@@ -31,7 +27,7 @@ class MasterDict(dict):
 class MastersConnectorComponent(base.DBConnectorComponent):
     data2db = {"masterid": "id", "link": "id"}
 
-    def findMasterId(self, name, _reactor=reactor):
+    def findMasterId(self, name):
         tbl = self.db.model.masters
         return self.findSomethingId(
             tbl=tbl,
@@ -40,10 +36,11 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 name=name,
                 name_hash=self.hashColumns(name),
                 active=0,  # initially inactive
-                last_active=_reactor.seconds()
+                last_active=self.master.reactor.seconds()
             ))
 
-    def setMasterState(self, masterid, active, _reactor=reactor):
+    # returns a Deferred that returns a value
+    def setMasterState(self, masterid, active):
         def thd(conn):
             tbl = self.db.model.masters
             whereclause = (tbl.c.id == masterid)
@@ -69,13 +66,14 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update(whereclause=whereclause)
             q = q.values(active=1 if active else 0)
             if active:
-                q = q.values(last_active=_reactor.seconds())
+                q = q.values(last_active=self.master.reactor.seconds())
             conn.execute(q)
 
             # return True if there was a change in state
             return was_active != bool(active)
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     def getMaster(self, masterid):
         def thd(conn):
             tbl = self.db.model.masters
@@ -90,6 +88,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     def getMasters(self):
         def thd(conn):
             tbl = self.db.model.masters
@@ -98,7 +97,8 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 for row in conn.execute(tbl.select()).fetchall()]
         return self.db.pool.do(thd)
 
-    def setAllMastersActiveLongTimeAgo(self, _reactor=reactor):
+    # returns a Deferred that returns None
+    def setAllMastersActiveLongTimeAgo(self):
         def thd(conn):
             tbl = self.db.model.masters
             q = tbl.update().values(active=1, last_active=0)

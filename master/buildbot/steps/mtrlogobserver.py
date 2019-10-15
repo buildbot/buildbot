@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
 
 import re
 import sys
@@ -46,9 +43,7 @@ are more suitable for use in MTR.
 
     def __init__(self, *args, **kwargs):
         self._eqKey = (args, kwargs)
-        adbapi.ConnectionPool.__init__(self,
-                                       cp_reconnect=True, cp_min=1, cp_max=3,
-                                       *args, **kwargs)
+        super().__init__(cp_reconnect=True, cp_min=1, cp_max=3, *args, **kwargs)
 
     def __eq__(self, other):
         if isinstance(other, EqConnectionPool):
@@ -109,10 +104,10 @@ class MtrLogObserver(LogLineObserver):
         self.testFail = None
         self.failList = []
         self.warnList = []
-        LogLineObserver.__init__(self)
+        super().__init__()
 
     def setLog(self, loog):
-        LogLineObserver.setLog(self, loog)
+        super().setLog(loog)
         d = loog.waitUntilFinished()
         d.addCallback(lambda l: self.closeTestFail())
 
@@ -283,7 +278,7 @@ class MTR(Test):
         dbpool is specified. The test_type string, if specified, will also
         appear on the waterfall page."""
 
-    renderables = ['mtr_subdir']
+    renderables = ['mtr_subdir', 'parallel']
 
     def __init__(self, dbpool=None, test_type=None, test_info="",
                  description=None, descriptionDone=None,
@@ -303,7 +298,7 @@ class MTR(Test):
             descriptionDone = ["test"]
             if test_type:
                 descriptionDone.append(test_type)
-        Test.__init__(self, logfiles=logfiles, lazylogfiles=lazylogfiles,
+        super().__init__(logfiles=logfiles, lazylogfiles=lazylogfiles,
                       description=description, descriptionDone=descriptionDone,
                       warningPattern=warningPattern, **kwargs)
         self.dbpool = dbpool
@@ -452,7 +447,7 @@ VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
         self.setProperty("mtr_id", insert_id)
         self.setProperty("mtr_warn_id", 0)
 
-        Test.start(self)
+        super().start()
 
     def reportError(self, err):
         log.msg("Error in async insert into database: %s" % err)

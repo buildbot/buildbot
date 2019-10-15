@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -40,12 +38,12 @@ class SetPropertyFromCommand(RunMasterBase):
             # tricky
             yield task.deferLater(reactor, .1, lambda: None)
             res = yield oldNewLog(*arg, **kw)
-            defer.returnValue(res)
+            return res
         self.master.data.updates.addLog = newLog
         build = yield self.doForceBuild(wantProperties=True)
 
         self.assertEqual(
-            build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))
+            build['properties']['test'], ('foo', 'SetPropertyFromCommand Step'))
 
 
 class SetPropertyFromCommandPB(SetPropertyFromCommand):

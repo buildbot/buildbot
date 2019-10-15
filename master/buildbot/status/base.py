@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from zope.interface import implementer
 
@@ -96,9 +94,7 @@ class StatusReceiverBase:
 
 class StatusReceiverMultiService(StatusReceiverBase, service.AsyncMultiService,
                                  util.ComparableMixin):
-
-    def __init__(self):
-        service.AsyncMultiService.__init__(self)
+    pass
 
 
 class StatusReceiverService(StatusReceiverBase, service.AsyncService,

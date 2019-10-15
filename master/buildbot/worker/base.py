@@ -14,10 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import time
 
 from twisted.internet import defer
@@ -33,11 +29,10 @@ from buildbot.status.worker import WorkerStatus
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import deprecatedWorkerClassProperty
 
 
 @implementer(IWorker)
-class AbstractWorker(service.BuildbotService, object):
+class AbstractWorker(service.BuildbotService):
 
     """This is the master-side representative for a remote buildbot worker.
     There is exactly one for each worker described in the config file (the
@@ -59,10 +54,16 @@ class AbstractWorker(service.BuildbotService, object):
     DEFAULT_MISSING_TIMEOUT = 3600
     DEFAULT_KEEPALIVE_INTERVAL = 3600
 
+    # override to True if isCompatibleWithBuild may return False
+    builds_may_be_incompatible = False
+
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
                     missing_timeout=None,
-                    properties=None, locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
+                    properties=None, defaultProperties=None,
+                    locks=None,
+                    keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL,
+                    machine_name=None):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -73,14 +74,18 @@ class AbstractWorker(service.BuildbotService, object):
         @param properties: properties that will be applied to builds run on
                            this worker
         @type properties: dictionary
+        @param defaultProperties: properties that will be applied to builds
+                                  run on this worker only if the property
+                                  has not been set by another source
+        @type defaultProperties: dictionary
         @param locks: A list of locks that must be acquired before this worker
                       can be used
         @type locks: dictionary
+        @param machine_name: The name of the machine to associate with the
+                             worker.
         """
         self.name = name = bytes2unicode(name)
-
-        if properties is None:
-            properties = {}
+        self.machine_name = machine_name
 
         self.password = password
 
@@ -104,9 +109,15 @@ class AbstractWorker(service.BuildbotService, object):
         self.lock_subscriptions = []
 
         self.properties = Properties()
-        self.properties.update(properties, "Worker")
-        self.properties.setProperty("slavename", name, "Worker (deprecated)")
+        self.properties.update(properties or {}, "Worker")
         self.properties.setProperty("workername", name, "Worker")
+        self.defaultProperties = Properties()
+        self.defaultProperties.update(defaultProperties or {}, "Worker")
+
+        if self.machine_name is not None:
+            self.properties.setProperty('machine_name', self.machine_name,
+                                        'Worker')
+        self.machine = None
 
         self.lastMessageReceived = 0
 
@@ -136,7 +147,6 @@ class AbstractWorker(service.BuildbotService, object):
     def workername(self):
         # workername is now an alias to twisted.Service's name
         return self.name
-    deprecatedWorkerClassProperty(locals(), workername)
 
     @property
     def botmaster(self):
@@ -144,6 +154,7 @@ class AbstractWorker(service.BuildbotService, object):
             return None
         return self.master.botmaster
 
+    @defer.inlineCallbacks
     def updateLocks(self):
         """Convert the L{LockAccess} objects in C{self.locks} into real lock
         objects, while also maintaining the subscriptions to lock releases."""
@@ -152,9 +163,10 @@ class AbstractWorker(service.BuildbotService, object):
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = [(self.botmaster.getLockFromLockAccess(a), a)
-                 for a in self.access]
-        self.locks = [(l.getLock(self), la) for l, la in locks]
+        locks = yield self.botmaster.getLockFromLockAccesses(self.access, self.config_version)
+
+        self.locks = [(l.getLockForWorker(self.workername), la)
+                      for l, la in locks]
         self.lock_subscriptions = [l.subscribeToReleases(self._lockReleased)
                                    for l, la in self.locks]
 
@@ -221,10 +233,13 @@ class AbstractWorker(service.BuildbotService, object):
         # startService
 
         self.manager = parent
-        return service.BuildbotService.setServiceParent(self, parent)
+        return super().setServiceParent(parent)
 
     @defer.inlineCallbacks
     def startService(self):
+        # tracks config version for locks
+        self.config_version = self.master.config_version
+
         self.updateLocks()
         self.workerid = yield self.master.data.updates.findWorkerId(
             self.name)
@@ -235,7 +250,7 @@ class AbstractWorker(service.BuildbotService, object):
                                                                         None))
 
         yield self._getWorkerInfo()
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
 
         # startMissingTimer wants the service to be running to really start
         if self.start_missing_on_startup:
@@ -244,7 +259,10 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def reconfigService(self, name, password, max_builds=None,
                         notify_on_missing=None, missing_timeout=DEFAULT_MISSING_TIMEOUT,
-                        properties=None, locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
+                        properties=None, defaultProperties=None,
+                        locks=None,
+                        keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL,
+                        machine_name=None):
         # Given a Worker config arguments, configure this one identically.
         # Because Worker objects are remotely referenced, we can't replace them
         # without disconnecting the worker, yet there's no reason to do that.
@@ -270,25 +288,43 @@ class AbstractWorker(service.BuildbotService, object):
             if running_missing_timer:
                 self.startMissingTimer()
 
-        if properties is None:
-            properties = {}
         self.properties = Properties()
-        self.properties.update(properties, "Worker")
-        self.properties.setProperty("slavename", name, "Worker (deprecated)")
+        self.properties.update(properties or {}, "Worker")
         self.properties.setProperty("workername", name, "Worker")
+        self.defaultProperties = Properties()
+        self.defaultProperties.update(defaultProperties or {}, "Worker")
+
+        # Note that before first reconfig self.machine will always be None and
+        # out of sync with self.machine_name, thus more complex logic is needed.
+        if self.machine is not None and self.machine_name != machine_name:
+            self.machine.unregisterWorker(self)
+            self.machine = None
+
+        self.machine_name = machine_name
+        if self.machine is None and self.machine_name is not None:
+            self.machine = self.master.machine_manager.getMachineByName(self.machine_name)
+            if self.machine is not None:
+                self.machine.registerWorker(self)
+                self.properties.setProperty("machine_name", self.machine_name,
+                                            "Worker")
+            else:
+                log.err("Unknown machine '{}' for worker '{}'".format(
+                    self.machine_name, self.name))
 
         # update our records with the worker manager
         if not self.registration:
             self.registration = yield self.master.workers.register(self)
         yield self.registration.update(self, self.master.config)
 
+        # tracks config version for locks
+        self.config_version = self.master.config_version
         self.updateLocks()
 
     @defer.inlineCallbacks
     def reconfigServiceWithSibling(self, sibling):
         # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
         # However, the worker configuration depends on which builder it is configured
-        yield service.BuildbotService.reconfigServiceWithSibling(self, sibling)
+        yield super().reconfigServiceWithSibling(sibling)
 
         # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
@@ -311,7 +347,14 @@ class AbstractWorker(service.BuildbotService, object):
         self.stopQuarantineTimer()
         # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
-        yield service.BuildbotService.stopService(self)
+        yield super().stopService()
+
+    def isCompatibleWithBuild(self, build_props):
+        # given a build properties object, determines whether the build is
+        # compatible with the currently running worker or not. This is most
+        # often useful for latent workers where it's possible to request
+        # different kinds of workers.
+        return defer.succeed(True)
 
     def startMissingTimer(self):
         if self.missing_timeout and self.parent and self.running:
@@ -354,6 +397,8 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def attached(self, conn):
         """This is called when the worker connects."""
+
+        assert self.conn is None
 
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", 1)
 
@@ -408,8 +453,22 @@ class AbstractWorker(service.BuildbotService, object):
         self.lastMessageReceived = now
         self.worker_status.setLastMessageReceived(now)
 
+    def setupProperties(self, props):
+        for name in self.properties.properties:
+            props.setProperty(
+                name, self.properties.getProperty(name), "Worker")
+        for name in self.defaultProperties.properties:
+            if name not in props:
+                props.setProperty(
+                    name, self.defaultProperties.getProperty(name), "Worker")
+
     @defer.inlineCallbacks
     def detached(self):
+        # protect against race conditions in conn disconnect path and someone
+        # calling detached directly. At the moment the null worker does that.
+        if self.conn is None:
+            return
+
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
         self.conn = None
         self._old_builder_list = []
@@ -537,7 +596,7 @@ class AbstractWorker(service.BuildbotService, object):
             return False
 
         if self.max_builds:
-            active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+            active_builders = [wfb for wfb in self.workerforbuilders.values()
                                if wfb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
@@ -561,7 +620,7 @@ class AbstractWorker(service.BuildbotService, object):
         and has no active builders."""
         if not self._graceful:
             return
-        active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+        active_builders = [wfb for wfb in self.workerforbuilders.values()
                            if wfb.isBusy()]
         if active_builders:
             return
@@ -616,22 +675,23 @@ class AbstractWorker(service.BuildbotService, object):
 
 class Worker(AbstractWorker):
 
+    @defer.inlineCallbacks
     def detached(self):
-        AbstractWorker.detached(self)
+        yield super().detached()
         self.botmaster.workerLost(self)
         self.startMissingTimer()
 
     @defer.inlineCallbacks
     def attached(self, bot):
         try:
-            yield AbstractWorker.attached(self, bot)
+            yield super().attached(bot)
         except Exception as e:
             log.err(e, "worker %s cannot attach" % (self.name,))
             return
 
     def buildFinished(self, wfb):
         """This is called when a build on this worker is finished."""
-        AbstractWorker.buildFinished(self, wfb)
+        super().buildFinished(wfb)
 
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect

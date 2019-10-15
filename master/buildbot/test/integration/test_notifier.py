@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import base64
 
@@ -60,6 +58,7 @@ class NotifierMaster(RunMasterBase):
         change = dict(branch="master",
                       files=["foo.c"],
                       author="author@foo.com",
+                      committer="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
                       project="none"

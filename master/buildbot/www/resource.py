@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
+
+import re
 
 from twisted.internet import defer
 from twisted.python import log
@@ -24,12 +24,17 @@ from twisted.web.error import Error
 
 from buildbot.util import unicode2bytes
 
+_CR_LF_RE = re.compile(br"[\r\n]+.*")
+
+
+def protect_redirect_url(url):
+    return _CR_LF_RE.sub(b"", url)
+
 
 class Redirect(Error):
-
     def __init__(self, url):
-        Error.__init__(self, 302, "redirect")
-        self.url = url
+        super().__init__(302, "redirect")
+        self.url = protect_redirect_url(unicode2bytes(url))
 
 
 class Resource(resource.Resource):
@@ -47,7 +52,7 @@ class Resource(resource.Resource):
         return self.master.config.buildbotURL
 
     def __init__(self, master):
-        resource.Resource.__init__(self)
+        super().__init__()
         self.master = master
         if self.needsReconfig and master is not None:
             master.www.resourceNeedsReconfigs(self)
@@ -74,7 +79,7 @@ class Resource(resource.Resource):
                 if s is not None:
                     request.write(s)
                 request.finish()
-            except RuntimeError:  # pragma: no-cover
+            except RuntimeError:  # pragma: no cover
                 # this occurs when the client has already disconnected; ignore
                 # it (see #2027)
                 log.msg("http client disconnected before results were sent")
@@ -110,10 +115,10 @@ class Resource(resource.Resource):
 class RedirectResource(Resource):
 
     def __init__(self, master, basepath):
-        Resource.__init__(self, master)
+        super().__init__(master)
         self.basepath = basepath
 
     def render(self, request):
         redir = self.base_url + self.basepath
-        request.redirect(redir)
+        request.redirect(protect_redirect_url(redir))
         return redir

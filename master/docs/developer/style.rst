@@ -170,8 +170,7 @@ the style within Buildbot is as follows:
             y += z
 
         if xval > 10:
-            defer.returnValue(xval + y)
-            return
+            return xval + y
 
         self.someOtherMethod()
 
@@ -206,7 +205,7 @@ The previous :py:func:`getRevInfo` example implementation should rather be writt
         results['rev'] = res.strip()
         res = yield utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
         results['comments'] = res.strip()
-        defer.returnValue(results)
+        return results
 
 Locking
 .......

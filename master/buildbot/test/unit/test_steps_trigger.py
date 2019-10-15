@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -36,10 +33,11 @@ from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
+from buildbot.test.util.misc import TestReactorMixin
 
 
 @implementer(interfaces.ITriggerableScheduler)
-class FakeTriggerable(object):
+class FakeTriggerable:
 
     triggered_with = None
     result = SUCCESS
@@ -73,7 +71,7 @@ class TriggerableInterfaceTest(unittest.TestCase, InterfaceTests):
         self.assertInterfacesImplemented(FakeTriggerable)
 
 
-class FakeSourceStamp(object):
+class FakeSourceStamp:
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -82,7 +80,7 @@ class FakeSourceStamp(object):
         return self.__dict__.copy()
 
 
-class FakeSchedulerManager(object):
+class FakeSchedulerManager:
     pass
 
 
@@ -99,9 +97,10 @@ def BRID_TO_BUILD_NUMBER(brid):
     return brid + 4000
 
 
-class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
+class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -111,7 +110,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         sourcestamps = sourcestampsInBuild or []
         got_revisions = gotRevisionsInBuild or {}
 
-        steps.BuildStepMixin.setupStep(self, step, *args, **kwargs)
+        super().setupStep(step, *args, **kwargs)
 
         # This step reaches deeply into a number of parts of Buildbot.  That
         # should be fixed!
@@ -188,7 +187,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         if self.step.waitForFinish:
             for i in [11, 22, 33, 44]:
                 yield self.master.db.builds.finishBuild(BRID_TO_BID(i), results_dict.get(i, SUCCESS))
-        d = steps.BuildStepMixin.runStep(self)
+        d = super().runStep()
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
         if self.step.waitForFinish:
@@ -263,39 +262,38 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     # tests
     def test_no_schedulerNames(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger())
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger()
 
     def test_unimportantSchedulerNames_not_in_schedulerNames(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['a'], unimportantsShedulerNames=['b']))
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['a'],
+                            unimportantsShedulerNames=['b'])
 
     def test_sourceStamp_and_updateSourceStamp(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamp=dict(x=1), updateSourceStamp=True))
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamp=dict(x=1),
+                            updateSourceStamp=True)
 
     def test_sourceStamps_and_updateSourceStamp(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamps=[dict(x=1), dict(x=2)],
-                                          updateSourceStamp=True))
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamps=[dict(x=1),
+                            dict(x=2)], updateSourceStamp=True)
 
     def test_updateSourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          updateSourceStamp=True, alwaysUseLatest=True))
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], updateSourceStamp=True,
+                            alwaysUseLatest=True)
 
     def test_sourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamp=dict(x=1), alwaysUseLatest=True))
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamp=dict(x=1),
+                            alwaysUseLatest=True)
 
     def test_sourceStamps_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamps=[dict(x=1), dict(x=2)],
-                                          alwaysUseLatest=True))
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamps=[dict(x=1),
+                            dict(x=2)], alwaysUseLatest=True)
 
     def test_simple(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
@@ -312,17 +310,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(a=(False, [], {}))
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_simple_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
         self.expectOutcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
-        d = self.runStep()
+        yield self.runStep()
 
-        def flush(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(flush)
-        return d
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     def test_bogus_scheduler(self):

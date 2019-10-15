@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from mock import Mock
 
@@ -27,10 +25,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class BuildLookAlike(object):
+class BuildLookAlike:
 
     """ a class whose instances compares to any build dict that this reporter is supposed to send out"""
 
@@ -59,23 +58,31 @@ class BuildLookAlike(object):
         return "{ any build }"
 
 
-class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         config._errors = Mock()
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def createReporter(self, **kwargs):
+    def createReporter(self, auth=("username", "passwd"), **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
-            "serv", auth=("username", "passwd"))
-        self.sp = sp = HttpStatusPush("serv", auth=(
-            "username", Interpolate("passwd")), **kwargs)
+            "serv", auth=auth,
+            debug=None, verify=None)
+
+        interpolated_auth = None
+        if auth is not None:
+            username, passwd = auth
+            passwd = Interpolate(passwd)
+            interpolated_auth = (username, passwd)
+
+        self.sp = sp = HttpStatusPush("serv", auth=interpolated_auth, **kwargs)
         yield sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -87,11 +94,22 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
+        self._http.expect("post", "", json=BuildLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildLookAlike(complete=True))
+        build = yield self.setupBuildResults(SUCCESS)
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "new"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_basic_noauth(self):
+        yield self.createReporter(auth=None)
         self._http.expect("post", "", json=BuildLookAlike(complete=False))
         self._http.expect("post", "", json=BuildLookAlike(complete=True))
         build = yield self.setupBuildResults(SUCCESS)
@@ -128,3 +146,23 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def http2XX(self, code, content):
+        yield self.createReporter()
+        self._http.expect('post', '', code=code, content=content,
+                          json=BuildLookAlike())
+        build = yield self.setupBuildResults(SUCCESS)
+        self.sp.buildStarted(('build', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
+    def test_http200(self):
+        yield self.http2XX(code=200, content="OK")
+
+    @defer.inlineCallbacks
+    def test_http201(self):  # e.g. GitHub returns 201
+        yield self.http2XX(code=201, content="Created")
+
+    @defer.inlineCallbacks
+    def test_http202(self):
+        yield self.http2XX(code=202, content="Accepted")

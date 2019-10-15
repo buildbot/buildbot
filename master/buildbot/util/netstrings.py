@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet.interfaces import IAddress
 from twisted.internet.interfaces import ITransport
@@ -25,13 +23,13 @@ from buildbot.util import unicode2bytes
 
 
 @implementer(IAddress)
-class NullAddress(object):
+class NullAddress:
 
     "an address for NullTransport"
 
 
 @implementer(ITransport)
-class NullTransport(object):
+class NullTransport:
 
     "a do-nothing transport to make NetstringReceiver happy"
 

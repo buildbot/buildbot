@@ -13,11 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 from zope.interface import implementer
 
@@ -30,6 +26,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 A_TIMESTAMP = 1341700729
@@ -58,31 +55,25 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get_existing(self):
-        d = self.callGet(('buildsets', 13))
+        buildset = yield self.callGet(('buildsets', 13))
 
-        @d.addCallback
-        def check(buildset):
-            self.validateData(buildset)
-            self.assertEqual(buildset['reason'], 'because I said so')
-        return d
+        self.validateData(buildset)
+        self.assertEqual(buildset['reason'], 'because I said so')
 
+    @defer.inlineCallbacks
     def test_get_existing_no_sourcestamps(self):
-        d = self.callGet(('buildsets', 14))
+        buildset = yield self.callGet(('buildsets', 14))
 
-        @d.addCallback
-        def check(buildset):
-            self.validateData(buildset)
-            self.assertEqual(buildset['sourcestamps'], [])
-        return d
+        self.validateData(buildset)
+        self.assertEqual(buildset['sourcestamps'], [])
 
+    @defer.inlineCallbacks
     def test_get_missing(self):
-        d = self.callGet(('buildsets', 99))
+        buildset = yield self.callGet(('buildsets', 99))
 
-        @d.addCallback
-        def check(buildset):
-            self.assertEqual(buildset, None)
-        return d
+        self.assertEqual(buildset, None)
 
 
 class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -103,47 +94,43 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get(self):
-        d = self.callGet(('buildsets',))
+        buildsets = yield self.callGet(('buildsets',))
 
-        @d.addCallback
-        def check(buildsets):
-            self.validateData(buildsets[0])
-            self.assertEqual(buildsets[0]['bsid'], 13)
-            self.validateData(buildsets[1])
-            self.assertEqual(buildsets[1]['bsid'], 14)
-        return d
+        self.validateData(buildsets[0])
+        self.assertEqual(buildsets[0]['bsid'], 13)
+        self.validateData(buildsets[1])
+        self.assertEqual(buildsets[1]['bsid'], 14)
 
+    @defer.inlineCallbacks
     def test_get_complete(self):
         f = resultspec.Filter('complete', 'eq', [True])
-        d = self.callGet(('buildsets',),
+        buildsets = yield self.callGet(('buildsets',),
                          resultSpec=resultspec.ResultSpec(filters=[f]))
 
-        @d.addCallback
-        def check(buildsets):
-            self.assertEqual(len(buildsets), 1)
-            self.validateData(buildsets[0])
-            self.assertEqual(buildsets[0]['bsid'], 13)
-        return d
+        self.assertEqual(len(buildsets), 1)
+        self.validateData(buildsets[0])
+        self.assertEqual(buildsets[0]['bsid'], 13)
 
+    @defer.inlineCallbacks
     def test_get_incomplete(self):
         f = resultspec.Filter('complete', 'eq', [False])
-        d = self.callGet(('buildsets',),
+        buildsets = yield self.callGet(('buildsets',),
                          resultSpec=resultspec.ResultSpec(filters=[f]))
 
-        @d.addCallback
-        def check(buildsets):
-            self.assertEqual(len(buildsets), 1)
-            self.validateData(buildsets[0])
-            self.assertEqual(buildsets[0]['bsid'], 14)
-        return d
+        self.assertEqual(len(buildsets), 1)
+        self.validateData(buildsets[0])
+        self.assertEqual(buildsets[0]['bsid'], 14)
 
 
-class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
+class Buildset(TestReactorMixin, util_interfaces.InterfaceTests,
+               unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
+                                             wantData=True)
         self.rtype = buildsets.Buildset(self.master)
         return self.master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',
@@ -153,8 +140,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Builder(id=43, name='bldr2'),
         ])
 
-    SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,
-                  'project': u'pr', 'repository': u'rep', 'revision': u'rev',
+    SS234_DATA = {'branch': 'br', 'codebase': 'cb', 'patch': None,
+                  'project': 'pr', 'repository': 'rep', 'revision': 'rev',
                   'created_at': epoch2datetime(89834834), 'ssid': 234}
 
     def test_signature_addBuildset(self):
@@ -166,6 +153,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                         parent_buildid=None, parent_relationship=None):
             pass
 
+    @defer.inlineCallbacks
     def do_test_addBuildset(self, kwargs, expectedReturn,
                             expectedMessages, expectedBuildset):
         """Run a test of addBuildset.
@@ -179,20 +167,15 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         Note that addBuildset does not add sourcestamps, so this method assumes
         there are none in the db.
         """
-        clock = task.Clock()
-        clock.advance(A_TIMESTAMP)
-        d = self.rtype.addBuildset(_reactor=clock, **kwargs)
+        self.reactor.advance(A_TIMESTAMP)
 
-        def check(xxx_todo_changeme):
-            (bsid, brids) = xxx_todo_changeme
-            self.assertEqual((bsid, brids), expectedReturn)
-            # check the correct message was received
-            self.master.mq.assertProductions(
-                expectedMessages, orderMatters=False)
-            # and that the correct data was inserted into the db
-            self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
-        d.addCallback(check)
-        return d
+        (bsid, brids) = yield self.rtype.addBuildset(**kwargs)
+        self.assertEqual((bsid, brids), expectedReturn)
+        # check the correct message was received
+        self.master.mq.assertProductions(
+            expectedMessages, orderMatters=False)
+        # and that the correct data was inserted into the db
+        self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
 
     def _buildRequestMessageDict(self, brid, bsid, builderid):
         return {'builderid': builderid,
@@ -227,8 +210,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
              'buildrequests', str(brid), 'new'),
             self._buildRequestMessageDict(brid, bsid, builderid))
 
-    def _buildsetMessage(self, bsid, external_idstring=u'extid',
-                         reason=u'because', scheduler=u'fakesched', sourcestampids=None,
+    def _buildsetMessage(self, bsid, external_idstring='extid',
+                         reason='because', scheduler='fakesched', sourcestampids=None,
                          submitted_at=A_TIMESTAMP):
         if sourcestampids is None:
             sourcestampids = [234]
@@ -242,8 +225,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                  submitted_at=submitted_at))
 
     def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
-                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring=u'extid',
-                                 reason=u'because', results=0, sourcestampids=None):
+                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring='extid',
+                                 reason='because', results=0, sourcestampids=None):
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
@@ -256,11 +239,11 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addBuildset_two_builderNames(self):
         @implementer(interfaces.IScheduler)
-        class FakeSched(object):
+        class FakeSched:
             name = 'fakesched'
 
-        kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                      sourcestamps=[234], external_idstring=u'extid',
+        kwargs = dict(scheduler='fakesched', reason='because',
+                      sourcestamps=[234], external_idstring='extid',
                       builderids=[42, 43], waited_for=True)
         expectedReturn = (200, {42: 1000, 43: 1001})
         expectedMessages = [
@@ -272,28 +255,28 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             self._buildRequestMessage3(1001, 200, 43),
             self._buildsetMessage(200),
         ]
-        expectedBuildset = dict(reason=u'because',
+        expectedBuildset = dict(reason='because',
                                 properties={},
-                                external_idstring=u'extid')
+                                external_idstring='extid')
         return self.do_test_addBuildset(kwargs,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
         @implementer(interfaces.IScheduler)
-        class FakeSched(object):
+        class FakeSched:
             name = 'fakesched'
 
-        kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                      sourcestamps=[234], external_idstring=u'extid', waited_for=False)
+        kwargs = dict(scheduler='fakesched', reason='because',
+                      sourcestamps=[234], external_idstring='extid', waited_for=False)
         expectedReturn = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),
             # with no builderNames, this is done already
             self._buildsetCompleteMessage(200),
         ]
-        expectedBuildset = dict(reason=u'because',
+        expectedBuildset = dict(reason='because',
                                 properties={},
-                                external_idstring=u'extid')
+                                external_idstring='extid')
         return self.do_test_addBuildset(kwargs,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
@@ -338,8 +321,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         if buildRequestResults is None:
             buildRequestResults = {}
 
-        clock = task.Clock()
-        clock.advance(A_TIMESTAMP)
+        self.reactor.advance(A_TIMESTAMP)
 
         def mkbr(brid, bsid=72):
             return fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=42,
@@ -360,7 +342,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
         ])
 
-        yield self.rtype.maybeBuildsetComplete(72, _reactor=clock)
+        yield self.rtype.maybeBuildsetComplete(72)
 
         self.master.db.buildsets.assertBuildsetCompletion(72, expectComplete)
         if expectMessage:

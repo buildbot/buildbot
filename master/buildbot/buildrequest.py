@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from buildbot.process.buildrequest import BuildRequest
 
 _hush_pyflakes = [BuildRequest]

@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -21,7 +19,7 @@ from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 
 
-class NotifierTestMixin(object):
+class NotifierTestMixin:
     @defer.inlineCallbacks
     def setupBuildResults(self, results, wantPreviousBuild=False):
         # this testsuite always goes through setupBuildResults so that
@@ -40,13 +38,13 @@ class NotifierTestMixin(object):
             fakedb.Step(id=50, buildid=20, number=5, name='make'),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(id=234, patchid=99),
-            fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283', author='me@foo',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=234),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283', author='me@foo',
+                          repository='svn://...', codebase='cbsvn',
+                          project='world-domination', sourcestampid=234),
             fakedb.Log(id=60, stepid=50, name='stdio', slug='stdio', type='s',
                        num_lines=7),
             fakedb.LogChunk(logid=60, first_line=0, last_line=1, compressed=0,
-                            content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
+                            content='Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='him@foo', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -71,7 +69,7 @@ class NotifierTestMixin(object):
         def getChangesForBuild(buildid):
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
-            defer.returnValue([ch])
+            return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
-        defer.returnValue((buildset, builds))
+        return (buildset, builds)

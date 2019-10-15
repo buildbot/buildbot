@@ -13,14 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import itertools
 
 import sqlalchemy as sa
 
-from twisted.internet import reactor
+from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import NULL
@@ -65,8 +63,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                        reqs_tbl.c.builderid == builder_tbl.c.id)
 
         return sa.select([reqs_tbl, claims_tbl, sstamps_tbl.c.branch,
-                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase, builder_tbl.c.name.label('buildername')]).select_from(from_clause)
+                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase,
+                          builder_tbl.c.name.label('buildername')
+                          ]).select_from(from_clause)
 
+    # returns a Deferred that returns a value
     def getBuildRequest(self, brid):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
@@ -81,6 +82,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
                          bsid=None, branch=None, repository=None, resultSpec=None):
 
@@ -127,13 +129,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
 
             return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid) for row in res.fetchall()])
-        return self.db.pool.do(thd)
+        res = yield self.db.pool.do(thd)
+        return res
 
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+    @defer.inlineCallbacks
+    def claimBuildRequests(self, brids, claimed_at=None):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
-            claimed_at = _reactor.seconds()
+            claimed_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             transaction = conn.begin()
@@ -151,8 +155,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def unclaimBuildRequests(self, brids):
         def thd(conn):
             transaction = conn.begin()
@@ -179,13 +184,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    def completeBuildRequests(self, brids, results, complete_at=None,
-                              _reactor=reactor):
+    @defer.inlineCallbacks
+    def completeBuildRequests(self, brids, results, complete_at=None):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
-            complete_at = _reactor.seconds()
+            complete_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             transaction = conn.begin()
@@ -216,7 +221,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     @staticmethod
     def _brdictFromRow(row, master_masterid):
@@ -228,12 +233,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             claimed = True
             claimed_by_masterid = row.masterid
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-        submitted_at = mkdt(row.submitted_at)
-        complete_at = mkdt(row.complete_at)
-        claimed_at = mkdt(claimed_at)
+        submitted_at = epoch2datetime(row.submitted_at)
+        complete_at = epoch2datetime(row.complete_at)
+        claimed_at = epoch2datetime(claimed_at)
 
         return BrDict(buildrequestid=row.id, buildsetid=row.buildsetid,
                       builderid=row.builderid, buildername=row.buildername,

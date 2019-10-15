@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import datetime
 from datetime import timedelta
@@ -34,10 +32,9 @@ from buildbot.schedulers.timed import Nightly
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.SynchronousTestCase):
@@ -56,24 +53,15 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
         self.expectNoConfigError()
 
-    def test_worker_vs_slaves(self):
-        """The base configurator uses the slaves config if it exists already"""
-        self.config_dict['slaves'] = []
-        self.setupConfigurator(logHorizon=timedelta(weeks=1))
-        self.expectWorker(JANITOR_NAME, LocalWorker)
-        self.expectScheduler(JANITOR_NAME, Nightly)
-        self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-                self.expectNoConfigError()
 
-
-class LogChunksJanitorTests(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+class LogChunksJanitorTests(steps.BuildStepMixin,
+                            configmixin.ConfigErrorsMixin,
+                            TestReactorMixin,
+                            unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpBuildStep()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
@@ -86,7 +74,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin, unittest.TestCase, configmixin
             LogChunksJanitor(logHorizon=timedelta(weeks=1)))
         self.master.db.logs.deleteOldLogChunks = mock.Mock(return_value=3)
         self.expectOutcome(result=SUCCESS,
-                           state_string=u"deleted 3 logchunks")
+                           state_string="deleted 3 logchunks")
         yield self.runStep()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp)

@@ -13,14 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import copy
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.data import base
@@ -34,12 +29,12 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     @defer.inlineCallbacks
     def db2data(self, bsdict):
         if not bsdict:
-            defer.returnValue(None)
+            return None
 
         buildset = bsdict.copy()
 
@@ -59,7 +54,7 @@ class Db2DataMixin(object):
         buildset['submitted_at'] = datetime2epoch(buildset['submitted_at'])
         buildset['complete_at'] = datetime2epoch(buildset['complete_at'])
 
-        defer.returnValue(buildset)
+        return buildset
 
     fieldMapping = {
         'bsid': 'buildsets.id',
@@ -85,7 +80,7 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
         res = yield self.db2data(res)
-        defer.returnValue(res)
+        return res
 
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
@@ -140,17 +135,16 @@ class Buildset(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason=u'',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
-                    parent_buildid=None, parent_relationship=None,
-                    _reactor=reactor):
+                    parent_buildid=None, parent_relationship=None):
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
             properties = {}
         if builderids is None:
             builderids = []
-        submitted_at = int(_reactor.seconds())
+        submitted_at = int(self.master.reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps, reason=reason,
             properties=properties, builderids=builderids,
@@ -158,7 +152,7 @@ class Buildset(base.ResourceType):
             submitted_at=epoch2datetime(submitted_at),
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
 
-        yield BuildRequestCollapser(self.master, list(itervalues(brids))).collapse()
+        yield BuildRequestCollapser(self.master, list(brids.values())).collapse()
 
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
@@ -170,7 +164,7 @@ class Buildset(base.ResourceType):
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
-        brResource.generateEvent(list(itervalues(brids)), 'new')
+        brResource.generateEvent(list(brids.values()), 'new')
 
         # and the buildset itself
         msg = dict(
@@ -191,13 +185,13 @@ class Buildset(base.ResourceType):
         # if there are no builders, then this is done already, so send the
         # appropriate messages for that
         if not builderids:
-            yield self.maybeBuildsetComplete(bsid, _reactor=_reactor)
+            yield self.maybeBuildsetComplete(bsid)
 
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid, _reactor=reactor):
+    def maybeBuildsetComplete(self, bsid):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(
             bsid=bsid, complete=False)
 
@@ -226,7 +220,7 @@ class Buildset(base.ResourceType):
             return
 
         # mark it as completed in the database
-        complete_at = epoch2datetime(int(_reactor.seconds()))
+        complete_at = epoch2datetime(int(self.master.reactor.seconds()))
         try:
             yield self.master.db.buildsets.completeBuildset(bsid,
                                                             cumulative_results, complete_at=complete_at)

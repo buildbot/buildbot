@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import log
@@ -59,7 +57,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     pollAtLaunch = None
 
     def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
-        ChangeSource.checkConfig(self, name=name)
+        super().checkConfig(name=name)
         if pollInterval < 0:
             config.error("interval must be >= 0: {}".format(pollInterval))
 
@@ -67,7 +65,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     def reconfigService(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
         self.pollInterval, prevPollInterval = pollInterval, self.pollInterval
         self.pollAtLaunch = pollAtLaunch
-        yield ChangeSource.reconfigService(self, name=name)
+        yield super().reconfigService(name=name)
 
         # pollInterval change is the only value which makes sense to reconfigure check.
         if prevPollInterval != pollInterval and self.doPoll.started:
@@ -101,7 +99,7 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
     # instead of porting everything at once, we make a class to support legacy
 
     def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False, **kwargs):
-        ReconfigurablePollingChangeSource.checkConfig(self, name=name, pollInterval=60 * 10, pollAtLaunch=False)
+        super().checkConfig(name=name, pollInterval=60 * 10, pollAtLaunch=False)
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
 

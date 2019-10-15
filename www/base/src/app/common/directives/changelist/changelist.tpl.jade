@@ -15,4 +15,6 @@
     .row
         ul.list-group
             li.list-group-item(ng-repeat="change in changes")
+                a(ui-sref="changebuilds({changeid: change.changeid})")
+                    | See builds
                 changedetails(change="change")

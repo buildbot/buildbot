@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -87,7 +83,7 @@ class HTTPStep(BuildStep):
         for param in HTTPStep.requestsParams:
             setattr(self, param, kwargs.pop(param, None))
 
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def start(self):
         d = self.doRequest()
@@ -118,7 +114,7 @@ class HTTPStep(BuildStep):
             log.addHeader('Parameters:\n')
             params = requestkwargs.get("params", {})
             if params:
-                params = sorted(iteritems(params), key=lambda x: x[0])
+                params = sorted(params.items(), key=lambda x: x[0])
                 requestkwargs['params'] = params
             for k, v in params:
                 log.addHeader('\t%s: %s\n' % (k, v))
@@ -126,7 +122,7 @@ class HTTPStep(BuildStep):
         if data:
             log.addHeader('Data:\n')
             if isinstance(data, dict):
-                for k, v in iteritems(data):
+                for k, v in data.items():
                     log.addHeader('\t%s: %s\n' % (k, v))
             else:
                 log.addHeader('\t%s\n' % data)
@@ -159,7 +155,7 @@ class HTTPStep(BuildStep):
         log = self.getLog('log')
 
         log.addHeader('Request Header:\n')
-        for k, v in iteritems(response.request.headers):
+        for k, v in response.request.headers.items():
             log.addHeader('\t%s: %s\n' % (k, v))
 
         log.addStdout('URL: %s\n' % response.url)
@@ -170,7 +166,7 @@ class HTTPStep(BuildStep):
             log.addStderr('Status: %s\n' % response.status_code)
 
         log.addHeader('Response Header:\n')
-        for k, v in iteritems(response.headers):
+        for k, v in response.headers.items():
             log.addHeader('\t%s: %s\n' % (k, v))
 
         log.addStdout(' ------ Content ------\n%s' % response.text)
@@ -180,34 +176,34 @@ class HTTPStep(BuildStep):
 class POST(HTTPStep):
 
     def __init__(self, url, **kwargs):
-        HTTPStep.__init__(self, url, method='POST', **kwargs)
+        super().__init__(url, method='POST', **kwargs)
 
 
 class GET(HTTPStep):
 
     def __init__(self, url, **kwargs):
-        HTTPStep.__init__(self, url, method='GET', **kwargs)
+        super().__init__(url, method='GET', **kwargs)
 
 
 class PUT(HTTPStep):
 
     def __init__(self, url, **kwargs):
-        HTTPStep.__init__(self, url, method='PUT', **kwargs)
+        super().__init__(url, method='PUT', **kwargs)
 
 
 class DELETE(HTTPStep):
 
     def __init__(self, url, **kwargs):
-        HTTPStep.__init__(self, url, method='DELETE', **kwargs)
+        super().__init__(url, method='DELETE', **kwargs)
 
 
 class HEAD(HTTPStep):
 
     def __init__(self, url, **kwargs):
-        HTTPStep.__init__(self, url, method='HEAD', **kwargs)
+        super().__init__(url, method='HEAD', **kwargs)
 
 
 class OPTIONS(HTTPStep):
 
     def __init__(self, url, **kwargs):
-        HTTPStep.__init__(self, url, method='OPTIONS', **kwargs)
+        super().__init__(url, method='OPTIONS', **kwargs)

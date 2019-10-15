@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import functools
 
 from twisted.internet import defer
@@ -27,7 +23,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.fake import logfile
 
 
-class FakeRemoteCommand(object):
+class FakeRemoteCommand:
 
     # callers should set this to the running TestCase instance
     testcase = None
@@ -106,14 +102,14 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                     initial_stdin=initialStdin,
                     timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                     usePTY=usePTY, logEnviron=logEnviron)
-        FakeRemoteCommand.__init__(self, "shell", args,
-                                   collectStdout=collectStdout,
-                                   collectStderr=collectStderr,
-                                   decodeRC=decodeRC,
-                                   stdioLogName=stdioLogName)
+        super().__init__("shell", args,
+                         collectStdout=collectStdout,
+                         collectStderr=collectStderr,
+                         decodeRC=decodeRC,
+                         stdioLogName=stdioLogName)
 
 
-class ExpectRemoteRef(object):
+class ExpectRemoteRef:
 
     """
     Define an expected RemoteReference in the args to an L{Expect} class
@@ -126,7 +122,7 @@ class ExpectRemoteRef(object):
         return isinstance(other, self.rrclass)
 
 
-class Expect(object):
+class Expect:
 
     """
     Define an expected L{RemoteCommand}, with the same arguments
@@ -203,7 +199,7 @@ class Expect(object):
         if behavior == 'rc':
             command.rc = args[0]
             d = defer.succeed(None)
-            for log in itervalues(command.logs):
+            for log in command.logs.values():
                 if hasattr(log, 'unwrap'):
                     # We're handling an old style log that was
                     # used in an old style step. We handle the necessary
@@ -254,7 +250,6 @@ class Expect(object):
 
         @param exp: The nested exception that passed or self.
         """
-        pass
 
     def raiseExpectationFailure(self, exp, failure):
         """
@@ -319,7 +314,7 @@ class ExpectShell(Expect):
                     initial_stdin=initialStdin,
                     timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                     usePTY=usePTY, logEnviron=logEnviron)
-        Expect.__init__(self, "shell", args)
+        super().__init__("shell", args)
 
     def __repr__(self):
         return "ExpectShell(" + repr(self.remote_command) + repr(self.args['command']) + ")"

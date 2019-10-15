@@ -1,11 +1,26 @@
 {
-    "name": "buildbot-codeparameter",
-    "engines": {
-        "node": ">=0.10.0",
-        "npm": ">=1.4.0"
+    "name": "codeparameter",
+    "private": true,
+    "main": "buildbot_codeparameter/static/scripts.js",
+    "scripts": {
+        "build": "rimraf buildbot_codeparameter/static && webpack --bail --progress --profile --env prod",
+        "build-dev": "rimraf buildbot_codeparameter/static && webpack --bail --progress --profile --env dev",
+        "dev": "webpack --bail --progress --profile --watch --env dev",
+        "test": "karma start",
+        "test-watch": "karma start --auto-watch --no-single-run"
+    },
+    "devDependencies": {
+        "angular-mocks": "1.7.8",
+        "buildbot-build-common": "link:../build_common",
+        "lodash": "^4.17.11",
+        "rimraf": "^2.6.3",
+        "style-loader": "^0.23.1"
     },
     "dependencies": {
-        "guanlecoja": "~0.8.3",
-        "gulp": "3.9.0"
+        "ace-builds": "^1.4.4",
+        "angular": "1.7.8",
+        "angular-ui-ace": "^0.2.3",
+        "angular-ui-bootstrap": "^2.5.6",
+        "jquery": "^3.4.0"
     }
 }

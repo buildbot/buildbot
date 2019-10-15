@@ -13,8 +13,6 @@
 #
 # Portions Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 
@@ -28,7 +26,7 @@ class LocalWorker(Worker):
 
     def checkConfig(self, name, workdir=None, **kwargs):
         kwargs['password'] = None
-        Worker.checkConfig(self, name, **kwargs)
+        super().checkConfig(name, **kwargs)
         self.LocalWorkerFactory = None
         try:
             # importing here to avoid dependency on buildbot worker package
@@ -42,7 +40,7 @@ class LocalWorker(Worker):
     @defer.inlineCallbacks
     def reconfigService(self, name, workdir=None, **kwargs):
         kwargs['password'] = None
-        Worker.reconfigService(self, name, **kwargs)
+        super().reconfigService(name, **kwargs)
         if workdir is None:
             workdir = name
         workdir = os.path.abspath(

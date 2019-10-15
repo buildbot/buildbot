@@ -14,9 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 
@@ -29,16 +26,14 @@ from twisted.python import log
 from buildbot import config
 from buildbot.util.eventual import eventually
 from buildbot.worker import AbstractLatentWorker
-from buildbot.worker import AbstractWorker
 
 try:
     import libvirt
-    libvirt = libvirt
 except ImportError:
     libvirt = None
 
 
-class WorkQueue(object):
+class WorkQueue:
 
     """
     I am a class that turns parallel access into serial access.
@@ -99,7 +94,7 @@ class WorkQueue(object):
 queue = WorkQueue()
 
 
-class Domain(object):
+class Domain:
 
     """
     I am a wrapper around a libvirt Domain object
@@ -122,7 +117,7 @@ class Domain(object):
         return queue.executeInThread(self.domain.destroy)
 
 
-class Connection(object):
+class Connection:
 
     """
     I am a wrapper around a libvirt Connection object.
@@ -138,13 +133,13 @@ class Connection(object):
     def lookupByName(self, name):
         """ I lookup an existing predefined domain """
         res = yield queue.executeInThread(self.connection.lookupByName, name)
-        defer.returnValue(self.DomainClass(self, res))
+        return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
         res = yield queue.executeInThread(self.connection.createXML, xml, 0)
-        defer.returnValue(self.DomainClass(self, res))
+        return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def all(self):
@@ -155,14 +150,14 @@ class Connection(object):
             domain = yield queue.executeInThread(self.connection.lookupByID, did)
             domains.append(self.DomainClass(self, domain))
 
-        defer.returnValue(domains)
+        return domains
 
 
 class LibVirtWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
                  **kwargs):
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+        super().__init__(name, password, **kwargs)
         if not libvirt:
             config.error(
                 "The python module 'libvirt' is needed to use a LibVirtWorker")
@@ -186,7 +181,7 @@ class LibVirtWorker(AbstractLatentWorker):
         I find existing VMs that are already running that might be orphaned instances of this worker.
         """
         if not self.connection:
-            defer.returnValue(None)
+            return None
 
         domains = yield self.connection.all()
         for d in domains:
@@ -207,7 +202,7 @@ class LibVirtWorker(AbstractLatentWorker):
                 "Not accepting builds as existing domain but worker not connected")
             return False
 
-        return AbstractLatentWorker.canStartBuild(self)
+        return super().canStartBuild()
 
     def _prepare_base_image(self):
         """
@@ -259,7 +254,7 @@ class LibVirtWorker(AbstractLatentWorker):
         if self.domain is not None:
             log.msg("Cannot start_instance '%s' as already active" %
                     self.workername)
-            defer.returnValue(False)
+            return False
 
         yield self._prepare_base_image()
 
@@ -274,9 +269,9 @@ class LibVirtWorker(AbstractLatentWorker):
                     "Cannot start a VM (%s), failing gracefully and triggering"
                     "a new build check" % self.workername)
             self.domain = None
-            defer.returnValue(False)
+            return False
 
-        defer.returnValue(True)
+        return True
 
     def stop_instance(self, fast=False):
         """
@@ -285,6 +280,14 @@ class LibVirtWorker(AbstractLatentWorker):
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
+        @defer.inlineCallbacks
+        def _destroy_domain(res, domain):
+            log.msg('Graceful shutdown failed. Force destroying domain %s' %
+                    self.workername)
+            # Don't return res to stop propagating shutdown error if destroy
+            # was successful.
+            yield domain.destroy()
+
         log.msg("Attempting to stop '%s'" % self.workername)
         if self.domain is None:
             log.msg("I don't think that domain is even running, aborting")
@@ -296,22 +299,16 @@ class LibVirtWorker(AbstractLatentWorker):
         if self.graceful_shutdown and not fast:
             log.msg("Graceful shutdown chosen for %s" % self.workername)
             d = domain.shutdown()
+            d.addErrback(_destroy_domain, domain)
         else:
             d = domain.destroy()
 
-        @d.addCallback
-        def _disconnect(res):
-            log.msg("VM destroyed (%s): Forcing its connection closed." %
-                    self.workername)
-            return AbstractWorker.disconnect(self)
-
-        @d.addBoth
-        def _disconnected(res):
-            log.msg(
-                "We forced disconnection (%s), cleaning up and triggering new build" % self.workername)
-            if self.base_image:
+        if self.base_image:
+            @d.addBoth
+            def _remove_image(res):
+                log.msg('Removing base image %s for %s' % (self.image,
+                                                           self.workername))
                 os.remove(self.image)
-            self.botmaster.maybeStartBuildsForWorker(self.workername)
-            return res
+                return res
 
         return d

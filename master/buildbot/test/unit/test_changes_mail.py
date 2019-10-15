@@ -13,27 +13,28 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import mail
 from buildbot.test.util import changesource
 from buildbot.test.util import dirs
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
+                        TestReactorMixin,
                         unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.maildir = os.path.abspath("maildir")
 
-        d = self.setUpChangeSource()
-        d.addCallback(lambda _: self.setUpDirs(self.maildir))
-        return d
+        yield self.setUpChangeSource()
+        yield self.setUpDirs(self.maildir)
 
     def populateMaildir(self):
         "create a fake maildir with a fake new message ('newmsg') in it"
@@ -54,10 +55,10 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         self.assertTrue(
             os.path.exists(os.path.join(self.maildir, "cur", "newmsg")))
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        d = self.tearDownDirs()
-        d.addCallback(lambda _: self.tearDownChangeSource())
-        return d
+        yield self.tearDownDirs()
+        yield self.tearDownChangeSource()
 
     # tests
 
@@ -65,6 +66,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         mds = mail.MaildirSource(self.maildir)
         self.assertSubstring(self.maildir, mds.describe())
 
+    @defer.inlineCallbacks
     def test_messageReceived_svn(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
@@ -73,31 +75,30 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return (u'svn', dict(author=u'jimmy'))
+            return ('svn', dict(author='jimmy'))
         mds.parse = parse
 
-        d = mds.messageReceived('newmsg')
+        yield mds.messageReceived('newmsg')
 
-        def check(_):
-            self.assertMailProcessed()
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': 'jimmy',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': None,
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': 'svn',
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertMailProcessed()
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'jimmy',
+            'committer': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': None,
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': 'svn',
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_messageReceived_bzr(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
@@ -106,27 +107,25 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return (u'bzr', dict(author=u'jimmy'))
+            return ('bzr', dict(author='jimmy'))
         mds.parse = parse
 
-        d = mds.messageReceived('newmsg')
+        yield mds.messageReceived('newmsg')
 
-        def check(_):
-            self.assertMailProcessed()
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': 'jimmy',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': None,
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': 'bzr',
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertMailProcessed()
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'jimmy',
+            'committer': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': None,
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': 'bzr',
+            'when_timestamp': None,
+        }])

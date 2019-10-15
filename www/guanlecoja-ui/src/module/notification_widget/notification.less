@@ -1,0 +1,48 @@
+.notifications {
+    .dropdown-menu {
+        @media (max-width: 600px) {
+          position: fixed;
+          top:50px;
+          height:auto;
+          width:100%;
+        }
+        li > .item {
+            display: block;
+            @media (min-width: 900px) {
+                min-width:800px;
+                max-width:800px;
+            }
+            @media (min-width: 600px) {
+                min-width:500px;
+                max-width:500px;
+            }
+            padding: 3px 20px;
+            clear: both;
+            font-weight: normal;
+            line-height: 14px;
+            .title {
+                font-weight: bold;
+                text-decoration: underline;
+                padding: 8px 5px;
+            }
+            .msg {
+              white-space: pre;
+              line-height: 20px;
+            }
+            // Adjust close link position
+            .close {
+              position: relative;
+              top: -2px;
+              right: -10px;
+              color: inherit;
+            }
+        }
+    }
+    // Open state for the dropdown
+    &.active {
+      // Show the menu
+      > .dropdown-menu {
+        display: block;
+      }
+    }
+}

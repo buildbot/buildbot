@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 import datetime
 import locale
 import os
@@ -28,7 +24,6 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import util
-from buildbot.util import PY3
 
 
 class formatInterval(unittest.TestCase):
@@ -107,6 +102,51 @@ class TestHumanReadableDelta(unittest.TestCase):
         self.assertEqual('1 days, 1 seconds', result)
 
 
+class TestFuzzyInterval(unittest.TestCase):
+
+    def test_moment(self):
+        self.assertEqual(util.fuzzyInterval(1), "a moment")
+
+    def test_seconds(self):
+        self.assertEqual(util.fuzzyInterval(17), "17 seconds")
+
+    def test_seconds_rounded(self):
+        self.assertEqual(util.fuzzyInterval(48), "50 seconds")
+
+    def test_minute(self):
+        self.assertEqual(util.fuzzyInterval(58), "a minute")
+
+    def test_minutes(self):
+        self.assertEqual(util.fuzzyInterval(3 * 60 + 24), "3 minutes")
+
+    def test_minutes_rounded(self):
+        self.assertEqual(util.fuzzyInterval(32 * 60 + 24), "30 minutes")
+
+    def test_hour(self):
+        self.assertEqual(util.fuzzyInterval(3600 + 1200), "an hour")
+
+    def test_hours(self):
+        self.assertEqual(util.fuzzyInterval(9 * 3600 - 720), "9 hours")
+
+    def test_day(self):
+        self.assertEqual(util.fuzzyInterval(32 * 3600 + 124), "a day")
+
+    def test_days(self):
+        self.assertEqual(util.fuzzyInterval((19 + 24) * 3600 + 124), "2 days")
+
+    def test_month(self):
+        self.assertEqual(util.fuzzyInterval(36 * 24 * 3600 + 124), "a month")
+
+    def test_months(self):
+        self.assertEqual(util.fuzzyInterval(86 * 24 * 3600 + 124), "3 months")
+
+    def test_year(self):
+        self.assertEqual(util.fuzzyInterval(370 * 24 * 3600), "a year")
+
+    def test_years(self):
+        self.assertEqual(util.fuzzyInterval((2 * 365 + 96) * 24 * 3600), "2 years")
+
+
 class safeTranslate(unittest.TestCase):
 
     def test_str_good(self):
@@ -122,14 +162,14 @@ class safeTranslate(unittest.TestCase):
                          b"p\ath\x01ogy")  # bad chars still here!
 
     def test_unicode_good(self):
-        self.assertEqual(util.safeTranslate(u"full"), b"full")
+        self.assertEqual(util.safeTranslate("full"), b"full")
 
     def test_unicode_bad(self):
-        self.assertEqual(util.safeTranslate(text_type("speed=slow;quality=high")),
+        self.assertEqual(util.safeTranslate(str("speed=slow;quality=high")),
                          b"speed_slow_quality_high")
 
     def test_unicode_pathological(self):
-        self.assertEqual(util.safeTranslate(u"\u0109"),
+        self.assertEqual(util.safeTranslate("\u0109"),
                          b"\xc4\x89")  # yuck!
 
 
@@ -224,7 +264,7 @@ class MakeList(unittest.TestCase):
         self.assertEqual(util.makeList('hello'), ['hello'])
 
     def test_unicode(self):
-        self.assertEqual(util.makeList(u'\N{SNOWMAN}'), [u'\N{SNOWMAN}'])
+        self.assertEqual(util.makeList('\N{SNOWMAN}'), ['\N{SNOWMAN}'])
 
     def test_list(self):
         self.assertEqual(util.makeList(['a', 'b']), ['a', 'b'])
@@ -266,16 +306,16 @@ class Flatten(unittest.TestCase):
 class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
-        rv = util.bytes2unicode(u'\N{SNOWMAN}', encoding='ascii')
-        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', text_type))
+        rv = util.bytes2unicode('\N{SNOWMAN}', encoding='ascii')
+        self.assertEqual((rv, type(rv)), ('\N{SNOWMAN}', str))
 
     def test_ascii(self):
         rv = util.bytes2unicode('abcd', encoding='ascii')
-        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
+        self.assertEqual((rv, type(rv)), ('abcd', str))
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda:
-                          util.bytes2unicode(b'a\x85', encoding='ascii'))
+        with self.assertRaises(UnicodeDecodeError):
+            util.bytes2unicode(b'a\x85', encoding='ascii')
 
     def test_None(self):
         self.assertEqual(util.bytes2unicode(None, encoding='ascii'), None)
@@ -284,30 +324,8 @@ class Ascii2Unicode(unittest.TestCase):
         rv1 = util.bytes2unicode(b'abcd')
         rv2 = util.bytes2unicode('efgh')
 
-        self.assertEqual(type(rv1), text_type)
-        self.assertEqual(type(rv2), text_type)
-
-    def test_bytes2NativeString(self):
-        rv = util.bytes2NativeString(b'abcd')
-        self.assertEqual((rv, type(rv)), ('abcd', str))
-        rv = util.bytes2NativeString('efgh')
-        self.assertEqual((rv, type(rv)), ('efgh', str))
-
-        if PY3:
-            self.assertNotEqual(type('abcd'), type(b'abcd'))
-            self.assertNotEqual(str, bytes)
-        else:
-            self.assertEqual(type('abcd'), type(b'abcd'))
-            self.assertEqual(str, bytes)
-
-
-class Unicode2NativeString(unittest.TestCase):
-
-    def test_unicode2NativeString(self):
-        rv = util.unicode2NativeString(u'abcd')
-        self.assertEqual((rv, type(rv)), ('abcd', str))
-        rv = util.unicode2NativeString('efgh')
-        self.assertEqual((rv, type(rv)), ('efgh', str))
+        self.assertEqual(type(rv1), str)
+        self.assertEqual(type(rv2), str)
 
 
 class StringToBoolean(unittest.TestCase):
@@ -334,11 +352,11 @@ class StringToBoolean(unittest.TestCase):
 
     def test_ascii(self):
         rv = util.bytes2unicode(b'abcd', encoding='ascii')
-        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
+        self.assertEqual((rv, type(rv)), ('abcd', str))
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda:
-                          util.bytes2unicode(b'a\x85', encoding='ascii'))
+        with self.assertRaises(UnicodeDecodeError):
+            util.bytes2unicode(b'a\x85', encoding='ascii')
 
     def test_None(self):
         self.assertEqual(util.bytes2unicode(None, encoding='ascii'), None)
@@ -402,36 +420,37 @@ class StripUrlPassword(unittest.TestCase):
 class JoinList(unittest.TestCase):
 
     def test_list(self):
-        self.assertEqual(util.join_list(['aa', 'bb']), u'aa bb')
+        self.assertEqual(util.join_list(['aa', 'bb']), 'aa bb')
 
     def test_tuple(self):
-        self.assertEqual(util.join_list(('aa', 'bb')), u'aa bb')
+        self.assertEqual(util.join_list(('aa', 'bb')), 'aa bb')
 
     def test_string(self):
-        self.assertEqual(util.join_list('abc'), u'abc')
+        self.assertEqual(util.join_list('abc'), 'abc')
 
     def test_unicode(self):
-        self.assertEqual(util.join_list(u'abc'), u'abc')
+        self.assertEqual(util.join_list('abc'), 'abc')
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda: util.join_list([b'\xff']))
+        with self.assertRaises(UnicodeDecodeError):
+            util.join_list([b'\xff'])
 
 
 class CommandToString(unittest.TestCase):
 
     def test_short_string(self):
-        self.assertEqual(util.command_to_string("ab cd"), u"'ab cd'")
+        self.assertEqual(util.command_to_string("ab cd"), "'ab cd'")
 
     def test_long_string(self):
-        self.assertEqual(util.command_to_string("ab cd ef"), u"'ab cd ...'")
+        self.assertEqual(util.command_to_string("ab cd ef"), "'ab cd ...'")
 
     def test_list(self):
         self.assertEqual(util.command_to_string(['ab', 'cd', 'ef']),
-                         u"'ab cd ...'")
+                         "'ab cd ...'")
 
     def test_nested_list(self):
         self.assertEqual(util.command_to_string(['ab', ['cd', ['ef']]]),
-                         u"'ab cd ...'")
+                         "'ab cd ...'")
 
     def test_object(self):
         # this looks like a renderable
@@ -440,10 +459,10 @@ class CommandToString(unittest.TestCase):
     def test_list_with_objects(self):
         # the object looks like a renderable, and is skipped
         self.assertEqual(util.command_to_string(['ab', object(), 'cd']),
-                         u"'ab cd'")
+                         "'ab cd'")
 
     def test_invalid_ascii(self):
-        self.assertEqual(util.command_to_string(b'a\xffc'), u"'a\ufffdc'")
+        self.assertEqual(util.command_to_string(b'a\xffc'), "'a\ufffdc'")
 
 
 class TestRewrap(unittest.TestCase):

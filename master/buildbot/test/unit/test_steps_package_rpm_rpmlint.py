@@ -13,20 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import rpmlint
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
+class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 
 import os
 
@@ -11,10 +10,11 @@ def download(url, fn):
     print(url, fn)
     if os.path.exists(fn):
         return
-    with open(fn, 'w') as f:
+    with open(fn, 'wb') as f:
         r = s.get(url, stream=True)
         for c in r.iter_content(1024):
             f.write(c)
+
 
 def main():
     global s
@@ -39,7 +39,7 @@ def main():
             download(url, fn)
     # download tag archive
     url = "https://github.com/buildbot/buildbot/archive/{tag}.tar.gz".format(tag=tag)
-    fn = os.path.join('dist', url.split('/')[-1])
+    fn = os.path.join('dist', "buildbot-{tag}.gitarchive.tar.gz".format(tag=tag))
     download(url, fn)
     sigfn = fn + ".sig"
     if os.path.exists(sigfn):
@@ -52,5 +52,16 @@ def main():
                params={"name": sigfnbase},
                data=open(sigfn, 'rb'))
     print(r.content)
+    fnbase = os.path.basename(fn)
+    r = s.post(upload_url,
+               headers={'Content-Type': "application/gzip"},
+               params={"name": fnbase},
+               data=open(fn, 'rb'))
+    print(r.content)
+    # remove files so that twine upload do not upload them
+    os.unlink(sigfn)
+    os.unlink(fn)
+
+
 if __name__ == '__main__':
     main()

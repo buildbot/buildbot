@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 # Method to add build step taken from here
 # https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
 import datetime
@@ -82,7 +79,7 @@ def mTimeVersion(init_file):
     for root, dirs, files in os.walk(cwd):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
-    d = datetime.datetime.fromtimestamp(m)
+    d = datetime.datetime.utcfromtimestamp(m)
     return d.strftime("%Y.%m.%d")
 
 
@@ -109,7 +106,7 @@ def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
 
         # archived revision is not tagged, use the commit date
         tstamp = git_archive_id.strip().split()[0]
-        d = datetime.datetime.fromtimestamp(int(tstamp))
+        d = datetime.datetime.utcfromtimestamp(int(tstamp))
         return d.strftime('%Y.%m.%d')
     return None
 
@@ -203,25 +200,17 @@ class BuildJsCommand(distutils.cmd.Command):
         package = self.distribution.packages[0]
         if os.path.exists("gulpfile.js") or os.path.exists("webpack.config.js"):
             yarn_version = check_output("yarn --version")
-            npm_version = check_output("npm -v")
-            print("yarn:", yarn_version, "npm: ", npm_version)
-            npm_bin = check_output("npm bin").strip()
-            assert npm_version != "", "need nodejs and npm installed in current PATH"
-            assert LooseVersion(npm_version) >= LooseVersion(
-                "1.4"), "npm < 1.4 (%s)" % (npm_version)
+            assert yarn_version != "", "need nodejs and yarn installed in current PATH"
+            yarn_bin = check_output("yarn bin").strip()
 
             commands = []
 
-            # if we find yarn, then we use it as it is much faster
-            if yarn_version != "":
-                commands.append(['yarn', 'install', '--pure-lockfile'])
-            else:
-                commands.append(['npm', 'install'])
+            commands.append(['yarn', 'install', '--pure-lockfile'])
 
             if os.path.exists("gulpfile.js"):
-                commands.append([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
+                commands.append([os.path.join(yarn_bin, "gulp"), 'prod', '--notests'])
             elif os.path.exists("webpack.config.js"):
-                commands.append([os.path.join(npm_bin, "webpack"), '-p'])
+                commands.append(['yarn', 'run', 'build'])
 
             shell = bool(os.name == 'nt')
 
@@ -229,7 +218,7 @@ class BuildJsCommand(distutils.cmd.Command):
                 self.announce(
                     'Running command: %s' % str(" ".join(command)),
                     level=distutils.log.INFO)
-                subprocess.call(command, shell=shell)
+                subprocess.check_call(command, shell=shell)
 
         self.copy_tree(os.path.join(package, 'static'), os.path.join(
             "build", "lib", package, "static"))
@@ -248,7 +237,7 @@ class BuildPyCommand(setuptools.command.build_py.build_py):
 
     def run(self):
         self.run_command('build_js')
-        setuptools.command.build_py.build_py.run(self)
+        super().run()
 
 
 class EggInfoCommand(setuptools.command.egg_info.egg_info):
@@ -256,7 +245,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info):
 
     def run(self):
         self.run_command('build_js')
-        setuptools.command.egg_info.egg_info.run(self)
+        super().run()
 
 
 def setup_www_plugin(**kw):

@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import itervalues
-
 import sqlalchemy as sa
 
 from twisted.internet import defer
@@ -74,10 +69,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
                         "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
                         "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
-    COMPRESSION_BYID = dict((x["id"], x) for x in itervalues(COMPRESSION_MODE))
+    COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.values())
     total_raw_bytes = 0
     total_compressed_bytes = 0
 
+    # returns a Deferred that returns a value
     def _getLog(self, whereclause):
         def thd_getLog(conn):
             q = self.db.model.logs.select(whereclause=whereclause)
@@ -98,6 +94,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         tbl = self.db.model.logs
         return self._getLog((tbl.c.slug == slug) & (tbl.c.stepid == stepid))
 
+    # returns a Deferred that returns a value
     def getLogs(self, stepid=None):
         def thdGetLogs(conn):
             tbl = self.db.model.logs
@@ -109,6 +106,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return [self._logdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thdGetLogs)
 
+    # returns a Deferred that returns a value
     def getLogLines(self, logid, first_line, last_line):
         def thdGetLogLines(conn):
             # get a set of chunks that completely cover the requested range
@@ -140,9 +138,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         idx = content.rindex('\n', 0, idx)
                     content = content[:idx]
                 rv.append(content)
-            return u'\n'.join(rv) + u'\n' if rv else u''
+            return '\n'.join(rv) + '\n' if rv else ''
         return self.db.pool.do(thdGetLogLines)
 
+    # returns a Deferred that returns a value
     def addLog(self, stepid, name, slug, type):
         assert type in 'tsh', "Log type must be one of t, s, or h"
 
@@ -195,7 +194,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def thdAppendLog(self, conn, logid, content):
         # check for trailing newline and strip it for storage -- chunks omit
         # the trailing newline
-        assert content[-1] == u'\n'
+        assert content[-1] == '\n'
         # Note that row.content is stored as bytes, and our caller is sending unicode
         content = content[:-1].encode('utf-8')
         q = sa.select([self.db.model.logs.c.num_lines])
@@ -211,6 +210,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                                            content=content,
                                            first_line=num_lines[0])
 
+    # returns a Deferred that returns a value
     def appendLog(self, logid, content):
         def thdappendLog(conn):
             return self.thdAppendLog(conn, logid, content)
@@ -248,6 +248,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return truncline, None
         return truncline, content[i + 1:]
 
+    # returns a Deferred that returns None
     def finishLog(self, logid):
         def thdfinishLog(conn):
             tbl = self.db.model.logs
@@ -343,38 +344,64 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return totlength - newsize
 
         saved = yield self.db.pool.do(thdcompressLog)
-        defer.returnValue(saved)
+        return saved
 
+    # returns a Deferred that returns a value
     def deleteOldLogChunks(self, older_than_timestamp):
         def thddeleteOldLogs(conn):
             model = self.db.model
-            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
+            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
             count1 = res.fetchone()[0]
             res.close()
 
             # update log types older than timestamps
             # we do it first to avoid having UI discrepancy
+
+            # N.B.: we utilize the fact that steps.id is auto-increment, thus steps.started_at
+            # times are effectively sorted and we only need to find the steps.id at the upper
+            # bound of steps to update.
+
+            # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
             res = conn.execute(
-                model.logs.update()
-                .where(model.logs.c.stepid.in_(
-                    sa.select([model.steps.c.id])
-                    .where(model.steps.c.started_at < older_than_timestamp)))
-                .values(type='d')
+                sa.select([model.steps.c.id])
+                .where(model.steps.c.started_at < older_than_timestamp)
+                .order_by(model.steps.c.id.desc())
+                .limit(1)
             )
+            res_list = res.fetchone()
+            stepid_max = None
+            if res_list:
+                stepid_max = res_list[0]
             res.close()
+
+            # UPDATE logs SET logs.type = 'd' WHERE logs.stepid <= stepid_max AND type != 'd';
+            if stepid_max:
+                res = conn.execute(
+                    model.logs.update()
+                    .where(sa.and_(model.logs.c.stepid <= stepid_max,
+                                   model.logs.c.type != 'd'))
+                    .values(type='d')
+                )
+                res.close()
 
             # query all logs with type 'd' and delete their chunks.
-            q = sa.select([model.logs.c.id])
-            q = q.select_from(model.logs)
-            q = q.where(model.logs.c.type == 'd')
+            if self.db._engine.dialect.name == 'sqlite':
+                # sqlite does not support delete with a join, so for this case we use a subquery,
+                # which is much slower
+                q = sa.select([model.logs.c.id])
+                q = q.select_from(model.logs)
+                q = q.where(model.logs.c.type == 'd')
 
-            # delete their logchunks
-            res = conn.execute(
-                model.logchunks.delete()
-                .where(model.logchunks.c.logid.in_(q))
-            )
+                # delete their logchunks
+                q = model.logchunks.delete().where(model.logchunks.c.logid.in_(q))
+            else:
+                q = model.logchunks.delete()
+                q = q.where(model.logs.c.id == model.logchunks.c.logid)
+                q = q.where(model.logs.c.type == 'd')
+
+            res = conn.execute(q)
             res.close()
-            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
+            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
             count2 = res.fetchone()[0]
             res.close()
             return count1 - count2

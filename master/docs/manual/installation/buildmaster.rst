@@ -97,7 +97,13 @@ Each buildbot release tries to be compatible with configurations that worked cle
 
 The ``upgrade-master`` command is idempotent.
 It is safe to run it multiple times.
-After each upgrade of the buildbot code, you should use ``upgrade-master`` on all your buildmasters.
+After each upgrade of the Buildbot code, you should use ``upgrade-master`` on all your buildmasters.
+
+.. warning::
+
+   The ``upgrade-master`` command may perform database schema modifications.
+   To avoid any data loss or corruption, it should **not** be interrupted.
+   As a safeguard, it ignores all signals except ``SIGKILL``.
 
 In general, Buildbot workers and masters can be upgraded independently, although some new features will not be available, depending on the master and worker versions.
 

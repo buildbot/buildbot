@@ -5,7 +5,6 @@ environment:
   matrix:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python27"
     - PYTHON: "C:\\Python35"
     - PYTHON: "C:\\Python36"
 
@@ -16,7 +15,7 @@ install:
   - "python -c \"import sys; print(sys.executable)\""
   - "python -V -V"
   # Twisted requires pywin32 on Windows in order to spawn processes.
-  - "python -m pip install \"pypiwin32<222\""
+  - "python -m pip install \"pypiwin32\""
 
   # TODO: There is no binary wheel for pysqlite and building on Windows is
   # painful. Let's just substitute sqlite3.dll with never version.
@@ -72,4 +71,4 @@ deploy:
   prerelease: false
   on:
     appveyor_repo_tag: true        # deploy on tag push only
-    PYTHON: "C:\\Python27"
+    PYTHON: "C:\\Python35"

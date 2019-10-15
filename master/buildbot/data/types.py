@@ -13,22 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 # See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import integer_types
-from future.utils import iteritems
-from future.utils import text_type
-
 import datetime
 import json
 import re
 
 from buildbot import util
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 
-class Type(object):
+class Type:
 
     name = None
     doc = None
@@ -115,7 +109,7 @@ class Instance(Type):
 class Integer(Instance):
 
     name = "integer"
-    types = integer_types
+    types = (int,)
     ramlType = "integer"
 
     def valueFromString(self, arg):
@@ -131,7 +125,7 @@ class DateTime(Instance):
 class String(Instance):
 
     name = "string"
-    types = (text_type,)
+    types = (str,)
     ramlType = "string"
 
     def valueFromString(self, arg):
@@ -166,7 +160,7 @@ class Identifier(Type):
     ramlType = "string"
 
     def __init__(self, len=None, **kwargs):
-        Type.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.len = len
 
     def valueFromString(self, arg):
@@ -176,11 +170,11 @@ class Identifier(Type):
         return val
 
     def validate(self, name, object):
-        if not isinstance(object, text_type):
+        if not isinstance(object, str):
             yield "%s - %r - is not a unicode string" % (name, object)
         elif not self.identRe.match(object):
             yield "%s - %r - is not an identifier" % (name, object)
-        elif len(object) < 1:
+        elif not object:
             yield "%s - identifiers cannot be an empty string" % (name,)
         elif len(object) > self.len:
             yield "%s - %r - is longer than %d characters" % (name, object,
@@ -201,7 +195,7 @@ class List(Type):
         return self.of.ramlname
 
     def __init__(self, of=None, **kwargs):
-        Type.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.of = of
 
     def validate(self, name, object):
@@ -242,17 +236,17 @@ class SourcedProperties(Type):
         if not isinstance(object, dict):  # we want a dict, and NOT a subclass
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
-        for k, v in iteritems(object):
-            if not isinstance(k, text_type):
+        for k, v in object.items():
+            if not isinstance(k, str):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:
                 yield "%s property value for '%s' is not a 2-tuple" % (name, k)
                 return
             propval, propsrc = v
-            if not isinstance(propsrc, text_type):
+            if not isinstance(propsrc, str):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
-                json.loads(bytes2NativeString(propval))
+                json.loads(bytes2unicode(propval))
             except ValueError:
                 yield "%s[%r] value is not JSON-able" % (name, k)
 
@@ -306,12 +300,12 @@ class Dict(Type):
                     fields=[dict(name=k,
                                  type=v.name,
                                  type_spec=v.getSpec())
-                            for k, v in iteritems(self.contents)
+                            for k, v in self.contents.items()
                             ])
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([(maybeNoneOrList(k, v), v.ramlname) for k, v in self.contents.items()])}
+                'properties': {maybeNoneOrList(k, v): v.ramlname for k, v in self.contents.items()}}
 
 
 class JsonObject(Type):
@@ -348,7 +342,7 @@ class Entity(Type):
 
     def __init__(self, name):
         fields = {}
-        for k, v in iteritems(self.__class__.__dict__):
+        for k, v in self.__class__.__dict__.items():
             if isinstance(v, Type):
                 fields[k] = v
         self.fields = fields
@@ -384,14 +378,11 @@ class Entity(Type):
                     fields=[dict(name=k,
                                  type=v.name,
                                  type_spec=v.getSpec())
-                            for k, v in iteritems(self.fields)
+                            for k, v in self.fields.items()
                             ])
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([
-                    (
-                        maybeNoneOrList(k, v),
-                        {'type': v.ramlname, 'description': ''}
-                    )
-                    for k, v in iteritems(self.fields)])}
+                'properties': {
+                    maybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
+                    for k, v in self.fields.items()}}

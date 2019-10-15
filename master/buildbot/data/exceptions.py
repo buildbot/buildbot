@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 # copy some exceptions from the DB layer
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
@@ -31,12 +29,8 @@ class DataException(Exception):
 
 
 class InvalidPathError(DataException):
-
     "A path argument was invalid or unknown"
-    pass
 
 
 class InvalidControlException(DataException):
-
     "Action is not supported"
-    pass

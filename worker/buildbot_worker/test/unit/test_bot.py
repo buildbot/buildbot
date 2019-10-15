@@ -53,31 +53,27 @@ class TestBot(unittest.TestCase):
 
         self.bot = FakeRemote(self.real_bot)
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        d = defer.succeed(None)
         if self.real_bot and self.real_bot.running:
-            d.addCallback(lambda _: self.real_bot.stopService())
+            yield self.real_bot.stopService()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
-        return d
 
+    @defer.inlineCallbacks
     def test_getCommands(self):
-        d = self.bot.callRemote("getCommands")
+        cmds = yield self.bot.callRemote("getCommands")
 
-        def check(cmds):
-            # just check that 'shell' is present..
-            self.assertTrue('shell' in cmds)
-        d.addCallback(check)
-        return d
+        # just check that 'shell' is present..
+        self.assertTrue('shell' in cmds)
 
+    @defer.inlineCallbacks
     def test_getVersion(self):
-        d = self.bot.callRemote("getVersion")
+        vers = yield self.bot.callRemote("getVersion")
 
-        def check(vers):
-            self.assertEqual(vers, buildbot_worker.version)
-        d.addCallback(check)
-        return d
+        self.assertEqual(vers, buildbot_worker.version)
 
+    @defer.inlineCallbacks
     def test_getWorkerInfo(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)
@@ -88,122 +84,91 @@ class TestBot(unittest.TestCase):
         with open(os.path.join(infodir, "environ"), "w") as f:
             f.write("something else")
 
-        d = self.bot.callRemote("getWorkerInfo")
+        info = yield self.bot.callRemote("getWorkerInfo")
 
-        def check(info):
-            self.assertEqual(info, dict(
-                admin='testy!', foo='bar',
-                environ=os.environ, system=os.name, basedir=self.basedir,
-                worker_commands=self.real_bot.remote_getCommands(),
-                version=self.real_bot.remote_getVersion(),
-                numcpus=multiprocessing.cpu_count()))
-        d.addCallback(check)
-        return d
+        self.assertEqual(info, dict(
+            admin='testy!', foo='bar',
+            environ=os.environ, system=os.name, basedir=self.basedir,
+            worker_commands=self.real_bot.remote_getCommands(),
+            version=self.real_bot.remote_getVersion(),
+            numcpus=multiprocessing.cpu_count()))
 
+    @defer.inlineCallbacks
     def test_getWorkerInfo_nodir(self):
-        d = self.bot.callRemote("getWorkerInfo")
+        info = yield self.bot.callRemote("getWorkerInfo")
 
-        def check(info):
-            self.assertEqual(set(info.keys()), set(
-                ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version']))
-        d.addCallback(check)
-        return d
+        self.assertEqual(set(info.keys()), set(
+            ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version']))
 
+    @defer.inlineCallbacks
     def test_setBuilderList_empty(self):
-        d = self.bot.callRemote("setBuilderList", [])
+        builders = yield self.bot.callRemote("setBuilderList", [])
 
-        def check(builders):
-            self.assertEqual(builders, {})
-        d.addCallback(check)
-        return d
+        self.assertEqual(builders, {})
 
+    @defer.inlineCallbacks
     def test_setBuilderList_single(self):
-        d = self.bot.callRemote("setBuilderList", [('mybld', 'myblddir')])
+        builders = yield self.bot.callRemote("setBuilderList", [('mybld', 'myblddir')])
 
-        def check(builders):
-            self.assertEqual(list(builders), ['mybld'])
-            self.assertTrue(
-                os.path.exists(os.path.join(self.basedir, 'myblddir')))
-            # note that we test the WorkerForBuilder instance below
-        d.addCallback(check)
-        return d
+        self.assertEqual(list(builders), ['mybld'])
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'myblddir')))
+        # note that we test the WorkerForBuilder instance below
 
+    @defer.inlineCallbacks
     def test_setBuilderList_updates(self):
-        d = defer.succeed(None)
 
         workerforbuilders = {}
 
-        def add_my(_):
-            d = self.bot.callRemote("setBuilderList", [
-                ('mybld', 'myblddir')])
+        builders = yield self.bot.callRemote("setBuilderList", [
+            ('mybld', 'myblddir')])
 
-            def check(builders):
-                self.assertEqual(list(builders), ['mybld'])
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                workerforbuilders['my'] = builders['mybld']
-            d.addCallback(check)
-            return d
-        d.addCallback(add_my)
+        self.assertEqual(list(builders), ['mybld'])
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'myblddir')))
+        workerforbuilders['my'] = builders['mybld']
 
-        def add_your(_):
-            d = self.bot.callRemote("setBuilderList", [
-                ('mybld', 'myblddir'), ('yourbld', 'yourblddir')])
+        builders = yield self.bot.callRemote("setBuilderList", [
+            ('mybld', 'myblddir'), ('yourbld', 'yourblddir')])
 
-            def check(builders):
-                self.assertEqual(
-                    sorted(builders.keys()), sorted(['mybld', 'yourbld']))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                # 'my' should still be the same WorkerForBuilder object
-                self.assertEqual(
-                    id(workerforbuilders['my']), id(builders['mybld']))
-                workerforbuilders['your'] = builders['yourbld']
-                self.assertTrue(repr(workerforbuilders['your']).startswith(
-                                 "<WorkerForBuilder 'yourbld' at "))
-            d.addCallback(check)
-            return d
-        d.addCallback(add_your)
+        self.assertEqual(
+            sorted(builders.keys()), sorted(['mybld', 'yourbld']))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'myblddir')))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+        # 'my' should still be the same WorkerForBuilder object
+        self.assertEqual(
+            id(workerforbuilders['my']), id(builders['mybld']))
+        workerforbuilders['your'] = builders['yourbld']
+        self.assertTrue(repr(workerforbuilders['your']).startswith(
+                         "<WorkerForBuilder 'yourbld' at "))
 
-        def remove_my(_):
-            d = self.bot.callRemote("setBuilderList", [
-                ('yourbld', 'yourblddir2')])  # note new builddir
+        builders = yield self.bot.callRemote("setBuilderList", [
+            ('yourbld', 'yourblddir2')])  # note new builddir
 
-            def check(builders):
-                self.assertEqual(sorted(builders.keys()), sorted(['yourbld']))
-                # note that build dirs are not deleted..
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
-                # 'your' should still be the same WorkerForBuilder object
-                self.assertEqual(
-                    id(workerforbuilders['your']), id(builders['yourbld']))
-            d.addCallback(check)
-            return d
-        d.addCallback(remove_my)
+        self.assertEqual(sorted(builders.keys()), sorted(['yourbld']))
+        # note that build dirs are not deleted..
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'myblddir')))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
+        # 'your' should still be the same WorkerForBuilder object
+        self.assertEqual(
+            id(workerforbuilders['your']), id(builders['yourbld']))
 
-        def add_and_remove(_):
-            d = self.bot.callRemote("setBuilderList", [
+        builders = yield self.bot.callRemote("setBuilderList", [
                 ('theirbld', 'theirblddir')])
 
-            def check(builders):
-                self.assertEqual(sorted(builders.keys()), sorted(['theirbld']))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, 'theirblddir')))
-            d.addCallback(check)
-            return d
-        d.addCallback(add_and_remove)
-
-        return d
+        self.assertEqual(sorted(builders.keys()), sorted(['theirbld']))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'myblddir')))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+        self.assertTrue(
+            os.path.exists(os.path.join(self.basedir, 'theirblddir')))
 
     def test_shutdown(self):
         d1 = defer.Deferred()
@@ -255,15 +220,14 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         self.setUpCommand()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         self.tearDownCommand()
 
-        d = defer.succeed(None)
         if self.bot and self.bot.running:
-            d.addCallback(lambda _: self.bot.stopService())
+            yield self.bot.stopService()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
-        return d
 
     def test_print(self):
         return self.wfb.callRemote("print", "Hello, WorkerForBuilder.")
@@ -281,6 +245,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
     def test_startBuild(self):
         return self.wfb.callRemote("startBuild")
 
+    @defer.inlineCallbacks
     def test_startCommand(self):
         # set up a fake step to receive updates
         st = FakeStep()
@@ -295,15 +260,10 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             0,
         )
 
-        d = defer.succeed(None)
-
-        def do_start(_):
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                       "13", "shell", dict(
-                command=['echo', 'hello'],
-                workdir='workdir'))
-        d.addCallback(do_start)
-        d.addCallback(lambda _: st.wait_for_finish())
+        yield self.wfb.callRemote("startCommand", FakeRemote(st),
+                                  "13", "shell", dict(command=['echo', 'hello'],
+                                                      workdir='workdir'))
+        yield st.wait_for_finish()
 
         def check(_):
             self.assertEqual(st.actions, [
@@ -313,9 +273,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
                 ['update', [[{'elapsed': 1}, 0]]],
                 ['complete', None],
             ])
-        d.addCallback(check)
-        return d
 
+    @defer.inlineCallbacks
     def test_startCommand_interruptCommand(self):
         # set up a fake step to receive updates
         st = FakeStep()
@@ -329,39 +288,28 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             {'wait': True}
         )
 
-        d = defer.succeed(None)
-
-        def do_start(_):
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                       "13", "shell", dict(
-                command=['sleep', '10'],
-                workdir='workdir'))
-        d.addCallback(do_start)
+        yield self.wfb.callRemote("startCommand", FakeRemote(st),
+                                  "13", "shell", dict(command=['sleep', '10'],
+                                                      workdir='workdir'))
 
         # wait a jiffy..
-        def do_wait(_):
-            d = defer.Deferred()
-            reactor.callLater(0.01, d.callback, None)
-            return d
-        d.addCallback(do_wait)
+        d = defer.Deferred()
+        reactor.callLater(0.01, d.callback, None)
+        yield d
 
         # and then interrupt the step
-        def do_interrupt(_):
-            return self.wfb.callRemote("interruptCommand", "13", "tl/dr")
-        d.addCallback(do_interrupt)
+        yield self.wfb.callRemote("interruptCommand", "13", "tl/dr")
 
-        d.addCallback(lambda _: st.wait_for_finish())
+        yield st.wait_for_finish()
 
-        def check(_):
-            self.assertEqual(st.actions, [
-                ['update', [[{'hdr': 'headers'}, 0]]],
-                ['update', [[{'hdr': 'killing'}, 0]]],
-                ['update', [[{'rc': -1}, 0]]],
-                ['complete', None],
-            ])
-        d.addCallback(check)
-        return d
+        self.assertEqual(st.actions, [
+            ['update', [[{'hdr': 'headers'}, 0]]],
+            ['update', [[{'hdr': 'killing'}, 0]]],
+            ['update', [[{'rc': -1}, 0]]],
+            ['complete', None],
+        ])
 
+    @defer.inlineCallbacks
     def test_startCommand_failure(self):
         # set up a fake step to receive updates
         st = FakeStep()
@@ -376,21 +324,14 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # failed
         self.patch(log, "err", lambda f: None)
 
-        d = defer.succeed(None)
+        yield self.wfb.callRemote("startCommand", FakeRemote(st),
+                                  "13", "shell", dict(command=['sleep', '10'],
+                                                      workdir='workdir'))
 
-        def do_start(_):
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                       "13", "shell", dict(
-                command=['sleep', '10'],
-                workdir='workdir'))
-        d.addCallback(do_start)
-        d.addCallback(lambda _: st.wait_for_finish())
+        yield st.wait_for_finish()
 
-        def check(_):
-            self.assertEqual(st.actions[1][0], 'complete')
-            self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
-        d.addCallback(check)
-        return d
+        self.assertEqual(st.actions[1][0], 'complete')
+        self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
 
     @defer.inlineCallbacks
     def test_startCommand_missing_args(self):

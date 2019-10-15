@@ -54,8 +54,8 @@ class TestStopWorker(misc.FileIOMixin,
         self.setUpOpenError(2)
 
         # check that stop() raises WorkerNotRunning exception
-        self.assertRaises(stop.WorkerNotRunning,
-                          stop.stopWorker, None, False)
+        with self.assertRaises(stop.WorkerNotRunning):
+            stop.stopWorker(None, False)
 
     @compat.skipUnlessPlatformIs("posix")
     def test_successful_stop(self):

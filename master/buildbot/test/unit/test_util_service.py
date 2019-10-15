@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import text_type
-
 import mock
 
 from twisted.internet import defer
@@ -147,16 +142,16 @@ class ClusteredBuildbotService(unittest.TestCase):
         svc.deactivate = self.makeMock(deactivate)
 
     def test_name_PreservesUnicodePromotion(self):
-        svc = self.makeService(name=u'n')
+        svc = self.makeService(name='n')
 
-        self.assertIsInstance(svc.name, text_type)
-        self.assertEqual(svc.name, u'n')
+        self.assertIsInstance(svc.name, str)
+        self.assertEqual(svc.name, 'n')
 
     def test_name_GetsUnicodePromotion(self):
         svc = self.makeService(name='n')
 
-        self.assertIsInstance(svc.name, text_type)
-        self.assertEqual(svc.name, u'n')
+        self.assertIsInstance(svc.name, str)
+        self.assertEqual(svc.name, 'n')
 
     def test_compare(self):
         a = self.makeService(name='a', serviceid=20)
@@ -553,7 +548,7 @@ class MyService(service.BuildbotService):
         return defer.succeed(None)
 
 
-class fakeConfig(object):
+class fakeConfig:
     pass
 
 
@@ -579,7 +574,7 @@ class BuildbotService(unittest.TestCase):
         yield serv.setServiceParent(self.master)
         yield self.master.startService()
         yield serv.reconfigServiceWithSibling(serv)
-        defer.returnValue(serv)
+        return serv
 
     @defer.inlineCallbacks
     def testNominal(self):
@@ -597,11 +592,12 @@ class BuildbotService(unittest.TestCase):
             'name': 'basic'})
 
     def testNoName(self):
-        self.assertRaises(ValueError, lambda: MyService(1, a=2))
+        with self.assertRaises(ValueError):
+            MyService(1, a=2)
 
     def testChecksDone(self):
-        self.assertRaises(
-            config.ConfigErrors, lambda: MyService(1, name="foo"))
+        with self.assertRaises(config.ConfigErrors):
+            MyService(1, name="foo")
 
 
 class BuildbotServiceManager(unittest.TestCase):
@@ -618,7 +614,7 @@ class BuildbotServiceManager(unittest.TestCase):
         yield self.manager.setServiceParent(self.master)
         yield self.master.startService()
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
-        defer.returnValue(serv)
+        return serv
 
     @defer.inlineCallbacks
     def testNominal(self):
@@ -664,11 +660,12 @@ class BuildbotServiceManager(unittest.TestCase):
         self.assertEqual(serv.config, ((1,), dict(a=4)))
 
     def testNoName(self):
-        self.assertRaises(ValueError, lambda: MyService(1, a=2))
+        with self.assertRaises(ValueError):
+            MyService(1, a=2)
 
     def testChecksDone(self):
-        self.assertRaises(
-            config.ConfigErrors, lambda: MyService(1, name="foo"))
+        with self.assertRaises(config.ConfigErrors):
+            MyService(1, name="foo")
 
     @defer.inlineCallbacks
     def testReconfigWithNew(self):
@@ -743,7 +740,7 @@ class BuildbotServiceManager(unittest.TestCase):
 
 class UnderTestSharedService(service.SharedService):
     def __init__(self, arg1=None):
-        service.SharedService.__init__(self)
+        super().__init__()
 
 
 class UnderTestDependentService(service.AsyncService):

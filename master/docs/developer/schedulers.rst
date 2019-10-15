@@ -31,7 +31,7 @@ The remaining arguments are keyword arguments, and the subclass's constructor sh
 
     class MyScheduler(base.BaseScheduler):
         def __init__(self, name, builderNames, arg1=None, arg2=None, **kwargs):
-            base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+            super().__init__(name, builderNames, **kwargs)
             self.arg1 = arg1
             self.arg2 = arg2
 

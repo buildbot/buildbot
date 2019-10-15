@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
@@ -25,6 +22,7 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot.process import botmaster
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.worker import manager as workermanager
 
@@ -35,7 +33,7 @@ class FakeWorker(service.BuildbotService):
     reconfig_count = 0
 
     def __init__(self, workername):
-        service.BuildbotService.__init__(self, name=workername)
+        super().__init__(name=workername)
 
     def reconfigService(self):
         self.reconfig_count += 1
@@ -47,11 +45,11 @@ class FakeWorker2(FakeWorker):
     pass
 
 
-class TestWorkerManager(unittest.TestCase):
+class TestWorkerManager(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantData=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.workers = workermanager.WorkerManager(self.master)
         self.workers.setServiceParent(self.master)

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot import config
@@ -25,19 +22,21 @@ from buildbot.steps.package.rpm import mock
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMock(steps.BuildStepMixin, unittest.TestCase):
+class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_no_root(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mock.Mock())
+        with self.assertRaises(config.ConfigErrors):
+            mock.Mock()
 
     def test_class_attrs(self):
         step = self.setupStep(mock.Mock(root='TESTROOT'))
@@ -95,17 +94,19 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
+class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_no_spec(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mock.MockBuildSRPM(root='TESTROOT'))
+        with self.assertRaises(config.ConfigErrors):
+            mock.MockBuildSRPM(root='TESTROOT')
 
     def test_success(self):
         self.setupStep(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
@@ -125,17 +126,19 @@ class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMockRebuild(steps.BuildStepMixin, unittest.TestCase):
+class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_no_srpm(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mock.MockRebuild(root='TESTROOT'))
+        with self.assertRaises(config.ConfigErrors):
+            mock.MockRebuild(root='TESTROOT')
 
     def test_success(self):
         self.setupStep(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))

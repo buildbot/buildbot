@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -28,32 +25,36 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
+                unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
         return self.tearDownSourceStep()
 
     def test_no_empty_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda: darcs.Darcs())
+        with self.assertRaises(config.ConfigErrors):
+            darcs.Darcs()
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          darcs.Darcs(repourl='http://localhost/darcs',
-                                      mode='full', method='fresh'))
+        with self.assertRaises(config.ConfigErrors):
+            darcs.Darcs(repourl='http://localhost/darcs', mode='full',
+                        method='fresh')
 
     def test_incremental_invalid_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          darcs.Darcs(repourl='http://localhost/darcs',
-                                      mode='incremental', method='fresh'))
+        with self.assertRaises(config.ConfigErrors):
+            darcs.Darcs(repourl='http://localhost/darcs', mode='incremental',
+                        method='fresh')
 
     def test_no_repo_url(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          darcs.Darcs(mode='full', method='fresh'))
+        with self.assertRaises(config.ConfigErrors):
+            darcs.Darcs(mode='full', method='fresh')
 
     def test_mode_full_clobber(self):
         self.setupStep(
@@ -242,13 +243,13 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'pull', '--all', '--verbose']) +
             0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None)) +
             0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
@@ -330,7 +331,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True)) +
             0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.darcs-context', workdir='wkdir',
@@ -368,7 +369,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True)) +
             0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.darcs-context', workdir='wkdir',

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -29,16 +26,19 @@ from buildbot.reporters.hipchat import HipChatStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
+class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
+                            ReporterTestMixin, LoggingMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -60,7 +60,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
     def setupBuildResults(self):
         self.insertTestData([SUCCESS], SUCCESS)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_authtokenTypeCheck(self):

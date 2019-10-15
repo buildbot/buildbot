@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import datetime
 import json
@@ -23,15 +21,17 @@ from twisted.trial import unittest
 
 from buildbot.test.unit import test_data_changes
 from buildbot.test.util import www
-from buildbot.util import bytes2NativeString
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 from buildbot.www import sse
 
 
-class EventResource(www.WwwTestMixin, unittest.TestCase):
+class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = master = self.make_master(url=b'h:/a/b/')
         self.sse = sse.EventResource(master)
 
@@ -58,8 +58,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.request.finished, True)
         self.assertEqual(request.finished, False)
         request.finish()  # fake close connection on client side
-        self.assertRaises(
-            AssertionError, self.assertReceivesChangeNewMessage, request)
+        with self.assertRaises(AssertionError):
+            self.assertReceivesChangeNewMessage(request)
 
     def test_listen_add_then_remove(self):
         self.render_resource(self.sse, b'/listen')
@@ -71,8 +71,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(request.finished, False)
         self.render_resource(self.sse, b'/remove/' +
                              unicode2bytes(uuid) + b"/changes/*/*")
-        self.assertRaises(
-            AssertionError, self.assertReceivesChangeNewMessage, request)
+        with self.assertRaises(AssertionError):
+            self.assertReceivesChangeNewMessage(request)
 
     def test_listen_add_nouuid(self):
         self.render_resource(self.sse, b'/listen')
@@ -118,8 +118,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
             ("changes", "500", "new"), test_data_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
-        msg = json.loads(bytes2NativeString(kw[b"data"]))
-        self.assertEqual(msg["key"], [u'changes', u'500', u'new'])
+        msg = json.loads(bytes2unicode(kw[b"data"]))
+        self.assertEqual(msg["key"], ['changes', '500', 'new'])
         self.assertEqual(msg["message"], json.loads(
             json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
 

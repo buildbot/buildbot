@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -39,10 +37,10 @@ class MQBase(service.AsyncService):
         else:
             res = None
         yield buildCompleteConsumer.stopConsuming()
-        defer.returnValue(res)
+        return res
 
 
-class QueueRef(object):
+class QueueRef:
 
     __slots__ = ['callback']
 

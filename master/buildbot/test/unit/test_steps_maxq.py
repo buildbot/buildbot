@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot import config
@@ -24,18 +21,22 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import maxq
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
+class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
+                                unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_testdir_required(self):
-        self.assertRaises(config.ConfigErrors, lambda: maxq.MaxQ())
+        with self.assertRaises(config.ConfigErrors):
+            maxq.MaxQ()
 
     def test_success(self):
         self.setupStep(

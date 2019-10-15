@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 import hashlib
 import itertools
 
@@ -25,7 +21,7 @@ import sqlalchemy as sa
 from buildbot.util import unicode2bytes
 
 
-class DBConnectorComponent(object):
+class DBConnectorComponent:
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
     # DBConnector object, so that they are available at e.g.,
@@ -72,6 +68,7 @@ class DBConnectorComponent(object):
             value = value[:col.type.length // 2] + hashlib.sha1(unicode2bytes(value)).hexdigest()[:col.type.length // 2]
         return value
 
+    # returns a Deferred that returns a value
     def findSomethingId(self, tbl, whereclause, insert_values,
                         _race_hook=None, autoCreate=True):
         def thd(conn, no_recurse=False):
@@ -106,7 +103,7 @@ class DBConnectorComponent(object):
         def encode(x):
             if x is None:
                 return b'\xf5'
-            elif isinstance(x, text_type):
+            elif isinstance(x, str):
                 return x.encode('utf-8')
             return str(x).encode('utf-8')
 
@@ -121,7 +118,7 @@ class DBConnectorComponent(object):
             yield batch
 
 
-class CachedMethod(object):
+class CachedMethod:
 
     def __init__(self, cache_name, method):
         self.cache_name = cache_name

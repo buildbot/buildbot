@@ -17,10 +17,6 @@
 
 # Many thanks to Dave Peticolas for contributing this module
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 import datetime
 import os
 import re
@@ -106,7 +102,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                      "server_tz")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET", "PATH"]
+                "P4CHARSET", "PATH", "P4CONFIG"]
 
     changes_line_re = re.compile(
         r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
@@ -134,9 +130,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = "P4Source:%s:%s" % (p4port, p4base)
 
-        base.PollingChangeSource.__init__(self, name=name,
-                                          pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch)
+        super().__init__(name=name,
+                         pollInterval=pollInterval,
+                         pollAtLaunch=pollAtLaunch)
 
         if project is None:
             project = ''
@@ -182,8 +178,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         return d
 
     def _get_process_output(self, args):
-        env = dict([(e, os.environ.get(e))
-                    for e in self.env_vars if os.environ.get(e)])
+        env = {e: os.environ.get(e)
+               for e in self.env_vars if os.environ.get(e)}
         d = utils.getProcessOutput(self.p4bin, args, env)
         return d
 
@@ -199,10 +195,10 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
 
     def _parseTicketPassword(self, text):
-        lines = text.split("\n")
+        lines = text.splitlines()
         if len(lines) < 2:
             return None
-        return lines[1].strip()
+        return lines[-1].strip()
 
     def _getPasswd(self):
         if self.use_tickets:
@@ -251,8 +247,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(u"Warning: cannot fully decode {} in {}".format(
-                    repr(result), self.encoding))
+            log.msg("{}: cannot fully decode {} in {}".format(
+                    ex, repr(result), self.encoding))
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
@@ -345,12 +341,13 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             for branch in branch_files:
                 yield self.master.data.updates.addChange(
                     author=who,
+                    committer=None,
                     files=branch_files[branch],
                     comments=comments,
-                    revision=text_type(num),
+                    revision=str(num),
                     when_timestamp=when,
                     branch=branch,
                     project=self.project,
-                    revlink=self.revlink_callable(branch, text_type(num)))
+                    revlink=self.revlink_callable(branch, str(num)))
 
             self.last_change = num

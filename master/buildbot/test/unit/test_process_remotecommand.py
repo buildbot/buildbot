@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.trial import unittest
@@ -25,9 +22,7 @@ from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestRemoteShellCommand(unittest.TestCase):
@@ -187,22 +182,6 @@ class TestFakeRunCommand(unittest.TestCase, Tests):
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_worker_old_api(self):
-        cmd = remotecommand.RemoteCommand('cmd', [])
-
-        w = mock.Mock()
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertIdentical(cmd.worker, None)
-
-            cmd.worker = w
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'buildslave' attribute is deprecated"):
-            old = cmd.buildslave
-
-        self.assertIdentical(old, w)
-
     def test_RemoteShellCommand_usePTY(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cmd = remotecommand.RemoteShellCommand(
@@ -221,12 +200,3 @@ class TestWorkerTransition(unittest.TestCase):
                 'workdir', 'command', usePTY=False)
 
         self.assertFalse(cmd.args['usePTY'])
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slave-config' value of 'usePTY' "
-                                "attribute is deprecated"):
-            cmd = remotecommand.RemoteShellCommand(
-                'workdir', 'command', usePTY='slave-config')
-
-        self.assertTrue(cmd.args['usePTY'] is None)

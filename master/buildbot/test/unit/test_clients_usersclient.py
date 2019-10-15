@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
@@ -70,26 +67,22 @@ class TestUsersClient(unittest.TestCase):
         self.assertEqual([host, port, called_with],
                          [self.conn_host, self.conn_port, self.called_with])
 
+    @defer.inlineCallbacks
     def test_usersclient_info(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        d = uc.send('update', 'bb_user', 'hashed_bb_pass', None,
+        yield uc.send('update', 'bb_user', 'hashed_bb_pass', None,
                     [{'identifier': 'x', 'svn': 'x'}])
 
-        def check(_):
-            self.assertProcess('localhost', 1234,
-                               dict(op='update', bb_username='bb_user',
-                                    bb_password='hashed_bb_pass', ids=None,
-                                    info=[dict(identifier='x', svn='x')]))
-        d.addCallback(check)
-        return d
+        self.assertProcess('localhost', 1234,
+                           dict(op='update', bb_username='bb_user',
+                                bb_password='hashed_bb_pass', ids=None,
+                                info=[dict(identifier='x', svn='x')]))
 
+    @defer.inlineCallbacks
     def test_usersclient_ids(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        d = uc.send('remove', None, None, ['x'], None)
+        yield uc.send('remove', None, None, ['x'], None)
 
-        def check(_):
-            self.assertProcess('localhost', 1234,
-                               dict(op='remove', bb_username=None,
-                                    bb_password=None, ids=['x'], info=None))
-        d.addCallback(check)
-        return d
+        self.assertProcess('localhost', 1234,
+                           dict(op='remove', bb_username=None,
+                           bb_password=None, ids=['x'], info=None))

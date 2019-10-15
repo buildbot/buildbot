@@ -13,15 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 
 from twisted.python import log
 
 
-class LoggingMixin(object):
+class LoggingMixin:
 
     def setUpLogging(self):
         self._logEvents = []

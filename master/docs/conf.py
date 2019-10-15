@@ -11,9 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import pkg_resources
@@ -27,10 +24,12 @@ sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from buildbot.util.raml import RamlSpec
+    from buildbot.reporters.telegram import TelegramContact
 except ImportError:
     sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     os.pardir))
     from buildbot.util.raml import RamlSpec
+    from buildbot.reporters.telegram import TelegramContact
 
 # -- General configuration -----------------------------------------------
 try:
@@ -98,9 +97,14 @@ release = version
 blockdiag_html_image_format = 'svg'
 blocdiag_transparency = True
 
+# add a loud note about python 2
+rst_prolog = textwrap.dedent("""\
+.. caution:: Buildbot no longer supports Python 2.7 on the Buildbot master.
+""")
+
 # add a loud note for anyone looking at the latest docs
 if release == 'latest':
-    rst_prolog = textwrap.dedent("""\
+    rst_prolog += textwrap.dedent("""\
     .. caution:: This page documents the latest, unreleased version of
         Buildbot.  For documentation for released versions, see
         http://docs.buildbot.net/current/.
@@ -319,7 +323,8 @@ man_pages = [
 ]
 
 jinja_contexts = {
-    "data_api": {'raml': RamlSpec()}
+    "data_api": {'raml': RamlSpec()},
+    "telegram": {'commands': TelegramContact.describe_commands()},
 }
 
 # Spell checker.

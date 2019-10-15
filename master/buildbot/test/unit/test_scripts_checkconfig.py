@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import os
 import re
 import sys
@@ -51,7 +47,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         configFile = os.path.join(self.configdir, 'master.cfg')
         with open(configFile, "w") as f:
             f.write(config)
-        for filename, contents in iteritems(other_files):
+        for filename, contents in other_files.items():
             if isinstance(filename, type(())):
                 fn = os.path.join(self.configdir, *filename)
                 dn = os.path.dirname(fn)

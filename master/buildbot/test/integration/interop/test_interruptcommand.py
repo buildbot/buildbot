@@ -13,23 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
 from buildbot.process.results import CANCELLED
+from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import asyncSleep
 
 
 class InterruptCommand(RunMasterBase):
     """Make sure we can interrupt a command"""
+
+    @flaky(bugNumber=4404, onPlatform='win32')
     @defer.inlineCallbacks
     def test_setProp(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True)
-        self.assertEqual(build['steps'][0]['results'], CANCELLED)
+        self.assertEqual(build['steps'][-1]['results'], CANCELLED)
 
 
 class InterruptCommandPb(InterruptCommand):
@@ -58,7 +59,7 @@ def masterConfig():
             yield asyncSleep(1)
             self.interrupt("just testing")
             res = yield d
-            defer.returnValue(res)
+            return res
 
     c['schedulers'] = [
         schedulers.ForceScheduler(

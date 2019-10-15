@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import textwrap
 
 from twisted.internet import defer
@@ -28,17 +25,19 @@ from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
-    LOGCONTENT = textwrap.dedent(u"""\
+class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
+    LOGCONTENT = textwrap.dedent("""\
         line zero
         line 1
         """)
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     def setupDb(self):
         self.db = self.master.db
@@ -61,9 +60,9 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
                          masterid=92, results=SUCCESS),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(id=234),
-            fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283', author='me@foo',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=234),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283', author='me@foo',
+                          repository='svn://...', codebase='cbsvn',
+                          project='world-domination', sourcestampid=234),
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='him@foo', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -89,7 +88,7 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         def getChangesForBuild(buildid):
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
-            defer.returnValue([ch])
+            return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
 
@@ -102,9 +101,9 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         build1 = res['builds'][0]
         build2 = res['builds'][1]
         buildset = res['buildset']
-        self.assertEqual(build1['properties'], {u'reason': (u'because', u'fakedb'),
-                                                u'owner': (u'him', u'fakedb'),
-                                                u'workername': (u'wrk', u'fakedb')})
+        self.assertEqual(build1['properties'], {'reason': ('because', 'fakedb'),
+                                                'owner': ('him', 'fakedb'),
+                                                'workername': ('wrk', 'fakedb')})
         self.assertEqual(len(build1['steps']), 2)
         self.assertEqual(build1['buildid'], 20)
         self.assertEqual(build2['buildid'], 21)
@@ -179,10 +178,11 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(res['buildid'], 18)
 
 
-class TestURLUtils(unittest.TestCase):
+class TestURLUtils(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
 
     def test_UrlForBuild(self):
         self.assertEqual(utils.getURLForBuild(self.master, 1, 3),

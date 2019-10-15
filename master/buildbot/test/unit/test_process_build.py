@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import operator
 
 from mock import Mock
@@ -42,10 +39,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.fake.fakebuild import FakeBuildStatus
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class FakeChange:
@@ -91,10 +85,9 @@ class FakeRequest:
 class FakeBuildStep(BuildStep):
 
     def __init__(self):
-        BuildStep.__init__(
-            self, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=True,
+        super().__init__(haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=True,
             warnOnWarnings=True, warnOnFailure=False, alwaysRun=False, name='fake')
-        self._summary = {u'step': u'result', u'build': u'build result'}
+        self._summary = {'step': 'result', 'build': 'build result'}
         self._expected_results = SUCCESS
 
     def run(self):
@@ -116,9 +109,12 @@ class FakeBuilder:
         self.name = 'fred'
         self.master = master
         self.botmaster = master.botmaster
+        self.builderid = 83
+        self._builders = {}
+        self.config_version = 0
 
     def getBuilderId(self):
-        return defer.succeed(83)
+        return defer.succeed(self.builderid)
 
     def setupProperties(self, props):
         pass
@@ -127,11 +123,11 @@ class FakeBuilder:
         pass
 
     def getBuilderIdForName(self, name):
-        return defer.succeed(83)
+        return defer.succeed(self._builders.get(name, None) or self.builderid)
 
 
 @implementer(interfaces.IBuildStepFactory)
-class FakeStepFactory(object):
+class FakeStepFactory:
 
     """Fake step factory that just returns a fixed step object."""
 
@@ -147,7 +143,7 @@ class TestException(Exception):
 
 
 @implementer(interfaces.IBuildStepFactory)
-class FailingStepFactory(object):
+class FailingStepFactory:
 
     """Fake step factory that just returns a fixed step object."""
 
@@ -167,7 +163,7 @@ class _StepController():
 class _ControllableStep(BuildStep):
 
     def __init__(self):
-        BuildStep.__init__(self)
+        super().__init__()
         self._deferred = defer.Deferred()
 
     def run(self):
@@ -180,16 +176,17 @@ def makeControllableStepFactory():
     return controller, FakeStepFactory(step)
 
 
-class TestBuild(unittest.TestCase):
+class TestBuild(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         r = FakeRequest()
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
         r.sources[0].revision = "12345"
 
         self.request = r
-        self.master = fakemaster.make_master(wantData=True, testcase=self)
+        self.master = fakemaster.make_master(self, wantData=True)
 
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
@@ -205,6 +202,10 @@ class TestBuild(unittest.TestCase):
         self.build.setBuilder(self.builder)
         self.build.text = []
         self.build.buildid = 666
+
+    def assertWorkerPreparationFailure(self, reason):
+        states = "".join(self.master.data.updates.stepStateString.values())
+        self.assertIn(states, reason)
 
     def testRunSuccessfulBuild(self):
         b = self.build
@@ -243,6 +244,7 @@ class TestBuild(unittest.TestCase):
         self.workerforbuilder.prepare = lambda _: False
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, RETRY)
+        self.assertWorkerPreparationFailure('error while worker_prepare')
 
     def testBuildCancelledWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
         b = self.build
@@ -256,6 +258,7 @@ class TestBuild(unittest.TestCase):
         b.stopBuild('Cancel Build', CANCELLED)
         d.callback(False)
         self.assertEqual(b.results, CANCELLED)
+        self.assertWorkerPreparationFailure('error while worker_prepare')
 
     def testBuildRetryWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
         b = self.build
@@ -269,7 +272,9 @@ class TestBuild(unittest.TestCase):
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
         self.assertEqual(b.results, RETRY)
+        self.assertWorkerPreparationFailure('error while worker_prepare')
 
+    @defer.inlineCallbacks
     def testAlwaysRunStepStopBuild(self):
         """Test that steps marked with alwaysRun=True still get run even if
         the build is stopped."""
@@ -304,16 +309,14 @@ class TestBuild(unittest.TestCase):
         step2.startStep = startStep2
         step1.stepDone = lambda: False
 
-        d = b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
-        def check(ign):
-            self.assertEqual(b.results, CANCELLED)
-            self.assertIn('stop it', step1.interrupted)
-            self.assertTrue(step2Started[0])
-        d.addCallback(check)
-        return d
+        self.assertEqual(b.results, CANCELLED)
+        self.assertIn('stop it', step1.interrupted)
+        self.assertTrue(step2Started[0])
 
-    def testBuildcanStartWithWorkerForBuilder(self):
+    @defer.inlineCallbacks
+    def testBuild_canAcquireLocks(self):
         b = self.build
 
         workerforbuilder1 = Mock()
@@ -321,45 +324,48 @@ class TestBuild(unittest.TestCase):
 
         lock = WorkerLock('lock')
         counting_access = lock.access('counting')
-        real_lock = b.builder.botmaster.getLockByID(lock)
+
+        real_lock = yield b.builder.botmaster.getLockByID(lock, 0)
 
         # no locks, so both these pass (call twice to verify there's no
         # state/memory)
         lock_list = [(real_lock, counting_access)]
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+            Build._canAcquireLocks(lock_list, workerforbuilder1))
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+            Build._canAcquireLocks(lock_list, workerforbuilder1))
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+            Build._canAcquireLocks(lock_list, workerforbuilder2))
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+            Build._canAcquireLocks(lock_list, workerforbuilder2))
 
-        worker_lock_1 = real_lock.getLock(workerforbuilder1.worker)
-        worker_lock_2 = real_lock.getLock(workerforbuilder2.worker)
+        worker_lock_1 = real_lock.getLockForWorker(
+            workerforbuilder1.worker.workername)
+        worker_lock_2 = real_lock.getLockForWorker(
+            workerforbuilder2.worker.workername)
 
         # then have workerforbuilder2 claim its lock:
         worker_lock_2.claim(workerforbuilder2, counting_access)
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+            Build._canAcquireLocks(lock_list, workerforbuilder1))
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+            Build._canAcquireLocks(lock_list, workerforbuilder1))
         self.assertFalse(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+            Build._canAcquireLocks(lock_list, workerforbuilder2))
         self.assertFalse(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+            Build._canAcquireLocks(lock_list, workerforbuilder2))
         worker_lock_2.release(workerforbuilder2, counting_access)
 
         # then have workerforbuilder1 claim its lock:
         worker_lock_1.claim(workerforbuilder1, counting_access)
         self.assertFalse(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+            Build._canAcquireLocks(lock_list, workerforbuilder1))
         self.assertFalse(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+            Build._canAcquireLocks(lock_list, workerforbuilder1))
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+            Build._canAcquireLocks(lock_list, workerforbuilder2))
         self.assertTrue(
-            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+            Build._canAcquireLocks(lock_list, workerforbuilder2))
         worker_lock_1.release(workerforbuilder1, counting_access)
 
     def testBuilddirPropType(self):
@@ -382,6 +388,7 @@ class TestBuild(unittest.TestCase):
             [call('builddir', expected_path, 'Worker')],
             any_order=True)
 
+    @defer.inlineCallbacks
     def testBuildLocksAcquired(self):
         b = self.build
 
@@ -389,15 +396,16 @@ class TestBuild(unittest.TestCase):
         claimCount = [0]
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+
+        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
+        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
 
         def claim(owner, access):
             claimCount[0] += 1
             return real_lock.old_claim(owner, access)
         real_lock.old_claim = real_lock.claim
         real_lock.claim = claim
-        b.setLocks([lock_access])
+        yield b.setLocks([lock_access])
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
@@ -407,11 +415,11 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(b.results, SUCCESS)
         self.assertEqual(claimCount[0], 1)
 
+    @defer.inlineCallbacks
     def testBuildLocksOrder(self):
         """Test that locks are acquired in FIFO order; specifically that
         counting locks cannot jump ahead of exclusive locks"""
         eBuild = self.build
-
         cBuilder = FakeBuilder(self.master)
         cBuild = Build([self.request])
         cBuild.setBuilder(cBuilder)
@@ -426,7 +434,9 @@ class TestBuild(unittest.TestCase):
 
         lock = WorkerLock('lock', 2)
         claimLog = []
-        realLock = self.master.botmaster.getLockByID(lock).getLock(self.worker)
+
+        real_workerlock = yield self.master.botmaster.getLockByID(lock, 0)
+        realLock = real_workerlock.getLockForWorker(self.worker.workername)
 
         def claim(owner, access):
             claimLog.append(owner)
@@ -434,8 +444,8 @@ class TestBuild(unittest.TestCase):
         realLock.oldClaim = realLock.claim
         realLock.claim = claim
 
-        eBuild.setLocks([lock.access('exclusive')])
-        cBuild.setLocks([lock.access('counting')])
+        yield eBuild.setLocks([lock.access('exclusive')])
+        yield cBuild.setLocks([lock.access('counting')])
 
         fakeBuild = Mock()
         fakeBuildAccess = lock.access('counting')
@@ -451,14 +461,12 @@ class TestBuild(unittest.TestCase):
 
         realLock.release(fakeBuild, fakeBuildAccess)
 
-        def check(ign):
-            self.assertEqual(eBuild.results, SUCCESS)
-            self.assertEqual(cBuild.results, SUCCESS)
-            self.assertEqual(claimLog, [fakeBuild, eBuild, cBuild])
+        yield d
+        self.assertEqual(eBuild.results, SUCCESS)
+        self.assertEqual(cBuild.results, SUCCESS)
+        self.assertEqual(claimLog, [fakeBuild, eBuild, cBuild])
 
-        d.addCallback(check)
-        return d
-
+    @defer.inlineCallbacks
     def testBuildWaitingForLocks(self):
         b = self.build
 
@@ -466,15 +474,16 @@ class TestBuild(unittest.TestCase):
         claimCount = [0]
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+
+        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
+        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
 
         def claim(owner, access):
             claimCount[0] += 1
             return real_lock.old_claim(owner, access)
         real_lock.old_claim = real_lock.claim
         real_lock.claim = claim
-        b.setLocks([lock_access])
+        yield b.setLocks([lock_access])
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
@@ -487,15 +496,18 @@ class TestBuild(unittest.TestCase):
         self.assertTrue(b.currentStep is None)
         self.assertTrue(b._acquiringLock is not None)
 
+    @defer.inlineCallbacks
     def testStopBuildWaitingForLocks(self):
         b = self.build
 
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
-        b.setLocks([lock_access])
+
+        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
+        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
+
+        yield b.setLocks([lock_access])
 
         step = FakeBuildStep()
         step.alwaysRun = False
@@ -514,15 +526,18 @@ class TestBuild(unittest.TestCase):
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
 
+    @defer.inlineCallbacks
     def testStopBuildWaitingForLocks_lostRemote(self):
         b = self.build
 
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
-        b.setLocks([lock_access])
+
+        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
+        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
+
+        yield b.setLocks([lock_access])
 
         step = FakeBuildStep()
         step.alwaysRun = False
@@ -544,14 +559,16 @@ class TestBuild(unittest.TestCase):
             ["retry", "lost", "connection"])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
+    @defer.inlineCallbacks
     def testStopBuildWaitingForStepLocks(self):
         b = self.build
 
         lock = WorkerLock('lock')
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+
+        real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
+        real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
 
         step = LoggingBuildStep(locks=[lock_access])
         b.setStepFactories([FakeStepFactory(step)])
@@ -719,7 +736,7 @@ class TestBuild(unittest.TestCase):
         res = yield b._flushProperties(result)
         self.assertEqual(res, result)
         self.assertEqual(self.master.data.updates.properties,
-                         [(43, u'foo', 'bar', u'test')])
+                         [(43, 'foo', 'bar', 'test')])
 
     def create_fake_steps(self, names):
         steps = []
@@ -734,6 +751,7 @@ class TestBuild(unittest.TestCase):
             steps.append(step)
         return steps
 
+    @defer.inlineCallbacks
     def testAddStepsAfterCurrentStep(self):
         b = self.build
 
@@ -747,12 +765,13 @@ class TestBuild(unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "d", "e", "c"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
 
+    @defer.inlineCallbacks
     def testAddStepsAfterLastStep(self):
         b = self.build
 
@@ -766,7 +785,7 @@ class TestBuild(unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "d", "e"]
         executed_names = [s.name for s in b.executedSteps]
@@ -821,6 +840,16 @@ class TestBuild(unittest.TestCase):
         self.build.number = 3
         url = yield self.build.getUrl()
         self.assertEqual(url, 'http://localhost:8080/#builders/83/builds/3')
+
+    @defer.inlineCallbacks
+    def testGetUrlForVirtualBuilder(self):
+        # Let's fake a virtual builder
+        self.builder._builders['wilma'] = 108
+        self.build.setProperty('virtual_builder_name', 'wilma', 'Build')
+        self.build.setProperty('virtual_builder_tags', ['_virtual_'])
+        self.build.number = 33
+        url = yield self.build.getUrl()
+        self.assertEqual(url, 'http://localhost:8080/#builders/108/builds/33')
 
     def test_active_builds_metric(self):
         """
@@ -958,7 +987,7 @@ class TestBuildBlameList(unittest.TestCase):
         self.assertEqual(blamelist, [])
 
 
-class TestSetupProperties_MultipleSources(unittest.TestCase):
+class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
 
     """
     Test that the property values, based on the available requests, are
@@ -966,6 +995,7 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         self.props = {}
         r = FakeRequest()
         r.sources = []
@@ -982,8 +1012,7 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         r.sources[1].revision = "34567"
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = FakeBuilder(
-            fakemaster.make_master(wantData=True, testcase=self))
+        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
@@ -1005,7 +1034,7 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         self.assertNotIn("repository", self.props["Build"])
 
 
-class TestSetupProperties_SingleSource(unittest.TestCase):
+class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
 
     """
     Test that the property values, based on the available requests, are
@@ -1013,6 +1042,7 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         self.props = {}
         r = FakeRequest()
         r.sources = []
@@ -1024,8 +1054,7 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         r.sources[0].revision = "12345"
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = FakeBuilder(
-            fakemaster.make_master(wantData=True, testcase=self))
+        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
@@ -1064,7 +1093,7 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         self.assertEqual(project, '')
 
 
-class TestBuildProperties(unittest.TestCase):
+class TestBuildProperties(TestReactorMixin, unittest.TestCase):
 
     """
     Test that a Build has the necessary L{IProperties} methods, and that they
@@ -1073,6 +1102,8 @@ class TestBuildProperties(unittest.TestCase):
     """
 
     def setUp(self):
+        self.setUpTestReactor()
+
         @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
             pass
@@ -1084,15 +1115,14 @@ class TestBuildProperties(unittest.TestCase):
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
         r.sources[0].revision = "12345"
-        self.master = fakemaster.make_master(wantData=True, testcase=self)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = FakeBuilder(
-            fakemaster.make_master(wantData=True, testcase=self))
+        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.properties = self.build.properties = FakeProperties()
         self.build_status = FakeBuildStatus()
@@ -1127,72 +1157,3 @@ class TestBuildProperties(unittest.TestCase):
     def test_render(self):
         self.build.render("xyz")
         self.properties.render.assert_called_with("xyz")
-
-    def test_getWorkerName_old_api(self):
-        @implementer(interfaces.IProperties)
-        class FakeProperties(Mock):
-            pass
-        import posixpath
-
-        r = FakeRequest()
-        build = Build([r])
-        build.properties = FakeProperties()
-        build.builder = FakeBuilder(self.master)
-        build.build_status = FakeBuildStatus()
-
-        w = worker.FakeWorker(self.master)
-        w.path_module = posixpath
-        w.properties = FakeProperties()
-        w.workername = 'worker name'
-        w.worker_basedir = None
-
-        workerforbuilder = Mock(name='workerforbuilder')
-        workerforbuilder.worker = w
-
-        build.workerforbuilder = workerforbuilder
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = build.getWorkerName()
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'getSlaveName' method is deprecated"):
-            old = build.getSlaveName()
-
-        self.assertEqual(old, 'worker name')
-        self.assertIdentical(new, old)
-
-    def test_workername_old_api(self):
-        @implementer(interfaces.IProperties)
-        class FakeProperties(Mock):
-            pass
-
-        import posixpath
-
-        r = FakeRequest()
-        build = Build([r])
-        build.properties = FakeProperties()
-        build.builder = FakeBuilder(self.master)
-        build.build_status = FakeBuildStatus()
-
-        w = worker.FakeWorker(self.master)
-        w.path_module = posixpath
-        w.properties = FakeProperties()
-        w.workername = 'worker name'
-        w.worker_basedir = None
-
-        workerforbuilder = Mock(name='workerforbuilder')
-        workerforbuilder.worker = w
-
-        build.setupWorkerForBuilder(workerforbuilder)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = build.workername
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' attribute is deprecated"):
-            old = build.slavename
-
-        self.assertEqual(old, 'worker name')
-        self.assertIdentical(new, old)

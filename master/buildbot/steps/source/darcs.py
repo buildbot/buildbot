@@ -16,8 +16,6 @@
 Source step code for darcs
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -27,7 +25,6 @@ from buildbot.config import ConfigErrors
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
-from buildbot.process import remotetransfer
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
 
@@ -47,7 +44,7 @@ class Darcs(Source):
         self.repourl = repourl
         self.method = method
         self.mode = mode
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         errors = []
 
         if not self._hasAttrGroupMember('mode', self.mode):
@@ -165,7 +162,7 @@ class Darcs(Source):
         d = defer.succeed(0)
         if self.revision:
             d.addCallback(
-                lambda _: self._downloadFile(self.revision, '.darcs-context'))
+                lambda _: self.downloadFileContentToWorker('.darcs-context', self.revision))
             command.append('--context')
             command.append('.darcs-context')
 
@@ -219,7 +216,7 @@ class Darcs(Source):
     def parseGotRevision(self, _):
         revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
         self.updateSourceProperty('got_revision', revision)
-        defer.returnValue(0)
+        return 0
 
     def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True, wkdir=None):
@@ -251,30 +248,3 @@ class Darcs(Source):
 
     def _sourcedirIsUpdatable(self):
         return self.pathExists(self.build.path_module.join(self.workdir, '_darcs'))
-
-    def _downloadFile(self, buf, filename):
-        filereader = remotetransfer.StringFileReader(buf)
-        args = {
-            'maxsize': None,
-            'reader': filereader,
-            'blocksize': 16 * 1024,
-            'workdir': self.workdir,
-            'mode': None
-        }
-
-        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
-            args['slavedest'] = filename
-        else:
-            args['workerdest'] = filename
-
-        cmd = remotecommand.RemoteCommand('downloadFile', args)
-        cmd.useLog(self.stdio_log, False)
-        log.msg("Downloading file: %s" % (filename))
-        d = self.runCommand(cmd)
-
-        @d.addCallback
-        def evaluateCommand(_):
-            if cmd.didFail():
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        return d

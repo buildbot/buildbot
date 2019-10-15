@@ -13,11 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
-
-class State(object):
+class State:
 
     """
     A simple class you can use to keep track of state throughout

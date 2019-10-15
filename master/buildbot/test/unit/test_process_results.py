@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import lrange
-
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -37,7 +33,7 @@ class TestResults(unittest.TestCase):
                          results.worst_status(results.SKIPPED, results.CANCELLED))
 
     def test_sort_worst_status(self):
-        res = lrange(len(results.Results))
+        res = list(range(len(results.Results)))
         res.sort(
             key=lambda a: a if a != results.SKIPPED else -1)
         self.assertEqual(res, [

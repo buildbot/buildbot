@@ -13,26 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
-import cairocffi as cairo
-import cairosvg
+from xml.sax.saxutils import escape
 
 import jinja2
+
 from klein import Klein
 from twisted.internet import defer
 
+import cairocffi as cairo
+import cairosvg
 from buildbot.process.results import Results
+from buildbot.util import bytes2unicode
 from buildbot.www.plugin import Application
-from xml.sax.saxutils import escape
-from buildbot.util import bytes2NativeString
 
 
-class Api(object):
+class Api:
     app = Klein()
 
-    default = {  # note that these defaults are documented in cfg-www.rst
+    default = {  # note that these defaults are documented in configuration/www.rst
         "left_text": "Build Status",
         "left_color": "#555",
         "style": "plastic",
@@ -69,8 +67,8 @@ class Api(object):
                 config[k] = v
 
         for k, v in request.args.items():
-            k = bytes2NativeString(k)
-            config[k] = escape(bytes2NativeString(v[0]))
+            k = bytes2unicode(k)
+            config[k] = escape(bytes2unicode(v[0]))
         return config
 
     @app.route("/<string:builder>.png", methods=['GET'])

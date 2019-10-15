@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -24,7 +20,7 @@ from buildbot.data import types
 from buildbot.data.resultspec import ResultSpec
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     def _generate_filtered_properties(self, props, filters):
         """
@@ -42,7 +38,7 @@ class Db2DataMixin(object):
         if props and filters:  # pragma: no cover
             return (props
                     if '*' in filters
-                    else dict(((k, v) for k, v in iteritems(props) if k in filters)))
+                    else dict(((k, v) for k, v in props.items() if k in filters)))
 
     def db2data(self, dbdict):
         data = {
@@ -109,7 +105,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                     props, filters)
                 if filtered_properties:
                     data['properties'] = filtered_properties
-        defer.returnValue(data)
+        return data
 
     @defer.inlineCallbacks
     def actionStop(self, args, kwargs):
@@ -130,7 +126,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         build = yield self.get(ResultSpec(), kwargs)
         buildrequest = yield self.master.data.get(('buildrequests', build['buildrequestid']))
         res = yield self.master.data.updates.rebuildBuildrequest(buildrequest)
-        defer.returnValue(res)
+        return res
 
 
 class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -141,30 +137,37 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         /builders/n:builderid/builds
         /builders/i:buildername/builds
         /buildrequests/n:buildrequestid/builds
+        /changes/n:changeid/builds
         /workers/n:workerid/builds
     """
     rootLinkName = 'builds'
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        # following returns None if no filter
-        # true or false, if there is a complete filter
-        builderid = None
-        if 'builderid' in kwargs or 'buildername' in kwargs:
-            builderid = yield self.getBuilderId(kwargs)
-            if builderid is None:
-                defer.returnValue([])
-        complete = resultSpec.popBooleanFilter("complete")
-        buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
-        resultSpec.fieldMapping = self.fieldMapping
-        builds = yield self.master.db.builds.getBuilds(
-            builderid=builderid,
-            buildrequestid=kwargs.get('buildrequestid', buildrequestid),
-            workerid=kwargs.get('workerid'),
-            complete=complete,
-            resultSpec=resultSpec)
+        changeid = kwargs.get('changeid')
+        if changeid is not None:
+            builds = yield self.master.db.builds.getBuildsForChange(changeid)
+        else:
+            # following returns None if no filter
+            # true or false, if there is a complete filter
+            builderid = None
+            if 'builderid' in kwargs or 'buildername' in kwargs:
+                builderid = yield self.getBuilderId(kwargs)
+                if builderid is None:
+                    return []
+            complete = resultSpec.popBooleanFilter("complete")
+            buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
+            resultSpec.fieldMapping = self.fieldMapping
+            builds = yield self.master.db.builds.getBuilds(
+                builderid=builderid,
+                buildrequestid=kwargs.get('buildrequestid', buildrequestid),
+                workerid=kwargs.get('workerid'),
+                complete=complete,
+                resultSpec=resultSpec)
+
         # returns properties' list
         filters = resultSpec.popProperties()
+
         buildscol = []
         for b in builds:
             data = yield self.db2data(b)
@@ -175,8 +178,9 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                     props, filters)
                 if filtered_properties:
                     data['properties'] = filtered_properties
+
             buildscol.append(data)
-        defer.returnValue(buildscol)
+        return buildscol
 
 
 class Build(base.ResourceType):
@@ -220,8 +224,8 @@ class Build(base.ResourceType):
             buildrequestid=buildrequestid,
             workerid=workerid,
             masterid=self.master.masterid,
-            state_string=u'created')
-        defer.returnValue(res)
+            state_string='created')
+        return res
 
     @base.updateMethod
     def generateNewBuildEvent(self, buildid):
@@ -233,7 +237,7 @@ class Build(base.ResourceType):
         res = yield self.master.db.builds.setBuildStateString(
             buildid=buildid, state_string=state_string)
         yield self.generateEvent(buildid, "update")
-        defer.returnValue(res)
+        return res
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -241,4 +245,4 @@ class Build(base.ResourceType):
         res = yield self.master.db.builds.finishBuild(
             buildid=buildid, results=results)
         yield self.generateEvent(buildid, "finished")
-        defer.returnValue(res)
+        return res

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
@@ -41,6 +39,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         d.addCallback(lambda objdict: objdict['id'])
         return d
 
+    # returns a Deferred that returns a value
     @base.cached('objectids')
     def _getObjectId(self, name_class_name_tuple):
         name, class_name = name_class_name_tuple
@@ -93,6 +92,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
     class Thunk:
         pass
 
+    # returns a Deferred that returns a value
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             return self.thdGetState(conn, objectid, name, default=default)
@@ -119,6 +119,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
             raise TypeError("JSON error loading state value '%s' for %d" %
                             (name, objectid))
 
+    # returns a Deferred that returns a value
     def setState(self, objectid, name, value):
         def thd(conn):
             return self.thdSetState(conn, objectid, name, value)
@@ -168,6 +169,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         # at an inopportune moment
         pass
 
+    # returns a Deferred that returns a value
     def atomicCreateState(self, objectid, name, thd_create_callback):
         def thd(conn):
             object_state_tbl = self.db.model.object_state

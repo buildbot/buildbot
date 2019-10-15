@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import error
 from twisted.trial import unittest
@@ -29,9 +27,11 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
+                   TestReactorMixin,
                    unittest.TestCase):
 
     # Just some random revision id to test.
@@ -39,6 +39,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
     MTN_VER = 'monotone 1.0 (base revision: UNKNOWN_REV)'
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
@@ -136,14 +137,14 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched',
@@ -209,14 +210,14 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched',
@@ -281,14 +282,14 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched',
@@ -922,22 +923,24 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_incorrect_method(self):
-        self.assertRaisesConfigError("Invalid method for mode == full", lambda:
-                                     mtn.Monotone(repourl='mtn://localhost/monotone',
-                                                  mode='full', method='wrongmethod', branch='master'))
+        with self.assertRaisesConfigError(
+                "Invalid method for mode == full"):
+            mtn.Monotone(repourl='mtn://localhost/monotone',
+                         mode='full', method='wrongmethod', branch='master')
 
     def test_incremental_invalid_method(self):
-        self.assertRaisesConfigError("Incremental mode does not require method", lambda:
-                                     mtn.Monotone(repourl='mtn://localhost/monotone',
-                                                  mode='incremental', method='fresh', branch="master"))
+        with self.assertRaisesConfigError(
+                "Incremental mode does not require method"):
+            mtn.Monotone(repourl='mtn://localhost/monotone',
+                         mode='incremental', method='fresh', branch="master")
 
     def test_repourl(self):
-        self.assertRaisesConfigError("must provide repourl", lambda:
-                                     mtn.Monotone(mode="full", branch="master"))
+        with self.assertRaisesConfigError("must provide repourl"):
+            mtn.Monotone(mode="full", branch="master")
 
     def test_branch(self):
-        self.assertRaisesConfigError("must provide branch", lambda:
-                                     mtn.Monotone(repourl='mtn://localhost/monotone', mode="full",))
+        with self.assertRaisesConfigError("must provide branch"):
+            mtn.Monotone(repourl='mtn://localhost/monotone', mode="full",)
 
     def test_mode_incremental_patched(self):
         self.setupStep(

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 import pprint
 import sys
@@ -35,13 +32,16 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 _COMSPEC_ENV = 'COMSPEC'
 
 
-class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
+class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         if runtime.platformType == 'win32':
             self.comspec = os.environ.get(_COMSPEC_ENV)
             os.environ[_COMSPEC_ENV] = r'C:\WINDOWS\system32\cmd.exe'
@@ -210,9 +210,11 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
+class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -231,9 +233,11 @@ class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
+class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -252,9 +256,11 @@ class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestsSetProperties(steps.BuildStepMixin, unittest.TestCase):
+class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
+                         unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -283,9 +289,11 @@ class TestsSetProperties(steps.BuildStepMixin, unittest.TestCase):
         return self.doOneTest(properties=manipulate)
 
 
-class TestAssert(steps.BuildStepMixin, unittest.TestCase):
+class TestAssert(steps.BuildStepMixin, TestReactorMixin,
+                 unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

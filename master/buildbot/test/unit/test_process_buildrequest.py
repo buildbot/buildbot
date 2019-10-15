@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import mock
 
 from twisted.internet import defer
@@ -26,15 +22,15 @@ from buildbot.process import buildrequest
 from buildbot.process.builder import Builder
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestBuildRequestCollapser(unittest.TestCase):
+class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True,
-                                             wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.botmaster = mock.Mock(name='botmaster')
         self.master.botmaster.builders = {}
         self.builders = {}
@@ -54,7 +50,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
         self.builders[name] = bldr
         bldr.getCollapseRequestsFn = lambda: False
 
-        defer.returnValue(bldr)
+        return bldr
 
     def tearDown(self):
         pass
@@ -289,11 +285,14 @@ class TestBuildRequestCollapser(unittest.TestCase):
         yield self.do_request_collapse(rows, [21], [20])
 
 
-class TestBuildRequest(unittest.TestCase):
+class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
+    def setUp(self):
+        self.setUpTestReactor()
+
+    @defer.inlineCallbacks
     def test_fromBrdict(self):
-        master = fakemaster.make_master(testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -313,29 +312,25 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
+        brdict = yield master.db.buildrequests.getBuildRequest(288)
+        br = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
 
-        def check(br):
-            # check enough of the source stamp to verify it found the changes
-            self.assertEqual([ss.ssid for ss in itervalues(br.sources)], [234])
+        # check enough of the source stamp to verify it found the changes
+        self.assertEqual([ss.ssid for ss in br.sources.values()], [234])
 
-            self.assertEqual(br.reason, 'triggered')
+        self.assertEqual(br.reason, 'triggered')
 
-            self.assertEqual(br.properties.getProperty('x'), 1)
-            self.assertEqual(br.properties.getProperty('y'), 2)
-            self.assertEqual(br.submittedAt, 1200000000)
-            self.assertEqual(br.buildername, 'bldr')
-            self.assertEqual(br.priority, 13)
-            self.assertEqual(br.id, 288)
-            self.assertEqual(br.bsid, 539)
-        d.addCallback(check)
-        return d
+        self.assertEqual(br.properties.getProperty('x'), 1)
+        self.assertEqual(br.properties.getProperty('y'), 2)
+        self.assertEqual(br.submittedAt, 1200000000)
+        self.assertEqual(br.buildername, 'bldr')
+        self.assertEqual(br.priority, 13)
+        self.assertEqual(br.id, 288)
+        self.assertEqual(br.bsid, 539)
 
+    @defer.inlineCallbacks
     def test_fromBrdict_submittedAt_NULL(self):
-        master = fakemaster.make_master(testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -348,19 +343,14 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
+        brdict = yield master.db.buildrequests.getBuildRequest(288)
+        br = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
 
-        def check(br):
-            # remaining fields assumed to be checked in test_fromBrdict
-            self.assertEqual(br.submittedAt, None)
-        d.addCallback(check)
-        return d
+        # remaining fields assumed to be checked in test_fromBrdict
+        self.assertEqual(br.submittedAt, None)
 
     def test_fromBrdict_no_sourcestamps(self):
-        master = fakemaster.make_master(testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
@@ -375,9 +365,9 @@ class TestBuildRequest(unittest.TestCase):
                       buildrequest.BuildRequest.fromBrdict(master, brdict))
         return self.assertFailure(d, AssertionError)
 
+    @defer.inlineCallbacks
     def test_fromBrdict_multiple_sourcestamps(self):
-        master = fakemaster.make_master(testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -405,23 +395,20 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
+        brdict = yield master.db.buildrequests.getBuildRequest(288)
+        br = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
 
-        def check(br):
-            self.assertEqual(br.reason, 'triggered')
+        self.assertEqual(br.reason, 'triggered')
 
-            self.assertEqual(br.properties.getProperty('x'), 1)
-            self.assertEqual(br.properties.getProperty('y'), 2)
-            self.assertEqual(br.submittedAt, 1200000000)
-            self.assertEqual(br.buildername, 'bldr')
-            self.assertEqual(br.priority, 13)
-            self.assertEqual(br.id, 288)
-            self.assertEqual(br.bsid, 539)
-        d.addCallback(check)
-        return d
+        self.assertEqual(br.properties.getProperty('x'), 1)
+        self.assertEqual(br.properties.getProperty('y'), 2)
+        self.assertEqual(br.submittedAt, 1200000000)
+        self.assertEqual(br.buildername, 'bldr')
+        self.assertEqual(br.priority, 13)
+        self.assertEqual(br.id, 288)
+        self.assertEqual(br.bsid, 539)
 
+    @defer.inlineCallbacks
     def test_mergeSourceStampsWith_common_codebases(self):
         """ This testcase has two buildrequests
             Request Change Codebase Revision Comment
@@ -436,8 +423,7 @@ class TestBuildRequest(unittest.TestCase):
             Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
         """
         brs = []  # list of buildrequests
-        master = fakemaster.make_master(testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
@@ -480,35 +466,29 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
-        d.addCallback(lambda br: brs.append(br))
-        d.addCallback(lambda _:
-                      master.db.buildrequests.getBuildRequest(289))
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
-        d.addCallback(lambda br: brs.append(br))
+        brdict = yield master.db.buildrequests.getBuildRequest(288)
+        res = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
+        brs.append(res)
+        brdict = yield master.db.buildrequests.getBuildRequest(289)
+        res = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
+        brs.append(res)
 
-        def check(_):
-            sources = brs[0].mergeSourceStampsWith(brs[1:])
+        sources = brs[0].mergeSourceStampsWith(brs[1:])
 
-            source1 = source2 = None
-            for source in sources:
-                if source.codebase == 'A':
-                    source1 = source
-                if source.codebase == 'B':
-                    source2 = source
+        source1 = source2 = None
+        for source in sources:
+            if source.codebase == 'A':
+                source1 = source
+            if source.codebase == 'B':
+                source2 = source
 
-            self.assertFalse(source1 is None)
-            self.assertEqual(source1.revision, '9284')
+        self.assertFalse(source1 is None)
+        self.assertEqual(source1.revision, '9284')
 
-            self.assertFalse(source2 is None)
-            self.assertEqual(source2.revision, '9201')
+        self.assertFalse(source2 is None)
+        self.assertEqual(source2.revision, '9201')
 
-        d.addCallback(check)
-        return d
-
+    @defer.inlineCallbacks
     def test_canBeCollapsed_different_codebases_raises_error(self):
         """ This testcase has two buildrequests
             Request Change Codebase   Revision Comment
@@ -520,8 +500,7 @@ class TestBuildRequest(unittest.TestCase):
               Merging requests requires both requests to have the same codebases
         """
         brDicts = []  # list of buildrequests dictionary
-        master = fakemaster.make_master(testcase=self,
-                                        wantData=True, wantDb=True)
+        master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insertTestData([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=238, branch='trunk',
@@ -548,16 +527,12 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict: brDicts.append(brdict))
-        d.addCallback(lambda _:
-                      master.db.buildrequests.getBuildRequest(289))
-        d.addCallback(lambda brdict: brDicts.append(brdict))
-        d.addCallback(lambda _: buildrequest.BuildRequest.canBeCollapsed(
-            master, brDicts[0], brDicts[1]))
+        req = yield master.db.buildrequests.getBuildRequest(288)
+        brDicts.append(req)
+        req = yield master.db.buildrequests.getBuildRequest(289)
+        brDicts.append(req)
+        can_collapse = \
+            yield buildrequest.BuildRequest.canBeCollapsed(master, brDicts[0],
+                                                           brDicts[1])
 
-        def check(canBeCollapsed):
-            self.assertEqual(canBeCollapsed, False)
-
-        d.addCallback(check)
-        return d
+        self.assertEqual(can_collapse, False)

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot.util import pathmatch
@@ -30,10 +27,12 @@ class Matcher(unittest.TestCase):
         def set():
             self.m[('abc,')] = 1
         set()
-        self.assertRaises(AssertionError, set)
+        with self.assertRaises(AssertionError):
+            set()
 
     def test_empty(self):
-        self.assertRaises(KeyError, lambda: self.m[('abc',)])
+        with self.assertRaises(KeyError):
+            self.m[('abc',)]
 
     def test_diff_length(self):
         self.m[('abc', 'def')] = 2
@@ -67,11 +66,13 @@ class Matcher(unittest.TestCase):
 
     def test_pattern_variables_num_invalid(self):
         self.m[('A', 'n:a')] = 'AB'
-        self.assertRaises(KeyError, lambda: self.m[('A', '1x0')])
+        with self.assertRaises(KeyError):
+            self.m[('A', '1x0')]
 
     def test_pattern_variables_ident_invalid(self):
         self.m[('A', 'i:a')] = 'AB'
-        self.assertRaises(KeyError, lambda: self.m[('A', '10')])
+        with self.assertRaises(KeyError):
+            self.m[('A', '10')]
 
     def test_pattern_variables_ident_num_distinguised(self):
         self.m[('A', 'n:a')] = 'num'

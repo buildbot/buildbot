@@ -13,14 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakedb
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import authz
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher
@@ -34,9 +32,10 @@ from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
 
 
-class Authz(www.WwwTestMixin, unittest.TestCase):
+class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         authzcfg = authz.Authz(
             # simple matcher with '*' glob character
             stringsMatcher=authz.fnmatchStrMatcher,
@@ -202,7 +201,6 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         ]
 
         self.setAllowRules(allow_rules)
-
         # check if action is denied and last check was exact against not-exist3
         with self.assertRaisesRegex(authz.Forbidden, '.+not-exists3.+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")

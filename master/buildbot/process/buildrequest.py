@@ -13,13 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import integer_types
-from future.utils import iteritems
-from future.utils import itervalues
-from future.utils import string_types
-
 import calendar
 
 from twisted.internet import defer
@@ -29,7 +22,7 @@ from buildbot.process import properties
 from buildbot.process.results import SKIPPED
 
 
-class BuildRequestCollapser(object):
+class BuildRequestCollapser:
     # brids is a list of the new added buildrequests id
     # This class is called before generated the 'new' event for the
     # buildrequest
@@ -59,7 +52,7 @@ class BuildRequestCollapser(object):
                                                                     [False])])
         # sort by submitted_at, so the first is the oldest
         unclaim_brs.sort(key=lambda brd: brd['submitted_at'])
-        defer.returnValue(unclaim_brs)
+        return unclaim_brs
 
     @defer.inlineCallbacks
     def collapse(self):
@@ -97,10 +90,10 @@ class BuildRequestCollapser(object):
             yield self.master.data.updates.completeBuildRequests(brids,
                                                                  SKIPPED)
 
-        defer.returnValue(brids)
+        return brids
 
 
-class TempSourceStamp(object):
+class TempSourceStamp:
     # temporary fake sourcestamp
 
     ATTRS = ('branch', 'revision', 'repository', 'project', 'codebase')
@@ -132,20 +125,20 @@ class TempSourceStamp(object):
         # SourceStampsConnectorComponent.findSourceStampId
         result = {}
         for attr in self.ATTRS:
-            result[attr] = self._ssdict[attr]
+            result[attr] = self._ssdict.get(attr)
 
         patch = self._ssdict.get('patch') or {}
         for attr in self.PATCH_ATTRS:
             result['patch_%s' % attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, string_types + integer_types + (type(None),))
-            for attr, val in iteritems(result)
+            isinstance(val, (str, int, type(None)))
+            for attr, val in result.items()
         ), result
         return result
 
 
-class TempChange(object):
+class TempChange:
     # temporary fake change
 
     def __init__(self, d):
@@ -162,7 +155,7 @@ class TempChange(object):
         return self._chdict
 
 
-class BuildRequest(object):
+class BuildRequest:
 
     """
 
@@ -253,7 +246,7 @@ class BuildRequest(object):
             changes = yield master.data.get(("sourcestamps", ss.ssid, "changes"))
             ss.changes = [TempChange(change) for change in changes]
 
-        defer.returnValue(buildrequest)
+        return buildrequest
 
     @staticmethod
     @defer.inlineCallbacks
@@ -265,7 +258,7 @@ class BuildRequest(object):
         """
         # short-circuit: if these are for the same buildset, collapse away
         if br1['buildsetid'] == br2['buildsetid']:
-            defer.returnValue(True)
+            return True
 
         # get the buidlsets for each buildrequest
         selfBuildsets = yield master.data.get(
@@ -281,22 +274,22 @@ class BuildRequest(object):
 
         # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
-            defer.returnValue(False)
+            return False
 
-        for c, selfSS in iteritems(selfSources):
+        for c, selfSS in selfSources.items():
             otherSS = otherSources[c]
             if selfSS['repository'] != otherSS['repository']:
-                defer.returnValue(False)
+                return False
 
             if selfSS['branch'] != otherSS['branch']:
-                defer.returnValue(False)
+                return False
 
             if selfSS['project'] != otherSS['project']:
-                defer.returnValue(False)
+                return False
 
             # anything with a patch won't be collapsed
             if selfSS['patch'] or otherSS['patch']:
-                defer.returnValue(False)
+                return False
             # get changes & compare
             selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
             otherChanges = yield master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
@@ -304,16 +297,16 @@ class BuildRequest(object):
             if selfChanges and otherChanges:
                 continue
             elif selfChanges and not otherChanges:
-                defer.returnValue(False)
+                return False
 
             elif not selfChanges and otherChanges:
-                defer.returnValue(False)
+                return False
 
             # else check revisions
             elif selfSS['revision'] != otherSS['revision']:
-                defer.returnValue(False)
+                return False
 
-        defer.returnValue(True)
+        return True
 
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
@@ -338,7 +331,7 @@ class BuildRequest(object):
             # looking at changeids and picking the highest-numbered.
             all_merged_sources[codebase] = all_sources[-1]
 
-        return list(itervalues(all_merged_sources))
+        return list(all_merged_sources.values())
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""

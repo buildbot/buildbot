@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import textwrap
 
 from twisted.internet import defer
@@ -27,13 +24,15 @@ from buildbot.reporters import message
 from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMessage(unittest.TestCase):
+class TestMessage(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
         self.message = message.MessageFormatter()
         self.messageMissing = message.MessageFormatterMissingWorker()
@@ -71,13 +70,13 @@ class TestMessage(unittest.TestCase):
         res = yield self.message.formatMessageForBuildResults(
             mode, "Builder1", buildset, build, self.master,
             lastresults, ["him@bar", "me@foo"])
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def test_message_success(self):
         res = yield self.doOneTest(SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
-        self.assertEqual(res['body'], textwrap.dedent(u'''\
+        self.assertEqual(res['body'], textwrap.dedent('''\
             The Buildbot has detected a passing build on builder Builder1 while building Buildbot.
             Full details are available at:
                 http://localhost:8080/#builders/80/builds/1

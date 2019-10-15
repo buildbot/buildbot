@@ -6,11 +6,14 @@ DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg http
 
 VENV_NAME:=.venv$(VENV_PY_VERSION)
 PIP?=$(VENV_NAME)/bin/pip
-VENV_PY_VERSION?=python
+VENV_PY_VERSION?=python3
 
-WWW_PKGS := pkg www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
-WWW_EX_PKGS := nestedexample codeparameter
-ALL_PKGS := master worker $(WWW_PKGS)
+WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
+WWW_EX_PKGS := www/nestedexample www/codeparameter
+WWW_DEP_PKGS := www/guanlecoja-ui www/data_module
+ALL_PKGS := master worker pkg $(WWW_PKGS)
+
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -36,18 +39,39 @@ flake8:
 	$(MAKE) -C worker flake8
 	flake8 --config=common/flake8rc www/*/buildbot_*/
 	flake8 --config=common/flake8rc www/*/setup.py
+	flake8 --config=common/flake8rc common/*.py
 
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
 	$(PIP) install mock wheel buildbot
+	cd www/build_common; yarn install --pure-lockfile
+	for i in $(WWW_DEP_PKGS); \
+		do (cd $$i; yarn install --pure-lockfile; yarn run build); done
+
+frontend_tests: frontend_deps
+	for i in $(WWW_PKGS); \
+		do (cd $$i; yarn install --pure-lockfile); done
+	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
+		do (cd $$i; yarn run build-dev || exit 1; yarn run test || exit 1) || exit 1; done
+
+frontend_tests_headless: frontend_deps
+	for i in $(WWW_PKGS); \
+		do (cd $$i; yarn install --pure-lockfile); done
+	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
+		do (cd $$i; yarn run build-dev || exit 1; yarn run test --browsers BBChromeHeadless || exit 1) || exit 1; done
 
 # rebuild front-end from source
 frontend: frontend_deps
-	for i in $(WWW_PKGS) $(WWW_EX_PKG); do $(PIP) install -e $$i || exit 1; done
+	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests: frontend_deps
 	trial pkg/test_buildbot_pkg.py
+
+# upgrade FE dependencies
+frontend_yarn_upgrade:
+	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS); \
+		do (cd $$i; echo $$i; rm -rf yarn.lock; yarn install || echo $$i failed); done
 
 # install git hooks for validating patches at commit time
 hooks:
@@ -61,14 +85,12 @@ isort:
 	git commit -a -m "isort+autopep8 run"
 
 
-docker: docker-buildbot-worker docker-buildbot-worker-node docker-buildbot-master docker-buildbot-master-ubuntu
+docker: docker-buildbot-worker docker-buildbot-master
 	echo done
 docker-buildbot-worker:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
 docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
-docker-buildbot-master-ubuntu:
-	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
 
 $(VENV_NAME):
 	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
@@ -81,8 +103,7 @@ virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 	$(PIP) install -e pkg \
 		-e 'master[tls,test,docs]' \
 		-e 'worker[test]' \
-		buildbot_www packaging \
-		'towncrier>=17.8.0'
+		buildbot_www packaging towncrier
 
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
@@ -90,10 +111,10 @@ release_notes: $(VENV_NAME)
 	git commit -m "relnotes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
-	. .venv/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
+	. $(VENV_NAME)/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
-	find . -name VERSION -exec rm {} \;
+	find master pkg worker www -name VERSION -exec rm {} \;
 	rm -rf dist
 	mkdir dist
 .PHONY: cleanup_for_tarballs
@@ -119,7 +140,7 @@ release: virtualenv
 
 finishrelease:
 	rm -rf dist
-	python ./common/download_release.py
+	python3 ./common/download_release.py
 	rm -rf ./dist/v*
 	./common/smokedist.sh
 	twine upload --sign dist/*

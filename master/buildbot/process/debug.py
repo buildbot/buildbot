@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -25,7 +23,7 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
     name = 'debug_services'
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.debug_port = None
         self.debug_password = None
@@ -44,13 +42,12 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
                 yield self.manhole.setServiceParent(self)
 
         # chain up
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     @defer.inlineCallbacks
     def stopService(self):
         # manhole will get stopped as a sub-service
-        yield service.AsyncMultiService.stopService(self)
+        yield super().stopService()
 
         # clean up
         if self.manhole:

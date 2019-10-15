@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import platform
 import textwrap
 
@@ -31,14 +28,16 @@ from buildbot.steps.source.p4 import P4
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
 
 _is_windows = (platform.system() == 'Windows')
 
 
-class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
@@ -47,8 +46,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
     def setupStep(self, step, args=None, patch=None, **kwargs):
         if args is None:
             args = {}
-        step = sourcesteps.SourceStepMixin.setupStep(
-            self, step, args={}, patch=None, **kwargs)
+        step = super().setupStep(step, args={}, patch=None, **kwargs)
         self.build.getSourceStamp().revision = args.get('revision', None)
 
         # builddir property used to create absolute path required in perforce
@@ -60,38 +58,37 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.properties.setProperty('builddir', workspace_dir, 'P4')
 
     def test_no_empty_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda: P4())
+        with self.assertRaises(config.ConfigErrors):
+            P4()
 
     def test_no_multiple_type_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4viewspec=('//depot/trunk', ''),
-                             p4base='//depot', p4branch='trunk',
-                             p4extra_views=['src', 'doc']))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4viewspec=('//depot/trunk', ''), p4base='//depot',
+            p4branch='trunk', p4extra_views=['src', 'doc'])
 
     def test_no_p4viewspec_is_string_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4viewspec='a_bad_idea'))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4viewspec='a_bad_idea')
 
     def test_no_p4base_has_trailing_slash_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4base='//depot/'))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot/')
 
     def test_no_p4branch_has_trailing_slash_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4base='//depot', p4branch='blah/'))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot', p4branch='blah/')
 
     def test_no_p4branch_with_no_p4base_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4branch='blah'))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4branch='blah')
 
     def test_no_p4extra_views_with_no_p4base_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4extra_views='blah'))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4extra_views='blah')
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          P4(p4base='//depot',
-                             mode='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot', mode='invalid')
 
     def test_mode_incremental_p4base_with_revision(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',

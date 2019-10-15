@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import fnmatch
 import re
@@ -31,7 +29,7 @@ from buildbot.www.authz.roles import RolesFromOwner
 class Forbidden(Error):
 
     def __init__(self, msg):
-        Error.__init__(self, 403, msg)
+        super().__init__(403, msg)
 
 
 # fnmatch and re.match are reversed API, we cannot just rename them
@@ -44,7 +42,7 @@ def reStrMatcher(value, match):
 
 
 @implementer(IConfigured)
-class Authz(object):
+class Authz:
 
     def getConfigDict(self):
         return {}
@@ -92,7 +90,7 @@ class Authz(object):
                             self.getOwnerRolesFromUser(userDetails, owner))
                 for role in roles:
                     if self.match(role, rule.role):
-                        defer.returnValue(None)
+                        return None
 
                 if not rule.defaultDeny:
                     continue   # check next suitable rule if not denied
@@ -100,4 +98,4 @@ class Authz(object):
                     error_msg = unicode2bytes(
                         "you need to have role '%s'" % rule.role)
                     raise Forbidden(error_msg)
-        defer.returnValue(None)
+        return None

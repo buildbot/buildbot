@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import json
 
 from mock import Mock
@@ -23,13 +20,15 @@ from mock import Mock
 from twisted.trial import unittest
 
 from buildbot.test.util import www
-from buildbot.util import bytes2NativeString
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import bytes2unicode
 from buildbot.www import ws
 
 
-class WsResource(www.WwwTestMixin, unittest.TestCase):
+class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = master = self.make_master(url='h:/a/b/')
         self.ws = ws.WsResource(master)
         self.proto = self.ws._factory.buildProtocol("me")
@@ -38,7 +37,7 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
 
     def assert_called_with_json(self, obj, expected_json):
         jsonArg = obj.call_args[0][0]
-        jsonArg = bytes2NativeString(jsonArg)
+        jsonArg = bytes2unicode(jsonArg)
         actual_json = json.loads(jsonArg)
         self.assertEqual(actual_json, expected_json)
 

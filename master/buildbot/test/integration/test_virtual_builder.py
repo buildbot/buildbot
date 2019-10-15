@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -34,8 +32,8 @@ class ShellMaster(RunMasterBase):
         builders = yield self.master.data.get(("builders",))
         self.assertEqual(len(builders), 2)
         self.assertEqual(builders[1], {
-            'masterids': [], 'tags': [u'virtual'], 'description': u'I am a virtual builder',
-            'name': u'virtual_testy', 'builderid': 2})
+            'masterids': [], 'tags': ['virtual', '_virtual_'], 'description': 'I am a virtual builder',
+            'name': 'virtual_testy', 'builderid': 2})
         self.assertEqual(build['builderid'], builders[1]['builderid'])
 
 

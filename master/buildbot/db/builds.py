@@ -13,15 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import reactor
 
 from buildbot.db import NULL
 from buildbot.db import base
@@ -31,6 +28,7 @@ from buildbot.util import epoch2datetime
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    # returns a Deferred that returns a value
     def _getBuild(self, whereclause):
         def thd(conn):
             q = self.db.model.builds.select(whereclause=whereclause)
@@ -52,6 +50,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             (self.db.model.builds.c.builderid == builderid) &
             (self.db.model.builds.c.number == number))
 
+    # returns a Deferred that returns a value
     def _getRecentBuilds(self, whereclause, offset=0, limit=1):
         def thd(conn):
             tbl = self.db.model.builds
@@ -73,31 +72,61 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         rv = None
         tbl = self.db.model.builds
         offset = 0
-        matchssBuild = set([(ss['repository'],
-                             ss['branch'],
-                             ss['codebase']) for ss in ssBuild])
+        increment = 1000
+        matchssBuild = {(ss['repository'],
+                         ss['branch'],
+                         ss['codebase']) for ss in ssBuild}
         while rv is None:
             # Get some recent successful builds on the same builder
             prevBuilds = yield self._getRecentBuilds(whereclause=((tbl.c.builderid == builderid) &
                                                                   (tbl.c.number < number) &
                                                                   (tbl.c.results == 0)),
                                                      offset=offset,
-                                                     limit=10)
+                                                     limit=increment)
             if not prevBuilds:
                 break
             for prevBuild in prevBuilds:
-                prevssBuild = set([(ss['repository'],
-                                    ss['branch'],
-                                    ss['codebase']) for ss in (yield gssfb(prevBuild['id']))])
+                prevssBuild = {(ss['repository'],
+                                ss['branch'],
+                                ss['codebase']) for ss in (yield gssfb(prevBuild['id']))}
                 if prevssBuild == matchssBuild:
                     # A successful build with the same
                     # repository/branch/codebase was found !
                     rv = prevBuild
                     break
-            offset += 10
+            offset += increment
 
-        defer.returnValue(rv)
+        return rv
 
+    def getBuildsForChange(self, changeid):
+        assert changeid > 0
+
+        def thd(conn):
+            # Get builds for the change
+            changes_tbl = self.db.model.changes
+            bsets_tbl = self.db.model.buildsets
+            bsss_tbl = self.db.model.buildset_sourcestamps
+            reqs_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            from_clause = changes_tbl.join(bsss_tbl,
+                                           changes_tbl.c.sourcestampid == bsss_tbl.c.sourcestampid)
+            from_clause = from_clause.join(bsets_tbl,
+                                           bsss_tbl.c.buildsetid == bsets_tbl.c.id)
+            from_clause = from_clause.join(reqs_tbl,
+                                           bsets_tbl.c.id == reqs_tbl.c.buildsetid)
+            from_clause = from_clause.join(builds_tbl,
+                                           reqs_tbl.c.id == builds_tbl.c.buildrequestid)
+
+            q = sa.select([builds_tbl]).select_from(
+                from_clause).where(changes_tbl.c.changeid == changeid)
+            res = conn.execute(q)
+            return [self._builddictFromRow(row)
+                    for row in res.fetchall()]
+
+        return self.db.pool.do(thd)
+
+    # returns a Deferred that returns a value
     def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         def thd(conn):
             tbl = self.db.model.builds
@@ -122,9 +151,10 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     def addBuild(self, builderid, buildrequestid, workerid, masterid,
-                 state_string, _reactor=reactor, _race_hook=None):
-        started_at = _reactor.seconds()
+                 state_string, _race_hook=None):
+        started_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             tbl = self.db.model.builds
@@ -154,6 +184,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 return r.inserted_primary_key[0], new_number
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def setBuildStateString(self, buildid, state_string):
         def thd(conn):
             tbl = self.db.model.builds
@@ -162,15 +193,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
-    def finishBuild(self, buildid, results, _reactor=reactor):
+    # returns a Deferred that returns None
+    def finishBuild(self, buildid, results):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.update(whereclause=(tbl.c.id == buildid))
             conn.execute(q,
-                         complete_at=_reactor.seconds(),
+                         complete_at=self.master.reactor.seconds(),
                          results=results)
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     def getBuildProperties(self, bid):
         def thd(conn):
             bp_tbl = self.db.model.build_properties
@@ -184,6 +217,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return dict(props)
         return self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def setBuildProperty(self, bid, name, value, source):
         """ A kind of create_or_update, that's between one or two queries per
         call """
@@ -205,13 +239,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             elif (prop.value != value_js) or (prop.source != source):
                 conn.execute(bp_tbl.update(whereclause=whereclause),
                              dict(value=value_js, source=source))
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-
         return dict(
             id=row.id,
             number=row.number,
@@ -219,7 +249,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             buildrequestid=row.buildrequestid,
             workerid=row.workerid,
             masterid=row.masterid,
-            started_at=mkdt(row.started_at),
-            complete_at=mkdt(row.complete_at),
+            started_at=epoch2datetime(row.started_at),
+            complete_at=epoch2datetime(row.complete_at),
             state_string=row.state_string,
             results=row.results)

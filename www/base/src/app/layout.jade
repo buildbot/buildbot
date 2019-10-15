@@ -1,33 +1,29 @@
 doctype html
-html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored', ng-app="app")
+html.no-js(ng-app="app", xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     head
         meta(charset='utf-8')
         meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
     title(window-title) Buildbot
     meta(name='description', content='Buildbot web UI')
     meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
-    link(rel='stylesheet', href='styles.css')
-    link(rel='icon', id='bbicon', href='img/icon.png')
-    link(rel='fluid-icon', href='img/icon.svg', title="Buildbot")
-
+    link(href='styles.css', rel='stylesheet')
+    link(id='bbicon', href='img/icon.png', rel='icon')
+    link(href='img/icon.svg', title="Buildbot", rel='fluid-icon')
+    div(id='outdated')
     body(ng-cloak)
         block content
         block footer
-
+    script(src="browser-warning.js")
+    link(href='browser-warning.css', rel='stylesheet')
+    script(src="browser-warning-list.js")
+    script
+      | window.T =  {{ custom_templates | tojson }};
     script(src="scripts.js?_" + (new Date()).getTime())
     | {% for app in config.plugins -%}
-    script(src="{{app}}/scripts.js")
-    link(rel='stylesheet', href='{{app}}/styles.css')
+    script(src="{{app}}/scripts.js?_" + (new Date()).getTime())
+    link(href='{{app}}/styles.css?_' + (new Date()).getTime(), rel='stylesheet')
     script
       | angular.module('app').requires.push('{{app}}')
     | {% endfor %}
     script
       | angular.module("buildbot_config", []).constant("config", {{configjson|safe}})
-    | {% if custom_templates %}
-    script
-      | angular.module("app").run(function ($templateCache) {
-      | {% for name, html in custom_templates.items() %}
-      |  $templateCache.put("{{ name }}", {{ html|safe }});
-      | {% endfor %}
-      | })
-    | {% endif %}

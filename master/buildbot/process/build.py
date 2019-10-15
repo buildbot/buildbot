@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 from functools import reduce
 
@@ -41,15 +38,12 @@ from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 @implementer(interfaces.IBuildControl)
-class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
+class Build(properties.PropertiesMixin):
 
     """I represent a single build by a single worker. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
@@ -98,6 +92,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.workerEnvironment = {}
         self.buildid = None
         self.number = None
+        self.executedSteps = []
+        self.stepnames = {}
 
         self.terminate = False
 
@@ -107,6 +103,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.results = SUCCESS
         self.properties = properties.Properties()
 
+        # tracks execution during the build finish phase
+        self._locks_released = False
+        self._build_finished = False
+
+        # tracks the config version for locks
+        self.config_version = None
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -115,11 +118,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         """
         self.builder = builder
         self.master = builder.master
+        self.config_version = builder.config_version
 
+    @defer.inlineCallbacks
     def setLocks(self, lockList):
-        # convert all locks into their real forms
-        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
-                      for access in lockList]
+        self.locks = yield self.builder.botmaster.getLockFromLockAccesses(lockList,
+                                                                          self.config_version)
 
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
@@ -195,7 +199,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     def getWorkerName(self):
         return self.workerforbuilder.worker.workername
-    deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     @staticmethod
     def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
@@ -223,8 +226,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # get worker properties
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        worker_properties = workerforbuilder.worker.properties
-        props.updateFromProperties(worker_properties)
+        workerforbuilder.worker.setupProperties(props)
 
     def setupOwnProperties(self):
         # now set some properties of our own, corresponding to the
@@ -248,14 +250,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # object that came from the config, and get its properties
         if workerforbuilder.worker.worker_basedir:
             builddir = path_module.join(
-                bytes2NativeString(workerforbuilder.worker.worker_basedir),
-                bytes2NativeString(self.builder.config.workerbuilddir))
+                bytes2unicode(workerforbuilder.worker.worker_basedir),
+                bytes2unicode(self.builder.config.workerbuilddir))
             self.setProperty("builddir", builddir, "Worker")
 
     def setupWorkerForBuilder(self, workerforbuilder):
         self.path_module = workerforbuilder.worker.path_module
         self.workername = workerforbuilder.worker.workername
-        self._registerOldWorkerAttr("workername")
         self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks
@@ -270,6 +271,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 tags = self.getProperty(
                     self.VIRTUAL_BUILDERTAGS_PROP,
                     self.builder.config.tags)
+                if type(tags) == type([]) and '_virtual_' not in tags:
+                    tags.append('_virtual_')
 
                 self.master.data.updates.updateBuilderInfo(self._builderid,
                                                            description,
@@ -277,7 +280,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
             else:
                 self._builderid = yield self.builder.getBuilderId()
-        defer.returnValue(self._builderid)
+        return self._builderid
 
     @defer.inlineCallbacks
     def startBuild(self, build_status, workerforbuilder):
@@ -306,10 +309,17 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                                                                      ("control", "builds",
                                                                       str(self.buildid),
                                                                       "stop"))
+
+        # the preparation step counts the time needed for preparing the worker and getting the locks.
+        # we cannot use a real step as we don't have a worker yet.
+        self.preparation_step = buildstep.BuildStep(name="worker_preparation")
+        self.preparation_step.setBuild(self)
+        yield self.preparation_step.addStep()
         self.setupOwnProperties()
 
         # then narrow WorkerLocks down to the right worker
-        self.locks = [(l.getLock(workerforbuilder.worker), a)
+        self.locks = [(l.getLockForWorker(workerforbuilder.worker.workername),
+                       a)
                       for l, a in self.locks]
         metrics.MetricCountEvent.log('active_builds', 1)
 
@@ -317,13 +327,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # events
         yield self._flushProperties(None)
         self.build_status.buildStarted(self)
-        yield self.master.data.updates.setBuildStateString(self.buildid, u'starting')
+        yield self.master.data.updates.setBuildStateString(self.buildid, 'starting')
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
         try:
             self.setupBuild()  # create .steps
         except Exception:
-            yield self.buildPreparationFailure(Failure(), "worker_prepare")
+            yield self.buildPreparationFailure(Failure(), "setupBuild")
             self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
 
@@ -331,7 +341,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         yield self._flushProperties(None)
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'preparing worker')
+                                                           'preparing worker')
         try:
             ready_or_failure = yield workerforbuilder.prepare(self)
         except Exception:
@@ -358,7 +368,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # situations where the worker is live but is pushing lots of data to
         # us in a build.
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'pinging worker')
+                                                           'pinging worker')
         log.msg("starting build %s.. pinging the worker %s"
                 % (self, workerforbuilder))
         try:
@@ -390,11 +400,14 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             return
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'acquiring locks')
+                                                           'acquiring locks')
         yield self.acquireLocks()
+        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                                                          "worker ready")
+        yield self.master.data.updates.finishStep(self.preparation_step.stepid, SUCCESS, False)
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'building')
+                                                           'building')
 
         # start the sequence of steps
         self.startNextStep()
@@ -403,17 +416,17 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def buildPreparationFailure(self, why, state_string):
         log.err(why, "while " + state_string)
         self.workerforbuilder.worker.putInQuarantine()
-        step = buildstep.BuildStep(name=state_string)
-        step.setBuild(self)
-        yield step.addStep()
         if isinstance(why, failure.Failure):
-            yield step.addLogWithFailure(why)
-        yield self.master.data.updates.finishStep(step.stepid, EXCEPTION, False)
+            yield self.preparation_step.addLogWithFailure(why)
+        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                                                          "error while " + state_string)
+        yield self.master.data.updates.finishStep(self.preparation_step.stepid, EXCEPTION, False)
 
     @staticmethod
-    def canStartWithWorkerForBuilder(lockList, workerforbuilder):
+    def _canAcquireLocks(lockList, workerforbuilder):
         for lock, access in lockList:
-            worker_lock = lock.getLock(workerforbuilder.worker)
+            worker_lock = lock.getLockForWorker(
+                workerforbuilder.worker.workername)
             if not worker_lock.isAvailable(None, access):
                 return False
         return True
@@ -465,8 +478,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     def setupBuild(self):
         # create the actual BuildSteps.
-        self.executedSteps = []
-        self.stepnames = {}
 
         self.steps = self.setupBuildSteps(self.stepFactories)
 
@@ -529,7 +540,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # `results` is just passed on to the next callback
         yield self.master.data.updates.setBuildProperties(self.buildid, self)
 
-        defer.returnValue(results)
+        return results
 
     @defer.inlineCallbacks
     def _stepDone(self, results, step):
@@ -566,7 +577,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             # force the results to retry if the connection was lost
             self.results = RETRY
             terminate = True
-        defer.returnValue(terminate)
+        return terminate
 
     def lostRemote(self, conn=None):
         # the worker went away. There are several possible reasons for this,
@@ -677,11 +688,16 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 self.workerforbuilder.worker.putInQuarantine()
             elif self.results != RETRY:
                 # This worker looks sane if status is neither retry or exception
-                self.workerforbuilder.worker.resetQuarantine()
+
+                # Avoid a race in case the build step reboot the worker
+                if self.workerforbuilder.worker is not None:
+                    self.workerforbuilder.worker.resetQuarantine()
 
             # mark the build as finished
             self.workerforbuilder.buildFinished()
             self.builder.buildFinished(self, self.workerforbuilder)
+
+            self._tryScheduleBuildsAfterLockUnlock(build_finished=True)
         except Exception:
             log.err(None, 'from finishing a build; this is a '
                           'serious error - please file a bug at http://buildbot.net')
@@ -689,9 +705,38 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def releaseLocks(self):
         if self.locks:
             log.msg("releaseLocks(%s): %s" % (self, self.locks))
+
         for lock, access in self.locks:
             if lock.isOwner(self, access):
                 lock.release(self, access)
+
+        self._tryScheduleBuildsAfterLockUnlock(locks_released=True)
+
+    def _tryScheduleBuildsAfterLockUnlock(self, locks_released=False,
+                                          build_finished=False):
+        # we need to inform the botmaster to attempt to schedule any pending
+        # build request if we released any locks. This is because buildrequest
+        # may be started for a completely unrelated builder and yet depend on
+        # a lock released by this build.
+        #
+        # TODO: the current approach is dumb as we just attempt to schedule
+        # all buildrequests. A much better idea would be to record the reason
+        # of why a buildrequest was not scheduled in the BuildRequestDistributor
+        # and then attempt to schedule only these buildrequests which may have
+        # had that reason resolved.
+
+        # this function is complicated by the fact that the botmaster must be
+        # informed only when all locks have been released and the actions in
+        # buildFinished have concluded. Since releaseLocks is called using
+        # eventually this may happen in any order.
+        self._locks_released = self._locks_released or locks_released
+        self._build_finished = self._build_finished or build_finished
+
+        if not self.locks:
+            return
+
+        if self._locks_released and self._build_finished:
+            self.builder.botmaster.maybeStartBuildsForAllBuilders()
 
     def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
         step_stats_list = [
@@ -704,8 +749,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     @defer.inlineCallbacks
     def getUrl(self):
-        builder_id = yield self.builder.getBuilderId()
-        defer.returnValue(getURLForBuild(self.master, builder_id, self.number))
+        builder_id = yield self.getBuilderId()
+        return getURLForBuild(self.master, builder_id, self.number)
 
     def waitUntilFinished(self):
         return self.master.mq.waitUntilEvent(

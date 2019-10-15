@@ -5,7 +5,7 @@ BuildSteps
 
 There are a few parent classes that are used as base classes for real buildsteps.
 This section describes the base classes.
-The "leaf" classes are described in :doc:`../manual/cfg-buildsteps`.
+The "leaf" classes are described in :doc:`../manual/configuration/buildsteps`.
 
 See :ref:`Writing-New-BuildSteps` for a guide to implementing new steps.
 
@@ -531,7 +531,7 @@ LoggingBuildStep
                 if res == results.SUCCESS:
                      cmd = RemoteCommand(...)
                      res = yield self.setupLogRunCommandAndProcessResults(cmd)
-                defer.returnValue(res)
+                return res
 
     To refine the status output, override one or more of the following methods.
     The :class:`LoggingBuildStep` implementations are stubs, so there is no need to call the parent method.

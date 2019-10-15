@@ -15,9 +15,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from setuptools import setup
 
 import buildbot_pkg
@@ -29,9 +26,11 @@ setup(
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
-    license='GNU GPL',
     py_modules=['buildbot_pkg'],
     install_requires=[
         "setuptools >= 21.2.1",
-    ]
+    ],
+    classifiers=[
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
+    ],
 )

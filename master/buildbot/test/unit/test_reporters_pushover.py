@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 from unittest import SkipTest
@@ -28,14 +26,16 @@ from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import httpclientservice
 
 
-class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
+class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     def setupFakeHttp(self):
         return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
@@ -46,7 +46,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         pn = PushoverNotifier(user_key, api_token, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()
-        defer.returnValue(pn)
+        return pn
 
     @defer.inlineCallbacks
     def test_sendMessage(self):

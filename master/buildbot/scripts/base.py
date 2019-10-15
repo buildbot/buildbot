@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.builtins import range
-
 import copy
 import errno
 import os
@@ -26,7 +21,6 @@ import sys
 import traceback
 from contextlib import contextmanager
 
-from twisted.internet import defer
 from twisted.python import runtime
 from twisted.python import usage
 
@@ -40,7 +34,7 @@ def captureErrors(errors, msg):
     except errors as e:
         print(msg)
         print(e)
-        defer.returnValue(1)
+        return 1
 
 
 class BusyError(RuntimeError):
@@ -199,12 +193,12 @@ class SubcommandOptions(usage.Options):
                 optfile = self.optionsFile = self.loadOptionsFile()
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
-                    for i in range(len(op)):
+                    for i, val in enumerate(op):
                         if (op[i][0] == option_name and
                                 optfile_name in optfile):
                             op[i] = list(op[i])
                             op[i][2] = optfile[optfile_name]
-        usage.Options.__init__(self, *args)
+        super().__init__(*args)
         if hasattr(cls, 'optParameters'):
             cls.optParameters = old_optParameters
 
@@ -279,7 +273,7 @@ class SubcommandOptions(usage.Options):
             raise usage.UsageError(msg)
 
 
-class BasedirMixin(object):
+class BasedirMixin:
 
     """SubcommandOptions Mixin to handle subcommands that take a basedir
     argument"""

@@ -13,14 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import iteritems
-from future.utils import itervalues
-from future.utils import string_types
-from future.utils import text_type
-
 import json
 import re
 
@@ -31,7 +23,8 @@ from twisted.trial import unittest
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
-from buildbot.util import bytes2NativeString
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz
 from buildbot.www import rest
@@ -39,20 +32,21 @@ from buildbot.www.rest import JSONRPC_CODES
 from buildbot.www.rest import BadRequest
 
 
-class RestRootResource(www.WwwTestMixin, unittest.TestCase):
+class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     maxVersion = 2
 
+    def setUp(self):
+        self.setUpTestReactor()
+
+    @defer.inlineCallbacks
     def test_render(self):
         master = self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
 
-        d = self.render_resource(rsrc, b'/')
+        rv = yield self.render_resource(rsrc, b'/')
 
-        @d.addCallback
-        def check(rv):
-            self.assertIn(b'api_versions', rv)
-        return d
+        self.assertIn(b'api_versions', rv)
 
     def test_versions(self):
         master = self.make_master(url='h:/a/b/')
@@ -73,9 +67,10 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(sorted(rsrc.listNames()), sorted(versions))
 
 
-class V2RootResource(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='http://server/path/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -145,9 +140,11 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         )
 
 
-class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -244,9 +241,11 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
         self.assertNotOk(message='invalid origin')
 
 
-class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/')
         self.master.config.www['debug'] = True
         self.master.data._scanModule(endpoint)
@@ -264,9 +263,9 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
-        self.assertFalse(isinstance(self.request.written, text_type))
+        self.assertFalse(isinstance(self.request.written, str))
         got = {}
-        got['content'] = json.loads(bytes2NativeString(self.request.written))
+        got['content'] = json.loads(bytes2unicode(self.request.written))
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
 
@@ -293,7 +292,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def assertRestDetails(self, typeName, item,
                           contentType=None):
         got = {}
-        got['content'] = json.loads(bytes2NativeString(self.request.written))
+        got['content'] = json.loads(bytes2unicode(self.request.written))
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
 
@@ -308,15 +307,11 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(got, exp)
 
     def assertRestError(self, responseCode, message):
-        got = {}
-        got['content'] = json.loads(bytes2NativeString(self.request.written))
-        got['responseCode'] = self.request.responseCode
-
-        exp = {}
-        exp['content'] = {'error': message}
-        exp['responseCode'] = responseCode
-
-        self.assertEqual(got, exp)
+        content = json.loads(bytes2unicode(self.request.written))
+        gotResponseCode = self.request.responseCode
+        self.assertEqual(list(content.keys()), ['error'])
+        self.assertRegex(content['error'], message)
+        self.assertEqual(responseCode, gotResponseCode)
 
     @defer.inlineCallbacks
     def test_not_found(self):
@@ -355,14 +350,14 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection(self):
         yield self.render_resource(self.rsrc, b'/test')
         self.assertRestCollection(typeName='tests',
-                                  items=list(itervalues(endpoint.testData)),
+                                  items=list(endpoint.testData.values()),
                                   total=8)
 
     @defer.inlineCallbacks
     def do_test_api_collection_pagination(self, query, ids, links):
         yield self.render_resource(self.rsrc, b'/test' + query)
         self.assertRestCollection(typeName='tests',
-                                  items=[v for k, v in iteritems(endpoint.testData)
+                                  items=[v for k, v in endpoint.testData.items()
                                          if k in ids],
                                   total=8)
 
@@ -450,7 +445,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, b'/test?field=success&field=info')
         self.assertRestCollection(typeName='tests',
                                   items=[{'success': v['success'], 'info': v['info']}
-                                         for v in itervalues(endpoint.testData)],
+                                         for v in endpoint.testData.values()],
                                   total=8)
 
     @defer.inlineCallbacks
@@ -465,7 +460,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_simple_filter(self):
         yield self.render_resource(self.rsrc, b'/test?success=yes')
         self.assertRestCollection(typeName='tests',
-                                  items=[v for v in itervalues(endpoint.testData)
+                                  items=[v for v in endpoint.testData.values()
                                          if v['success']],
                                   total=5)
 
@@ -473,7 +468,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_list_filter(self):
         yield self.render_resource(self.rsrc, b'/test?tags__contains=a')
         self.assertRestCollection(typeName='tests',
-                                  items=[v for v in itervalues(endpoint.testData)
+                                  items=[v for v in endpoint.testData.values()
                                          if 'a' in v['tags']],
                                   total=2)
 
@@ -481,7 +476,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_operator_filter(self):
         yield self.render_resource(self.rsrc, b'/test?info__lt=skipped')
         self.assertRestCollection(typeName='tests',
-                                  items=[v for v in itervalues(endpoint.testData)
+                                  items=[v for v in endpoint.testData.values()
                                          if v['info'] < 'skipped'],
                                   total=4)
 
@@ -489,8 +484,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_order(self):
         yield self.render_resource(self.rsrc, b'/test?order=info')
         self.assertRestCollection(typeName='tests',
-                                  items=sorted(list(itervalues(endpoint.testData)),
-                                               key=lambda v: v['info']),
+                                  items=sorted(list(endpoint.testData.values()),
+                                      key=lambda v: v['info']),
                                   total=8, orderSignificant=True)
 
     @defer.inlineCallbacks
@@ -498,7 +493,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, b'/test?field=info&order=info')
         self.assertRestCollection(typeName='tests',
                                   items=sorted(list([{'info': v['info']}
-                                                     for v in itervalues(endpoint.testData)]),
+                                                     for v in endpoint.testData.values()]),
                                                key=lambda v: v['info']),
                                   total=8, orderSignificant=True)
 
@@ -506,7 +501,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_order_desc(self):
         yield self.render_resource(self.rsrc, b'/test?order=-info')
         self.assertRestCollection(typeName='tests',
-                                  items=sorted(list(itervalues(endpoint.testData)),
+                                  items=sorted(list(endpoint.testData.values()),
                                                key=lambda v: v['info'], reverse=True),
                                   total=8, orderSignificant=True)
 
@@ -515,7 +510,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, b'/test?field=info&order=-info')
         self.assertRestCollection(typeName='tests',
                                   items=sorted(list([{'info': v['info']}
-                                                     for v in itervalues(endpoint.testData)]),
+                                                     for v in endpoint.testData.values()]),
                                                key=lambda v: v['info'], reverse=True),
                                   total=8, orderSignificant=True)
 
@@ -536,7 +531,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, b'/test?success=false&limit=2')
         # note that the limit/offset and total are *after* the filter
         self.assertRestCollection(typeName='tests',
-                                  items=sorted([v for v in itervalues(endpoint.testData)
+                                  items=sorted([v for v in endpoint.testData.values()
                                                 if not v['success']], key=lambda v: v['id'])[:2],
                                   total=3)
 
@@ -551,9 +546,9 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.maxDiff = None
         yield self.render_resource(self.rsrc, b'/test/0')
         self.assertRequest(
-            contentJson={u'error': u"not found while getting from endpoint for /test/n:testid with arguments"
-                                   " ResultSpec(**{'filters': [], 'fields': None, 'properties': [], "
-                                   "'order': None, 'limit': None, 'offset': None}) and {'testid': 0}"},
+            contentJson={'error': "not found while getting from endpoint for /test/n:testid with arguments"
+                                  " ResultSpec(**{'filters': [], 'fields': None, 'properties': [], "
+                                  "'order': None, 'limit': None, 'offset': None}) and {'testid': 0}"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=404)
 
@@ -583,16 +578,15 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_api_fails(self):
         yield self.render_resource(self.rsrc, b'/test/fail')
-        self.assertRestError(message="RuntimeError('oh noes',)",
-                             responseCode=500)
+        self.assertRestError(message=r"RuntimeError\('oh noes',?\)", responseCode=500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_decode_result_spec_raise_bad_request_on_bad_property_value(self):
         expected_props = [None, 'test2']
         self.make_request(b'/test')
         self.request.args = {b'property': expected_props}
-        self.assertRaises(BadRequest, lambda: self.rsrc.decodeResultSpec(
-            self.request, endpoint.TestsEndpoint))
+        with self.assertRaises(BadRequest):
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
 
     def test_decode_result_spec_limit(self):
         expected_limit = 5
@@ -602,7 +596,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(spec.limit, expected_limit)
 
     def test_decode_result_spec_order(self):
-        expected_order = 'info',
+        expected_order = ('info',)
         self.make_request(b'/test')
         self.request.args = {b'order': expected_order}
         spec = self.rsrc.decodeResultSpec(self.request, endpoint.Test)
@@ -628,15 +622,17 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             self.make_request(b'/test')
             self.request.args = {b'limit': limit}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
-        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+        with self.assertRaises(rest.BadRequest):
+            expectRaiseBadRequest()
 
     def test_decode_result_spec_not_a_collection_order(self):
         def expectRaiseBadRequest():
-            order = 'info',
+            order = ('info',)
             self.make_request(b'/test')
             self.request.args = {b'order': order}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
-        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+        with self.assertRaises(rest.BadRequest):
+            expectRaiseBadRequest()
 
     def test_decode_result_spec_not_a_collection_offset(self):
         def expectRaiseBadRequest():
@@ -644,7 +640,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             self.make_request(b'/test')
             self.request.args = {b'offset': offset}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
-        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+        with self.assertRaises(rest.BadRequest):
+            expectRaiseBadRequest()
 
     def test_decode_result_spec_not_a_collection_properties(self):
         expected_props = ['test1', 'test2']
@@ -669,7 +666,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         got = {}
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
-        content = json.loads(bytes2NativeString(self.request.written))
+        content = json.loads(bytes2unicode(self.request.written))
 
         if 'error' not in content:
             self.fail("response does not have proper error form: %r"
@@ -682,7 +679,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         exp['error'] = message
 
         # process a regular expression for message, if given
-        if not isinstance(message, string_types):
+        if not isinstance(message, str):
             if message.match(got['error']):
                 exp['error'] = got['error']
             else:
@@ -691,9 +688,11 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(got, exp)
 
 
-class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
+class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
+                              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/')
 
         def allow(*args, **kw):
@@ -708,7 +707,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
         got = {}
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
-        content = json.loads(bytes2NativeString(self.request.written))
+        content = json.loads(bytes2unicode(self.request.written))
         if ('error' not in content
                 or sorted(content['error'].keys()) != ['code', 'message']):
             self.fail("response does not have proper error form: %r"
@@ -721,7 +720,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
         exp['error'] = {'code': jsonrpccode, 'message': message}
 
         # process a regular expression for message, if given
-        if not isinstance(message, string_types):
+        if not isinstance(message, str):
             if message.match(got['error']['message']):
                 exp['error']['message'] = got['error']['message']
             else:

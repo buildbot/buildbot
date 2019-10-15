@@ -7,7 +7,6 @@ Installation
    components
    requirements
    installation
-   nine-upgrade
    buildmaster
    worker
    misc

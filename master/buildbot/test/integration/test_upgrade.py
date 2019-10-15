@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import locale
 import os
@@ -36,9 +34,10 @@ from buildbot.db.model import EightUpgradeError
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import querylog
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class UpgradeTestMixin(db.RealDatabaseMixin):
+class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
 
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
@@ -90,7 +89,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
 
-        self.master = master = fakemaster.make_master()
+        self.master = master = fakemaster.make_master(self)
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(self.basedir)
         self.db.setServiceParent(master)
@@ -111,6 +110,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpUpgradeTest()
 
     def tearDown(self):
@@ -143,13 +143,13 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                     implied = [idx for (tname, idx)
                                in self.db.model.implied_indexes
                                if tname == tbl.name]
-                    exp = sorted(exp + implied)
+                    exp = sorted(exp + implied, key=lambda k: k["name"])
 
                 got = sorted(insp.get_indexes(tbl.name),
                              key=lambda x: x['name'])
                 if exp != got:
-                    got_names = set([idx['name'] for idx in got])
-                    exp_names = set([idx['name'] for idx in exp])
+                    got_names = {idx['name'] for idx in got}
+                    exp_names = {idx['name'] for idx in exp}
                     got_info = dict((idx['name'], idx) for idx in got)
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:
@@ -218,7 +218,7 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
     def test_emptydb_modelmatches(self):
         os_encoding = locale.getpreferredencoding()
         try:
-            u'\N{SNOWMAN}'.encode(os_encoding)
+            '\N{SNOWMAN}'.encode(os_encoding)
         except UnicodeEncodeError:
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.

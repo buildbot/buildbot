@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 
@@ -38,7 +36,7 @@ def waitFor(fn):
     while True:
         res = yield fn()
         if res:
-            defer.returnValue(res)
+            return res
         yield util.asyncSleep(.01)
 
 

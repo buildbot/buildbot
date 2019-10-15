@@ -13,11 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
+import signal
 import sys
 import traceback
 
@@ -78,15 +76,37 @@ def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
         print("upgrading database (%s)"
               % (stripUrlPassword(master_cfg.db['db_url'])))
+        print("Warning: Stopping this process might cause data loss")
 
-    master = BuildMaster(config['basedir'])
-    master.config = master_cfg
-    master.db.disownServiceParent()
-    db = connector.DBConnector(basedir=config['basedir'])
-    db.setServiceParent(master)
-    yield db.setup(check_version=False, verbose=not config['quiet'])
-    yield db.model.upgrade()
-    yield db.masters.setAllMastersActiveLongTimeAgo()
+    def sighandler(signum, frame):
+        msg = " ".join("""
+        WARNING: ignoring signal %s.
+        This process should not be interrupted to avoid database corruption.
+        If you really need to terminate it, use SIGKILL.
+        """.split())
+        print(msg % signum)
+
+    prev_handlers = {}
+    try:
+        for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP",
+                        "SIGUSR1", "SIGUSR2", "SIGBREAK"):
+            if hasattr(signal, signame):
+                signum = getattr(signal, signame)
+                prev_handlers[signum] = signal.signal(signum, sighandler)
+
+        master = BuildMaster(config['basedir'])
+        master.config = master_cfg
+        master.db.disownServiceParent()
+        db = connector.DBConnector(basedir=config['basedir'])
+        db.setServiceParent(master)
+        yield db.setup(check_version=False, verbose=not config['quiet'])
+        yield db.model.upgrade()
+        yield db.masters.setAllMastersActiveLongTimeAgo()
+
+    finally:
+        # restore previous signal handlers
+        for signum, handler in prev_handlers.items():
+            signal.signal(signum, handler)
 
 
 @in_reactor
@@ -122,9 +142,9 @@ def _upgradeMaster(config, master_cfg):
     except Exception:
         e = traceback.format_exc()
         print("problem while upgrading!:\n" + e, file=sys.stderr)
-        defer.returnValue(1)
+        return 1
     else:
         if not config['quiet']:
             print("upgrade complete")
 
-    defer.returnValue(0)
+    return 0

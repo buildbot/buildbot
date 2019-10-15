@@ -13,19 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
-import calendar
-
 import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
+from buildbot.plugins import util
+from buildbot.secrets.manager import SecretManager
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.www import change_hook
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
@@ -112,127 +111,749 @@ gitJsonPayloadTag = b"""
    "total_commits_count": 2
 }
 """
-gitJsonPayloadMR = b"""
+
+# == Merge requests from a different branch of the same project
+# GITLAB commit payload from an actual version 10.7.1-ee gitlab instance
+# chronicling the lives and times of a trivial MR through the operations
+# open, edit description, add commit, close, and reopen, in that order.
+# (Tidied with json_pp --json_opt=canonical,pretty and an editor.)
+# FIXME: only show diffs here to keep file smaller and increase clarity
+gitJsonPayloadMR_open = b"""
 {
-  "object_kind": "merge_request",
-  "user": {
-    "name": "Administrator",
-    "username": "root",
-    "avatar_url": "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon"
-  },
-  "object_attributes": {
-    "id": 99,
-    "target_branch": "master",
-    "source_branch": "ms-viewport",
-    "source_project_id": 14,
-    "author_id": 51,
-    "assignee_id": 6,
-    "title": "MS-Viewport",
-    "created_at": "2013-12-03T17:23:34Z",
-    "updated_at": "2013-12-03T17:23:34Z",
-    "st_commits": null,
-    "st_diffs": null,
-    "milestone_id": null,
-    "state": "opened",
-    "merge_status": "unchecked",
-    "target_project_id": 14,
-    "iid": 1,
-    "description": "",
-    "source":{
-      "name":"Awesome Project",
-      "description":"Aut reprehenderit ut est.",
-      "web_url":"http://example.com/awesome_user/awesome_project",
-      "avatar_url":null,
-      "git_ssh_url":"git@example.com:awesome_user/awesome_project.git",
-      "git_http_url":"http://example.com/awesome_user/awesome_project.git",
-      "namespace":"Awesome Space",
-      "visibility_level":20,
-      "path_with_namespace":"awesome_user/awesome_project",
-      "default_branch":"master",
-      "homepage":"http://example.com/awesome_user/awesome_project",
-      "url":"http://example.com/awesome_user/awesome_project.git",
-      "ssh_url":"git@example.com:awesome_user/awesome_project.git",
-      "http_url":"http://example.com/awesome_user/awesome_project.git"
-    },
-    "target": {
-      "name":"Awesome Project",
-      "description":"Aut reprehenderit ut est.",
-      "web_url":"http://example.com/awesome_space/awesome_project",
-      "avatar_url":null,
-      "git_ssh_url":"git@example.com:awesome_space/awesome_project.git",
-      "git_http_url":"http://example.com/awesome_space/awesome_project.git",
-      "namespace":"Awesome Space",
-      "visibility_level":20,
-      "path_with_namespace":"awesome_space/awesome_project",
-      "default_branch":"master",
-      "homepage":"http://example.com/awesome_space/awesome_project",
-      "url":"http://example.com/awesome_space/awesome_project.git",
-      "ssh_url":"git@example.com:awesome_space/awesome_project.git",
-      "http_url":"http://example.com/awesome_space/awesome_project.git"
-    },
-    "last_commit": {
-      "id": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
-      "message": "fixed readme",
-      "timestamp": "2012-01-03T23:36:29+02:00",
-      "url": "http://example.com/awesome_space/awesome_project/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
-      "author": {
-        "name": "GitLab dev user",
-        "email": "gitlabdev@dv6700.(none)"
+   "event_type" : "merge_request",
+   "object_attributes" : {
+      "action" : "open",
+      "assignee_id" : null,
+      "author_id" : 15,
+      "created_at" : "2018-05-15 07:45:37 -0700",
+      "description" : "This to both gitlab gateways!",
+      "head_pipeline_id" : 29931,
+      "human_time_estimate" : null,
+      "human_total_time_spent" : null,
+      "id" : 10850,
+      "iid" : 6,
+      "last_commit" : {
+         "author" : {
+            "email" : "mmusterman@example.com",
+            "name" : "Max Mustermann"
+         },
+         "id" : "92268bc781b24f0a61b907da062950e9e5252a69",
+         "message" : "Remove the dummy line again",
+         "timestamp" : "2018-05-14T07:54:04-07:00",
+         "url" : "https://gitlab.example.com/mmusterman/awesome_project/commit/92268bc781b24f0a61b907da062950e9e5252a69"
+      },
+      "last_edited_at" : null,
+      "last_edited_by_id" : null,
+      "merge_commit_sha" : null,
+      "merge_error" : null,
+      "merge_params" : {
+         "force_remove_source_branch" : 0
+      },
+      "merge_status" : "unchecked",
+      "merge_user_id" : null,
+      "merge_when_pipeline_succeeds" : false,
+      "milestone_id" : null,
+      "source" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "source_branch" : "ms-viewport",
+      "source_project_id" : 239,
+      "state" : "opened",
+      "target" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "target_branch" : "master",
+      "target_project_id" : 239,
+      "time_estimate" : 0,
+      "title" : "Remove the dummy line again",
+      "total_time_spent" : 0,
+      "updated_at" : "2018-05-15 07:45:37 -0700",
+      "updated_by_id" : null,
+      "url" : "https://gitlab.example.com/mmusterman/awesome_project/merge_requests/6",
+      "work_in_progress" : false
+   },
+   "object_kind" : "merge_request",
+   "project" : {
+      "avatar_url" : null,
+      "ci_config_path" : null,
+      "default_branch" : "master",
+      "description" : "Trivial project for testing build machinery quickly",
+      "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "id" : 239,
+      "name" : "awesome_project",
+      "namespace" : "mmusterman",
+      "path_with_namespace" : "mmusterman/awesome_project",
+      "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "visibility_level" : 0,
+      "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+   },
+   "user" : {
+      "avatar_url" : "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon",
+      "name" : "Max Mustermann",
+      "username" : "mmusterman"
+   }
+}
+"""
+gitJsonPayloadMR_editdesc = b"""
+{
+   "event_type" : "merge_request",
+   "object_attributes" : {
+      "action" : "update",
+      "assignee_id" : null,
+      "author_id" : 15,
+      "created_at" : "2018-05-15 07:45:37 -0700",
+      "description" : "Edited description.",
+      "head_pipeline_id" : 29931,
+      "human_time_estimate" : null,
+      "human_total_time_spent" : null,
+      "id" : 10850,
+      "iid" : 6,
+      "last_commit" : {
+         "author" : {
+            "email" : "mmusterman@example.com",
+            "name" : "Max Mustermann"
+         },
+         "id" : "92268bc781b24f0a61b907da062950e9e5252a69",
+         "message" : "Remove the dummy line again",
+         "timestamp" : "2018-05-14T07:54:04-07:00",
+         "url" : "https://gitlab.example.com/mmusterman/awesome_project/commit/92268bc781b24f0a61b907da062950e9e5252a69"
+      },
+      "last_edited_at" : "2018-05-15 07:49:55 -0700",
+      "last_edited_by_id" : 15,
+      "merge_commit_sha" : null,
+      "merge_error" : null,
+      "merge_params" : {
+         "force_remove_source_branch" : 0
+      },
+      "merge_status" : "can_be_merged",
+      "merge_user_id" : null,
+      "merge_when_pipeline_succeeds" : false,
+      "milestone_id" : null,
+      "source" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "source_branch" : "ms-viewport",
+      "source_project_id" : 239,
+      "state" : "opened",
+      "target" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "target_branch" : "master",
+      "target_project_id" : 239,
+      "time_estimate" : 0,
+      "title" : "Remove the dummy line again",
+      "total_time_spent" : 0,
+      "updated_at" : "2018-05-15 07:49:55 -0700",
+      "updated_by_id" : 15,
+      "url" : "https://gitlab.example.com/mmusterman/awesome_project/merge_requests/6",
+      "work_in_progress" : false
+   },
+   "object_kind" : "merge_request",
+   "project" : {
+      "avatar_url" : null,
+      "ci_config_path" : null,
+      "default_branch" : "master",
+      "description" : "Trivial project for testing build machinery quickly",
+      "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "id" : 239,
+      "name" : "awesome_project",
+      "namespace" : "mmusterman",
+      "path_with_namespace" : "mmusterman/awesome_project",
+      "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "visibility_level" : 0,
+      "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+   },
+   "user" : {
+      "avatar_url" : "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon",
+      "name" : "Max Mustermann",
+      "username" : "mmusterman"
+   }
+}
+"""
+gitJsonPayloadMR_addcommit = b"""
+{
+   "event_type" : "merge_request",
+   "object_attributes" : {
+      "action" : "update",
+      "assignee_id" : null,
+      "author_id" : 15,
+      "created_at" : "2018-05-15 07:45:37 -0700",
+      "description" : "Edited description.",
+      "head_pipeline_id" : 29931,
+      "human_time_estimate" : null,
+      "human_total_time_spent" : null,
+      "id" : 10850,
+      "iid" : 6,
+      "last_commit" : {
+         "author" : {
+            "email" : "mmusterman@example.com",
+            "name" : "Max Mustermann"
+         },
+         "id" : "cee8b01dcbaeed89563c2822f7c59a93c813eb6b",
+         "message" : "debian/compat: update to 9",
+         "timestamp" : "2018-05-15T07:51:11-07:00",
+         "url" : "https://gitlab.example.com/mmusterman/awesome_project/commit/cee8b01dcbaeed89563c2822f7c59a93c813eb6b"
+      },
+      "last_edited_at" : "2018-05-15 14:49:55 UTC",
+      "last_edited_by_id" : 15,
+      "merge_commit_sha" : null,
+      "merge_error" : null,
+      "merge_params" : {
+         "force_remove_source_branch" : 0
+      },
+      "merge_status" : "unchecked",
+      "merge_user_id" : null,
+      "merge_when_pipeline_succeeds" : false,
+      "milestone_id" : null,
+      "oldrev" : "92268bc781b24f0a61b907da062950e9e5252a69",
+      "source" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "source_branch" : "ms-viewport",
+      "source_project_id" : 239,
+      "state" : "opened",
+      "target" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "target_branch" : "master",
+      "target_project_id" : 239,
+      "time_estimate" : 0,
+      "title" : "Remove the dummy line again",
+      "total_time_spent" : 0,
+      "updated_at" : "2018-05-15 14:51:27 UTC",
+      "updated_by_id" : 15,
+      "url" : "https://gitlab.example.com/mmusterman/awesome_project/merge_requests/6",
+      "work_in_progress" : false
+   },
+   "object_kind" : "merge_request",
+   "project" : {
+      "avatar_url" : null,
+      "ci_config_path" : null,
+      "default_branch" : "master",
+      "description" : "Trivial project for testing build machinery quickly",
+      "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "id" : 239,
+      "name" : "awesome_project",
+      "namespace" : "mmusterman",
+      "path_with_namespace" : "mmusterman/awesome_project",
+      "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "visibility_level" : 0,
+      "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+   },
+   "user" : {
+      "avatar_url" : "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon",
+      "name" : "Max Mustermann",
+      "username" : "mmusterman"
+   }
+}
+"""
+gitJsonPayloadMR_close = b"""
+{
+   "event_type" : "merge_request",
+   "object_attributes" : {
+      "action" : "close",
+      "assignee_id" : null,
+      "author_id" : 15,
+      "created_at" : "2018-05-15 07:45:37 -0700",
+      "description" : "Edited description.",
+      "head_pipeline_id" : 29958,
+      "human_time_estimate" : null,
+      "human_total_time_spent" : null,
+      "id" : 10850,
+      "iid" : 6,
+      "last_commit" : {
+         "author" : {
+            "email" : "mmusterman@example.com",
+            "name" : "Max Mustermann"
+         },
+         "id" : "cee8b01dcbaeed89563c2822f7c59a93c813eb6b",
+         "message" : "debian/compat: update to 9",
+         "timestamp" : "2018-05-15T07:51:11-07:00",
+         "url" : "https://gitlab.example.com/mmusterman/awesome_project/commit/cee8b01dcbaeed89563c2822f7c59a93c813eb6b"
+      },
+      "last_edited_at" : "2018-05-15 07:49:55 -0700",
+      "last_edited_by_id" : 15,
+      "merge_commit_sha" : null,
+      "merge_error" : null,
+      "merge_params" : {
+         "force_remove_source_branch" : 0
+      },
+      "merge_status" : "can_be_merged",
+      "merge_user_id" : null,
+      "merge_when_pipeline_succeeds" : false,
+      "milestone_id" : null,
+      "source" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "source_branch" : "ms-viewport",
+      "source_project_id" : 239,
+      "state" : "closed",
+      "target" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "target_branch" : "master",
+      "target_project_id" : 239,
+      "time_estimate" : 0,
+      "title" : "Remove the dummy line again",
+      "total_time_spent" : 0,
+      "updated_at" : "2018-05-15 07:52:01 -0700",
+      "updated_by_id" : 15,
+      "url" : "https://gitlab.example.com/mmusterman/awesome_project/merge_requests/6",
+      "work_in_progress" : false
+   },
+   "object_kind" : "merge_request",
+   "project" : {
+      "avatar_url" : null,
+      "ci_config_path" : null,
+      "default_branch" : "master",
+      "description" : "Trivial project for testing build machinery quickly",
+      "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "id" : 239,
+      "name" : "awesome_project",
+      "namespace" : "mmusterman",
+      "path_with_namespace" : "mmusterman/awesome_project",
+      "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "visibility_level" : 0,
+      "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+   },
+   "user" : {
+      "avatar_url" : "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon",
+      "name" : "Max Mustermann",
+      "username" : "mmusterman"
+   }
+}
+"""
+gitJsonPayloadMR_reopen = b"""
+{
+   "event_type" : "merge_request",
+   "object_attributes" : {
+      "action" : "reopen",
+      "assignee_id" : null,
+      "author_id" : 15,
+      "created_at" : "2018-05-15 07:45:37 -0700",
+      "description" : "Edited description.",
+      "head_pipeline_id" : 29958,
+      "human_time_estimate" : null,
+      "human_total_time_spent" : null,
+      "id" : 10850,
+      "iid" : 6,
+      "last_commit" : {
+         "author" : {
+            "email" : "mmusterman@example.com",
+            "name" : "Max Mustermann"
+         },
+         "id" : "cee8b01dcbaeed89563c2822f7c59a93c813eb6b",
+         "message" : "debian/compat: update to 9",
+         "timestamp" : "2018-05-15T07:51:11-07:00",
+         "url" : "https://gitlab.example.com/mmusterman/awesome_project/commit/cee8b01dcbaeed89563c2822f7c59a93c813eb6b"
+      },
+      "last_edited_at" : "2018-05-15 07:49:55 -0700",
+      "last_edited_by_id" : 15,
+      "merge_commit_sha" : null,
+      "merge_error" : null,
+      "merge_params" : {
+         "force_remove_source_branch" : 0
+      },
+      "merge_status" : "can_be_merged",
+      "merge_user_id" : null,
+      "merge_when_pipeline_succeeds" : false,
+      "milestone_id" : null,
+      "source" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "source_branch" : "ms-viewport",
+      "source_project_id" : 239,
+      "state" : "opened",
+      "target" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "target_branch" : "master",
+      "target_project_id" : 239,
+      "time_estimate" : 0,
+      "title" : "Remove the dummy line again",
+      "total_time_spent" : 0,
+      "updated_at" : "2018-05-15 07:53:27 -0700",
+      "updated_by_id" : 15,
+      "url" : "https://gitlab.example.com/mmusterman/awesome_project/merge_requests/6",
+      "work_in_progress" : false
+   },
+   "object_kind" : "merge_request",
+   "project" : {
+      "avatar_url" : null,
+      "ci_config_path" : null,
+      "default_branch" : "master",
+      "description" : "Trivial project for testing build machinery quickly",
+      "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "id" : 239,
+      "name" : "awesome_project",
+      "namespace" : "mmusterman",
+      "path_with_namespace" : "mmusterman/awesome_project",
+      "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "visibility_level" : 0,
+      "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+   },
+   "user" : {
+      "avatar_url" : "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon",
+      "name" : "Max Mustermann",
+      "username" : "mmusterman"
+   }
+}
+"""
+
+# == Merge requests from a fork of the project
+# (Captured more accurately than above test data)
+gitJsonPayloadMR_open_forked = b"""
+{
+   "changes" : {
+      "total_time_spent" : {
+         "current" : 0,
+         "previous" : null
       }
-    },
-    "work_in_progress": false,
-    "url": "http://example.com/diaspora/merge_requests/1",
-    "action": "open",
-    "assignee": {
-      "name": "User1",
-      "username": "user1",
-      "avatar_url": "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon"
-    }
-  }
+   },
+   "event_type" : "merge_request",
+   "labels" : [],
+   "object_attributes" : {
+      "action" : "open",
+      "assignee_id" : null,
+      "author_id" : 15,
+      "created_at" : "2018-05-19 06:57:12 -0700",
+      "description" : "This is a merge request from a fork of the project.",
+      "head_pipeline_id" : null,
+      "human_time_estimate" : null,
+      "human_total_time_spent" : null,
+      "id" : 10914,
+      "iid" : 7,
+      "last_commit" : {
+         "author" : {
+            "email" : "mmusterman@example.com",
+            "name" : "Max Mustermann"
+         },
+         "id" : "e46ee239f3d6d41ade4d1e610669dd71ed86ec80",
+         "message" : "Add note to README",
+         "timestamp" : "2018-05-19T06:35:26-07:00",
+         "url" : "https://gitlab.example.com/mmusterman/awesome_project/commit/e46ee239f3d6d41ade4d1e610669dd71ed86ec80"
+      },
+      "last_edited_at" : null,
+      "last_edited_by_id" : null,
+      "merge_commit_sha" : null,
+      "merge_error" : null,
+      "merge_params" : {
+         "force_remove_source_branch" : "0"
+      },
+      "merge_status" : "unchecked",
+      "merge_user_id" : null,
+      "merge_when_pipeline_succeeds" : false,
+      "milestone_id" : null,
+      "source" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/build/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:build/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/build/awesome_project",
+         "http_url" : "https://gitlab.example.com/build/awesome_project.git",
+         "id" : 2337,
+         "name" : "awesome_project",
+         "namespace" : "build",
+         "path_with_namespace" : "build/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:build/awesome_project.git",
+         "url" : "git@gitlab.example.com:build/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/build/awesome_project"
+      },
+      "source_branch" : "ms-viewport",
+      "source_project_id" : 2337,
+      "state" : "opened",
+      "target" : {
+         "avatar_url" : null,
+         "ci_config_path" : null,
+         "default_branch" : "master",
+         "description" : "Trivial project for testing build machinery quickly",
+         "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+         "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+         "id" : 239,
+         "name" : "awesome_project",
+         "namespace" : "mmusterman",
+         "path_with_namespace" : "mmusterman/awesome_project",
+         "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+         "visibility_level" : 0,
+         "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+      },
+      "target_branch" : "master",
+      "target_project_id" : 239,
+      "time_estimate" : 0,
+      "title" : "Add note to README",
+      "total_time_spent" : 0,
+      "updated_at" : "2018-05-19 06:57:12 -0700",
+      "updated_by_id" : null,
+      "url" : "https://gitlab.example.com/mmusterman/awesome_project/merge_requests/7",
+      "work_in_progress" : false
+   },
+   "object_kind" : "merge_request",
+   "project" : {
+      "avatar_url" : null,
+      "ci_config_path" : null,
+      "default_branch" : "master",
+      "description" : "Trivial project for testing build machinery quickly",
+      "git_http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "git_ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
+      "id" : 239,
+      "name" : "awesome_project",
+      "namespace" : "mmusterman",
+      "path_with_namespace" : "mmusterman/awesome_project",
+      "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
+      "visibility_level" : 0,
+      "web_url" : "https://gitlab.example.com/mmusterman/awesome_project"
+   },
+   "repository" : {
+      "description" : "Trivial project for testing build machinery quickly",
+      "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
+      "name" : "awesome_project",
+      "url" : "git@gitlab.example.com:mmusterman/awesome_project.git"
+   },
+   "user" : {
+      "avatar_url" : "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40&d=identicon",
+      "name" : "Max Mustermann",
+      "username" : "mmusterman"
+   }
 }
 """
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+def FakeRequestMR(content):
+    request = FakeRequest(content=content)
+    request.uri = b"/change_hook/gitlab"
+    request.args = {b'codebase': [b'MyCodebase']}
+    request.received_headers[_HEADER_EVENT] = b"Merge Request Hook"
+    request.method = b"POST"
+    return request
+
+
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
+                                            TestReactorMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.changeHook = change_hook.ChangeHookResource(
-            dialects={'gitlab': True}, master=fakeMasterForHooks())
+            dialects={'gitlab': True}, master=fakeMasterForHooks(self))
 
     def check_changes_tag_event(self, r, project='', codebase=None):
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1323692851
         )
         self.assertEqual(change["branch"], "v1.0.0")
 
-    def check_changes_mr_event(self, r, project='', codebase=None):
-        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
-        change = self.changeHook.master.addedChanges[0]
+    def check_changes_mr_event(self, r, project='awesome_project', codebase=None, timestamp=1526309644, source_repo=None):
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change["repository"],
-                         "http://example.com/awesome_user/awesome_project.git")
+                         "https://gitlab.example.com/mmusterman/awesome_project.git")
+        if source_repo is None:
+            source_repo = "https://gitlab.example.com/mmusterman/awesome_project.git"
+        self.assertEqual(change['properties']["source_repository"],
+                         source_repo)
         self.assertEqual(change['properties']["target_repository"],
-                         "http://example.com/awesome_space/awesome_project.git")
+                         "https://gitlab.example.com/mmusterman/awesome_project.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
-            1325626589
+            change["when_timestamp"],
+            timestamp
         )
-        self.assertEqual(change["branch"], "ms-viewport")
+        self.assertEqual(change["branch"], "master")
+        self.assertEqual(change['properties']["source_branch"], 'ms-viewport')
         self.assertEqual(change['properties']["target_branch"], 'master')
         self.assertEqual(change["category"], "merge_request")
+        self.assertEqual(change.get("project"), project)
 
-    def check_changes_push_event(self, r, project='', codebase=None):
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
+    def check_changes_push_event(self, r, project='diaspora', codebase=None):
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1323692851
         )
         self.assertEqual(
@@ -245,10 +866,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change[
             "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
-        change = self.changeHook.master.addedChanges[1]
+        change = self.changeHook.master.data.updates.changesAdded[1]
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1325626589
         )
         self.assertEqual(
@@ -261,7 +882,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change[
             "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 
-        self.assertEqual(change.get("project"), project)
+        # FIXME: should we convert project name to canonical case?
+        # Or should change filter be case insensitive?
+        self.assertEqual(change.get("project").lower(), project.lower())
         self.assertEqual(change.get("codebase"), codebase)
 
     # Test 'base' hook with attributes. We should get a json string representing
@@ -279,11 +902,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithProjectToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {b'project': [b'MyProject']}
+        self.request.args = {b'project': [b'Diaspora']}
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
-        self.check_changes_push_event(res, project="MyProject")
+        self.check_changes_push_event(res, project="Diaspora")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithCodebaseToo(self):
@@ -305,20 +928,17 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_tag_event(res, codebase="MyCodebase")
 
+    @defer.inlineCallbacks
     def testGitWithNoJson(self):
         self.request = FakeRequest()
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
-        d = self.request.test_render(self.changeHook)
+        yield self.request.test_render(self.changeHook)
 
-        def check_changes(r):
-            self.assertEqual(len(self.changeHook.master.addedChanges), 0)
-            self.assertIn(b"Error loading JSON:", self.request.written)
-            self.request.setResponseCode.assert_called_with(400, mock.ANY)
-
-        d.addCallback(check_changes)
-        return d
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
+        self.assertIn(b"Error loading JSON:", self.request.written)
+        self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
     @defer.inlineCallbacks
     def test_event_property(self):
@@ -327,32 +947,76 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["properties"]["event"], "Push Hook")
         self.assertEqual(change["category"], "Push Hook")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR(self):
-        self.request = FakeRequest(content=gitJsonPayloadMR)
-        self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {b'codebase': [b'MyCodebase']}
-        self.request.received_headers[_HEADER_EVENT] = b"Merge Request Hook"
-        self.request.method = b"POST"
+    def testGitWithChange_WithMR_open(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_open)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase")
-        change = self.changeHook.master.addedChanges[0]
+        change = self.changeHook.master.data.updates.changesAdded[0]
+        self.assertEqual(change["category"], "merge_request")
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithMR_editdesc(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_editdesc)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithMR_addcommit(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_addcommit)
+        res = yield self.request.test_render(self.changeHook)
+        self.check_changes_mr_event(res, codebase="MyCodebase", timestamp=1526395871)
+        change = self.changeHook.master.data.updates.changesAdded[0]
+        self.assertEqual(change["category"], "merge_request")
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithMR_close(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_close)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithMR_reopen(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_reopen)
+        res = yield self.request.test_render(self.changeHook)
+        self.check_changes_mr_event(res, codebase="MyCodebase", timestamp=1526395871)
+        change = self.changeHook.master.data.updates.changesAdded[0]
+        self.assertEqual(change["category"], "merge_request")
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithMR_open_forked(self):
+        self.request = FakeRequestMR(content=gitJsonPayloadMR_open_forked)
+        res = yield self.request.test_render(self.changeHook)
+        self.check_changes_mr_event(
+                res, codebase="MyCodebase", timestamp=1526736926,
+                source_repo="https://gitlab.example.com/build/awesome_project.git")
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["category"], "merge_request")
 
 
-class TestChangeHookConfiguredWithSecret(unittest.TestCase):
+class TestChangeHookConfiguredWithSecret(unittest.TestCase, TestReactorMixin):
 
     _SECRET = 'thesecret'
 
     def setUp(self):
+        self.setUpTestReactor()
+        self.master = fakeMasterForHooks(self)
+
+        fakeStorageService = FakeSecretStorage()
+        fakeStorageService.reconfigService(secretdict={"secret_key": self._SECRET})
+
+        self.secretService = SecretManager()
+        self.secretService.services = [fakeStorageService]
+        self.master.addService(self.secretService)
+
         self.changeHook = change_hook.ChangeHookResource(
-            dialects={'gitlab': {'secret': self._SECRET}},
-            master=fakeMasterForHooks())
+            dialects={'gitlab': {'secret': util.Secret("secret_key")}},
+            master=self.master)
 
     @defer.inlineCallbacks
     def test_missing_secret(self):
@@ -364,7 +1028,7 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
         yield self.request.test_render(self.changeHook)
         expected = b'Invalid secret'
         self.assertEqual(self.request.written, expected)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def test_valid_secret(self):
@@ -374,4 +1038,4 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)

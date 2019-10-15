@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 
 import mock
@@ -28,13 +25,11 @@ from buildbot.db import connector
 from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
+class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
+                      unittest.TestCase):
 
     """
     Basic tests of the DBConnector class - all start with an empty DB
@@ -42,13 +37,14 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         yield self.setUpRealDatabase(table_names=[
             'changes', 'change_properties', 'change_files', 'patches',
             'sourcestamps', 'buildset_properties', 'buildsets',
             'sourcestampsets', 'builds', 'builders', 'masters',
             'buildrequests', 'workers'])
 
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(self)
         self.master.config = config.MasterConfig()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         self.db.setServiceParent(self.master)
@@ -80,16 +76,14 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         self.db._doCleanup()
         self.assertFalse(self.db.changes.pruneChanges.called)
 
+    @defer.inlineCallbacks
     def test_doCleanup_configured(self):
         self.db.changes.pruneChanges = mock.Mock(
             return_value=defer.succeed(None))
-        d = self.startService()
+        yield self.startService()
 
-        @d.addCallback
-        def check(_):
-            self.db._doCleanup()
-            self.assertTrue(self.db.changes.pruneChanges.called)
-        return d
+        self.db._doCleanup()
+        self.assertTrue(self.db.changes.pruneChanges.called)
 
     def test_setup_check_version_bad(self):
         if self.db_url == 'sqlite://':
@@ -101,17 +95,3 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     def test_setup_check_version_good(self):
         self.db.model.is_current = lambda: defer.succeed(True)
         return self.startService(check_version=True)
-
-    @defer.inlineCallbacks
-    def test_workersrc_old_api(self):
-        yield self.startService()
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = self.db.workers
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'buildslaves' attribute is deprecated"):
-            old = self.db.buildslaves
-
-        self.assertIdentical(new, old)

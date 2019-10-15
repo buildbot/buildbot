@@ -16,8 +16,6 @@
 Source step code for mercurial
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -77,7 +75,7 @@ class Mercurial(Source):
         self.method = method
         self.clobberOnBranchChange = clobberOnBranchChange
         self.mode = mode
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         errors = []
         if not self._hasAttrGroupMember('mode', self.mode):
@@ -334,9 +332,8 @@ class Mercurial(Source):
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:
-                defer.returnValue(cmd.rc)
-                return
-        defer.returnValue(0)
+                return cmd.rc
+        return 0
 
     def _update(self, _):
         command = ['update', '--clean']

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.application import strports
 from twisted.cred import checkers
@@ -30,6 +28,7 @@ from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.util.eventual import eventually
 
 debug = False
 
@@ -44,7 +43,7 @@ class PBManager(service.AsyncMultiService):
     """
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setName('pbmanager')
         self.dispatchers = {}
 
@@ -81,7 +80,7 @@ class PBManager(service.AsyncMultiService):
         return defer.succeed(None)
 
 
-class Registration(object):
+class Registration:
 
     def __init__(self, pbmanager, portstr, username):
         self.portstr = portstr
@@ -136,15 +135,15 @@ class Dispatcher(service.AsyncService):
     def startService(self):
         assert not self.port
         self.port = strports.listen(self.portstr, self.serverFactory)
-        return service.AsyncService.startService(self)
+        return super().startService()
 
+    @defer.inlineCallbacks
     def stopService(self):
         # stop listening on the port when shut down
         assert self.port
         port, self.port = self.port, None
-        d = defer.maybeDeferred(port.stopListening)
-        d.addCallback(lambda _: service.AsyncService.stopService(self))
-        return d
+        yield defer.maybeDeferred(port.stopListening)
+        yield super().stopService()
 
     def register(self, username, password, pfactory):
         if debug:
@@ -208,10 +207,12 @@ class Dispatcher(service.AsyncService):
                 matched = yield defer.maybeDeferred(
                     creds.checkPassword, unicode2bytes(password))
                 if not matched:
-                    log.msg("invalid login from user '%s'" % creds.username)
+                    log.msg("invalid login from user '{}'".format(username))
                     raise error.UnauthorizedLogin()
-                defer.returnValue(creds.username)
-            log.msg("invalid login from unknown user '%s'" % creds.username)
+                return creds.username
+            log.msg("invalid login from unknown user '{}'".format(username))
             raise error.UnauthorizedLogin()
         finally:
-            yield self.master.initLock.release()
+            # brake the callback stack by returning to the reactor
+            # before waking up other waiters
+            eventually(self.master.initLock.release)

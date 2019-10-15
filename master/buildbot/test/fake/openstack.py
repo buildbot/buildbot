@@ -14,8 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import uuid
 
@@ -84,7 +82,7 @@ class Item():
 class Image(Item):
 
     def __init__(self, *args, **kwargs):
-        Item.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         setattr(self, 'OS-EXT-IMG-SIZE:size', self.size)
 
 

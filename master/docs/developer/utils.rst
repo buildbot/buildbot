@@ -65,6 +65,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     Convert a UNIX epoch timestamp to a Python datetime object, in the UTC timezone.
     Note that timestamps specify UTC time (modulo leap seconds and a few other minor details).
+    If the argument is None, returns None.
 
 .. py:function:: datetime2epoch(datetime)
 
@@ -72,6 +73,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :returns: equivalent epoch time (integer)
 
     Convert an arbitrary Python datetime object into a UNIX epoch timestamp.
+    If the argument is None, returns None.
 
 .. py:data:: UTC
 
@@ -510,7 +512,7 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 .. py:function:: method
 
     This decorator replaces the decorated method with a :py:class:`Poller` instance configured to call the decorated method periodically.
-    The poller is initially stopped, so peroidic calls will not begin until its ``start`` method is called.
+    The poller is initially stopped, so periodic calls will not begin until its ``start`` method is called.
     The start polling interval is specified when the poller is started.
 
     If the decorated method fails or raises an exception, the Poller logs the error and re-schedules the call for the next interval.
@@ -815,7 +817,7 @@ This module makes it easy to manipulate identifiers.
     :param str: string to coerce to an identifier
     :returns: identifier of maximum length ``maxLength``
 
-    Coerce a string (assuming ASCII for bytestrings) into an identifier.
+    Coerce a string (assuming UTF-8 for bytestrings) into an identifier.
     This method will replace any invalid characters with ``_`` and truncate to the given length.
 
 .. py:function:: incrementIdentifier(maxLength, str)
@@ -1021,7 +1023,7 @@ For example, a particular daily scheduler could be configured on multiple master
     .. py:method:: __init__(self, *args, **kwargs)
 
         Constructor of the service.
-        The constructor initialize the service, and store the config arguments in private attributes.
+        The constructor initializes the service, calls checkConfig() and stores the config arguments in private attributes.
 
         This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
@@ -1313,7 +1315,7 @@ For example, a particular daily scheduler could be configured on multiple master
                         raise Exception("%d: server did not succeed" % (res.code))
                     res_json = yield res.json()
                     # res.json() returns a deferred to account for the time needed to fetch the entire body
-                    defer.returnValue(res_json)
+                    return res_json
 
 
             class Test(unittest.SynchronousTestCase):

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.python.reflect import namedObject
 
@@ -36,7 +34,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
     name = 'mq'
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.impl = None  # set in setup
         self.impl_type = None  # set in setup
 
@@ -66,8 +64,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         # double-check -- the master ensures this in config checks
         assert self.impl_type == new_config.mq['type']
 
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def produce(self, routing_key, data):
         # will be patched after configuration to point to the running

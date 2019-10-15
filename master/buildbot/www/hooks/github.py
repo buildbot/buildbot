@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import hmac
 import json
@@ -28,6 +26,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
@@ -48,6 +47,7 @@ class GitHubEventHandler(PullRequestMixin):
                  master=None,
                  skips=None,
                  github_api_endpoint=None,
+                 pullrequest_ref=None,
                  token=None,
                  debug=False,
                  verify=False):
@@ -55,6 +55,7 @@ class GitHubEventHandler(PullRequestMixin):
         self._strict = strict
         self._token = token
         self._codebase = codebase
+        self.pullrequest_ref = pullrequest_ref
         self.github_property_whitelist = github_property_whitelist
         self.skips = skips
         self.github_api_endpoint = github_api_endpoint
@@ -74,7 +75,7 @@ class GitHubEventHandler(PullRequestMixin):
 
     @defer.inlineCallbacks
     def process(self, request):
-        payload = self._get_payload(request)
+        payload = yield self._get_payload(request)
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
@@ -87,8 +88,9 @@ class GitHubEventHandler(PullRequestMixin):
             raise ValueError('Unknown event: {}'.format(event_type))
 
         result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
-        defer.returnValue(result)
+        return result
 
+    @defer.inlineCallbacks
     def _get_payload(self, request):
         content = request.content.read()
         content = bytes2unicode(content)
@@ -109,12 +111,24 @@ class GitHubEventHandler(PullRequestMixin):
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: {}'.format(hash_type))
 
-            mac = hmac.new(unicode2bytes(self._secret),
+            p = Properties()
+            p.master = self.master
+            rendered_secret = yield p.render(self._secret)
+
+            mac = hmac.new(unicode2bytes(rendered_secret),
                            msg=unicode2bytes(content),
                            digestmod=sha1)
-            # NOTE: hmac.compare_digest should be used, but it's only available
-            # starting Python 2.7.7
-            if mac.hexdigest() != hexdigest:
+
+            def _cmp(a, b):
+                try:
+                    # try the more secure compare_digest() first
+                    from hmac import compare_digest
+                    return compare_digest(a, b)
+                except ImportError:  # pragma: no cover
+                    # and fallback to the insecure simple comparison otherwise
+                    return a == b
+
+            if not _cmp(bytes2unicode(mac.hexdigest()), hexdigest):
                 raise ValueError('Hash mismatch')
 
         content_type = request.getHeader(b'Content-Type')
@@ -156,7 +170,8 @@ class GitHubEventHandler(PullRequestMixin):
     def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/{}/merge'.format(number)
+        refname = 'refs/pull/{}/{}'.format(number, self.pullrequest_ref)
+        basename = payload['pull_request']['base']['ref']
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
@@ -170,15 +185,16 @@ class GitHubEventHandler(PullRequestMixin):
         if self._has_skip(head_msg):
             log.msg("GitHub PR #{}, Ignoring: "
                     "head commit message contains skip pattern".format(number))
-            defer.returnValue(([], 'git'))
+            return ([], 'git')
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
             log.msg("GitHub PR #{} {}, ignoring".format(number, action))
-            defer.returnValue((changes, 'git'))
+            return (changes, 'git')
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
+        properties.update({'basename': basename})
         change = {
             'revision': payload['pull_request']['head']['sha'],
             'when_timestamp': dateparse(payload['pull_request']['created_at']),
@@ -189,7 +205,7 @@ class GitHubEventHandler(PullRequestMixin):
             'category': 'pull',
             # TODO: Get author name based on login id using txgithub module
             'author': payload['sender']['login'],
-            'comments': u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
+            'comments': 'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
                 number, commits, 's' if commits != 1 else '', title, comments),
             'properties': properties,
         }
@@ -203,7 +219,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         log.msg("Received {} changes from GitHub PR #{}".format(
             len(changes), number))
-        defer.returnValue((changes, 'git'))
+        return (changes, 'git')
 
     @defer.inlineCallbacks
     def _get_commit_msg(self, repo, sha):
@@ -223,8 +239,8 @@ class GitHubEventHandler(PullRequestMixin):
             debug=self.debug, verify=self.verify)
         res = yield http.get(url)
         data = yield res.json()
-        msg = data['commit']['message']
-        defer.returnValue(msg)
+        msg = data.get('commit', {'message': 'No message field'})['message']
+        return msg
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
                         properties):
@@ -270,8 +286,10 @@ class GitHubEventHandler(PullRequestMixin):
             log.msg("New revision: {}".format(commit['id'][:8]))
 
             change = {
-                'author': u'{} <{}>'.format(commit['author']['name'],
+                'author': '{} <{}>'.format(commit['author']['name'],
                                            commit['author']['email']),
+                'committer': '{} <{}>'.format(commit['committer']['name'],
+                                           commit['committer']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
@@ -318,7 +336,7 @@ class GitHubHandler(BaseHookHandler):
     def __init__(self, master, options):
         if options is None:
             options = {}
-        BaseHookHandler.__init__(self, master, options)
+        super().__init__(master, options)
 
         klass = options.get('class', GitHubEventHandler)
         klass_kwargs = {
@@ -327,6 +345,7 @@ class GitHubHandler(BaseHookHandler):
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
             'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'pullrequest_ref': options.get('pullrequest_ref', None) or 'merge',
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,

@@ -13,13 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
 
-class AbsoluteSourceStampsMixin(object):
+class AbsoluteSourceStampsMixin:
     # record changes and revisions per codebase
 
     _lastCodebases = None
@@ -32,7 +30,7 @@ class AbsoluteSourceStampsMixin(object):
             self._lastCodebases = yield self.getState('lastCodebases', {})
 
         # may fail with KeyError
-        defer.returnValue(self._lastCodebases.get(codebase, self.codebases[codebase]))
+        return self._lastCodebases.get(codebase, self.codebases[codebase])
 
     @defer.inlineCallbacks
     def recordChange(self, change):

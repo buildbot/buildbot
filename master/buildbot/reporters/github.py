@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 
@@ -32,7 +30,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import httpclientservice
-from buildbot.util import unicode2NativeString
 from buildbot.util.giturlparse import giturlparse
 
 HOSTED_BASE_URL = 'https://api.github.com'
@@ -47,7 +44,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                         startDescription=None, endDescription=None,
                         context=None, baseURL=None, verbose=False, **kwargs):
         token = yield self.renderSecrets(token)
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
 
         self.setDefaults(context, startDescription, endDescription)
         if baseURL is None:
@@ -152,16 +149,12 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
+            response = None
             try:
-                repo_user = unicode2NativeString(repoOwner)
-                repo_name = unicode2NativeString(repoName)
-                sha = unicode2NativeString(sha)
-                state = unicode2NativeString(state)
-                target_url = unicode2NativeString(build['url'])
-                context = unicode2NativeString(context)
-                issue = unicode2NativeString(issue)
-                description = unicode2NativeString(description)
-                yield self.createStatus(
+                repo_user = repoOwner
+                repo_name = repoName
+                target_url = build['url']
+                response = yield self.createStatus(
                     repo_user=repo_user,
                     repo_name=repo_name,
                     sha=sha,
@@ -171,6 +164,10 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     issue=issue,
                     description=description
                 )
+
+                if not self.isStatus2XX(response.code):
+                    raise Exception()
+
                 if self.verbose:
                     log.msg(
                         'Updated status with "{state}" for {repoOwner}/{repoName} '
@@ -178,12 +175,19 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                             state=state, repoOwner=repoOwner, repoName=repoName,
                             sha=sha, issue=issue, context=context))
             except Exception as e:
+                if response:
+                    content = yield response.content()
+                    code = response.code
+                else:
+                    content = code = "n/a"
                 log.err(
                     e,
                     'Failed to update "{state}" for {repoOwner}/{repoName} '
-                    'at {sha}, context "{context}", issue {issue}.'.format(
+                    'at {sha}, context "{context}", issue {issue}. '
+                    'http {code}, {content}'.format(
                         state=state, repoOwner=repoOwner, repoName=repoName,
-                        sha=sha, issue=issue, context=context))
+                        sha=sha, issue=issue, context=context,
+                        code=code, content=content))
 
 
 class GitHubCommentPush(GitHubStatusPush):

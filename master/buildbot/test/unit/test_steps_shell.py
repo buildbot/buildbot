@@ -13,12 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import re
 import textwrap
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -35,11 +33,16 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+class TestShellCommandExecution(steps.BuildStepMixin,
+                                configmixin.ConfigErrorsMixin,
+                                TestReactorMixin,
+                                unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -56,7 +59,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.setupStep(
             shell.ShellCommand(command="echo hello", doStepIf=False))
         self.expectOutcome(result=SKIPPED,
-                           state_string=u"'echo hello' (skipped)")
+                           state_string="'echo hello' (skipped)")
         return self.runStep()
 
     def test_constructor_args_kwargs(self):
@@ -71,10 +74,10 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_constructor_args_validity(self):
         # this checks that an exception is raised for invalid arguments
-        self.assertRaisesConfigError(
-            "Invalid argument(s) passed to RemoteShellCommand: ",
-            lambda: shell.ShellCommand(workdir='build', command="echo Hello World",
-                                       wrongArg1=1, wrongArg2='two'))
+        with self.assertRaisesConfigError(
+                "Invalid argument(s) passed to RemoteShellCommand: "):
+            shell.ShellCommand(workdir='build', command="echo Hello World",
+                                       wrongArg1=1, wrongArg2='two')
 
     def test_getLegacySummary_from_empty_command(self):
         # this is more of a regression test for a potential failure, really
@@ -85,7 +88,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_getLegacySummary_from_short_command(self):
         step = shell.ShellCommand(workdir='build', command="true")
         step.rendered = True
-        self.assertLegacySummary(step, u"'true'")
+        self.assertLegacySummary(step, "'true'")
 
     def test_getLegacySummary_from_short_command_list(self):
         step = shell.ShellCommand(workdir='build', command=["true"])
@@ -95,42 +98,42 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_getLegacySummary_from_med_command(self):
         step = shell.ShellCommand(command="echo hello")
         step.rendered = True
-        self.assertLegacySummary(step, u"'echo hello'")
+        self.assertLegacySummary(step, "'echo hello'")
 
     def test_getLegacySummary_from_med_command_list(self):
         step = shell.ShellCommand(command=["echo", "hello"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'echo hello'")
+        self.assertLegacySummary(step, "'echo hello'")
 
     def test_getLegacySummary_from_long_command(self):
         step = shell.ShellCommand(command="this is a long command")
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_long_command_list(self):
         step = shell.ShellCommand(command="this is a long command".split())
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_list(self):
         step = shell.ShellCommand(command=["this", ["is", "a"], "nested"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_tuples(self):
         step = shell.ShellCommand(command=["this", ("is", "a"), "nested"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_list_empty(self):
         step = shell.ShellCommand(command=["this", [], ["is", "a"], "nested"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_list_deep(self):
         step = shell.ShellCommand(command=[["this", [[["is", ["a"]]]]]])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_custom(self):
         step = shell.ShellCommand(command="echo hello",
@@ -143,7 +146,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         step = shell.ShellCommand(
             command="echo hello", descriptionSuffix="suffix")
         step.rendered = True
-        self.assertLegacySummary(step, u"'echo hello' suffix")
+        self.assertLegacySummary(step, "'echo hello' suffix")
 
     def test_getLegacySummary_unrendered_WithProperties(self):
         step = shell.ShellCommand(command=properties.WithProperties(''))
@@ -316,14 +319,15 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_missing_command_error(self):
         # this checks that an exception is raised for invalid arguments
-        self.assertRaisesConfigError(
-            "ShellCommand's `command' argument is not specified",
-            lambda: shell.ShellCommand())
+        with self.assertRaisesConfigError(
+                "ShellCommand's `command' argument is not specified"):
+            shell.ShellCommand()
 
 
-class TreeSize(steps.BuildStepMixin, unittest.TestCase):
+class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -367,17 +371,19 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
+class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_constructor_conflict(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None))
+        with self.assertRaises(config.ConfigErrors):
+            shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None)
 
     def test_run_property(self):
         self.setupStep(
@@ -391,7 +397,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr(u'abcdef'))
+        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
         return self.runStep()
 
     def test_renderable_workdir(self):
@@ -406,7 +412,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr(u'abcdef'))
+        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
         return self.runStep()
 
     def test_run_property_no_strip(self):
@@ -421,7 +427,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "\n\nabcdef\n")
-        self.expectLogfile('property changes', r"res: " + repr(u'\n\nabcdef\n'))
+        self.expectLogfile('property changes', r"res: " + repr('\n\nabcdef\n'))
         return self.runStep()
 
     def test_run_failure(self):
@@ -493,6 +499,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
                            state_string="'cmd' (failure)")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
@@ -506,31 +513,32 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=EXCEPTION,
                            state_string="'cmd' (exception)")
-        d = self.runStep()
-        d.addCallback(lambda _:
-                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
-        return d
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_error_both_set(self):
         """
         If both ``extract_fn`` and ``property`` are defined,
         ``SetPropertyFromCommand`` reports a config error.
         """
-        self.assertRaises(config.ConfigErrors,
-                          shell.SetPropertyFromCommand, command=["echo", "value"], property="propname", extract_fn=lambda x: {"propname": "hello"})
+        with self.assertRaises(config.ConfigErrors):
+            shell.SetPropertyFromCommand(command=["echo", "value"],
+                                         property="propname",
+                                         extract_fn=lambda x: {"propname": "hello"})
 
     def test_error_none_set(self):
         """
         If neither ``extract_fn`` and ``property`` are defined,
         ``SetPropertyFromCommand`` reports a config error.
         """
-        self.assertRaises(config.ConfigErrors,
-                          shell.SetPropertyFromCommand, command=["echo", "value"])
+        with self.assertRaises(config.ConfigErrors):
+            shell.SetPropertyFromCommand(command=["echo", "value"])
 
 
-class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
+class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -662,10 +670,13 @@ class Configure(unittest.TestCase):
         self.assertEqual(step.command, ['./configure'])
 
 
-class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
-                                  configmixin.ConfigErrorsMixin):
+class WarningCountingShellCommand(steps.BuildStepMixin,
+                                  configmixin.ConfigErrorsMixin,
+                                  TestReactorMixin,
+                                  unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -849,7 +860,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             server-src.* : BBB
             """).strip()
         # note that this uses the unicode smart-quotes that gcc loves so much
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             make: Entering directory \u2019amar-src\u2019
             amar.c:164: warning: XXX
             amar.c:165: warning: YYY
@@ -876,7 +887,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
                                                  directoryEnterPattern="^IN: (.*)",
                                                  directoryLeavePattern="^OUT:")
         supps_file = "dir1/dir2/abc.c : .*"
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             IN: dir1
             IN: decoy
             OUT: decoy
@@ -892,19 +903,20 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
                                                  suppressionFile='supps',
                                                  warningExtractor=warningExtractor)
         supps_file = "abc.c:.*:100-199\ndef.c:.*:22"
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
         return self.do_test_suppressions(step, supps_file, stdout, 2,
                                          exp_warning_log)
 
+    @defer.inlineCallbacks
     def test_suppressions_warningExtractor_exc(self):
         def warningExtractor(step, line, match):
             raise RuntimeError("oh noes")
@@ -914,11 +926,9 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         # need at least one supp to trigger warningExtractor
         supps_file = 'x:y'
         stdout = "abc.c:99: warning: seen 1"
-        d = self.do_test_suppressions(step, supps_file, stdout,
-                                      exp_exception=True)
-        d.addCallback(lambda _:
-                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
-        return d
+        yield self.do_test_suppressions(step, supps_file, stdout,
+                                        exp_exception=True)
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_suppressions_addSuppression(self):
         # call addSuppression "manually" from a subclass
@@ -926,18 +936,18 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
 
             def start(self):
                 self.addSuppression([('.*', '.*unseen.*', None, None)])
-                return shell.WarningCountingShellCommand.start(self)
+                return super().start()
 
         def warningExtractor(step, line, match):
             return line.split(':', 2)
         step = MyWCSC(command=['make'], suppressionFile='supps',
                       warningExtractor=warningExtractor)
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
@@ -955,13 +965,13 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         step = shell.WarningCountingShellCommand(command=['make'],
                                                  suppressionList=supps,
                                                  warningExtractor=warningExtractor)
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
@@ -981,13 +991,13 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
                                                  suppressionList=properties.Property("suppressionsList"),
                                                  warningExtractor=warningExtractor)
 
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
@@ -1004,15 +1014,16 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
 
     def test_missing_command_error(self):
         # this checks that an exception is raised for invalid arguments
-        self.assertRaisesConfigError(
-            "WarningCountingShellCommand's `command' argument is not "
-            "specified",
-            lambda: shell.WarningCountingShellCommand())
+        with self.assertRaisesConfigError(
+                "WarningCountingShellCommand's `command' argument is not "
+                "specified"):
+            shell.WarningCountingShellCommand()
 
 
-class Compile(steps.BuildStepMixin, unittest.TestCase):
+class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -1030,9 +1041,12 @@ class Compile(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.command, ["make", "all"])
 
 
-class Test(steps.BuildStepMixin, unittest.TestCase):
+class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
+           TestReactorMixin,
+           unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuildStep()
 
     def tearDown(self):

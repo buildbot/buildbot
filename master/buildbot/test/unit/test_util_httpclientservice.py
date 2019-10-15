@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import iteritems
-
 import datetime
 import json
 import os
@@ -26,13 +21,15 @@ import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import components
 from twisted.python.compat import intToBytes
 from twisted.trial import unittest
 from twisted.web import resource
 from twisted.web import server
 
+from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
@@ -41,6 +38,12 @@ try:
     from requests.auth import HTTPDigestAuth
 except ImportError:
     pass
+
+# There is no way to unregister an adapter, so we have no other option
+# than registering it as a module side effect :-(
+components.registerAdapter(
+    lambda m: m,
+    mock.Mock, interfaces.IHttpResponse)
 
 
 class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
@@ -59,7 +62,7 @@ class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
 class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
     def setUp(self):
-        HTTPClientServiceTestBase.setUp(self)
+        super().setUp()
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
                                                            headers=self.base_headers))
@@ -125,7 +128,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
     def setUp(self):
-        HTTPClientServiceTestBase.setUp(self)
+        super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
@@ -203,12 +206,12 @@ class MyResource(resource.Resource):
     def render_GET(self, request):
         def decode(x):
             if isinstance(x, bytes):
-                return bytes2NativeString(x)
+                return bytes2unicode(x)
             elif isinstance(x, (list, tuple)):
-                return [bytes2NativeString(y) for y in x]
+                return [bytes2unicode(y) for y in x]
             elif isinstance(x, dict):
                 newArgs = {}
-                for a, b in iteritems(x):
+                for a, b in x.items():
                     newArgs[decode(a)] = decode(b)
                 return newArgs
             return x
@@ -217,7 +220,7 @@ class MyResource(resource.Resource):
         content_type = request.getHeader(b'content-type')
         if content_type == b"application/json":
             jsonBytes = request.content.read()
-            jsonStr = bytes2NativeString(jsonBytes)
+            jsonStr = bytes2unicode(jsonBytes)
             args['json_received'] = json.loads(jsonStr)
 
         data = json.dumps(args)
@@ -297,7 +300,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                     content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b'))
         content = yield res.content()
-        content = bytes2NativeString(content)
+        content = bytes2unicode(content)
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
@@ -309,7 +312,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                     content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b', ts=dt))
         content = yield res.content()
-        content = bytes2NativeString(content)
+        content = bytes2unicode(content)
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
@@ -361,7 +364,7 @@ class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):
 
     def setUp(self):
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
-        return HTTPClientServiceTestTxRequestE2E.setUp(self)
+        return super().setUp()
 
 
 class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):

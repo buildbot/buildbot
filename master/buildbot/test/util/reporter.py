@@ -13,22 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import iteritems
-
 from buildbot.test.fake import fakedb
 
 
-class ReporterTestMixin(object):
+class ReporterTestMixin:
 
-    TEST_PROJECT = u'testProject'
-    TEST_REPO = u'https://example.org/repo'
-    TEST_REVISION = u'd34db33fd43db33f'
-    TEST_CODEBASE = u'cbgerrit'
-    TEST_CHANGE_ID = u'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
-    TEST_BUILDER_NAME = u'Builder0'
+    TEST_PROJECT = 'testProject'
+    TEST_REPO = 'https://example.org/repo'
+    TEST_REVISION = 'd34db33fd43db33f'
+    TEST_CODEBASE = 'cbgerrit'
+    TEST_CHANGE_ID = 'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
+    TEST_BUILDER_NAME = 'Builder0'
     TEST_PROPS = {
         'Stash_branch': 'refs/changes/34/1234/1',
         'project': TEST_PROJECT,
@@ -48,9 +43,9 @@ class ReporterTestMixin(object):
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
-            fakedb.Change(changeid=13, branch=u'master', revision=u'9283', author='me@foo',
+            fakedb.Change(changeid=13, branch='master', revision='9283', author='me@foo',
                           repository=self.TEST_REPO, codebase=self.TEST_CODEBASE,
-                          project=u'world-domination', sourcestampid=234),
+                          project='world-domination', sourcestampid=234),
         ])
 
         if insertSS:
@@ -69,12 +64,12 @@ class ReporterTestMixin(object):
                 fakedb.BuildRequest(
                     id=11 + i, buildsetid=98, builderid=79 + i),
                 fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i, workerid=13,
-                             masterid=92, results=results, state_string=u"buildText"),
+                             masterid=92, results=results, state_string="buildText"),
                 fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
                 fakedb.Log(id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s',
                            num_lines=7),
                 fakedb.LogChunk(logid=60 + i, first_line=0, last_line=1, compressed=0,
-                                content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
+                                content='Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
                 fakedb.BuildProperty(
                     buildid=20 + i, name="workername", value="wrk"),
                 fakedb.BuildProperty(
@@ -82,7 +77,7 @@ class ReporterTestMixin(object):
                 fakedb.BuildProperty(
                     buildid=20 + i, name="buildername", value="Builder0"),
             ])
-            for k, v in iteritems(self.TEST_PROPS):
+            for k, v in self.TEST_PROPS.items():
                 self.db.insertTestData([
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                 ])

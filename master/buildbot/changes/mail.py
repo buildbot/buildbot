@@ -17,10 +17,6 @@
 Parse various kinds of 'CVS notify' email.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 import calendar
 import datetime
 import re
@@ -46,9 +42,10 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
 
     compare_attrs = ("basedir", "pollinterval", "prefix")
+    name = 'MaildirSource'
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
-        MaildirService.__init__(self, maildir)
+        super().__init__(maildir)
         self.prefix = prefix
         self.category = category
         self.repository = repository
@@ -74,7 +71,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             if chtuple:
                 src, chdict = chtuple
             if chdict:
-                return self.master.data.updates.addChange(src=text_type(src),
+                return self.master.data.updates.addChange(src=str(src),
                                                           **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
@@ -91,7 +88,7 @@ class CVSMaildirSource(MaildirSource):
 
     def __init__(self, maildir, prefix=None, category='',
                  repository='', properties=None):
-        MaildirSource.__init__(self, maildir, prefix, category, repository)
+        super().__init__(maildir, prefix, category, repository)
         if properties is None:
             properties = {}
         self.properties = properties
@@ -259,7 +256,7 @@ class CVSMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
         if comments == '\n':
             comments = None
-        return ('cvs', dict(author=author, files=files, comments=comments,
+        return ('cvs', dict(author=author, committer=None, files=files, comments=comments,
                             isdir=isdir, when=when, branch=branch,
                             revision=rev, category=category,
                             repository=cvsroot, project=project,
@@ -351,9 +348,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # commit message is terminated by the file-listing section
         while lines:
             line = lines.pop(0)
-            if (line == "Modified:\n" or
-                line == "Added:\n" or
-                    line == "Removed:\n"):
+            if line in ("Modified:\n", "Added:\n", "Removed:\n"):
                 break
             comments += line
         comments = comments.rstrip() + "\n"
@@ -390,7 +385,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return ('svn', dict(author=author, files=files, comments=comments,
+        return ('svn', dict(author=author, committer=None, files=files, comments=comments,
                             when=when, revision=rev))
 
 # bzr Launchpad branch subscription mails. Sample mail:
@@ -430,7 +425,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap
         self.defaultBranch = defaultBranch
-        MaildirSource.__init__(self, maildir, prefix, **kwargs)
+        super().__init__(maildir, prefix, **kwargs)
 
     def parse(self, m, prefix=None):
         """Parse branch notification messages sent by Launchpad.
@@ -445,7 +440,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
         # Put these into a dictionary, otherwise we cannot assign them
         # from nested function definitions.
-        d = {'files': [], 'comments': u""}
+        d = {'files': [], 'comments': ""}
         gobbler = None
         rev = None
         author = None
@@ -474,7 +469,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = text_type(lines.pop(0), "utf-8", errors="ignore")
+            line = str(lines.pop(0), "utf-8", errors="ignore")
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)
@@ -529,7 +524,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                     branch = None
 
         if rev and author:
-            return ('bzr', dict(author=author, files=d['files'],
+            return ('bzr', dict(author=author, committer=None, files=d['files'],
                                 comments=d['comments'],
                                 when=when, revision=rev,
                                 branch=branch, repository=repository or ''))

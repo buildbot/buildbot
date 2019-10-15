@@ -13,19 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
-from buildbot.util import service
 from buildbot.worker.protocols import pb as bbpb
 
 
-class WorkerRegistration(object):
+class WorkerRegistration:
 
     __slots__ = ['master', 'worker', 'pbReg']
 
@@ -67,7 +64,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     reconfig_priority = 127
 
     def __init__(self, master):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.pb = bbpb.Listener()
         self.pb.setServiceParent(master)
@@ -144,4 +141,4 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         conn.notifyOnDisconnect(remove)
 
         # accept the connection
-        defer.returnValue(True)
+        return True

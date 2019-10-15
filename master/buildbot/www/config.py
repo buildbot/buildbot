@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 import os
@@ -27,6 +25,7 @@ from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.interfaces import IConfigured
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
@@ -35,7 +34,7 @@ class IndexResource(resource.Resource):
     needsReconfig = True
 
     def __init__(self, master, staticdir):
-        resource.Resource.__init__(self, master)
+        super().__init__(master)
         loader = jinja2.FileSystemLoader(staticdir)
         self.jinja = jinja2.Environment(
             loader=loader, undefined=jinja2.StrictUndefined)
@@ -93,7 +92,7 @@ class IndexResource(resource.Resource):
                             block, pretty=False)
                         html = compiler.compile()
                 res[template_name % (basename,)] = json.dumps(html)
-            pass
+
         return res
 
     @staticmethod
@@ -158,4 +157,4 @@ class IndexResource(resource.Resource):
         tpl = tpl.render(configjson=json.dumps(config, default=toJson),
                          custom_templates=self.custom_templates,
                          config=self.config)
-        defer.returnValue(tpl.encode("ascii"))
+        return unicode2bytes(tpl, encoding='ascii')

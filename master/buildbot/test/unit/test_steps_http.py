@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -26,6 +24,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import http
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 try:
     import txrequests
@@ -51,11 +50,12 @@ class TestPage(Resource):
         return b"OK"
 
 
-class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
+class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     timeout = 3  # those tests should not run long
 
     def setUp(self):
+        self.setUpTestReactor()
         if txrequests is None:
             raise unittest.SkipTest(
                 "Need to install txrequests to test http steps")

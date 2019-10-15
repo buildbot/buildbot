@@ -13,30 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
+from parameterized import parameterized
 
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import locks
+from buildbot.machine.base import Machine
+from buildbot.process import properties
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class ConcreteWorker(base.AbstractWorker):
@@ -55,6 +52,9 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_properties(self):
         self.assertTrue(hasattr(self.wrk, 'properties'))
+
+    def test_attr_defaultProperties(self):
+        self.assertTrue(hasattr(self.wrk, 'defaultProperties'))
 
     @defer.inlineCallbacks
     def test_attr_worker_basedir(self):
@@ -112,26 +112,30 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
+class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
 
+    @defer.inlineCallbacks
     def callAttached(self):
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
-        self.master.workers.disownServiceParent()
+        self.master = fakemaster.make_master(self, wantData=True)
+        yield self.master.workers.disownServiceParent()
         self.workers = bworkermanager.FakeWorkerManager()
-        self.workers.setServiceParent(self.master)
+        yield self.workers.setServiceParent(self.master)
         self.master.workers = self.workers
-        self.wrk.setServiceParent(self.master.workers)
+        yield self.wrk.setServiceParent(self.master.workers)
         self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
-        return self.wrk.attached(self.conn)
+        yield self.wrk.attached(self.conn)
 
 
-class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
+class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
+                     WorkerInterfaceTests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
         self.wrk = worker.FakeWorker(self.master)
 
     def callAttached(self):
@@ -139,18 +143,17 @@ class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
         return self.wrk.attached(self.conn)
 
 
-class TestAbstractWorker(unittest.TestCase):
+class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, wantData=True,
-                                             testcase=self)
+        self.setUpTestReactor()
+        self.setUpLogging()
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
-        self.master.workers.disownServiceParent()
+        yield self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
-        self.workers.setServiceParent(self.master)
-        self.clock = task.Clock()
-        self.patch(reactor, 'callLater', self.clock.callLater)
-        self.patch(reactor, 'seconds', self.clock.seconds)
+        yield self.workers.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def createWorker(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
@@ -159,7 +162,14 @@ class TestAbstractWorker(unittest.TestCase):
             yield worker.setServiceParent(self.workers)
         if attached:
             worker.conn = fakeprotocol.FakeConnection(self.master, worker)
-        defer.returnValue(worker)
+        return worker
+
+    @defer.inlineCallbacks
+    def createMachine(self, name, configured=True, **kwargs):
+        machine = Machine(name)
+        if configured:
+            yield machine.setServiceParent(self.master.machine_manager)
+        return machine
 
     @defer.inlineCallbacks
     def test_constructor_minimal(self):
@@ -174,36 +184,23 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.access, [])
 
     @defer.inlineCallbacks
-    def test_slavename_deprecated(self):
-        bs = yield self.createWorker('bot', 'pass')
-        yield bs.startService()
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' property is deprecated"):
-            old_name = bs.slavename
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            name = bs.workername
-
-        self.assertEqual(name, old_name)
-
-    @defer.inlineCallbacks
     def test_constructor_full(self):
-        lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
+        lock1, lock2 = locks.MasterLock('lock1'), locks.MasterLock('lock2')
+        access1, access2 = lock1.access('counting'), lock2.access('counting')
+
         bs = yield self.createWorker('bot', 'pass',
                             max_builds=2,
                             notify_on_missing=['me@me.com'],
                             missing_timeout=120,
                             properties={'a': 'b'},
-                            locks=[lock1, lock2])
+                            locks=[access1, access2])
         yield bs.startService()
 
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
         self.assertEqual(bs.missing_timeout, 120)
         self.assertEqual(bs.properties.getProperty('a'), 'b')
-        self.assertEqual(bs.access, [lock1, lock2])
+        self.assertEqual(bs.access, [access1, access2])
 
     @defer.inlineCallbacks
     def test_constructor_notify_on_missing_not_list(self):
@@ -214,9 +211,8 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
     def test_constructor_notify_on_missing_not_string(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          ConcreteWorker('bot', 'pass',
-                                         notify_on_missing=['a@b.com', 13]))
+        with self.assertRaises(config.ConfigErrors):
+            ConcreteWorker('bot', 'pass', notify_on_missing=['a@b.com', 13])
 
     @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):
@@ -224,7 +220,9 @@ class TestAbstractWorker(unittest.TestCase):
         if existingRegistration:
             old.registration = bworkermanager.FakeWorkerRegistration(old)
         old.missing_timer = mock.Mock(name='missing_timer')
-        yield old.startService()
+
+        if not old.running:
+            yield old.startService()
 
         yield old.reconfigServiceWithSibling(new)
 
@@ -260,6 +258,22 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertTrue(old.properties.getProperty('workername'), 'bot')
 
     @defer.inlineCallbacks
+    def test_setupProperties(self):
+        props = properties.Properties()
+        props.setProperty('foo', 1, 'Scheduler')
+        props.setProperty('bar', 'bleh', 'Change')
+        props.setProperty('omg', 'wtf', 'Builder')
+
+        wrkr = yield self.createWorker(
+            'bot', 'passwd',
+            defaultProperties={'bar': 'onoes', 'cuckoo': 42})
+
+        wrkr.setupProperties(props)
+
+        self.assertEquals(props.getProperty('bar'), 'bleh')
+        self.assertEquals(props.getProperty('cuckoo'), 42)
+
+    @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
         old = yield self.createWorker('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
@@ -291,6 +305,82 @@ class TestAbstractWorker(unittest.TestCase):
         workers = yield self.master.data.get(('workers',))
         self.assertEqual(len(workers[0]['configured_on']), 1)
         self.assertEqual(workers[0]['configured_on'][0]['builderid'], 1)
+
+    @defer.inlineCallbacks
+    def test_reconfig_service_no_machine(self):
+        old = yield self.createWorker('bot', 'pass')
+        self.assertIsNone(old.machine)
+
+        yield self.do_test_reconfigService(old, old)
+        self.assertIsNone(old.machine)
+
+    @defer.inlineCallbacks
+    def test_reconfig_service_with_machine_initial(self):
+        machine = yield self.createMachine('machine1')
+        old = yield self.createWorker('bot', 'pass', machine_name='machine1')
+        self.assertIsNone(old.machine)
+
+        yield self.do_test_reconfigService(old, old)
+        self.assertIs(old.machine, machine)
+
+    @defer.inlineCallbacks
+    def test_reconfig_service_with_unknown_machine(self):
+        old = yield self.createWorker('bot', 'pass', machine_name='machine1')
+        self.assertIsNone(old.machine)
+
+        yield self.do_test_reconfigService(old, old)
+        self.assertLogged('Unknown machine')
+
+    @parameterized.expand([
+        ('None_to_machine_initial',
+         False, None, None, 'machine1', 'machine1'),
+        ('None_to_machine',
+         True, None, None, 'machine1', 'machine1'),
+        ('machine_to_None_initial',
+         False, 'machine1', None, None, None),
+        ('machine_to_None',
+         True, 'machine1', 'machine1', None, None),
+        ('machine_to_same_machine_initial',
+         False, 'machine1', None, 'machine1', 'machine1'),
+        ('machine_to_same_machine',
+         True, 'machine1', 'machine1', 'machine1', 'machine1'),
+        ('machine_to_another_machine_initial',
+         False, 'machine1', None, 'machine2', 'machine2'),
+        ('machine_to_another_machine',
+         True, 'machine1', 'machine1', 'machine2', 'machine2'),
+    ])
+    @defer.inlineCallbacks
+    def test_reconfig_service_machine(self, test_name,
+                                      do_initial_self_reconfig,
+                                      old_machine_name,
+                                      expected_old_machine_name,
+                                      new_machine_name,
+                                      expected_new_machine_name):
+
+        machine1 = yield self.createMachine('machine1')
+        machine2 = yield self.createMachine('machine2')
+
+        name_to_machine = {
+            None: None,
+            machine1.name: machine1,
+            machine2.name: machine2,
+        }
+
+        expected_old_machine = name_to_machine[expected_old_machine_name]
+        expected_new_machine = name_to_machine[expected_new_machine_name]
+
+        old = yield self.createWorker('bot', 'pass',
+                                      machine_name=old_machine_name)
+        new = yield self.createWorker('bot', 'pass', configured=False,
+                                      machine_name=new_machine_name)
+
+        if do_initial_self_reconfig:
+            yield self.do_test_reconfigService(old, old)
+
+        self.assertIs(old.machine, expected_old_machine)
+
+        yield self.do_test_reconfigService(old, new)
+        self.assertIs(old.machine, expected_new_machine)
 
     @defer.inlineCallbacks
     def test_stopService(self):
@@ -350,7 +440,7 @@ class TestAbstractWorker(unittest.TestCase):
         bsmanager = master.workers
         yield master.startService()
         bs = ConcreteWorker('bot', 'pass')
-        bs.setServiceParent(bsmanager)
+        yield bs.setServiceParent(bsmanager)
         self.assertEqual(bs.manager, bsmanager)
         self.assertEqual(bs.parent, bsmanager)
         self.assertEqual(bsmanager.master, master)
@@ -366,7 +456,7 @@ class TestAbstractWorker(unittest.TestCase):
         yield master.startService()
         lock = locks.MasterLock('masterlock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(bsmanager)
+        yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
     def test_setServiceParent_workerLocks(self):
@@ -378,7 +468,7 @@ class TestAbstractWorker(unittest.TestCase):
         yield master.startService()
         lock = locks.WorkerLock('lock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(bsmanager)
+        yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
     def test_startService_getWorkerInfo_empty(self):
@@ -522,7 +612,7 @@ class TestAbstractWorker(unittest.TestCase):
         worker = yield self.createWorker(attached=False, missing_timeout=1)
         yield worker.startService()
         self.assertNotEqual(worker.missing_timer, None)
-        yield self.clock.advance(1)
+        yield self.reactor.advance(1)
         self.assertEqual(worker.missing_timer, None)
         self.assertEqual(len(self.master.data.updates.missingWorkers), 1)
 
@@ -560,72 +650,34 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker._paused, False)
 
 
-class TestAbstractLatentWorker(unittest.SynchronousTestCase):
+class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, wantData=True,
-                                             testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
-        self.master.workers.disownServiceParent()
+        yield self.master.workers.disownServiceParent()
         self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
-        self.workers.setServiceParent(self.master)
-        self.clock = task.Clock()
-        self.patch(reactor, 'callLater', self.clock.callLater)
-        self.patch(reactor, 'seconds', self.clock.seconds)
+        yield self.workers.setServiceParent(self.master)
 
+    @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):
         old.parent = self.master
         if existingRegistration:
             old.registration = bworkermanager.FakeWorkerRegistration(old)
         old.missing_timer = mock.Mock(name='missing_timer')
-        self.successResultOf(old.startService())
+        yield old.startService()
 
-        self.successResultOf(old.reconfigServiceWithSibling(new))
+        yield old.reconfigServiceWithSibling(new)
 
+    @defer.inlineCallbacks
     def test_reconfigService(self):
         old = AbstractLatentWorker(
             "name", "password", build_wait_timeout=10)
         new = AbstractLatentWorker(
             "name", "password", build_wait_timeout=30)
 
-        self.do_test_reconfigService(old, new)
+        yield self.do_test_reconfigService(old, new)
 
         self.assertEqual(old.build_wait_timeout, 30)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_AbstractBuildSlave_deprecated_worker(self):
-        from buildbot.worker import AbstractWorker
-
-        import buildbot.buildslave as bs
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="AbstractBuildSlave was deprecated"):
-            deprecated = bs.AbstractBuildSlave
-
-        self.assertIdentical(deprecated, AbstractWorker)
-
-    def test_AbstractLatentBuildSlave_deprecated_worker(self):
-
-        import buildbot.buildslave as bs
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="AbstractLatentBuildSlave was deprecated"):
-            deprecated = bs.AbstractLatentBuildSlave
-
-        self.assertIdentical(deprecated, AbstractLatentWorker)
-
-    def test_BuildSlave_deprecated_worker(self):
-        from buildbot.worker import Worker
-
-        import buildbot.buildslave as bs
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildSlave was deprecated"):
-            deprecated = bs.BuildSlave
-
-        self.assertIdentical(deprecated, Worker)

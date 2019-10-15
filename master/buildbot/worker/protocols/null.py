@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import log
@@ -73,7 +70,7 @@ class Connection(base.Connection):
                base.FileReaderImpl: FileReaderProxy}
 
     def loseConnection(self):
-        pass
+        self.notifyDisconnected()
 
     def remotePrint(self, message):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)

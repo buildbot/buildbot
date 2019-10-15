@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import functools
 
@@ -28,7 +26,7 @@ PH_RUNNING = 2
 PH_RUNNING_QUEUED = 3
 
 
-class Debouncer(object):
+class Debouncer:
     __slots__ = ['phase', 'timer', 'wait', 'function', 'stopped',
                  'completeDeferreds', 'get_reactor']
 
@@ -95,7 +93,7 @@ class Debouncer(object):
         return defer.succeed(None)
 
 
-class _Descriptor(object):
+class _Descriptor:
 
     def __init__(self, fn, wait, attrName, get_reactor):
         self.fn = fn

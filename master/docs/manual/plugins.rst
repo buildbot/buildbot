@@ -21,29 +21,31 @@ allows to use a component of kind ``kind``.
 Available ``kind``\s are:
 
 ``worker``
-    workers, described in :doc:`cfg-workers`
+    workers, described in :doc:`configuration/workers`
 
 ``changes``
-    change source, described in :doc:`cfg-changesources`
+    change source, described in :doc:`configuration/changesources`
 
 ``schedulers``
-    schedulers, described in :doc:`cfg-schedulers`
+    schedulers, described in :doc:`configuration/schedulers`
 
 ``steps``
-    build steps, described in :doc:`cfg-buildsteps`
+    build steps, described in :doc:`configuration/buildsteps`
 
 ``reporters``
-    reporters (or reporter targets), described in :doc:`cfg-reporters`
+    reporters (or reporter targets), described in :doc:`configuration/reporters`
 
 ``util``
     utility classes.
-    For example, :doc:`BuilderConfig <cfg-builders>`, :doc:`cfg-buildfactories`, :ref:`ChangeFilter <Change-Filters>` and :doc:`Locks <cfg-interlocks>` are accessible through ``util``.
+    For example, :doc:`BuilderConfig <configuration/builders>`, :doc:`configuration/buildfactories`, :ref:`ChangeFilter <Change-Filters>` and :doc:`Locks <configuration/interlocks>` are accessible through ``util``.
 
-Web interface plugins are not used directly: as described in :doc:`web server configuration <cfg-www>` section, they are listed in the corresponding section of the web server configuration dictionary.
+Web interface plugins are not used directly: as described in :doc:`web server configuration <configuration/www>` section, they are listed in the corresponding section of the web server configuration dictionary.
 
 .. note::
 
-    If you are not very familiar with Python and you need to use different kinds of components, start your ``master.cfg`` file with::
+    If you are not very familiar with Python and you need to use different kinds of components, start your ``master.cfg`` file with:
+
+    .. code-block:: python
 
         from buildbot.plugins import *
 
@@ -53,17 +55,17 @@ Web interface plugins are not used directly: as described in :doc:`web server co
 Finding Plugins
 ===============
 
-Buildbot maintains a list of plugins at http://trac.buildbot.net/wiki/Plugins.
+Buildbot maintains a list of plugins at https://github.com/buildbot/buildbot/wiki/PluginList.
 
 Developing Plugins
 ==================
 
 :ref:`Plugin-Module` contains all necessary information for you to develop new plugins.
-Please edit http://trac.buildbot.net/wiki/Plugins to add a link to your plugin!
+Please edit https://github.com/buildbot/buildbot/wiki/PluginList to add a link to your plugin!
 
 Plugins of note
 ===============
 
 Plugins were introduced in Buildbot-0.8.11, so as of this writing, only components that are bundled with Buildbot are available as plugins.
 
-If you have an idea/need about extending Buildbot, head to :doc:`../developer/plugins-publish`, create your own plugins and let the world now how Buildbot can be made even more useful.
+If you have an idea/need about extending Buildbot, head to :doc:`../developer/plugins-publish`, create your own plugins and let the world know how Buildbot can be made even more useful.

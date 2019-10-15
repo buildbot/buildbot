@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 from twisted.internet import defer
 from twisted.python import log
@@ -25,10 +23,9 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
 from buildbot.reporters import notifier
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
-from buildbot.util import unicode2NativeString
 
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
@@ -48,8 +45,7 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                         statusName=None, startDescription=None,
                         endDescription=None, verbose=False, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield http.HttpStatusPushBase.reconfigService(
-            self, wantProperties=True, **kwargs)
+        yield super().reconfigService(wantProperties=True, **kwargs)
         self.key = key or Interpolate('%(prop:buildername)s')
         self.context = statusName
         self.endDescription = endDescription or 'Build done.'
@@ -94,19 +90,13 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
 
         for sourcestamp in sourcestamps:
             try:
-                sha = unicode2NativeString(sourcestamp['revision'])
+                sha = sourcestamp['revision']
 
                 if sha is None:
                     log.msg("Unable to get the commit hash")
                     continue
 
-                key = unicode2NativeString(key)
-                state = unicode2NativeString(state)
-                url = unicode2NativeString(build['url'])
-                key = unicode2NativeString(key)
-                description = unicode2NativeString(description)
-                context = unicode2NativeString(context)
-
+                url = build['url']
                 res = yield self.createStatus(
                     sha=sha,
                     state=state,
@@ -140,8 +130,8 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
     def reconfigService(self, base_url, user, password, messageFormatter=None,
                         verbose=False, debug=None, verify=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield notifier.NotifierBase.reconfigService(
-            self, messageFormatter=messageFormatter, watchedWorkers=None,
+        yield super().reconfigService(
+            messageFormatter=messageFormatter, watchedWorkers=None,
             messageFormatterMissingWorker=None, subject='', addLogs=False,
             addPatch=False, **kwargs)
         self.verbose = verbose
@@ -152,18 +142,17 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
     def checkConfig(self, base_url, user, password, messageFormatter=None,
                     verbose=False, debug=None, verify=None, **kwargs):
 
-        notifier.NotifierBase.checkConfig(self,
-                                          messageFormatter=messageFormatter,
-                                          watchedWorkers=None,
-                                          messageFormatterMissingWorker=None,
-                                          subject='',
-                                          addLogs=False,
-                                          addPatch=False,
-                                          **kwargs)
+        super().checkConfig(messageFormatter=messageFormatter,
+                            watchedWorkers=None,
+                            messageFormatterMissingWorker=None,
+                            subject='',
+                            addLogs=False,
+                            addPatch=False,
+                            **kwargs)
 
     def isMessageNeeded(self, build):
         if 'pullrequesturl' in build['properties']:
-            return notifier.NotifierBase.isMessageNeeded(self, build)
+            return super().isMessageNeeded(build)
         return False
 
     def workerMissing(self, key, worker):
@@ -174,7 +163,7 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
         path = urlparse(unicode2bytes(pr_url)).path
         payload = {'text': text}
         return self._http.post(COMMENT_API_URL.format(
-            path=bytes2NativeString(path)), json=payload)
+            path=bytes2unicode(path)), json=payload)
 
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type=None, builderName=None,

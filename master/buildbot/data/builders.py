@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -35,22 +33,19 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         builderid = yield self.getBuilderId(kwargs)
         if builderid is None:
-            defer.returnValue(None)
+            return None
 
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
-            defer.returnValue(None)
-            return
+            return None
         if 'masterid' in kwargs:
             if kwargs['masterid'] not in bdict['masterids']:
-                defer.returnValue(None)
-                return
-        defer.returnValue(
-            dict(builderid=builderid,
-                 name=bdict['name'],
-                 masterids=bdict['masterids'],
-                 description=bdict['description'],
-                 tags=bdict['tags']))
+                return None
+        return dict(builderid=builderid,
+                    name=bdict['name'],
+                    masterids=bdict['masterids'],
+                    description=bdict['description'],
+                    tags=bdict['tags'])
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -66,13 +61,12 @@ class BuildersEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
             masterid=kwargs.get('masterid', None))
-        defer.returnValue([
-            dict(builderid=bd['id'],
-                 name=bd['name'],
-                 masterids=bd['masterids'],
-                 description=bd['description'],
-                 tags=bd['tags'])
-            for bd in bdicts])
+        return [dict(builderid=bd['id'],
+                     name=bd['name'],
+                     masterids=bd['masterids'],
+                     description=bd['description'],
+                     tags=bd['tags'])
+               for bd in bdicts]
 
 
 class Builder(base.ResourceType):
@@ -93,9 +87,6 @@ class Builder(base.ResourceType):
         tags = types.List(of=types.String())
     entityType = EntityType(name)
 
-    def __init__(self, master):
-        base.ResourceType.__init__(self, master)
-
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         builder = yield self.master.data.get(('builders', str(_id)))
@@ -110,7 +101,7 @@ class Builder(base.ResourceType):
     def updateBuilderInfo(self, builderid, description, tags):
         ret = yield self.master.db.builders.updateBuilderInfo(builderid, description, tags)
         yield self.generateEvent(builderid, "update")
-        defer.returnValue(ret)
+        return ret
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -141,8 +132,8 @@ class Builder(base.ResourceType):
             self.master.mq.produce(('builders', str(builderid), 'started'),
                                    dict(builderid=builderid, masterid=masterid, name=name))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def _masterDeactivated(self, masterid):
         # called from the masters rtype to indicate that the given master is
         # deactivated
-        yield self.updateBuilderList(masterid, [])
+        return self.updateBuilderList(masterid, [])

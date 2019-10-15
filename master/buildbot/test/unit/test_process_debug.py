@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import mock
 
@@ -24,6 +22,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process import debug
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 
 
@@ -31,15 +30,16 @@ class FakeManhole(service.AsyncService):
     pass
 
 
-class TestDebugServices(unittest.TestCase):
+class TestDebugServices(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = mock.Mock(name='master')
         self.config = config.MasterConfig()
 
     @defer.inlineCallbacks
     def test_reconfigService_manhole(self):
-        master = fakemaster.make_master()
+        master = fakemaster.make_master(self)
         ds = debug.DebugServices()
         ds.setServiceParent(master)
         yield master.startService()

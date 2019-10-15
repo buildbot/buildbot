@@ -13,11 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from mock import Mock
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Property
@@ -27,6 +25,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import vstudio
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 real_log = r"""
 1>------ Build started: Project: lib1, Configuration: debug Win32 ------
@@ -94,8 +93,7 @@ class MSLogLineObserver(unittest.TestCase):
 
         self.progress = {}
         self.llo.step = Mock()
-        self.llo.step.setProgress = \
-            lambda n, prog: self.progress.__setitem__(n, prog)
+        self.llo.step.setProgress = self.progress.__setitem__
 
     def receiveLines(self, *lines):
         for line in lines:
@@ -197,16 +195,17 @@ class VCx(vstudio.VisualStudio):
     def start(self):
         command = ["command", "here"]
         self.setCommand(command)
-        return vstudio.VisualStudio.start(self)
+        return super().start()
 
 
-class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
+class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     """
     Test L{VisualStudio} with a simple subclass, L{VCx}.
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -227,6 +226,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_installdir(self):
         self.setupStep(VCx(installdir=r'C:\I'))
         self.step.exp_installdir = r'C:\I'
@@ -237,12 +237,8 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        d = self.runStep()
-
-        def check_installdir(_):
-            self.assertEqual(self.step.installdir, r'C:\I')
-        d.addCallback(check_installdir)
-        return d
+        yield self.runStep()
+        self.assertEqual(self.step.installdir, r'C:\I')
 
     def test_evaluateCommand_failure(self):
         self.setupStep(VCx())
@@ -317,6 +313,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_rendering(self):
         self.setupStep(VCx(
             projectfile=Property('a'),
@@ -332,19 +329,17 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        d = self.runStep()
+        yield self.runStep()
 
-        def check_props(_):
-            self.assertEqual(
+        self.assertEqual(
                 [self.step.projectfile, self.step.config, self.step.project],
                 ['aa', 'bb', 'cc'])
-        d.addCallback(check_props)
-        return d
 
 
-class TestVC6(steps.BuildStepMixin, unittest.TestCase):
+class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -442,9 +437,10 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestVC7(steps.BuildStepMixin, unittest.TestCase):
+class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -543,7 +539,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class VC8ExpectedEnvMixin(object):
+class VC8ExpectedEnvMixin:
     # used for VC8 and VC9Express
 
     def getExpectedEnv(self, installdir, x64=False, LIB=None, i=None, p=None):
@@ -584,9 +580,11 @@ class VC8ExpectedEnvMixin(object):
         )
 
 
-class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -638,6 +636,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_rendering(self):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                    arch=Property('a')))
@@ -652,18 +651,17 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        d = self.runStep()
+        yield self.runStep()
 
-        def check_props(_):
-            self.assertEqual(self.step.arch, 'x64')
-        d.addCallback(check_props)
-        return d
+        self.assertEqual(self.step.arch, 'x64')
 
 
 class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
+                     TestReactorMixin,
                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -718,9 +716,11 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         return self.runStep()
 
 
-class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+              unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -742,9 +742,11 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -766,9 +768,11 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
+               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -790,9 +794,10 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
+class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

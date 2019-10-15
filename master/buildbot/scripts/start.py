@@ -13,12 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import sys
+import textwrap
 
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -34,10 +32,12 @@ from buildbot.util import rewrap
 
 class Follower:
 
-    def follow(self, basedir):
+    def follow(self, basedir, timeout=None):
         self.rc = 0
+        self._timeout = timeout if timeout else 10.0
         print("Following twistd.log until startup finished..")
-        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"),
+                        timeout=self._timeout)
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
         reactor.run()
@@ -51,11 +51,11 @@ class Follower:
     def _failure(self, why):
         if why.check(BuildmasterTimeoutError):
             print(rewrap("""\
-                The buildmaster took more than 10 seconds to start, so we were
+                The buildmaster took more than {0} seconds to start, so we were
                 unable to confirm that it started correctly.
                 Please 'tail twistd.log' and look for a line that says
                 'BuildMaster is running' to verify correct startup.
-                """))
+                """.format(self._timeout)))
         elif why.check(ReconfigError):
             print(rewrap("""\
                 The buildmaster appears to have encountered an error in the
@@ -127,9 +127,33 @@ def launch(config):
             pidfile.write("{0}".format(proc.pid))
 
 
+def py2Warning(config):
+    if sys.version[0] == '2' and not config['quiet']:
+        print(textwrap.dedent("""\
+        WARNING: You are running Buildbot with Python 2.7.x !
+        -----------------------------------------------------
+
+        Python 2 is going unmaintained as soon as 2020: https://pythonclock.org/
+        To prepare for that transition, we recommend upgrading your buildmaster to run on Python 3.6 now!
+        Buildbot open source project is as well deprecating running buildmaster on Python 2 for better maintainability.
+
+        Buildbot 2.0 going to be released in February 2019 will remove support for Python < 3.5
+        https://github.com/buildbot/buildbot/issues/4439
+
+        On most installations, switching to Python 3 can be accomplished by running the 2to3 tool over the master.cfg file.
+        https://docs.python.org/3.7/library/2to3.html
+
+        Note that the above applies only for the buildmaster.
+        Workers will still support running under Python 2.7.
+        Additionally, the buildmaster still supports workers using old versions of Buildbot.
+        """))
+
+
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         return 1
+
+    py2Warning(config)
 
     if config['nodaemon']:
         launchNoDaemon(config)
@@ -142,5 +166,13 @@ def start(config):
         return 0
 
     # this is the parent
-    rc = Follower().follow(config['basedir'])
+    timeout = config.get('start_timeout', None)
+    if timeout is not None:
+        try:
+            timeout = float(timeout)
+        except ValueError:
+            print('Start timeout must be a number')
+            return 1
+
+    rc = Follower().follow(config['basedir'], timeout=timeout)
     return rc

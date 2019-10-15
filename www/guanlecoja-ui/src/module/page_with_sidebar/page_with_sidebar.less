@@ -1,0 +1,217 @@
+/* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
+@gl-sidebar-transition-time: 0.2s;
+@gl-sidebar-small-threshold: 600px;
+@gl-sidebar-width: 600px;
+.fa-45{
+        transform: rotate(45deg);
+        -webkit-transform: rotate(45deg);
+}
+.gl-page-with-sidebar {
+    padding-left: 70px;
+    @media (max-width: @gl-sidebar-small-threshold) {
+        padding-left: 30px;
+    }
+    height: 100%;
+    bottom: 0;
+    /* theme */
+    .sidebar.sidebar-blue {
+        background: #30426a;
+        ul .sidebar-main, .sidebar-footer, a:hover {
+            background: #273759;
+        }
+        ul .sidebar-title {
+            color: #627cb7;
+        }
+    }
+    &.active:not(.pinned) .sidebar{
+        transform: translate(180px, 0px);
+        -webkit-transform: translate(180px, 0px);
+    }
+    /* add scrollbar if the menu is open */
+    &.active .sidebar ul {
+        overflow-y: auto;
+    }
+    &:not(.active){
+
+        .sidebar.blue {
+            ul.sidebar .sidebar-title.separator {
+                background: #273759;
+            }
+        }
+        ul {
+            .sidebar-title {
+                alpha: 0;
+            }
+            &.separator {
+                display: block;
+                margin: 13px 0;
+            }
+            .sidebar-list a:hover span {
+                border-left: 3px solid #e99d1a;
+                text-indent: 22px;
+            }
+        }
+        .sidebar-footer {
+            display: none;
+        }
+    }
+    &.pinned{
+         > .content {
+            margin-left: 180px;
+        }
+        .sidebar {
+            margin-left: 0px;
+            left: 0px;
+        }
+    }
+    // use ngAnimate for the sidebar
+    &.active-add, &.active-remove {
+        // ngAnimate wants an animation on the object it watches
+        //  even if it is not actually animated
+        transition: all @gl-sidebar-transition-time ease-out 0s;
+        .sidebar {
+            transition: all @gl-sidebar-transition-time ease-out 0s;
+
+        }
+    }
+    /* sidebar */
+    .sidebar {
+        z-index:3000;
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        margin-left: -150px;
+
+        @media (max-width: @gl-sidebar-small-threshold) {
+            width: 210px;
+        }
+        left: -30px;
+        width: 250px;
+        position: fixed;
+        height: 100%;
+        ul {
+            position: absolute;
+            top: 0;
+            bottom: 45px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            text-indent: 20px;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            li a {
+                color: #fff;
+                display: block;
+                float: left;
+                text-decoration: none;
+                width: 250px;
+                @media (max-width: @gl-sidebar-small-threshold) {
+                    width: 210px;
+                }
+            }
+            li.sidebar-main {
+                height: 51px;
+                a {
+                    font-size: 18px;
+                    line-height: 50px;
+                }
+                .menu-icon {
+                    float: right;
+                    font-size: 18px;
+                    padding-right: 28px;
+                    line-height: 50px;
+                    @media (max-width: @gl-sidebar-small-threshold) {
+                        padding-right: 8px;
+                    }
+                }
+            }
+            li.sidebar-title {
+                font-size: 12px;
+                height: 35px;
+                line-height: 40px;
+                text-transform: uppercase;
+            }
+            li.sidebar-list {
+                height: 40px;
+                a {
+                    text-indent: 25px;
+                    font-size: 15px;
+                    color: #b2bfdc;
+                    line-height: 40px;
+                    .fa {
+                        margin-left: -34px;
+                    }
+                }
+                a:hover {
+                    color: #fff;
+                    border-left: 3px solid #e99d1a;
+                    text-indent: 22px;
+                }
+                .menu-icon {
+                    float: right;
+                    padding-right: 29px;
+                    line-height: 40px;
+                    width: 70px;
+                    @media (max-width: @gl-sidebar-small-threshold) {
+                        width: 50px;
+                    }
+                }
+                a:hover .menu-icon {
+                    text-indent: 25px;
+                }
+                &.subitem {
+                    transition: height @gl-sidebar-transition-time ease-out 0s;
+                    a {
+                        padding-left:20px;
+                        transition: line-height @gl-sidebar-transition-time ease-out 0s, color @gl-sidebar-transition-time ease-out 0s,  background @gl-sidebar-transition-time ease-out 0s;;
+                    }
+                    &:not(.active) {
+                        height: 0px;
+                        a {
+                            line-height: 0px;
+                            color: rgba(255, 0, 0, 0.0);
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+    /* footer */
+    .sidebar-footer {
+        position: absolute;
+        height: 40px;
+        bottom: 0;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        text-align: center;
+        div a {
+            color: #b2bfdc;
+            font-size: 12px;
+            line-height: 43px;
+        }
+        div a:hover {
+            color: #ffffff;
+            text-decoration: none;
+        }
+    }
+    /* content */
+    > .content {
+        position: relative;
+        height: 100%;
+        transition: margin-left @gl-sidebar-transition-time ease-out 0s;
+        padding-left: 0px;
+        margin-left: 0px;
+        right:0px;
+        overflow-y: visible;
+        .container {
+            width: 100%
+        }
+        .container-fluid {
+            width: 100%
+        }
+    }
+    overflow-y: visible;
+}

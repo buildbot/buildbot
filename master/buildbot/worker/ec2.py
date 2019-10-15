@@ -19,13 +19,6 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 Tested with Python boto 1.5c
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import integer_types
-from future.utils import iteritems
-from future.utils import string_types
-
 import os
 import re
 import time
@@ -79,15 +72,12 @@ class EC2LatentWorker(AbstractLatentWorker):
                          "EC2LatentWorker")
 
         if keypair_name is None:
-            reportDeprecatedWorkerNameUsage(
-                "Use of default value of 'keypair_name' of EC2LatentWorker "
-                "constructor is deprecated. Please explicitly specify value")
-            keypair_name = 'latent_buildbot_slave'
+            config.error("EC2LatentWorker: 'keypair_name' parameter must be "
+                         "specified")
+
         if security_name is None and not subnet_id:
-            reportDeprecatedWorkerNameUsage(
-                "Use of default value of 'security_name' of EC2LatentWorker "
-                "constructor is deprecated. Please explicitly specify value")
-            security_name = 'latent_buildbot_slave'
+            config.error("EC2LatentWorker: 'security_name' parameter must be "
+                         "specified")
 
         if volumes is None:
             volumes = []
@@ -95,7 +85,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if tags is None:
             tags = {}
 
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+        super().__init__(name, password, **kwargs)
 
         if security_name and subnet_id:
             raise ValueError(
@@ -109,21 +99,20 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'valid_ami_location_regex and valid_ami_owners')
         self.ami = ami
         if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, integer_types):
+            if isinstance(valid_ami_owners, int):
                 valid_ami_owners = (valid_ami_owners,)
             else:
                 for element in valid_ami_owners:
-                    if not isinstance(element, integer_types):
+                    if not isinstance(element, int):
                         raise ValueError(
                             'valid_ami_owners should be int or iterable '
                             'of ints', element)
         if valid_ami_location_regex is not None:
-            if not isinstance(valid_ami_location_regex, string_types):
+            if not isinstance(valid_ami_location_regex, str):
                 raise ValueError(
                     'valid_ami_location_regex should be a string')
-            else:
-                # verify that regex will compile
-                re.compile(valid_ami_location_regex)
+            # pre-compile the regex
+            valid_ami_location_regex = re.compile(valid_ami_location_regex)
         if spot_instance and price_multiplier is None and max_spot_price is None:
             raise ValueError('You must provide either one, or both, of '
                              'price_multiplier or max_spot_price')
@@ -295,7 +284,7 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _convert_deprecated_block_device_mapping(self, mapping_definitions):
         new_mapping_definitions = []
-        for dev_name, dev_config in iteritems(mapping_definitions):
+        for dev_name, dev_config in mapping_definitions.items():
             new_dev_config = {}
             new_dev_config['DeviceName'] = dev_name
             if dev_config:
@@ -314,15 +303,6 @@ class EC2LatentWorker(AbstractLatentWorker):
                     new_dev_config['Ebs'])
             new_mapping_definitions.append(new_dev_config)
         return new_mapping_definitions
-        if not mapping_definitions:
-            return None
-
-        for mapping_definition in mapping_definitions:
-            ebs = mapping_definition.get('Ebs')
-            if ebs:
-                ebs.setdefault('DeleteOnTermination', True)
-
-        return mapping_definitions
 
     def get_image(self):
         # pylint: disable=too-many-nested-blocks
@@ -335,7 +315,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if self.valid_ami_location_regex:
             level = 0
             options = []
-            get_match = re.compile(self.valid_ami_location_regex).match
+            get_match = self.valid_ami_location_regex.match
             for image in images:
                 # Image must be available
                 if image.state != 'available':
@@ -390,7 +370,7 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _remove_none_opts(self, *args, **opts):
         if args:
             opts = args[0]
-        return dict((k, v) for k, v in iteritems(opts) if v is not None)
+        return dict((k, v) for k, v in opts.items() if v is not None)
 
     def _start_instance(self):
         image = self.get_image()
@@ -398,7 +378,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             ImageId=image.id, KeyName=self.keypair_name,
             SecurityGroups=self.classic_security_groups,
             InstanceType=self.instance_type, UserData=self.user_data,
-            Placement=self.placement, MinCount=1, MaxCount=1,
+            Placement=self._remove_none_opts(
+                AvailabilityZone=self.placement,
+            ),
+            MinCount=1, MaxCount=1,
             SubnetId=self.subnet_id, SecurityGroupIds=self.security_group_ids,
             IamInstanceProfile=self._remove_none_opts(
                 Name=self.instance_profile_name,
@@ -451,7 +434,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             goal = (SHUTTINGDOWN, TERMINATED)
             instance.reload()
         else:
-            goal = TERMINATED,
+            goal = (TERMINATED,)
         while instance.state['Name'] not in goal:
             time.sleep(interval)
             duration += interval

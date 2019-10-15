@@ -1,6 +1,4 @@
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import sys
 import textwrap
@@ -35,7 +33,7 @@ def patched_unhighlighted(self, source):
     indented_source = '    ' + '\n    '.join(source.split('\n'))
 
     if fail_on_first_unhighlighted:
-        msg = textwrap.dedent(u"""\
+        msg = textwrap.dedent("""\
             Block not highlighted:
 
             %s
@@ -55,7 +53,7 @@ def patched_unhighlighted(self, source):
             """) % indented_source
         raise UnhighlightedError(msg)
     else:
-        msg = textwrap.dedent(u"""\
+        msg = textwrap.dedent("""\
             Unhighlighted block:
 
             %s

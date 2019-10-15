@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import json
 import os
 import webbrowser
@@ -30,9 +27,13 @@ from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
+from buildbot.process.properties import Secret
+from buildbot.secrets.manager import SecretManager
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.util import bytes2NativeString
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import bytes2unicode
 
 try:
     import requests
@@ -44,7 +45,7 @@ if requests:
     from buildbot.www import oauth2  # pylint: disable=ungrouped-imports
 
 
-class FakeResponse(object):
+class FakeResponse:
 
     def __init__(self, _json):
         self.json = lambda: _json
@@ -54,9 +55,11 @@ class FakeResponse(object):
         pass
 
 
-class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
+class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
+                 unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
@@ -80,6 +83,17 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
                      self.githubAuthEnt, self.gitlabAuth, self.bitbucketAuth]:
             self._master = master = self.make_master(url='h:/a/b/', auth=auth)
             auth.reconfigAuth(master, master.config)
+
+        self.githubAuth_secret = oauth2.GitHubAuth(
+            Secret("client-id"), Secret("client-secret"), apiVersion=4)
+        self._master = master = self.make_master(url='h:/a/b/', auth=auth)
+        fake_storage_service = FakeSecretStorage()
+        fake_storage_service.reconfigService(secretdict={"client-id": "secretClientId",
+                                                         "client-secret": "secretClientSecret"})
+        secret_service = SecretManager()
+        secret_service.services = [fake_storage_service]
+        secret_service.setServiceParent(self._master)
+        self.githubAuth_secret.reconfigAuth(master, master.config)
 
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
@@ -108,6 +122,20 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(res, exp)
         res = yield self.githubAuth.getLoginURL(None)
         exp = ("https://github.com/login/oauth/authorize?client_id=ghclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user%3Aemail+read%3Aorg")
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_getGithubLoginURL_with_secret(self):
+        res = yield self.githubAuth_secret.getLoginURL('http://redir')
+        exp = ("https://github.com/login/oauth/authorize?client_id=secretClientId&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user%3Aemail+read%3Aorg&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
+        self.assertEqual(res, exp)
+        res = yield self.githubAuth_secret.getLoginURL(None)
+        exp = ("https://github.com/login/oauth/authorize?client_id=secretClientId&"
                "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
                "scope=user%3Aemail+read%3Aorg")
         self.assertEqual(res, exp)
@@ -194,30 +222,7 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
-    def test_GithubAcceptToken(self):
-        requests.get.side_effect = []
-        requests.post.side_effect = [
-            FakeResponse(dict(access_token="TOK3N"))]
-        self.githubAuth.get = mock.Mock(side_effect=[
-            dict(  # /user
-                login="bar",
-                name="foo bar",
-                email="buzz@bar"),
-            [  # /user/emails
-                {'email': 'buzz@bar', 'verified': True, 'primary': False},
-                {'email': 'bar@foo', 'verified': True, 'primary': True}],
-            [  # /user/orgs
-                dict(login="hello"),
-                dict(login="grp"),
-            ]])
-        res = yield self.githubAuth.acceptToken("TOK3N")
-        self.assertEqual({'email': 'bar@foo',
-                          'username': 'bar',
-                          'groups': ["hello", "grp"],
-                          'full_name': 'foo bar'}, res)
-
-    @defer.inlineCallbacks
-    def test_GithubAcceptToken_v4(self):
+    def test_GithubVerifyCode_v4(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
             FakeResponse(dict(access_token="TOK3N"))]
@@ -246,14 +251,14 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
                 }
             }
         ])
-        res = yield self.githubAuth_v4.acceptToken("TOK3N")
+        res = yield self.githubAuth_v4.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
                           'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
-    def test_GithubAcceptToken_v4_teams(self):
+    def test_GithubVerifyCode_v4_teams(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
             FakeResponse(dict(access_token="TOK3N"))]
@@ -322,39 +327,47 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
                                         'slug': 'committers'
                                     }
                                 },
+                                {
+                                    'node': {
+                                        'name': 'Team with spaces and caps',
+                                        'slug': 'team-with-spaces-and-caps'
+                                    }
+                                },
                             ]
                         }
                     },
                 }
             }
         ])
-        res = yield self.githubAuth_v4_teams.acceptToken("TOK3N")
+        res = yield self.githubAuth_v4_teams.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
                           'groups': [
                               'hello',
                               'grp',
+                              'grp/Team with spaces and caps',
                               'grp/committers',
                               'grp/contributors',
                               'grp/developers',
+                              'grp/develpers',
+                              'grp/team-with-spaces-and-caps',
                               'hello/contributors',
-                              'hello/developers'
+                              'hello/developers',
+                              'hello/develpers',
                           ],
                           'full_name': 'foo bar'}, res)
 
     def test_GitHubAuthBadApiVersion(self):
         for bad_api_version in (2, 5, 'a'):
-            self.assertRaisesConfigError(
-                'GitHubAuth apiVersion must be 3 or 4 not ',
-                lambda api_version=bad_api_version: oauth2.GitHubAuth(
-                    "ghclientID", "clientSECRET", apiVersion=api_version)
-            )
+            with self.assertRaisesConfigError(
+                    'GitHubAuth apiVersion must be 3 or 4 not '):
+                oauth2.GitHubAuth("ghclientID", "clientSECRET",
+                                  apiVersion=bad_api_version)
 
     def test_GitHubAuthRaiseErrorWithApiV3AndGetTeamMembership(self):
-        self.assertRaisesConfigError(
-            'Retrieving team membership information using GitHubAuth is only possible using GitHub api v4.',
-            lambda: oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
-        )
+        with self.assertRaisesConfigError(
+                'Retrieving team membership information using GitHubAuth is only possible using GitHub api v4.'):
+            oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
 
     @defer.inlineCallbacks
     def test_GitlabVerifyCode(self):
@@ -407,7 +420,7 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_loginResource(self):
-        class fakeAuth(object):
+        class fakeAuth:
             homeUri = "://me"
             getLoginURL = mock.Mock(side_effect=lambda x: defer.succeed("://"))
             verifyCode = mock.Mock(
@@ -421,19 +434,17 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, b'/')
         rsrc.auth.getLoginURL.assert_called_once_with(None)
         rsrc.auth.verifyCode.assert_not_called()
-        self.assertEqual(res, {'redirected': '://'})
+        self.assertEqual(res, {'redirected': b'://'})
         rsrc.auth.getLoginURL.reset_mock()
         rsrc.auth.verifyCode.reset_mock()
         res = yield self.render_resource(rsrc, b'/?code=code!')
         rsrc.auth.getLoginURL.assert_not_called()
         rsrc.auth.verifyCode.assert_called_once_with(b"code!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
-        self.assertEqual(res, {'redirected': '://me'})
+        self.assertEqual(res, {'redirected': b'://me'})
+        # token not supported anymore
         res = yield self.render_resource(rsrc, b'/?token=token!')
-        rsrc.auth.getLoginURL.assert_not_called()
-        rsrc.auth.acceptToken.assert_called_once_with(b"token!")
-        self.assertEqual(self.master.session.user_info, {'username': 'bar'})
-        self.assertEqual(res, {'redirected': '://me'})
+        rsrc.auth.getLoginURL.assert_called_once()
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
@@ -468,13 +479,16 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
 #  }
 
 
-class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
+class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
+                          unittest.TestCase):
     authClass = "GitHubAuth"
 
     def _instantiateAuth(self, cls, config):
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
     def setUp(self):
+        self.setUpTestReactor()
+
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
@@ -534,7 +548,7 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
         def thd():
             res = requests.get('http://localhost:5000/auth/login')
-            content = bytes2NativeString(res.content)
+            content = bytes2unicode(res.content)
             webbrowser.open(content)
         threads.deferToThread(thd)
         res = yield d

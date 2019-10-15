@@ -17,8 +17,6 @@
 Steps and objects related to lintian
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -32,7 +30,7 @@ from buildbot.steps.shell import ShellCommand
 class MaxQObserver(buildstep.LogLineObserver):
 
     def __init__(self):
-        buildstep.LogLineObserver.__init__(self)
+        super().__init__()
         self.failures = 0
 
     def outLineReceived(self, line):
@@ -65,7 +63,7 @@ class DebLintian(ShellCommand):
         @type kwargs: dict
         @param kwargs: all other keyword arguments.
         """
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if fileloc:
             self.fileloc = fileloc
         if suppressTags:

@@ -13,15 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 import tarfile
 import tempfile
 from io import BytesIO
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
 
@@ -111,7 +109,7 @@ class DirectoryWriter(FileWriter):
         self.fd, self.tarname = tempfile.mkstemp()
         os.close(self.fd)
 
-        FileWriter.__init__(self, self.tarname, maxsize, mode)
+        super().__init__(self.tarname, maxsize, mode)
 
     def remote_unpack(self):
         """
@@ -182,7 +180,7 @@ class StringFileWriter(base.FileWriterImpl):
         self.buffer = ""
 
     def remote_write(self, data):
-        self.buffer += bytes2NativeString(data)
+        self.buffer += bytes2unicode(data)
 
     def remote_close(self):
         pass
@@ -199,4 +197,4 @@ class StringFileReader(FileReader):
 
     def __init__(self, s):
         s = unicode2bytes(s)
-        FileReader.__init__(self, BytesIO(s))
+        super().__init__(BytesIO(s))

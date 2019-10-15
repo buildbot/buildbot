@@ -193,7 +193,7 @@ First we create two builders, one for each branch (see the builders paragraph ab
     c['schedulers'] = [trunkchanged, branch72changed]
 
 The syntax of the change filter is VCS-dependent (above is for SVN), but again once the idea is clear, the documentation has all the details.
-Another feature of the scheduler is that is can be told which changes, within those it's paying attention to, are important and which are not.
+Another feature of the scheduler is that it can be told which changes, within those it's paying attention to, are important and which are not.
 For example, there may be a documentation directory in the branch the scheduler is watching, but changes under that directory should not trigger a build of the binary.
 This finer filtering is implemented by means of the ``fileIsImportant`` argument to the scheduler (full details in the docs and - alas - in the sources).
 
@@ -277,7 +277,7 @@ One thing I've found useful is the ability to pass a domain name as the lookup a
     c['reporters'].append(notifier)
 
 The mail notifier can be customized at will by means of the ``messageFormatter`` argument, which is a class that Buildbot calls to format the body of the email, and to which it makes available lots of information about the build.
-Here all the details.
+For more details, look into the :ref:`Reporters` section of the Buildbot manual.
 
 Conclusion
 ----------

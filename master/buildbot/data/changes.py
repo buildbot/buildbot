@@ -13,14 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 import copy
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.data import base
@@ -32,7 +27,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 
-class FixerMixin(object):
+class FixerMixin:
 
     @defer.inlineCallbacks
     def _fixChange(self, change):
@@ -44,7 +39,7 @@ class FixerMixin(object):
             sskey = ('sourcestamps', str(change['sourcestampid']))
             change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
-        defer.returnValue(change)
+        return change
 
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
@@ -93,7 +88,7 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
         results = []
         for ch in changes:
             results.append((yield self._fixChange(ch)))
-        defer.returnValue(results)
+        return results
 
 
 class Change(base.ResourceType):
@@ -109,6 +104,7 @@ class Change(base.ResourceType):
         changeid = types.Integer()
         parent_changeids = types.List(of=types.Integer())
         author = types.String()
+        committer = types.String()
         files = types.List(of=types.String())
         comments = types.String()
         revision = types.NoneOk(types.String())
@@ -125,17 +121,17 @@ class Change(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addChange(self, files=None, comments=None, author=None, revision=None,
-                  when_timestamp=None, branch=None, category=None, revlink=u'',
-                  properties=None, repository=u'', codebase=None, project=u'',
-                  src=None, _reactor=reactor):
+    def addChange(self, files=None, comments=None, author=None, committer=None, revision=None,
+                  when_timestamp=None, branch=None, category=None, revlink='',
+                  properties=None, repository='', codebase=None, project='',
+                  src=None):
         metrics.MetricCountEvent.log("added_changes", 1)
 
         if properties is None:
             properties = {}
         # add the source to the properties
         for k in properties:
-            properties[k] = (properties[k], u'Change')
+            properties[k] = (properties[k], 'Change')
 
         # get a user id
         if src:
@@ -147,10 +143,11 @@ class Change(base.ResourceType):
 
         if not revlink and revision and repository and callable(self.master.config.revlink):
             # generate revlink from revision and repository using the configured callable
-            revlink = self.master.config.revlink(revision, repository) or u''
+            revlink = self.master.config.revlink(revision, repository) or ''
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               committer=committer,
                                                                files=files,
                                                                comments=comments,
                                                                revision=revision,
@@ -166,6 +163,7 @@ class Change(base.ResourceType):
         if codebase is None \
                 and self.master.config.codebaseGenerator is not None:
             pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               committer=committer,
                                                                files=files,
                                                                comments=comments,
                                                                revision=revision,
@@ -177,13 +175,14 @@ class Change(base.ResourceType):
                                                                repository=repository,
                                                                project=project)
             codebase = self.master.config.codebaseGenerator(pre_change)
-            codebase = text_type(codebase)
+            codebase = str(codebase)
         else:
-            codebase = codebase or u''
+            codebase = codebase or ''
 
         # add the Change to the database
         changeid = yield self.master.db.changes.addChange(
             author=author,
+            committer=committer,
             files=files,
             comments=comments,
             revision=revision,
@@ -195,8 +194,7 @@ class Change(base.ResourceType):
             repository=repository,
             codebase=codebase,
             project=project,
-            uid=uid,
-            _reactor=_reactor)
+            uid=uid)
 
         # get the change and munge the result for the notification
         change = yield self.master.data.get(('changes', str(changeid)))
@@ -204,7 +202,7 @@ class Change(base.ResourceType):
         self.produceEvent(change, 'new')
 
         # log, being careful to handle funny characters
-        msg = u"added change with revision %s to database" % (revision,)
+        msg = "added change with revision %s to database" % (revision,)
         log.msg(msg.encode('utf-8', 'replace'))
 
-        defer.returnValue(changeid)
+        return changeid

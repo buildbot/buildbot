@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import string_types
-
 import warnings
 import weakref
 
@@ -36,26 +32,19 @@ from buildbot.process.results import RETRY
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerClassMethod
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'workername' in breq.properties:
         workername = breq.properties['workername']
-        if isinstance(workername, string_types):
+        if isinstance(workername, str):
             return workername == workerforbuilder.worker.workername
 
     return True
 
 
-deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
-
-
 class Builder(util_service.ReconfigurableServiceMixin,
-              service.MultiService,
-              WorkerAPICompatMixin):
+              service.MultiService):
 
     # reconfigure builders before workers
     reconfig_priority = 196
@@ -66,7 +55,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return None
 
     def __init__(self, name):
-        service.MultiService.__init__(self)
+        super().__init__()
         self.name = name
 
         # this is filled on demand by getBuilderId; don't access it directly
@@ -80,16 +69,17 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
         self.attaching_workers = []
-        self._registerOldWorkerAttr("attaching_workers")
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.workers = []
-        self._registerOldWorkerAttr("workers")
 
         self.config = None
         self.builder_status = None
+
+        # Tracks config version for locks
+        self.config_version = None
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -109,6 +99,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 description=builder_config.description)
 
         self.config = builder_config
+        self.config_version = self.master.config_version
 
         # allocate  builderid now, so that the builder is visible in the web
         # UI; without this, the builder wouldn't appear until it preformed a
@@ -166,7 +157,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             [resultspec.Filter('claimed', 'eq', [False])],
             order=['submitted_at'], limit=1)
         if unclaimed:
-            defer.returnValue(unclaimed[0]['submitted_at'])
+            return unclaimed[0]['submitted_at']
 
     @defer.inlineCallbacks
     def getNewestCompleteTime(self):
@@ -181,9 +172,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
             [resultspec.Filter('complete', 'eq', [False])],
             order=['-complete_at'], limit=1)
         if completed:
-            defer.returnValue(completed[0]['complete_at'])
+            return completed[0]['complete_at']
         else:
-            defer.returnValue(None)
+            return None
 
     def getBuild(self, number):
         for b in self.building:
@@ -203,8 +194,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)
             self.workers.append(wfb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
-    deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
+    @defer.inlineCallbacks
     def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
         registers their builder.
@@ -231,27 +222,24 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 #
                 # Therefore, when we see that we're already attached, we can
                 # just ignore it.
-                return defer.succeed(self)
+                return self
 
         wfb = workerforbuilder.WorkerForBuilder()
         wfb.setBuilder(self)
         self.attaching_workers.append(wfb)
-        d = wfb.attached(worker, commands)
-        d.addCallback(self._attached)
-        d.addErrback(self._not_attached, worker)
-        return d
 
-    def _attached(self, wfb):
-        self.attaching_workers.remove(wfb)
-        self.workers.append(wfb)
+        try:
+            wfb = yield wfb.attached(worker, commands)
+            self.attaching_workers.remove(wfb)
+            self.workers.append(wfb)
+            return self
 
-        return self
-
-    def _not_attached(self, why, worker):
-        # already log.err'ed by WorkerForBuilder._attachFailure
-        # TODO: remove from self.workers (except that detached() should get
-        #       run first, right?)
-        log.err(why, 'worker failed to attach')
+        except Exception as e:  # pragma: no cover
+            # already log.err'ed by WorkerForBuilder._attachFailure
+            # TODO: remove from self.workers (except that detached() should get
+            #       run first, right?)
+            log.err(e, 'worker failed to attach')
+            return None
 
     def detached(self, worker):
         """This is called when the connection to the bot is lost."""
@@ -276,41 +264,52 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
-    deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
     @defer.inlineCallbacks
-    def canStartWithWorkerForBuilder(self, workerforbuilder, buildrequests=None):
-        locks = self.config.locks
-        if IRenderable.providedBy(locks):
-            if buildrequests is None:
-                raise RuntimeError("buildrequests parameter must be specified "
-                                   " when using renderable builder locks. Not "
-                                   "specifying buildrequests is deprecated")
+    def canStartBuild(self, workerforbuilder, buildrequest):
+        can_start = True
 
+        # check whether the locks that the build will acquire can actually be
+        # acquired
+        locks = self.config.locks
+        worker = workerforbuilder.worker
+        props = None
+
+        # don't unnecessarily setup properties for build
+        def setupPropsIfNeeded(props):
+            if props is not None:
+                return
+            props = Properties()
+            Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
+                                                        self, workerforbuilder)
+            return props
+
+        if worker.builds_may_be_incompatible:
+            # Check if the latent worker is actually compatible with the build.
+            # The instance type of the worker may depend on the properties of
+            # the build that substantiated it.
+            props = setupPropsIfNeeded(props)
+            can_start = yield worker.isCompatibleWithBuild(props)
+            if not can_start:
+                return False
+
+        if IRenderable.providedBy(locks):
             # collect properties that would be set for a build if we
             # started it now and render locks using it
-            props = Properties()
-            Build.setupPropertiesKnownBeforeBuildStarts(props, buildrequests,
-                                                        self, workerforbuilder)
+            props = setupPropsIfNeeded(props)
             locks = yield props.render(locks)
 
-        # Make sure we don't warn and throw an exception at the same time
-        if buildrequests is None:
-            warnings.warn(
-                "Not passing corresponding buildrequests to "
-                "Builder.canStartWithWorkerForBuilder is deprecated")
+        locks = yield self.botmaster.getLockFromLockAccesses(locks, self.config_version)
 
-        locks = [(self.botmaster.getLockFromLockAccess(access), access)
-                 for access in locks]
-        can_start = Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
-        defer.returnValue(can_start)
-    deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
-                                compat_name="canStartWithSlavebuilder")
+        if locks:
+            can_start = Build._canAcquireLocks(locks, workerforbuilder)
+            if can_start is False:
+                return can_start
 
-    def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):
-            return defer.maybeDeferred(self.config.canStartBuild, self, workerforbuilder, breq)
-        return defer.succeed(True)
+            can_start = yield self.config.canStartBuild(self, workerforbuilder,
+                                                        buildrequest)
+        return can_start
 
     @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
@@ -366,7 +365,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
 
-        defer.returnValue(True)
+        return True
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
@@ -489,8 +488,8 @@ class BuilderControl:
             buildrequests.append(br)
 
         # and return the corresponding control objects
-        defer.returnValue([buildrequest.BuildRequestControl(self.original, r)
-                           for r in buildrequests])
+        return [buildrequest.BuildRequestControl(self.original, r)
+            for r in buildrequests]
 
     def getBuild(self, number):
         return self.original.getBuild(number)

@@ -13,16 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import itervalues
-from future.utils import text_type
-
 import json
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import failure
 
 from buildbot.data import connector
@@ -62,13 +55,13 @@ class FakeUpdates(service.AsyncService):
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
-        for k, v in iteritems(properties):
-            self.testcase.assertIsInstance(k, text_type)
+        for k, v in properties.items():
+            self.testcase.assertIsInstance(k, str)
             if sourced:
                 self.testcase.assertIsInstance(v, tuple)
                 self.testcase.assertEqual(len(v), 2)
                 propval, propsrc = v
-                self.testcase.assertIsInstance(propsrc, text_type)
+                self.testcase.assertIsInstance(propsrc, str)
             else:
                 propval = v
             try:
@@ -78,25 +71,27 @@ class FakeUpdates(service.AsyncService):
 
     # update methods
 
-    def addChange(self, files=None, comments=None, author=None,
+    def addChange(self, files=None, comments=None, author=None, committer=None,
                   revision=None, when_timestamp=None, branch=None, category=None,
-                  revlink=u'', properties=None, repository=u'', codebase=None,
-                  project=u'', src=None):
+                  revlink='', properties=None, repository='', codebase=None,
+                  project='', src=None):
         if properties is None:
             properties = {}
 
         # double-check args, types, etc.
         if files is not None:
             self.testcase.assertIsInstance(files, list)
-            map(lambda f: self.testcase.assertIsInstance(f, text_type), files)
-        self.testcase.assertIsInstance(comments, (type(None), text_type))
-        self.testcase.assertIsInstance(author, (type(None), text_type))
-        self.testcase.assertIsInstance(revision, (type(None), text_type))
+            map(lambda f: self.testcase.assertIsInstance(f, str), files)
+        self.testcase.assertIsInstance(comments, (type(None), str))
+        self.testcase.assertIsInstance(author, (type(None), str))
+        self.testcase.assertIsInstance(committer, (type(None), str))
+        self.testcase.assertIsInstance(revision, (type(None), str))
         self.testcase.assertIsInstance(when_timestamp, (type(None), int))
-        self.testcase.assertIsInstance(branch, (type(None), text_type))
+        self.testcase.assertIsInstance(branch, (type(None), str))
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               committer=committer,
                                                                files=files,
                                                                comments=comments,
                                                                revision=revision,
@@ -108,13 +103,13 @@ class FakeUpdates(service.AsyncService):
                                                                project=project)
             category = category(pre_change)
 
-        self.testcase.assertIsInstance(category, (type(None), text_type))
-        self.testcase.assertIsInstance(revlink, (type(None), text_type))
+        self.testcase.assertIsInstance(category, (type(None), str))
+        self.testcase.assertIsInstance(revlink, (type(None), str))
         self.assertProperties(sourced=False, properties=properties)
-        self.testcase.assertIsInstance(repository, text_type)
-        self.testcase.assertIsInstance(codebase, (type(None), text_type))
-        self.testcase.assertIsInstance(project, text_type)
-        self.testcase.assertIsInstance(src, (type(None), text_type))
+        self.testcase.assertIsInstance(repository, str)
+        self.testcase.assertIsInstance(codebase, (type(None), str))
+        self.testcase.assertIsInstance(project, str)
+        self.testcase.assertIsInstance(src, (type(None), str))
 
         # use locals() to ensure we get all of the args and don't forget if
         # more are added
@@ -123,7 +118,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(len(self.changesAdded))
 
     def masterActive(self, name, masterid):
-        self.testcase.assertIsInstance(name, text_type)
+        self.testcase.assertIsInstance(name, str)
         self.testcase.assertIsInstance(masterid, int)
         if masterid:
             self.testcase.assertEqual(masterid, 1)
@@ -131,7 +126,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     def masterStopped(self, name, masterid):
-        self.testcase.assertIsInstance(name, text_type)
+        self.testcase.assertIsInstance(name, str)
         self.testcase.assertEqual(masterid, 1)
         self.thisMasterActive = False
         return defer.succeed(None)
@@ -140,7 +135,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason=u'',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
                     parent_buildid=None, parent_relationship=None):
         if sourcestamps is None:
@@ -150,18 +145,18 @@ class FakeUpdates(service.AsyncService):
         if builderids is None:
             builderids = []
         # assert types
-        self.testcase.assertIsInstance(scheduler, text_type)
+        self.testcase.assertIsInstance(scheduler, str)
         self.testcase.assertIsInstance(sourcestamps, list)
         for ss in sourcestamps:
             if not isinstance(ss, int) and not isinstance(ss, dict):
                 self.testcase.fail("%s (%s) is not an integer or a dictionary"
                                    % (ss, type(ss)))
             del ss  # since we use locals(), below
-        self.testcase.assertIsInstance(reason, text_type)
+        self.testcase.assertIsInstance(reason, str)
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderids, list)
         self.testcase.assertIsInstance(external_idstring,
-                                       (type(None), text_type))
+                                       (type(None), str))
 
         self.buildsetsAdded.append(locals())
         self.buildsetsAdded[-1].pop('self')
@@ -173,28 +168,27 @@ class FakeUpdates(service.AsyncService):
             properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     def maybeBuildsetComplete(self, bsid):
         self.maybeBuildsetCompleteCalls += 1
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+    def claimBuildRequests(self, brids, claimed_at=None):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
         validation.verifyType(self.testcase, 'claimed_at', claimed_at,
                               validation.NoneOk(validation.DateTimeValidator()))
         if not brids:
-            defer.returnValue(True)
-            return
+            return True
         try:
             yield self.master.db.buildrequests.claimBuildRequests(
-                brids=brids, claimed_at=claimed_at, _reactor=_reactor)
+                brids=brids, claimed_at=claimed_at)
         except AlreadyClaimedError:
-            defer.returnValue(False)
+            return False
         self.claimedBuildRequests.update(set(brids))
-        defer.returnValue(True)
+        return True
 
     @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):
@@ -204,7 +198,7 @@ class FakeUpdates(service.AsyncService):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
-    def completeBuildRequests(self, brids, results, complete_at=None, _reactor=reactor):
+    def completeBuildRequests(self, brids, results, complete_at=None):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
         validation.verifyType(self.testcase, 'results', results,
@@ -219,7 +213,7 @@ class FakeUpdates(service.AsyncService):
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
         for n in builderNames:
-            self.testcase.assertIsInstance(n, text_type)
+            self.testcase.assertIsInstance(n, str)
         self.builderNames = builderNames
         return defer.succeed(None)
 
@@ -237,7 +231,7 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         if name not in self.schedulerIds:
             self.schedulerIds[name] = max(
-                [0] + list(itervalues(self.schedulerIds))) + 1
+                [0] + list(self.schedulerIds.values())) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
@@ -245,7 +239,7 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         if name not in self.changesourceIds:
             self.changesourceIds[name] = max(
-                [0] + list(itervalues(self.changesourceIds))) + 1
+                [0] + list(self.changesourceIds.values())) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):
@@ -387,7 +381,7 @@ class FakeUpdates(service.AsyncService):
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'content', content,
                               validation.StringValidator())
-        self.testcase.assertEqual(content[-1], u'\n')
+        self.testcase.assertEqual(content[-1], '\n')
         self.logs[logid]['content'].append(content)
         return defer.succeed(None)
 
@@ -438,7 +432,7 @@ class FakeDataConnector(service.AsyncMultiService):
     # relevant updates with fake methods, though.
 
     def __init__(self, master, testcase):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setServiceParent(master)
         self.updates = FakeUpdates(testcase)
         self.updates.setServiceParent(self)

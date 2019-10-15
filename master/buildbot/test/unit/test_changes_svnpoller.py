@@ -14,9 +14,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
 import xml.dom.minidom
 
@@ -27,6 +24,7 @@ from buildbot.changes import svnpoller
 from buildbot.process.properties import Interpolate
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
+from buildbot.test.util.misc import TestReactorMixin
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -254,9 +252,11 @@ def split_file(path):
 
 class TestSVNPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
+                    TestReactorMixin,
                     unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpGetProcessOutput()
         return self.setUpChangeSource()
 
@@ -289,17 +289,15 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(base + "/")
         self.assertEqual(s.repourl, base)
 
+    @defer.inlineCallbacks
     def do_test_get_prefix(self, base, output, expected):
         s = self.attachSVNPoller(base)
         self.expectCommands(
             gpo.Expect('svn', 'info', '--xml', '--non-interactive', base).stdout(output))
-        d = s.get_prefix()
+        prefix = yield s.get_prefix()
 
-        def check(prefix):
-            self.assertEqual(prefix, expected)
-            self.assertAllCommandsRan()
-        d.addCallback(check)
-        return d
+        self.assertEqual(prefix, expected)
+        self.assertAllCommandsRan()
 
     def test_get_prefix_1(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -381,7 +379,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(changes[0]['project'], '')
         self.assertEqual(changes[0]['repository'], base)
         self.assertEqual(changes[1]['branch'], "branch")
-        self.assertEqual(changes[1]['files'], [u"çmain.c"])
+        self.assertEqual(changes[1]['files'], ["çmain.c"])
         self.assertEqual(changes[1]['revision'], '3')
         self.assertEqual(changes[1]['project'], '')
         self.assertEqual(changes[1]['repository'], base)
@@ -390,7 +388,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]['branch'], None)
         self.assertEqual(changes[0]['revision'], '4')
-        self.assertEqual(changes[0]['files'], [u"version.c"])
+        self.assertEqual(changes[0]['files'], ["version.c"])
 
         # r5 should *not* create a change as it's a branch deletion
         changes = s.create_changes([logentries[5]])
@@ -401,7 +399,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]['branch'], 'branch')
         self.assertEqual(changes[0]['revision'], '6')
-        self.assertEqual(changes[0]['files'], [u"version.c"])
+        self.assertEqual(changes[0]['files'], ["version.c"])
 
     def makeInfoExpect(self, password='bbrocks'):
         args = ['svn', 'info', '--xml', '--non-interactive', sample_base,
@@ -445,17 +443,16 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(changes[0]['codebase'], "overridden-codebase")
 
         self.assertEqual(changes[1]['branch'], "branch")
-        self.assertEqual(changes[1]['files'], [u'çmain.c'])
+        self.assertEqual(changes[1]['files'], ['çmain.c'])
         self.assertEqual(changes[1]['revision'], '3')
         self.assertEqual(changes[1]['project'], "overridden-project")
         self.assertEqual(changes[1]['repository'], "overridden-repository")
         self.assertEqual(changes[1]['codebase'], "overridden-codebase")
 
+    @defer.inlineCallbacks
     def test_poll(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
-
-        d = defer.succeed(None)
 
         self.expectCommands(
             self.makeInfoExpect().stdout(sample_info_output),
@@ -465,85 +462,79 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.makeLogExpect().stdout(make_changes_output(4)),
         )
         # fire it the first time; it should do nothing
-        d.addCallback(lambda _: s.poll())
+        yield s.poll()
 
-        def check_first(_):
-            # no changes generated on the first iteration
-            self.assertEqual(self.master.data.updates.changesAdded, [])
-            self.assertEqual(s.last_change, 1)
-        d.addCallback(check_first)
+        # no changes generated on the first iteration
+        self.assertEqual(self.master.data.updates.changesAdded, [])
+        self.assertEqual(s.last_change, 1)
 
         # now fire it again, nothing changing
-        d.addCallback(lambda _: s.poll())
+        yield s.poll()
 
-        def check_second(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [])
-            self.assertEqual(s.last_change, 1)
-        d.addCallback(check_second)
+        self.assertEqual(self.master.data.updates.changesAdded, [])
+        self.assertEqual(s.last_change, 1)
 
         # and again, with r2 this time
-        d.addCallback(lambda _: s.poll())
+        yield s.poll()
 
-        def check_third(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'warner',
-                'branch': 'branch',
-                'category': None,
-                'codebase': None,
-                'comments': u'make_branch',
-                'files': [u''],
-                'project': '',
-                'properties': {},
-                'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
-                'revision': '2',
-                'revlink': '',
-                'src': 'svn',
-                'when_timestamp': None,
-            }])
-            self.assertEqual(s.last_change, 2)
-        d.addCallback(check_third)
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'warner',
+            'committer': None,
+            'branch': 'branch',
+            'category': None,
+            'codebase': None,
+            'comments': 'make_branch',
+            'files': [''],
+            'project': '',
+            'properties': {},
+            'repository':
+                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+            'revision': '2',
+            'revlink': '',
+            'src': 'svn',
+            'when_timestamp': None,
+        }])
+        self.assertEqual(s.last_change, 2)
 
         # and again with both r3 and r4 appearing together
-        def setup_fourth(_):
-            self.master.data.updates.changesAdded = []
-        d.addCallback(setup_fourth)
-        d.addCallback(lambda _: s.poll())
+        self.master.data.updates.changesAdded = []
+        yield s.poll()
 
-        def check_fourth(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'warner',
-                'branch': 'branch',
-                'category': None,
-                'codebase': None,
-                'comments': u'commit_on_branch',
-                'files': [u'çmain.c'],
-                'project': '',
-                'properties': {},
-                'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
-                'revision': '3',
-                'revlink': '',
-                'src': 'svn',
-                'when_timestamp': None,
-            }, {
-                'author': u'warner',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': u'revised_to_2',
-                'files': [u'version.c'],
-                'project': '',
-                'properties': {},
-                'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
-                'revision': '4',
-                'revlink': '',
-                'src': 'svn',
-                'when_timestamp': None,
-            }])
-            self.assertEqual(s.last_change, 4)
-            self.assertAllCommandsRan()
-        d.addCallback(check_fourth)
-
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'warner',
+            'committer': None,
+            'branch': 'branch',
+            'category': None,
+            'codebase': None,
+            'comments': 'commit_on_branch',
+            'files': ['çmain.c'],
+            'project': '',
+            'properties': {},
+            'repository':
+                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+            'revision': '3',
+            'revlink': '',
+            'src': 'svn',
+            'when_timestamp': None,
+        }, {
+            'author': 'warner',
+            'committer': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': 'revised_to_2',
+            'files': ['version.c'],
+            'project': '',
+            'properties': {},
+            'repository':
+                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+            'revision': '4',
+            'revlink': '',
+            'src': 'svn',
+            'when_timestamp': None,
+        }])
+        self.assertEqual(s.last_change, 4)
+        self.assertAllCommandsRan()
 
     def test_poll_empty_password(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
@@ -584,21 +575,20 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         )
         s.poll()
 
+    @defer.inlineCallbacks
     def test_poll_get_prefix_exception(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
 
         self.expectCommands(
             self.makeInfoExpect().stderr(b"error"))
-        d = s.poll()
+        yield s.poll()
 
-        @d.addCallback
-        def check(_):
-            # should have logged the RuntimeError, but not errback'd from poll
-            self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
-            self.assertAllCommandsRan()
-        return d
+        # should have logged the RuntimeError, but not errback'd from poll
+        self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
+        self.assertAllCommandsRan()
 
+    @defer.inlineCallbacks
     def test_poll_get_logs_exception(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
@@ -606,14 +596,11 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
         self.expectCommands(
             self.makeLogExpect().stderr(b"some error"))
-        d = s.poll()
+        yield s.poll()
 
-        @d.addCallback
-        def check(_):
-            # should have logged the RuntimeError, but not errback'd from poll
-            self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
-            self.assertAllCommandsRan()
-        return d
+        # should have logged the RuntimeError, but not errback'd from poll
+        self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
+        self.assertAllCommandsRan()
 
     def test_cachepath_empty(self):
         cachepath = os.path.abspath('revcache')
@@ -656,7 +643,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def test_use_svnurl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
-        self.assertRaises(TypeError, self.attachSVNPoller, svnurl=base)
+        with self.assertRaises(TypeError):
+            self.attachSVNPoller(svnurl=base)
 
 
 class TestSplitFile(unittest.TestCase):

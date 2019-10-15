@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 # Copyright 2013 (c) Mamba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
@@ -44,7 +42,7 @@ class BitBucketHandler(BaseHookHandler):
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
         payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
-        repo_url = u'{}{}'.format(
+        repo_url = '{}{}'.format(
             payload['canon_url'], payload['repository']['absolute_url'])
         project = request.args.get(b'project', [b''])[0]
         project = bytes2unicode(project)
@@ -58,7 +56,7 @@ class BitBucketHandler(BaseHookHandler):
                 'revision': commit['raw_node'],
                 'when_timestamp': dateparse(commit['utctimestamp']),
                 'branch': commit['branch'],
-                'revlink': u'{}commits/{}'.format(repo_url, commit['raw_node']),
+                'revlink': '{}commits/{}'.format(repo_url, commit['raw_node']),
                 'repository': repo_url,
                 'project': project,
                 'properties': {

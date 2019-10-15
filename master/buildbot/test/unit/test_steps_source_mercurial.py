@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
@@ -30,11 +27,14 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
+                    unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
@@ -45,23 +45,22 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mercurial.Mercurial(mode="full"))
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(mode="full")
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                              mode='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(repourl='http://hg.mozilla.org', mode='invalid')
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                              method='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                method='invalid')
 
     def test_incorrect_branchType(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                              branchType='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                branchType='invalid')
 
     def test_mode_full_clean(self):
         self.setupStep(
@@ -242,13 +241,13 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
@@ -309,13 +308,13 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
@@ -375,13 +374,13 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',

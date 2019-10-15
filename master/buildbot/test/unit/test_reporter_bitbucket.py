@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -31,18 +28,22 @@ from buildbot.reporters.bitbucket import BitbucketStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
-    TEST_REPO = u'https://example.org/user/repo'
+class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
+                              ReporterTestMixin, LoggingMixin):
+    TEST_REPO = 'https://example.org/user/repo'
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
@@ -65,7 +66,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(('builds', 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -76,34 +77,34 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/user/repo/commit/d34db33fd43db33f/statuses/build',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'state': 'INPROGRESS',
-                'key': u'Builder0',
-                'name': u'Builder0'},
-            code=201),
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=201)
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
             'post',
-            u'/user/repo/commit/d34db33fd43db33f/statuses/build',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'state': 'SUCCESSFUL',
-                'key': u'Builder0',
-                'name': u'Builder0'},
-            code=201),
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=201)
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
             'post',
-            u'/user/repo/commit/d34db33fd43db33f/statuses/build',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'state': 'FAILED',
-                'key': u'Builder0',
-                'name': u'Builder0'},
+                'key': 'Builder0',
+                'name': 'Builder0'},
             code=201)
 
         build['complete'] = False
@@ -136,12 +137,12 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/user/repo/commit/d34db33fd43db33f/statuses/build',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'state': 'INPROGRESS',
-                'key': u'Builder0',
-                'name': u'Builder0'},
+                'key': 'Builder0',
+                'name': 'Builder0'},
             code=404,
             content_json={
                 "error_description": "This commit is unknown to us",

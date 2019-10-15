@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import calendar
 import datetime
 
@@ -32,6 +29,7 @@ from twisted.web.server import Request
 
 from buildbot.test.unit import test_www_hooks_base
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 from buildbot.www import change_hook
 from buildbot.www import resource
@@ -48,9 +46,10 @@ class NeedsReconfigResource(resource.Resource):
         NeedsReconfigResource.reconfigs += 1
 
 
-class Test(www.WwwTestMixin, unittest.TestCase):
+class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.master = self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         self.svc.setServiceParent(self.master)
@@ -64,14 +63,12 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         self.master.config = new_config
         return new_config
 
+    @defer.inlineCallbacks
     def test_reconfigService_no_port(self):
         new_config = self.makeConfig()
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(self.svc.site, None)
-        return d
+        self.assertEqual(self.svc.site, None)
 
     @defer.inlineCallbacks
     def test_reconfigService_reconfigResources(self):
@@ -87,59 +84,47 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(NeedsReconfigResource.reconfigs, 2)
 
+    @defer.inlineCallbacks
     def test_reconfigService_port(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertNotEqual(self.svc.site, None)
-            self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(self.svc.port, 20)
-        return d
+        self.assertNotEqual(self.svc.site, None)
+        self.assertNotEqual(self.svc.port_service, None)
+        self.assertEqual(self.svc.port, 20)
 
+    @defer.inlineCallbacks
     def test_reconfigService_expiration_time(self):
         new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertNotEqual(self.svc.site, None)
-            self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
-        return d
+        self.assertNotEqual(self.svc.site, None)
+        self.assertNotEqual(self.svc.port_service, None)
+        self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
 
+    @defer.inlineCallbacks
     def test_reconfigService_port_changes(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def reconfig(_):
-            newer_config = self.makeConfig(port=999)
-            return self.svc.reconfigServiceWithBuildbotConfig(newer_config)
+        newer_config = self.makeConfig(port=999)
+        yield self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertNotEqual(self.svc.site, None)
-            self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(self.svc.port, 999)
-        return d
+        self.assertNotEqual(self.svc.site, None)
+        self.assertNotEqual(self.svc.port_service, None)
+        self.assertEqual(self.svc.port, 999)
 
+    @defer.inlineCallbacks
     def test_reconfigService_port_changes_to_none(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def reconfig(_):
-            newer_config = self.makeConfig()
-            return self.svc.reconfigServiceWithBuildbotConfig(newer_config)
+        newer_config = self.makeConfig()
+        yield self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
-        @d.addCallback
-        def check(_):
-            # (note the site sticks around)
-            self.assertEqual(self.svc.port_service, None)
-            self.assertEqual(self.svc.port, None)
-        return d
+        # (note the site sticks around)
+        self.assertEqual(self.svc.port_service, None)
+        self.assertEqual(self.svc.port, None)
 
     def test_setupSite(self):
         self.svc.setupSite(self.makeConfig())
@@ -194,9 +179,9 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
         path = b'/change_hook/base'
         request = test_www_hooks_base._prepare_request({})
-        self.master.addChange = mock.Mock()
+        self.master.data.updates.addChange = mock.Mock()
         yield self.render_resource(rsrc, path, request=request)
-        self.master.addChange.assert_called()
+        self.master.data.updates.addChange.assert_called()
 
     @defer.inlineCallbacks
     def test_setupSiteWithHookAndAuth(self):
@@ -236,7 +221,8 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
             then we should raise KeyError for consumption by caller,
             and log the JWT error
         """
-        self.assertRaises(KeyError, self.site.getSession, "xxx")
+        with self.assertRaises(KeyError):
+            self.site.getSession("xxx")
         self.flushLoggedErrors(jwt.exceptions.DecodeError)
 
     def test_getSession_from_correct_jwt(self):
@@ -251,12 +237,14 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         exp = calendar.timegm(datetime.datetime.timetuple(exp))
         payload = {'user_info': {'some': 'payload'}, 'exp': exp}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
-        self.assertRaises(KeyError, self.site.getSession, uid)
+        with self.assertRaises(KeyError):
+            self.site.getSession(uid)
 
     def test_getSession_with_no_user_info(self):
         payload = {'foo': 'bar'}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
-        self.assertRaises(KeyError, self.site.getSession, uid)
+        with self.assertRaises(KeyError):
+            self.site.getSession(uid)
 
     def test_makeSession(self):
         session = self.site.makeSession()
@@ -265,11 +253,18 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
     def test_updateSession(self):
         session = self.site.makeSession()
 
-        class FakeChannel(object):
+        class FakeChannel:
             transport = None
 
             def isSecure(self):
                 return False
+
+            def getPeer(self):
+                return None
+
+            def getHost(self):
+                return None
+
         request = Request(FakeChannel(), False)
         request.sitepath = [b"bb"]
         session.updateSession(request)

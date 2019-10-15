@@ -13,23 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import string_types
-from future.utils import text_type
-
 import re
 
 from buildbot import util
 
-ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
+ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
 initial_re = re.compile('^[^a-zA-Z_-]')
 subsequent_re = re.compile('[^a-zA-Z0-9_-]')
 trailing_digits_re = re.compile('_([0-9]+)$')
 
 
 def isIdentifier(maxLength, obj):
-    if not isinstance(obj, text_type):
+    if not isinstance(obj, str):
         return False
     elif not ident_re.match(obj):
         return False
@@ -38,20 +33,20 @@ def isIdentifier(maxLength, obj):
     return True
 
 
-def forceIdentifier(maxLength, str):
-    if not isinstance(str, string_types):
+def forceIdentifier(maxLength, s):
+    if not isinstance(s, str):
         raise TypeError("%r cannot be coerced to an identifier" % (str,))
 
     # usually bytes2unicode can handle it
-    str = util.bytes2unicode(str)
-    if isIdentifier(maxLength, str):
-        return str
+    s = util.bytes2unicode(s)
+    if isIdentifier(maxLength, s):
+        return s
 
     # trim to length and substitute out invalid characters
-    str = str[:maxLength]
-    str = initial_re.sub('_', str)
-    str = subsequent_re.subn('_', str)[0]
-    return str
+    s = s[:maxLength]
+    s = initial_re.sub('_', s)
+    s = subsequent_re.subn('_', s)[0]
+    return s
 
 
 def incrementIdentifier(maxLength, ident):

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -27,17 +25,19 @@ from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
 OBJECTID = 33
 SCHEDULERID = 133
-UPSTREAM_NAME = u'uppy'
+UPSTREAM_NAME = 'uppy'
 
 
-class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
+class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -72,23 +72,23 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     # method returns.
 
     def test_constructor_string_arg(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: self.makeScheduler(upstream='foo'))
+        with self.assertRaises(config.ConfigErrors):
+            self.makeScheduler(upstream='foo')
 
+    @defer.inlineCallbacks
     def test_activate(self):
         sched = self.makeScheduler()
         sched.activate()
 
         self.assertEqual(
             sorted([q.filter for q in sched.master.mq.qrefs]),
-            [('buildsets', None, 'complete',), ('buildsets', None, 'new',)])
+            [('buildsets', None, 'complete',), ('buildsets', None, 'new',),
+             ('schedulers', '133', 'updated')])
 
-        d = sched.deactivate()
+        yield sched.deactivate()
 
-        def check(_):
-            self.assertEqual([q.filter for q in sched.master.mq.qrefs], [])
-        d.addCallback(check)
-        return d
+        self.assertEqual([q.filter for q in sched.master.mq.qrefs],
+                         [('schedulers', '133', 'updated')])
 
     def sendBuildsetMessage(self, scheduler_name=None, results=-1,
                             complete=False):
@@ -101,7 +101,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             complete=complete,
             complete_at=COMPLETE_AT_TIME if complete else None,
             external_idstring=None,
-            reason=u'Because',
+            reason='Because',
             results=results if complete else -1,
             parent_buildid=None,
             parent_relationship=None,
@@ -139,7 +139,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                 complete=False,
                 complete_at=None,
                 external_idstring=None,
-                reason=u'Because',
+                reason='Because',
                 results=-1,
             ),
             fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
@@ -163,7 +163,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                     builderNames=None,  # defaults
                     external_idstring=None,
                     properties=None,
-                    reason=u'downstream',
+                    reason='downstream',
                     sourcestamps=[93])),
             ])
         else:
@@ -179,7 +179,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         return self.do_test(UPSTREAM_NAME, True, FAILURE, False)
 
     def test_unrelated_buildset(self):
-        return self.do_test(u'unrelated', False, SUCCESS, False)
+        return self.do_test('unrelated', False, SUCCESS, False)
 
     @defer.inlineCallbacks
     def test_getUpstreamBuildsets_missing(self):

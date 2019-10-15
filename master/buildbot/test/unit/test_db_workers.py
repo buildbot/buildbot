@@ -13,12 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.builtins import range
-
-import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -30,8 +24,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import querylog
 from buildbot.test.util import validation
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def workerKey(worker):
@@ -49,9 +42,9 @@ class Tests(interfaces.InterfaceTests):
     baseRows = [
         fakedb.Master(id=10, name='m10'),
         fakedb.Master(id=11, name='m11'),
-        fakedb.Builder(id=20, name=u'a'),
-        fakedb.Builder(id=21, name=u'b'),
-        fakedb.Builder(id=22, name=u'c'),
+        fakedb.Builder(id=20, name='a'),
+        fakedb.Builder(id=21, name='b'),
+        fakedb.Builder(id=22, name='c'),
         fakedb.Worker(id=30, name='zero'),
         fakedb.Worker(id=31, name='one'),
     ]
@@ -135,7 +128,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findWorkerId_insert(self):
-        id = yield self.db.workers.findWorkerId(name=u"xyz")
+        id = yield self.db.workers.findWorkerId(name="xyz")
         worker = yield self.db.workers.getWorker(workerid=id)
         self.assertEqual(worker['name'], 'xyz')
         self.assertEqual(worker['workerinfo'], {})
@@ -143,7 +136,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_findWorkerId_existing(self):
         yield self.insertTestData(self.baseRows)
-        id = yield self.db.workers.findWorkerId(name=u"one")
+        id = yield self.db.workers.findWorkerId(name="one")
         self.assertEqual(id, 31)
 
     @defer.inlineCallbacks
@@ -660,10 +653,11 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
         self.db = fakedb.FakeDBConnector(self)
         self.db.setServiceParent(self.master)
         self.db.checkForeignKeys = True
@@ -674,17 +668,15 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests, querylog.SqliteMaxVariableMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['workers', 'masters', 'builders',
                          'builder_masters', 'connected_workers',
                          'configured_workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.workers = \
-                workers.WorkersConnectorComponent(self.db)
-        return d
+        self.db.workers = \
+            workers.WorkersConnectorComponent(self.db)
 
     @defer.inlineCallbacks
     def test_workerConfiguredMany(self):
@@ -710,7 +702,7 @@ class TestRealDB(unittest.TestCase,
     @defer.inlineCallbacks
     def test_workerConfiguredManyBuilders(self):
         manyWorkers = [
-            fakedb.Builder(id=100 + n, name=u'a' + str(n))
+            fakedb.Builder(id=100 + n, name='a' + str(n))
             for n in range(1000)
         ] + [
             fakedb.Worker(id=50 + n, name='zero' + str(n))
@@ -733,28 +725,3 @@ class TestRealDB(unittest.TestCase,
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_BuildslavesConnectorComponent_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildslavesConnectorComponent was deprecated"):
-            from buildbot.db.buildslaves import BuildslavesConnectorComponent
-
-        self.assertIdentical(BuildslavesConnectorComponent,
-                             workers.WorkersConnectorComponent)
-
-    def test_getWorkers_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.workers.WorkersConnectorComponent.getWorkers',
-                method):
-            m = workers.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getBuildslaves' method is deprecated"):
-                dummy = m.getBuildslaves()
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with()

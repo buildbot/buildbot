@@ -13,12 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
 
-
-class RolesFromBase(object):
+class RolesFromBase:
 
     def __init__(self):
         pass
@@ -34,7 +30,7 @@ class RolesFromBase(object):
 class RolesFromGroups(RolesFromBase):
 
     def __init__(self, groupPrefix=""):
-        RolesFromBase.__init__(self)
+        super().__init__()
         self.groupPrefix = groupPrefix
 
     def getRolesFromUser(self, userDetails):
@@ -49,9 +45,9 @@ class RolesFromGroups(RolesFromBase):
 class RolesFromEmails(RolesFromBase):
 
     def __init__(self, **kwargs):
-        RolesFromBase.__init__(self)
+        super().__init__()
         self.roles = {}
-        for role, emails in iteritems(kwargs):
+        for role, emails in kwargs.items():
             for email in emails:
                 self.roles.setdefault(email, []).append(role)
 
@@ -64,10 +60,10 @@ class RolesFromEmails(RolesFromBase):
 class RolesFromDomain(RolesFromEmails):
 
     def __init__(self, **kwargs):
-        RolesFromBase.__init__(self)
+        super().__init__()
 
         self.domain_roles = {}
-        for role, domains in iteritems(kwargs):
+        for role, domains in kwargs.items():
             for domain in domains:
                 self.domain_roles.setdefault(domain, []).append(role)
 
@@ -82,7 +78,7 @@ class RolesFromDomain(RolesFromEmails):
 class RolesFromOwner(RolesFromBase):
 
     def __init__(self, role):
-        RolesFromBase.__init__(self)
+        super().__init__()
         self.role = role
 
     def getRolesFromUser(self, userDetails, owner):

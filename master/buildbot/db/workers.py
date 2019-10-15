@@ -13,17 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import sqlalchemy as sa
 
 from twisted.internet import defer
 
 from buildbot.db import base
 from buildbot.util import identifiers
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
@@ -53,6 +48,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(cfg_tbl.c.workerid == workerid)
             conn.execute(q).close()
 
+    # returns a Deferred which returns None
     def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and worker
@@ -73,6 +69,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
 
         def thd(conn):
@@ -86,7 +83,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(bm_tbl.c.masterid == masterid)
                 q = q.where(bm_tbl.c.builderid.in_(builderids))
                 res = conn.execute(q)
-                buildermasterids = set([row['id'] for row in res])
+                buildermasterids = {row['id'] for row in res}
                 res.close()
             else:
                 buildermasterids = set([])
@@ -98,8 +95,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
             res = conn.execute(q)
-            oldbuildermasterids = set(
-                [row['buildermasterid'] for row in res])
+            oldbuildermasterids = {row['buildermasterid'] for row in res}
             res.close()
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
@@ -122,12 +118,13 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     def getWorker(self, workerid=None, name=None, masterid=None,
                   builderid=None):
         if workerid is None and name is None:
-            defer.returnValue(None)
+            return None
         workers = yield self.getWorkers(_workerid=workerid,
                                         _name=name, masterid=masterid, builderid=builderid)
         if workers:
-            defer.returnValue(workers[0])
+            return workers[0]
 
+    # returns a Deferred that returns a value
     def getWorkers(self, _workerid=None, _name=None, masterid=None,
                    builderid=None, paused=None, graceful=None):
         def thd(conn):
@@ -209,11 +206,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                     continue
                 rv[row.workerid]['connected_to'].append(row.masterid)
 
-            return list(itervalues(rv))
+            return list(rv.values())
         return self.db.pool.do(thd)
-    deprecatedWorkerClassMethod(
-        locals(), getWorkers, compat_name="getBuildslaves")
 
+    # returns a Deferred that returns None
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):
             conn_tbl = self.db.model.connected_workers
@@ -230,6 +226,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q, info=workerinfo)
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def workerDisconnected(self, workerid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_workers
@@ -238,6 +235,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q)
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def setWorkerState(self, workerid, paused, graceful):
         def thd(conn):
             tbl = self.db.model.workers

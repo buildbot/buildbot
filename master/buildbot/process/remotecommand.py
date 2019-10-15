@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import text_type
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import log
@@ -32,15 +27,13 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 class RemoteException(Exception):
     pass
 
 
-class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
+class RemoteCommand(base.RemoteCommandImpl):
 
     # class-level unique identifier generator for command ids
     _commandCounter = 0
@@ -71,7 +64,6 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         self.decodeRC = decodeRC
         self.conn = None
         self.worker = None
-        self._registerOldWorkerAttr("worker", name="buildslave")
         self.step = None
         self.builder_name = None
         self.commandID = None
@@ -284,7 +276,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
             return self.step.build.properties.cleanupTextFromSecrets(data)
 
         if self.debug:
-            for k, v in iteritems(update):
+            for k, v in update.items():
                 log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
@@ -320,7 +312,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
-        for name, loog in iteritems(self.logs):
+        for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
                     loog = yield self._unwrap(loog)
@@ -366,7 +358,7 @@ class RemoteShellCommand(RemoteCommand):
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         self.command = command  # stash .command, set it later
-        if isinstance(self.command, (text_type, bytes)):
+        if isinstance(self.command, (str, bytes)):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
         else:
@@ -383,12 +375,6 @@ class RemoteShellCommand(RemoteCommand):
             # able to modify the original.
             env = env.copy()
 
-        if usePTY == 'slave-config':
-            reportDeprecatedWorkerNameUsage(
-                "'slave-config' value of 'usePTY' attribute is deprecated, "
-                "use None instead.")
-            usePTY = None
-
         args = {'workdir': workdir,
                 'env': env,
                 'want_stdout': want_stdout,
@@ -403,10 +389,10 @@ class RemoteShellCommand(RemoteCommand):
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
-                               collectStderr=collectStderr,
-                               decodeRC=decodeRC,
-                               stdioLogName=stdioLogName)
+        super().__init__("shell", args, collectStdout=collectStdout,
+                         collectStderr=collectStderr,
+                         decodeRC=decodeRC,
+                         stdioLogName=stdioLogName)
 
     def _start(self):
         if self.args['usePTY'] is None:
@@ -429,7 +415,7 @@ class RemoteShellCommand(RemoteCommand):
         what = "command '%s' in dir '%s'" % (self.fake_command,
                                              self.args['workdir'])
         log.msg(what)
-        return RemoteCommand._start(self)
+        return super()._start()
 
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.fake_command)

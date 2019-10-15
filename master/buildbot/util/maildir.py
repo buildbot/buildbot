@@ -19,8 +19,6 @@ linux dirwatcher API (if available) to look for new files. The
 relative to the top of the maildir (so it will look like "new/blahblah").
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 
@@ -46,9 +44,10 @@ class NoSuchMaildir(Exception):
 
 class MaildirService(service.BuildbotService):
     pollinterval = 10  # only used if we don't have DNotify
+    name = 'MaildirService'
 
     def __init__(self, basedir=None):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         if basedir:
             self.setBasedir(basedir)
         self.files = []
@@ -84,7 +83,7 @@ class MaildirService(service.BuildbotService):
                 self.pollinterval, self.poll)
             self.timerService.setServiceParent(self)
         self.poll()
-        return service.AsyncMultiService.startService(self)
+        return super().startService()
 
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
@@ -107,7 +106,7 @@ class MaildirService(service.BuildbotService):
         if self.timerService is not None:
             self.timerService.disownServiceParent()
             self.timerService = None
-        return service.AsyncMultiService.stopService(self)
+        return super().stopService()
 
     @defer.inlineCallbacks
     def poll(self):

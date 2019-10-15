@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -70,7 +68,7 @@ class FakeStatsService(stats_service.StatsService):
     """
 
     def __init__(self, master=None, *args, **kwargs):
-        stats_service.StatsService.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.master = master
 
     @property
@@ -82,7 +80,7 @@ class FakeStatsService(stats_service.StatsService):
         self._master = value
 
 
-class FakeInfluxDBClient(object):
+class FakeInfluxDBClient:
 
     """
     Fake Influx module for testing on systems that don't have influxdb installed.

@@ -14,14 +14,12 @@
 # Copyright Buildbot Team Members
 # Copyright Mamba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
 from twisted.python import log
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
@@ -30,7 +28,7 @@ GIT_TAG_REF = "refs/tags/{}"
 _HEADER_EVENT = b'X-Event-Key'
 
 
-class BitbucketServerEventHandler(object):
+class BitbucketServerEventHandler:
 
     def __init__(self, master, options=None):
         if options is None:
@@ -44,7 +42,7 @@ class BitbucketServerEventHandler(object):
     def process(self, request):
         payload = self._get_payload(request)
         event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2NativeString(event_type)
+        event_type = bytes2unicode(event_type)
         log.msg("Processing event {header}: {event}"
                 .format(header=_HEADER_EVENT, event=event_type))
         event_type = event_type.replace(":", "_")
@@ -57,9 +55,9 @@ class BitbucketServerEventHandler(object):
 
     def _get_payload(self, request):
         content = request.content.read()
-        content = bytes2NativeString(content)
+        content = bytes2unicode(content)
         content_type = request.getHeader(b'Content-Type')
-        content_type = bytes2NativeString(content_type)
+        content_type = bytes2unicode(content_type)
         if content_type.startswith('application/json'):
             payload = json.loads(content)
         else:
@@ -70,7 +68,16 @@ class BitbucketServerEventHandler(object):
 
         return payload
 
+    def handle_repo_refs_changed(self, payload):
+        return self._handle_repo_refs_changed_common(payload)
+
     def handle_repo_push(self, payload):
+        # repo:push works exactly like repo:refs_changed, but is no longer documented (not even
+        # in the historical documentation of old versions of Bitbucket Server). The old code path
+        # has been preserved for backwards compatibility.
+        return self._handle_repo_refs_changed_common(payload)
+
+    def _handle_repo_refs_changed_common(self, payload):
         changes = []
         project = payload['repository']['project']['name']
         repo_url = payload['repository']['links']['self'][0]['href']

@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import string_types
-
 import abc
 
 from twisted.internet import defer
@@ -43,7 +39,7 @@ class NotifierBase(service.BuildbotService):
                       "exception", "cancelled")
 
     def computeShortcutModes(self, mode):
-        if isinstance(mode, string_types):
+        if isinstance(mode, str):
             if mode == "all":
                 mode = ("failing", "passing", "warnings",
                         "exception", "cancelled")
@@ -92,8 +88,8 @@ class NotifierBase(service.BuildbotService):
                 "not both.")
 
         if not(watchedWorkers == 'all' or watchedWorkers is None or
-               isinstance(watchedWorkers, (list, tuple, set))):
-                    config.error("watchedWorkers must be 'all', None, or list of worker names")
+                isinstance(watchedWorkers, (list, tuple, set))):
+            config.error("watchedWorkers must be 'all', None, or list of worker names")
 
     def reconfigService(self, mode=("failing", "passing", "warnings"),
                         tags=None, builders=None,
@@ -126,7 +122,7 @@ class NotifierBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
             self.buildsetComplete,
@@ -140,7 +136,7 @@ class NotifierBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        yield service.BuildbotService.stopService(self)
+        yield super().stopService()
         if self._buildsetCompleteConsumer is not None:
             yield self._buildsetCompleteConsumer.stopConsuming()
             self._buildsetCompleteConsumer = None
@@ -241,7 +237,11 @@ class NotifierBase(service.BuildbotService):
                 l['stepname'] = step['name']
                 l['content'] = yield self.master.data.get(("logs", l['logid'], 'contents'))
                 all_logs.append(l)
-        defer.returnValue(all_logs)
+        return all_logs
+
+    def getResponsibleUsersForBuild(self, master, buildid):
+        # Use library method but subclassers may want to override that
+        return utils.getResponsibleUsersForBuild(master, buildid)
 
     @defer.inlineCallbacks
     def buildMessage(self, name, builds, results):
@@ -266,7 +266,7 @@ class NotifierBase(service.BuildbotService):
                 previous_results = build['prev_build']['results']
             else:
                 previous_results = None
-            blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
+            blamelist = yield self.getResponsibleUsersForBuild(self.master, build['buildid'])
             buildmsg = yield self.messageFormatter.formatMessageForBuildResults(
                 self.mode, name, build['buildset'], build, self.master,
                 previous_results, blamelist)

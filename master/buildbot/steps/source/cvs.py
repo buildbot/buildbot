@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import re
 import time
@@ -59,7 +56,7 @@ class CVS(Source):
         if not self._hasAttrGroupMember('mode', self.mode):
             raise ValueError("mode %s is not one of %s" %
                              (self.mode, self._listAttrGroupMembers('mode')))
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def startVC(self, branch, revision, patch):
         self.branch = branch
@@ -98,19 +95,17 @@ class CVS(Source):
             rv = yield self.doUpdate()
         else:
             rv = yield self.clobber()
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def mode_full(self, _):
         if self.method == 'clobber':
             rv = yield self.clobber()
-            defer.returnValue(rv)
-            return
+            return rv
 
         elif self.method == 'copy':
             rv = yield self.copy()
-            defer.returnValue(rv)
-            return
+            return rv
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
@@ -122,7 +117,7 @@ class CVS(Source):
             rv = yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        defer.returnValue(rv)
+        return rv
 
     def _clobber(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
@@ -319,8 +314,7 @@ class CVS(Source):
                                           ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
-            defer.returnValue(False)
-            return
+            return False
 
         # on Windows, the cvsroot may not contain the password, so compare to
         # both
@@ -328,8 +322,7 @@ class CVS(Source):
                                     r"\1\2", self.cvsroot)
         if myFileWriter.buffer.strip() not in (self.cvsroot,
                                                cvsroot_without_pw):
-            defer.returnValue(False)
-            return
+            return False
 
         myFileWriter.buffer = ""
         cmd = remotecommand.RemoteCommand('uploadFile',
@@ -337,11 +330,9 @@ class CVS(Source):
                                           ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
-            defer.returnValue(False)
-            return
+            return False
         if myFileWriter.buffer.strip() != self.cvsmodule:
-            defer.returnValue(False)
-            return
+            return False
 
         # if there are sticky dates (from an earlier build with revision),
         # we can't update (unless we remove those tags with cvs update -A)
@@ -351,12 +342,11 @@ class CVS(Source):
                                       ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
-            defer.returnValue(False)
-            return
+            return False
         if self._cvsEntriesContainStickyDates(myFileWriter.buffer):
-            defer.returnValue(False)
+            return False
 
-        defer.returnValue(True)
+        return True
 
     def parseGotRevision(self, res):
         revision = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())

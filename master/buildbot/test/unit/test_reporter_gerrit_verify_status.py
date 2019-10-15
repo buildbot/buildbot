@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import datetime
 
 from mock import Mock
@@ -33,20 +30,26 @@ from buildbot.reporters.gerrit_verify_status import GerritVerifyStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import logging
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
 
 
-class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.LoggingMixin):
+class TestGerritVerifyStatusPush(TestReactorMixin,
+                                 ReporterTestMixin,
+                                 logging.LoggingMixin,
+                                 unittest.TestCase):
+
     TEST_PROPS = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
         yield self.master.startService()
 
@@ -68,7 +71,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -81,7 +84,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -93,7 +96,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -105,7 +108,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': -1,
@@ -134,7 +137,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'started Builder0',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -146,7 +149,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'finished Builder0',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -172,7 +175,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'builder Builder0',
+                'name': 'builder Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -184,7 +187,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'builder Builder0',
+                'name': 'builder Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -210,7 +213,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': True,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -222,7 +225,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': True,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -249,7 +252,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'comment': 'Build started.',
                 'abstain': False,
                 'category': 'Builder0',
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -262,7 +265,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'comment': 'Build done.',
                 'abstain': False,
                 'category': 'Builder0',
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -288,7 +291,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'Builder0',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -300,7 +303,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'Builder0',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -324,7 +327,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -344,7 +347,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -377,8 +380,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
 
         # from chdict:
         chdict = TestGerritChangeSource.expected_change
-        props = Properties.fromDict(dict([
-            (k, (v, 'change')) for k, v in chdict['properties'].items()]))
+        props = Properties.fromDict({
+            k: (v, 'change') for k, v in chdict['properties'].items()})
         changes = self.sp.getGerritChanges(props)
         self.assertEqual(changes, [
             {'change_id': '4321', 'revision_id': '12'}

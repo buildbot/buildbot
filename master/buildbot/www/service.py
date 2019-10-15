@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import iteritems
-
 import calendar
 import datetime
 import os
@@ -38,7 +33,7 @@ from twisted.web import server
 from zope.interface import implementer
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
@@ -69,6 +64,9 @@ class BuildbotSession(server.Session):
         """
         self.site = site
         assert self.site.session_secret is not None, "site.session_secret is not configured yet!"
+        # Cannot use super() here as it would call server.Session.__init__
+        # which we explicitly want to override. However, we still want to call
+        # server.Session parent class constructor
         components.Componentized.__init__(self)
         if token:
             self._fromToken(token)
@@ -143,7 +141,7 @@ class BuildbotSite(server.Site):
     """
 
     def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
-        server.Site.__init__(self, root, logPath=logPath)
+        super().__init__(root, logPath=logPath)
         self.rotateLength = rotateLength
         self.maxRotatedFiles = maxRotatedFiles
         self.session_secret = None
@@ -178,7 +176,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     name = 'www'
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.port = None
         self.port_service = None
@@ -216,8 +214,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if www['port'] != self.port:
             if self.port_service:
-                yield defer.maybeDeferred(lambda:
-                                          self.port_service.disownServiceParent())
+                yield defer.maybeDeferred(self.port_service.disownServiceParent)
                 self.port_service = None
 
             self.port = www['port']
@@ -233,14 +230,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     if hasattr(self.port_service, 'endpoint'):
                         old_listen = self.port_service.endpoint.listen
 
+                        @defer.inlineCallbacks
                         def listen(factory):
-                            d = old_listen(factory)
+                            port = yield old_listen(factory)
+                            self._getPort = lambda: port
+                            return port
 
-                            @d.addCallback
-                            def keep(port):
-                                self._getPort = lambda: port
-                                return port
-                            return d
                         self.port_service.endpoint.listen = listen
                     else:
                         # older twisted's just have the port sitting there
@@ -252,8 +247,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if not self.port_service:
             log.msg("No web server configured on this master")
 
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a
@@ -263,7 +257,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def configPlugins(self, root, new_config):
         known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
-        for key, plugin in list(iteritems(new_config.www.get('plugins', {}))):
+        for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError(
@@ -364,14 +358,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # and other runs of this master
 
             # we encode that in hex for db storage convenience
-            return bytes2NativeString(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
+            return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
         session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
         self.site.setSessionSecret(session_secret)
 
     def setupProtectedResource(self, resource_obj, checkers):
         @implementer(IRealm)
-        class SimpleRealm(object):
+        class SimpleRealm:
 
             """
             A realm which gives out L{ChangeHookResource} instances for authenticated

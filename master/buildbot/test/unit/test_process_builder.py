@@ -13,44 +13,35 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import text_type
-
 import random
 
 import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implementer
 
 from buildbot import config
-from buildbot import interfaces
-from buildbot import locks
 from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from buildbot.worker import AbstractLatentWorker
 
 
-class BuilderMixin(object):
+class BuilderMixin:
 
     def setUpBuilderMixin(self):
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         self.mq = self.master.mq
         self.db = self.master.db
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
                     **config_kwargs):
         """Set up C{self.bldr}"""
@@ -83,12 +74,20 @@ class BuilderMixin(object):
         mastercfg = config.MasterConfig()
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
-            defer.returnValue((yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)))
+            return self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
 
 
-class TestBuilder(BuilderMixin, unittest.TestCase):
+class FakeWorker:
+    builds_may_be_incompatible = False
+
+    def __init__(self, workername):
+        self.workername = workername
+
+
+class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         # a collection of rows that would otherwise clutter up every test
         self.setUpBuilderMixin()
         self.base_rows = [
@@ -97,20 +96,17 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
         ]
 
+    @defer.inlineCallbacks
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
-        d = BuilderMixin.makeBuilder(
-            self, patch_random=patch_random, **config_kwargs)
+        yield super().makeBuilder(patch_random=patch_random, **config_kwargs)
 
-        @d.addCallback
-        def patch_startBuildsFor(_):
-            # patch into the _startBuildsFor method
-            self.builds_started = []
+        # patch into the _startBuildsFor method
+        self.builds_started = []
 
-            def _startBuildFor(workerforbuilder, buildrequests):
-                self.builds_started.append((workerforbuilder, buildrequests))
-                return defer.succeed(startBuildsForSucceeds)
-            self.bldr._startBuildFor = _startBuildFor
-        return d
+        def _startBuildFor(workerforbuilder, buildrequests):
+            self.builds_started.append((workerforbuilder, buildrequests))
+            return defer.succeed(startBuildsForSucceeds)
+        self.bldr._startBuildFor = _startBuildFor
 
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (worker, [brids])
@@ -122,7 +118,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def setWorkerForBuilders(self, workerforbuilders):
         """C{workerforbuilders} maps name : available"""
         self.bldr.workers = []
-        for name, avail in iteritems(workerforbuilders):
+        for name, avail in workerforbuilders.items():
             wfb = mock.Mock(spec=['isAvailable'], name=name)
             wfb.name = name
             wfb.isAvailable.return_value = avail
@@ -217,62 +213,163 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def test_getCollapseRequestsFn_builder_function(self):
         self.do_test_getCollapseRequestsFn('callable', None, 'callable')
 
-    # other methods
+    # canStartBuild
 
     @defer.inlineCallbacks
-    def test_canStartBuild(self):
+    def test_canStartBuild_no_constraints(self):
         yield self.makeBuilder()
 
-        # by default, it returns True
-        startable = yield self.bldr.canStartBuild('worker', 100)
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        startable = yield self.bldr.canStartBuild(wfb, 100)
         self.assertEqual(startable, True)
 
-        startable = yield self.bldr.canStartBuild('worker', 101)
+        startable = yield self.bldr.canStartBuild(wfb, 101)
         self.assertEqual(startable, True)
-
-        # set a configurable one
-        record = []
-
-        def canStartBuild(bldr, worker, breq):
-            record.append((bldr, worker, breq))
-            return (worker, breq) == ('worker', 100)
-        self.bldr.config.canStartBuild = canStartBuild
-
-        startable = yield self.bldr.canStartBuild('worker', 100)
-        self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'worker', 100)])
-
-        startable = yield self.bldr.canStartBuild('worker', 101)
-        self.assertEqual(startable, False)
-        self.assertEqual(
-            record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
-
-        # set a configurable one to return Deferred
-        record = []
-
-        def canStartBuild_deferred(bldr, worker, breq):
-            record.append((bldr, worker, breq))
-            return defer.succeed((worker, breq) == ('worker', 100))
-        self.bldr.config.canStartBuild = canStartBuild_deferred
-
-        startable = yield self.bldr.canStartBuild('worker', 100)
-        self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'worker', 100)])
-
-        startable = yield self.bldr.canStartBuild('worker', 101)
-        self.assertEqual(startable, False)
-        self.assertEqual(
-            record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
     @defer.inlineCallbacks
-    def test_enforceChosenWorker(self):
+    def test_canStartBuild_config_canStartBuild_returns_value(self):
+        yield self.makeBuilder()
+
+        def canStartBuild(bldr, worker, breq):
+            return breq == 100
+        canStartBuild = mock.Mock(side_effect=canStartBuild)
+
+        self.bldr.config.canStartBuild = canStartBuild
+
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        startable = yield self.bldr.canStartBuild(wfb, 100)
+        self.assertEqual(startable, True)
+        canStartBuild.assert_called_with(self.bldr, wfb, 100)
+        canStartBuild.reset_mock()
+
+        startable = yield self.bldr.canStartBuild(wfb, 101)
+        self.assertEqual(startable, False)
+        canStartBuild.assert_called_with(self.bldr, wfb, 101)
+        canStartBuild.reset_mock()
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_config_canStartBuild_returns_deferred(self):
+        yield self.makeBuilder()
+
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        def canStartBuild(bldr, wfb, breq):
+            return defer.succeed(breq == 100)
+        canStartBuild = mock.Mock(side_effect=canStartBuild)
+
+        self.bldr.config.canStartBuild = canStartBuild
+
+        startable = yield self.bldr.canStartBuild(wfb, 100)
+        self.assertEqual(startable, True)
+        canStartBuild.assert_called_with(self.bldr, wfb, 100)
+        canStartBuild.reset_mock()
+
+        startable = yield self.bldr.canStartBuild(wfb, 101)
+        self.assertEqual(startable, False)
+        canStartBuild.assert_called_with(self.bldr, wfb, 101)
+        canStartBuild.reset_mock()
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_cant_acquire_locks_but_no_locks(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
+
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            startable = yield self.bldr.canStartBuild(wfb, 100)
+            self.assertEqual(startable, True)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_locks(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[mock.Mock()])
+
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            startable = yield self.bldr.canStartBuild(wfb, 100)
+            self.assertEqual(startable, False)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_renderable_locks(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[mock.Mock()])
+
+        renderedLocks = [False]
+
+        @renderer
+        def rendered_locks(props):
+            renderedLocks[0] = True
+            return [mock.Mock()]
+
+        self.bldr.config.locks = rendered_locks
+
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            with mock.patch(
+                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                    mock.Mock()):
+                startable = yield self.bldr.canStartBuild(wfb, 100)
+                self.assertEqual(startable, False)
+
+        self.assertTrue(renderedLocks[0])
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_incompatible_latent_worker(self):
+        yield self.makeBuilder()
+
+        class FakeLatentWorker(AbstractLatentWorker):
+            builds_may_be_incompatible = True
+
+            def __init__(self):
+                pass
+
+            def isCompatibleWithBuild(self, build_props):
+                return defer.succeed(False)
+
+            def checkConfig(self, name, _, **kwargs):
+                pass
+
+            def reconfigService(self, name, _, **kwargs):
+                pass
+
+        wfb = mock.Mock()
+        wfb.worker = FakeLatentWorker()
+
+        with mock.patch(
+                'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                mock.Mock()):
+            startable = yield self.bldr.canStartBuild(wfb, 100)
+        self.assertFalse(startable)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_enforceChosenWorker(self):
         """enforceChosenWorker rejects and accepts builds"""
         yield self.makeBuilder()
 
         self.bldr.config.canStartBuild = builder.enforceChosenWorker
 
         workerforbuilder = mock.Mock()
-        workerforbuilder.worker.workername = 'worker5'
+        workerforbuilder.worker = FakeWorker('worker5')
 
         breq = mock.Mock()
 
@@ -296,10 +393,12 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
+    # other methods
+
     @defer.inlineCallbacks
     def test_getBuilderId(self):
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = fakemaster.make_master(self, wantData=True)
         # only include the necessary required config, plus user-requested
         self.bldr = builder.Builder('bldr')
         self.bldr.master = self.master
@@ -314,160 +413,6 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         builderid = yield self.bldr.getBuilderId()
         self.assertEqual(builderid, 13)
         fbi.assert_not_called()
-
-    def test_enforceChosenSlave_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="enforceChosenSlave was deprecated"):
-            deprecated = builder.enforceChosenSlave
-
-        self.assertIdentical(deprecated, builder.enforceChosenWorker)
-
-    def test_attaching_workers_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = bldr.attaching_workers
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'attaching_slaves' attribute is deprecated"):
-            old = bldr.attaching_slaves
-
-        self.assertIdentical(new, old)
-
-    def test_workers_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = bldr.workers
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slaves' attribute is deprecated"):
-            old = bldr.slaves
-
-        self.assertIdentical(new, old)
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_old_api(self):
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-        bldr.config.locks = []
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'canStartWithSlavebuilder' method is deprecated"):
-            with mock.patch(
-                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
-                    mock.Mock(return_value='dummy')):
-                dummy = yield bldr.canStartWithSlavebuilder(mock.Mock(), mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_no_buildrequests(self):
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-        bldr.config.locks = []
-
-        with assertProducesWarning(
-                Warning,
-                message_pattern=(
-                    "Not passing corresponding buildrequests to "
-                    "Builder.canStartWithWorkerForBuilder is deprecated")):
-            with mock.patch(
-                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
-                    mock.Mock(return_value='dummy')):
-                dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_renderableLocks_no_buildrequests(self):
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-
-        @renderer
-        def rendered_locks(props):
-            return []
-
-        bldr.config.locks = rendered_locks
-
-        with self.assertRaisesRegex(
-                RuntimeError,
-                'buildrequests parameter must be specified .+'):
-            with mock.patch(
-                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
-                    mock.Mock(return_value='dummy')):
-                yield bldr.canStartWithWorkerForBuilder(mock.Mock())
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_renderableLocks(self):
-
-        @implementer(interfaces.IProperties)
-        class FakeProperties(mock.Mock):
-            def __iter__(self):
-                return iter([])
-
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-        bldr.botmaster = mock.Mock()
-        bldr.botmaster.getLockFromLockAccess = mock.Mock(return_value='dummy')
-
-        lock1 = mock.Mock(spec=locks.MasterLock)
-        lock1.name = "masterlock"
-
-        lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "workerlock"
-
-        renderedLocks = [False]
-
-        @renderer
-        def rendered_locks(props):
-            renderedLocks[0] = True
-            access1 = locks.LockAccess(lock1, 'counting')
-            access2 = locks.LockAccess(lock2, 'exclusive')
-            return [access1, access2]
-
-        bldr.config.locks = rendered_locks
-
-        with mock.patch(
-                'buildbot.process.build.Build.canStartWithWorkerForBuilder',
-                mock.Mock(return_value='dummy')):
-            with mock.patch(
-                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
-                    mock.Mock()):
-                dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock(), [mock.Mock()])
-                self.assertEqual(dummy, 'dummy')
-
-        self.assertTrue(renderedLocks[0])
-
-    def test_addLatentWorker_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'addLatentSlave' method is deprecated"):
-            method = mock.Mock(return_value='dummy')
-            with mock.patch(
-                    'buildbot.process.builder.Builder.addLatentWorker',
-                    method):
-                dummy = bldr.addLatentSlave(mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-                self.assertTrue(method.called)
-
-    def test_getAvailableWorkers_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'getAvailableSlaves' method is deprecated"):
-            method = mock.Mock(return_value='dummy')
-            with mock.patch(
-                    'buildbot.process.builder.Builder.getAvailableWorkers',
-                    method):
-                dummy = bldr.getAvailableSlaves(mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-                self.assertTrue(method.called)
 
     def test_expectations_deprecated(self):
         self.successResultOf(self.makeBuilder())
@@ -493,9 +438,10 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertEquals(props.getProperty('cuckoo'), 42)
 
 
-class TestGetBuilderId(BuilderMixin, unittest.TestCase):
+class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks
@@ -509,16 +455,18 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         # and see that fbi was only called once
-        fbi.assert_called_once_with(u'b1')
+        fbi.assert_called_once_with('b1')
         # check that the name was unicodified
         arg = fbi.mock_calls[0][1][0]
-        self.assertIsInstance(arg, text_type)
+        self.assertIsInstance(arg, str)
 
 
-class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
+class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin,
+                               unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -567,10 +515,11 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
         self.assertEqual(rqtime, None)
 
 
-class TestGetNewestCompleteTime(BuilderMixin, unittest.TestCase):
+class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -607,11 +556,12 @@ class TestGetNewestCompleteTime(BuilderMixin, unittest.TestCase):
         self.assertEqual(rqtime, None)
 
 
-class TestReconfig(BuilderMixin, unittest.TestCase):
+class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     """Tests that a reconfig properly updates all attributes"""
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpBuilderMixin()
 
     @defer.inlineCallbacks

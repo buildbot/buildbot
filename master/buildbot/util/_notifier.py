@@ -19,14 +19,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
 
 from twisted.internet.defer import Deferred
 
 
-class Notifier(object):
+class Notifier:
     def __init__(self):
         self._waiters = []
 
@@ -42,5 +39,3 @@ class Notifier(object):
 
     def __bool__(self):
         return bool(self._waiters)
-    if not PY3:
-        __nonzero__ = __bool__

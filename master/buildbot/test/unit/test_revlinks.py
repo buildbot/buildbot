@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot.revlinks import GithubRevlink
@@ -93,7 +90,7 @@ class TestRevlinkMatch(unittest.TestCase):
 
     def testSingleUnicode(self):
         revision = 'rev'
-        matcher = RevlinkMatch(u'test', 'out%s')
+        matcher = RevlinkMatch('test', 'out%s')
         self.assertEqual(matcher(revision, 'test'), 'outrev')
 
     def testTwoCaptureGroups(self):

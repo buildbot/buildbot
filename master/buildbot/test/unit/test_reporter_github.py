@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -30,19 +27,22 @@ from buildbot.reporters.github import GitHubCommentPush
 from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
+                           ReporterTestMixin):
     # project must be in the form <owner>/<project>
-    TEST_PROJECT = u'buildbot/buildbot'
+    TEST_PROJECT = 'buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
@@ -67,7 +67,7 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -103,7 +103,7 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     def setupBuildResultsMin(self, buildResults):
         self.insertTestData([buildResults], buildResults, insertSS=False)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_empty(self):
@@ -116,18 +116,20 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.buildFinished(("build", 20, "finished"), build)
 
 
-class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
+class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
+                              ReporterTestMixin):
     # project must be in the form <owner>/<project>
-    TEST_PROJECT = u'buildbot'
-    TEST_REPO = u'https://github.com/buildbot1/buildbot1.git'
+    TEST_PROJECT = 'buildbot'
+    TEST_REPO = 'https://github.com/buildbot1/buildbot1.git'
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
 
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
@@ -152,11 +154,11 @@ class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_ssh(self):
-        self.TEST_REPO = u'git@github.com:buildbot2/buildbot2.git'
+        self.TEST_REPO = 'git@github.com:buildbot2/buildbot2.git'
 
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made

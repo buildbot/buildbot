@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -28,10 +24,10 @@ from buildbot.www.rest import BadJsonRpc2
 
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
-               name=text_type(sched.name),
-               button_name=text_type(sched.buttonName),
-               label=text_type(sched.label),
-               builder_names=[text_type(name)
+               name=str(sched.name),
+               button_name=str(sched.buttonName),
+               label=str(sched.label),
+               builder_names=[str(name)
                               for name in sched.builderNames],
                enabled=sched.enabled)
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
@@ -55,7 +51,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         sched = yield self.findForceScheduler(kwargs['schedulername'])
         if sched is not None:
-            defer.returnValue(forceScheduler2Data(sched))
+            return forceScheduler2Data(sched)
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -65,10 +61,10 @@ class ForceSchedulerEndpoint(base.Endpoint):
                 args['owner'] = "user"
             try:
                 res = yield sched.force(**args)
-                defer.returnValue(res)
+                return res
             except forcesched.CollectedValidationError as e:
                 raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
-        defer.returnValue(None)
+        return None
 
 
 class ForceSchedulersEndpoint(base.Endpoint):
@@ -91,7 +87,7 @@ class ForceSchedulersEndpoint(base.Endpoint):
                 if builderid is not None and bdict['name'] not in sched.builderNames:
                     continue
                 ret.append(forceScheduler2Data(sched))
-        defer.returnValue(ret)
+        return ret
 
 
 class ForceScheduler(base.ResourceType):

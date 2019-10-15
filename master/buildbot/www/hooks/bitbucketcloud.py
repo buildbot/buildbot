@@ -14,14 +14,12 @@
 # Copyright Buildbot Team Members
 # Copyright Mamba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
 from twisted.python import log
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
@@ -30,7 +28,7 @@ GIT_TAG_REF = "refs/tags/{}"
 _HEADER_EVENT = b'X-Event-Key'
 
 
-class BitbucketCloudEventHandler(object):
+class BitbucketCloudEventHandler:
 
     def __init__(self, master, options=None):
         if options is None:
@@ -44,7 +42,7 @@ class BitbucketCloudEventHandler(object):
     def process(self, request):
         payload = self._get_payload(request)
         event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2NativeString(event_type)
+        event_type = bytes2unicode(event_type)
         log.msg("Processing event {header}: {event}"
                 .format(header=_HEADER_EVENT, event=event_type))
         event_type = event_type.replace(":", "_")
@@ -57,9 +55,9 @@ class BitbucketCloudEventHandler(object):
 
     def _get_payload(self, request):
         content = request.content.read()
-        content = bytes2NativeString(content)
+        content = bytes2unicode(content)
         content_type = request.getHeader(b'Content-Type')
-        content_type = bytes2NativeString(content_type)
+        content_type = bytes2unicode(content_type)
         if content_type.startswith('application/json'):
             payload = json.loads(content)
         else:
@@ -72,7 +70,7 @@ class BitbucketCloudEventHandler(object):
 
     def handle_repo_push(self, payload):
         changes = []
-        project = payload['repository']['project']['name']
+        project = payload['repository'].get('project', {'name': 'none'})['name']
         repo_url = payload['repository']['links']['self']['href']
         web_url = payload['repository']['links']['html']['href']
 
@@ -96,7 +94,7 @@ class BitbucketCloudEventHandler(object):
                 'revlink': '{}/commits/{}'.format(web_url, commit_hash),
                 'repository': repo_url,
                 'author': '{} <{}>'.format(payload['actor']['display_name'],
-                                           payload['actor']['username']),
+                                           payload['actor']['nickname']),
                 'comments': 'Bitbucket Cloud commit {}'.format(commit_hash),
                 'branch': branch,
                 'project': project,
@@ -141,15 +139,16 @@ class BitbucketCloudEventHandler(object):
     def handle_pullrequest(self, payload, refname, category):
         pr_number = int(payload['pullrequest']['id'])
         repo_url = payload['repository']['links']['self']['href']
+        project = payload['repository'].get('project', {'name': 'none'})['name']
         change = {
             'revision': payload['pullrequest']['fromRef']['commit']['hash'],
             'revlink': payload['pullrequest']['link'],
             'repository': repo_url,
             'author': '{} <{}>'.format(payload['actor']['display_name'],
-                                       payload['actor']['username']),
+                                       payload['actor']['nickname']),
             'comments': 'Bitbucket Cloud Pull Request #{}'.format(pr_number),
             'branch': refname,
-            'project': payload['repository']['project']['name'],
+            'project': project,
             'category': category,
             'properties': {'pullrequesturl': payload['pullrequest']['link']}
         }

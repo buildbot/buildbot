@@ -65,7 +65,7 @@ BaseScheduler
 
     .. py:method:: gotChange(change, important)
 
-        :param Change change: the new change
+        :param buildbot.changes.changes.Change change: the new change
         :param boolean important: true if the change is important
         :return: Deferred
 
@@ -77,7 +77,7 @@ BaseScheduler
 
         .. note::
 
-            The ``change`` instance will instead be a change resource in later versions.
+            The :py:class:`buildbot.changes.changes.Change` instance will instead be a change resource in later versions.
 
     The following methods are available for subclasses to queue new builds.
     Each creates a new buildset with a build request for each builder.

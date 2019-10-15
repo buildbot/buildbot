@@ -109,8 +109,7 @@ Arguments:
   (required) Absolute path to directory containing the files with a secret.
 
 ``strip``
-  (optional) if ``True`` (the default), trailing newlines are removed from the
-  file contents.
+  (optional) if ``True`` (the default), trailing newlines are removed from the file contents.
 
 .. _SecretInAVault:
 
@@ -119,20 +118,51 @@ SecretInVault
 
 .. code-block:: python
 
-    c['secretsProviders'] = [secrets.SecretInVault(
-                            vaultToken=open('VAULT_TOKEN').read(),
-                            vaultServer="http://localhost:8200"
+    c['secretsProviders'] = [secrets.HashiCorpVaultSecretProvider(
+                            vaultToken=open('VAULT_TOKEN').read().strip(),
+                            vaultServer="http://localhost:8200",
+                            secretsmount="secret",
+                            apiVersion=2
     )]
 
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
-To be authenticated in Vault, Buildbot need to send a token to the vault server.
-The token is generated when the Vault instance is initialized for the first time.
+At the moment Buildbot supports KV v1 and v2 backends via the apiVersion argument.
 
+Buildbot's Vault authentication/authorisation is via a token.
+The "Initial Root Token", generated on Vault initialization, can be used but has ‘root’ authorization.
+Vault policies, and subsequent tokens assigned to them, provide for a more restrictive approach.
 
-In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
+In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
+
+.. _SecretInPass:
+
+SecretInPass
+`````````````
+
+.. code-block:: python
+
+    c['secretsProviders'] = [secrets.SecretInPass(
+                            gpgPassphrase="passphrase", 
+                            dirname="/path/to/password/store"
+    )]
+
+Passwords can be stored in a unix password store, encrypted using GPG keys.
+Buildbot can query secrets via the ``pass`` binary found in the PATH of each worker.
+While ``pass`` allows for multiline entries, the secret must be on the first line of each entry.
+The only caveat is that all passwords Buildbot needs to access have to be encrypted using the same GPG key.
+
+For more information about ``pass``, please visit _`pass`: https://www.passwordstore.org/
+
+Arguments:
+
+``gpgPassphrase``
+  (optional) Pass phrase to the GPG decryption key, if any
+
+``dirname``
+  (optional) Absolute path to the password store directory, defaults to ~/.password-store
 
 How to populate secrets in a build
 ----------------------------------
@@ -165,7 +195,7 @@ How to configure a Vault instance
 ---------------------------------
 
 Vault being a very generic system, it can be complex to install for the first time.
-Here is a simple tutorial to install the minimal Vault for use with Buildbot.
+Here is a simple tutorial to install the minimal Vault to use with Buildbot.
 
 Use Docker to install Vault
 ```````````````````````````
@@ -201,9 +231,11 @@ Then, export the environment variable VAULT_ADDR needed to init Vault.
 Writing secrets
 ```````````````
 
-By default Vault is initialized with a mount named secret.
+By default the official docker instance of Vault is initialized with a mount path of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
+Currently Buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
+Provision is made to set a top level path via the "secretsmount" argument: defaults to "secret".
 To add a new secret:
 
 .. code-block:: shell
 
-      vault write secret/new_secret_key value=new_secret_value
+      vault kv put secret/new_secret_key value=new_secret_value

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import warnings
 from contextlib import contextmanager
@@ -101,7 +99,7 @@ class BuildFactory(util.ComparableMixin):
 # BuildFactory subclasses for common build tools
 
 
-class _DefaultCommand(object):
+class _DefaultCommand:
     # Used to indicate a default command to the step.
     pass
 
@@ -126,7 +124,7 @@ class GNUAutoconf(BuildFactory):
         if distcheck is _DefaultCommand:
             distcheck = ["make", "distcheck"]
 
-        BuildFactory.__init__(self, [source])
+        super().__init__([source])
 
         if reconf is True:
             reconf = ["autoreconf", "-si"]
@@ -159,7 +157,7 @@ class GNUAutoconf(BuildFactory):
 class CPAN(BuildFactory):
 
     def __init__(self, source, perl="perl"):
-        BuildFactory.__init__(self, [source])
+        super().__init__([source])
         self.addStep(Configure(command=[perl, "Makefile.PL"]))
         self.addStep(Compile(command=["make"]))
         self.addStep(PerlModuleTest(command=["make", "test"]))
@@ -168,7 +166,7 @@ class CPAN(BuildFactory):
 class Distutils(BuildFactory):
 
     def __init__(self, source, python="python", test=None):
-        BuildFactory.__init__(self, [source])
+        super().__init__([source])
         self.addStep(Compile(command=[python, "./setup.py", "build"]))
         if test is not None:
             self.addStep(Test(command=test))
@@ -194,7 +192,7 @@ class Trial(BuildFactory):
                  buildpython=None, trialpython=None, trial=None,
                  testpath=".", randomly=None, recurse=None,
                  tests=None, useTestCaseNames=False, env=None):
-        BuildFactory.__init__(self, [source])
+        super().__init__([source])
         assert tests or useTestCaseNames, "must use one or the other"
         if buildpython is None:
             buildpython = ["python"]
@@ -242,10 +240,10 @@ class BasicBuildFactory(GNUAutoconf):
             method = "copy"
         source = CVS(
             cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode, method=method)
-        GNUAutoconf.__init__(self, source,
-                             configure=configure, configureEnv=configureEnv,
-                             compile=compile,
-                             test=test)
+        super().__init__(source,
+                         configure=configure, configureEnv=configureEnv,
+                         compile=compile,
+                         test=test)
 
 
 class QuickBuildFactory(BasicBuildFactory):
@@ -259,10 +257,10 @@ class QuickBuildFactory(BasicBuildFactory):
             configureEnv = {}
         mode = "incremental"
         source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
-        GNUAutoconf.__init__(self, source,
-                             configure=configure, configureEnv=configureEnv,
-                             compile=compile,
-                             test=test)
+        super().__init__(source,
+                         configure=configure, configureEnv=configureEnv,
+                         compile=compile,
+                         test=test)
 
 
 class BasicSVN(GNUAutoconf):
@@ -274,7 +272,7 @@ class BasicSVN(GNUAutoconf):
         if configureEnv is None:
             configureEnv = {}
         source = SVN(svnurl=svnurl, mode="incremental")
-        GNUAutoconf.__init__(self, source,
-                             configure=configure, configureEnv=configureEnv,
-                             compile=compile,
-                             test=test)
+        super().__init__(source,
+                         configure=configure, configureEnv=configureEnv,
+                         compile=compile,
+                         test=test)

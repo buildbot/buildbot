@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import iteritems
-
 import os
 
 import jinja2
@@ -47,7 +42,7 @@ def makeTAC(config):
     env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
     env.filters['repr'] = repr
     tpl = env.get_template('buildbot_tac.tmpl')
-    cxt = dict((k.replace('-', '_'), v) for k, v in iteritems(config))
+    cxt = dict((k.replace('-', '_'), v) for k, v in config.items())
     contents = tpl.render(cxt)
 
     tacfile = os.path.join(config['basedir'], "buildbot.tac")
@@ -111,4 +106,4 @@ def createMaster(config):
     if not config['quiet']:
         print("buildmaster configured in %s" % (config['basedir'],))
 
-    defer.returnValue(0)
+    return 0

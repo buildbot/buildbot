@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -152,10 +149,8 @@ class LBF(unittest.TestCase):
         yield self.lbf.flush()
         self.assertCallbacks([('12' * 2048 + '\n') * 16])
 
+    @defer.inlineCallbacks
     def test_empty_flush(self):
-        d = self.lbf.flush()
+        yield self.lbf.flush()
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(self.callbacks, [])
-        return d
+        self.assertEqual(self.callbacks, [])

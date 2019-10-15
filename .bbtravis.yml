@@ -4,7 +4,7 @@ language: python
 
 # Available Python versions:
 python:
-  - "2.7"
+  - "3.5"
 label_mapping:
   TWISTED: tw
   SQLALCHEMY: sqla
@@ -18,23 +18,19 @@ env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - HYPER_SIZE=m1
+  - CHROME_BIN=/usr/bin/chromium-browser
   matrix:
-  # pylint, docs and coverage first as they're more likely to find issues
-  - TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
-  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8 
-  - TWISTED=latest SQLALCHEMY=latest TESTS=isort 
-  - TWISTED=latest SQLALCHEMY=latest TESTS=docs
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   # add js tests in separate job. Start it early because it is quite long
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js HYPER_SIZE=m1
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m2
   - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
-  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.4
+  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
@@ -55,36 +51,44 @@ env:
   #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
   # Test different versions of SQLAlchemy
-  - TWISTED=16.1.0 SQLALCHEMY=0.8.0 TESTS=trial
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=1.1.0 TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial_worker
 
 matrix:
   fast_finish: true
   include:
-
-    # python 3 tests
-    - python: "3.4"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
-
-    - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
-    - python: "3.5"
+    # flake8, isort, pylint, docs first as they're more likely to find issues
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-    - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
+    - python: "3.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
+    - python: "3.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
+    - python: "3.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
+
+    # keep worker supported on py2.7
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
 
 # Dependencies installation commands
 install:
   - pip install -U pip
-  - condition: TESTS != "smokes"
+  - condition: TESTS not in ("smokes", "trial_worker")
     cmd: pip install -r requirements-ci.txt
+  - condition: TESTS == "trial_worker"
+    cmd: pip install -r requirements-ciworker.txt
   - condition: TESTS == "docs"
     cmd: pip install -r requirements-cidocs.txt
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
@@ -101,6 +105,13 @@ install:
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
+  - step: !ShellCommand
+        command: "pip check"
+        warnOnFailure: True
+        flunkOnFailure: False
+        haltOnFailure: False
+        name: "pip check"
+    title: "pip check"
 
 before_script:
   # create real database for tests
@@ -116,13 +127,17 @@ before_script:
 # Tests running commands
 script:
   # make frontend_install_tests takes 17 min, so we only do it post submit
-  - title: frontend tests
-    condition: TESTS == "js" and TRAVIS_PULL_REQUEST
+  - title: frontend build tests
+    condition: TESTS == "js_build" and TRAVIS_PULL_REQUEST
     cmd: make frontend
 
   - title: full frontend tests
-    condition: TESTS == "js" and not TRAVIS_PULL_REQUEST
+    condition: TESTS == "js_build" and not TRAVIS_PULL_REQUEST
     cmd: make frontend_install_tests
+
+  - title: frontend unit tests
+    condition: TESTS == "js_unit"
+    cmd: make frontend_tests_headless
 
   - title: master and worker tests
     condition: TESTS == "trial"
@@ -140,11 +155,6 @@ script:
   - title: coverage tests
     condition: TESTS == "coverage"
     cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
-
-  # blacklisting testrunner for new version of py3
-  - title: py3 tests
-    condition: TESTS == "py3next"
-    cmd: python common/run_py3_working_tests.py
 
   # Run additional tests in their separate job
   - title: pylint
@@ -176,15 +186,15 @@ script:
 
   - title: maketarballs
     condition: TESTS == "smokes"
-    cmd: make tarballs 
+    cmd: make tarballs
 
-  - title: protractor tests
-    condition: TESTS == "smokes"
-    cmd: ./common/smokedist.sh whl
+  # - title: protractor tests
+  #   condition: TESTS == "smokes"
+  #   cmd: ./common/smokedist.sh whl
 
-  - title: tarballs protractor tests
-    condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
-    cmd: ./common/smokedist.sh tar.gz
+  # - title: tarballs protractor tests
+  #   condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
+  #   cmd: ./common/smokedist.sh tar.gz
 
 notifications:
   email: false

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import copy
 import sys
@@ -34,17 +32,20 @@ from buildbot.reporters.notifier import NotifierBase
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
 
 
-class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
+class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
+                       unittest.TestCase, NotifierTestMixin):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantData=True, wantDb=True, wantMq=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
     @defer.inlineCallbacks
     def setupNotifier(self, *args, **kwargs):
@@ -53,16 +54,16 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
         yield mn.startService()
-        defer.returnValue(mn)
+        return mn
 
     def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
-        self.assertRaises(config.ConfigErrors, NotifierBase,
-                          tags=['fast', 'slow'], builders=['a', 'b'])
+        with self.assertRaises(config.ConfigErrors):
+            NotifierBase(tags=['fast', 'slow'], builders=['a', 'b'])
 
     def test_init_warns_notifier_mode_all_in_iter(self):
-        self.assertRaisesConfigError(
-            "mode 'all' is not valid in an iterator and must be passed in as a separate string",
-            lambda: NotifierBase(mode=['all']))
+        with self.assertRaisesConfigError(
+               "mode 'all' is not valid in an iterator and must be passed in as a separate string"):
+            NotifierBase(mode=['all'])
 
     @defer.inlineCallbacks
     def test_buildsetComplete_sends_message(self):
@@ -276,7 +277,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
                                                                          "subject": "subject"}
         yield mn.buildMessage("mybldr", builds, SUCCESS)
-        defer.returnValue((mn, builds))
+        return (mn, builds)
 
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self):
@@ -285,11 +286,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         build = builds[0]
         mn.messageFormatter.formatMessageForBuildResults.assert_called_with(
             ('change',), 'mybldr', build['buildset'], build, self.master,
-            None, [u'me@foo'])
+            None, ['me@foo'])
 
         self.assertEqual(mn.sendMessage.call_count, 1)
         mn.sendMessage.assert_called_with('body', 'subject', 'text', 'mybldr', SUCCESS, builds,
-                                          [u'me@foo'], [], [])
+                                          ['me@foo'], [], [])
 
     @defer.inlineCallbacks
     def test_buildMessage_addLogs(self):
@@ -307,12 +308,12 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         self.assertEqual(mn.sendMessage.call_count, 1)
         # make sure the patch are sent
         self.assertEqual(mn.sendMessage.call_args[0][7],
-                         [{'author': u'him@foo',
+                         [{'author': 'him@foo',
                            'body': b'hello, world',
-                           'comment': u'foo',
+                           'comment': 'foo',
                            'level': 3,
                            'patchid': 99,
-                           'subdir': u'/foo'}])
+                           'subdir': '/foo'}])
 
     @defer.inlineCallbacks
     def test_buildMessage_addPatchNoPatch(self):
@@ -321,7 +322,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         class NoPatchSourcestamp(SourceStamp):
 
             def __init__(self, id, patchid):
-                SourceStamp.__init__(self, id=id)
+                super().__init__(id=id)
         self.patch(fakedb, 'SourceStamp', NoPatchSourcestamp)
         mn, builds = yield self.setupBuildMessage(mode=("change",), addPatch=True)
         self.assertEqual(mn.sendMessage.call_count, 1)

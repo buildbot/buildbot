@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -34,7 +32,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
     verifyMessages = True
 
     def __init__(self, testcase):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.testcase = testcase
         self.setup_called = False
         self.productions = []
@@ -100,7 +98,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.productions = []
 
 
-class FakeQueueRef(object):
+class FakeQueueRef:
 
     def stopConsuming(self):
         if self in self.qrefs:

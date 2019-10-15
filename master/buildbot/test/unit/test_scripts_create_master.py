@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import os
 
 import mock
@@ -30,6 +26,7 @@ from buildbot.scripts import create_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def mkconfig(**kwargs):
@@ -52,6 +49,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     # tests
 
+    @defer.inlineCallbacks
     def do_test_createMaster(self, config):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
@@ -65,37 +63,32 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
             self.patch(create_master, fn, repl)
         repls['createDB'].side_effect = (lambda config:
                                          calls.append(fn) or defer.succeed(None))
-        d = create_master.createMaster(config)
+        rc = yield create_master.createMaster(config)
 
-        @d.addCallback
-        def check(rc):
-            self.assertEqual(rc, 0)
-            self.assertEqual(calls, functions)
-            for repl in itervalues(repls):
-                repl.assert_called_with(config)
-        return d
+        self.assertEqual(rc, 0)
+        self.assertEqual(calls, functions)
+        for repl in repls.values():
+            repl.assert_called_with(config)
 
+    @defer.inlineCallbacks
     def test_createMaster_quiet(self):
-        d = self.do_test_createMaster(mkconfig(quiet=True))
+        yield self.do_test_createMaster(mkconfig(quiet=True))
 
-        @d.addCallback
-        def check(_):
-            self.assertWasQuiet()
-        return d
+        self.assertWasQuiet()
 
+    @defer.inlineCallbacks
     def test_createMaster_loud(self):
-        d = self.do_test_createMaster(mkconfig(quiet=False))
+        yield self.do_test_createMaster(mkconfig(quiet=False))
 
-        @d.addCallback
-        def check(_):
-            self.assertInStdout('buildmaster configured in')
-        return d
+        self.assertInStdout('buildmaster configured in')
 
 
 class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
-                                misc.StdoutAssertionsMixin, unittest.TestCase):
+                                misc.StdoutAssertionsMixin, TestReactorMixin,
+                                unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()
@@ -176,9 +169,9 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_str_log_count(self):
-        self.assertRaises(TypeError,
-                          create_master.makeTAC,
-                          mkconfig(basedir='test', **{'log-count': '30'}))
+        with self.assertRaises(TypeError):
+            create_master.makeTAC(mkconfig(basedir='test',
+                                  **{'log-count': '30'}))
 
     def test_makeTAC_none_log_count(self):
         create_master.makeTAC(mkconfig(basedir='test', **{'log-count': None}))
@@ -191,9 +184,9 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_str_log_size(self):
-        self.assertRaises(TypeError,
-                          create_master.makeTAC,
-                          mkconfig(basedir='test', **{'log-size': '3000'}))
+        with self.assertRaises(TypeError):
+            create_master.makeTAC(mkconfig(basedir='test',
+                                  **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:

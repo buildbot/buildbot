@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import quote_plus as urlquote_plus
+from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
 from twisted.python import log
@@ -32,7 +30,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
-from buildbot.util import unicode2NativeString
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
@@ -47,7 +44,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                         context=None, baseURL=None, verbose=False, **kwargs):
 
         token = yield self.renderSecrets(token)
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
 
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
         self.startDescription = startDescription or 'Build started.'
@@ -89,7 +86,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['name'] = context
 
-        return self._http.post('/api/v3/projects/%d/statuses/%s' % (
+        return self._http.post('/api/v4/projects/%d/statuses/%s' % (
             project_id, sha),
             json=payload)
 
@@ -98,25 +95,24 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         # retrieve project id via cache
         url = giturlparse(sourcestamp['repository'])
         if url is None:
-            defer.returnValue(None)
-        project_full_name = u"%s/%s" % (url.owner, url.repo)
-        project_full_name = unicode2NativeString(project_full_name)
+            return None
+        project_full_name = "%s/%s" % (url.owner, url.repo)
 
         # gitlab needs project name to be fully url quoted to get the project id
         project_full_name = urlquote_plus(project_full_name)
 
         if project_full_name not in self.project_ids:
-            response = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
+            response = yield self._http.get('/api/v4/projects/%s' % (project_full_name))
             proj = yield response.json()
             if response.code not in (200, ):
                 log.msg(
                     'Unknown (or hidden) gitlab project'
                     '{repo}: {message}'.format(
                         repo=project_full_name, **proj))
-                defer.returnValue(None)
+                return None
             self.project_ids[project_full_name] = proj['id']
 
-        defer.returnValue(self.project_ids[project_full_name])
+        return self.project_ids[project_full_name]
 
     @defer.inlineCallbacks
     def send(self, build):
@@ -142,18 +138,21 @@ class GitLabStatusPush(http.HttpStatusPushBase):
 
         sourcestamps = build['buildset']['sourcestamps']
 
+        # FIXME: probably only want to report status for the last commit in the changeset
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
-            proj_id = yield self.getProjectId(sourcestamp)
+            if 'source_project_id' in props:
+                proj_id = props['source_project_id']
+            else:
+                proj_id = yield self.getProjectId(sourcestamp)
             if proj_id is None:
                 continue
             try:
-                branch = unicode2NativeString(sourcestamp['branch'])
-                sha = unicode2NativeString(sha)
-                state = unicode2NativeString(state)
-                target_url = unicode2NativeString(build['url'])
-                context = unicode2NativeString(context)
-                description = unicode2NativeString(description)
+                if 'source_branch' in props:
+                    branch = props['source_branch']
+                else:
+                    branch = sourcestamp['branch']
+                target_url = build['url']
                 res = yield self.createStatus(
                     project_id=proj_id,
                     branch=branch,

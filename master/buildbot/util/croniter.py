@@ -5,10 +5,6 @@
 # Pyflakes warnings corrected
 
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.builtins import range
 
 import re
 from datetime import datetime
@@ -25,7 +21,7 @@ star_or_int_re = re.compile(r'^(\d+|\*)$')
 __all__ = ('croniter',)
 
 
-class croniter(object):
+class croniter:
     RANGES = (
         (0, 59),
         (0, 23),

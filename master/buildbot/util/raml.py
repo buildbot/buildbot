@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import copy
 import json
 import os
@@ -48,10 +44,10 @@ def construct_mapping(loader, node):
 RamlLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
     construct_mapping)
-RamlLoader.add_constructor(u'!include', construct_include)
+RamlLoader.add_constructor('!include', construct_include)
 
 
-class RamlSpec(object):
+class RamlSpec:
 
     """
     This class loads the raml specification, and expose useful
@@ -80,7 +76,7 @@ class RamlSpec(object):
         if uriParameters is None:
             uriParameters = OrderedDict()
 
-        for k, v in iteritems(api):
+        for k, v in api.items():
             if k.startswith("/"):
                 ep = base + k
                 p = copy.deepcopy(uriParameters)
@@ -114,7 +110,7 @@ class RamlSpec(object):
 
     def iter_actions(self, endpoint):
         ACTIONS_MAGIC = '/actions/'
-        for k, v in iteritems(endpoint):
+        for k, v in endpoint.items():
             if k.startswith(ACTIONS_MAGIC):
                 k = k[len(ACTIONS_MAGIC):]
                 v = v['post']

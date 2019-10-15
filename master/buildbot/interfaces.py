@@ -23,25 +23,10 @@ Define the interfaces that are implemented by various buildbot classes.
 # pylint: disable=no-method-argument
 # pylint: disable=inherit-non-class
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from zope.interface import Attribute
 from zope.interface import Interface
 
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-
 # exceptions that can be raised while trying to start a build
-
-
-# This class is deprecated and should no longer be used.
-class NoSlaveError(Exception):
-    pass
-
-
-deprecatedWorkerModuleAttribute(locals(), NoSlaveError,
-                                compat_name="NoSlaveError",
-                                new_name="")
 
 
 class BuilderInUseError(Exception):
@@ -52,21 +37,12 @@ class WorkerTooOldError(Exception):
     pass
 
 
-deprecatedWorkerModuleAttribute(
-    locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
-
-
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
 
 
 class LatentWorkerCannotSubstantiate(Exception):
     pass
-
-
-deprecatedWorkerModuleAttribute(
-    locals(), LatentWorkerFailedToSubstantiate,
-    compat_name="LatentBuildSlaveFailedToSubstantiate")
 
 
 class LatentWorkerSubstantiatiationCancelled(Exception):
@@ -87,7 +63,7 @@ class IChangeSource(IPlugin):
     directories are changed in version control, this object should represent
     the changes as a change dictionary and call::
 
-      self.master.addChange(who=.., rev=.., ..)
+      self.master.data.updates.addChange(who=.., rev=.., ..)
 
     See 'Writing Change Sources' in the manual for more information.
     """
@@ -147,7 +123,6 @@ class IEmailSender(Interface):
 
     """I know how to send email, and can be used by other parts of the
     Buildbot to contact developers."""
-    pass
 
 
 class IEmailLookup(Interface):
@@ -181,9 +156,6 @@ class IWorker(IPlugin):
     pass
 
 
-deprecatedWorkerModuleAttribute(locals(), IWorker, compat_name="IBuildSlave")
-
-
 class ILatentWorker(IWorker):
 
     """A worker that is not always running, but can run when requested.
@@ -215,8 +187,21 @@ class ILatentWorker(IWorker):
         """
 
 
-deprecatedWorkerModuleAttribute(
-    locals(), ILatentWorker, compat_name="ILatentBuildSlave")
+class IMachine(Interface):
+    pass
+
+
+class IMachineAction(Interface):
+    def perform(self, manager):
+        """ Perform an action on the machine managed by manager. Returns a
+            deferred evaluating to True if it was possible to execute the
+            action.
+        """
+
+
+class ILatentMachine(IMachine):
+    """ A machine that is not always running, but can be started when requested.
+    """
 
 
 class IRenderable(Interface):
@@ -433,10 +418,6 @@ class IStatus(Interface):
                            of builds that will be examined within any given
                            Builder.
         """
-        if builders is None:
-            builders = []
-        if branches is None:
-            branches = []
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -551,9 +532,6 @@ class IWorkerStatus(Interface):
         recent message was received from the worker."""
 
 
-deprecatedWorkerModuleAttribute(locals(), IWorkerStatus)
-
-
 class ISchedulerStatus(Interface):
 
     def getName():
@@ -663,8 +641,6 @@ class IBuilderStatus(Interface):
                            This argument imposes a hard limit on the number
                            of builds that will be examined.
         """
-        if branches is None:
-            branches = []
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -702,14 +678,6 @@ class IEventSource(Interface):
         @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
-        if branches is None:
-            branches = []
-        if categories is None:
-            categories = []
-        if committers is None:
-            committers = []
-        if projects is None:
-            projects = []
 
 
 class IBuildStatus(Interface):
@@ -1015,15 +983,6 @@ class IStatusReceiver(IPlugin):
         @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
         will contain self.
         """
-
-
-class IControl(Interface):
-
-    def addChange(change):
-        """Add a change to the change queue, for analysis by schedulers."""
-
-    def getBuilder(name):
-        """Retrieve the IBuilderControl object for the given Builder."""
 
 
 class IBuilderControl(Interface):

@@ -13,22 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class Timed(scheduler.SchedulerMixin, unittest.TestCase):
+class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     OBJECTID = 928754
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

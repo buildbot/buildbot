@@ -13,15 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
 import sqlalchemy as sa
 
 from twisted.internet import defer
-from twisted.internet import reactor
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
@@ -31,19 +28,20 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
     url_lock = None
 
+    @defer.inlineCallbacks
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         tbl = self.db.model.steps
         if stepid is not None:
             wc = (tbl.c.id == stepid)
         else:
             if buildid is None:
-                return defer.fail(RuntimeError('must supply either stepid or buildid'))
+                raise RuntimeError('must supply either stepid or buildid')
             if number is not None:
                 wc = (tbl.c.number == number)
             elif name is not None:
                 wc = (tbl.c.name == name)
             else:
-                return defer.fail(RuntimeError('must supply either number or name'))
+                raise RuntimeError('must supply either number or name')
             wc = wc & (tbl.c.buildid == buildid)
 
         def thd(conn):
@@ -56,8 +54,9 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 rv = self._stepdictFromRow(row)
             res.close()
             return rv
-        return self.db.pool.do(thd)
+        return (yield self.db.pool.do(thd))
 
+    # returns a Deferred that returns a value
     def getSteps(self, buildid):
         def thd(conn):
             tbl = self.db.model.steps
@@ -68,6 +67,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             return [self._stepdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     def addStep(self, buildid, name, state_string):
         def thd(conn):
             tbl = self.db.model.steps
@@ -98,7 +98,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # 50-character identifier, this isn't a simple query.
             res = conn.execute(sa.select([tbl.c.name],
                                          whereclause=((tbl.c.buildid == buildid))))
-            names = set([row[0] for row in res])
+            names = {row[0] for row in res}
             num = 1
             while True:
                 numstr = '_%d' % num
@@ -112,15 +112,17 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             return (got_id, number, newname)
         return self.db.pool.do(thd)
 
-    def startStep(self, stepid, _reactor=reactor):
-        started_at = _reactor.seconds()
+    @defer.inlineCallbacks
+    def startStep(self, stepid):
+        started_at = int(self.master.reactor.seconds())
 
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q, started_at=started_at)
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def setStepStateString(self, stepid, state_string):
         def thd(conn):
             tbl = self.db.model.steps
@@ -161,28 +163,25 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         return self.url_lock.run(lambda: self.db.pool.do(thd))
 
-    def finishStep(self, stepid, results, hidden, _reactor=reactor):
+    # returns a Deferred that returns None
+    def finishStep(self, stepid, results, hidden):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q,
-                         complete_at=_reactor.seconds(),
+                         complete_at=self.master.reactor.seconds(),
                          results=results,
                          hidden=1 if hidden else 0)
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-
         return dict(
             id=row.id,
             number=row.number,
             name=row.name,
             buildid=row.buildid,
-            started_at=mkdt(row.started_at),
-            complete_at=mkdt(row.complete_at),
+            started_at=epoch2datetime(row.started_at),
+            complete_at=epoch2datetime(row.complete_at),
             state_string=row.state_string,
             results=row.results,
             urls=json.loads(row.urls_json),

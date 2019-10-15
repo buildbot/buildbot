@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
@@ -24,6 +21,7 @@ from twisted.trial import unittest
 from buildbot.mq import base
 from buildbot.mq import connector
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 
 
@@ -42,10 +40,11 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
         return defer.succeed(None)
 
 
-class MQConnector(unittest.TestCase):
+class MQConnector(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
         self.conn.setServiceParent(self.master)
@@ -58,8 +57,8 @@ class MQConnector(unittest.TestCase):
 
     def test_setup_unknown_type(self):
         self.mqconfig['type'] = 'unknown'
-        self.assertRaises(AssertionError, lambda:
-                          self.conn.setup())
+        with self.assertRaises(AssertionError):
+            self.conn.setup()
 
     def test_setup_simple_type(self):
         self.patchFakeMQ(name='simple')
@@ -70,18 +69,16 @@ class MQConnector(unittest.TestCase):
         self.assertEqual(self.conn.impl.startConsuming,
                          self.conn.startConsuming)
 
+    @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
         new_config = mock.Mock()
         new_config.mq = dict(type='fake')
-        d = self.conn.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertIdentical(self.conn.impl.new_config, new_config)
-        return d
+        self.assertIdentical(self.conn.impl.new_config, new_config)
 
     @defer.inlineCallbacks
     def test_reconfigService_change_type(self):

@@ -25,9 +25,7 @@ from buildbot_worker import util
 from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.interfaces import IWorkerCommand
 
-# this used to be a CVS $-style "Revision" auto-updated keyword, but since I
-# moved to Darcs as the primary repository, this is updated manually each
-# time this file is changed. The last cvs_ver that was here was 1.51 .
+# The following identifier should be updated each time this file is changed
 command_version = "3.1"
 
 # version history:
@@ -155,7 +153,6 @@ class Command(object):
 
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
-        pass
 
     def doStart(self):
         self.running = True
@@ -195,7 +192,6 @@ class Command(object):
         """Override this in a subclass to allow commands to be interrupted.
         May be called multiple times, test and set self.interrupted=True if
         this matters."""
-        pass
 
     # utility methods, mostly used by WorkerShellCommand and the like
 

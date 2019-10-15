@@ -13,14 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
-import mock
-
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -29,6 +22,7 @@ from buildbot.schedulers import triggerable
 from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
@@ -37,28 +31,22 @@ class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
         self.assertInterfacesImplemented(triggerable.Triggerable)
 
 
-class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
+class Triggerable(scheduler.SchedulerMixin, TestReactorMixin,
+                  unittest.TestCase):
 
     OBJECTID = 33
     SCHEDULERID = 13
 
     def setUp(self):
+        self.setUpTestReactor()
         # Necessary to get an assertable submitted_at time.
-        self.now = 946684799
-        self.clock = task.Clock()
-        self.clock.advance(self.now)
-        self.clock_patch = mock.patch(
-            'buildbot.test.fake.fakedb.reactor.seconds', self.clock.seconds)
-        self.clock_patch.start()
+        self.reactor.advance(946684799)
 
         self.setUpScheduler()
-        # Patch reactor for sched._updateWaiters debounce
-        self.master.reactor = self.clock
         self.subscription = None
 
     def tearDown(self):
         self.tearDownScheduler()
-        self.clock_patch.stop()
 
     def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):
         self.master.db.insertTestData([fakedb.Builder(id=77, name='b')])
@@ -73,9 +61,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def assertTriggeredBuildset(self, idsDeferred, waited_for, properties=None, sourcestamps=None):
         if properties is None:
-                properties = {}
+            properties = {}
         bsid, brids = yield idsDeferred
-        properties.update({u'scheduler': ('n', u'Scheduler')})
+        properties.update({'scheduler': ('n', 'Scheduler')})
 
         self.assertEqual(
             self.master.db.buildsets.buildsets[bsid]['properties'],
@@ -95,7 +83,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'complete': False,
                 'complete_at': None,
                 'external_idstring': None,
-                'reason': u"The Triggerable scheduler named 'n' triggered this build",
+                'reason': "The Triggerable scheduler named 'n' triggered this build",
                 'results': -1,
                 'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
                 'parent_buildid': None,
@@ -118,13 +106,13 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     del actual_ss[key]
             self.assertEqual(expected_ss, actual_ss)
 
-        for brid in itervalues(brids):
+        for brid in brids.values():
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,
                 {
                     'buildrequestid': brid,
-                    'buildername': u'b',
+                    'buildername': 'b',
                     'builderid': 77,
                     'buildsetid': bsid,
                     'claimed': False,
@@ -147,7 +135,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                                         complete=True,
                                         complete_at=200,
                                         external_idstring=None,
-                                        reason=u'triggering',
+                                        reason='triggering',
                                         results=results,
                                         sourcestamps=[],
                                         parent_buildid=None,
@@ -186,12 +174,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
               'codebase': 'cb'}
         idsDeferred, d = sched.trigger(
             waited_for, sourcestamps=[ss], set_props=set_props)
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
 
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
-            properties={u'pr': ('op', u'test')},
+            properties={'pr': ('op', 'test')},
             sourcestamps=[
                 dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev'),
@@ -226,7 +214,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend the matching buildset is complete
         self.sendCompletionMessage(200)
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
 
         # scheduler should have reacted
         self.assertEqual(
@@ -264,7 +252,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # and the second time
         idsDeferred, d = sched.trigger(
             waited_for, [makeSS('myrev2')])  # triggers bsid 201
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
@@ -285,7 +273,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.sendCompletionMessage(201, results=22)
         self.sendCompletionMessage(9, results=3)
         self.sendCompletionMessage(200, results=11)
-        self.clock.advance(0)  # let the debounced function fire
+        self.reactor.advance(0)  # let the debounced function fire
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled

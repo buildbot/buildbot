@@ -1,8 +1,10 @@
-// Import bootstrap and font awesome stylesheets
-@import "../../libs/bootstrap/less/bootstrap.less";
-@import "../../libs/font-awesome/less/font-awesome.less";
-@import (inline) "../../libs/guanlecoja-ui/styles.css";
-@fa-font-path: "./fonts";
+@import "~bootstrap/less/bootstrap.less";
+@import "~font-awesome/less/font-awesome.less";
+@import "../app/**/*.less";
+@import "./animations.less";
+@import "./colors.less";
+@import "./mobile.less";
+@import (inline) "~guanlecoja-ui/dist/styles.css";
 /* base css for angular, don't display anything until angular is running */
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 from abc import ABCMeta
@@ -49,7 +47,7 @@ class AuthRootResource(resource.Resource):
             return self.master.www.auth.getLoginResource()
         elif path == b'logout':
             return self.master.www.auth.getLogoutResource()
-        return resource.Resource.getChild(self, path, request)
+        return super().getChild(path, request)
 
 
 class AuthBase(config.ConfiguredMixin):
@@ -107,13 +105,13 @@ class RemoteUserAuth(AuthBase):
     headerRegex = re.compile(br"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")
 
     def __init__(self, header=None, headerRegex=None, **kwargs):
-        AuthBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if self.userInfoProvider is None:
             self.userInfoProvider = UserInfoProviderBase()
         if header is not None:
-            self.header = header
+            self.header = unicode2bytes(header)
         if headerRegex is not None:
-            self.headerRegex = re.compile(headerRegex)
+            self.headerRegex = re.compile(unicode2bytes(headerRegex))
 
     @defer.inlineCallbacks
     def maybeAutoLogin(self, request):
@@ -125,13 +123,14 @@ class RemoteUserAuth(AuthBase):
             raise Error(
                 403, b'http header does not match regex! "' + header + b'" not matching ' + self.headerRegex.pattern)
         session = request.getSession()
-        if session.user_info != dict(res.groupdict()):
-            session.user_info = dict(res.groupdict())
+        user_info = {k: bytes2unicode(v) for k, v in res.groupdict().items()}
+        if session.user_info != user_info:
+            session.user_info = user_info
             yield self.updateUserInfo(request)
 
 
 @implementer(IRealm)
-class AuthRealm(object):
+class AuthRealm:
 
     def __init__(self, master, auth):
         self.auth = auth
@@ -148,7 +147,7 @@ class AuthRealm(object):
 class TwistedICredAuthBase(AuthBase):
 
     def __init__(self, credentialFactories, checkers, **kwargs):
-        AuthBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if self.userInfoProvider is None:
             self.userInfoProvider = UserInfoProviderBase()
         self.credentialFactories = credentialFactories
@@ -163,9 +162,7 @@ class TwistedICredAuthBase(AuthBase):
 class HTPasswdAuth(TwistedICredAuthBase):
 
     def __init__(self, passwdFile, **kwargs):
-        TwistedICredAuthBase.__init__(
-            self,
-            [DigestCredentialFactory(b"md5", b"buildbot"),
+        super().__init__([DigestCredentialFactory(b"md5", b"buildbot"),
              BasicCredentialFactory(b"buildbot")],
             [FilePasswordDB(passwdFile)],
             **kwargs)
@@ -178,9 +175,7 @@ class UserPasswordAuth(TwistedICredAuthBase):
             users = {user: unicode2bytes(pw) for user, pw in users.items()}
         elif isinstance(users, list):
             users = [(user, unicode2bytes(pw)) for user, pw in users]
-        TwistedICredAuthBase.__init__(
-            self,
-            [DigestCredentialFactory(b"md5", b"buildbot"),
+        super().__init__([DigestCredentialFactory(b"md5", b"buildbot"),
              BasicCredentialFactory(b"buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
@@ -192,9 +187,7 @@ class CustomAuth(TwistedICredAuthBase):
     credentialInterfaces = [IUsernamePassword]
 
     def __init__(self, **kwargs):
-        TwistedICredAuthBase.__init__(
-            self,
-            [BasicCredentialFactory(b"buildbot")],
+        super().__init__([BasicCredentialFactory(b"buildbot")],
             [self],
             **kwargs)
 
@@ -219,7 +212,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     # HTTPAuthSessionWrapper
 
     def __init__(self, master, username):
-        LoginResource.__init__(self, master)
+        super().__init__(master)
         self.username = username
 
     @defer.inlineCallbacks

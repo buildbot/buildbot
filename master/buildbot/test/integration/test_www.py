@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
@@ -33,7 +31,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import www
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
 from buildbot.www import authz
@@ -71,7 +69,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         yield self.setUpRealDatabase(table_names=['masters', 'objects', 'object_state'],
                                      sqlite_memory=False)
 
-        master = fakemaster.FakeMaster()
+        master = fakemaster.FakeMaster(reactor)
 
         master.config.db = dict(db_url=self.db_url)
         master.db = dbconnector.DBConnector('basedir')
@@ -142,7 +140,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         if expect200 and pg.code != 200:
             self.fail("did not get 200 response for '%s'" % (url,))
 
-        defer.returnValue(json.loads(bytes2NativeString(body)))
+        return json.loads(bytes2unicode(body))
 
     def link(self, suffix):
         return self.url + b'api/v2/' + suffix

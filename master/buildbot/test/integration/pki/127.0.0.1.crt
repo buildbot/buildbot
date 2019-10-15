@@ -1,0 +1,98 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=ZZ, ST=QA, L=Nowhere, O=Buildbot, OU=Development Team, CN=Buildbot CA/name=EasyRSA/emailAddress=buildbot@integration.test
+        Validity
+            Not Before: Sep  2 12:10:17 2016 GMT
+            Not After : Aug 31 12:10:17 2026 GMT
+        Subject: C=ZZ, ST=QA, L=Nowhere, O=Buildbot, OU=Development Team, CN=127.0.0.1/name=EasyRSA/emailAddress=buildbot@integration.test
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:9e:e5:6e:8d:83:89:6e:3c:45:7a:37:2d:cf:dc:
+                    a4:37:38:30:b8:58:cb:50:b7:78:d2:f5:11:e4:e4:
+                    3b:de:3f:02:f0:b5:4b:2a:f4:4e:e5:cc:f0:e7:cf:
+                    43:a4:36:5a:22:6b:89:3e:aa:c4:ef:2c:75:3a:cc:
+                    43:e4:8d:d5:99:4e:1f:08:a6:3d:36:2d:72:80:10:
+                    7b:52:20:44:9a:c7:ee:6b:45:2f:41:cd:0e:3e:dd:
+                    59:01:eb:bb:11:2c:cb:e4:34:bd:63:d9:73:84:90:
+                    36:d9:9b:1b:1b:4f:d0:15:12:89:df:bd:a6:3c:cf:
+                    7e:5b:f5:0b:4d:e1:18:47:1f:7c:58:e4:2a:ae:17:
+                    fa:c1:13:64:6f:06:78:32:92:8f:83:78:b0:5d:a4:
+                    8b:7f:a5:8d:d5:c8:87:b1:37:28:17:7a:34:d5:83:
+                    29:8c:e8:d1:1d:a2:df:4d:c5:94:22:4d:0e:75:92:
+                    20:bb:8b:b4:08:85:fb:17:1e:8b:f3:86:b5:b5:5c:
+                    63:9f:fa:3e:e7:52:7c:b6:c6:2a:a3:79:37:44:e0:
+                    fc:cd:0b:a1:fc:3c:42:fe:ee:a1:11:b1:c0:a4:17:
+                    fb:77:5f:89:ae:7c:55:37:0e:75:8e:93:a8:3a:c3:
+                    34:1b:24:2f:39:87:2c:ee:f0:70:7e:d4:70:0d:db:
+                    29:af
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                Easy-RSA Generated Certificate
+            X509v3 Subject Key Identifier: 
+                18:6E:2E:76:45:FE:0D:4D:66:76:B6:4D:97:AE:DD:87:27:F0:42:A2
+            X509v3 Authority Key Identifier: 
+                keyid:FB:03:F2:3E:31:9D:6C:14:52:7D:8E:29:18:92:7E:75:43:7C:09:F9
+                DirName:/C=ZZ/ST=QA/L=Nowhere/O=Buildbot/OU=Development Team/CN=Buildbot CA/name=EasyRSA/emailAddress=buildbot@integration.test
+                serial:B1:2A:2E:B0:BF:9B:5C:37
+
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Key Usage: 
+                Digital Signature
+            X509v3 Subject Alternative Name: 
+                DNS:127.0.0.1
+    Signature Algorithm: sha256WithRSAEncryption
+         58:d9:74:e7:ce:32:aa:b1:a7:dc:06:23:c6:bd:76:b4:3b:7b:
+         01:ec:82:61:b7:80:7e:ba:c9:ca:a0:48:40:ef:3e:ca:1c:55:
+         0d:64:3f:80:8c:01:5f:c0:2e:a3:b6:bd:ec:67:29:d6:cf:3e:
+         f4:d2:b9:3b:70:84:95:d8:6d:81:dd:dc:07:6a:15:0c:48:ea:
+         dd:b8:93:55:6f:3f:0d:6f:95:57:d3:dc:e4:a1:60:fd:d4:1b:
+         33:eb:b1:95:14:c0:65:c7:aa:95:f3:a6:0b:8b:73:fa:77:33:
+         61:68:e8:fd:cd:f5:1a:a4:c4:6b:78:5d:f6:3b:23:be:f4:92:
+         88:dc:42:d5:cb:04:96:0b:e5:a7:61:ad:1a:68:ef:8f:38:1f:
+         cf:a0:de:5a:aa:27:e2:fb:98:de:eb:76:1b:a4:0c:2c:7b:8f:
+         38:14:21:28:f2:cb:c6:78:9f:43:c7:f6:9e:e9:49:54:fa:ff:
+         36:67:ee:69:2b:d2:3b:2d:08:25:7c:5f:f5:49:0a:23:c1:e3:
+         8b:4b:09:a5:15:95:60:02:9f:91:bf:64:9c:a8:99:9a:7a:bf:
+         7a:45:58:c2:0d:b1:da:f0:73:96:0e:9d:fd:f6:a3:02:8f:dc:
+         fe:77:40:16:64:23:57:7f:87:d5:5b:8e:5a:3d:f1:2a:29:e2:
+         c4:ea:d7:43
+-----BEGIN CERTIFICATE-----
+MIIFTjCCBDagAwIBAgIBATANBgkqhkiG9w0BAQsFADCBrDELMAkGA1UEBhMCWlox
+CzAJBgNVBAgTAlFBMRAwDgYDVQQHEwdOb3doZXJlMREwDwYDVQQKEwhCdWlsZGJv
+dDEZMBcGA1UECxMQRGV2ZWxvcG1lbnQgVGVhbTEUMBIGA1UEAxMLQnVpbGRib3Qg
+Q0ExEDAOBgNVBCkTB0Vhc3lSU0ExKDAmBgkqhkiG9w0BCQEWGWJ1aWxkYm90QGlu
+dGVncmF0aW9uLnRlc3QwHhcNMTYwOTAyMTIxMDE3WhcNMjYwODMxMTIxMDE3WjCB
+qjELMAkGA1UEBhMCWloxCzAJBgNVBAgTAlFBMRAwDgYDVQQHEwdOb3doZXJlMREw
+DwYDVQQKEwhCdWlsZGJvdDEZMBcGA1UECxMQRGV2ZWxvcG1lbnQgVGVhbTESMBAG
+A1UEAxMJMTI3LjAuMC4xMRAwDgYDVQQpEwdFYXN5UlNBMSgwJgYJKoZIhvcNAQkB
+FhlidWlsZGJvdEBpbnRlZ3JhdGlvbi50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOC
+AQ8AMIIBCgKCAQEAnuVujYOJbjxFejctz9ykNzgwuFjLULd40vUR5OQ73j8C8LVL
+KvRO5czw589DpDZaImuJPqrE7yx1OsxD5I3VmU4fCKY9Ni1ygBB7UiBEmsfua0Uv
+Qc0OPt1ZAeu7ESzL5DS9Y9lzhJA22ZsbG0/QFRKJ372mPM9+W/ULTeEYRx98WOQq
+rhf6wRNkbwZ4MpKPg3iwXaSLf6WN1ciHsTcoF3o01YMpjOjRHaLfTcWUIk0OdZIg
+u4u0CIX7Fx6L84a1tVxjn/o+51J8tsYqo3k3ROD8zQuh/DxC/u6hEbHApBf7d1+J
+rnxVNw51jpOoOsM0GyQvOYcs7vBwftRwDdsprwIDAQABo4IBeTCCAXUwCQYDVR0T
+BAIwADAtBglghkgBhvhCAQ0EIBYeRWFzeS1SU0EgR2VuZXJhdGVkIENlcnRpZmlj
+YXRlMB0GA1UdDgQWBBQYbi52Rf4NTWZ2tk2Xrt2HJ/BCojCB4QYDVR0jBIHZMIHW
+gBT7A/I+MZ1sFFJ9jikYkn51Q3wJ+aGBsqSBrzCBrDELMAkGA1UEBhMCWloxCzAJ
+BgNVBAgTAlFBMRAwDgYDVQQHEwdOb3doZXJlMREwDwYDVQQKEwhCdWlsZGJvdDEZ
+MBcGA1UECxMQRGV2ZWxvcG1lbnQgVGVhbTEUMBIGA1UEAxMLQnVpbGRib3QgQ0Ex
+EDAOBgNVBCkTB0Vhc3lSU0ExKDAmBgkqhkiG9w0BCQEWGWJ1aWxkYm90QGludGVn
+cmF0aW9uLnRlc3SCCQCxKi6wv5tcNzATBgNVHSUEDDAKBggrBgEFBQcDAjALBgNV
+HQ8EBAMCB4AwFAYDVR0RBA0wC4IJMTI3LjAuMC4xMA0GCSqGSIb3DQEBCwUAA4IB
+AQBY2XTnzjKqsafcBiPGvXa0O3sB7IJht4B+usnKoEhA7z7KHFUNZD+AjAFfwC6j
+tr3sZynWzz700rk7cISV2G2B3dwHahUMSOrduJNVbz8Nb5VX09zkoWD91Bsz67GV
+FMBlx6qV86YLi3P6dzNhaOj9zfUapMRreF32OyO+9JKI3ELVywSWC+WnYa0aaO+P
+OB/PoN5aqifi+5je63YbpAwse484FCEo8svGeJ9Dx/ae6UlU+v82Z+5pK9I7LQgl
+fF/1SQojweOLSwmlFZVgAp+Rv2ScqJmaer96RVjCDbHa8HOWDp399qMCj9z+d0AW
+ZCNXf4fVW45aPfEqKeLE6tdD
+-----END CERTIFICATE-----

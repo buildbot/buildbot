@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import errno
 import os
@@ -55,14 +52,14 @@ def stop(config, signame="TERM", wait=None):
     except OSError as e:
         if e.errno != errno.ESRCH and platformType != "win32":
             raise
-        else:
-            if not config['quiet']:
-                print("buildmaster not running")
-            try:
-                os.unlink(pidfile)
-            except OSError:
-                pass
-            return 0
+
+        if not config['quiet']:
+            print("buildmaster not running")
+        try:
+            os.unlink(pidfile)
+        except OSError:
+            pass
+        return 0
 
     if not wait:
         if not quiet:

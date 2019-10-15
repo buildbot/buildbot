@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from datetime import datetime
 from fnmatch import fnmatch
 
@@ -41,10 +37,10 @@ link_urls = {
 }
 
 
-class PullRequestMixin(object):
+class PullRequestMixin:
     def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
-            for k, v in iteritems(info_dict):
+            for k, v in info_dict.items():
                 name = ".".join([base, k])
                 if isinstance(v, dict):
                     flatten(properties, name, v)
@@ -84,8 +80,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         if repository_type not in ["https", "svn", "git", "ssh"]:
             config.error(
                 "repository_type must be one of {https, svn, git, ssh}")
-        base.ReconfigurablePollingChangeSource.checkConfig(
-            self, name=self.name, **kwargs)
+        super().checkConfig(name=self.name, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self,
@@ -102,8 +97,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         repository_type="https",
                         github_property_whitelist=None,
                         **kwargs):
-        yield base.ReconfigurablePollingChangeSource.reconfigService(
-            self, name=self.name, **kwargs)
+        yield super().reconfigService(name=self.name, **kwargs)
 
         if baseURL is None:
             baseURL = HOSTED_BASE_URL
@@ -148,7 +142,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
         my_json = yield result.json()
-        defer.returnValue(my_json)
+        return my_json
 
     @defer.inlineCallbacks
     def _getPulls(self):
@@ -158,13 +152,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
-        defer.returnValue(my_json)
-
-    @defer.inlineCallbacks
-    def _getEmail(self, user):
-        result = yield self._http.get("/".join(['/users', user]))
-        my_json = yield result.json()
-        defer.returnValue(my_json["email"])
+        return my_json
 
     @defer.inlineCallbacks
     def _getFiles(self, prnumber):
@@ -173,7 +161,25 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         ]))
         my_json = yield result.json()
 
-        defer.returnValue([f["filename"] for f in my_json])
+        return [f["filename"] for f in my_json]
+
+    @defer.inlineCallbacks
+    def _getCommitters(self, prnumber):
+        result = yield self._http.get("/".join([
+            '/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'
+        ]))
+        my_json = yield result.json()
+
+        return [[c["commit"]["committer"]["name"], c["commit"]["committer"]["email"]] for c in my_json]
+
+    @defer.inlineCallbacks
+    def _getAuthors(self, prnumber):
+        result = yield self._http.get("/".join([
+            '/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'
+        ]))
+        my_json = yield result.json()
+
+        return [[a["commit"]["author"]["name"], a["commit"]["author"]["email"]] for a in my_json]
 
     @defer.inlineCallbacks
     def _getCurrentRev(self, prnumber):
@@ -182,7 +188,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._getStateObjectId()
         rev = yield self.master.db.state.getState(result, 'pull_request%d' %
                                                   prnumber, None)
-        defer.returnValue(rev)
+        return rev
 
     @defer.inlineCallbacks
     def _setCurrentRev(self, prnumber, rev):
@@ -197,7 +203,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         # Return a deferred for object id in state db.
         result = yield self.master.db.state.getObjectId(
             '%s/%s' % (self.owner, self.repo), self.db_class_name)
-        defer.returnValue(result)
+        return result
 
     @defer.inlineCallbacks
     def _processChanges(self, github_result):
@@ -231,12 +237,11 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 # update database
                 yield self._setCurrentRev(prnumber, revision)
 
-                author = pr['user']['login']
                 project = pr['base']['repo']['full_name']
                 commits = pr['commits']
 
                 dl = defer.DeferredList(
-                    [self._getFiles(prnumber), self._getEmail(author)],
+                    [self._getAuthors(prnumber), self._getCommitters(prnumber), self._getFiles(prnumber)],
                     consumeErrors=True)
 
                 results = yield dl
@@ -248,19 +253,21 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                                       prnumber, revision))
                         # Fail on the first error!
                         failures[0].raiseException()
-                [files, email] = [r[1] for r in results]
+                [authors, committers, files] = [r[1] for r in results]
 
-                if email is not None and email != "null":
-                    author += " <" + str(email) + ">"
+                author = authors[0][0] + " <" + authors[0][1] + ">"
+
+                committer = committers[0][0] + " <" + committers[0][1] + ">"
 
                 properties = self.extractProperties(pr)
 
                 # emit the change
                 yield self.master.data.updates.addChange(
-                    author=bytes2unicode(author),
+                    author=author,
+                    committer=committer,
                     revision=bytes2unicode(revision),
                     revlink=bytes2unicode(revlink),
-                    comments=u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
+                    comments='GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
                     format(prnumber, commits, 's'
                            if commits > 0 else '', title, comments),
                     when_timestamp=datetime2epoch(updated),
@@ -270,7 +277,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     repository=bytes2unicode(repo),
                     files=files,
                     properties=properties,
-                    src=u'git')
+                    src='git')
 
     @defer.inlineCallbacks
     def poll(self):

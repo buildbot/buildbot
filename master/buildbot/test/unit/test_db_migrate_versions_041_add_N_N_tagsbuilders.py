@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import sqlalchemy as sa
 
 from twisted.trial import unittest
@@ -65,7 +62,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             num_rows = 0
             for row in conn.execute(q):
                 self.assertEqual(
-                    row, (1, u'bname', u'description', u'dontcare'))
+                    row, (1, 'bname', 'description', 'dontcare'))
                 num_rows += 1
             self.assertEqual(num_rows, 1)
 

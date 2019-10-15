@@ -12,8 +12,8 @@ At a bare minimum, you'll need the following for both the buildmaster and a work
 
 Python: https://www.python.org
 
-  Buildbot master works with Python 2.7 or Python-3.4+.
-  Buildbot worker works with Python 2.7, or Python 3.4+.
+  Buildbot master works with Python-3.5+.
+  Buildbot worker works with Python 2.7, or Python 3.5+.
 
   .. note::
 
@@ -22,7 +22,7 @@ Python: https://www.python.org
 
 Twisted: http://twistedmatrix.com
 
-  Buildbot requires Twisted-14.0.1 or later on the master, and Twisted-10.2.0 on the worker.
+  Buildbot requires Twisted-17.9.0 or later on the master and the worker.
   In upcoming versions of Buildbot, a newer Twisted will also be required on the worker.
   As always, the most recent version is recommended.
 
@@ -68,7 +68,7 @@ Jinja2: http://jinja.pocoo.org/
 
 SQLAlchemy: http://www.sqlalchemy.org/
 
-  Buildbot requires SQLAlchemy version 0.8.0 or higher.
+  Buildbot requires SQLAlchemy version 1.1.0 or higher.
   SQLAlchemy allows Buildbot to build database schemas and queries for a wide variety of database systems.
 
 SQLAlchemy-Migrate: https://sqlalchemy-migrate.readthedocs.io/en/latest/

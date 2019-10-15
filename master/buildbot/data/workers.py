@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -24,7 +22,7 @@ from buildbot.data import types
 from buildbot.util import identifiers
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     def db2data(self, dbdict):
         return {
@@ -65,7 +63,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             masterid=kwargs.get('masterid'),
             builderid=kwargs.get('builderid'))
         if sldict:
-            defer.returnValue(self.db2data(sldict))
+            return self.db2data(sldict)
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -101,7 +99,7 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
             masterid=kwargs.get('masterid'),
             paused=paused,
             graceful=graceful)
-        defer.returnValue([self.db2data(w) for w in workers_dicts])
+        return [self.db2data(w) for w in workers_dicts]
 
 
 class Worker(base.ResourceType):
@@ -128,9 +126,9 @@ class Worker(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
-        yield self.master.db.workers.workerConfigured(
+        return self.master.db.workers.workerConfigured(
             workerid=workerid,
             masterid=masterid,
             builderids=builderids)

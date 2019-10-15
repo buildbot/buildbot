@@ -71,6 +71,7 @@ from future.builtins import range
 import os
 import sys
 import threading
+from contextlib import contextmanager
 
 import pywintypes
 import servicemanager
@@ -204,7 +205,7 @@ class BBService(win32serviceutil.ServiceFramework):
                        "Stopping the service.")
             return False
         if save_dirs:
-            dir_string = os.pathsep.join(self.dirs).encode("mbcs")
+            dir_string = os.pathsep.join(self.dirs)
             win32serviceutil.SetServiceCustomOption(self, "directories",
                                                     dir_string)
         return True
@@ -408,7 +409,7 @@ class BBService(win32serviceutil.ServiceFramework):
             except pywintypes.error as err:
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.
-                if err[0] != winerror.ERROR_BROKEN_PIPE:
+                if err.winerror != winerror.ERROR_BROKEN_PIPE:
                     self.warning("Error reading output from process: {0}".format(err))
                 break
             captured_blocks.append(data)
@@ -468,6 +469,60 @@ def RegisterWithFirewall(exe_name, description):
     profile.AuthorizedApplications.Add(app)
 
 
+@contextmanager
+def GetLocalSecurityPolicyHandle(systemName, desiredAccess):
+    # Context manager for GetPolicyHandle
+    policyHandle = win32security.GetPolicyHandle(systemName, desiredAccess)
+    yield policyHandle
+    win32security.LsaClose(policyHandle)
+
+
+def ConfigureLogOnAsAServicePolicy(accountName):
+    # Modifies LocalSecurityPolicy to allow run buildbot as specified user
+    # You can do it manually by running "secpol.msc"
+    # Open Local Policies > User Rights Assignment > Log on as a service
+    # Add User or Group...
+    #
+    # Args:
+    #  accountName(str): fully qualified string in the domain_name\user_name format.
+    #                    use ".\user_name" format for local account
+    SE_SERVICE_LOGON_RIGHT = "SeServiceLogonRight"
+    try:
+        if "\\" not in accountName or accountName.startswith(".\\"):
+            computerName = os.environ['COMPUTERNAME']
+            if not computerName:
+                computerName = win32api.GetComputerName()
+                if not computerName:
+                    print("error: Cannot determine computer name")
+                    return
+            accountName = "{}\\{}".format(computerName, accountName.lstrip(".\\"))
+
+        account = win32security.LookupAccountName(None, accountName)
+        accountSid = account[0]
+        sid = win32security.ConvertSidToStringSid(accountSid)
+    except win32api.error as err:
+        print("error {} ({}): {}".format(err.winerror, err.funcname, err.strerror))
+        return
+
+    with GetLocalSecurityPolicyHandle('', win32security.POLICY_ALL_ACCESS) as policy:
+        win32security.LsaAddAccountRights(policy, accountSid, [SE_SERVICE_LOGON_RIGHT])
+
+    # verify if policy was really modified
+    with GetLocalSecurityPolicyHandle('', win32security.POLICY_ALL_ACCESS) as policy:
+        try:
+            privileges = win32security.LsaEnumerateAccountRights(policy, accountSid)
+        except win32api.error as err:
+            # If no account rights are found or if the function fails for any other reason,
+            # the function returns throws winerror.ERROR_FILE_NOT_FOUND or any other
+            print("error {} ({}): {}".format(err.winerror, err.funcname, err.strerror))
+            privileges = []
+
+        if SE_SERVICE_LOGON_RIGHT in privileges:
+            print("Account {}({}) has granted {} privilege.".format(accountName, sid, SE_SERVICE_LOGON_RIGHT))
+        else:
+            print("error: Account {}({}) does not have {} privilege.".format(accountName, sid, SE_SERVICE_LOGON_RIGHT))
+
+
 # A custom install function.
 
 
@@ -480,6 +535,10 @@ def CustomInstall(opts):
         print("FAILED to register with the Windows firewall")
         print(why)
 
+    for opt, val in opts:
+        if opt == '--username':
+            userName = val
+    ConfigureLogOnAsAServicePolicy(userName)
 
 # Magic code to allow shutdown.  Note that this code is executed in
 # the *child* process, by way of the service process executing us with

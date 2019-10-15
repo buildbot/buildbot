@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import hashlib
 
@@ -46,8 +44,8 @@ class TestBase(unittest.TestCase):
         self.comp.checkLength(self.tbl.c.str32, "short string")
 
     def test_checkLength_long(self):
-        self.assertRaises(RuntimeError, lambda:
-                          self.comp.checkLength(self.tbl.c.str32, "long string" * 5))
+        with self.assertRaises(RuntimeError):
+            self.comp.checkLength(self.tbl.c.str32, ("long string" * 5))
 
     def test_ensureLength_ok(self):
         v = self.comp.ensureLength(self.tbl.c.str32, "short string")
@@ -59,8 +57,8 @@ class TestBase(unittest.TestCase):
         self.comp.checkLength(self.tbl.c.str32, v)
 
     def test_checkLength_text(self):
-        self.assertRaises(AssertionError, lambda:
-                          self.comp.checkLength(self.tbl.c.txt, "long string" * 5))
+        with self.assertRaises(AssertionError):
+            self.comp.checkLength(self.tbl.c.txt, ("long string" * 5))
 
     def test_checkLength_long_not_mysql(self):
         self.db.pool.engine.dialect.name = 'sqlite'
@@ -89,21 +87,19 @@ class TestBase(unittest.TestCase):
 
     def test_hashColumns_unicode_ascii_match(self):
         self.assertEqual(self.comp.hashColumns('master'),
-                         self.comp.hashColumns(u'master'))
+                         self.comp.hashColumns('master'))
 
 
 class TestBaseAsConnectorComponent(unittest.TestCase,
                                    connector_component.ConnectorComponentMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
         # this co-opts the masters table to test findSomethingId
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['masters'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.base = base.DBConnectorComponent(self.db)
-        return d
+        self.db.base = base.DBConnectorComponent(self.db)
 
     @defer.inlineCallbacks
     def test_findSomethingId_race(self):

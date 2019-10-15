@@ -13,12 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import PY3
-from future.utils import iteritems
-
 import collections
 import json
 import re
@@ -33,7 +27,6 @@ from buildbot import util
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
 from buildbot.util import flatten
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 @implementer(IProperties)
@@ -85,7 +78,7 @@ class Properties(util.ComparableMixin):
     @property
     def sourcestamps(self):
         if self.build is not None:
-            return [b.asSSDict() for b in self.build.getAllSourceStamps()]
+            return [b.asDict() for b in self.build.getAllSourceStamps()]
         elif self._sourcestamps is not None:
             return self._sourcestamps
         raise AttributeError('neither build nor _sourcestamps are set')
@@ -93,6 +86,12 @@ class Properties(util.ComparableMixin):
     @sourcestamps.setter
     def sourcestamps(self, value):
         self._sourcestamps = value
+
+    def getSourceStamp(self, codebase=''):
+        for source in self.sourcestamps:
+            if source['codebase'] == codebase:
+                return source
+        return None
 
     @property
     def changes(self):
@@ -119,7 +118,7 @@ class Properties(util.ComparableMixin):
     @classmethod
     def fromDict(cls, propDict):
         properties = cls()
-        for name, (value, source) in iteritems(propDict):
+        for name, (value, source) in propDict.items():
             properties.setProperty(name, value, source)
         return properties
 
@@ -143,30 +142,28 @@ class Properties(util.ComparableMixin):
 
     def __bool__(self):
         return bool(self.properties)
-    if not PY3:
-        __nonzero__ = __bool__
 
     def getPropertySource(self, name):
         return self.properties[name][1]
 
     def asList(self):
         """Return the properties as a sorted list of (name, value, source)"""
-        ret = sorted([(k, v[0], v[1]) for k, v in iteritems(self.properties)])
+        ret = sorted([(k, v[0], v[1]) for k, v in self.properties.items()])
         return ret
 
     def asDict(self):
         """Return the properties as a simple key:value dictionary,
         properly unicoded"""
-        return dict((k, (v, s)) for k, (v, s) in iteritems(self.properties))
+        return self.properties.copy()
 
     def __repr__(self):
         return ('Properties(**' +
-                repr(dict((k, v[0]) for k, v in iteritems(self.properties))) +
+                repr(dict((k, v[0]) for k, v in self.properties.items())) +
                 ')')
 
     def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
-        for k, v in iteritems(dict):
+        for k, v in dict.items():
             self.setProperty(k, v, source, runtime=runtime)
 
     def updateFromProperties(self, other):
@@ -177,7 +174,7 @@ class Properties(util.ComparableMixin):
     def updateFromPropertiesNoRuntime(self, other):
         """Update this object based on another object, but don't
         include properties that were marked as runtime."""
-        for k, v in iteritems(other.properties):
+        for k, v in other.properties.items():
             if k not in other.runtime:
                 self.properties[k] = v
 
@@ -193,7 +190,8 @@ class Properties(util.ComparableMixin):
 
     def setProperty(self, name, value, source, runtime=False):
         name = util.bytes2unicode(name)
-        json.dumps(value)  # Let the exception propagate ...
+        if not IRenderable.providedBy(value):
+            json.dumps(value)  # Let the exception propagate ...
         source = util.bytes2unicode(source)
 
         self.properties[name] = (value, source)
@@ -225,7 +223,7 @@ class Properties(util.ComparableMixin):
         return text
 
 
-class PropertiesMixin(object):
+class PropertiesMixin:
 
     """
     A mixin to add L{IProperties} methods to a class which does not implement
@@ -266,7 +264,7 @@ class PropertiesMixin(object):
         return props.render(value)
 
 
-class _PropertyMap(object):
+class _PropertyMap:
 
     """
     Privately-used mapping object to implement WithProperties' substitutions,
@@ -356,30 +354,13 @@ class WithProperties(util.ComparableMixin):
         self.args = args
         if not self.args:
             self.lambda_subs = lambda_subs
-            for key, val in iteritems(self.lambda_subs):
+            for key, val in self.lambda_subs.items():
                 if not callable(val):
                     raise ValueError(
                         'Value for lambda substitution "%s" must be callable.' % key)
         elif lambda_subs:
             raise ValueError(
                 'WithProperties takes either positional or keyword substitutions, not both.')
-
-        # Deprecated after worker-name transition property names support.
-        if self.args:
-            # Property names are specified in the arguments, e.g.
-            #     WithProperties("build-%s-%s.tar.gz", "branch", "revision")
-            for prop_name in self.args:
-                # Report on parent frame.
-                _on_property_usage(prop_name, stacklevel=1)
-        else:
-            # Property names are specified in string format, e.g.
-            #     WithProperties('REVISION=%(got_revision)s')
-            # TODO: this is not perfect parsing of string formatting, but well
-            # enough for real cases.
-            for match in re.finditer(r"%\(([A-Za-z0-9_]+)\)", self.fmtstring):
-                prop_name = match.group(1)
-                # Report on parent frame.
-                _on_property_usage(prop_name, stacklevel=1)
 
     def getRenderingFor(self, build):
         pmap = _PropertyMap(build.getProperties())
@@ -389,7 +370,7 @@ class WithProperties(util.ComparableMixin):
                 strings.append(pmap[name])
             s = self.fmtstring % tuple(strings)
         else:
-            for k, v in iteritems(self.lambda_subs):
+            for k, v in self.lambda_subs.items():
                 pmap.add_temporary_value(k, v(build))
             s = self.fmtstring % pmap
         return s
@@ -411,7 +392,7 @@ _notHasKey = _NotHasKey()
 
 
 @implementer(IRenderable)
-class _Lookup(util.ComparableMixin, object):
+class _Lookup(util.ComparableMixin):
 
     compare_attrs = (
         'value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
@@ -459,7 +440,7 @@ class _Lookup(util.ComparableMixin, object):
                 rv = yield build.render(value[index])
         if rv is None:
             rv = yield build.render(self.elideNoneAs)
-        defer.returnValue(rv)
+        return rv
 
 
 def _getInterpolationList(fmtstring):
@@ -470,7 +451,7 @@ def _getInterpolationList(fmtstring):
 
 
 @implementer(IRenderable)
-class _PropertyDict(object):
+class _PropertyDict:
 
     def getRenderingFor(self, build):
         return build.getProperties()
@@ -480,7 +461,7 @@ _thePropertyDict = _PropertyDict()
 
 
 @implementer(IRenderable)
-class _SecretRenderer(object):
+class _SecretRenderer:
 
     def __init__(self, secret_name):
         self.secret_name = secret_name
@@ -498,33 +479,16 @@ class _SecretRenderer(object):
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secret_name)
         properties.useSecret(secret_detail.value, self.secret_name)
-        defer.returnValue(secret_detail.value)
+        return secret_detail.value
 
 
 class Secret(_SecretRenderer):
 
     def __repr__(self):
-        return "Secret({0})".format(self.secretKey)
-
-    def __init__(self, secretKey):
-        self.secretKey = secretKey
-
-    @defer.inlineCallbacks
-    def getRenderingFor(self, props):
-        secretsSrv = props.master.namedServices.get("secrets")
-        if not secretsSrv:
-            error_message = "secrets service not started, need to configure" \
-                            " SecretManager in c['services'] to use 'secrets'" \
-                            "in Interpolate"
-            raise KeyError(error_message)
-        credsservice = props.master.namedServices['secrets']
-        secret_detail = yield credsservice.get(self.secretKey)
-        if secret_detail is None:
-            raise KeyError("secret key %s is not found in any provider" % self.secretKey)
-        defer.returnValue(secret_detail.value)
+        return "Secret({0})".format(self.secret_name)
 
 
-class _SecretIndexer(object):
+class _SecretIndexer:
 
     def __contains__(self, password):
         return True
@@ -534,22 +498,22 @@ class _SecretIndexer(object):
 
 
 @implementer(IRenderable)
-class _SourceStampDict(util.ComparableMixin, object):
+class _SourceStampDict(util.ComparableMixin):
 
     compare_attrs = ('codebase',)
 
     def __init__(self, codebase):
         self.codebase = codebase
 
-    def getRenderingFor(self, build):
-        ss = build.getBuild().getSourceStamp(self.codebase)
+    def getRenderingFor(self, props):
+        ss = props.getSourceStamp(self.codebase)
         if ss:
-            return ss.asDict()
+            return ss
         return {}
 
 
 @implementer(IRenderable)
-class _Lazy(util.ComparableMixin, object):
+class _Lazy(util.ComparableMixin):
 
     compare_attrs = ('value',)
 
@@ -563,29 +527,8 @@ class _Lazy(util.ComparableMixin, object):
         return '_Lazy(%r)' % self.value
 
 
-def _on_property_usage(prop_name, stacklevel):
-    """Handle deprecated properties after worker-name transition.
-
-    :param stacklevel: stack level relative to the caller's frame.
-    Defaults to caller of the caller of this function.
-    """
-
-    # "Remove" current frame
-    stacklevel += 1
-
-    deprecated_to_new_props = {'slavename': 'workername'}
-
-    if prop_name in deprecated_to_new_props:
-        reportDeprecatedWorkerNameUsage(
-            "Property '{old_name}' is deprecated, "
-            "use '{new_name}' instead.".format(
-                old_name=prop_name,
-                new_name=deprecated_to_new_props[prop_name]),
-            stacklevel=stacklevel)
-
-
 @implementer(IRenderable)
-class Interpolate(util.ComparableMixin, object):
+class Interpolate(util.ComparableMixin):
 
     """
     This is a marker class, used fairly widely to indicate that we
@@ -626,8 +569,6 @@ class Interpolate(util.ComparableMixin, object):
                 "Property name must be alphanumeric for prop Interpolation '%s'" % arg)
             prop = repl = None
 
-        # Report in proper place with typical stack trace...
-        _on_property_usage(prop, stacklevel=4)
         return _thePropertyDict, prop, repl
 
     @staticmethod
@@ -690,7 +631,7 @@ class Interpolate(util.ComparableMixin, object):
     @staticmethod
     def _splitBalancedParen(delim, arg):
         parenCount = 0
-        for i in range(0, len(arg)):
+        for i, val in enumerate(arg):
             if arg[i] == "(":
                 parenCount += 1
             if arg[i] == ")":
@@ -776,7 +717,7 @@ class Interpolate(util.ComparableMixin, object):
 
 
 @implementer(IRenderable)
-class _ComparisonRenderer(util.ComparableMixin, object):
+class _ComparisonRenderer(util.ComparableMixin):
     """
     An instance of this class renders a comparison given by a comparator
     function with v1 and v2
@@ -792,7 +733,7 @@ class _ComparisonRenderer(util.ComparableMixin, object):
     def getRenderingFor(self, props):
         v1 = yield props.render(self.v1)
         v2 = yield props.render(self.v2)
-        defer.returnValue(self.comparator(v1, v2))
+        return self.comparator(v1, v2)
 
     def __repr__(self):
         return '%r %r %r' % (self.v1, self.cstr, self.v2)
@@ -818,9 +759,6 @@ class Property(util.ComparableMixin):
         self.key = key
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
-
-        # Report on parent frame.
-        _on_property_usage(key, stacklevel=1)
 
     def __eq__(self, other):
         return _ComparisonRenderer(self, other, "==", lambda v1, v2: v1 == v2)
@@ -891,20 +829,36 @@ class FlattenList(util.ComparableMixin):
 
 
 @implementer(IRenderable)
-class _Renderer(util.ComparableMixin, object):
+class _Renderer(util.ComparableMixin):
 
     compare_attrs = ('fn',)
 
     def __init__(self, fn):
         self.fn = fn
+        self.args = []
+        self.kwargs = {}
 
+    def withArgs(self, *args, **kwargs):
+        new_renderer = _Renderer(self.fn)
+        new_renderer.args = self.args + list(args)
+        new_renderer.kwargs = dict(self.kwargs)
+        new_renderer.kwargs.update(kwargs)
+        return new_renderer
+
+    @defer.inlineCallbacks
     def getRenderingFor(self, props):
+        args = yield props.render(self.args)
+        kwargs = yield props.render(self.kwargs)
+
         # We allow the renderer fn to return a renderable for convenience
-        d = defer.maybeDeferred(self.fn, props)
-        d.addCallback(props.render)
-        return d
+        result = yield self.fn(props, *args, **kwargs)
+        result = yield props.render(result)
+        return result
 
     def __repr__(self):
+        if self.args or self.kwargs:
+            return 'renderer(%r, args=%r, kwargs=%r)' % (self.fn, self.args,
+                                                         self.kwargs)
         return 'renderer(%r)' % (self.fn,)
 
 
@@ -913,7 +867,7 @@ def renderer(fn):
 
 
 @implementer(IRenderable)
-class _DefaultRenderer(object):
+class _DefaultRenderer:
 
     """
     Default IRenderable adaptor. Calls .getRenderingFor if available, otherwise
@@ -934,7 +888,7 @@ registerAdapter(_DefaultRenderer, object, IRenderable)
 
 
 @implementer(IRenderable)
-class _ListRenderer(object):
+class _ListRenderer:
 
     """
     List IRenderable adaptor. Maps Build.render over the list.
@@ -951,7 +905,7 @@ registerAdapter(_ListRenderer, list, IRenderable)
 
 
 @implementer(IRenderable)
-class _TupleRenderer(object):
+class _TupleRenderer:
 
     """
     Tuple IRenderable adaptor. Maps Build.render over the tuple.
@@ -970,7 +924,7 @@ registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 
 @implementer(IRenderable)
-class _DictRenderer(object):
+class _DictRenderer:
 
     """
     Dict IRenderable adaptor. Maps Build.render over the keys and values in the dict.
@@ -978,7 +932,7 @@ class _DictRenderer(object):
 
     def __init__(self, value):
         self.value = _ListRenderer(
-            [_TupleRenderer((k, v)) for k, v in iteritems(value)])
+            [_TupleRenderer((k, v)) for k, v in value.items()])
 
     def getRenderingFor(self, build):
         d = self.value.getRenderingFor(build)
@@ -990,7 +944,7 @@ registerAdapter(_DictRenderer, dict, IRenderable)
 
 
 @implementer(IRenderable)
-class Transform(object):
+class Transform:
 
     """
     A renderable that combines other renderables' results using an arbitrary function.
@@ -1010,4 +964,4 @@ class Transform(object):
         rfunction = yield iprops.render(self._function)
         rargs = yield iprops.render(self._args)
         rkwargs = yield iprops.render(self._kwargs)
-        defer.returnValue(rfunction(*rargs, **rkwargs))
+        return rfunction(*rargs, **rkwargs)

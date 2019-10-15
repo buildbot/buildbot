@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from buildbot.util import giturlparse
@@ -34,6 +31,7 @@ class Tests(unittest.TestCase):
             self.assertEqual(u.domain, "github.com")
             self.assertEqual(u.owner, "buildbot")
             self.assertEqual(u.repo, "buildbot")
+            self.assertIsNone(u.port)
 
     def test_gitlab(self):
         for u in [
@@ -42,6 +40,7 @@ class Tests(unittest.TestCase):
                 "git@mygitlab.com:group/subgrouptest/testproject.git",
                 "git://mygitlab.com/group/subgrouptest/testproject.git"]:
             u = giturlparse(u)
+            self.assertIsNone(u.port)
             self.assertIn(u.user, (None, "git"))
             self.assertEqual(u.domain, "mygitlab.com")
             self.assertEqual(u.owner, "group/subgrouptest")
@@ -54,6 +53,7 @@ class Tests(unittest.TestCase):
                 "git://mygitlab.com/group/subgrouptest/subsubgroup/testproject.git"]:
             u = giturlparse(u)
             self.assertIn(u.user, (None, "git"))
+            self.assertIsNone(u.port)
             self.assertEqual(u.domain, "mygitlab.com")
             self.assertEqual(u.owner, "group/subgrouptest/subsubgroup")
             self.assertEqual(u.repo, "testproject")
@@ -64,6 +64,7 @@ class Tests(unittest.TestCase):
                 "https://buildbot@mygitlab.com/group/subgrouptest/testproject.git"]:
             u = giturlparse(u)
             self.assertEqual(u.domain, "mygitlab.com")
+            self.assertIsNone(u.port)
             self.assertEqual(u.user, "buildbot")
             self.assertEqual(u.owner, "group/subgrouptest")
             self.assertEqual(u.repo, "testproject")
@@ -88,6 +89,19 @@ class Tests(unittest.TestCase):
             self.assertIn(u.user, (None, "git"))
             self.assertEqual(u.domain, "bitbucket.org")
             self.assertEqual(u.owner, "org")
+            self.assertEqual(u.repo, "repo")
+
+    def test_no_owner(self):
+        for u in [
+                "https://example.org/repo.git",
+                "ssh://example.org:repo.git",
+                "ssh://git@example.org:repo.git",
+                "git@example.org:repo.git",
+                ]:
+            u = giturlparse(u)
+            self.assertIn(u.user, (None, "git"))
+            self.assertEqual(u.domain, "example.org")
+            self.assertIsNone(u.owner)
             self.assertEqual(u.repo, "repo")
 
     def test_protos(self):

@@ -26,8 +26,7 @@ from buildbot.plugins.db import get_plugins
 
 __all__ = [
     'changes', 'schedulers', 'steps', 'util', 'reporters', 'statistics',
-    'worker', 'secrets', 'webhooks',
-    'buildslave',  # deprecated, use 'worker' instead.
+    'worker', 'secrets', 'webhooks'
 ]
 
 
@@ -41,8 +40,5 @@ reporters = get_plugins('reporters', None)
 secrets = get_plugins('secrets', None)
 webhooks = get_plugins('webhooks', None)
 
-# For plugins that are not updated to the new worker names, plus fallback of
-# current Buildbot plugins for old configuration files.
-buildslave = get_plugins('buildslave', IWorker)
 # Worker entry point for new/updated plugins.
 worker = get_plugins('worker', IWorker)

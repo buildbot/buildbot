@@ -48,7 +48,8 @@ class GetCommand(unittest.TestCase):
         self.set_which_results({
             'xeyes': [],
         })
-        self.assertRaises(RuntimeError, lambda: utils.getCommand('xeyes'))
+        with self.assertRaises(RuntimeError):
+            utils.getCommand('xeyes')
 
     def test_getCommand_single(self):
         self.set_which_results({

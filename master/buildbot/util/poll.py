@@ -13,23 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 
 _poller_instances = None
 
 
-class Poller(object):
+class Poller:
 
     __slots__ = ['fn', 'instance', 'loop', 'started', 'running',
                  'pending', 'stopDeferreds', '_reactor']
 
-    def __init__(self, fn, instance):
+    def __init__(self, fn, instance, reactor):
         self.fn = fn
         self.instance = instance
         self.loop = None
@@ -39,20 +36,19 @@ class Poller(object):
         self.stopDeferreds = []
         self._reactor = reactor
 
+    @defer.inlineCallbacks
     def _run(self):
         self.running = True
-        d = defer.maybeDeferred(self.fn, self.instance)
-        # log all errors, so d is always successful
-        d.addErrback(log.err, 'while running %s' % (self.fn,))
+        try:
+            yield defer.maybeDeferred(self.fn, self.instance)
+        except Exception as e:
+            log.err(e, 'while running %s' % (self.fn,))
 
-        @d.addCallback
-        def done(_):
-            self.running = False
-            # loop if there's another pending call
-            if self.pending:
-                self.pending = False
-                return self._run()
-        return d
+        self.running = False
+        # loop if there's another pending call
+        if self.pending:
+            self.pending = False
+            yield self._run()
 
     def __call__(self):
         if self.started:
@@ -89,7 +85,7 @@ class Poller(object):
         return defer.succeed(None)
 
 
-class _Descriptor(object):
+class _Descriptor:
 
     def __init__(self, fn, attrName):
         self.fn = fn
@@ -99,7 +95,7 @@ class _Descriptor(object):
         try:
             poller = getattr(instance, self.attrName)
         except AttributeError:
-            poller = Poller(self.fn, instance)
+            poller = Poller(self.fn, instance, instance.master.reactor)
             setattr(instance, self.attrName, poller)
             # track instances when testing
             if _poller_instances is not None:

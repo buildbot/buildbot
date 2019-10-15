@@ -13,11 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
 
-import datetime
 import os
 import signal
 import socket
@@ -26,59 +22,51 @@ from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.internet import threads
-from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
-from zope.interface import implementer
 
 import buildbot
 import buildbot.pbmanager
 from buildbot import config
-from buildbot import interfaces
 from buildbot import monkeypatches
 from buildbot.buildbot_net_usage_data import sendBuildbotNetUsageData
-from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
 from buildbot.db import exceptions
+from buildbot.machine.manager import MachineManager
 from buildbot.mq import connector as mqconnector
 from buildbot.process import cache
 from buildbot.process import debug
 from buildbot.process import metrics
 from buildbot.process.botmaster import BotMaster
-from buildbot.process.builder import BuilderControl
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
 from buildbot.status.master import Status
-from buildbot.util import bytes2unicode
 from buildbot.util import check_functional_environment
-from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
-from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
 
 
-class LogRotation(object):
+class LogRotation:
 
     def __init__(self):
         self.rotateLength = 1 * 1000 * 1000
         self.maxRotatedFiles = 10
 
 
-class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
-                  WorkerAPICompatMixin):
+class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
     # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
     # unclaimed; this should be at least 2 to avoid false positives
     UNCLAIMED_BUILD_FACTOR = 6
 
     def __init__(self, basedir, configFileName=None, umask=None, reactor=None, config_loader=None):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         if reactor is None:
             from twisted.internet import reactor
@@ -96,7 +84,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             raise config.ConfigErrors([
                 "Can't specify both `config_loader` and `configFilename`.",
             ])
-        elif config_loader is None:
+        if config_loader is None:
             if configFileName is None:
                 configFileName = 'master.cfg'
             config_loader = config.FileLoader(self.basedir, configFileName)
@@ -115,6 +103,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
+        self.config_version = 0  # increased by one on each reconfig
         self.reconfig_active = False
         self.reconfig_requested = False
         self.reconfig_notifier = None
@@ -164,6 +153,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self)
 
+        self.machine_manager = MachineManager()
+        self.machine_manager.setServiceParent(self)
+
         self.scheduler_manager = SchedulerManager()
         self.scheduler_manager.setServiceParent(self)
 
@@ -208,6 +200,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                                                      masterid=self.masterid)
             yield self.data.updates.expireMasters()
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
+        self.masterHeartbeatService.clock = self.reactor
         # we do setServiceParent only when the master is configured
         # master should advertise itself only at that time
 
@@ -292,7 +285,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                                                   masterid=self.masterid)
 
             # call the parent method
-            yield service.AsyncMultiService.startService(self)
+            yield super().startService()
 
             # We make sure the housekeeping is done before configuring in order to cleanup
             # any remaining claimed schedulers or change sources from zombie
@@ -343,13 +336,14 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             if self.running:
                 yield self.botmaster.cleanShutdown(
                     quickMode=True, stopReactor=False)
-                yield service.AsyncMultiService.stopService(self)
+                yield super().stopService()
 
             log.msg("BuildMaster is stopped")
             self._master_initialized = False
         finally:
             yield self.initLock.release()
 
+    @defer.inlineCallbacks
     def reconfig(self):
         # this method wraps doConfig, ensuring it is only ever called once at
         # a time, and alerting the user if the reconfig takes too long
@@ -371,10 +365,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         timer = metrics.Timer("BuildMaster.reconfig")
         timer.start()
 
-        d = self.doReconfig()
-
-        @d.addBoth
-        def cleanup(res):
+        try:
+            yield self.doReconfig()
+        except Exception as e:
+            log.err(e, 'while reconfiguring')
+        finally:
             timer.stop()
             self.reconfig_notifier.stop()
             self.reconfig_notifier = None
@@ -382,11 +377,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             if self.reconfig_requested:
                 self.reconfig_requested = False
                 self.reconfig()
-            return res
-
-        d.addErrback(log.err, 'while reconfiguring')
-
-        return d  # for tests
 
     @defer.inlineCallbacks
     def doReconfig(self):
@@ -400,6 +390,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 self.reactor, self.reactor.getThreadPool(),
                 self.config_loader.loadConfig)
             changes_made = True
+            self.config_version += 1
             self.config = new_config
 
             yield self.reconfigServiceWithBuildbotConfig(new_config)
@@ -438,8 +429,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 "Cannot change c['mq']['type'] after the master has started",
             ])
 
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        return super().reconfigServiceWithBuildbotConfig(new_config)
 
     # informational methods
     def allSchedulers(self):
@@ -450,67 +440,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         @rtype: L{buildbot.status.builder.Status}
         """
         return self.status
-
-    # triggering methods
-
-    @defer.inlineCallbacks
-    def addChange(self, who=None, files=None, comments=None, **kwargs):
-        # deprecated in 0.9.0; will be removed in 1.0.0
-        log.msg("WARNING: change source is using deprecated "
-                "self.master.addChange method; this method will disappear in "
-                "Buildbot-1.0.0")
-        # handle positional arguments
-        kwargs['who'] = who
-        kwargs['files'] = files
-        kwargs['comments'] = comments
-
-        def handle_deprec(oldname, newname):
-            if oldname in kwargs:
-                old = kwargs.pop(oldname)
-                if old is not None:
-                    if kwargs.get(newname) is None:
-                        log.msg("WARNING: change source is using deprecated "
-                                "addChange parameter '%s'" % oldname)
-                        return old
-                    raise TypeError("Cannot provide '%s' and '%s' to addChange"
-                                    % (oldname, newname))
-            return kwargs.get(newname)
-
-        kwargs['author'] = handle_deprec("who", "author")
-        kwargs['when_timestamp'] = handle_deprec("when", "when_timestamp")
-
-        # timestamp must be an epoch timestamp now
-        if isinstance(kwargs.get('when_timestamp'), datetime.datetime):
-            kwargs['when_timestamp'] = datetime2epoch(kwargs['when_timestamp'])
-
-        # unicodify stuff
-        for k in ('comments', 'author', 'revision', 'branch', 'category',
-                  'revlink', 'repository', 'codebase', 'project'):
-            if k in kwargs:
-                kwargs[k] = bytes2unicode(kwargs[k])
-        if kwargs.get('files'):
-            kwargs['files'] = [bytes2unicode(f)
-                               for f in kwargs['files']]
-        if kwargs.get('properties'):
-            kwargs['properties'] = dict((bytes2unicode(k), v)
-                                        for k, v in iteritems(kwargs['properties']))
-
-        # pass the converted call on to the data API
-        changeid = yield self.data.updates.addChange(**kwargs)
-
-        # and turn that changeid into a change object, since that's what
-        # callers expected (and why this method was deprecated)
-        chdict = yield self.db.changes.getChange(changeid)
-        change = yield changes.Change.fromChdict(self, chdict)
-        defer.returnValue(change)
-
-    @defer.inlineCallbacks
-    def addBuildset(self, scheduler, **kwargs):
-        log.msg("WARNING: master.addBuildset is deprecated; "
-                "use the data API update method")
-        bsid, brids = yield self.data.updates.addBuildset(
-            scheduler=scheduler, **kwargs)
-        defer.returnValue((bsid, brids))
 
     # state maintenance (private)
     def getObjectId(self):
@@ -553,23 +482,3 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         def set(objectid):
             return self.db.state.setState(objectid, name, value)
         return d
-
-
-@implementer(interfaces.IControl)
-class Control:
-
-    def __init__(self, master):
-        self.master = master
-
-    def addChange(self, change):
-        self.master.addChange(change)
-
-    def addBuildset(self, **kwargs):
-        return self.master.addBuildset(**kwargs)
-
-    def getBuilder(self, name):
-        b = self.master.botmaster.builders[name]
-        return BuilderControl(b, self)
-
-
-components.registerAdapter(Control, BuildMaster, interfaces.IControl)

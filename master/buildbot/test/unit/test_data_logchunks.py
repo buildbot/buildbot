@@ -13,12 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.builtins import range
-from future.utils import text_type
-
 import textwrap
 
 from twisted.internet import defer
@@ -90,7 +84,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                          {'logid': logid, 'firstline': 0, 'content': expContent})
 
         # line-by-line
-        for i in range(len(expLines)):
+        for i, expLine in enumerate(expLines):
             logchunk = yield self.callGet(path,
                                           resultSpec=resultspec.ResultSpec(offset=i, limit=1))
             self.validateData(logchunk)
@@ -184,9 +178,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     endpointname = "raw"
 
     def validateData(self, data):
-        self.assertIsInstance(data['raw'], text_type)
-        self.assertIsInstance(data['mime-type'], text_type)
-        self.assertIsInstance(data['filename'], text_type)
+        self.assertIsInstance(data['raw'], str)
+        self.assertIsInstance(data['mime-type'], str)
+        self.assertIsInstance(data['filename'], str)
 
     @defer.inlineCallbacks
     def do_test_chunks(self, path, logid, expLines):
@@ -194,11 +188,11 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         logchunk = yield self.callGet(path)
         self.validateData(logchunk)
         if logid == 60:
-            expContent = u'\n'.join([line[1:] for line in expLines])
+            expContent = '\n'.join([line[1:] for line in expLines])
             expFilename = "stdio"
         else:
-            expContent = u'\n'.join(expLines) + '\n'
+            expContent = '\n'.join(expLines) + '\n'
             expFilename = "errors"
 
         self.assertEqual(logchunk,
-                         {'filename': expFilename, 'mime-type': u"text/plain", 'raw': expContent})
+                         {'filename': expFilename, 'mime-type': "text/plain", 'raw': expContent})

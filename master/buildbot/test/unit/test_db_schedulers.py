@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -26,6 +24,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 
 
 class Tests(interfaces.InterfaceTests):
@@ -198,6 +197,7 @@ class Tests(interfaces.InterfaceTests):
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertEqual(sch['masterid'], 13)
 
+    @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked(self):
         d = self.insertTestData([
             self.master13,
@@ -205,25 +205,23 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.schedulers.setSchedulerMaster(25, 13))
-        self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
 
+    @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked_to_this_master(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             self.scheduler25, self.master14, self.scheduler25master,
         ])
-        d.addCallback(lambda _:
-                      self.db.schedulers.setSchedulerMaster(25, 14))
-        return d
+        yield self.db.schedulers.setSchedulerMaster(25, 14)
 
+    @defer.inlineCallbacks
     def test_setSchedulerMaster_active(self):
         d = self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
         ])
         d.addCallback(lambda _:
                       self.db.schedulers.setSchedulerMaster(24, 14))
-        self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_None(self):
@@ -393,10 +391,11 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
@@ -411,26 +410,24 @@ class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['changes', 'schedulers', 'masters',
                          'sourcestamps', 'patches', 'scheduler_masters',
                          'scheduler_changes'])
 
-        def finish_setup(_):
-            self.db.schedulers = \
-                schedulers.SchedulersConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-
-        return d
+        self.db.schedulers = \
+            schedulers.SchedulersConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
+    @defer.inlineCallbacks
     def addClassifications(self, schedulerid, *classifications):
         def thd(conn):
             q = self.db.model.scheduler_changes.insert()
             conn.execute(q, [
                 dict(changeid=c[0], schedulerid=schedulerid, important=c[1])
                 for c in classifications])
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)

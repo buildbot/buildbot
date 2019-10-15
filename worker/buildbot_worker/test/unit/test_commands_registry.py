@@ -29,8 +29,8 @@ class Registry(unittest.TestCase):
         self.assertEqual(factory, shell.WorkerShellCommand)
 
     def test_getFactory_KeyError(self):
-        self.assertRaises(
-            KeyError, lambda: registry.getFactory('nosuchcommand'))
+        with self.assertRaises(KeyError):
+            registry.getFactory('nosuchcommand')
 
     def test_getAllCommandNames(self):
         self.assertTrue('shell' in registry.getAllCommandNames())

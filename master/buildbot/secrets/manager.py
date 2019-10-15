@@ -15,8 +15,6 @@
 """
 manage providers and handle secrets
 """
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -44,4 +42,4 @@ class SecretManager(service.BuildbotServiceManager):
             value = yield provider.get(secret)
             source_name = provider.__class__.__name__
             if value is not None:
-                defer.returnValue(SecretDetails(source_name, secret, value))
+                return SecretDetails(source_name, secret, value)

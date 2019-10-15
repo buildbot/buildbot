@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import errno
 import os
 import string
@@ -184,8 +181,8 @@ class TestSubcommandOptions(unittest.TestCase):
 
     def test_requiredOptions(self):
         self.fakeOptionsFile()
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse(self.RequiredOptions))
+        with self.assertRaises(usage.UsageError):
+            self.parse(self.RequiredOptions)
 
 
 class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
@@ -265,8 +262,8 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def test_loadOptionsFile_syntax_error(self):
         self.writeOptionsFile(self.dir, 'abc=abc')
-        self.assertRaises(NameError, lambda:
-                          self.do_loadOptionsFile(_here=self.dir, exp={}))
+        with self.assertRaises(NameError):
+            self.do_loadOptionsFile(_here=self.dir, exp={})
         self.assertInStdout('error while reading')
 
     def test_loadOptionsFile_toomany(self):

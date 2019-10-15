@@ -40,7 +40,7 @@ To make this work, you will need the following installed:
 
 Preferably, use your distribution package manager to install these.
 
-You will also need a working Internet connection, as virtualenv and pip will need to download other projects from the Internet.
+You will also need a working Internet connection, as virtualenv and pip will need to download other projects from the Internet. The master and builder daemons will need to be able to connect to ``github.com`` via HTTPS to fetch the repo we're testing; if you need to use a proxy for this ensure that either the ``HTTPS_PROXY`` or ``ALL_PROXY`` environment variable is set to your proxy, e.g., by executing ``export HTTPS_PROXY=http://localhost:9080`` in the shell before starting each daemon.
 
 .. note::
 
@@ -58,12 +58,6 @@ We will also use a separate directory to demonstrate the distinction between a m
   mkdir -p ~/tmp/bb-master
   cd ~/tmp/bb-master
 
-On Python 2:
-
-.. code-block:: bash
-
-  virtualenv --no-site-packages sandbox
-  source sandbox/bin/activate
 
 On Python 3:
 
@@ -193,10 +187,10 @@ You should now be able to go to http://localhost:8010, where you will see a web 
 .. image:: _images/index.png
    :alt: index page
 
-Click on the `Waterfall Display link <http://localhost:8010/#/waterfall>`_ and you get this:
+Click on "Builds" at the left to open the submenu and then `Builders <http://localhost:8010/#/builders>`_ to see that the worker you just started has connected to the master:
 
-.. image:: _images/waterfall-empty.png
-   :alt: empty waterfall.
+.. image:: _images/builders.png
+   :alt: builder runtests is active.
 
 Your master is now quietly waiting for new commits to hello-world.
 This doesn't happen very often though.

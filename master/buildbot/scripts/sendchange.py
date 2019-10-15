@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import sys
 import traceback
@@ -55,7 +52,7 @@ def sendchange(config):
     except Exception:
         print("change not sent:")
         traceback.print_exc(file=sys.stdout)
-        defer.returnValue(1)
+        return 1
     else:
         print("change sent successfully")
-        defer.returnValue(0)
+        return 0

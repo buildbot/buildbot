@@ -13,11 +13,6 @@
 #
 # Copyright  Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-from future.utils import string_types
-
 import json
 
 from autobahn.twisted.resource import WebSocketResource
@@ -26,27 +21,28 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import toJson
+from buildbot.util import unicode2bytes
 
 
 class WsProtocol(WebSocketServerProtocol):
 
     def __init__(self, master):
-        WebSocketServerProtocol.__init__(self)
+        super().__init__()
         self.master = master
         self.qrefs = {}
         self.debug = self.master.config.www.get('debug', False)
 
     def sendJsonMessage(self, **msg):
-        return self.sendMessage(json.dumps(msg, default=toJson, separators=(',', ':')).encode('utf8'))
+        return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson, separators=(',', ':'))))
 
     def onMessage(self, frame, isBinary):
         if self.debug:
             log.msg("FRAME %s" % frame)
         # parse the incoming request
 
-        frame = json.loads(bytes2NativeString(frame))
+        frame = json.loads(bytes2unicode(frame))
         _id = frame.get("_id")
         if _id is None:
             return self.sendJsonMessage(error="no '_id' in websocket frame", code=400, _id=None)
@@ -73,7 +69,7 @@ class WsProtocol(WebSocketServerProtocol):
         return tuple([str(p) if p != "*" else None for p in path])
 
     def isPath(self, path):
-        if not isinstance(path, string_types):
+        if not isinstance(path, str):
             return False
         return True
 
@@ -123,7 +119,7 @@ class WsProtocol(WebSocketServerProtocol):
     def connectionLost(self, reason):
         if self.debug:
             log.msg("connection lost", system=self)
-        for qref in itervalues(self.qrefs):
+        for qref in self.qrefs.values():
             qref.stopConsuming()
         self.qrefs = None  # to be sure we don't add any more
 
@@ -131,7 +127,7 @@ class WsProtocol(WebSocketServerProtocol):
 class WsProtocolFactory(WebSocketServerFactory):
 
     def __init__(self, master):
-        WebSocketServerFactory.__init__(self)
+        super().__init__()
         self.master = master
 
     def buildProtocol(self, addr):
@@ -143,4 +139,4 @@ class WsProtocolFactory(WebSocketServerFactory):
 class WsResource(WebSocketResource):
 
     def __init__(self, master):
-        WebSocketResource.__init__(self, WsProtocolFactory(master))
+        super().__init__(WsProtocolFactory(master))

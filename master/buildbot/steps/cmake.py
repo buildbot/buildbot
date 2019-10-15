@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
 
 from buildbot import config
@@ -78,7 +74,7 @@ class CMake(ShellMixin, BuildStep):
             command.append(self.path)
 
         if self.definitions is not None:
-            for item in iteritems(self.definitions):
+            for item in self.definitions.items():
                 command.append('-D%s=%s' % item)
 
         if self.options is not None:
@@ -88,4 +84,4 @@ class CMake(ShellMixin, BuildStep):
 
         yield self.runCommand(cmd)
 
-        defer.returnValue(cmd.results())
+        return cmd.results()

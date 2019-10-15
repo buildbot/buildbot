@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
 
 import base64
 import textwrap
@@ -31,7 +28,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.util import bytes2NativeString
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
@@ -51,8 +49,8 @@ class Tests(interfaces.InterfaceTests):
     ]
 
     testLogLines = [
-        fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                   complete=0, num_lines=7, type=u's'),
+        fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                   complete=0, num_lines=7, type='s'),
         fakedb.LogChunk(logid=201, first_line=0, last_line=1, compressed=0,
                         content=textwrap.dedent("""\
                     line zero
@@ -78,8 +76,8 @@ class Tests(interfaces.InterfaceTests):
         GFwc2VkVGltZT04LjI0NTcwMg==""")
 
     bug3101Rows = [
-        fakedb.Log(id=1470, stepid=101, name=u'problems', slug=u'problems',
-                   complete=1, num_lines=11, type=u't'),
+        fakedb.Log(id=1470, stepid=101, name='problems', slug='problems',
+                   complete=1, num_lines=11, type='t'),
         fakedb.LogChunk(logid=1470, first_line=0, last_line=10, compressed=0,
                         content=bug3101Content),
     ]
@@ -151,16 +149,16 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLog(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                       complete=0, num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                       complete=0, num_lines=200, type='s'),
         ])
         logdict = yield self.db.logs.getLog(201)
         validation.verifyDbDict(self, 'logdict', logdict)
         self.assertEqual(logdict, {
             'id': 201,
             'stepid': 101,
-            'name': u'stdio',
-            'slug': u'stdio',
+            'name': 'stdio',
+            'slug': 'stdio',
             'complete': False,
             'num_lines': 200,
             'type': 's',
@@ -174,33 +172,33 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLogBySlug(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                       complete=0, num_lines=200, type=u's'),
-            fakedb.Log(id=202, stepid=101, name=u'dbg.log', slug=u'dbg_log',
-                       complete=1, num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                       complete=0, num_lines=200, type='s'),
+            fakedb.Log(id=202, stepid=101, name='dbg.log', slug='dbg_log',
+                       complete=1, num_lines=200, type='s'),
         ])
-        logdict = yield self.db.logs.getLogBySlug(101, u'dbg_log')
+        logdict = yield self.db.logs.getLogBySlug(101, 'dbg_log')
         validation.verifyDbDict(self, 'logdict', logdict)
         self.assertEqual(logdict['id'], 202)
 
     @defer.inlineCallbacks
     def test_getLogBySlug_missing(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                       complete=0, num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                       complete=0, num_lines=200, type='s'),
         ])
-        logdict = yield self.db.logs.getLogBySlug(102, u'stdio')
+        logdict = yield self.db.logs.getLogBySlug(102, 'stdio')
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
     def test_getLogs(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                       complete=0, num_lines=200, type=u's'),
-            fakedb.Log(id=202, stepid=101, name=u'dbg.log', slug=u'dbg_log',
-                       complete=1, num_lines=300, type=u't'),
-            fakedb.Log(id=203, stepid=102, name=u'stdio', slug=u'stdio',
-                       complete=0, num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                       complete=0, num_lines=200, type='s'),
+            fakedb.Log(id=202, stepid=101, name='dbg.log', slug='dbg_log',
+                       complete=1, num_lines=300, type='t'),
+            fakedb.Log(id=203, stepid=102, name='stdio', slug='stdio',
+                       complete=0, num_lines=200, type='s'),
         ])
         logdicts = yield self.db.logs.getLogs(101)
         for logdict in logdicts:
@@ -218,8 +216,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLogLines_empty(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                       complete=0, num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                       complete=0, num_lines=200, type='s'),
         ])
         self.assertEqual((yield self.db.logs.getLogLines(201, 9, 99)), '')
         self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
@@ -230,11 +228,11 @@ class Tests(interfaces.InterfaceTests):
         content = self.bug3101Content
         yield self.insertTestData(self.backgroundData + self.bug3101Rows)
         # overall content is the same, with '\n' padding at the end
-        expected = bytes2NativeString(self.bug3101Content + b'\n')
+        expected = bytes2unicode(self.bug3101Content + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 99)),
                          expected)
         # try to fetch just one line
-        expected = bytes2NativeString(content.split(b'\n')[0] + b'\n')
+        expected = bytes2unicode(content.split(b'\n')[0] + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 0)),
                          expected)
 
@@ -242,14 +240,14 @@ class Tests(interfaces.InterfaceTests):
     def test_addLog_getLog(self):
         yield self.insertTestData(self.backgroundData)
         logid = yield self.db.logs.addLog(
-            stepid=101, name=u'config.log', slug=u'config_log', type=u't')
+            stepid=101, name='config.log', slug='config_log', type='t')
         logdict = yield self.db.logs.getLog(logid)
         validation.verifyDbDict(self, 'logdict', logdict)
         self.assertEqual(logdict, {
             'id': logid,
             'stepid': 101,
-            'name': u'config.log',
-            'slug': u'config_log',
+            'name': 'config.log',
+            'slug': 'config_log',
             'complete': False,
             'num_lines': 0,
             'type': 't',
@@ -259,29 +257,29 @@ class Tests(interfaces.InterfaceTests):
     def test_appendLog_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         logid = yield self.db.logs.addLog(
-            stepid=102, name=u'another', slug=u'another', type=u's')
-        self.assertEqual((yield self.db.logs.appendLog(logid, u'xyz\n')),
+            stepid=102, name='another', slug='another', type='s')
+        self.assertEqual((yield self.db.logs.appendLog(logid, 'xyz\n')),
                          (0, 0))
-        self.assertEqual((yield self.db.logs.appendLog(201, u'abc\ndef\n')),
+        self.assertEqual((yield self.db.logs.appendLog(201, 'abc\ndef\n')),
                          (7, 8))
-        self.assertEqual((yield self.db.logs.appendLog(logid, u'XYZ\n')),
+        self.assertEqual((yield self.db.logs.appendLog(logid, 'XYZ\n')),
                          (1, 1))
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 7)),
-                         u"yet another line\nabc\n")
+                         "yet another line\nabc\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 7, 8)),
-                         u"abc\ndef\n")
+                         "abc\ndef\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 8, 8)),
-                         u"def\n")
+                         "def\n")
         self.assertEqual((yield self.db.logs.getLogLines(logid, 0, 1)),
-                         u"xyz\nXYZ\n")
+                         "xyz\nXYZ\n")
         self.assertEqual((yield self.db.logs.getLog(logid)), {
             'complete': False,
             'id': logid,
-            'name': u'another',
-            'slug': u'another',
+            'name': 'another',
+            'slug': 'another',
             'num_lines': 2,
             'stepid': 102,
-            'type': u's',
+            'type': 's',
         })
 
     @defer.inlineCallbacks
@@ -295,16 +293,16 @@ class Tests(interfaces.InterfaceTests):
     def test_addLogLines_big_chunk(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         self.assertEqual(
-            (yield self.db.logs.appendLog(201, u'abc\n' * 20000)),  # 80k
+            (yield self.db.logs.appendLog(201, 'abc\n' * 20000)),  # 80k
             (7, 20006))
         lines = yield self.db.logs.getLogLines(201, 7, 50000)
         self.assertEqual(len(lines), 80000)
-        self.assertEqual(lines, (u'abc\n' * 20000))
+        self.assertEqual(lines, ('abc\n' * 20000))
 
     @defer.inlineCallbacks
     def test_addLogLines_big_chunk_big_lines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        line = u'x' * 33000 + '\n'
+        line = 'x' * 33000 + '\n'
         self.assertEqual((yield self.db.logs.appendLog(201, line * 3)),
                          (7, 9))  # three long lines, all truncated
         lines = yield self.db.logs.getLogLines(201, 7, 100)
@@ -318,7 +316,7 @@ class RealTests(Tests):
     def test_addLogLines_db(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         self.assertEqual(
-            (yield self.db.logs.appendLog(201, u'abc\ndef\nghi\njkl\n')),
+            (yield self.db.logs.appendLog(201, 'abc\ndef\nghi\njkl\n')),
             (7, 10))
 
         def thd(conn):
@@ -338,17 +336,17 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_addLogLines_huge_lines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        line = u'xy' * 70000 + '\n'
+        line = 'xy' * 70000 + '\n'
         yield self.db.logs.appendLog(201, line * 3)
         for lineno in 7, 8, 9:
             line = yield self.db.logs.getLogLines(201, lineno, lineno)
             self.assertEqual(len(line), 65537)
 
     def test_splitBigChunk_unicode_misalignment(self):
-        unaligned = (u'a ' + u'\N{SNOWMAN}' * 30000 + '\n').encode('utf-8')
+        unaligned = ('a ' + '\N{SNOWMAN}' * 30000 + '\n').encode('utf-8')
         # the first 65536 bytes of that line are not valid utf-8
-        self.assertRaises(UnicodeDecodeError, lambda:
-                          unaligned[:65536].decode('utf-8'))
+        with self.assertRaises(UnicodeDecodeError):
+            unaligned[:65536].decode('utf-8')
         chunk, remainder = self.db.logs._splitBigChunk(unaligned, 1)
         # see that it was truncated by two bytes, and now properly decodes
         self.assertEqual(len(chunk), 65534)
@@ -359,7 +357,7 @@ class RealTests(Tests):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         self.db.master.config.logCompressionMethod = "gz"
         self.assertEqual(
-            (yield self.db.logs.appendLog(201, u'abc\n')),
+            (yield self.db.logs.appendLog(201, 'abc\n')),
             (7, 7))
 
         def thd(conn):
@@ -380,7 +378,7 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_raw_compress_big_chunk(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        line = u'xy' * 10000
+        line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "raw"
         self.assertEqual(
             (yield self.db.logs.appendLog(201, line + '\n')),
@@ -405,7 +403,7 @@ class RealTests(Tests):
     def test_gz_compress_big_chunk(self):
         import zlib
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        line = u'xy' * 10000
+        line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "gz"
         self.assertEqual(
             (yield self.db.logs.appendLog(201, line + '\n')),
@@ -430,7 +428,7 @@ class RealTests(Tests):
     def test_bz2_compress_big_chunk(self):
         import bz2
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        line = u'xy' * 10000
+        line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "bz2"
         self.assertEqual(
             (yield self.db.logs.appendLog(201, line + '\n')),
@@ -459,7 +457,7 @@ class RealTests(Tests):
             raise unittest.SkipTest("lz4 not installed, skip the test")
 
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        line = u'xy' * 10000
+        line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "lz4"
         self.assertEqual(
             (yield self.db.logs.appendLog(201, line + '\n')),
@@ -480,7 +478,7 @@ class RealTests(Tests):
             'compressed': 3})
 
     @defer.inlineCallbacks
-    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=(u'xy' * 70 + u'\n') * 3):
+    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
         if chunk.endswith("\n"):
             chunk = chunk[:-1]
         linesperchunk = chunk.count("\n") + 1
@@ -492,8 +490,8 @@ class RealTests(Tests):
         ]
         yield self.insertTestData(
             self.backgroundData + [
-                fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                           complete=0, num_lines=NUM_CHUNKS * 3, type=u's')] +
+                fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                           complete=0, num_lines=NUM_CHUNKS * 3, type='s')] +
             test_data)
         wholeLog = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
         for i in range(10):
@@ -517,10 +515,10 @@ class RealTests(Tests):
         return self.do_addLogLines_huge_log()
 
     def test_addLogLines_huge_log_lots_line(self):
-        return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk=u'x\n' * 50)
+        return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk='x\n' * 50)
 
     def test_addLogLines_huge_log_lots_snowmans(self):
-        return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk=u'\N{SNOWMAN}\n' * 50)
+        return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk='\N{SNOWMAN}\n' * 50)
 
     @defer.inlineCallbacks
     def test_compressLog_non_existing_log(self):
@@ -531,18 +529,18 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_compressLog_empty_log(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
-                       complete=1, num_lines=0, type=u's'),
+            fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
+                       complete=1, num_lines=0, type='s'),
         ])
         yield self.db.logs.compressLog(201)
         logdict = yield self.db.logs.getLog(201)
         self.assertEqual(logdict, {
             'stepid': 101,
             'num_lines': 0,
-            'name': u'stdio',
+            'name': 'stdio',
             'id': 201,
-            'type': u's',
-            'slug': u'stdio',
+            'type': 's',
+            'slug': 'stdio',
             'complete': True})
 
     @defer.inlineCallbacks
@@ -552,8 +550,8 @@ class RealTests(Tests):
         for stepid in (101, 102):
             for i in range(stepid):
                 logid = yield self.db.logs.addLog(
-                    stepid=stepid, name=u'another' + str(i), slug=u'another' + str(i), type=u's')
-                yield self.db.logs.appendLog(logid, u'xyz\n')
+                    stepid=stepid, name='another' + str(i), slug='another' + str(i), type='s')
+                yield self.db.logs.appendLog(logid, 'xyz\n')
                 logids.append(logid)
 
         deleted_chunks = yield self.db.logs.deleteOldLogChunks(
@@ -565,6 +563,8 @@ class RealTests(Tests):
         deleted_chunks = yield self.db.logs.deleteOldLogChunks(
             self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101)
         self.assertEqual(deleted_chunks, 0)
+        deleted_chunks = yield self.db.logs.deleteOldLogChunks(0)
+        self.assertEqual(deleted_chunks, 0)
         for logid in logids:
             logdict = yield self.db.logs.getLog(logid)
             self.assertEqual(logdict['type'], 'd')
@@ -574,10 +574,11 @@ class RealTests(Tests):
             self.assertEqual(lines, '')
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
@@ -587,16 +588,14 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                          'masters', 'buildrequests', 'buildsets',
                          'workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.logs = logs.LogsConnectorComponent(self.db)
-        return d
+        self.db.logs = logs.LogsConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

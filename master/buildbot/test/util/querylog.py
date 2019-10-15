@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import contextlib
 import logging
@@ -30,7 +27,7 @@ from twisted.python import log
 class _QueryToTwistedHandler(logging.Handler):
 
     def __init__(self, log_query_result=False, record_mode=False):
-        logging.Handler.__init__(self)
+        super().__init__()
 
         self._log_query_result = log_query_result
         self.recordMode = record_mode
@@ -96,7 +93,7 @@ def log_queries():
         stop_log_queries(handler)
 
 
-class SqliteMaxVariableMixin(object):
+class SqliteMaxVariableMixin:
 
     @contextlib.contextmanager
     def assertNoMaxVariables(self):

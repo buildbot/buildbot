@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import inspect
 import time
@@ -23,6 +20,7 @@ import traceback
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
@@ -89,7 +87,7 @@ def timed_do_fn(f):
     return wrap
 
 
-class DBThreadPool(object):
+class DBThreadPool:
 
     running = False
 
@@ -178,7 +176,7 @@ class DBThreadPool(object):
             if with_engine:
                 arg = self.engine
             else:
-                arg = self.engine.contextual_connect()
+                arg = self.engine.connect()
             try:
                 try:
                     rv = callable(arg, *args, **kwargs)
@@ -202,12 +200,13 @@ class DBThreadPool(object):
                     # and re-try
                     log.err(e, 'retrying {} after sql error {}'.format(callable, e))
                     continue
-                # AlreadyClaimedError are normal especially in a multimaster
-                # configuration
-                except (AlreadyClaimedError, ChangeSourceAlreadyClaimedError, SchedulerAlreadyClaimedError, AlreadyCompleteError):
-                    raise
                 except Exception as e:
-                    log.err(e, 'Got fatal Exception on DB')
+                    # AlreadyClaimedError are normal especially in a multimaster
+                    # configuration
+                    if not isinstance(e,
+                        (AlreadyClaimedError, ChangeSourceAlreadyClaimedError,
+                         SchedulerAlreadyClaimedError, AlreadyCompleteError)):
+                        log.err(e, 'Got fatal Exception on DB')
                     raise
             finally:
                 if not with_engine:
@@ -215,13 +214,19 @@ class DBThreadPool(object):
             break
         return rv
 
+    @defer.inlineCallbacks
     def do(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(self.reactor, self._pool,
-                                         self.__thd, False, callable, args, kwargs)
+        ret = yield threads.deferToThreadPool(self.reactor, self._pool,
+                                              self.__thd, False, callable,
+                                              args, kwargs)
+        return ret
 
+    @defer.inlineCallbacks
     def do_with_engine(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(self.reactor, self._pool,
-                                         self.__thd, True, callable, args, kwargs)
+        ret = yield threads.deferToThreadPool(self.reactor, self._pool,
+                                              self.__thd, True, callable,
+                                              args, kwargs)
+        return ret
 
     def get_sqlite_version(self):
         import sqlite3

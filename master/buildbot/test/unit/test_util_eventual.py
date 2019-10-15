@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import log
@@ -43,13 +41,11 @@ class Eventually(unittest.TestCase):
         self.results.append(r)
 
     # flush the queue and assert results
+    @defer.inlineCallbacks
     def assertResults(self, exp):
-        d = eventual.flushEventualQueue()
+        yield eventual.flushEventualQueue()
 
-        @d.addCallback
-        def cb(_):
-            self.assertEqual(self.results, exp)
-        return d
+        self.assertEqual(self.results, exp)
 
     # tests
 

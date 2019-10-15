@@ -13,12 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
-from twisted.internet import reactor
 
 from buildbot.data import base
 from buildbot.data import types
@@ -28,7 +23,7 @@ from buildbot.process import results
 from buildbot.process.results import RETRY
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     def _generate_filtered_properties(self, props, filters):
         """
@@ -41,7 +36,7 @@ class Db2DataMixin(object):
         if props and filters:
             return (props
                     if '*' in filters
-                    else dict(((k, v) for k, v in iteritems(props) if k in filters)))
+                    else dict(((k, v) for k, v in props.items() if k in filters)))
 
     @defer.inlineCallbacks
     def addPropertiesToBuildRequest(self, buildrequest, filters):
@@ -99,8 +94,8 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         if buildrequest:
             filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
             yield self.addPropertiesToBuildRequest(buildrequest, filters)
-            defer.returnValue((yield self.db2data(buildrequest)))
-        defer.returnValue(None)
+            return (yield self.db2data(buildrequest))
+        return None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -129,7 +124,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             for b in builds:
                 self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
                                        mqKwargs)
-            defer.returnValue(None)
+            return None
 
         # then complete it with 'CANCELLED'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
@@ -174,7 +169,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         for br in buildrequests:
             yield self.addPropertiesToBuildRequest(br, filters)
             results.append((yield self.db2data(br)))
-        defer.returnValue(results)
+        return results
 
 
 class BuildRequest(base.ResourceType):
@@ -216,24 +211,23 @@ class BuildRequest(base.ResourceType):
     def callDbBuildRequests(self, brids, db_callable, event, **kw):
         if not brids:
             # empty buildrequest list. No need to call db API
-            defer.returnValue(True)
+            return True
         try:
             yield db_callable(brids, **kw)
         except AlreadyClaimedError:
             # the db layer returned an AlreadyClaimedError exception, usually
             # because one of the buildrequests has already been claimed by
             # another master
-            defer.returnValue(False)
+            return False
         yield self.generateEvent(brids, event)
-        defer.returnValue(True)
+        return True
 
     @base.updateMethod
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+    def claimBuildRequests(self, brids, claimed_at=None):
         return self.callDbBuildRequests(brids,
                                         self.master.db.buildrequests.claimBuildRequests,
                                         event="claimed",
-                                        claimed_at=claimed_at,
-                                        _reactor=_reactor)
+                                        claimed_at=claimed_at)
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -244,23 +238,21 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None,
-                              _reactor=reactor):
+    def completeBuildRequests(self, brids, results, complete_at=None):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
-            defer.returnValue(True)
+            return True
         try:
             yield self.master.db.buildrequests.completeBuildRequests(
                 brids,
                 results,
-                complete_at=complete_at,
-                _reactor=_reactor)
+                complete_at=complete_at)
         except NotClaimedError:
             # the db layer returned a NotClaimedError exception, usually
             # because one of the buildrequests has been claimed by another
             # master
-            defer.returnValue(False)
+            return False
         yield self.generateEvent(brids, "complete")
 
         # check for completed buildsets -- one call for each build request with
@@ -276,7 +268,7 @@ class BuildRequest(base.ResourceType):
                 seen_bsids.add(bsid)
                 yield self.master.data.updates.maybeBuildsetComplete(bsid)
 
-        defer.returnValue(True)
+        return True
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -286,11 +278,11 @@ class BuildRequest(base.ResourceType):
         buildset = yield self.master.data.get(('buildsets', buildrequest['buildsetid']))
         properties = yield self.master.data.get(('buildsets', buildrequest['buildsetid'], 'properties'))
         ssids = [ss['ssid'] for ss in buildset['sourcestamps']]
-        res = yield self.master.data.updates.addBuildset(waited_for=False, scheduler=u'rebuild',
-                                                         sourcestamps=ssids, reason=u'rebuild',
+        res = yield self.master.data.updates.addBuildset(waited_for=False, scheduler='rebuild',
+                                                         sourcestamps=ssids, reason='rebuild',
                                                          properties=properties, builderids=[
                                                              buildrequest['builderid']], external_idstring=buildset['external_idstring'],
                                                          parent_buildid=buildset['parent_buildid'], parent_relationship=buildset[
                                                              'parent_relationship'],
                                                          )
-        defer.returnValue(res)
+        return res

@@ -7,10 +7,10 @@ Creating a worker
 -----------------
 
 Typically, you will be adding a worker to an existing buildmaster, to provide additional architecture coverage.
-The buildbot administrator will give you several pieces of information necessary to connect to the buildmaster.
+The Buildbot administrator will give you several pieces of information necessary to connect to the buildmaster.
 You should also be somewhat familiar with the project being tested, so you can troubleshoot build problems locally.
 
-The buildbot exists to make sure that the project's stated ``how to build it`` process actually works.
+The Buildbot exists to make sure that the project's stated ``how to build it`` process actually works.
 To this end, the worker should run in an environment just like that of your regular developers.
 Typically the project build process is documented somewhere (:file:`README`, :file:`INSTALL`, etc), in a document that should mention all library dependencies and contain a basic set of build instructions.
 This document will be useful as you configure the host and account in which the worker runs.
@@ -24,10 +24,10 @@ Here's a good checklist for setting up a worker:
   This serves to isolate your personal working environment from that of the worker's, and helps to minimize the security threat posed by letting possibly-unknown contributors run arbitrary code on your system.
   The account should have a minimum of fancy init scripts.
 
-2. Install the buildbot code
+2. Install the Buildbot code
 
   Follow the instructions given earlier (:ref:`Installing-the-code`).
-  If you use a separate worker account, and you didn't install the buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
+  If you use a separate worker account, and you didn't install the Buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
 
 3. Set up the host
 
@@ -44,7 +44,7 @@ Here's a good checklist for setting up a worker:
   Follow the instructions in the :file:`INSTALL` document, in the worker's account.
   Perform a full CVS (or whatever) checkout, configure, make, run tests, etc.
   Confirm that the build works without manual fussing.
-  If it doesn't work when you do it by hand, it will be unlikely to work when the buildbot attempts to do it in an automated fashion.
+  If it doesn't work when you do it by hand, it will be unlikely to work when the Buildbot attempts to do it in an automated fashion.
 
 5. Choose a base directory
 
@@ -54,7 +54,7 @@ Here's a good checklist for setting up a worker:
 
 6. Get the buildmaster host/port, botname, and password
 
-  When the buildbot admin configures the buildmaster to accept and use your worker, they will provide you with the following pieces of information:
+  When the Buildbot admin configures the buildmaster to accept and use your worker, they will provide you with the following pieces of information:
 
   * your worker's name
   * the password assigned to your worker
@@ -71,14 +71,14 @@ Here's a good checklist for setting up a worker:
 8. Fill in the hostinfo files
 
   When it first connects, the worker will send a few files up to the buildmaster which describe the host that it is running on.
-  These files are presented on the web status display so that developers have more information to reproduce any test failures that are witnessed by the buildbot.
-  There are sample files in the :file:`info` subdirectory of the buildbot's base directory.
+  These files are presented on the web status display so that developers have more information to reproduce any test failures that are witnessed by the Buildbot.
+  There are sample files in the :file:`info` subdirectory of the Buildbot's base directory.
   You should edit these to correctly describe you and your host.
 
   :file:`{BASEDIR}/info/admin` should contain your name and email address.
   This is the ``worker admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
 
-  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the buildbot code which is running the worker.
+  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the Buildbot code which is running the worker.
 
   The optional :file:`{BASEDIR}/info/access_uri` can specify a URI which will connect a user to the machine.
   Many systems accept ``ssh://hostname`` URIs for this purpose.
@@ -96,7 +96,7 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
 .. code-block:: bash
 
-    buildbot-worker create-worker --umask=022 ~/worker buildmaster.example.org:42012 {myworkername} {mypasswd}
+    buildbot-worker create-worker --umask=0o22 ~/worker buildmaster.example.org:42012 {myworkername} {mypasswd}
 
 .. program:: buildbot-worker create-worker
 
@@ -109,8 +109,8 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
     This is a string (generally an octal representation of an integer) which will cause the worker process' ``umask`` value to be set shortly after initialization.
     The ``twistd`` daemonization utility forces the umask to 077 at startup (which means that all files created by the worker or its child processes will be unreadable by any user other than the worker account).
-    If you want build products to be readable by other accounts, you can add ``--umask=022`` to tell the worker to fix the umask after twistd clobbers it.
-    If you want build products to be *writable* by other accounts too, use ``--umask=000``, but this is likely to be a security problem.
+    If you want build products to be readable by other accounts, you can add ``--umask=0o22`` to tell the worker to fix the umask after twistd clobbers it.
+    If you want build products to be *writable* by other accounts too, use ``--umask=0o000``, but this is likely to be a security problem.
 
 .. option:: --keepalive
 
@@ -171,7 +171,7 @@ Other Worker Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``unicode_encoding``
-    This represents the encoding that buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
+    This represents the encoding that Buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
 
     The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale settings.
 
@@ -182,6 +182,92 @@ Other Worker Configuration
     s = Worker(buildmaster_host, port, workername, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
                unicode_encoding='utf-8', allow_shutdown='signal')
+
+.. _Worker-TLS-Config:
+
+Worker TLS Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``connection_string``
+    For TLS connections to the master the ``connection_string``-argument must be used to ``Worker.__init__`` function. ``buildmaster_host`` and ``port`` must then be ``None``.
+
+    ``connection_string`` will be used to create a client endpoint with clientFromString_. An example of ``connection_string`` is ``"TLS:buildbot-master.com:9989"``.
+
+    See more about how to formulate the connection string in ConnectionStrings_.
+
+    Example TLS connection string:
+
+    .. code-block:: python
+
+        s = Worker(None, None, workername, passwd, basedir, keepalive,
+                   connection_string='TLS:buildbot-master.com:9989')
+
+    Make sure the worker trusts the masters certificate. If you have an non-authoritative certificate
+    (CA is self-signed) the trustRoot parameter can be used.
+
+    .. code-block:: python
+
+        s = Worker(None, None, workername, passwd, basedir, keepalive,
+                   connection_string=
+                   'TLS:buildbot-master.com:9989:trustRoots=/dir-with-ca-certs')
+
+
+    It must point to a directory with PEM-encoded certificates in files with file ending .pem. For example:
+
+    .. code-block:: bash
+
+        $ cat /dir-with-ca-certs/ca.pem
+        -----BEGIN CERTIFICATE-----
+        MIIE9DCCA9ygAwIBAgIJALEqLrC/m1w3MA0GCSqGSIb3DQEBCwUAMIGsMQswCQYD
+        VQQGEwJaWjELMAkGA1UECBMCUUExEDAOBgNVBAcTB05vd2hlcmUxETAPBgNVBAoT
+        CEJ1aWxkYm90MRkwFwYDVQQLExBEZXZlbG9wbWVudCBUZWFtMRQwEgYDVQQDEwtC
+        dWlsZGJvdCBDQTEQMA4GA1UEKRMHRWFzeVJTQTEoMCYGCSqGSIb3DQEJARYZYnVp
+        bGRib3RAaW50ZWdyYXRpb24udGVzdDAeFw0xNjA5MDIxMjA5NTJaFw0yNjA4MzEx
+        MjA5NTJaMIGsMQswCQYDVQQGEwJaWjELMAkGA1UECBMCUUExEDAOBgNVBAcTB05v
+        d2hlcmUxETAPBgNVBAoTCEJ1aWxkYm90MRkwFwYDVQQLExBEZXZlbG9wbWVudCBU
+        ZWFtMRQwEgYDVQQDEwtCdWlsZGJvdCBDQTEQMA4GA1UEKRMHRWFzeVJTQTEoMCYG
+        CSqGSIb3DQEJARYZYnVpbGRib3RAaW50ZWdyYXRpb24udGVzdDCCASIwDQYJKoZI
+        hvcNAQEBBQADggEPADCCAQoCggEBALJZcC9j4XYBi1fYT/fibY2FRWn6Qh74b1Pg
+        I7iIde6Sf3DPdh/ogYvZAT+cIlkZdo4v326d0EkuYKcywDvho8UeET6sIYhuHPDW
+        lRl1Ret6ylxpbEfxFNvMoEGNhYAP0C6QS2eWEP9LkV2lCuMQtWWzdedjk+efqBjR
+        Gozaim0lr/5lx7bnVx0oRLAgbI5/9Ukbopansfr+Cp9CpFpbNPGZSmELzC3FPKXK
+        5tycj8WEqlywlha2/VRnCZfYefB3aAuQqQilLh+QHyhn6hzc26+n5B0l8QvrMkOX
+        atKdznMLzJWGxS7UwmDKcsolcMAW+82BZ8nUCBPF3U5PkTLO540CAwEAAaOCARUw
+        ggERMB0GA1UdDgQWBBT7A/I+MZ1sFFJ9jikYkn51Q3wJ+TCB4QYDVR0jBIHZMIHW
+        gBT7A/I+MZ1sFFJ9jikYkn51Q3wJ+aGBsqSBrzCBrDELMAkGA1UEBhMCWloxCzAJ
+        BgNVBAgTAlFBMRAwDgYDVQQHEwdOb3doZXJlMREwDwYDVQQKEwhCdWlsZGJvdDEZ
+        MBcGA1UECxMQRGV2ZWxvcG1lbnQgVGVhbTEUMBIGA1UEAxMLQnVpbGRib3QgQ0Ex
+        EDAOBgNVBCkTB0Vhc3lSU0ExKDAmBgkqhkiG9w0BCQEWGWJ1aWxkYm90QGludGVn
+        cmF0aW9uLnRlc3SCCQCxKi6wv5tcNzAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEB
+        CwUAA4IBAQCJGJVMAmwZRK/mRqm9E0e3s4YGmYT2jwX5IX17XljEy+1cS4huuZW2
+        33CFpslkT1MN/r8IIZWilxT/lTujHyt4eERGjE1oRVKU8rlTH8WUjFzPIVu7nkte
+        09abqynAoec8aQukg79NRCY1l/E2/WzfnUt3yTgKPfZmzoiN0K+hH4gVlWtrizPA
+        LaGwoslYYTA6jHNEeMm8OQLNf17OTmAa7EpeIgVpLRCieI9S3JIG4WYU8fVkeuiU
+        cB439SdixU4cecVjNfFDpq6JM8N6+DQoYOSNRt9Dy0ioGyx5D4lWoIQ+BmXQENal
+        gw+XLyejeNTNgLOxf9pbNYMJqxhkTkoE
+        -----END CERTIFICATE-----
+
+
+    Using TCP in ``connection_string`` is the equivalent as using the ``buildmaster_host`` and ``port`` arguments.
+
+    .. code-block:: python
+
+        s = Worker(None, None, workername, passwd, basedir, keepalive
+                   connection_string='TCP:buildbot-master.com:9989')
+
+
+    is equivalent to
+
+    .. code-block:: python
+
+        s = Worker('buildbot-master.com', 9989, workername, passwd, basedir,
+                   keepalive)
+
+
+
+
+.. _ConnectionStrings: https://twistedmatrix.com/documents/current/core/howto/endpoints.html
+.. _clientFromString: https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.clientFromString.html
 
 .. _Upgrading-an-Existing-Worker:
 
@@ -216,11 +302,15 @@ The existing :file:`buildbot.tac` for any workers running older versions will ne
 If the loss of cached worker state (e.g., for Source steps in copy mode) is not problematic, the easiest solution is to simply delete the worker directory and re-run ``buildslave create-slave``.
 
 If deleting the worker directory is problematic, the change to :file:`buildbot.tac` is simple.
-On line 3, replace::
+On line 3, replace:
+
+.. code-block:: python
 
     from buildbot.slave.bot import BuildSlave
 
-with::
+with:
+
+.. code-block:: python
 
     from buildslave.bot import BuildSlave
 
@@ -243,29 +333,41 @@ If the loss of cached worker state (e.g., for Source steps in copy mode) is not 
 
 If deleting the worker directory is problematic, you can change :file:`buildbot.tac` in the following way:
 
-1. Replace::
+1. Replace:
+
+   .. code-block:: python
 
        from buildslave.bot import BuildSlave
 
-   with::
+   with:
+
+   .. code-block:: python
 
        from buildbot_worker.bot import Worker
 
-2. Replace::
+2. Replace:
+
+   .. code-block:: python
 
        application = service.Application('buildslave')
 
-   with::
+   with:
+
+   .. code-block:: python
 
        application = service.Application('buildbot-worker')
 
-3. Replace::
+3. Replace:
+
+   .. code-block:: python
 
        s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                       keepalive, usepty, umask=umask, maxdelay=maxdelay,
                       numcpus=numcpus, allow_shutdown=allow_shutdown)
 
-   with::
+   with:
+
+   .. code-block:: python
 
        s = Worker(buildmaster_host, port, slavename, passwd, basedir,
                   keepalive, umask=umask, maxdelay=maxdelay,

@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import abc
 import re
 
@@ -27,7 +23,7 @@ from buildbot import config
 from buildbot.errors import CaptureCallbackError
 
 
-class Capture(object):
+class Capture:
 
     """
     Base class for all Capture* classes.
@@ -78,7 +74,7 @@ class CapturePropertyBase(Capture):
         if not callback:
             callback = default_callback
 
-        Capture.__init__(self, routingKey, callback)
+        super().__init__(routingKey, callback)
 
     @defer.inlineCallbacks
     def consume(self, routingKey, msg):
@@ -131,7 +127,7 @@ class CaptureProperty(CapturePropertyBase):
     def __init__(self, builder_name, property_name, callback=None, regex=False):
         self._builder_name = builder_name
 
-        CapturePropertyBase.__init__(self, property_name, callback, regex)
+        super().__init__(property_name, callback, regex)
 
     def _builder_name_matches(self, builder_info):
         return self._builder_name == builder_info['name']
@@ -158,7 +154,7 @@ class CaptureBuildTimes(Capture):
         self._builder_name = builder_name
         routingKey = ("builders", None, "builds", None, "finished")
         self._time_type = time_type
-        Capture.__init__(self, routingKey, callback)
+        super().__init__(routingKey, callback)
 
     @defer.inlineCallbacks
     def consume(self, routingKey, msg):
@@ -211,7 +207,7 @@ class CaptureBuildStartTime(CaptureBuildTimes):
             return start_time.isoformat()
         if not callback:
             callback = default_callback
-        CaptureBuildTimes.__init__(self, builder_name, callback, "start-time")
+        super().__init__(builder_name, callback, "start-time")
 
     def _retValParams(self, msg):
         return [msg['started_at']]
@@ -227,7 +223,7 @@ class CaptureBuildStartTimeAllBuilders(CaptureBuildStartTime):
     """
 
     def __init__(self, callback=None):
-        CaptureBuildStartTime.__init__(self, None, callback)
+        super().__init__(None, callback)
 
     def _builder_name_matches(self, builder_info):
         # Match all builders so simply return True
@@ -245,7 +241,7 @@ class CaptureBuildEndTime(CaptureBuildTimes):
             return end_time.isoformat()
         if not callback:
             callback = default_callback
-        CaptureBuildTimes.__init__(self, builder_name, callback, "end-time")
+        super().__init__(builder_name, callback, "end-time")
 
     def _retValParams(self, msg):
         return [msg['complete_at']]
@@ -261,7 +257,7 @@ class CaptureBuildEndTimeAllBuilders(CaptureBuildEndTime):
     """
 
     def __init__(self, callback=None):
-        CaptureBuildEndTime.__init__(self, None, callback)
+        super().__init__(None, callback)
 
     def _builder_name_matches(self, builder_info):
         # Match all builders so simply return True
@@ -295,7 +291,7 @@ class CaptureBuildDuration(CaptureBuildTimes):
 
         if not callback:
             callback = default_callback
-        CaptureBuildTimes.__init__(self, builder_name, callback, "duration")
+        super().__init__(builder_name, callback, "duration")
 
     def _retValParams(self, msg):
         return [msg['started_at'], msg['complete_at']]
@@ -311,7 +307,7 @@ class CaptureBuildDurationAllBuilders(CaptureBuildDuration):
     """
 
     def __init__(self, report_in='seconds', callback=None):
-        CaptureBuildDuration.__init__(self, None, report_in, callback)
+        super().__init__(None, report_in, callback)
 
     def _builder_name_matches(self, builder_info):
         # Match all builders so simply return True
@@ -337,7 +333,7 @@ class CaptureDataBase(Capture):
         # this following key created in StatsService.yieldMetricsValue and used
         # here
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
-        Capture.__init__(self, routingKey, callback)
+        super().__init__(routingKey, callback)
 
     @defer.inlineCallbacks
     def consume(self, routingKey, msg):
@@ -375,7 +371,7 @@ class CaptureData(CaptureDataBase):
     def __init__(self, data_name, builder_name, callback=None):
         self._builder_name = builder_name
 
-        CaptureDataBase.__init__(self, data_name, callback)
+        super().__init__(data_name, callback)
 
     def _builder_name_matches(self, builder_info):
         return self._builder_name == builder_info['name']

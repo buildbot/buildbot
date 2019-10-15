@@ -16,11 +16,6 @@
 Push events to Gerrit
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import iteritems
-
 import time
 import warnings
 from distutils.version import LooseVersion
@@ -37,7 +32,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 
 # Cache the version that the gerrit server is running for this many seconds
@@ -124,11 +119,11 @@ def defaultSummaryCB(buildInfoList, results, master, arg):
 
 
 # These are just sentinel values for GerritStatusPush.__init__ args
-class DEFAULT_REVIEW(object):
+class DEFAULT_REVIEW:
     pass
 
 
-class DEFAULT_SUMMARY(object):
+class DEFAULT_SUMMARY:
     pass
 
 
@@ -214,7 +209,7 @@ class GerritStatusPush(service.BuildbotService):
                 return
             vers = data[len(vstr):].strip()
             log.msg(b"gerrit version: " + vers)
-            self.gerrit_version = LooseVersion(bytes2NativeString(vers))
+            self.gerrit_version = LooseVersion(bytes2unicode(vers))
 
         def errReceived(self, data):
             log.msg(b"gerriterr: " + data)
@@ -266,7 +261,7 @@ class GerritStatusPush(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
             self.buildsetComplete,
@@ -309,7 +304,11 @@ class GerritStatusPush(service.BuildbotService):
     def getBuildDetails(self, build):
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(self.master, buildset, [build], wantProperties=True)
+        yield utils.getDetailsForBuilds(self.master,
+                                        buildset,
+                                        [build],
+                                        wantProperties=True,
+                                        wantSteps=self.wantSteps)
 
     def isBuildReported(self, build):
         return self.builders is None or build['builder']['name'] in self.builders
@@ -371,9 +370,9 @@ class GerritStatusPush(service.BuildbotService):
         if downloads is not None and downloaded is not None:
             downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
-                for i in range(0, len(downloads)):
+                for i, download in enumerate(downloads):
                     try:
-                        project, change1 = downloads[i].split(" ")
+                        project, change1 = download.split(" ")
                     except ValueError:
                         return  # something is wrong, abort
                     change2 = downloaded[2 * i]
@@ -429,7 +428,7 @@ class GerritStatusPush(service.BuildbotService):
             else:
                 add_label = _new_add_label
 
-            for label, value in iteritems(labels):
+            for label, value in labels.items():
                 command.extend(add_label(label, value))
 
         command.append(revision)

@@ -122,7 +122,6 @@ class WorkerForBuilderBase(service.Service):
     def remote_startBuild(self):
         """This is invoked before the first step of any new build is run.  It
         doesn't do much, but masters call it so it's still here."""
-        pass
 
     def remote_startCommand(self, stepref, stepId, command, args):
         """
@@ -254,17 +253,17 @@ class BotBase(service.MultiService):
         service.MultiService.startService(self)
 
     def remote_getCommands(self):
-        commands = dict([
-            (n, base.command_version)
+        commands = {
+            n: base.command_version
             for n in registry.getAllCommandNames()
-        ])
+        }
         return commands
 
     @defer.inlineCallbacks
     def remote_setBuilderList(self, wanted):
         retval = {}
-        wanted_names = set([name for (name, builddir) in wanted])
-        wanted_dirs = set([builddir for (name, builddir) in wanted])
+        wanted_names = {name for (name, builddir) in wanted}
+        wanted_dirs = {builddir for (name, builddir) in wanted}
         wanted_dirs.add('info')
         for (name, builddir) in wanted:
             b = self.builders.get(name, None)

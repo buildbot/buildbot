@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from buildbot.util import service
 from buildbot.util import subscription
 
@@ -25,7 +21,7 @@ class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     pass
 
 
-class Connection(object):
+class Connection:
     proxies = {}
 
     def __init__(self, master, worker):
@@ -38,8 +34,8 @@ class Connection(object):
     # This method replace all Impl args by their Proxy protocol implementation
     def createArgsProxies(self, args):
         newargs = {}
-        for k, v in iteritems(args):
-            for implclass, proxyclass in iteritems(self.proxies):
+        for k, v in args.items():
+            for implclass, proxyclass in self.proxies.items():
                 if isinstance(v, implclass):
                     v = proxyclass(v)
             newargs[k] = v
@@ -80,7 +76,7 @@ class Connection(object):
 
 
 # RemoteCommand base implementation and base proxy
-class RemoteCommandImpl(object):
+class RemoteCommandImpl:
 
     def remote_update(self, updates):
         raise NotImplementedError
@@ -90,7 +86,7 @@ class RemoteCommandImpl(object):
 
 
 # FileWriter base implementation
-class FileWriterImpl(object):
+class FileWriterImpl:
 
     def remote_write(self, data):
         raise NotImplementedError
@@ -106,7 +102,7 @@ class FileWriterImpl(object):
 
 
 # FileReader base implementation
-class FileReaderImpl(object):
+class FileReaderImpl:
 
     def remote_read(self, maxLength):
         raise NotImplementedError

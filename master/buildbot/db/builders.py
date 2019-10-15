@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
+
+from collections import defaultdict
 
 import sqlalchemy as sa
 
@@ -70,7 +70,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return (yield self.db.pool.do(thd))
 
     def getBuilder(self, builderid):
         d = self.getBuilders(_builderid=builderid)
@@ -82,6 +82,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             return None
         return d
 
+    # returns a Deferred that returns None
     def addBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
             try:
@@ -92,6 +93,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 pass
         return self.db.pool.do(thd)
 
+    # returns a Deferred that returns None
     def removeBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
@@ -104,6 +106,9 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             bldr_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
+            builders_tags_tbl = self.db.model.builders_tags
+            tags_tbl = self.db.model.tags
+
             j = bldr_tbl.outerjoin(bm_tbl)
             # if we want to filter by masterid, we must join to builder_masters
             # again, so we can still get the full set of masters for each
@@ -123,31 +128,24 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if _builderid is not None:
                 q = q.where(bldr_tbl.c.id == _builderid)
 
+            # build up a intermediate builder id -> tag names map (fixes performance issue #3396)
+            bldr_id_to_tags = defaultdict(list)
+            bldr_q = sa.select([builders_tags_tbl.c.builderid, tags_tbl.c.name])
+            bldr_q = bldr_q.select_from(tags_tbl.join(builders_tags_tbl))
+
+            for bldr_id, tag in conn.execute(bldr_q).fetchall():
+                bldr_id_to_tags[bldr_id].append(tag)
+
             # now group those by builderid, aggregating by masterid
             rv = []
             last = None
             for row in conn.execute(q).fetchall():
                 # pylint: disable=unsubscriptable-object
                 if not last or row['id'] != last['id']:
-                    last = self._thd_row2dict(conn, row)
+                    last = dict(id=row.id, name=row.name, masterids=[], description=row.description,
+                                tags=bldr_id_to_tags[row.id])
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])
             return rv
         return self.db.pool.do(thd)
-
-    def _thd_row2dict(self, conn, row):
-        # get tags
-        builders_tags = self.db.model.builders_tags
-        tags = self.db.model.tags
-        from_clause = tags
-        from_clause = from_clause.join(builders_tags)
-        q = sa.select([tags.c.name],
-                      (builders_tags.c.builderid == row.id)).select_from(from_clause)
-
-        tags = [r.name for r in
-                conn.execute(q).fetchall()]
-
-        return dict(id=row.id, name=row.name, masterids=[],
-                    description=row.description,
-                    tags=tags)

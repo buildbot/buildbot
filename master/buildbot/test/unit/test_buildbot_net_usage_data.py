@@ -13,14 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.moves.urllib import request as urllib_request
-
 import os
 import platform
 from unittest.case import SkipTest
+from urllib import request as urllib_request
 
 from twisted.internet import reactor
 from twisted.python.filepath import FilePath
@@ -109,7 +105,7 @@ class Tests(unittest.TestCase):
     def test_urllib(self):
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
-        class FakeRequest(object):
+        class FakeRequest:
 
             def __init__(self, *args, **kwargs):
                 self.args = args
@@ -117,7 +113,7 @@ class Tests(unittest.TestCase):
 
         open_url = []
 
-        class urlopen(object):
+        class urlopen:
 
             def __init__(self, r):
                 self.request = r
@@ -153,4 +149,6 @@ class Tests(unittest.TestCase):
         distro = linux_distribution()
         self.assertEqual(len(distro), 2)
         self.assertNotIn("unknown", distro[0])
-        self.assertNotIn("unknown", distro[1])
+        # Rolling distributions like Arch Linux (arch) does not have VERSION_ID
+        if distro[0] != "arch":
+            self.assertNotIn("unknown", distro[1])

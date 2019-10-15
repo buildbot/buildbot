@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 
@@ -30,6 +28,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import sautils
 
 # test_upgrade vs. migration tests
@@ -39,29 +38,28 @@ from buildbot.util import sautils
 # single db upgrade script.
 
 
-class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
+class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
+    @defer.inlineCallbacks
     def setUpMigrateTest(self):
+        self.setUpTestReactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 
-        d = self.setUpRealDatabase()
+        yield self.setUpRealDatabase()
 
-        @d.addCallback
-        def make_dbc(_):
-            master = fakemaster.make_master()
-            self.db = connector.DBConnector(self.basedir)
-            self.db.setServiceParent(master)
-            self.db.pool = self.db_pool
-        return d
+        master = fakemaster.make_master(self)
+        self.db = connector.DBConnector(self.basedir)
+        self.db.setServiceParent(master)
+        self.db.pool = self.db_pool
 
     def tearDownMigrateTest(self):
         self.tearDownDirs()
         return self.tearDownRealDatabase()
 
+    @defer.inlineCallbacks
     def do_test_migration(self, base_version, target_version,
                           setup_thd_cb, verify_thd_cb):
-        d = defer.succeed(None)
 
         def setup_thd(conn):
             metadata = sa.MetaData()
@@ -77,7 +75,7 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                          repository_path=self.db.model.repo_path,
                          version=base_version)
             setup_thd_cb(conn)
-        d.addCallback(lambda _: self.db.pool.do(setup_thd))
+        yield self.db.pool.do(setup_thd)
 
         def upgrade_thd(engine):
             with querylog.log_queries():
@@ -89,7 +87,7 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                         log.msg('upgrading to schema version %d' %
                                 (version + 1))
                         schema.runchange(version, change, 1)
-        d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
+        yield self.db.pool.do_with_engine(upgrade_thd)
 
         def check_table_charsets_thd(engine):
             # charsets are only a problem for MySQL
@@ -101,11 +99,10 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                 create_table = r.fetchone()[1]
                 self.assertIn('DEFAULT CHARSET=utf8', create_table,
                               "table %s does not have the utf8 charset" % tbl)
-        d.addCallback(lambda _: self.db.pool.do(check_table_charsets_thd))
+        yield self.db.pool.do(check_table_charsets_thd)
 
         def verify_thd(engine):
             with sautils.withoutSqliteForeignKeys(engine):
                 verify_thd_cb(engine)
 
-        d.addCallback(lambda _: self.db.pool.do(verify_thd))
-        return d
+        yield self.db.pool.do(verify_thd)

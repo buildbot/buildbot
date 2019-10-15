@@ -5,9 +5,8 @@ Development Quick-start
 Buildbot is a python based application.
 It tries very hard to follow the python best practices, and to make is easy to dive into the code.
 
-We won't try to create a full step by step how to install python on whatever distribution.
-Basically what you need is just a python environment with maybe some native packages required by our dependencies.
-Because those dependencies sometimes change, we keep the most up to date list in the docker file we use to manage our CI (MetaBBotDockerFile_).
+In order to develop Buildbot you need just a python environment and possibly some native packages in stripped-down setups.
+The most up to date list in the docker file we use to manage our CI (MetaBBotDockerFile_).
 
 If you are completely new to python, the best is to first follow the tutorials that would come when you type "python virtualenv for dummies" in your favorite search engine.
 
@@ -28,12 +27,20 @@ Following is a quick shell session to put you on the right track, including runn
     git clone https://github.com/buildbot/buildbot
     cd buildbot
 
-    # helper script which creates the virtualenv for development
+    # run a helper script which creates the virtualenv for development.
+    # Virtualenv allows to install python packages without affecting
+    # other parts of the system
     make virtualenv
+
+    # Activate the virtualenv.
+    # After this you should see (.venv) in your shell prompt
     . .venv/bin/activate
 
     # now we run the test suite
     trial buildbot
+
+    # using all CPU cores within the system helps to speed everything up
+    trial -j16 buildbot
 
     # find all tests that talk about mail
     trial -n --reporter=bwverbose buildbot | grep mail
@@ -47,73 +54,95 @@ Create a JavaScript Frontend Environment
 
 This section describes how to get set up quickly to hack on the JavaScript UI.
 It does not assume familiarity with Python, although a Python installation is required, as well as ``virtualenv``.
-You will also need ``NodeJS``, and ``npm`` installed.
+You will also need ``NodeJS``, and ``yarn`` installed.
 
 Prerequisites
 ~~~~~~~~~~~~~
 
 .. note::
 
-  Buildbot UI is only tested to build on node 4.x.x.
+  Buildbot UI requires at least node 4 or newer and yarn.
 
 * Install LTS release of node.js.
 
-  http://nodejs.org/ is a good start for windows and osx
+  http://nodejs.org/ is a good start for Windows and OSX.
 
-  For Linux, as node.js is evolving very fast, distros versions are often too old, and sometimes distro maintainers make incompatible changes (i.e naming node binary nodejs instead of node)
-  For Ubuntu and other Debian based distros, you want to use following method:
-
-  .. code-block:: none
-
-    curl -sL https://deb.nodesource.com/setup_4.x | sudo bash -
-
-  Please feel free to update this documentation for other distros.
-  Know good source for Linux binary distribution is: https://github.com/nodesource/distributions
-
-* Install gulp globally. Gulp is the build system used for coffeescript development.
+  For modern Linux distributions you can often simply install distribution-provided node version, if it's recent enough.
+  You can use yarn from the same source.
+  The below method has been tested on Ubuntu 18.04 and should work on recent enough Debian.
 
   .. code-block:: none
 
-    sudo npm install -g gulp
+    sudo apt install nodejs yarn
+
+  In other cases, use https://deb.nodesource.com.
 
 .. _JSDevQuickStart:
 
 Hacking the Buildbot JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To effectively hack on the Buildbot JavaScript, you'll need a running Buildmaster, configured to operate out of the source directory (unless you like editing minified JS).
+To effectively develop Buildbot JavaScript, you'll need a running Buildmaster, configured to operate out of the source directory.
 
-thus you need to follow the :ref:`PythonDevQuickStart`
+Follow :ref:`PythonDevQuickStart` as a prerequisite.
 
-This should have created an isolated Python environment in which you can install packages without affecting other parts of the system.
-You should see ``(.venv)`` in your shell prompt, indicating the sandbox is activated.
+This should have created and enabled virtualenv Python environment.
 
-Next, install the Buildbot-WWW and Buildbot packages using ``--editable``, which means that they should execute from the source directory.
+Next, install the Buildbot-WWW and Buildbot python packages using ``--editable`` mode, which means that they should execute from the source directory.
 
 .. code-block:: none
 
     make frontend
 
-This will fetch a number of dependencies from pypi, the Python package repository.
-This will also fetch a bunch a bunch of node.js dependencies used for building the web application, and a bunch of client side js dependencies, with bower
+This will fetch a number of python dependencies from pypi, the Python package repository and also a number of node.js dependencies that are used for building the web application.
+Then the actual frontend code will be built with artifacts stored in the source directory, e.g. ``www/base/buildbot_www/static``.
+Finally, the built python packages will be installed to virtualenv environment as ``--editable`` packages.
+This means that the webserver will load resources from ``www/base/buildbot_www/static``.
 
 Now you'll need to create a master instance.
 For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
 
 .. code-block:: none
 
-    buildbot create-master .venv/testmaster
-    mv .venv/testmaster/master.cfg.sample .venv/testmaster/master.cfg
-    buildbot start .venv/testmaster
+    mkdir test-master
+    buildbot create-master test-master
+    mv test-master/master.cfg.sample test-master/master.cfg
+    buildbot start test-master
 
 If all goes well, the master will start up and begin running in the background.
-As you just installed www in editable mode (aka 'develop' mode), setup.py did build the web site in prod mode, so the everything is minified, making it hard to debug.
+During ``make frontend`` the www frontend was built using production mode, so everything is minified and hard to debug.
+However, the frontend was installed as a editable python package, so all changes in the artifacts (e.g. ``www/base/buildbot_www/static``) in the source directories will be observed in the browser.
+Thus we can rebuild the JavaScript resources manually using development settings, so they are not minified and easier to debug.
 
-When doing web development, you usually run:
+This can be done by running the following in e.g. ``www/base`` directory:
 
 .. code-block:: none
 
-    cd www/base
-    gulp dev
+    yarn run build-dev
 
-This will compile the base webapp in development mode, and automatically rebuild when files change.
+The above rebuilds the resources only once, after each change you need to refresh the built resources.
+The actual commands that are ran are stored in the ``package.json`` file under the ``scripts`` key.
+
+To avoid the need to type the above command after each change, you can use the following:
+
+.. code-block:: none
+
+    yarn run dev
+
+This will watch files for changes and reload automatically.
+
+To run unit tests, do the following:
+
+.. code-block:: none
+
+    yarn run test
+
+To run unit tests within all frontend packages within Buildbot, do the following at the root of the project:
+
+.. code-block:: none
+
+    make frontend_tests
+
+.. note::
+
+   You need to have Chrome-based browser installed in order to run unit tests in the default configuration.

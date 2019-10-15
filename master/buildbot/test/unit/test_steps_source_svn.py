@@ -14,9 +14,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
@@ -32,10 +30,11 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.properties import ConstantRenderable
 
 
-class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
     svn_st_xml = """<?xml version="1.0"?>
         <status>
@@ -119,6 +118,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             </info>"""
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpSourceStep()
 
     def tearDown(self):
@@ -128,18 +128,16 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          svn.SVN())
+        with self.assertRaises(config.ConfigErrors):
+            svn.SVN()
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          svn.SVN(repourl='http://svn.local/app/trunk',
-                                  mode='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            svn.SVN(repourl='http://svn.local/app/trunk', mode='invalid')
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          svn.SVN(repourl='http://svn.local/app/trunk',
-                                  method='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            svn.SVN(repourl='http://svn.local/app/trunk', method='invalid')
 
     def test_svn_not_installed(self):
         self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
@@ -183,6 +181,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_revision_noninteger(self):
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setupStep(svnTestStep)
@@ -215,13 +214,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'a10', 'SVN')
-        d = self.runStep()
+        yield self.runStep()
 
-        def _checkType():
-            revision = self.step.getProperty('got_revision')
-            self.assertRaises(ValueError, lambda: int(revision))
-        d.addCallback(lambda _: _checkType())
-        return d
+        revision = self.step.getProperty('got_revision')
+        with self.assertRaises(ValueError):
+            int(revision)
 
     def test_revision_missing(self):
         """Fail if 'revision' tag isn't there"""
@@ -1334,13 +1331,13 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
@@ -1409,13 +1406,13 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
@@ -1720,7 +1717,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             +
             ExpectShell.log(
-                'stdio', stdout="""<?xml version="1.0"?><entry kind="dir" path="/a/b/c" revision="1"><url>http://svn.local/app/trunk</url></entry>""")
+                'stdio', stdout='<?xml version="1.0"?>'
+                                '<entry kind="dir" path="/a/b/c" revision="1">'
+                                '<url>http://svn.local/app/trunk</url>'
+                                '</entry>')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
@@ -1986,8 +1986,8 @@ class TestGetUnversionedFiles(unittest.TestCase):
             </target>
         </status>
         """
-        self.assertRaises(buildstep.BuildStepFailed,
-                          lambda: list(svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, [])))
+        with self.assertRaises(buildstep.BuildStepFailed):
+            list(svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, []))
 
     def test_getUnversionedFiles_no_path(self):
         svn_st_xml = """<?xml version="1.0"?>
@@ -2042,7 +2042,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual(
-            [u"Path/To/Content/Developers/François"], unversioned_files)
+            ["Path/To/Content/Developers/François"], unversioned_files)
 
 
 class TestSvnUriCanonicalize(unittest.TestCase):

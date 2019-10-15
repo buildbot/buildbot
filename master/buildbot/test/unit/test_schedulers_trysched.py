@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import json
 import os
 import shutil
@@ -32,13 +29,15 @@ from twisted.trial import unittest
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TryBase(scheduler.SchedulerMixin, unittest.TestCase):
+class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 26
     SCHEDULERID = 6
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -130,12 +129,13 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         svc.messageReceived('jobdata')
 
 
-class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
+class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     OBJECTID = 23
     SCHEDULERID = 3
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
         self.jobdir = None
 
@@ -221,8 +221,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
     def test_parseJob_empty(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob, NativeStringIO(''))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO(''))
 
     def test_parseJob_longer_than_netstring_MAXLENGTH(self):
         self.patch(basic.NetstringReceiver, 'MAX_LENGTH', 100)
@@ -236,21 +236,20 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
         test_temp_file = NativeStringIO(jobstr)
 
-        self.assertRaises(trysched.BadJobfile,
-                          lambda: sched.parseJob(test_temp_file))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(test_temp_file)
 
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob,
-            NativeStringIO('this is not a netstring'))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO('this is not a netstring'))
 
     def test_parseJob_invalid_version(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob, NativeStringIO('1:9,'))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO('1:9,'))
 
     def makeNetstring(self, *strings):
         return ''.join(['%d:%s,' % (len(s), s) for s in strings])
@@ -549,8 +548,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring('5', '{"comment": "com}')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob, NativeStringIO(jobstr))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO(jobstr))
 
     # handleJobFile
 
@@ -578,113 +577,103 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         pj.update(overrides)
         return pj
 
+    @defer.inlineCallbacks
     def test_handleJobFile(self):
-        d = self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
+        yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=['buildera', 'builderb'],
-                    external_idstring=u'extid',
-                    properties={},
-                    reason=u"'try' job by user who",
-                    sourcestamps=[
-                        dict(
-                            branch='trunk',
-                            codebase='',
-                            patch_author='who',
-                            patch_body='this is my diff, -- ++, etc.',
-                            patch_comment='comment',
-                            patch_level=1,
-                            patch_subdir='',
-                            project='proj',
-                            repository='repo',
-                            revision='1234'),
-                    ])),
-            ])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStamps', dict(
+                builderNames=['buildera', 'builderb'],
+                external_idstring='extid',
+                properties={},
+                reason="'try' job by user who",
+                sourcestamps=[
+                    dict(
+                        branch='trunk',
+                        codebase='',
+                        patch_author='who',
+                        patch_body='this is my diff, -- ++, etc.',
+                        patch_comment='comment',
+                        patch_level=1,
+                        patch_subdir='',
+                        project='proj',
+                        repository='repo',
+                        revision='1234'),
+                ])),
+        ])
 
+    @defer.inlineCallbacks
     def test_handleJobFile_exception(self):
         def parseJob(f):
             raise trysched.BadJobfile
-        d = self.call_handleJobFile(parseJob)
+        yield self.call_handleJobFile(parseJob)
 
-        def check(bsid):
-            self.assertEqual(self.addBuildsetCalls, [])
-            self.assertEqual(
-                1, len(self.flushLoggedErrors(trysched.BadJobfile)))
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [])
+        self.assertEqual(
+            1, len(self.flushLoggedErrors(trysched.BadJobfile)))
     if twisted.version.major <= 9 and sys.version_info[:2] >= (2, 7):
         test_handleJobFile_exception.skip = (
             "flushLoggedErrors does not work correctly on 9.0.0 "
             "and earlier with Python-2.7")
 
+    @defer.inlineCallbacks
     def test_handleJobFile_bad_builders(self):
-        d = self.call_handleJobFile(
+        yield self.call_handleJobFile(
             lambda f: self.makeSampleParsedJob(builderNames=['xxx']))
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [])
 
+    @defer.inlineCallbacks
     def test_handleJobFile_subset_builders(self):
-        d = self.call_handleJobFile(
+        yield self.call_handleJobFile(
             lambda f: self.makeSampleParsedJob(builderNames=['buildera']))
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=['buildera'],
-                    external_idstring=u'extid',
-                    properties={},
-                    reason=u"'try' job by user who",
-                    sourcestamps=[
-                        dict(
-                            branch='trunk',
-                            codebase='',
-                            patch_author='who',
-                            patch_body='this is my diff, -- ++, etc.',
-                            patch_comment='comment',
-                            patch_level=1,
-                            patch_subdir='',
-                            project='proj',
-                            repository='repo',
-                            revision='1234'),
-                    ])),
-            ])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStamps', dict(
+                builderNames=['buildera'],
+                external_idstring='extid',
+                properties={},
+                reason="'try' job by user who",
+                sourcestamps=[
+                    dict(
+                        branch='trunk',
+                        codebase='',
+                        patch_author='who',
+                        patch_body='this is my diff, -- ++, etc.',
+                        patch_comment='comment',
+                        patch_level=1,
+                        patch_subdir='',
+                        project='proj',
+                        repository='repo',
+                        revision='1234'),
+                ])),
+        ])
 
+    @defer.inlineCallbacks
     def test_handleJobFile_with_try_properties(self):
-        d = self.call_handleJobFile(
-            lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
+        yield self.call_handleJobFile(
+                lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=['buildera', 'builderb'],
-                    external_idstring=u'extid',
-                    properties={'foo': ('bar', u'try build')},
-                    reason=u"'try' job by user who",
-                    sourcestamps=[
-                        dict(
-                            branch='trunk',
-                            codebase='',
-                            patch_author='who',
-                            patch_body='this is my diff, -- ++, etc.',
-                            patch_comment='comment',
-                            patch_level=1,
-                            patch_subdir='',
-                            project='proj',
-                            repository='repo',
-                            revision='1234'),
-                    ])),
-            ])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStamps', dict(
+                builderNames=['buildera', 'builderb'],
+                external_idstring='extid',
+                properties={'foo': ('bar', 'try build')},
+                reason="'try' job by user who",
+                sourcestamps=[
+                    dict(
+                        branch='trunk',
+                        codebase='',
+                        patch_author='who',
+                        patch_body='this is my diff, -- ++, etc.',
+                        patch_comment='comment',
+                        patch_level=1,
+                        patch_subdir='',
+                        project='proj',
+                        repository='repo',
+                        revision='1234'),
+                ])),
+        ])
 
     def test_handleJobFile_with_invalid_try_properties(self):
         d = self.call_handleJobFile(
@@ -692,12 +681,14 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         return self.assertFailure(d, AttributeError)
 
 
-class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
+class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
+                               unittest.TestCase):
 
     OBJECTID = 26
     SCHEDULERID = 6
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):
@@ -713,9 +704,11 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         sched.master.status = mock.Mock()
         return sched
 
+    @defer.inlineCallbacks
     def call_perspective_try(self, *args, **kwargs):
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
-                                   port='xxx', userpass=[('a', 'b')], properties=dict(frm='schd'))
+                                   port='xxx', userpass=[('a', 'b')],
+                                   properties=dict(frm='schd'))
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
 
         # patch out all of the handling after addBuildsetForSourceStamp
@@ -723,101 +716,93 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
             return dict(bsid=bsid)
         self.db.buildsets.getBuildset = getBuildset
 
-        d = persp.perspective_try(*args, **kwargs)
+        rbss = yield persp.perspective_try(*args, **kwargs)
 
-        def check(rbss):
-            if rbss is None:
-                return
-            self.assertIsInstance(rbss, trysched.RemoteBuildSetStatus)
-        d.addCallback(check)
-        return d
+        if rbss is None:
+            return
+        self.assertIsInstance(rbss, trysched.RemoteBuildSetStatus)
 
+    @defer.inlineCallbacks
     def test_perspective_try(self):
-        d = self.call_perspective_try(
+        yield self.call_perspective_try(
             'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'],
             properties={'pr': 'op'})
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=['a'],
-                    external_idstring=None,
-                    properties={'pr': ('op', u'try build')},
-                    reason=u"'try' job",
-                    sourcestamps=[
-                        dict(
-                            branch='default',
-                            codebase='',
-                            patch_author='',
-                            patch_body='-- ++',
-                            patch_comment='',
-                            patch_level=1,
-                            patch_subdir='',
-                            project='proj',
-                            repository='repo',
-                            revision='abcdef'),
-                    ])),
-            ])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStamps', dict(
+                builderNames=['a'],
+                external_idstring=None,
+                properties={'pr': ('op', 'try build')},
+                reason="'try' job",
+                sourcestamps=[
+                    dict(
+                        branch='default',
+                        codebase='',
+                        patch_author='',
+                        patch_body='-- ++',
+                        patch_comment='',
+                        patch_level=1,
+                        patch_subdir='',
+                        project='proj',
+                        repository='repo',
+                        revision='abcdef'),
+                ])),
+        ])
 
+    @defer.inlineCallbacks
     def test_perspective_try_who(self):
-        d = self.call_perspective_try(
-            'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'],
-            who='who', comment='comment', properties={'pr': 'op'})
+        yield self.call_perspective_try(
+                'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'],
+                who='who', comment='comment', properties={'pr': 'op'})
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamps', dict(
-                    builderNames=['a'],
-                    external_idstring=None,
-                    properties={'pr': ('op', u'try build')},
-                    reason=u"'try' job by user who (comment)",
-                    sourcestamps=[
-                        dict(
-                            branch='default',
-                            codebase='',
-                            patch_author='who',
-                            patch_body='-- ++',
-                            patch_comment='comment',
-                            patch_level=1,
-                            patch_subdir='',
-                            project='proj',
-                            repository='repo',
-                            revision='abcdef'),
-                    ])),
-            ])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStamps', dict(
+                builderNames=['a'],
+                external_idstring=None,
+                properties={'pr': ('op', 'try build')},
+                reason="'try' job by user who (comment)",
+                sourcestamps=[
+                    dict(
+                        branch='default',
+                        codebase='',
+                        patch_author='who',
+                        patch_body='-- ++',
+                        patch_comment='comment',
+                        patch_level=1,
+                        patch_subdir='',
+                        project='proj',
+                        repository='repo',
+                        revision='abcdef'),
+                ])),
+        ])
 
+    @defer.inlineCallbacks
     def test_perspective_try_bad_builders(self):
-        d = self.call_perspective_try(
-            'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['xxx'],
-            properties={'pr': 'op'})
+        yield self.call_perspective_try(
+                'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['xxx'],
+                properties={'pr': 'op'})
 
-        def check(_):
-            self.assertEqual(self.addBuildsetCalls, [])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.addBuildsetCalls, [])
 
+    @defer.inlineCallbacks
     def test_getAvailableBuilderNames(self):
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
                                    port='xxx', userpass=[('a', 'b')])
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
-        d = defer.maybeDeferred(persp.perspective_getAvailableBuilderNames)
+        buildernames = yield defer.maybeDeferred(
+                                persp.perspective_getAvailableBuilderNames)
 
-        def check(buildernames):
-            self.assertEqual(buildernames, ['a', 'b'])
-        d.addCallback(check)
-        return d
+        self.assertEqual(buildernames, ['a', 'b'])
 
 
-class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
+class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin,
+                   unittest.TestCase):
 
     OBJECTID = 25
     SCHEDULERID = 5
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def tearDown(self):

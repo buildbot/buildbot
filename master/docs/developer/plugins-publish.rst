@@ -39,7 +39,7 @@ Buildbot supports several kinds of pluggable components:
 
 * ``www``
 
-which is described in :doc:`web server configuration <../manual/cfg-www>`.
+which is described in :doc:`web server configuration <../manual/configuration/www>`.
 
 Once you have your component packaged, it's quite straightforward: you just need to add a few lines to the ``entry_points`` parameter of your call of ``setup`` function in :file:`setup.py` file:
 
@@ -89,4 +89,4 @@ Once again, there is a number of options available for you:
 
 The last option is probably the best one since it will make your plugin available pretty much to all Python developers.
 
-Once you have published the package, please send a link to `buildbot-devel <mailto:buildbot-devel@lists.sourceforge.net>`_ mailing list, so we can include a link to your plugin to :doc:`../manual/plugins`.
+Once you have published the package, please send a link to `buildbot-devel <mailto:devel@buildbot.net>`_ mailing list, so we can include a link to your plugin to :doc:`../manual/plugins`.

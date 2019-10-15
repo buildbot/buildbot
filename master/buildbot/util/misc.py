@@ -17,9 +17,7 @@ Miscellaneous utilities; these should be imported from C{buildbot.util}, not
 directly from this module.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import string_types
+import os
 
 from twisted.internet import reactor
 
@@ -28,7 +26,7 @@ def deferredLocked(lock_or_attr):
     def decorator(fn):
         def wrapper(*args, **kwargs):
             lock = lock_or_attr
-            if isinstance(lock, string_types):
+            if isinstance(lock, str):
                 lock = getattr(args[0], lock)
             return lock.run(fn, *args, **kwargs)
         return wrapper
@@ -46,3 +44,10 @@ def cancelAfter(seconds, deferred, _reactor=reactor):
         return x
 
     return deferred
+
+
+def writeLocalFile(path, contents, mode=None):  # pragma: no cover
+    with open(path, 'w') as file:
+        if mode is not None:
+            os.chmod(path, mode)
+        file.write(contents)

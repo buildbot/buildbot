@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import stat
 import time
 
@@ -28,11 +25,14 @@ from buildbot.steps.package.deb import pbuilder
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -247,9 +247,11 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -347,17 +349,19 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
+                      unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_no_distribution(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          pbuilder.UbuPbuilder())
+        with self.assertRaises(config.ConfigErrors):
+            pbuilder.UbuPbuilder()
 
     def test_new(self):
         self.setupStep(pbuilder.UbuPbuilder(distribution='oneiric'))
@@ -381,17 +385,19 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_no_distribution(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          pbuilder.UbuCowbuilder())
+        with self.assertRaises(config.ConfigErrors):
+            pbuilder.UbuCowbuilder()
 
     def test_new(self):
         self.setupStep(pbuilder.UbuCowbuilder(distribution='oneiric'))

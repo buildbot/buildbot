@@ -13,20 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.python import log
 
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
-from buildbot.process import remotetransfer
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
 from buildbot.steps.worker import CompositeStepMixin
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 
 class Source(LoggingBuildStep, CompositeStepMixin):
@@ -112,9 +109,10 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         if not descriptionSuffix and codebase:
             descriptionSuffix = [codebase]
 
-        LoggingBuildStep.__init__(self, description=description,
-                                  descriptionDone=descriptionDone, descriptionSuffix=descriptionSuffix,
-                                  **kwargs)
+        super().__init__(description=description,
+                         descriptionDone=descriptionDone,
+                         descriptionSuffix=descriptionSuffix,
+                         **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
@@ -178,12 +176,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 % self.name
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
-            LoggingBuildStep.setProperty(self, name, property_dict, source)
+            super().setProperty(name, property_dict, source)
         else:
             assert not isinstance(self.getProperty(name, None), dict), \
                 "Sourcestep %s does not have a codebase, other sourcesteps do" \
                 % self.name
-            LoggingBuildStep.setProperty(self, name, value, source)
+            super().setProperty(name, value, source)
 
     def describe(self, done=False):
         desc = self.descriptionDone if done else self.description
@@ -231,36 +229,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                                            ).startswith(self.build.path_module.abspath(self.workdir))):
             self.workdir = self.build.path_module.join(self.workdir, root)
 
-        def _downloadFile(buf, filename):
-            filereader = remotetransfer.StringFileReader(buf)
-            args = {
-                'maxsize': None,
-                'reader': filereader,
-                'blocksize': 16 * 1024,
-                'workdir': self.workdir,
-                'mode': None
-            }
-
-            if self.workerVersionIsOlderThan('downloadFile', '3.0'):
-                args['slavedest'] = filename
-            else:
-                args['workerdest'] = filename
-
-            cmd = remotecommand.RemoteCommand('downloadFile', args)
-            cmd.useLog(self.stdio_log, False)
-            log.msg("Downloading file: %s" % (filename))
-            d = self.runCommand(cmd)
-
-            @d.addCallback
-            def evaluateCommand(_):
-                if cmd.didFail():
-                    raise buildstep.BuildStepFailed()
-                return cmd.rc
-            return d
-
-        d = _downloadFile(diff, ".buildbot-diff")
+        d = self.downloadFileContentToWorker('.buildbot-diff', diff)
         d.addCallback(
-            lambda _: _downloadFile("patched\n", ".buildbot-patched"))
+            lambda _: self.downloadFileContentToWorker('.buildbot-patched', 'patched\n'))
         d.addCallback(lambda _: self.applyPatch(patch))
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
                                                     'logEnviron': self.logEnviron})
@@ -311,7 +282,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    self.addCompleteLog("patch", bytes2NativeString(patch[1]))
+                    self.addCompleteLog("patch", bytes2unicode(patch[1]))
             else:
                 log.msg(
                     "No sourcestamp found in build for codebase '%s'" % self.codebase)

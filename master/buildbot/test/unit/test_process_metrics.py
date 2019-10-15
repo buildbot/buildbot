@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import lrange
-
 import gc
 import sys
 
@@ -26,16 +21,17 @@ from twisted.trial import unittest
 
 from buildbot.process import metrics
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestMetricBase(unittest.TestCase):
+class TestMetricBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.clock = task.Clock()
+        self.setUpTestReactor()
         self.observer = metrics.MetricLogObserver()
-        self.observer.parent = self.master = fakemaster.make_master()
+        self.observer.parent = self.master = fakemaster.make_master(self)
         self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
-        self.observer._reactor = self.clock
+        self.observer._reactor = self.reactor
         self.observer.startService()
         self.observer.reconfigServiceWithBuildbotConfig(self.master.config)
 
@@ -131,7 +127,7 @@ class TestMetricTimeEvent(TestMetricBase):
         self.assertEqual(report['timers']['foo_time'], 5)
 
     def testAverages(self):
-        data = lrange(10)
+        data = list(range(10))
         for i in data:
             metrics.MetricTimeEvent.log('foo_time', i)
         report = self.observer.asDict()
@@ -172,8 +168,8 @@ class TestPeriodicChecks(TestMetricBase):
 
     def testGetRSS(self):
         self.assertTrue(metrics._get_rss() > 0)
-    if sys.platform != 'linux2':
-        testGetRSS.skip = "only available on linux2 platforms"
+    if sys.platform != 'linux':
+        testGetRSS.skip = "only available on linux platforms"
 
 
 class TestReconfig(TestMetricBase):
@@ -199,7 +195,7 @@ class TestReconfig(TestMetricBase):
         self.assertEqual(observer.log_task, None)
 
         # Make the periodic check run
-        self.clock.pump([0.1])
+        self.reactor.pump([0.1])
 
         # disable the whole listener
         new_config.metrics = None

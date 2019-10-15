@@ -17,7 +17,9 @@ Programmatic Configuration Generation
 -------------------------------------
 
 Bearing in mind that ``master.cfg`` is a Python file, large configurations can be shortened considerably by judicious use of Python loops.
-For example, the following will generate a builder for each of a range of supported versions of Python::
+For example, the following will generate a builder for each of a range of supported versions of Python:
+
+.. code-block:: python
 
     pythons = ['python2.4', 'python2.5', 'python2.6', 'python2.7',
                'python3.2', 'python3.3']
@@ -62,7 +64,9 @@ Arguments for the callable are:
     The number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
 
 It should return true if the requests can be merged, and False otherwise.
-For example::
+For example:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -77,13 +81,13 @@ For example::
         otherSourcestamps = otherBuildset['sourcestamps']
 
         if len(selfSourcestamps) != len(otherSourcestamps):
-            defer.returnValue(False)
+            return False
 
         for selfSourcestamp, otherSourcestamp in zip(selfSourcestamps, otherSourcestamps):
             if selfSourcestamp['branch'] != otherSourcestamp['branch']:
-                defer.returnValue(False)
+                return False
 
-        defer.returnValue(True)
+        return True
 
     c['collapseRequests'] = collapseRequests
 
@@ -91,17 +95,17 @@ In many cases, the details of the :bb:rtype:`sourcestamp` and :bb:rtype:`buildre
 
 In the following example, only :bb:rtype:`buildrequest` with the same "reason" are merged; thus developers forcing builds for different reasons will see distinct builds.
 
-Note the use of the :py:meth:`buildrequest.BuildRequest.canBeCollapsed` method to access the source stamp compatibility algorithm.
+Note the use of the :py:meth:`buildrequest.BuildRequest.canBeCollapsed` method to access the source stamp compatibility algorithm:
 
-::
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
         canBeCollapsed = yield buildrequest.BuildRequest.canBeCollapsed(master, req1, req2)
         if canBeCollapsed and req1.reason == req2.reason:
-           defer.returnValue(True)
+           return True
         else:
-           defer.returnValue(False)
+           return False
     c['collapseRequests'] = collapseRequests
 
 Another common example is to prevent collapsing of requests coming from a :bb:step:`Trigger` step.
@@ -113,7 +117,9 @@ Buildrequests will all have the same sourcestamp, but probably different propert
 
     In most of the cases, just setting collapseRequests=False for triggered builders will do the trick.
 
-In other cases, ``parent_buildid`` from buildset can be used::
+In other cases, ``parent_buildid`` from buildset can be used:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -123,9 +129,9 @@ In other cases, ``parent_buildid`` from buildset can be used::
             master.data.get(('buildsets', req2['buildsetid']))
         ])
         if canBeCollapsed and selfBuildset['parent_buildid'] != None and otherBuildset['parent_buildid'] != None:
-           defer.returnValue(True)
+           return True
         else:
-           defer.returnValue(False)
+           return False
     c['collapseRequests'] = collapseRequests
 
 
@@ -135,7 +141,9 @@ If it's necessary to perform some extended operation to determine whether two re
 
     Again, the number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
 
-For example::
+For example:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def collapseRequests(master, builder, req1, req2):
@@ -143,7 +151,7 @@ For example::
             getMergeInfo(req1),
             getMergeInfo(req2),
         ])
-        defer.returnValue(info1 == info2)
+        return info1 == info2
 
     c['collapseRequests'] = collapseRequests
 
@@ -159,7 +167,9 @@ It should return a list of the same :class:`Builder` objects, in the desired ord
 It may also remove items from the list if builds should not be started on those builders.
 If necessary, this function can return its results via a Deferred (it is called with ``maybeDeferred``).
 
-A simple ``prioritizeBuilders`` implementation might look like this::
+A simple ``prioritizeBuilders`` implementation might look like this:
+
+.. code-block:: python
 
     def prioritizeBuilders(buildmaster, builders):
         """Prioritize builders.  'finalRelease' builds have the highest
@@ -205,7 +215,9 @@ Build Priority Functions
 When a builder has multiple pending build requests, it uses a ``nextBuild`` function to decide which build it should start first.
 This function is given two parameters: the :class:`Builder`, and a list of :class:`BuildRequest` objects representing pending build requests.
 
-A simple function to prioritize release builds over other builds might look like this::
+A simple function to prioritize release builds over other builds might look like this:
+
+.. code-block:: python
 
    def nextBuild(bldr, requests):
        for r in requests:
@@ -213,7 +225,9 @@ A simple function to prioritize release builds over other builds might look like
                return r
        return requests[0]
 
-If some non-immediate result must be calculated, the ``nextBuild`` function can also return a Deferred::
+If some non-immediate result must be calculated, the ``nextBuild`` function can also return a Deferred:
+
+.. code-block:: python
 
     def nextBuild(bldr, requests):
         d = get_request_priorities(requests)
@@ -223,7 +237,9 @@ If some non-immediate result must be calculated, the ``nextBuild`` function can 
         d.addCallback(pick)
         return d
 
-The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`::
+The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`:
+
+.. code-block:: python
 
     ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
@@ -252,11 +268,77 @@ If the file does not exist on the given worker, refuse to run the build to force
            cmd.worker = wfb.worker
            res = yield cmd.run(None, wfb.worker.conn, builder.name)
            if res.rc != 0:
-               defer.returnValue(False)
+               return False
 
-       defer.returnValue(True)
+       return True
 
-You can extend this example using any remote command described in the :doc:`../developer/master-worker`.
+Here is a more complete example that checks if a worker is fit to start a build.
+If the load average is higher than the number of CPU cores or if there is less than 2GB of free memory, refuse to run the build on that worker.
+Also, put that worker in quarantine to make sure no other builds are scheduled on it for a while.
+Otherwise, let the build start on that worker.
+
+.. code-block:: python
+
+   class FakeBuild(object):
+       properties = Properties()
+
+   class FakeStep(object):
+       build = FakeBuild()
+
+   @defer.inlineCallbacks
+   def shell(command, worker, builder):
+       args = {
+           'command': command,
+           'logEnviron': False,
+           'workdir': worker.worker_basedir,
+           'want_stdout': False,
+           'want_stderr': False,
+       }
+       cmd = RemoteCommand('shell', args, stdioLogName=None)
+       cmd.worker = worker
+       yield cmd.run(FakeStep(), worker.conn, builder.name)
+       return cmd.rc
+
+   @defer.inlineCallbacks
+   def canStartBuild(builder, wfb, request):
+       # check that load is not too high
+       rc = yield shell(
+           'test "$(cut -d. -f1 /proc/loadavg)" -le "$(nproc)"',
+           wfb.worker, builder)
+       if rc != 0:
+           log.msg('loadavg is too high to take new builds',
+                   system=repr(wfb.worker))
+           wfb.worker.putInQuarantine()
+           return False
+
+       # check there is enough free memory
+       sed_expr = r's/^MemAvailable:[[:space:]]+([0-9]+)[[:space:]]+kB$/\1/p'
+       rc = yield shell(
+           'test "$(sed -nre \'%s\' /proc/meminfo)" -gt 2000000' % sed_expr,
+           wfb.worker, builder)
+       if rc != 0:
+           log.msg('not enough free memory to take new builds',
+                   system=repr(wfb.worker))
+           wfb.worker.putInQuarantine()
+           return False
+
+       # The build may now proceed.
+       #
+       # Prevent this worker from taking any other build while this one is
+       # starting for 2 min. This leaves time for the build to start consuming
+       # resources (disk, memory, cpu). When the quarantine is over, if the
+       # same worker is subject to start another build, the above checks will
+       # better reflect the actual state of the worker.
+       wfb.worker.quarantine_timeout = 120
+       wfb.worker.putInQuarantine()
+
+       # This does not take the worker out of quarantine, it only resets the
+       # timeout value to default.
+       wfb.worker.resetQuarantine()
+
+       return True
+
+You can extend these examples using any remote command described in the :doc:`../developer/master-worker`.
 
 .. _Customizing-SVNPoller:
 
@@ -282,7 +364,9 @@ One common layout is to have all the various projects that share a repository ge
                /3_2_2
                /3_3_0
 
-To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing else), we would use the following, using the default ``split_file``::
+To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing else), we would use the following, using the default ``split_file``:
+
+.. code-block:: python
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller(
@@ -309,7 +393,9 @@ It may also return ``None`` to indicate that the file is of no interest.
    The function should return ``branches/3_3`` rather than just ``3_3`` because the SVN checkout step, will append the branch name to the ``baseURL``, which requires that we keep the ``branches`` component in there.
    Other VC schemes use a different approach towards branches and may not require this artifact.
 
-If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming scheme, the following function will work::
+If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming scheme, the following function will work:
+
+.. code-block:: python
 
     def split_file_branches(path):
         pieces = path.split('/')
@@ -322,7 +408,9 @@ If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming schem
             return None
 
 In fact, this is the definition of the provided ``split_file_branches`` function.
-So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, we would use this::
+So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, we would use this:
+
+.. code-block:: python
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
@@ -331,7 +419,9 @@ So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, 
 Changes for all sorts of branches (with names like ``"branches/1.5.x"``, and ``None`` to indicate the trunk) will be delivered to the Schedulers.
 Each Scheduler is then free to use or ignore each branch as it sees fit.
 
-If you have multiple projects in the same repository your split function can attach a project name to the Change to help the Scheduler filter out unwanted changes::
+If you have multiple projects in the same repository your split function can attach a project name to the Change to help the Scheduler filter out unwanted changes:
+
+.. code-block:: python
 
     from buildbot.plugins import util
     def split_file_projects_branches(path):
@@ -347,7 +437,9 @@ If you have multiple projects in the same repository your split function can att
         return f
 
 Again, this is provided by default.
-To use it you would do this::
+To use it you would do this:
+
+.. code-block:: python
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
@@ -374,7 +466,9 @@ The 1.5.x branch version of this file would have a URL of ``http://divmod.org/sv
 The whole Nevow trunk would be checked out with ``http://divmod.org/svn/Divmod/trunk/Nevow``, while the Quotient trunk would be checked out using ``http://divmod.org/svn/Divmod/trunk/Quotient``.
 
 Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about the Nevow trunk.
-This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlier::
+This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlier:
+
+.. code-block:: python
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
@@ -383,7 +477,7 @@ But what happens when we want to track multiple Nevow branches?
 We have to point our ``repourl=`` high enough to see all those branches, but we also don't want to include Quotient changes (since we're only building Nevow).
 To accomplish this, we must rely upon the ``split_file`` function to help us tell the difference between files that belong to Nevow and those that belong to Quotient, as well as figuring out which branch each one is on.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod",
@@ -405,7 +499,9 @@ The ``my_file_splitter`` function will be called with repository-relative pathna
 :file:`branches/1.5.x/Quotient/setup.py`
     This is also a Quotient file, which should be ignored.
 
-The following definition for :meth:`my_file_splitter` will do the job::
+The following definition for :meth:`my_file_splitter` will do the job:
+
+.. code-block:: python
 
     def my_file_splitter(path):
         pieces = path.split('/')
@@ -423,7 +519,9 @@ The following definition for :meth:`my_file_splitter` will do the job::
             return None # wrong project
         return dict(branch=branch, path='/'.join(pieces))
 
-If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply::
+If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply:
+
+.. code-block:: python
 
     return dict(project=projectname, branch=branch, path='/'.join(pieces))
 
@@ -454,7 +552,7 @@ A custom change source must implement :class:`buildbot.interfaces.IChangeSource`
 The easiest way to do this is to subclass :class:`buildbot.changes.base.ChangeSource`, implementing the :meth:`describe` method to describe the instance.
 :class:`ChangeSource` is a Twisted service, so you will need to implement the :meth:`startService` and :meth:`stopService` methods to control the means by which your change source receives notifications.
 
-When the class does receive a change, it should call ``self.master.addChange(..)`` to submit it to the buildmaster.
+When the class does receive a change, it should call ``self.master.data.updates.addChange(..)`` to submit it to the buildmaster.
 This method shares the same parameters as ``master.db.changes.addChange``, so consult the API documentation for that function for details on the available arguments.
 
 You will probably also want to set ``compare_attrs`` to the list of object attributes which Buildbot will use to compare one change source to another when reconfiguring.
@@ -473,25 +571,57 @@ Aside from the service methods, the other concerns in the previous section apply
 Writing a New Latent Worker Implementation
 ------------------------------------------
 
-Writing a new latent worker should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance`.
+Writing a new latent worker should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance` at a minimum.
 
-::
+.. bb:worker:: AbstractWorkerController
 
-    def start_instance(self):
-        # responsible for starting instance that will try to connect with this
-        # master. Should return deferred. Problems should use an errback. The
-        # callback value can be None, or can be an iterable of short strings to
-        # include in the "substantiate success" status message, such as
-        # identifying the instance that started.
-        raise NotImplementedError
+AbstractLatentWorker
+~~~~~~~~~~~~~~~~~~~~
 
-    def stop_instance(self, fast=False):
-        # responsible for shutting down instance. Return a deferred. If `fast`,
-        # we're trying to shut the master down, so callback as soon as is safe.
-        # Callback value is ignored.
-        raise NotImplementedError
+.. py:class:: buildbot.worker.AbstractLatentWorker
+
+This class is the base class of all latent workers and implements some common functionality.
+A custom worker should only need to override :meth:`start_instance` and :meth:`stop_instance` methods.
 
 See :class:`buildbot.worker.ec2.EC2LatentWorker` for an example.
+
+Additionally, :meth:`builds_may_be_incompatible` and :attr:`isCompatibleWithBuild` members must be overridden if some qualities of the new instances is determined dynamically according to the properties of an incoming build.
+An example a build may require a certain Docker image or amount of allocated memory.
+Overriding these members ensures that builds aren't ran on incompatible workers that have already been started.
+
+    .. py:method:: start_instance(self)
+
+        This method is responsible for starting instance that will try to connect with this master.
+        A deferred should be returned.
+        Any problems should use an errback.
+        The callback value can be ``None``, or can be an iterable of short strings to include in the "substantiate success" status message, such as identifying the instance that started.
+        Buildbot will ensure that a single worker will never have its ``start_instance`` called before any previous calls to ``start_instance`` or ``stop_instance`` finish.
+        Additionally, for each ``start_instance`` call, exactly one corresponding call to ``stop_instance`` will be done eventually.
+
+    .. py:method:: stop_instance(self, fast=False)
+
+        This method is responsible for shutting down instance.
+        A deferred should be returned.
+        If ``fast`` is ``True`` then the function should call back as soon as it is safe to do so, as, for example, the master may be shutting down.
+        The value returned by the callback is ignored.
+        Buildbot will ensure that a single worker will never have its ``stop_instance`` called before any previous calls to ``stop_instance`` finish.
+        During master shutdown any pending calls to ``start_instance`` or ``stop_instance`` will be waited upon finish.
+
+    .. py:attribute:: builds_may_be_incompatible
+
+        Determines if new instances have qualities dependent on the build.
+        If ``True``, the master will call ``isCompatibleWithBuild`` to determine whether new builds are compatible with the started instance.
+        Unnecessarily setting ``builds_may_be_incompatible`` to ``True`` may result in unnecessary overhead when processing the builds.
+        By default, this is ``False``.
+
+    .. py:method:: isCompatibleWithBuild(self, build_props)
+
+        This method determines whether a started instance is compatible with the build that is about to be started.
+        ``build_props`` is the properties of the build that are known before the build has been started.
+        A build may be incompatible with already started instance if, for example, it requests a different amount of memory or a different Docker image.
+        A deferred should be returned, whose callback should return ``True`` if build is compatible and ``False`` otherwise.
+        The method may be called when the instance is not yet started and should indicate compatible build in that case.
+        In the default implementation the callback returns ``True``.
 
 Custom Build Classes
 --------------------
@@ -502,7 +632,9 @@ Each step can affect the results of the build, but in general there is little in
 
 By setting the factory's ``buildClass`` attribute to a different class, you can instantiate a different build class.
 This might be useful, for example, to create a build class that dynamically determines which steps to run.
-The skeleton of such a project would look like::
+The skeleton of such a project would look like:
+
+.. code-block:: python
 
     class DynamicBuild(Build):
         # override some methods
@@ -530,7 +662,9 @@ Note that the value must be returned immediately - Deferreds are not supported.
 
 This can be useful, for example, in scenarios with multiple repositories submitting changes to Buildbot.
 In this case you likely will want to have a dedicated workdir per repository, since otherwise a sourcing step with mode = "update" will fail as a workdir with a working copy of repository A can't be "updated" for changes from a repository B.
-Here is an example how you can achieve workdir-per-repo::
+Here is an example how you can achieve workdir-per-repo:
+
+.. code-block:: python
 
         def workdir(source_stamps):
             return hashlib.md5(source_stamps[0].repository).hexdigest()[:8]
@@ -562,10 +696,9 @@ Writing New BuildSteps
 
 .. warning::
 
-   Buildbot has transitioned to a new, simpler style for writing custom steps.
-   See :doc:`new-style-steps` for details.
+   The API of writing custom build steps has changed significantly in Buildbot-0.9.0.
+   See :ref:`New-Style-Build-Steps` for details about what has changed since pre 0.9.0 releases.
    This section documents new-style steps.
-   Old-style steps are supported in Buildbot-0.9.0, but not in later releases.
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
 One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
@@ -587,7 +720,9 @@ Writing BuildStep Constructors
 Build steps act as their own factories, so their constructors are a bit more complex than necessary.
 The configuration file instantiates a :class:`~buildbot.process.buildstep.BuildStep` object, but the step configuration must be re-used for multiple builds, so Buildbot needs some way to create more steps.
 
-Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
+Consider the use of a :class:`BuildStep` in :file:`master.cfg`:
+
+.. code-block:: python
 
     f.addStep(MyStep(someopt="stuff", anotheropt=1))
 
@@ -599,7 +734,9 @@ When writing a new step class, then, keep in mind are that you cannot do anythin
 It is customary to call the parent class's constructor with all otherwise-unspecified keyword arguments.
 Keep a ``**kwargs`` argument on the end of your options, and pass that up to the parent class's constructor.
 
-The whole thing looks like this::
+The whole thing looks like this:
+
+.. code-block:: python
 
     class Frobnify(LoggingBuildStep):
         def __init__(self,
@@ -616,7 +753,7 @@ The whole thing looks like this::
             kwargs['parentOpt'] = 'xyz'
 
             # call parent
-            LoggingBuildStep.__init__(self, **kwargs)
+            super().__init__(**kwargs)
 
             # set Frobnify attributes
             self.frob_what = frob_what
@@ -627,7 +764,7 @@ The whole thing looks like this::
         def __init__(self,
                 speed=5,
                 **kwargs):
-            Frobnify.__init__(self, **kwargs)
+            super().__init__(**kwargs)
             self.speed = speed
 
 Step Execution Process
@@ -643,7 +780,9 @@ The :bb:step:`ShellCommand` class implements this ``run`` method, and in most ca
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the worker, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
+To spawn a command in the worker, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`:
+
+.. code-block:: python
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
@@ -655,13 +794,15 @@ This class provides a method to handle the myriad constructor arguments related 
 This mixin is the recommended method of implementing custom shell-based steps.
 The older pattern of subclassing ``ShellCommand`` is no longer recommended.
 
-A simple example of a step using the shell mixin is::
+A simple example of a step using the shell mixin is:
+
+.. code-block:: python
 
     class RunCleanup(buildstep.ShellMixin, buildstep.BuildStep):
         def __init__(self, cleanupScript='./cleanup.sh', **kwargs):
             self.cleanupScript = cleanupScript
             kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-            buildstep.BuildStep.__init__(self, **kwargs)
+            super().__init__(**kwargs)
 
         @defer.inlineCallbacks
         def run(self):
@@ -673,7 +814,7 @@ A simple example of a step using the shell mixin is::
                         command=[self.cleanupScript, '--force'],
                         logEnviron=False)
                 yield self.runCommand(cmd)
-            defer.returnValue(cmd.results())
+            return cmd.results()
 
     @defer.inlineCallbacks
     def run(self):
@@ -720,7 +861,9 @@ Writing Log Files
 ~~~~~~~~~~~~~~~~~
 
 Most commonly, logfiles come from commands run on the worker.
-Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method::
+Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
@@ -732,23 +875,29 @@ Internally, these are configured by supplying the :class:`~buildbot.process.remo
 The name passed to :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` must match that configured in the command.
 In this case, ``stdio`` is the default.
 
-If the log file was already added by another part of the step, it can be retrieved with :meth:`~buildbot.process.buildstep.BuildStep.getLog`::
+If the log file was already added by another part of the step, it can be retrieved with :meth:`~buildbot.process.buildstep.BuildStep.getLog`:
+
+.. code-block:: python
 
     stdioLog = self.getLog('stdio')
 
 Less frequently, some master-side processing produces a log file.
-If this log file is short and easily stored in memory, this is as simple as a call to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`::
+If this log file is short and easily stored in memory, this is as simple as a call to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
         ...
         summary = u'\n'.join('%s: %s' % (k, count)
-                             for (k, count) in self.lint_results.iteritems())
+                             for (k, count) in self.lint_results.items())
         yield self.addCompleteLog('summary', summary)
 
 Note that the log contents must be a unicode string.
 
-Longer logfiles can be constructed line-by-line using the ``add`` methods of the log file::
+Longer logfiles can be constructed line-by-line using the ``add`` methods of the log file:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
@@ -839,7 +988,9 @@ It has a mode flag named ``finished`` to ignore everything after the ``====`` ma
 Each time it identifies a test has been completed, it increments its counter and delivers the new progress value to the step with ``self.step.setProgress``.
 This helps Buildbot to determine the ETA for the step.
 
-To connect this parser into the :bb:step:`Trial` build step, ``Trial.__init__`` ends with the following clause::
+To connect this parser into the :bb:step:`Trial` build step, ``Trial.__init__`` ends with the following clause:
+
+.. code-block:: python
 
     # this counter will feed Progress along the 'test cases' metric
     counter = TrialTestCaseCounter()
@@ -854,7 +1005,9 @@ Using Properties
 
 In custom :class:`BuildSteps`, you can get and set the build properties with the :meth:`getProperty` and :meth:`setProperty` methods.
 Each takes a string for the name of the property, and returns or accepts an arbitrary JSON-able (lists, dicts, strings, and numbers) object.
-For example::
+For example:
+
+.. code-block:: python
 
     class MakeTarball(ShellCommand):
         def start(self):
@@ -862,7 +1015,7 @@ For example::
                 self.setCommand([ ... ]) # windows-only command
             else:
                 self.setCommand([ ... ]) # equivalent for other systems
-            ShellCommand.start(self)
+            super().start()
 
 Remember that properties set in a step may not be available until the next step begins.
 In particular, any :class:`Property` or :class:`Interpolate` instances for the current step are interpolated before the step starts, so they cannot use the value of any properties determined in that step.
@@ -891,13 +1044,57 @@ For example, a step that uploads a build result to an external service might inc
 
 To set one of these links, the :class:`BuildStep` should call the :meth:`~buildbot.process.buildstep.BuildStep.addURL` method with the name of the link and the target URL.
 Multiple URLs can be set.
-For example::
+For example:
+
+.. code-block:: python
 
     @defer.inlineCallbacks
     def run(self):
         ... # create and upload report to coverage server
         url = 'http://coverage.example.com/reports/%s' % reportname
         yield self.addURL('coverage', url)
+
+This also works from log observers, which is helpful for instance if the build output points to an external page such as a detailed log file. The following example parses output of *poudriere*, a tool for building packages on the FreeBSD operating system.
+
+Example output:
+
+.. code-block:: none
+
+    [00:00:00] Creating the reference jail... done
+    ...
+    [00:00:01] Logs: /usr/local/poudriere/data/logs/bulk/103amd64-2018Q4/2018-10-03_05h47m30s
+    ...
+    ... build log without details (those are in the above logs directory) ...
+
+Log observer implementation:
+
+.. code-block:: python
+
+    c = BuildmasterConfig = {}
+    c['titleURL'] = 'https://my-buildbot.example.com/'
+    # ...
+    class PoudriereLogLinkObserver(util.LogLineObserver):
+        _regex = re.compile(
+            r'Logs: /usr/local/poudriere/data/logs/bulk/([-_/0-9A-Za-z]+)$')
+
+        def __init__(self):
+            super().__init__()
+            self._finished = False
+
+        def outLineReceived(self, line):
+            # Short-circuit if URL already found
+            if self._finished:
+                return
+
+            m = self._regex.search(line.rstrip())
+            if m:
+                self._finished = True
+                # Let's assume local directory /usr/local/poudriere/data/logs/bulk
+                # is available as https://my-buildbot.example.com/poudriere/logs
+                poudriere_ui_url = c['titleURL'] + 'poudriere/logs/' + m.group(1)
+                # Add URLs for build overview page and for per-package log files
+                self.step.addURL('Poudriere build web interface', poudriere_ui_url)
+                self.step.addURL('Poudriere logs', poudriere_ui_url + '/logs/')
 
 Discovering files
 ~~~~~~~~~~~~~~~~~
@@ -928,7 +1125,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
     class MyBuildStep(steps.BuildStep):
 
         def __init__(self, dirname, **kwargs):
-            buildstep.BuildStep.__init__(self, **kwargs)
+            super().__init__(**kwargs)
             self.dirname = dirname
 
         def start(self):
@@ -1078,7 +1275,9 @@ To run a Framboozle-enabled test suite, you just run the 'framboozler' command f
 The 'framboozler' command emits a bunch of stuff to stdout, but the most interesting bit is that it emits the line "FNURRRGH!" every time it finishes running a test case You'd like to have a test-case counting LogObserver that watches for these lines and counts them, because counting them will help the buildbot more accurately calculate how long the build will take, and this will let you know exactly how long you can sneak out of the office for your hang-gliding lessons without anyone noticing that you're gone.
 
 This will involve writing a new :class:`BuildStep` (probably named "Framboozle") which inherits from :bb:step:`ShellCommand`.
-The :class:`BuildStep` class definition itself will look something like this::
+The :class:`BuildStep` class definition itself will look something like this:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 
@@ -1093,7 +1292,7 @@ The :class:`BuildStep` class definition itself will look something like this::
         command = ["framboozler"]
 
         def __init__(self, **kwargs):
-            steps.ShellCommand.__init__(self, **kwargs)   # always upcall!
+            super().__init__(**kwargs)   # always upcall!
             counter = FNURRRGHCounter()
             self.addLogObserver('stdio', counter)
             self.progressMetrics += ('tests',)
@@ -1109,7 +1308,9 @@ You have a number of different options:
 Inclusion in the :file:`master.cfg` file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like::
+The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like:
+
+.. code-block:: python
 
     f = BuildFactory()
     f.addStep(SVN(repourl="stuff"))
@@ -1141,14 +1342,18 @@ Or add something like this to something like your :file:`~/.bashrc` or :file:`~/
 
     export PYTHONPATH=~/lib/python
 
-Once we've done this, our :file:`master.cfg` can look like::
+Once we've done this, our :file:`master.cfg` can look like:
+
+.. code-block:: python
 
     from framboozle import Framboozle
     f = BuildFactory()
     f.addStep(SVN(repourl="stuff"))
     f.addStep(Framboozle())
 
-or::
+or:
+
+.. code-block:: python
 
     import framboozle
     f = BuildFactory()
@@ -1226,7 +1431,9 @@ Where:
 * ``framboozle:Framboozle`` consists of two parts: ``framboozle`` is the name of the Python module where to look for ``Framboozle`` class, which implements the plugin
 * ``Framboozle`` is the name of the plugin.
 
-  This will allow users of your plugin to use it just like any other Buildbot plugins::
+  This will allow users of your plugin to use it just like any other Buildbot plugins:
+
+  .. code-block:: python
 
     from buildbot.plugins import steps
 
@@ -1243,7 +1450,9 @@ Submit the code for inclusion in the Buildbot distribution
 Make a fork of buildbot on http://github.com/buildbot/buildbot or post a patch in a bug at http://trac.buildbot.net/.
 In either case, post a note about your patch to the mailing list, so others can provide feedback and, eventually, commit it.
 
-When it's committed to the master, the usage is the same as in the previous approach::
+When it's committed to the master, the usage is the same as in the previous approach:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
 

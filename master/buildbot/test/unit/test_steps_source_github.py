@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
 from buildbot.test.fake.remotecommand import Expect
@@ -53,7 +50,7 @@ class TestGitHub(test_steps_source_git.TestGit):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'refs/pull/1234/merge'])
+                                 'refs/pull/1234/merge', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])

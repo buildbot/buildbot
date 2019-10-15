@@ -16,15 +16,12 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
 
 
-class UsersClient(object):
+class UsersClient:
 
     """
     Client set up in buildbot.scripts.runner to send `buildbot user` args

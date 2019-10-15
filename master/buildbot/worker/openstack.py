@@ -14,9 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import math
 import time
@@ -27,6 +24,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -48,7 +46,8 @@ DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
 
-class OpenStackLatentWorker(AbstractLatentWorker):
+class OpenStackLatentWorker(AbstractLatentWorker,
+                            CompatibleLatentWorkerMixin):
 
     instance = None
     _poll_resolution = 5  # hook point for tests
@@ -83,7 +82,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
 
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+        super().__init__(name, password, **kwargs)
 
         self.flavor = flavor
         self.client_version = client_version
@@ -158,7 +157,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             source_uuid = rendered_block_device['uuid']
             volume_size = self._determineVolumeSize(source_type, source_uuid)
             rendered_block_device['volume_size'] = volume_size
-        defer.returnValue(rendered_block_device)
+        return rendered_block_device
 
     def _determineVolumeSize(self, source_type, source_uuid):
         """
@@ -195,12 +194,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             image_uuid = image(self.novaclient.images.list())
         else:
             image_uuid = yield build.render(image)
-        defer.returnValue(image_uuid)
+        return image_uuid
 
     @defer.inlineCallbacks
-    def start_instance(self, build):
-        if self.instance is not None:
-            raise ValueError('instance active')
+    def renderWorkerProps(self, build):
         image = yield self._getImage(build)
         if self.block_devices is not None:
             block_devices = []
@@ -209,9 +206,17 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
+        return (image, block_devices)
+
+    @defer.inlineCallbacks
+    def start_instance(self, build):
+        if self.instance is not None:
+            raise ValueError('instance active')
+
+        image, block_devices = yield self.renderWorkerPropsOnStart(build)
         res = yield threads.deferToThread(self._start_instance, image,
                                           block_devices)
-        defer.returnValue(res)
+        return res
 
     def _start_instance(self, image_uuid, block_devices):
         boot_args = [self.workername, image_uuid, self.flavor]

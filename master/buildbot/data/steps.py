@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -22,7 +20,7 @@ from buildbot.data import base
 from buildbot.data import types
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     def db2data(self, dbdict):
         data = {
@@ -58,9 +56,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            defer.returnValue((yield self.db2data(dbdict))
-                              if dbdict else None)
-            return
+            return (yield self.db2data(dbdict)) if dbdict else None
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return
@@ -68,8 +64,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             buildid=buildid,
             number=kwargs.get('step_number'),
             name=kwargs.get('step_name'))
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -93,7 +88,7 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         results = []
         for dbdict in steps:
             results.append((yield self.db2data(dbdict)))
-        defer.returnValue(results)
+        return results
 
 
 class Step(base.ResourceType):
@@ -134,9 +129,9 @@ class Step(base.ResourceType):
     @defer.inlineCallbacks
     def addStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
-            buildid=buildid, name=name, state_string=u'pending')
+            buildid=buildid, name=name, state_string='pending')
         yield self.generateEvent(stepid, 'new')
-        defer.returnValue((stepid, num, name))
+        return (stepid, num, name)
 
     @base.updateMethod
     @defer.inlineCallbacks

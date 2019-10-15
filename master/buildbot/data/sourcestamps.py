@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -57,7 +55,7 @@ class SourceStampEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         ssdict = yield self.master.db.sourcestamps.getSourceStamp(
             kwargs['ssid'])
-        defer.returnValue(_db2data(ssdict) if ssdict else None)
+        return _db2data(ssdict) if ssdict else None
 
 
 class SourceStampsEndpoint(base.Endpoint):
@@ -70,8 +68,8 @@ class SourceStampsEndpoint(base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        defer.returnValue([_db2data(ssdict) for ssdict in
-                           (yield self.master.db.sourcestamps.getSourceStamps())])
+        return [_db2data(ssdict) for ssdict in
+            (yield self.master.db.sourcestamps.getSourceStamps())]
 
 
 class SourceStamp(base.ResourceType):

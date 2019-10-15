@@ -13,14 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.python import failure
 from twisted.python import log
 
 
-class SubscriptionPoint(object):
+class SubscriptionPoint:
 
     def __init__(self, name):
         self.name = name
@@ -46,7 +44,7 @@ class SubscriptionPoint(object):
         self.subscriptions.remove(subscription)
 
 
-class Subscription(object):
+class Subscription:
 
     def __init__(self, subpt, callback):
         self.subpt = subpt

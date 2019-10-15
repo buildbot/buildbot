@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import itervalues
-
 from collections import defaultdict
 
 from twisted.internet import defer
@@ -67,7 +62,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 "fileIsImportant must be a callable")
 
         # initialize parent classes
-        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
 
         self.treeStableTimer = treeStableTimer
         if fileIsImportant is not None:
@@ -91,7 +86,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def activate(self):
-        yield base.BaseScheduler.activate(self)
+        yield super().activate()
 
         if not self.enabled:
             return
@@ -114,14 +109,14 @@ class BaseBasicScheduler(base.BaseScheduler):
     @defer.inlineCallbacks
     def deactivate(self):
         # the base deactivate will unsubscribe from new changes
-        yield base.BaseScheduler.deactivate(self)
+        yield super().deactivate()
 
         if not self.enabled:
             return
 
         @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers():
-            for timer in itervalues(self._stable_timers):
+            for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
             self._stable_timers.clear()
@@ -170,7 +165,7 @@ class BaseBasicScheduler(base.BaseScheduler):
             yield self.master.db.schedulers.getChangeClassifications(self.serviceid)
 
         # call gotChange for each change, after first fetching it from the db
-        for changeid, important in iteritems(classifications):
+        for changeid, important in classifications.items():
             chdict = yield self.master.db.changes.getChange(changeid)
 
             if not chdict:
@@ -211,22 +206,22 @@ class BaseBasicScheduler(base.BaseScheduler):
             self.serviceid, less_than=max_changeid + 1)
 
 
-class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
+class SingleBranchScheduler(AbsoluteSourceStampsMixin, BaseBasicScheduler):
 
     def __init__(self, name, createAbsoluteSourceStamps=False, **kwargs):
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
-        BaseBasicScheduler.__init__(self, name, **kwargs)
+        super().__init__(name, **kwargs)
 
     @defer.inlineCallbacks
     def gotChange(self, change, important):
         if self.createAbsoluteSourceStamps:
             yield self.recordChange(change)
 
-        yield BaseBasicScheduler.gotChange(self, change, important)
+        yield super().gotChange(change, important)
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
-            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
+            return super().getCodebaseDict(codebase)
         return self.codebases[codebase]
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
@@ -259,7 +254,7 @@ class Scheduler(SingleBranchScheduler):
                 "buildbot.schedulers.basic.SingleBranchScheduler instead " +
                 "(note that this may require you to change your import " +
                 "statement)")
-        SingleBranchScheduler.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class AnyBranchScheduler(BaseBasicScheduler):

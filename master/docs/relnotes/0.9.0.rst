@@ -119,7 +119,7 @@ Individual features and improvements to the Data API are not described on this p
 
 * Add new :bb:step:`Cppcheck` step.
 
-* Add a new :doc:`Docker latent Workers </manual/cfg-workers-docker>`.
+* Add a new :doc:`Docker latent Workers </manual/configuration/workers-docker>`.
 
 * Add a new configuration for creating custom services in out-of-tree CI systems or plugins. See :py:class:`buildbot.util.service.BuildbotService`
 
@@ -210,7 +210,7 @@ See respective documentation for details.
 
 * :class:`~buildbot.status.mail.MailNotifier` renamed to :class:`~buildbot.reporters.mail.MailNotifier`
 
-* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a :class:`~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
+* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a :class:`~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formatters need to be rewritten.
 
 * :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
 
@@ -234,10 +234,10 @@ Fixes
 
 * The version check for SQLAlchemy-Migrate was fixed to accept more version string formats.
 
-* The :bb:step:`HTTPStep` step's requeset parameters are now renderable.
+* The :bb:step:`HTTPStep` step's request parameters are now renderable.
 
 * With Git(), force the updating submodules to ensure local changes by the
-  build are overwitten. This both ensures more consistent builds and avoids
+  build are overwritten. This both ensures more consistent builds and avoids
   errors when updating submodules.
 
 * Buildbot is now compatible with Gerrit v2.6 and higher.

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import log
@@ -50,8 +48,7 @@ class BuildRequestStatus:
 
         # this is only set once, so no need to lock if we already have it
         if self._buildrequest:
-            defer.returnValue(self._buildrequest)
-            return
+            return self._buildrequest
 
         yield self._buildrequest_lock.acquire()
 
@@ -70,7 +67,7 @@ class BuildRequestStatus:
 
         self._buildrequest_lock.release()
 
-        defer.returnValue(self._buildrequest)
+        return self._buildrequest
 
     def buildStarted(self, build):
         self.status._buildrequest_buildStarted(build.status)
@@ -80,12 +77,12 @@ class BuildRequestStatus:
     @defer.inlineCallbacks
     def getBsid(self):
         br = yield self._getBuildRequest()
-        defer.returnValue(br.bsid)
+        return br.bsid
 
     @defer.inlineCallbacks
     def getBuildProperties(self):
         br = yield self._getBuildRequest()
-        defer.returnValue(br.properties)
+        return br.properties
 
     def getSourceStamp(self):
         # TODO..
@@ -107,7 +104,7 @@ class BuildRequestStatus:
             bs = builder.getBuild(buildnum)
             if bs:
                 builds.append(bs)
-        defer.returnValue(builds)
+        return builds
 
     def subscribe(self, observer):
         d = self.getBuilds()
@@ -126,7 +123,7 @@ class BuildRequestStatus:
     @defer.inlineCallbacks
     def getSubmitTime(self):
         br = yield self._getBuildRequest()
-        defer.returnValue(br.submittedAt)
+        return br.submittedAt
 
     def asDict(self):
         result = {}
@@ -153,4 +150,4 @@ class BuildRequestStatus:
         builds = yield self.getBuilds()
         result['builds'] = [build.asDict() for build in builds]
 
-        defer.returnValue(result)
+        return result

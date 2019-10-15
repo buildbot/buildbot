@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import PY3
 
 import inspect
 import pkg_resources
@@ -24,7 +20,7 @@ import pkg_resources
 from twisted.trial import unittest
 
 
-class InterfaceTests(object):
+class InterfaceTests:
 
     # assertions
 
@@ -65,11 +61,8 @@ class InterfaceTests(object):
                 return func
 
         def filter_argspec(func):
-            if PY3:
-                return filter(
-                    inspect.getfullargspec(remove_decorators(func)))
             return filter(
-                inspect.getargspec(remove_decorators(func)))
+                inspect.getfullargspec(remove_decorators(func)))
 
         def assert_same_argspec(expected, actual):
             if expected != actual:
@@ -102,6 +95,7 @@ class InterfaceTests(object):
                 "zope.interfaces is too old to run this test")
 
         import zope.interface.interface
+        from zope.interface.interface import Attribute
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):
@@ -110,6 +104,9 @@ class InterfaceTests(object):
                         interface)
                     self.fail(msg)
                 actual_argspec = getattr(cls, attr)
+                if isinstance(template_argspec, Attribute):
+                    continue
+                # else check method signatures
                 while hasattr(actual_argspec, '__wrapped__'):
                     actual_argspec = actual_argspec.__wrapped__
                 actual_argspec = zope.interface.interface.fromMethod(

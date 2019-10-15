@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
 
 import json
 
@@ -7,7 +5,7 @@ from klein import Klein
 from twisted.internet import defer
 
 
-class Api(object):
+class Api:
     app = Klein()
     pizzaIngredients = {'margherita': ['tomato', 'ham', 'cheese'],
                         'regina': ['tomato', 'ham', 'cheese', 'mushrooms']}

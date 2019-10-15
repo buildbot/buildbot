@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot_worker.commands import shell
@@ -31,6 +32,7 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.make_command(shell.WorkerShellCommand, dict(
             command=['echo', 'hello'],
@@ -43,14 +45,11 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
             + 0,
         )
 
-        d = self.run_command()
+        yield self.run_command()
 
         # note that WorkerShellCommand does not add any extra updates of it own
-        def check(_):
-            self.assertUpdates(
-                [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
-                self.builder.show())
-        d.addCallback(check)
-        return d
+        self.assertUpdates(
+            [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
+            self.builder.show())
 
     # TODO: test all functionality that WorkerShellCommand adds atop RunProcess

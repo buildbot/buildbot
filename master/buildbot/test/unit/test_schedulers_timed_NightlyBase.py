@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import time
 
 from twisted.internet import defer
@@ -23,6 +20,7 @@ from twisted.trial import unittest
 
 from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
+from buildbot.test.util.misc import TestReactorMixin
 
 try:
     from multiprocessing import Process
@@ -31,7 +29,8 @@ except ImportError:
     Process = None
 
 
-class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
+class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
+                  unittest.TestCase):
 
     """detailed getNextBuildTime tests"""
 
@@ -39,6 +38,7 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
     SCHEDULERID = 33
 
     def setUp(self):
+        self.setUpTestReactor()
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):

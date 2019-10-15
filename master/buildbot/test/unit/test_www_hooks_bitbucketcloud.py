@@ -14,27 +14,24 @@
 # Copyright Buildbot Team Members
 # Copyright Mamba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import text_type
-
 from io import BytesIO
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
+from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucketcloud import _HEADER_EVENT
 
 _CT_JSON = b'application/json'
 
-pushJsonPayload = u"""
+pushJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -55,7 +52,7 @@ pushJsonPayload = u"""
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -87,10 +84,10 @@ pushJsonPayload = u"""
 }
 """
 
-pullRequestCreatedJsonPayload = u"""
+pullRequestCreatedJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -114,7 +111,7 @@ pullRequestCreatedJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -146,7 +143,7 @@ pullRequestCreatedJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -178,7 +175,7 @@ pullRequestCreatedJsonPayload = u"""
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -186,10 +183,10 @@ pullRequestCreatedJsonPayload = u"""
 }
 """
 
-pullRequestUpdatedJsonPayload = u"""
+pullRequestUpdatedJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -213,7 +210,7 @@ pullRequestUpdatedJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -245,7 +242,7 @@ pullRequestUpdatedJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -277,7 +274,7 @@ pullRequestUpdatedJsonPayload = u"""
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -285,10 +282,10 @@ pullRequestUpdatedJsonPayload = u"""
 }
 """
 
-pullRequestRejectedJsonPayload = u"""
+pullRequestRejectedJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -312,7 +309,7 @@ pullRequestRejectedJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -344,7 +341,7 @@ pullRequestRejectedJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -376,7 +373,7 @@ pullRequestRejectedJsonPayload = u"""
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -384,10 +381,10 @@ pullRequestRejectedJsonPayload = u"""
 }
 """
 
-pullRequestFulfilledJsonPayload = u"""
+pullRequestFulfilledJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "pullrequest": {
@@ -411,7 +408,7 @@ pullRequestFulfilledJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -443,7 +440,7 @@ pullRequestFulfilledJsonPayload = u"""
                 "public": false,
                 "ownerName": "CI",
                 "owner": {
-                    "username": "CI",
+                    "nickname": "CI",
                     "display_name": "CI"
                 },
                 "fullName": "CI/py-repo"
@@ -475,7 +472,7 @@ pullRequestFulfilledJsonPayload = u"""
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -483,10 +480,10 @@ pullRequestFulfilledJsonPayload = u"""
 }
 """
 
-deleteTagJsonPayload = u"""
+deleteTagJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -507,7 +504,7 @@ deleteTagJsonPayload = u"""
         "ownerName": "BUIL",
         "public": false,
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -532,10 +529,10 @@ deleteTagJsonPayload = u"""
 }
 """
 
-deleteBranchJsonPayload = u"""
+deleteBranchJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -556,7 +553,7 @@ deleteBranchJsonPayload = u"""
         "ownerName": "CI",
         "public": false,
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -581,10 +578,10 @@ deleteBranchJsonPayload = u"""
 }
 """
 
-newTagJsonPayload = u"""
+newTagJsonPayload = """
 {
     "actor": {
-        "username": "John",
+        "nickname": "John",
         "display_name": "John Smith"
     },
     "repository": {
@@ -605,7 +602,7 @@ newTagJsonPayload = u"""
         "public": false,
         "ownerName": "CI",
         "owner": {
-            "username": "CI",
+            "nickname": "CI",
             "display_name": "CI"
         },
         "fullName": "CI/py-repo"
@@ -636,7 +633,7 @@ def _prepare_request(payload, headers=None, change_dict=None):
     request = FakeRequest(change_dict)
     request.uri = b"/change_hook/bitbucketcloud"
     request.method = b"POST"
-    if isinstance(payload, text_type):
+    if isinstance(payload, str):
         payload = unicode2bytes(payload)
     request.content = BytesIO(payload)
     request.received_headers[b'Content-Type'] = _CT_JSON
@@ -644,11 +641,13 @@ def _prepare_request(payload, headers=None, change_dict=None):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
+                                            TestReactorMixin):
 
     def setUp(self):
+        self.setUpTestReactor()
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucketcloud': {}}, master=fakeMasterForHooks())
+            dialects={'bitbucketcloud': {}}, master=fakeMasterForHooks(self))
 
     def _checkPush(self, change):
         self.assertEqual(
@@ -674,8 +673,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'push')
@@ -712,8 +711,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/pull-requests/21/merge')
         self.assertEqual(change['category'], 'pull-created')
@@ -726,8 +725,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/pull-requests/21/merge')
         self.assertEqual(change['category'], 'pull-updated')
@@ -740,8 +739,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'pull-rejected')
@@ -754,8 +753,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPullRequest(change)
         self.assertEqual(change['branch'], 'refs/heads/master')
         self.assertEqual(change['category'], 'pull-fulfilled')
@@ -768,8 +767,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
             payloads[event_type], headers={_HEADER_EVENT: event_type})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self.assertEqual(change['codebase'], expected_codebase)
 
     @defer.inlineCallbacks
@@ -805,7 +804,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
             pushJsonPayload, headers={_HEADER_EVENT: 'invented:event'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b"Unknown event: invented_event")
 
     @defer.inlineCallbacks
@@ -813,8 +812,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
             newTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/tags/1.0.0')
         self.assertEqual(change['category'], 'push')
@@ -824,8 +823,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
             deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/tags/1.0.0')
         self.assertEqual(change['category'], 'ref-deleted')
@@ -835,8 +834,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
             deleteBranchJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        change = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496758965')
         self.assertEqual(change['category'], 'ref-deleted')
@@ -847,6 +846,6 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             pushJsonPayload, headers={_HEADER_EVENT: b'repo:push'})
         request.received_headers[b'Content-Type'] = b'invalid/content'
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written,
                          b"Unknown content type: invalid/content")

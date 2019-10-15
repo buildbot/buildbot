@@ -13,22 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.internet import utils
 from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.test.fake import libvirt
-from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import eventual
 from buildbot.worker import libvirt as libvirtworker
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestLibVirtWorker(unittest.TestCase):
@@ -43,8 +39,8 @@ class TestLibVirtWorker(unittest.TestCase):
 
     def test_constructor_nolibvirt(self):
         self.patch(libvirtworker, "libvirt", None)
-        self.assertRaises(config.ConfigErrors, self.ConcreteWorker,
-                          'bot', 'pass', None, 'path', 'path')
+        with self.assertRaises(config.ConfigErrors):
+            self.ConcreteWorker('bot', 'pass', None, 'path', 'path')
 
     @defer.inlineCallbacks
     def test_constructor_minimal(self):
@@ -90,7 +86,6 @@ class TestLibVirtWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_prepare_base_image_full(self):
-        pass
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
@@ -101,6 +96,49 @@ class TestLibVirtWorker(unittest.TestCase):
 
         utils.getProcessValue.assert_called_with(
             "cp", ["o", "p"])
+
+    @defer.inlineCallbacks
+    def _test_stop_instance(self, graceful, fast, expected_destroy,
+                            expected_shutdown, shutdown_side_effect=None):
+        bs = self.ConcreteWorker('name', 'p', self.conn,
+                                 mock.sentinel.hd_image, 'o', xml='<xml/>')
+        bs.graceful_shutdown = graceful
+        domain_mock = mock.Mock()
+        if shutdown_side_effect:
+            domain_mock.shutdown.side_effect = shutdown_side_effect
+        bs.domain = libvirtworker.Domain(mock.sentinel.connection, domain_mock)
+
+        with mock.patch('os.remove') as remove_mock:
+            yield bs.stop_instance(fast=fast)
+
+        self.assertIsNone(bs.domain)
+
+        self.assertEqual(int(expected_destroy), domain_mock.destroy.call_count)
+        self.assertEqual(int(expected_shutdown),
+                         domain_mock.shutdown.call_count)
+        remove_mock.assert_called_once_with(mock.sentinel.hd_image)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_destroy(self):
+        yield self._test_stop_instance(graceful=False,
+                                       fast=False,
+                                       expected_destroy=True,
+                                       expected_shutdown=False)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_shutdown(self):
+        yield self._test_stop_instance(graceful=True,
+                                       fast=False,
+                                       expected_destroy=False,
+                                       expected_shutdown=True)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_shutdown_fails(self):
+        yield self._test_stop_instance(graceful=True,
+                                       fast=False,
+                                       expected_destroy=True,
+                                       expected_shutdown=True,
+                                       shutdown_side_effect=Exception)
 
     @defer.inlineCallbacks
     def test_start_instance(self):
@@ -141,8 +179,13 @@ class TestLibVirtWorker(unittest.TestCase):
     def setup_canStartBuild(self):
         bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
+
+        bs.parent = mock.Mock()
+        bs.config_version = 0
+        bs.parent.master.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
         bs.updateLocks()
-        defer.returnValue(bs)
+
+        return bs
 
     @defer.inlineCallbacks
     def test_canStartBuild(self):
@@ -183,23 +226,27 @@ class TestLibVirtWorker(unittest.TestCase):
         self.assertEqual(bs.canStartBuild(), True)
 
 
-class TestWorkQueue(unittest.TestCase):
+class TestWorkQueue(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
-        self.queue = libvirtworker.WorkQueue()
+        self.setUpTestReactor()
+
+    def tearDown(self):
+        return eventual.flushEventualQueue()
 
     def delayed_success(self):
         def work():
             d = defer.Deferred()
-            reactor.callLater(0, d.callback, True)
+            self.reactor.callLater(0, d.callback, True)
             return d
         return work
 
     def delayed_errback(self):
         def work():
             d = defer.Deferred()
-            reactor.callLater(0, d.errback,
-                              failure.Failure(RuntimeError("Test failure")))
+            self.reactor.callLater(0, d.errback,
+                                   failure.Failure(
+                                       RuntimeError("Test failure")))
             return d
         return work
 
@@ -210,58 +257,81 @@ class TestWorkQueue(unittest.TestCase):
 
         @d.addErrback
         def errback(f):
-            # log.msg("errback called?")
-            pass
+            """ log.msg("errback called?") """
+
         return d
 
+    @defer.inlineCallbacks
     def test_handle_exceptions(self):
+        queue = libvirtworker.WorkQueue()
+
         def work():
             raise ValueError
-        return self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(queue.execute(work))
 
+    @defer.inlineCallbacks
     def test_handle_immediate_errback(self):
+        queue = libvirtworker.WorkQueue()
+
         def work():
             return defer.fail(RuntimeError("Sad times"))
-        return self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(queue.execute(work))
 
+    @defer.inlineCallbacks
     def test_handle_delayed_errback(self):
+        queue = libvirtworker.WorkQueue()
         work = self.delayed_errback()
-        return self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(queue.execute(work))
 
+    @defer.inlineCallbacks
     def test_handle_immediate_success(self):
+        queue = libvirtworker.WorkQueue()
+
         def work():
             return defer.succeed(True)
-        return self.queue.execute(work)
+        yield queue.execute(work)
 
+    @defer.inlineCallbacks
     def test_handle_delayed_success(self):
+        queue = libvirtworker.WorkQueue()
         work = self.delayed_success()
-        return self.queue.execute(work)
+        yield queue.execute(work)
 
+    @defer.inlineCallbacks
     def test_single_pow_fires(self):
-        return self.queue.execute(self.delayed_success())
+        queue = libvirtworker.WorkQueue()
+        yield queue.execute(self.delayed_success())
 
+    @defer.inlineCallbacks
     def test_single_pow_errors_gracefully(self):
-        d = self.queue.execute(self.delayed_errback())
-        return self.expect_errback(d)
+        queue = libvirtworker.WorkQueue()
+        d = queue.execute(self.delayed_errback())
+        yield self.expect_errback(d)
 
+    @defer.inlineCallbacks
     def test_fail_doesnt_break_further_work(self):
-        self.expect_errback(self.queue.execute(self.delayed_errback()))
-        return self.queue.execute(self.delayed_success())
+        queue = libvirtworker.WorkQueue()
+        yield self.expect_errback(queue.execute(self.delayed_errback()))
+        yield queue.execute(self.delayed_success())
 
+    @defer.inlineCallbacks
     def test_second_pow_fires(self):
-        self.queue.execute(self.delayed_success())
-        return self.queue.execute(self.delayed_success())
+        queue = libvirtworker.WorkQueue()
+        yield queue.execute(self.delayed_success())
+        yield queue.execute(self.delayed_success())
 
+    @defer.inlineCallbacks
     def test_work(self):
+        queue = libvirtworker.WorkQueue()
+
         # We want these deferreds to fire in order
         flags = {1: False, 2: False, 3: False}
 
         # When first deferred fires, flags[2] and flags[3] should still be false
         # flags[1] shouldn't already be set, either
-        d1 = self.queue.execute(self.delayed_success())
-
-        @d1.addCallback
-        def cb1(res):
+        @defer.inlineCallbacks
+        def d1():
+            yield queue.execute(self.delayed_success())
             self.assertEqual(flags[1], False)
             flags[1] = True
             self.assertEqual(flags[2], False)
@@ -269,36 +339,22 @@ class TestWorkQueue(unittest.TestCase):
 
         # When second deferred fires, only flags[3] should be set
         # flags[2] should definitely be False
-        d2 = self.queue.execute(self.delayed_success())
-
-        @d2.addCallback
-        def cb2(res):
-            assert not flags[2]
+        @defer.inlineCallbacks
+        def d2():
+            yield queue.execute(self.delayed_success())
+            self.assertFalse(flags[2])
             flags[2] = True
-            assert flags[1]
-            assert not flags[3]
+            self.assertTrue(flags[1])
+            self.assertFalse(flags[3])
 
         # When third deferred fires, only flags[3] should be unset
-        d3 = self.queue.execute(self.delayed_success())
+        @defer.inlineCallbacks
+        def d3():
+            yield queue.execute(self.delayed_success())
 
-        @d3.addCallback
-        def cb3(res):
-            assert not flags[3]
+            self.assertFalse(flags[3])
             flags[3] = True
-            assert flags[1]
-            assert flags[2]
+            self.assertTrue(flags[1])
+            self.assertTrue(flags[2])
 
-        return defer.DeferredList([d1, d2, d3], fireOnOneErrback=True)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_LibVirtSlave_deprecated(self):
-        from buildbot.worker.libvirt import LibVirtWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="LibVirtSlave was deprecated"):
-            from buildbot.buildslave.libvirt import LibVirtSlave
-
-        self.assertIdentical(LibVirtSlave, LibVirtWorker)
+        yield defer.DeferredList([d1(), d2(), d3()], fireOnOneErrback=True)

@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -33,21 +29,23 @@ from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.util import unicode2NativeString
 
 HTTP_NOT_FOUND = 404
 
 
-class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
+class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
+                                    ReporterTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
     def setupReporter(self, **kwargs):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
@@ -66,29 +64,29 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     def _check_start_and_finish_build(self, build):
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
                   'description': 'Build started.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'SUCCESSFUL', 'key': u'Builder0',
+                  'state': 'SUCCESSFUL', 'key': 'Builder0',
                   'description': 'Build done.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'FAILED', 'key': u'Builder0',
+                  'state': 'FAILED', 'key': 'Builder0',
                   'description': 'Build done.'})
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -111,23 +109,23 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build started.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'SUCCESSFUL', 'key': u'Builder0',
+                  'state': 'SUCCESSFUL', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'FAILED', 'key': u'Builder0',
+                  'state': 'FAILED', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
         build['complete'] = False
@@ -144,9 +142,9 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
                   'description': 'Build started.'},
             code=HTTP_NOT_FOUND,
             content_json={
@@ -177,19 +175,21 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         self.sp.buildFinished(("build", 20, "finished"), build)
 
 
-UNICODE_BODY = u"body: \u00E5\u00E4\u00F6 text"
-EXPECTED_API = u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments'
+UNICODE_BODY = "body: \u00E5\u00E4\u00F6 text"
+EXPECTED_API = '/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments'
 PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 
 
-class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, LoggingMixin):
+class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
+                                       NotifierTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
+        self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -210,11 +210,11 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, set_pr=True):
-        buildset, builds = yield NotifierTestMixin.setupBuildResults(self, buildResults)
+        buildset, builds = yield super().setupBuildResults(buildResults)
         if set_pr:
             yield self.master.db.builds.setBuildProperty(
                 20, "pullrequesturl", PR_URL, "test")
-        defer.returnValue((buildset, builds))
+        return (buildset, builds)
 
     @defer.inlineCallbacks
     def test_reporter_basic(self):
@@ -229,8 +229,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build["complete"] = True
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
-        self.assertLogged(unicode2NativeString(
-            u'Comment sent to {}'.format(PR_URL)))
+        self.assertLogged('Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
     def test_reporter_basic_without_logging(self):
@@ -246,28 +245,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
 
-        self.assertNotLogged(unicode2NativeString(
-            u'Comment sent to {}'.format(PR_URL)))
-
-    @defer.inlineCallbacks
-    def test_reporter_non_unicode(self):
-        if PY3:
-            raise unittest.SkipTest("not supported in Python3")
-        yield self.setupReporter()
-
-        self.cp.messageFormatter.formatMessageForBuildResults.return_value = \
-            {"body": "body text",
-             "type": "text"}
-
-        _, builds = yield self.setupBuildResults(SUCCESS)
-        build = builds[0]
-        self._http.expect(
-            "post",
-            EXPECTED_API,
-            json={"text": "body text"},
-            code=HTTP_CREATED)
-        build["complete"] = True
-        yield self.cp.buildComplete(("build", 20, "finished"), build)
+        self.assertNotLogged('Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
     def test_reporter_without_pullrequest(self):
@@ -301,8 +279,8 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build = builds[0]
 
         http_error_code = 500
-        error_body = {u"errors": [
-            {u"message": u"A dataXXXbase error has occurred."}]}
+        error_body = {"errors": [
+            {"message": "A dataXXXbase error has occurred."}]}
 
         self._http.expect(
             "post",

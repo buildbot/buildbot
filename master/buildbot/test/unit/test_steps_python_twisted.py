@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import textwrap
 
 from twisted.trial import unittest
@@ -27,6 +24,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+from buildbot.test.util.misc import TestReactorMixin
 
 failureLog = '''\
 buildbot.test.unit.test_steps_python_twisted.Trial.testProperties ... [FAILURE]
@@ -89,12 +87,13 @@ buildbot.test.unit.test_steps_python_twisted.Trial.test_run_singular
 Ran 8 tests in 0.101s
 
 FAILED (failures=8)
-'''
+'''  # noqa: max-line-length
 
 
-class Trial(steps.BuildStepMixin, unittest.TestCase):
+class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -201,7 +200,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_supplement ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobs ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobsProperties ... [FAILURE]
-                '''))
+                '''))  # noqa: max-line-length
         return self.runStep()
 
     def testProperties(self):
@@ -278,9 +277,10 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class HLint(steps.BuildStepMixin, unittest.TestCase):
+class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):

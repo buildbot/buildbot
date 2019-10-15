@@ -176,7 +176,7 @@ RemoteCommand
 
         Add data to a logfile other than ``stdio``.
 
-.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False)
+.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False, collectStderr=False, interruptSignal=None, initialStdin=None, decodeRC=None, stdioLogName='stdio')
 
     :param workdir: directory in which command should be executed, relative to the builder's basedir.
     :param command: shell command to run
@@ -185,16 +185,22 @@ RemoteCommand
     :param want_stderr: If false, then no updates will be sent for stderr.
     :param timeout: Maximum time without output before the command is killed.
     :param maxTime: Maximum overall time from the start before the command is killed.
-    :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing SIGKILL.
+    :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interruptSignal`` or SIGKILL if it's not defined.
                         If None, SIGTERM will not be fired.
     :param env: A dictionary of environment variables to augment or replace the existing environment on the worker.
     :param logfiles: Additional logfiles to request from the worker.
     :param usePTY: True to use a PTY, false to not use a PTY; the default value is False.
     :param logEnviron: If false, do not log the environment on the worker.
     :param collectStdout: If True, collect the command's stdout.
+    :param collectStderr: If True, collect the command's stderr.
+    :param interruptSignal: The signal to send to interrupt the command, e.g. ``KILL`` or ``TERM``.
+                            If None, SIGKILL is used.
+    :param initialStdin: The input to supply the command via stdin.
+    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+    :param stdioLogName: name of the log to which to write the command's stdio
 
     Most of the constructor arguments are sent directly to the worker; see :ref:`shell-command-args` for the details of the formats.
-    The ``collectStdout`` parameter is as described for the parent class.
+    The ``collectStdout``, ``decodeRC`` and ``stdioLogName`` parameters are as described for the parent class.
 
     If shell command contains passwords, they can be hidden from log files by using :doc:`../manual/secretsmanagement`.
     This is the recommended procedure for new-style build steps. For legacy build steps password were hidden from the

@@ -18,17 +18,16 @@
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import re
+from datetime import datetime
 
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
+from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
@@ -46,7 +45,7 @@ class ChangeHookResource(resource.Resource):
         The value is passed to the module's getChanges function, providing
         configuration options to the dialect.
         """
-        resource.Resource.__init__(self, master)
+        super().__init__(master)
 
         if dialects is None:
             dialects = {}
@@ -109,7 +108,7 @@ class ChangeHookResource(resource.Resource):
             request.write(b"no change found")
         else:
             yield self.submitChanges(changes, request, src)
-            request.write("{} change found".format(len(changes)).encode())
+            request.write(unicode2bytes("{} change found".format(len(changes))))
 
     def makeHandler(self, dialect):
         """create and cache the handler object for this dialect"""
@@ -148,7 +147,7 @@ class ChangeHookResource(resource.Resource):
 
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2NativeString(request.uri))
+        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)
@@ -166,10 +165,24 @@ class ChangeHookResource(resource.Resource):
 
         handler = self.makeHandler(dialect)
         changes, src = yield handler.getChanges(request)
-        defer.returnValue((changes, src))
+        return (changes, src)
 
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         for chdict in changes:
-            change = yield self.master.addChange(src=src, **chdict)
-            log.msg("injected change %s" % change)
+            when_timestamp = chdict.get('when_timestamp')
+            if isinstance(when_timestamp, datetime):
+                chdict['when_timestamp'] = datetime2epoch(when_timestamp)
+            # unicodify stuff
+            for k in ('comments', 'author', 'committer', 'revision', 'branch', 'category',
+                    'revlink', 'repository', 'codebase', 'project'):
+                if k in chdict:
+                    chdict[k] = bytes2unicode(chdict[k])
+            if chdict.get('files'):
+                chdict['files'] = [bytes2unicode(f)
+                                for f in chdict['files']]
+            if chdict.get('properties'):
+                chdict['properties'] = dict((bytes2unicode(k), v)
+                                            for k, v in chdict['properties'].items())
+            chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
+            log.msg("injected change %s" % chid)

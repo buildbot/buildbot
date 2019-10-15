@@ -13,18 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.util import www
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
 from buildbot.www import avatar
 
 
-class AvatarResource(www.WwwTestMixin, unittest.TestCase):
+class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
 
     @defer.inlineCallbacks
     def test_default(self):
@@ -45,8 +46,8 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
-        self.assertEqual(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                                   'def654fccc4a4d8?d=retro&s=32'))
+        self.assertEqual(res, dict(redirected=b'//www.gravatar.com/avatar/acbd18db4cc2f85ce'
+                                   b'def654fccc4a4d8?d=retro&s=32'))
 
     @defer.inlineCallbacks
     def test_custom(self):
@@ -79,5 +80,5 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
-        self.assertEqual(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                         'def654fccc4a4d8?d=retro&s=32'))
+        self.assertEqual(res, dict(redirected=b'//www.gravatar.com/avatar/acbd18db4cc2f85ce'
+                         b'def654fccc4a4d8?d=retro&s=32'))

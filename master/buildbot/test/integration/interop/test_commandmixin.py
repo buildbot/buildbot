@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -35,6 +33,7 @@ class CommandMixinMaster(RunMasterBase):
         change = dict(branch="master",
                       files=["foo.c"],
                       author="me@foo.com",
+                      committer="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
                       project="none"
@@ -51,36 +50,33 @@ class CommandMixinMasterPB(CommandMixinMaster):
 
 class TestCommandMixinStep(BuildStep, CommandMixin):
 
-    def __init__(self, *args, **kwargs):
-        BuildStep.__init__(self, *args, **kwargs)
-
     @defer.inlineCallbacks
     def run(self):
         contents = yield self.runGlob('*')
         if contents != []:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         hasPath = yield self.pathExists('composite_mixin_test')
         if hasPath:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         yield self.runMkdir('composite_mixin_test')
 
         hasPath = yield self.pathExists('composite_mixin_test')
         if not hasPath:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         contents = yield self.runGlob('*')
         if not contents[0].endswith('composite_mixin_test'):
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         yield self.runRmdir('composite_mixin_test')
 
         hasPath = yield self.pathExists('composite_mixin_test')
         if hasPath:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
-        defer.returnValue(results.SUCCESS)
+        return results.SUCCESS
 
 
 # master configuration

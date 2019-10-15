@@ -22,7 +22,6 @@ from __future__ import print_function
 from future.utils import iteritems
 
 from twisted.cred import error
-from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
@@ -31,54 +30,31 @@ from twisted.spread.pb import PBClientFactory
 from buildbot_worker.compat import bytes2unicode
 
 
-class ReconnectingPBClientFactory(PBClientFactory,
-                                  protocol.ReconnectingClientFactory):
+class AutoLoginPBFactory(PBClientFactory):
+    """Factory for PB brokers that are managed through a ClientService.
 
-    """Reconnecting client factory for PB brokers.
-
-    Like PBClientFactory, but if the connection fails or is lost, the factory
-    will attempt to reconnect.
+    Upon reconnect issued by ClientService this factory will re-login.
 
     Instead of using f.getRootObject (which gives a Deferred that can only
-    be fired once), override the gotRootObject method.
+    be fired once), override the gotRootObject method. GR -> yes in case a user
+    would use that to be notified of root object appearances, it wouldn't
+    work. But getRootObject() can itself be used as much as one wants.
 
-    Instead of using the newcred f.login (which is also one-shot), call
+    Instead of using the f.login (which is also one-shot), call
     f.startLogin() with the credentials and client, and override the
     gotPerspective method.
 
     gotRootObject and gotPerspective will be called each time the object is
-    received (once per successful connection attempt). You will probably want
-    to use obj.notifyOnDisconnect to find out when the connection is lost.
+    received (once per successful connection attempt).
 
     If an authorization error occurs, failedToGetPerspective() will be
     invoked.
-
-    To use me, subclass, then hand an instance to a connector (like
-    TCPClient).
     """
 
-    def clientConnectionFailed(self, connector, reason):
-        PBClientFactory.clientConnectionFailed(self, connector, reason)
-        if self.continueTrying:
-            self.connector = connector
-            self.retry()
-
-    def clientConnectionLost(self, connector, reason):
-        PBClientFactory.clientConnectionLost(self, connector, reason,
-                                             reconnecting=True)
-        RCF = protocol.ReconnectingClientFactory
-        RCF.clientConnectionLost(self, connector, reason)
-
     def clientConnectionMade(self, broker):
-        self.resetDelay()
         PBClientFactory.clientConnectionMade(self, broker)
         self.doLogin(self._root, broker)
         self.gotRootObject(self._root)
-
-    def buildProtocol(self, addr):
-        return PBClientFactory.buildProtocol(self, addr)
-
-    # newcred methods
 
     def login(self, *args):
         raise RuntimeError("login is one-shot: use startLogin instead")
@@ -88,11 +64,11 @@ class ReconnectingPBClientFactory(PBClientFactory,
         self._client = client
 
     def doLogin(self, root, broker):
-        # newcred login()
         d = self._cbSendUsername(root, self._credentials.username,
                                  self._credentials.password, self._client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
                        errbackArgs=(broker,))
+        return d
 
     # methods to override
 
@@ -120,7 +96,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
             # fall through
         else:
             log.err(why, 'While trying to connect:')
-            self.stopTrying()
             reactor.stop()
             return
 

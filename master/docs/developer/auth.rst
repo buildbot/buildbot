@@ -21,7 +21,7 @@ Buildbot's authentication subsystem is designed to support several authenticatio
     An HTTP proxy in front of Buildbot performs the authentication and passes the verified username to Buildbot in an HTTP Header.
 
 * Authentication by a third-party website.
-    Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworty assertion of the user's identity from that site.
+    Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworthy assertion of the user's identity from that site.
 
 Implementation
 --------------

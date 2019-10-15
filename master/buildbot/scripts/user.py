@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 from twisted.internet import defer
 
@@ -51,4 +48,4 @@ def user(config):
     if output:
         print(output)
 
-    defer.returnValue(0)
+    return 0

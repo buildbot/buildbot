@@ -13,11 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.collections import UserList
-from future.utils import lrange
-from future.utils import string_types
+from collections import UserList
 
 from twisted.internet import defer
 from twisted.python import log
@@ -37,9 +33,9 @@ def getPreviousBuild(master, build):
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
         if prev and prev['results'] != RETRY:
-            defer.returnValue(prev)
+            return prev
         n -= 1
-    defer.returnValue(None)
+    return None
 
 
 @defer.inlineCallbacks
@@ -65,7 +61,7 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
         yield getDetailsForBuilds(master, buildset, builds, wantProperties=wantProperties,
                                   wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
 
-    defer.returnValue(dict(buildset=buildset, builds=builds))
+    return dict(buildset=buildset, builds=builds)
 
 
 @defer.inlineCallbacks
@@ -77,33 +73,33 @@ def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
     ret = yield getDetailsForBuilds(master, buildset, [build],
                                     wantProperties=wantProperties, wantSteps=wantSteps,
                                     wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
-    raise defer.returnValue(ret)
+    return ret
 
 
 @defer.inlineCallbacks
 def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantSteps=False,
                         wantPreviousBuild=False, wantLogs=False):
 
-    builderids = set([build['builderid'] for build in builds])
+    builderids = {build['builderid'] for build in builds}
 
     builders = yield defer.gatherResults([master.data.get(("builders", _id))
                                           for _id in builderids])
 
-    buildersbyid = dict([(builder['builderid'], builder)
-                         for builder in builders])
+    buildersbyid = {builder['builderid']: builder
+                    for builder in builders}
 
     if wantProperties:
         buildproperties = yield defer.gatherResults(
             [master.data.get(("builds", build['buildid'], 'properties'))
              for build in builds])
     else:  # we still need a list for the big zip
-        buildproperties = lrange(len(builds))
+        buildproperties = list(range(len(builds)))
 
     if wantPreviousBuild:
         prev_builds = yield defer.gatherResults(
             [getPreviousBuild(master, build) for build in builds])
     else:  # we still need a list for the big zip
-        prev_builds = lrange(len(builds))
+        prev_builds = list(range(len(builds)))
 
     if wantSteps:
         buildsteps = yield defer.gatherResults(
@@ -117,7 +113,7 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
-        buildsteps = lrange(len(builds))
+        buildsteps = list(range(len(builds)))
 
     # a big zip to connect everything together
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
@@ -151,7 +147,7 @@ def getResponsibleUsersForSourceStamp(master, sourcestampid):
         blamelist.add(sourcestamp['patch']['author'])
     blamelist = list(blamelist)
     blamelist.sort()
-    defer.returnValue(blamelist)
+    return blamelist
 
 
 # perhaps we need data api for users with builds/:id/users
@@ -171,7 +167,7 @@ def getResponsibleUsersForBuild(master, buildid):
     # add owner from properties
     if 'owner' in properties:
         owner = properties['owner'][0]
-        if isinstance(owner, string_types):
+        if isinstance(owner, str):
             blamelist.add(owner)
         else:
             blamelist.update(owner)
@@ -186,7 +182,7 @@ def getResponsibleUsersForBuild(master, buildid):
 
     blamelist = list(blamelist)
     blamelist.sort()
-    defer.returnValue(blamelist)
+    return blamelist
 
 
 def getURLForBuild(master, builderid, build_number):

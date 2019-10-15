@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 import shutil
@@ -22,7 +20,7 @@ import shutil
 from twisted.internet import defer
 
 
-class DirsMixin(object):
+class DirsMixin:
 
     _dirs = None
 

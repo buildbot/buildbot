@@ -13,8 +13,6 @@
 #
 # Copyright  Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import txaio
 from autobahn.twisted.wamp import ApplicationSession
@@ -35,6 +33,8 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
     """
 
     def __init__(self, config):
+        # Cannot use super() here.
+        # We must explicitly call both parent constructors.
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
         self.config = config
@@ -47,7 +47,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
-        yield self.publish(u"org.buildbot.%s.connected" % (self.master.masterid))
+        yield self.publish("org.buildbot.%s.connected" % (self.master.masterid))
         self.parent.service = self
         self.parent.serviceDeferred.callback(self)
 
@@ -85,7 +85,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
     name = "wamp"
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.app = self.router_url = None
         self.serviceDeferred = defer.Deferred()
         self.service = None
@@ -105,7 +105,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         if self.service is not None:
             self.service.leaving = True
 
-        service.AsyncMultiService.stopService(self)
+        super().stopService()
 
     @defer.inlineCallbacks
     def publish(self, topic, data, options=None):
@@ -115,13 +115,13 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         except TransportLost:
             log.err(failure.Failure(), "while publishing event " + topic)
             return
-        defer.returnValue(ret)
+        return ret
 
     @defer.inlineCallbacks
     def subscribe(self, callback, topic=None, options=None):
         service = yield self.getService()
         ret = yield service.subscribe(callback, topic, options)
-        defer.returnValue(ret)
+        return ret
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -149,5 +149,4 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         wamp_debug_level = wamp.get('wamp_debug_level', 'error')
         txaio.set_global_log_level(wamp_debug_level)
         yield self.app.setServiceParent(self)
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)

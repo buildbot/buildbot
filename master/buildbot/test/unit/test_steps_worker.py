@@ -13,12 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import stat
-
-import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -34,8 +29,7 @@ from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def uploadString(string):
@@ -46,9 +40,11 @@ def uploadString(string):
     return behavior
 
 
-class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
+class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
+                               unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -89,9 +85,11 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
+class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
+                     unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -149,9 +147,11 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         self.flushLoggedErrors(WorkerTooOldError)
 
 
-class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
+class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -207,9 +207,11 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
+class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
+                          unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -247,9 +249,11 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
+class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
+                        unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -289,21 +293,26 @@ class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
     def __init__(self, payload):
         self.payload = payload
         self.logEnviron = False
-        buildstep.LoggingBuildStep.__init__(self)
+        super().__init__()
 
+    @defer.inlineCallbacks
     def start(self):
         self.addLogForRemoteCommands('stdio')
-        d = self.payload(self)
-        d.addCallback(self.payloadComplete)
-        d.addErrback(self.failed)
+        try:
+            res = yield self.payload(self)
+            self.payloadComplete(res)
+        except Exception as e:
+            self.failed(e)
 
     def payloadComplete(self, res):
         self.finished(FAILURE if res else SUCCESS)
 
 
-class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
+class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
+                             unittest.TestCase):
 
     def setUp(self):
+        self.setUpTestReactor()
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -470,19 +479,6 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_getFileContentFromWorker_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.steps.worker.CompositeStepMixin.getFileContentFromWorker',
-                method):
-            m = worker.CompositeStepMixin()
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getFileContentFromSlave' method is deprecated"):
-                dummy = m.getFileContentFromSlave('file')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('file')
-
     def test_downloadFileContentToWorker(self):
         @defer.inlineCallbacks
         def testFunc(x):
@@ -522,14 +518,3 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_SlaveBuildStep_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="SlaveBuildStep was deprecated"):
-            from buildbot.steps.slave import SlaveBuildStep
-
-        self.assertIdentical(SlaveBuildStep, worker.WorkerBuildStep)

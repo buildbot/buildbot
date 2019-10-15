@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import re
 
 from twisted.cred.checkers import FilePasswordDB
@@ -27,7 +23,7 @@ from buildbot.interfaces import IConfigured
 
 
 @implementer(IConfigured)
-class _DefaultConfigured(object):
+class _DefaultConfigured:
 
     def __init__(self, value):
         self.value = value
@@ -40,7 +36,7 @@ registerAdapter(_DefaultConfigured, object, IConfigured)
 
 
 @implementer(IConfigured)
-class _ListConfigured(object):
+class _ListConfigured:
 
     def __init__(self, value):
         self.value = value
@@ -53,20 +49,20 @@ registerAdapter(_ListConfigured, list, IConfigured)
 
 
 @implementer(IConfigured)
-class _DictConfigured(object):
+class _DictConfigured:
 
     def __init__(self, value):
         self.value = value
 
     def getConfigDict(self):
-        return dict([(k, IConfigured(v).getConfigDict()) for k, v in iteritems(self.value)])
+        return {k: IConfigured(v).getConfigDict() for k, v in self.value.items()}
 
 
 registerAdapter(_DictConfigured, dict, IConfigured)
 
 
 @implementer(IConfigured)
-class _SREPatternConfigured(object):
+class _SREPatternConfigured:
 
     def __init__(self, value):
         self.value = value
@@ -79,14 +75,14 @@ registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
 
 
 @implementer(IConfigured)
-class ConfiguredMixin(object):
+class ConfiguredMixin:
 
     def getConfigDict(self):
         return {'name': self.name}
 
 
 @implementer(IConfigured)
-class _FilePasswordDBConfigured(object):
+class _FilePasswordDBConfigured:
 
     def __init__(self, value):
         pass

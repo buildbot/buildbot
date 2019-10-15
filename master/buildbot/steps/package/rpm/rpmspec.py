@@ -18,8 +18,6 @@
 library to populate parameters from and rpmspec file into a memory structure
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 
@@ -46,7 +44,7 @@ class RpmSpec(ShellCommand):
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         self.specfile = specfile
         self._pkg_name = None

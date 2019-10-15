@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import copy
 import random
@@ -34,7 +32,7 @@ from buildbot.util import epoch2datetime
 from buildbot.util import service
 
 
-class BuildChooserBase(object):
+class BuildChooserBase:
     #
     # WARNING: This API is experimental and in active development.
     #
@@ -64,10 +62,9 @@ class BuildChooserBase(object):
 
         worker, breq = yield self.popNextBuild()
         if not worker or not breq:
-            defer.returnValue((None, None))
-            return
+            return (None, None)
 
-        defer.returnValue((worker, [breq]))
+        return (worker, [breq])
 
     # Must be implemented by subclass
     def popNextBuild(self):
@@ -93,7 +90,7 @@ class BuildChooserBase(object):
             # sort by submitted_at, so the first is the oldest
             brdicts.sort(key=lambda brd: brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
-        defer.returnValue(self.unclaimedBrdicts)
+        return self.unclaimedBrdicts
 
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
@@ -105,7 +102,7 @@ class BuildChooserBase(object):
             breq = yield BuildRequest.fromBrdict(self.master, brdict)
             if breq:
                 self.breqCache[brdict['buildrequestid']] = breq
-        defer.returnValue(breq)
+        return breq
 
     def _getBrdictForBuildRequest(self, breq):
         # Turn a BuildRequest back into a brdict. This operates from the
@@ -152,20 +149,13 @@ class BasicBuildChooser(BuildChooserBase):
     # the workers that cannot be used are "recycled" back into a list
     # to be tried, in order, for the next chosen build.
     #
-    # There are two tests performed on the worker:
-    #   * can the worker start a generic build for the Builder?
-    #   * if so, can the worker start the chosen build on the Builder?
-    # Workers that cannot meet the first criterion are saved into the
-    # self.rejectedWorkers list and will be used as a last resort. An example
-    # of this test is whether the worker can grab the Builder's locks.
-    #
-    # If all workers fail the first test, then the algorithm will assign the
-    # workers in the order originally generated. By setting self.rejectedWorkers
-    # to None, the behavior will instead refuse to ever assign to a worker that
-    # fails the generic test.
+    # We check whether Builder.canStartBuild returns True for a particular
+    # worker. It evaluates any Build properties that are known before build
+    # and checks whether the worker may satisfy them. For example, the worker
+    # must have the locks available.
 
     def __init__(self, bldr, master):
-        BuildChooserBase.__init__(self, bldr, master)
+        super().__init__(bldr, master)
 
         self.nextWorker = self.bldr.config.nextWorker
         if not self.nextWorker:
@@ -175,11 +165,9 @@ class BasicBuildChooser(BuildChooserBase):
         self.workerpool = self.bldr.getAvailableWorkers()
 
         # Pick workers one at a time from the pool, and if the Builder says
-        # they're usable (eg, locks can be satisfied), then prefer those workers;
-        # otherwise they go in the 'last resort' bucket, and we'll use them if
-        # we need to. (Setting rejectedWorkers to None disables that feature)
+        # they're usable (eg, locks can be satisfied), then prefer those
+        # workers.
         self.preferredWorkers = []
-        self.rejectedWorkers = []
 
         self.nextBuild = self.bldr.config.nextBuild
 
@@ -221,15 +209,14 @@ class BasicBuildChooser(BuildChooserBase):
                 nextBuild = (worker, breq)
                 break
 
-        defer.returnValue(nextBuild)
+        return nextBuild
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
         # ensure the cache is there
         yield self._fetchUnclaimedBrdicts()
         if not self.unclaimedBrdicts:
-            defer.returnValue(None)
-            return
+            return None
 
         if self.nextBuild:
             # nextBuild expects BuildRequest objects
@@ -247,15 +234,14 @@ class BasicBuildChooser(BuildChooserBase):
             brdict = self.unclaimedBrdicts[0]
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
 
-        defer.returnValue(nextBreq)
+        return nextBreq
 
     @defer.inlineCallbacks
     def _popNextWorker(self, buildrequest):
         # use 'preferred' workers first, if we have some ready
         if self.preferredWorkers:
             worker = self.preferredWorkers.pop(0)
-            defer.returnValue(worker)
-            return
+            return worker
 
         while self.workerpool:
             try:
@@ -270,23 +256,9 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
             self.workerpool.remove(worker)
+            return worker
 
-            canStart = yield self.bldr.canStartWithWorkerForBuilder(worker, [buildrequest])
-            if canStart:
-                defer.returnValue(worker)
-                return
-
-            # save as a last resort, just in case we need them later
-            if self.rejectedWorkers is not None:
-                self.rejectedWorkers.append(worker)
-
-        # if we chewed through them all, use as last resort:
-        if self.rejectedWorkers:
-            worker = self.rejectedWorkers.pop(0)
-            defer.returnValue(worker)
-            return
-
-        defer.returnValue(None)
+        return None
 
     def _unpopWorkers(self, workers):
         # push the workers back to the front
@@ -312,7 +284,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
     BuildChooser = BasicBuildChooser
 
     def __init__(self, botmaster):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.botmaster = botmaster
 
         # lock to ensure builders are only sorted once at any time
@@ -325,6 +297,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         self.active = False
 
         self._pendingMSBOCalls = []
+        self._activity_loop_deferred = None
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -341,6 +314,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         if self._pendingMSBOCalls:
             yield defer.DeferredList(self._pendingMSBOCalls)
 
+    @defer.inlineCallbacks
     def maybeStartBuildsOn(self, new_builders):
         """
         Try to start any builds that can be started right now.  This function
@@ -356,19 +330,21 @@ class BuildRequestDistributor(service.AsyncMultiService):
         d = self._maybeStartBuildsOn(new_builders)
         self._pendingMSBOCalls.append(d)
 
-        @d.addBoth
-        def remove(x):
+        try:
+            yield d
+        except Exception as e:  # pragma: no cover
+            log.err(e, "while starting builds on {0}".format(new_builders))
+        finally:
             self._pendingMSBOCalls.remove(d)
-            return x
-        d.addErrback(log.err, "while starting builds on %s" % (new_builders,))
 
+    @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
-            return defer.succeed(None)
+            return None
 
         # reset the list of pending builders
         @defer.inlineCallbacks
@@ -386,12 +362,12 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # start the activity loop, if we aren't already
                 # working on that.
                 if not self.active:
-                    self._activityLoop()
-            except Exception:
+                    self._activity_loop_deferred = self._activityLoop()
+            except Exception:  # pragma: no cover
                 log.err(Failure(),
                         "while attempting to start builds on %s" % self.name)
 
-        return self.pending_builders_lock.run(
+        yield self.pending_builders_lock.run(
             resetPendingBuildersList, new_builders)
 
     @defer.inlineCallbacks
@@ -402,8 +378,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # into sys.maxint so that it sorts to the end
 
         def xform(bldr):
-            d = defer.maybeDeferred(lambda:
-                                    bldr.getOldestRequestTime())
+            d = defer.maybeDeferred(bldr.getOldestRequestTime)
             d.addCallback(lambda time:
                           (((time is None) and None or time), bldr))
             return d
@@ -436,7 +411,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # and reverse the transform
         rv = [xf[1] for xf in xformed]
         timer.stop()
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def _sortBuilders(self, buildernames):
@@ -457,15 +432,14 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # run it
         try:
-            builders = yield defer.maybeDeferred(lambda:
-                                                 sorter(self.master, builders))
+            builders = yield defer.maybeDeferred(sorter, self.master, builders)
         except Exception:
             log.err(Failure(), "prioritizing builders; order unspecified")
 
         # and return the names
         rv = [b.name for b in builders]
         timer.stop()
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def _activityLoop(self):
@@ -511,7 +485,6 @@ class BuildRequestDistributor(service.AsyncMultiService):
         timer.stop()
 
         self.active = False
-        self._quiet()
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
@@ -545,6 +518,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # just instantiate the build chooser requested
         return self.BuildChooser(bldr, master)
 
-    def _quiet(self):
-        # shim for tests
-        pass  # pragma: no cover
+    @defer.inlineCallbacks
+    def _waitForFinish(self):
+        if self._activity_loop_deferred is not None:
+            yield self._activity_loop_deferred

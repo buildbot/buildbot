@@ -13,26 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 # See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import integer_types
-from future.utils import iteritems
-from future.utils import text_type
 
 import datetime
 import json
 import re
 
 from buildbot.util import UTC
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 # Base class
 
 validatorsByName = {}
 
 
-class Validator(object):
+class Validator:
 
     name = None
     hasArgs = False
@@ -62,7 +57,7 @@ class InstanceValidator(Validator):
 
 
 class IntValidator(InstanceValidator):
-    types = integer_types
+    types = (int,)
     name = 'integer'
 
 
@@ -73,7 +68,7 @@ class BooleanValidator(InstanceValidator):
 
 class StringValidator(InstanceValidator):
     # strings must be unicode
-    types = (text_type,)
+    types = (str,)
     name = 'string'
 
 
@@ -99,21 +94,21 @@ class DateTimeValidator(Validator):
 
 
 class IdentifierValidator(Validator):
-    types = (text_type,)
+    types = (str,)
     name = 'identifier'
     hasArgs = True
 
-    ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
+    ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
 
     def __init__(self, len):
         self.len = len
 
     def validate(self, name, object):
-        if not isinstance(object, text_type):
+        if not isinstance(object, str):
             yield "{} - {!r} - is not a unicode string".format(name, object)
         elif not self.ident_re.match(object):
             yield "{} - {!r} - is not an identifier".format(name, object)
-        elif len(object) < 1:
+        elif not object:
             yield "{} - identifiers cannot be an empty string".format(name)
         elif len(object) > self.len:
             yield "{} - {!r} - is longer than {} characters".format(
@@ -122,7 +117,7 @@ class IdentifierValidator(Validator):
 # Miscellaneous
 
 
-class NoneOk(object):
+class NoneOk:
 
     def __init__(self, original):
         self.original = original
@@ -135,7 +130,7 @@ class NoneOk(object):
                 yield msg
 
 
-class Any(object):
+class Any:
 
     def validate(self, name, object):
         return
@@ -209,7 +204,7 @@ class StringListValidator(ListValidator):
     name = 'string-list'
 
     def __init__(self):
-        ListValidator.__init__(self, StringValidator())
+        super().__init__(StringValidator())
 
 
 class SourcedPropertiesValidator(Validator):
@@ -220,14 +215,14 @@ class SourcedPropertiesValidator(Validator):
         if not isinstance(object, dict):
             yield "{} is not sourced properties (not a dict)".format(name)
             return
-        for k, v in iteritems(object):
-            if not isinstance(k, text_type):
+        for k, v in object.items():
+            if not isinstance(k, str):
                 yield "{} property name {!r} is not unicode".format(name, k)
             if not isinstance(v, tuple) or len(v) != 2:
                 yield "{} property value for '{}' is not a 2-tuple".format(name, k)
                 return
             propval, propsrc = v
-            if not isinstance(propsrc, text_type):
+            if not isinstance(propsrc, str):
                 yield "{}[{}] source {!r} is not unicode".format(name, k, propsrc)
             try:
                 json.dumps(propval)
@@ -268,7 +263,7 @@ class MessageValidator(Validator):
     routingKeyValidator = TupleValidator(StrValidator())
 
     def __init__(self, events, messageValidator):
-        self.events = [bytes2NativeString(e) for e in set(events)]
+        self.events = [bytes2unicode(e) for e in set(events)]
         self.messageValidator = messageValidator
 
     def validate(self, name, routingKey_message):
@@ -303,7 +298,7 @@ class Selector(Validator):
         try:
             arg, object = arg_object
         except (TypeError, ValueError) as e:
-            yield u"{!r}: not a not data options and data dict: {}".format(arg_object, e)
+            yield "{!r}: not a not data options and data dict: {}".format(arg_object, e)
         for selector, validator in self.selectors:
             if selector is None or selector(arg):
                 for msg in validator.validate(name, object):
@@ -491,6 +486,7 @@ message['changes'].add(None,
                                changeid=IntValidator(),
                                parent_changeids=ListValidator(IntValidator()),
                                author=StringValidator(),
+                               committer=StringValidator(),
                                files=ListValidator(StringValidator()),
                                comments=StringValidator(),
                                revision=NoneOk(StringValidator()),
@@ -510,6 +506,7 @@ message['changes'].add(None,
 dbdict['chdict'] = DictValidator(
     changeid=IntValidator(),
     author=StringValidator(),
+    committer=StringValidator(),
     files=ListValidator(StringValidator()),
     comments=StringValidator(),
     revision=NoneOk(StringValidator()),
@@ -666,7 +663,7 @@ def verifyMessage(testcase, routingKey, message_):
     # the "type" of the message is identified by last path name
     # -1 being the event, and -2 the id.
 
-    validator = message[bytes2NativeString(routingKey[-3])]
+    validator = message[bytes2unicode(routingKey[-3])]
     _verify(testcase, validator, '',
             (routingKey, (routingKey, message_)))
 

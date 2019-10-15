@@ -14,17 +14,13 @@
 # Copyright Buildbot Team Members
 # Copyright Manba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
-
-import calendar
-
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucket import _HEADER_EVENT
 
 gitJsonPayload = b"""{
@@ -138,14 +134,16 @@ mercurialJsonNoCommitsPayload = b"""{
 }"""
 
 
-class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
+class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase,
+                                                  TestReactorMixin):
 
     """Unit tests for BitBucket Change Hook
     """
 
     def setUp(self):
+        self.setUpTestReactor()
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucket': True}, master=fakeMasterForHooks())
+            dialects={'bitbucket': True}, master=fakeMasterForHooks(self))
 
     @inlineCallbacks
     def testGitWithChange(self):
@@ -158,14 +156,14 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        commit = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        commit = self.change_hook.master.data.updates.changesAdded[0]
 
         self.assertEqual(commit['files'], ['somefile.py'])
         self.assertEqual(
             commit['repository'], 'https://bitbucket.org/marcus/project-x/')
         self.assertEqual(
-            calendar.timegm(commit['when_timestamp'].utctimetuple()),
+            commit['when_timestamp'],
             1338350336
         )
         self.assertEqual(
@@ -194,7 +192,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b'no change found')
 
     @inlineCallbacks
@@ -208,14 +206,14 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        commit = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        commit = self.change_hook.master.data.updates.changesAdded[0]
 
         self.assertEqual(commit['files'], ['somefile.py'])
         self.assertEqual(
             commit['repository'], 'https://bitbucket.org/marcus/project-x/')
         self.assertEqual(
-            calendar.timegm(commit['when_timestamp'].utctimetuple()),
+            commit['when_timestamp'],
             1338350336
         )
         self.assertEqual(
@@ -244,7 +242,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b'no change found')
 
     @inlineCallbacks
@@ -254,7 +252,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         request.method = b'POST'
 
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b'Error processing changes.')
         request.setResponseCode.assert_called_with(
             500, b'Error processing changes.')
@@ -272,7 +270,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
-        commit = self.change_hook.master.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
+        commit = self.change_hook.master.data.updates.changesAdded[0]
 
         self.assertEqual(commit['project'], 'project-name')

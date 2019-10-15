@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -26,6 +23,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.misc import TestReactorMixin
 
 
 def changeSourceKey(changeSource):
@@ -81,6 +79,7 @@ class Tests(interfaces.InterfaceTests):
         cs = yield self.db.changesources.getChangeSource(42)
         self.assertEqual(cs['masterid'], 13)
 
+    @defer.inlineCallbacks
     def test_setChangeSourceMaster_inactive_but_linked(self):
         """Inactive changesource but already claimed by an active master"""
         d = self.insertTestData([
@@ -90,9 +89,9 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.changesources.setChangeSourceMaster(87, 13))
-        self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
 
+    @defer.inlineCallbacks
     def test_setChangeSourceMaster_active(self):
         """Active changesource already claimed by an active master"""
         d = self.insertTestData([
@@ -100,8 +99,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.changesources.setChangeSourceMaster(42, 14))
-        self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None(self):
@@ -278,10 +276,11 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(unittest.TestCase, Tests):
+class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
@@ -291,17 +290,14 @@ class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['changes', 'changesources', 'masters',
                          'patches', 'sourcestamps', 'changesource_masters'])
 
-        def finish_setup(_):
-            self.db.changesources = \
-                changesources.ChangeSourcesConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-
-        return d
+        self.db.changesources = \
+            changesources.ChangeSourcesConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

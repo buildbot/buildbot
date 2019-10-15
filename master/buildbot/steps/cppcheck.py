@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import re
 
@@ -46,7 +44,7 @@ class Cppcheck(ShellCommand):
                               ('extra_args', [])]:
             setattr(self, name, kwargs.pop(name, default))
 
-        ShellCommand.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 

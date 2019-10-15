@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import string_types
-
 from twisted.internet import defer
 
 from buildbot import config
@@ -22,9 +18,9 @@ class HipChatStatusPush(HttpStatusPushBase):
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
                     event_messages=None, **kwargs):
-        if not isinstance(auth_token, string_types):
+        if not isinstance(auth_token, str):
             config.error('auth_token must be a string')
-        if not isinstance(endpoint, string_types):
+        if not isinstance(endpoint, str):
             config.error('endpoint must be a string')
         if builder_room_map and not isinstance(builder_room_map, dict):
             config.error('builder_room_map must be a dict')
@@ -36,7 +32,7 @@ class HipChatStatusPush(HttpStatusPushBase):
                         builder_room_map=None, builder_user_map=None,
                         event_messages=None, **kwargs):
         auth_token = yield self.renderSecrets(auth_token)
-        yield HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, endpoint,
             debug=self.debug, verify=self.verify)
@@ -45,13 +41,13 @@ class HipChatStatusPush(HttpStatusPushBase):
         self.builder_room_map = builder_room_map
         self.builder_user_map = builder_user_map
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def buildStarted(self, key, build):
-        yield self.send(build, key[2])
+        return self.send(build, key[2])
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def buildFinished(self, key, build):
-        yield self.send(build, key[2])
+        return self.send(build, key[2])
 
     @defer.inlineCallbacks
     def getBuildDetailsAndSendMessage(self, build, key):
@@ -60,7 +56,7 @@ class HipChatStatusPush(HttpStatusPushBase):
         postData['message'] = yield self.getMessage(build, key)
         extra_params = yield self.getExtraParams(build, key)
         postData.update(extra_params)
-        defer.returnValue(postData)
+        return postData
 
     def getRecipientList(self, build, event_name):
         result = {}

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -27,7 +25,7 @@ from buildbot.scripts import user
 
 class TestUsersClient(unittest.TestCase):
 
-    class FakeUsersClient(object):
+    class FakeUsersClient:
 
         def __init__(self, master, username="user", passwd="userpw", port=0):
             self.master = master
@@ -58,53 +56,47 @@ class TestUsersClient(unittest.TestCase):
         # un-do the effects of @in_reactor
         self.patch(user, 'user', user.user._orig)
 
+    @defer.inlineCallbacks
     def test_usersclient_send_ids(self):
-        d = user.user(dict(master='a:9990', username="x",
+        yield user.user(dict(master='a:9990', username="x",
                            passwd="y", op='get', bb_username=None,
                            bb_password=None, ids=['me', 'you'],
                            info=None))
 
-        def check(_):
-            c = self.usersclient
-            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.ids, c.info),
-                             ('a', 9990, "x", "y", 'get', ['me', 'you'], None))
-        d.addCallback(check)
-        return d
+        c = self.usersclient
+        self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
+                          c.ids, c.info),
+                         ('a', 9990, "x", "y", 'get', ['me', 'you'], None))
 
+    @defer.inlineCallbacks
     def test_usersclient_send_update_info(self):
         def _fake_encrypt(passwd):
             assert passwd == 'day'
             return 'ENCRY'
         self.patch(users, 'encrypt', _fake_encrypt)
 
-        d = user.user(dict(master='a:9990', username="x",
+        yield user.user(dict(master='a:9990', username="x",
                            passwd="y", op='update', bb_username='bud',
                            bb_password='day', ids=None,
                            info=[{'identifier': 'x', 'svn': 'x'}]))
 
-        def check(_):
-            c = self.usersclient
-            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.bb_username, c.bb_password, c.ids, c.info),
-                             ('a', 9990, "x", "y", 'update', 'bud', 'ENCRY',
-                              None, [{'identifier': 'x', 'svn': 'x'}]))
-        d.addCallback(check)
-        return d
+        c = self.usersclient
+        self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
+                          c.bb_username, c.bb_password, c.ids, c.info),
+                         ('a', 9990, "x", "y", 'update', 'bud', 'ENCRY',
+                          None, [{'identifier': 'x', 'svn': 'x'}]))
 
+    @defer.inlineCallbacks
     def test_usersclient_send_add_info(self):
-        d = user.user(dict(master='a:9990', username="x",
+        yield user.user(dict(master='a:9990', username="x",
                            passwd="y", op='add', bb_username=None,
                            bb_password=None, ids=None,
                            info=[{'git': 'x <h@c>', 'irc': 'aaa'}]))
 
-        def check(_):
-            c = self.usersclient
-            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.bb_username, c.bb_password, c.ids, c.info),
-                             ('a', 9990, "x", "y", 'add', None, None, None,
-                                 [{'identifier': 'aaa',
-                                   'git': 'x <h@c>',
-                                   'irc': 'aaa'}]))
-        d.addCallback(check)
-        return d
+        c = self.usersclient
+        self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
+                          c.bb_username, c.bb_password, c.ids, c.info),
+                         ('a', 9990, "x", "y", 'add', None, None, None,
+                             [{'identifier': 'aaa',
+                               'git': 'x <h@c>',
+                               'irc': 'aaa'}]))

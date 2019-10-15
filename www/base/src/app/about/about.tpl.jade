@@ -19,25 +19,6 @@
         rawdata(data='config')
   .row
     .well
-        h2 Javascript dependencies
-        |  buildbot-www is using the following open-source JavaScript libraries
-        | (according to their bower manifest):
-        dl.dl-horizontal
-          table.table.table-stripped.table-condensed
-            tr
-                th name
-                th version
-                th license
-                th description
-            tr(ng-repeat='module in bower_configs', title="{{module}}")
-              td
-                a(ng-show='module.homepage', ng-href='{{module.homepage}}') {{module.name}}
-                span(ng-hide='module.homepage') {{module.name}}
-              td {{module.version}}
-              td {{ module.license.join ? module.license.join(", ") : module.license}}
-              td {{ module.description }}
-  .row
-    .well
       h2 API description
       ul.list-group
         li.list-group-item(ng-repeat='spec in specs |orderBy:"path"')

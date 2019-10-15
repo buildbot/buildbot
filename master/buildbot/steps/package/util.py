@@ -14,8 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Marius Rieder <marius.rieder@durchmesser.ch>
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from buildbot.process import logobserver
 
@@ -23,7 +21,7 @@ from buildbot.process import logobserver
 class WEObserver(logobserver.LogLineObserver):
 
     def __init__(self):
-        logobserver.LogLineObserver.__init__(self)
+        super().__init__()
         self.warnings = []
         self.errors = []
 

@@ -10,12 +10,11 @@ Buildbot Manual
    installation/index
    concepts
    secretsmanagement
-   configuration
-   worker-transition
+   configuration/index
    customization
-   new-style-steps
    cmdline
    resources
    optimization
    plugins
    deploy
+   upgrading/index

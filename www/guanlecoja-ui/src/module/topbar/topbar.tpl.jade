@@ -1,0 +1,17 @@
+nav.navbar.navbar-default
+    .container-fluid
+        .navbar-header
+            button.navbar-toggle.collapsed(
+            type="button", ng-click="collapse=!collapse", ng-init="collapse=1" aria-expanded="false")
+                span.sr-only Toggle navigation
+                span.icon-bar
+                span.icon-bar
+                span.icon-bar
+            a.navbar-brand {{appTitle}}
+            ol.breadcrumb
+                li(ng-repeat="b in breadcrumb")
+                    a(ng-if="b.sref", ui-sref="{{b.sref}}") {{b.caption}}
+                    a(ng-if="b.href", ng-href="{{b.href}}") {{b.caption}}
+                    span(ng-if="b.href == undefined && b.sref == undefined", ng-href="{{b.href}}") {{b.caption}}
+        .navbar-collapse.collapse.pull-right(ng-class='{"in": !collapse}')
+            ul.nav.navbar-nav(ng-transclude)

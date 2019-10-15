@@ -13,12 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
-from future.utils import iteritems
-from future.utils import string_types
-
 import inspect
 import re
 
@@ -130,17 +124,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
-        buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
+        super().__init__(**buildstep_kwargs)
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        if PY3:
-            signature = inspect.signature(
-                remotecommand.RemoteShellCommand.__init__)
-            valid_rsc_args = signature.parameters.keys()
-        else:
-            valid_rsc_args = inspect.getargspec(
-                remotecommand.RemoteShellCommand.__init__)[0]
+        signature = inspect.signature(
+            remotecommand.RemoteShellCommand.__init__)
+        valid_rsc_args = signature.parameters.keys()
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
@@ -155,7 +145,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.remote_kwargs['workdir'] = workdir
 
     def setBuild(self, build):
-        buildstep.LoggingBuildStep.setBuild(self, build)
+        super().setBuild(build)
         # Set this here, so it gets rendered when we start the step
         self.workerEnvironment = self.build.workerEnvironment
 
@@ -167,19 +157,19 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def describe(self, done=False):
         if self.stopped and not self.rendered:
-            return u"stopped early"
+            return "stopped early"
         assert(self.rendered)
         desc = self._describe(done)
         if not desc:
             return None
         if self.descriptionSuffix:
-            desc = desc + u' ' + join_list(self.descriptionSuffix)
+            desc = desc + ' ' + join_list(self.descriptionSuffix)
         return desc
 
     def getCurrentSummary(self):
         cmdsummary = self._getLegacySummary(False)
         if cmdsummary:
-            return {u'step': cmdsummary}
+            return {'step': cmdsummary}
         return super(ShellCommand, self).getCurrentSummary()
 
     def getResultSummary(self):
@@ -187,8 +177,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         if cmdsummary:
             if self.results != SUCCESS:
-                cmdsummary += u' (%s)' % Results[self.results]
-            return {u'step': cmdsummary}
+                cmdsummary += ' (%s)' % Results[self.results]
+            return {'step': cmdsummary}
 
         return super(ShellCommand, self).getResultSummary()
 
@@ -216,7 +206,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
             # add the descriptionSuffix, if one was given
             if self.descriptionSuffix:
-                rv = rv + u' ' + join_list(self.descriptionSuffix)
+                rv = rv + ' ' + join_list(self.descriptionSuffix)
 
             return rv
 
@@ -241,7 +231,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
     def buildCommandKwargs(self, warnings):
-        kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
+        kwargs = super().buildCommandKwargs()
         kwargs.update(self.remote_kwargs)
         kwargs['workdir'] = self.workdir
 
@@ -284,7 +274,7 @@ class TreeSize(ShellCommand):
     kib = None
 
     def __init__(self, **kwargs):
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.observer = logobserver.BufferLogObserver(wantStdout=True,
                                                       wantStderr=True)
         self.addLogObserver('stdio', self.observer)
@@ -325,7 +315,7 @@ class SetPropertyFromCommand(ShellCommand):
             config.error(
                 "Exactly one of property and extract_fn must be set")
 
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         if self.extract_fn:
             self.includeStderr = True
@@ -351,14 +341,14 @@ class SetPropertyFromCommand(ShellCommand):
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
-            for k, v in iteritems(new_props):
+            for k, v in new_props.items():
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
         if self.property_changes:
             props_set = ["%s: %r" % (k, v)
-                         for k, v in sorted(iteritems(self.property_changes))]
+                         for k, v in sorted(self.property_changes.items())]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def describe(self, done=False):
@@ -368,7 +358,7 @@ class SetPropertyFromCommand(ShellCommand):
             return ["property '%s' set" % list(self.property_changes)[0]]
         # else:
         # let ShellCommand describe
-        return ShellCommand.describe(self, done)
+        return super().describe(done)
 
 
 SetProperty = SetPropertyFromCommand
@@ -400,8 +390,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     warnCount = 0
     warningPattern = '(?i).*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory "
-                             u"[\u2019\"`'](.*)[\u2019'`\"]")
+    directoryEnterPattern = ("make.*: Entering directory "
+                             "[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None
 
@@ -433,7 +423,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         self.maxWarnCount = maxWarnCount
 
         # And upcall to let the base class do its work
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         if self.__class__ is WarningCountingShellCommand and \
                 not kwargs.get('command'):
@@ -475,9 +465,9 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         is no upper bound."""
 
         for fileRe, warnRe, start, end in suppressionList:
-            if fileRe is not None and isinstance(fileRe, string_types):
+            if fileRe is not None and isinstance(fileRe, str):
                 fileRe = re.compile(fileRe)
-            if warnRe is not None and isinstance(warnRe, string_types):
+            if warnRe is not None and isinstance(warnRe, str):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
@@ -507,12 +497,12 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
 
         directoryEnterRe = self.directoryEnterPattern
         if (directoryEnterRe is not None and
-                isinstance(directoryEnterRe, string_types)):
+                isinstance(directoryEnterRe, str)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
         if (directoryLeaveRe is not None and
-                isinstance(directoryLeaveRe, string_types)):
+                isinstance(directoryLeaveRe, str)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
         # Check if each line in the output from this command matched our
@@ -552,8 +542,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
                     continue
                 if not (warnRe is None or warnRe.search(text)):
                     continue
-                if not ((start is None and end is None) or
-                        (lineNo is not None and start <= lineNo and end >= lineNo)):
+                if ((start is not None and end is not None) and
+                   not (lineNo is not None and start <= lineNo <= end)):
                     continue
                 return
 
@@ -564,7 +554,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         if self.suppressionList is not None:
             self.addSuppression(self.suppressionList)
         if self.suppressionFile is None:
-            return ShellCommand.start(self)
+            return super().start()
         d = self.getFileContentFromWorker(
             self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
@@ -589,7 +579,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
                 list.append((file, test, start, end))
 
         self.addSuppression(list)
-        return ShellCommand.start(self)
+        return super().start()
 
     def createSummary(self, log):
         """
@@ -653,7 +643,7 @@ class Test(WarningCountingShellCommand):
         self.setStatistic('tests-passed', passed)
 
     def describe(self, done=False):
-        description = WarningCountingShellCommand.describe(self, done)
+        description = super().describe(done)
         if done:
             if not description:
                 description = []
@@ -680,7 +670,7 @@ class Test(WarningCountingShellCommand):
 class PerlModuleTestObserver(logobserver.LogLineObserver):
 
     def __init__(self, warningPattern):
-        logobserver.LogLineObserver.__init__(self)
+        super().__init__()
         if warningPattern:
             self.warningPattern = re.compile(warningPattern)
         else:
@@ -729,7 +719,7 @@ class PerlModuleTest(Test):
     total = 0
 
     def __init__(self, *args, **kwargs):
-        Test.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.observer = PerlModuleTestObserver(
             warningPattern=self.warningPattern)
         self.addLogObserver('stdio', self.observer)

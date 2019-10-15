@@ -14,9 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer
@@ -27,9 +24,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestOpenStackWorker(unittest.TestCase):
@@ -51,15 +46,13 @@ class TestOpenStackWorker(unittest.TestCase):
 
     def test_constructor_nonova(self):
         self.patch(openstack, "client", None)
-        self.assertRaises(config.ConfigErrors,
-                          openstack.OpenStackLatentWorker, 'bot', 'pass',
-                          **self.bs_image_args)
+        with self.assertRaises(config.ConfigErrors):
+            openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
 
     def test_constructor_nokeystoneauth(self):
         self.patch(openstack, "loading", None)
-        self.assertRaises(config.ConfigErrors,
-                          openstack.OpenStackLatentWorker, 'bot', 'pass',
-                          **self.bs_image_args)
+        with self.assertRaises(config.ConfigErrors):
+            openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
 
     def test_constructor_minimal(self):
         bs = openstack.OpenStackLatentWorker(
@@ -162,9 +155,9 @@ class TestOpenStackWorker(unittest.TestCase):
         """
         Must have one of image or block_devices specified.
         """
-        self.assertRaises(ValueError,
-                          openstack.OpenStackLatentWorker, 'bot', 'pass',
-                          flavor=1, **self.os_auth)
+        with self.assertRaises(ValueError):
+            openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                            **self.os_auth)
 
     @defer.inlineCallbacks
     def test_getImage_string(self):
@@ -198,11 +191,12 @@ class TestOpenStackWorker(unittest.TestCase):
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
+    @defer.inlineCallbacks
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        self.assertFailure(bs.start_instance(self.build), ValueError)
+        yield self.assertFailure(bs.start_instance(self.build), ValueError)
 
     @defer.inlineCallbacks
     def test_start_instance_first_fetch_fail(self):
@@ -307,16 +301,3 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertIn(inst.id, s.instances)
         bs.stop_instance()
         self.assertIn(inst.id, s.instances)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_OpenStackLatentBuildSlave_deprecated(self):
-        from buildbot.worker.openstack import OpenStackLatentWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="OpenStackLatentBuildSlave was deprecated"):
-            from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
-
-        self.assertIdentical(OpenStackLatentBuildSlave, OpenStackLatentWorker)
