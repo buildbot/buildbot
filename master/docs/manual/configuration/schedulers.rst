@@ -1357,6 +1357,35 @@ Example:
         builder1.factory.addStep(Trigger(name="Trigger tests",
                                         schedulerNames=Property("forced_tests")))
 
+
+Example of scheduler allowing to choose which worker to run on:
+
+.. code-block:: python
+
+        worker_list = ["worker1", "worker2", "worker3"]
+        ChoiceStringParameter(name="worker",
+                              label="worker to run the build on",
+                              default="*",
+                              multiple=False,
+                              strict=True,
+                              choices=worker_list)
+
+        # .. and in nextWorker, use this property:
+        def nextWorker(bldr, workers, buildrequest):
+            forced_worker = buildrequest.properties.getProperty("worker", "*")
+            if forced_worker == "*":
+                return random.choice(workers) if workers else None
+            for w in workers:
+                if w.worker.workername == forced_worker:
+                    return w
+            return None  # worker not yet available
+
+        c['builders'] = [
+          BuilderConfig(name='mybuild', factory=f, nextWorker=nextWorker,
+                workernames=worker_list),
+        ]
+        
+
 .. bb:sched:: CodebaseParameter
 
 CodebaseParameter
