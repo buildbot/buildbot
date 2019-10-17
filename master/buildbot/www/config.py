@@ -91,7 +91,7 @@ class IndexResource(resource.Resource):
                         compiler = pyjade.ext.html.Compiler(
                             block, pretty=False)
                         html = compiler.compile()
-                res[template_name % (basename,)] = json.dumps(html)
+                res[template_name % (basename,)] = html
 
         return res
 

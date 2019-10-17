@@ -1,5 +1,6 @@
 {
     "name": "buildbot-www",
+    "plugin_name": "buildbot-www",
     "private": true,
     "main": "buildbot_www/static/scripts.js",
     "style": "buildbot_www/static/styles.css",
