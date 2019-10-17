@@ -140,7 +140,7 @@ Another example of a function delivering a customized html email is given below:
     <h4>Build status: {{ summary }}</h4>
     <p> Worker used: {{ workername }}</p>
     {% for step in build['steps'] %}
-    <p> {{ step['name'] }}: {{ step['result'] }}</p>
+    <p> {{ step['name'] }}: {{ step['results'] }}</p>
     {% endfor %}
     <p><b> -- The Buildbot</b></p>
     '''

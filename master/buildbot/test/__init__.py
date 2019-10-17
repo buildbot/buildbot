@@ -119,3 +119,13 @@ warnings.filterwarnings('ignore', ".*the imp module is deprecated in favour of i
 
 # sqlalchemy-migrate uses deprecated api from sqlalchemy https://review.openstack.org/#/c/648072/
 warnings.filterwarnings('ignore', ".*Engine.contextual_connect.*", DeprecationWarning)
+
+# ignore an attrs API warning for APIs used in dependencies
+warnings.filterwarnings('ignore', ".*The usage of `cmp` is deprecated and will be removed "
+                                  "on or after.*", DeprecationWarning)
+
+# ignore a warning emitted by pkg_resources when importing certain namespace packages
+warnings.filterwarnings('ignore', ".*Not importing directory .*/zope: missing __init__",
+                        category=ImportWarning)
+warnings.filterwarnings('ignore', ".*Not importing directory .*/sphinxcontrib: missing __init__",
+                        category=ImportWarning)
