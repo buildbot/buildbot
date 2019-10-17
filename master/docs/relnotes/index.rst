@@ -10,7 +10,7 @@ Release Notes
 
 .. towncrier release notes start
 
-Buildbot ``2.4.2`` ( ``2019-10-17`` )
+Buildbot ``2.5.0`` ( ``2019-10-17`` )
 =====================================
 
 Bug fixes
@@ -18,7 +18,8 @@ Bug fixes
 
 - Fix crash when reconfiguring changed workers that have new builders assigned to them (:issue:`4757`, :issue:`5027`).
 - DockerLatentWorker: Allow to bind the same volume twice into a worker's container, Buildbot now requires 'docker-py' (nowadays 'docker') version 1.2.3+ from 2015.
-- IRC bot can have authz configured to create or stop builds (#2957).
+- IRC bot can have authz configured to create or stop builds (:issue:`2957`).
+- Fix javascript exception with grid view tag filtering (:issue:`4801`)
 
 Improved Documentation
 ----------------------
@@ -28,12 +29,11 @@ Improved Documentation
 Features
 --------
 
+- Created a `TelegramBot` for notification and control through Telegram messaging app.
 - Added support for environment variable P4CONFIG to class ``P4Source``
 - Allow to define behavior for GitCommit when there is nothing to commit.
 - Add support for revision links to Mercurial poller
-- Support recursive matching ('**') in MultipleFileUpload when `glob=True`.
-  This is only supported in python3.5+
-- Created a `TelegramBot` for notification and control through Telegram messaging app.
+- Support recursive matching ('**') in MultipleFileUpload when `glob=True` (requires python3.5+ on the worker)
 
 
 Buildbot ``2.4.1`` ( ``2019-09-11`` )
