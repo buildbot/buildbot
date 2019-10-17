@@ -50,9 +50,9 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
 
     def __init__(self, stdin, p4base):
         self.deferred = defer.Deferred()
-        self.stdin = stdin
-        self.stdout = ''
-        self.stderr = ''
+        self.stdin = stdin.encode('ascii')
+        self.stdout = b''
+        self.stderr = b''
         self.p4base = p4base
 
     def connectionMade(self):
