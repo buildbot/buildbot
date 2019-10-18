@@ -33,6 +33,12 @@ div.changedetails(style="width:100%;")
           tr
             td Revision
             td {{ change.revision }}
+          tr
+            td Properties
+            td
+              i.fa.fa-chevron-circle-right.rotate.clickable(ng-class="{'fa-rotate-90':change.show_props}", ng-click="change.show_props = !change.show_props")
+              pre(ng-show="change.show_props", style="padding:unset; margin:unset; border:unset; background-color:unset")
+                  | {{ change.properties | json }}
 
         h5 Comment
         pre {{ change.comments }}
