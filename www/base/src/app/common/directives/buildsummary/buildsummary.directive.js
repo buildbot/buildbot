@@ -99,7 +99,8 @@ class _buildsummary {
             }, 1000);
             $scope.$on("$destroy", () => $interval.cancel(stop));
             $scope.settings = bbSettingsService.getSettingsGroup("LogPreview");
-            $scope.page_size = bbSettingsService.getSettingsGroup("TriggerStep").page_size.value;
+            $scope.trigger_step_page_size = bbSettingsService.getSettingsGroup("Build").trigger_step_page_size.value;
+            $scope.show_urls = bbSettingsService.getSettingsGroup("Build").show_urls.value;
 
             const NONE = 0;
             const ONLY_NOT_SUCCESS = 1;
