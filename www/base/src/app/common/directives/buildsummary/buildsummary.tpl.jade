@@ -42,7 +42,7 @@
             span.badge-status(ng-class="results2class(step, 'pulse')")
               | {{step.number}}
             | #{' '}
-            i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':step.fulldisplay}", ng-if="step.logs.length")
+            i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':step.fulldisplay}", ng-if="step.logs.length || step.buildrequests.length")
             | #{' '} {{step.name}}
             span(ng-if="step.buildrequests.length") #{' '} {{step.builds.length}} builds, {{step.buildrequests.length - step.builds.length}} pending builds
 
