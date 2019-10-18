@@ -612,8 +612,9 @@ class RealTests(Tests):
             for tbl_name in ('scheduler_changes', 'change_files',
                              'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
-                res = conn.execute(sa.select([tbl.c.changeid]))
-                results[tbl_name] = len([row for row in res.fetchall()])
+                res = conn.execute(sa.select([sa.func.count()]).select_from(tbl))
+                results[tbl_name] = res.fetchone()[0]
+                res.close()
             self.assertEqual(results, {
                 'scheduler_changes': 0,
                 'change_files': 0,

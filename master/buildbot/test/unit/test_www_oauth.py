@@ -19,6 +19,7 @@ import webbrowser
 
 import mock
 
+import twisted
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import threads
@@ -520,7 +521,6 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin,
     @defer.inlineCallbacks
     def test_E2E(self):
         d = defer.Deferred()
-        import twisted
         twisted.web.http._logDateTimeUsers = 1
 
         class HomePage(Resource):

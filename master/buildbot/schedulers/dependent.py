@@ -106,7 +106,7 @@ class Dependent(base.BaseScheduler):
             # differ from one another)
             if sub_results in (SUCCESS, WARNINGS):
                 yield self.addBuildsetForSourceStamps(
-                    sourcestamps=[ssid for ssid in sub_ssids],
+                    sourcestamps=sub_ssids.copy(),
                     reason='downstream')
 
             sub_bsids.append(sub_bsid)

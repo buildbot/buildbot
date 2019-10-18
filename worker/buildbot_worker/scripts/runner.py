@@ -220,7 +220,7 @@ class Options(usage.Options):
     ]
 
     def opt_version(self):
-        import buildbot_worker
+        import buildbot_worker  # pylint: disable=import-outside-toplevel
         print("worker version: {}".format(buildbot_worker.version))
         usage.Options.opt_version(self)
 

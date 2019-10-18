@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import bz2
+import zlib
+
 import sqlalchemy as sa
 
 from twisted.internet import defer
@@ -39,22 +42,18 @@ except ImportError:
 
 
 def dumps_gzip(data):
-    import zlib
     return zlib.compress(data, 9)
 
 
 def read_gzip(data):
-    import zlib
     return zlib.decompress(data)
 
 
 def dumps_bz2(data):
-    import bz2
     return bz2.compress(data, 9)
 
 
 def read_bz2(data):
-    import bz2
     return bz2.decompress(data)
 
 

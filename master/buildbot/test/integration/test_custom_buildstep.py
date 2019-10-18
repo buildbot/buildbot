@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import traceback
+
 import mock
 
 from twisted.internet import defer
@@ -84,7 +86,6 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
             else:
                 self.finished(results.SUCCESS)
         except Exception:
-            import traceback
             traceback.print_exc()
             self.failed(failure.Failure())
 

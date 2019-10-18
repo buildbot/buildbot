@@ -40,7 +40,7 @@ class DevProxy:
         cookies = {}
         if auth_cookie:
             if "TWISTED_SESSION" in auth_cookie:  # user pasted the whole document.cookie part!
-                cookies = {k: v for k, v in [c.split("=") for c in auth_cookie.split(";")]}
+                cookies = dict(c.split("=") for c in auth_cookie.split(";"))
                 auth_cookie = cookies["TWISTED_SESSION"]
             cookies = {'TWISTED_SESSION': auth_cookie}
         logging.basicConfig(level=logging.DEBUG)

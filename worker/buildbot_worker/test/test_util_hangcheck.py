@@ -24,11 +24,12 @@ from ..util import HangCheckFactory
 from ..util._hangcheck import HangCheckProtocol
 
 try:
-    from twisted.internet.testing import AccumulatingProtocol 
+    from twisted.internet.testing import AccumulatingProtocol
     from twisted.internet.testing import StringTransport
 except ImportError:
     from twisted.test.proto_helpers import AccumulatingProtocol
-   from twisted.test.proto_helpers import StringTransport
+    from twisted.test.proto_helpers import StringTransport
+
 
 def assert_clock_idle(case, clock):
     """

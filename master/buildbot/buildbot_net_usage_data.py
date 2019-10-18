@@ -191,7 +191,7 @@ def _sendWithUrlib(url, data):
 
 def _sendWithRequests(url, data):
     try:
-        import requests
+        import requests  # pylint: disable=import-outside-toplevel
     except ImportError:
         return None
     r = requests.post(url, json=data)

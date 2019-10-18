@@ -436,8 +436,7 @@ class MasterConfig(util.ComparableMixin):
 
         if self.logCompressionMethod == "lz4":
             try:
-
-                import lz4
+                import lz4  # pylint: disable=import-outside-toplevel
                 [lz4]
             except ImportError:
                 error(

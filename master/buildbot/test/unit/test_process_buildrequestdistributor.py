@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import random
+
 import mock
 
 from twisted.internet import defer
@@ -775,7 +777,6 @@ class TestMaybeStartBuilds(TestBRDBase):
         return self.do_test_nextWorker(nextWorker, exp_choice=0, exp_warning=True)
 
     def test_nextWorker_default(self):
-        import random
         self.patch(random, 'choice', nth_worker(2))
         return self.do_test_nextWorker(None, exp_choice=2)
 

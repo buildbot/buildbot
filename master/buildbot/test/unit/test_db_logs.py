@@ -15,7 +15,9 @@
 
 
 import base64
+import bz2
 import textwrap
+import zlib
 
 import sqlalchemy as sa
 
@@ -401,7 +403,6 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_gz_compress_big_chunk(self):
-        import zlib
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "gz"
@@ -426,7 +427,6 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_bz2_compress_big_chunk(self):
-        import bz2
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "bz2"
@@ -452,7 +452,7 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_lz4_compress_big_chunk(self):
         try:
-            import lz4  # noqa pylint: disable=unused-import
+            import lz4  # noqa pylint: disable=unused-import,import-outside-toplevel
         except ImportError:
             raise unittest.SkipTest("lz4 not installed, skip the test")
 

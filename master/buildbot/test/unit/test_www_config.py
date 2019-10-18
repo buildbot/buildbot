@@ -82,7 +82,7 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         try:
             # we make the test work if pyjade is present or note
             # It is better than just skip if pyjade is not there
-            import pyjade
+            import pyjade  # pylint: disable=import-outside-toplevel
             [pyjade]
             exp.update({'plugin/views/plugin.html':
                         json.dumps('<div class="myclass"><pre>this is customized</pre></div>')})
