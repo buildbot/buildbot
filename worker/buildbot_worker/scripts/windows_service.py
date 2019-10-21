@@ -1,3 +1,4 @@
+# pylint: disable=import-outside-toplevel
 # Runs the build-bot as a Windows service.
 # To use:
 # * Install and configure buildbot as per normal (ie, running
@@ -249,27 +250,26 @@ class BBService(win32serviceutil.ServiceFramework):
             if rc == win32event.WAIT_OBJECT_0:
                 # user sent a stop service request
                 break
-            else:
-                # A child process died.  For now, just log the output
-                # and forget the process.
-                index = rc - win32event.WAIT_OBJECT_0 - 1
-                bbdir, dead_handle, dead_thread, output_blocks = \
-                    child_infos[index]
-                status = win32process.GetExitCodeProcess(dead_handle)
-                output = "".join(output_blocks)
-                if not output:
-                    output = "The child process generated no output. " \
-                             "Please check the twistd.log file in the " \
-                             "indicated directory."
+            # A child process died.  For now, just log the output
+            # and forget the process.
+            index = rc - win32event.WAIT_OBJECT_0 - 1
+            bbdir, dead_handle, dead_thread, output_blocks = \
+                child_infos[index]
+            status = win32process.GetExitCodeProcess(dead_handle)
+            output = "".join(output_blocks)
+            if not output:
+                output = ("The child process generated no output. "
+                          "Please check the twistd.log file in the "
+                          "indicated directory.")
 
-                self.warning("BuildBot for directory {0!r} terminated with "
-                             "exit code {1}.\n{2}".format(bbdir, status, output))
+            self.warning("BuildBot for directory {0!r} terminated with "
+                         "exit code {1}.\n{2}".format(bbdir, status, output))
 
-                del child_infos[index]
+            del child_infos[index]
 
-                if not child_infos:
-                    self.warning("All BuildBot child processes have "
-                                 "terminated.  Service stopping.")
+            if not child_infos:
+                self.warning("All BuildBot child processes have "
+                             "terminated.  Service stopping.")
 
         # Either no child processes left, or stop event set.
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)

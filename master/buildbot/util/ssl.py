@@ -19,6 +19,9 @@ This modules acts the same as twisted.internet.ssl except it does not raise Impo
 Modules using this should call ensureHasSSL in order to make sure that the user installed buildbot[tls]
 """
 
+import unittest
+
+from buildbot.config import error
 
 try:
     from twisted.internet.ssl import *  # noqa pylint: disable=unused-wildcard-import, wildcard-import
@@ -30,12 +33,10 @@ except ImportError as e:
 
 
 def ensureHasSSL(module):
-    from buildbot.config import error
     if not has_ssl:
         error("TLS dependencies required for {} are not installed : {}\n pip install 'buildbot[tls]'".format(
             module, ssl_import_error))
 
 
 def skipUnless(f):
-    import unittest
     return unittest.skipUnless(has_ssl, "TLS dependencies required")(f)

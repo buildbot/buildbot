@@ -17,7 +17,9 @@
 import inspect
 import pkg_resources
 
+import zope.interface.interface
 from twisted.trial import unittest
+from zope.interface.interface import Attribute
 
 
 class InterfaceTests:
@@ -94,8 +96,6 @@ class InterfaceTests:
             raise unittest.SkipTest(
                 "zope.interfaces is too old to run this test")
 
-        import zope.interface.interface
-        from zope.interface.interface import Attribute
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):

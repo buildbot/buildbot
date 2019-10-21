@@ -296,14 +296,15 @@ class BuildRequest:
             # if both have changes, proceed, else fail - if no changes check revision instead
             if selfChanges and otherChanges:
                 continue
-            elif selfChanges and not otherChanges:
+
+            if selfChanges and not otherChanges:
                 return False
 
-            elif not selfChanges and otherChanges:
+            if not selfChanges and otherChanges:
                 return False
 
             # else check revisions
-            elif selfSS['revision'] != otherSS['revision']:
+            if selfSS['revision'] != otherSS['revision']:
                 return False
 
         return True

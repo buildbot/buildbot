@@ -237,15 +237,14 @@ class Trigger(BuildStep):
             if isinstance(element, dict):
                 schedulers_and_props_list = schedulers_and_props
                 break
-            else:
-                # Old-style back compatibility: Convert tuple to dict and make
-                # it important
-                d = {
-                    'sched_name': element[0],
-                    'props_to_set': element[1],
-                    'unimportant': False
-                }
-                schedulers_and_props_list.append(d)
+            # Old-style back compatibility: Convert tuple to dict and make
+            # it important
+            d = {
+                'sched_name': element[0],
+                'props_to_set': element[1],
+                'unimportant': False
+            }
+            schedulers_and_props_list.append(d)
 
         # post process the schedulernames, and raw properties
         # we do this out of the loop, as this can result in errors

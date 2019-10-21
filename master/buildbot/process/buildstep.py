@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import inspect
 import re
 import sys
 
@@ -464,7 +465,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def updateSummary(self):
         def methodInfo(m):
-            import inspect
             lines = inspect.getsourcelines(m)
             return "\nat %s:%s:\n %s" % (
                 inspect.getsourcefile(m), lines[1], "\n".join(lines[0]))

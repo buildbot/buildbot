@@ -124,7 +124,7 @@ class TelegramContact(Contact):
             if cached is None:
                 self.bot.query_cache[key] = payload
                 break
-            elif cached == payload:
+            if cached == payload:
                 break
             key += 1
         return {'text': caption, 'callback_data': key}

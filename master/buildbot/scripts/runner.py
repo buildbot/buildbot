@@ -19,6 +19,7 @@
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and reStructuredText documentation.
 
+import getpass
 import sys
 import textwrap
 
@@ -304,7 +305,6 @@ class SendChangeOptions(base.SubcommandOptions):
         # fix up the auth with a password if none was given
         auth = self.get('auth')
         if ':' not in auth:
-            import getpass
             pw = getpass.getpass("Enter password for '%s': " % auth)
             auth = "%s:%s" % (auth, pw)
         self['auth'] = tuple(auth.split(':', 1))

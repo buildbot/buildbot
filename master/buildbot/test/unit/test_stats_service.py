@@ -120,7 +120,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         captures = [capture.CaptureProperty('test_builder', 'test')]
         try:
             # Try to import
-            import influxdb
+            import influxdb  # pylint: disable=import-outside-toplevel
             # consume it somehow to please pylint
             [influxdb]
         except ImportError:

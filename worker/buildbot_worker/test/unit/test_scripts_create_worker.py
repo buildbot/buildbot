@@ -575,6 +575,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         script and does typical for TAC file logic.
         """
 
+        # pylint: disable=import-outside-toplevel
         # import modules for mocking
         import twisted.application.service
         import twisted.python.logfile

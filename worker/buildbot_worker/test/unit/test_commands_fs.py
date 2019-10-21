@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import stat
 import sys
 
 from twisted.internet import defer
@@ -200,7 +201,6 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         ), True)
         yield self.run_command()
 
-        import stat
         self.assertTrue(
             stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
         self.assertIn({'rc': 0},
@@ -217,7 +217,6 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        import stat
         self.assertTrue(
             stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
         self.assertIn({'rc': 0},
@@ -236,7 +235,6 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
 
-        import stat
         self.assertTrue(
             stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
         self.assertIn({'rc': 0},
