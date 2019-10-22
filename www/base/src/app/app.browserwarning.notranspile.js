@@ -4,6 +4,8 @@
 outdatedBrowserRework({
     browserSupport: {
         'Chrome': 56, // Includes Chrome for mobile devices
+        'Chromium': 56, // same as Chrome, but needs to be listed explicitly
+                        // (https://github.com/mikemaccana/outdated-browser-rework/issues/49)
         'Edge': 13,
         'Safari': 10,
         'Mobile Safari': 10,
