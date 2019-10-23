@@ -32,7 +32,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
         self.setUpScheduler()
 
-    def makeScheduler(self, firstBuildDuration=0, exp_branch=None, **kwargs):
+    def makeScheduler(self, firstBuildDuration=0, firstBuildError=False, exp_branch=None, **kwargs):
         self.sched = sched = timed.Periodic(**kwargs)
         sched._reactor = self.reactor
 
@@ -47,6 +47,8 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             self.assertIn('Periodic scheduler named', reason)
             # TODO: check branch
             isFirst = (self.events == [])
+            if self.reactor.seconds() == 0 and firstBuildError:
+                1 / 0
             self.events.append('B@%d' % self.reactor.seconds())
             if isFirst and firstBuildDuration:
                 d = defer.Deferred()
@@ -127,6 +129,22 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             self.reactor.advance(1)
         self.assertEqual(self.events, ['B@0', 'B@15', 'B@25', 'B@35'])
         self.assertEqual(self.state.get('last_build'), 35)
+
+        d = sched.deactivate()
+        return d
+
+    def test_start_build_error(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   periodicBuildTimer=10,
+                                   firstBuildError=True)  # error during first build start
+
+        sched.activate()
+        self.reactor.advance(0)  # let it trigger the first (error) build
+        while self.reactor.seconds() < 40:
+            self.reactor.advance(1)
+        self.assertEqual(self.events, ['B@10', 'B@20', 'B@30', 'B@40'])
+        self.assertEqual(self.state.get('last_build'), 40)
+        self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
 
         d = sched.deactivate()
         return d
