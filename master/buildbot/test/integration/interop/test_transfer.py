@@ -19,7 +19,7 @@ import shutil
 
 from twisted.internet import defer
 
-from buildbot.process.results import SUCCESS
+from buildbot.process.results import SUCCESS, FAILURE
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
@@ -75,6 +75,13 @@ class TransferStepsMasterPb(RunMasterBase):
         # cleanup
         shutil.rmtree("dest")
 
+    @defer.inlineCallbacks
+    def test_noExistTransfer(self):
+        yield self.setupConfig(notExistingFileMasterConfig())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['results'], FAILURE)
+        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        self.assertTrue(res)
 
 class TransferStepsMasterNull(TransferStepsMasterPb):
     proto = "null"
@@ -152,5 +159,29 @@ def masterGlobConfig():
     c['builders'] = [
         BuilderConfig(
             name="testy", workernames=["local1"], factory=f)
+    ]
+    return c
+
+
+# master configuration
+def notExistingFileMasterConfig():
+    c = {}
+    from buildbot.config import BuilderConfig
+    from buildbot.process.factory import BuildFactory
+    from buildbot.plugins import steps, schedulers
+
+    c['schedulers'] = [
+        schedulers.ForceScheduler(
+            name="force",
+            builderNames=["testy"])]
+
+    f = BuildFactory()
+
+    f.addStep(
+        steps.FileUpload(workersrc="dir/noexist_file.txt", masterdest="master.txt"))
+    c['builders'] = [
+        BuilderConfig(name="testy",
+                      workernames=["local1"],
+                      factory=f)
     ]
     return c
