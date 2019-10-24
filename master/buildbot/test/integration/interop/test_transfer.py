@@ -19,7 +19,8 @@ import shutil
 
 from twisted.internet import defer
 
-from buildbot.process.results import SUCCESS, FAILURE
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 

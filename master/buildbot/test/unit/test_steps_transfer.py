@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import json
 import os
 import shutil
 import stat
@@ -28,7 +27,6 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import remotetransfer
-from buildbot.process.properties import Properties
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
@@ -38,7 +36,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
@@ -1017,71 +1014,33 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
             transfer.JSONStringDownload('srcfile')
 
 
-class TestJSONPropertiesDownload(unittest.TestCase):
+class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
+    def setUp(self):
+        self.setUpTestReactor()
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    @defer.inlineCallbacks
     def testBasic(self):
-        s = transfer.JSONPropertiesDownload("props.json")
-        s.build = Mock()
-        props = Properties()
-        props.setProperty('key1', 'value1', 'test')
-        s.build.getProperties.return_value = props
-        s.build.getWorkerCommandVersion.return_value = '3.0'
-        ss = Mock()
-        ss.asDict.return_value = dict(revision="12345")
-        s.build.getAllSourceStamps.return_value = [ss]
+        self.setupStep(transfer.JSONPropertiesDownload("props.json"))
+        self.step.build.setProperty('key1', 'value1', 'test')
+        read = []
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                workerdest="props.json", workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
+            )
+            + Expect.behavior(downloadString(read.append))
+            + 0)
 
-        s.worker = Mock()
-        s.remote = Mock()
-
-        s.start()
-
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'downloadFile':
-                self.assertEqual(kwargs['workerdest'], 'props.json')
-                reader = kwargs['reader']
-                data = reader.remote_read(100)
-                data = bytes2unicode(data)
-                actualJson = json.loads(data)
-                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
-                self.assertEqual(actualJson, expectedJson)
-                break
-        else:
-            raise ValueError("No downloadFile command found")
-
-    def testBasicWorker2_16(self):
-        s = transfer.JSONPropertiesDownload("props.json")
-        s.build = Mock()
-        props = Properties()
-        props.setProperty('key1', 'value1', 'test')
-        s.build.getProperties.return_value = props
-        s.build.getWorkerCommandVersion.return_value = '2.16'
-        ss = Mock()
-        ss.asDict.return_value = dict(revision="12345")
-        s.build.getAllSourceStamps.return_value = [ss]
-
-        s.worker = Mock()
-        s.remote = Mock()
-
-        s.start()
-
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'downloadFile':
-                self.assertEqual(kwargs['slavedest'], 'props.json')
-                reader = kwargs['reader']
-                data = reader.remote_read(100)
-                data = bytes2unicode(data)
-                actualJson = json.loads(data)
-                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
-                self.assertEqual(actualJson, expectedJson)
-                break
-        else:
-            raise ValueError("No downloadFile command found")
+        self.expectOutcome(
+            result=SUCCESS, state_string="downloading to props.json")
+        yield self.runStep()
+        self.assertEqual(b''.join(read), b'{"properties": {"key1": "value1"}, "sourcestamps": []}')
 
     def test_init_workerdest_keyword(self):
         step = transfer.JSONPropertiesDownload(workerdest='dstfile')
