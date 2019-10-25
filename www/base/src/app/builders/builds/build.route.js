@@ -39,13 +39,19 @@ class BuildState {
             }
             ]});
         bbSettingsServiceProvider.addSettingsGroup({
-            name:'TriggerStep',
-            caption: 'Builds per page',
+            name:'Build',
+            caption: 'Build page related settings',
             items:[{
                 type:'integer',
-                name:'page_size',
+                name:'trigger_step_page_size',
                 caption:'Number of builds to show per page in trigger step',
                 default_value: 20
+            },
+            {
+                type:'bool',
+                name:'show_urls',
+                caption:'Always show URLs in step',
+                default_value: true
             }
             ]});
     }
