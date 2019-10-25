@@ -11,10 +11,10 @@ module.exports = function() {
   var fileName = this.resourcePath;
   var code = pug.compileFile(fileName);
   var content = code();
-	var pluginName = loaderUtils.getOptions(this).pluginName;
+  var pluginName = loaderUtils.getOptions(this).pluginName;
 
   // compute template name (as defined by ancient gulp based build system)
-  var tplName = path.parse(fileName).name.replace(/.tpl$/,'') + ".html";
+  var tplName = "views/" + path.parse(fileName).name.replace(/.tpl$/,'') + ".html";
   if (pluginName != "buildbot-www") {
     tplName = pluginName + "/" + tplName;
   }
