@@ -33,7 +33,7 @@ isort==4.3.21
 Jinja2==2.10.3
 jmespath==0.9.4
 jsonref==0.2
-lazy-object-proxy==1.4.2
+lazy-object-proxy==1.4.3
 lz4==2.2.1
 markdown2==2.3.8
 MarkupSafe==1.1.1
