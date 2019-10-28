@@ -4,7 +4,7 @@ asn1crypto==1.2.0
 astroid==2.3.2; python_version >= "3.4"
 attrs==19.3.0
 autobahn==19.10.1
-Automat==0.7.0
+Automat==0.8.0
 Babel==2.7.0
 backports.functools-lru-cache==1.5
 blockdiag==1.5.4
