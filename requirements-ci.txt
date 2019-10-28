@@ -1,7 +1,7 @@
 alabaster==0.7.12
 appdirs==1.4.3
 asn1crypto==1.2.0
-astroid==2.3.1; python_version >= "3.4"
+astroid==2.3.2; python_version >= "3.4"
 attrs==19.2.0
 autobahn==19.10.1
 Automat==0.7.0
