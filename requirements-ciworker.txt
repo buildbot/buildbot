@@ -1,4 +1,4 @@
-attrs==19.2.0
+attrs==19.3.0
 Automat==0.7.0
 constantly==15.1.0
 funcsigs==1.0.2
