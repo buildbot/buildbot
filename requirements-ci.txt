@@ -71,7 +71,7 @@ singledispatch==3.4.0.3
 six==1.12.0
 snowballstemmer==2.0.0
 SQLAlchemy==1.3.10
-sqlalchemy-migrate==0.12.0
+sqlalchemy-migrate==0.13.0
 sqlparse==0.3.0
 Tempita==0.5.2
 termcolor==1.1.0
