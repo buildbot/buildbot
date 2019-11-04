@@ -11,7 +11,7 @@ blockdiag==1.5.4
 boto==2.49.0
 boto3==1.10.8
 botocore==1.13.8
-cffi==1.12.3
+cffi==1.13.2
 click==7.0
 configparser==4.0.2
 constantly==15.1.0
