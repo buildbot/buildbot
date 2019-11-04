@@ -19,7 +19,7 @@ language: python
 # Available Python versions:
 # http://about.travis-ci.org/docs/user/ci-environment/#Python-VM-images
 python:
-  - "3.7"
+  - "3.8"
 
 env:
   matrix:
