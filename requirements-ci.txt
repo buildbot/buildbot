@@ -21,7 +21,7 @@ decorator==4.4.1
 dicttoxml==1.7.4
 docutils==0.15.2
 enum34==1.1.6
-flake8==3.7.8
+flake8==3.7.9
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.0
