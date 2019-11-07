@@ -22,11 +22,14 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.web import client
 
+from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
+
+_UNSPECIFIED = object()
 
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):
@@ -44,7 +47,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                  category=None,
                  project='',
                  pullrequest_filter=True,
-                 encoding='utf-8',
+                 encoding=_UNSPECIFIED,
                  pollAtLaunch=False
                  ):
 
@@ -52,7 +55,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.slug = slug
         self.branch = branch
         super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
-        self.encoding = encoding
+        if encoding != _UNSPECIFIED:
+            config.warnDeprecated('2.6.0', 'encoding of BitbucketPullrequestPoller is deprecated.')
 
         if hasattr(pullrequest_filter, '__call__'):
             self.pullrequest_filter = pullrequest_filter
@@ -89,7 +93,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
     @defer.inlineCallbacks
     def _processChanges(self, page):
-        result = json.loads(page, encoding=self.encoding)
+        result = json.loads(page)
         for pr in result['values']:
             branch = pr['source']['branch']['name']
             nr = int(pr['id'])
@@ -106,7 +110,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                 if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
                     page = yield client.getPage(str(pr['links']['self']['href']))
-                    pr_json = json.loads(page, encoding=self.encoding)
+                    pr_json = json.loads(page)
 
                     # filter pull requests by user function
                     if not self.pullrequest_filter(pr_json):
@@ -127,13 +131,13 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     title = pr['title']
                     # parse commit api page
                     page = yield client.getPage(str(pr['source']['commit']['links']['self']['href']))
-                    commit_json = json.loads(page, encoding=self.encoding)
+                    commit_json = json.loads(page)
                     # use the full-length hash from now on
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
                     # parse repo api page
                     page = yield client.getPage(str(pr['source']['repository']['links']['self']['href']))
-                    repo_json = json.loads(page, encoding=self.encoding)
+                    repo_json = json.loads(page)
                     repo = repo_json['links']['html']['href']
 
                     # update database
