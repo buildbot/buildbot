@@ -726,6 +726,31 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         # check that correct info message was printed
         self.assertStdoutEqual("worker configured in bdir\n")
 
+    def testUseTLS(self):
+        """
+        test that when --useTLS options is used, correct connection_string
+        is generated
+        """
+        options = self.options.copy()
+        options["useTLS"] = True
+
+        # patch _make*() functions to do nothing
+        self.setUpMakeFunctions()
+
+        # call createWorker() and check that we get success exit code
+        self.assertEqual(create_worker.createWorker(options), 0,
+                         "unexpected exit code")
+
+        # check _make*() functions were called with correct arguments
+        expected_tac_contents = (create_worker.workerTACTemplate[0] +
+                                 create_worker.workerTACTemplate[2]) % options
+        self.assertMakeFunctionsCalls(self.options["basedir"],
+                                      expected_tac_contents,
+                                      self.options["quiet"])
+
+        # check that correct info message was printed
+        self.assertStdoutEqual("worker configured in bdir\n")
+
     def testWithOpts(self):
         """
         test calling createWorker() with --relocatable and --allow-shutdown
