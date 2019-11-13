@@ -4,7 +4,7 @@ language: python
 
 # Available Python versions:
 python:
-  - "3.5"
+  - "3.8"
 label_mapping:
   TWISTED: tw
   SQLALCHEMY: sqla
@@ -29,6 +29,7 @@ env:
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
+  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
@@ -61,21 +62,23 @@ matrix:
   fast_finish: true
   include:
     # flake8, isort, pylint, docs first as they're more likely to find issues
-    - python: "3.7"
+    - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-    - python: "3.7"
+    - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
-    - python: "3.7"
+    - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
-    - python: "3.7"
+    - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
     - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.8"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
-    - python: "3.7"
+    - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
     # keep worker supported on py2.7
