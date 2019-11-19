@@ -24,10 +24,12 @@ sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from buildbot.util.raml import RamlSpec
+    from buildbot.reporters.telegram import TelegramContact
 except ImportError:
     sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     os.pardir))
     from buildbot.util.raml import RamlSpec
+    from buildbot.reporters.telegram import TelegramContact
 
 # -- General configuration -----------------------------------------------
 try:
@@ -321,7 +323,8 @@ man_pages = [
 ]
 
 jinja_contexts = {
-    "data_api": {'raml': RamlSpec()}
+    "data_api": {'raml': RamlSpec()},
+    "telegram": {'commands': TelegramContact.describe_commands()},
 }
 
 # Spell checker.

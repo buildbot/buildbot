@@ -78,14 +78,14 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, exp)
 
     def test_parseCustomTemplateDir(self):
-        exp = {'views/builds.html': json.dumps('<div>\n</div>')}
+        exp = {'views/builds.html': '<div>\n</div>'}
         try:
             # we make the test work if pyjade is present or note
             # It is better than just skip if pyjade is not there
-            import pyjade
+            import pyjade  # pylint: disable=import-outside-toplevel
             [pyjade]
             exp.update({'plugin/views/plugin.html':
-                        json.dumps('<div class="myclass"><pre>this is customized</pre></div>')})
+                        '<div class="myclass"><pre>this is customized</pre></div>'})
         except ImportError:
             log.msg("Only testing html based template override")
         template_dir = util.sibpath(__file__, "test_templates_dir")

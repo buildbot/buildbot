@@ -77,7 +77,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'git@gitlab.example.com:build/awesome_project.git',
-                                 'ms-viewport'])
+                                 'ms-viewport', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])

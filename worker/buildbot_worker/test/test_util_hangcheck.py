@@ -15,8 +15,6 @@ from twisted.internet.protocol import Protocol
 from twisted.internet.task import Clock
 from twisted.python.failure import Failure
 from twisted.spread.pb import PBClientFactory
-from twisted.test.proto_helpers import AccumulatingProtocol
-from twisted.test.proto_helpers import StringTransport
 from twisted.trial.unittest import TestCase
 from twisted.web.server import Site
 from twisted.web.static import Data
@@ -24,6 +22,13 @@ from twisted.web.static import Data
 from ..backports import SynchronousTestCase
 from ..util import HangCheckFactory
 from ..util._hangcheck import HangCheckProtocol
+
+try:
+    from twisted.internet.testing import AccumulatingProtocol
+    from twisted.internet.testing import StringTransport
+except ImportError:
+    from twisted.test.proto_helpers import AccumulatingProtocol
+    from twisted.test.proto_helpers import StringTransport
 
 
 def assert_clock_idle(case, clock):

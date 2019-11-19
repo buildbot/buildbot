@@ -18,6 +18,7 @@ import re
 import mock
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -42,6 +43,10 @@ class ContactMixin(TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.patch(reactor, 'callLater', self.reactor.callLater)
+        self.patch(reactor, 'seconds', self.reactor.seconds)
+        self.patch(reactor, 'stop', self.reactor.stop)
+
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
                                              wantDb=True)
 
@@ -72,8 +77,8 @@ class ContactMixin(TestReactorMixin):
             self.bot.master.botmaster.shuttingDown = False
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = self.contactClass(self.bot, user=self.USER, channel=self.CHANNEL)
-        self.bot.reactor = self.reactor
+        self.contact = self.contactClass(user=self.USER,
+                                         channel=self.bot.getChannel(self.CHANNEL))
         self.contact.channel.setServiceParent(self.master)
         return self.master.startService()
 
@@ -88,10 +93,13 @@ class ContactMixin(TestReactorMixin):
         self.contact.channel.send = send
 
     @defer.inlineCallbacks
-    def do_test_command(self, command, args='', clock_ticks=None,
+    def do_test_command(self, command, args='', contact=None, clock_ticks=None,
                         exp_usage=True, exp_UsageError=False,
                         shuttingDown=False, **kwargs):
-        cmd = getattr(self.contact, 'command_' + command.upper())
+        if contact is None:
+            contact = self.contact
+
+        cmd = getattr(contact, 'command_' + command.upper())
 
         if exp_usage:
             self.assertTrue(hasattr(cmd, 'usage'))
@@ -129,24 +137,28 @@ class ContactMixin(TestReactorMixin):
         ])
         self.master.db.builds.finishBuild(buildid=14, results=SUCCESS)
 
+    def setup_multi_builders(self):
+        # Make first builder configured, but not connected
+        # Make second builder configured and connected
+        self.master.db.insertTestData([
+            fakedb.Worker(id=1, name='linux1', info={}),  # connected one
+            fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
+            fakedb.BuilderMaster(
+                id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
+            fakedb.BuilderMaster(
+                id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
+            fakedb.ConfiguredWorker(id=14013,
+                                    workerid=2, buildermasterid=4012),
+            fakedb.ConfiguredWorker(id=14013,
+                                    workerid=1, buildermasterid=4013),
+        ])
+
 
 class TestContact(ContactMixin, unittest.TestCase):
 
     def test_channel_service(self):
         self.assertTrue(self.contact.channel.running)
         self.contact.channel.stopService()
-
-    def test_doSilly(self):
-        self.patch_send()
-        silly_prompt, silly_response = list(self.contact.silly.items())[0]
-
-        self.contact.doSilly(silly_prompt)
-        self.reactor.pump([0.5] * 20)
-
-        self.assertEqual(self.sent, silly_response)
-
-    # TODO: remaining commands
-    # (all depend on status, which interface will change soon)
 
     @defer.inlineCallbacks
     def test_command_notify0(self):
@@ -346,14 +358,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.assertIn('Buildbot commands', self.sent[0])
 
     @defer.inlineCallbacks
-    def test_command_dance(self):
-        yield self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
-        self.assertTrue(self.sent)  # doesn't matter what it sent
-
-    @defer.inlineCallbacks
     def test_command_hello(self):
-        yield self.do_test_command('hello', exp_usage=False)
-        self.assertEqual(self.sent, ['yes?'])
         yield self.do_test_command('hello', exp_usage=False)
         self.assertIn(self.sent[0], words.GREETINGS)
 
@@ -381,7 +386,7 @@ class TestContact(ContactMixin, unittest.TestCase):
             self.assertIn('%s [offline]' % worker, self.sent[0])
 
     @defer.inlineCallbacks
-    def test_command_list_online(self):
+    def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
         self.master.db.insertTestData([
@@ -389,8 +394,8 @@ class TestContact(ContactMixin, unittest.TestCase):
         ])
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('linux1 [disconnected]', self.sent[0])
-        self.assertNotIn('linux2 [disconnected]', self.sent[0])
+        self.assertNotIn('linux1 [disconnected]', self.sent[0])
+        self.assertIn('linux2 [disconnected]', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
@@ -399,22 +404,6 @@ class TestContact(ContactMixin, unittest.TestCase):
         ])
         yield self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 1)
-
-    def setup_multi_builders(self):
-        # Make first builder configured, but not connected
-        # Make second builder configured and connected
-        self.master.db.insertTestData([
-            fakedb.Worker(id=1, name='linux1', info={}),  # connected one
-            fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
-            fakedb.BuilderMaster(
-                id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
-            fakedb.BuilderMaster(
-                id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
-            fakedb.ConfiguredWorker(id=14013,
-                                    workerid=2, buildermasterid=4012),
-            fakedb.ConfiguredWorker(id=14013,
-                                    workerid=1, buildermasterid=4013),
-        ])
 
     @defer.inlineCallbacks
     def test_command_list_builders_not_connected(self):
@@ -643,14 +632,6 @@ class TestContact(ContactMixin, unittest.TestCase):
                  .format(self.BUILDER_NAMES[0]))
 
     @defer.inlineCallbacks
-    def test_handleMessage_silly(self):
-        silly_prompt = list(self.contact.silly)[0]
-        self.contact.doSilly = mock.Mock()
-        yield self.contact.handleMessage(silly_prompt)
-
-        self.contact.doSilly.assert_called_with(silly_prompt)
-
-    @defer.inlineCallbacks
     def test_handleMessage_short_command(self):
         self.contact.command_TESTY = mock.Mock()
         yield self.contact.handleMessage('testy')
@@ -726,11 +707,6 @@ class TestContact(ContactMixin, unittest.TestCase):
         meth = self.contact.getCommandMethod('shutdown')
         self.assertEqual(meth, self.contact.access_denied)
 
-    def test_getCommandMethod_ignore_authz(self):
-        self.bot.authz = words.StatusBot.expand_authz(None)
-        meth = self.contact.getCommandMethod('shutdown', True)
-        self.assertNotEqual(meth, self.contact.access_denied)
-
     authz1 = {
         'force': ['me'],
         'shutdown': ['notme', 'someone'],
@@ -787,19 +763,3 @@ class TestContact(ContactMixin, unittest.TestCase):
         ])
         yield self.bot.loadState()
         self.assertEqual(self.bot.channels['#channel1'].notify_events, {'warnings'})
-
-
-class FakeContact:
-
-    def __init__(self, bot, user=None, channel=None):
-        self.bot = bot
-        self.user = user
-        self.channel = channel
-        self.messages = []
-        self.actions = []
-
-    def handleMessage(self, message):
-        self.messages.append(message)
-
-    def handleAction(self, data):
-        self.actions.append(data)

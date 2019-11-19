@@ -15,6 +15,7 @@
 
 
 import inspect
+import sqlite3
 import time
 import traceback
 
@@ -229,5 +230,4 @@ class DBThreadPool:
         return ret
 
     def get_sqlite_version(self):
-        import sqlite3
         return sqlite3.sqlite_version_info

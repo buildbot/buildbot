@@ -385,7 +385,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
             expectSpec = json.loads(expectJson)
             if gotSpec != expectSpec:
                 try:
-                    import xerox
+                    import xerox  # pylint: disable=import-outside-toplevel
                     formatted = self.formatJsonForTest(gotJson)
                     print(
                         "You may update the test with (copied to clipboard):\n" + formatted)

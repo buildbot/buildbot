@@ -163,14 +163,12 @@ class BaseLock:
             if w_access.mode == 'counting':
                 if num_excl > 0 or num_counting >= self.maxCount:
                     break
-                else:
-                    num_counting = num_counting + 1
+                num_counting = num_counting + 1
             else:
                 # w_access.mode == 'exclusive'
                 if num_excl > 0 or num_counting > 0:
                     break
-                else:
-                    num_excl = num_excl + 1
+                num_excl = num_excl + 1
 
             # If the waiter has a deferred, wake it up and clear the deferred
             # from the wait queue entry to indicate that it has been woken.

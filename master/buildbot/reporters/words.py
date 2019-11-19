@@ -23,10 +23,13 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python import usage
+from twisted.web import resource
+from twisted.web import server
 
 from buildbot import util
 from buildbot import version
 from buildbot.data import resultspec
+from buildbot.plugins.db import get_plugins
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
@@ -37,6 +40,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 
@@ -366,17 +370,14 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, bot, user, channel=None):
+    def __init__(self, user, channel):
         """
         :param StatusBot bot: StatusBot this Contact belongs to
         :param user: User ID representing this contact
-        :param channel: Channel this contact is on (None is used for privmsgs)
+        :param channel: Channel this contact is on
         """
-        if channel is None:
-            channel = user
-        self.user = user
-        self.channel = bot.getChannel(channel)
-        self._next_HELLO = 'yes?'
+        self.user_id = user
+        self.channel = channel
 
     @property
     def bot(self):
@@ -385,6 +386,10 @@ class Contact:
     @property
     def master(self):
         return self.channel.bot.master
+
+    @property
+    def is_private_chat(self):
+        return self.user_id == self.channel.id
 
     @staticmethod
     def overrideCommand(meth):
@@ -403,58 +408,40 @@ class Contact:
                 pass
         return meth
 
-    @property
-    def userid(self):
-        return self.user
-
-    # Silliness
-
-    silly = {
-        "What happens?": ["Somebody set up us the bomb."],
-        "It's You!": ["How are you gentlemen!!",
-                      "All your base are belong to us.",
-                      "You are on the way to destruction."],
-        "What you say!": ["You have no chance to survive make your time.",
-                          "HA HA HA HA ...."],
-    }
-
     # Communication with the user
 
     def send(self, message, **kwargs):
         return self.channel.send(message, **kwargs)
 
     def access_denied(self, *args, **kwargs):
-        return self.send("Thou shall not pass, {}!!!".format(self.user))
+        return self.send("Thou shall not pass, {}!!!".format(self.user_id))
 
     # Main dispatchers for incoming messages
 
-    def getCommandMethod(self, command, ignore_authz=False):
+    def getCommandMethod(self, command):
         command = command.upper()
         try:
             method = getattr(self, 'command_' + command)
         except AttributeError:
-            return
-        if not ignore_authz:
-            get_authz = self.bot.authz.get
-            acl = get_authz(command)
-            if acl is None:
-                if command in dangerous_commands:
-                    acl = get_authz('!', False)
-                else:
-                    acl = get_authz('', True)
-                acl = get_authz('*', acl)
-            if isinstance(acl, (list, tuple)):
-                acl = self.userid in acl
-            if not acl:
-                return self.access_denied
+            return None
+        get_authz = self.bot.authz.get
+        acl = get_authz(command)
+        if acl is None:
+            if command in dangerous_commands:
+                acl = get_authz('!', False)
+            else:
+                acl = get_authz('', True)
+            acl = get_authz('*', acl)
+        if isinstance(acl, (list, tuple)):
+            acl = self.user_id in acl
+        elif acl not in (True, False, None):
+            acl = self.user_id == acl
+        if not acl:
+            return self.access_denied
         return method
 
     def handleMessage(self, message, **kwargs):
         message = message.lstrip()
-        if message in self.silly:
-            self.doSilly(message)
-            return defer.succeed(None)
-
         parts = message.split(' ', 1)
         if len(parts) == 1:
             parts = parts + ['']
@@ -464,41 +451,39 @@ class Contact:
         if cmd_suffix and cmd.endswith(cmd_suffix):
             cmd = cmd[:-len(cmd_suffix)]
 
-        log.msg("chat bot command", cmd)
+        self.bot.log("Received command `{}` from {}".format(cmd, self.describeUser()))
 
         if cmd.startswith(self.bot.commandPrefix):
             meth = self.getCommandMethod(cmd[len(self.bot.commandPrefix):])
         else:
             meth = None
 
-        if not meth and message[-1] == '!':
-            self.send("What you say!")
-            return defer.succeed(None)
+        if not meth:
+            if message[-1] == '!':
+                self.send("What you say!")
+                return defer.succeed(None)
+            elif cmd.startswith(self.bot.commandPrefix):
+                self.send("I don't get this '{}'...".format(cmd))
+                meth = self.command_COMMANDS
+            else:
+                if self.is_private_chat:
+                    self.send("Say what?")
+                return defer.succeed(None)
 
-        if meth:
-            d = defer.maybeDeferred(meth, args.strip(), **kwargs)
+        d = defer.maybeDeferred(meth, args.strip(), **kwargs)
 
-            @d.addErrback
-            def usageError(f):
-                f.trap(UsageError)
-                self.send(str(f.value))
+        @d.addErrback
+        def usageError(f):
+            f.trap(UsageError)
+            self.send(str(f.value))
 
-            @d.addErrback
-            def logErr(f):
-                log.err(f)
-                self.send("Something bad happened (see logs)")
+        @d.addErrback
+        def logErr(f):
+            self.bot.log_err(f)
+            self.send("Something bad happened (see logs)")
 
-            d.addErrback(log.err)
-            return d
-
-        return defer.succeed(None)
-
-    def doSilly(self, message):
-        response = self.silly[message]
-        when = 0.5
-        for r in response:
-            self.bot.reactor.callLater(when, self.send, r)
-            when += 2.5
+        d.addErrback(self.bot.log_err)
+        return d
 
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
@@ -510,8 +495,7 @@ class Contact:
 
     def command_HELLO(self, args, **kwargs):
         """say hello"""
-        self.send(self._next_HELLO)
-        self._next_HELLO = random.choice(GREETINGS)
+        self.send(random.choice(GREETINGS))
 
     def command_VERSION(self, args, **kwargs):
         """show buildbot version"""
@@ -523,7 +507,7 @@ class Contact:
         args = self.splitArgs(args)
 
         all = False
-        num = 5
+        num = 10
         try:
             num = int(args[0])
             del args[0]
@@ -533,9 +517,6 @@ class Contact:
                 del args[0]
         except IndexError:
             pass
-
-        if all:
-            num = 20
 
         if not args:
             raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
@@ -560,7 +541,7 @@ class Contact:
             for worker in workers:
                 if worker['configured_on']:
                     response.append(worker['name'])
-                    if worker['connected_to']:
+                    if not worker['connected_to']:
                         response.append("[disconnected]")
                 elif all:
                     response.append(worker['name'])
@@ -569,6 +550,12 @@ class Contact:
             return
 
         elif args[0] == 'changes':
+            if all:
+                self.send("Do you really want me to list all changes? It can be thousands!\n"
+                          "If you want to be flooded, specify the maximum number of changes to show.\n"
+                          "Right now, I will show up to 100 recent changes.")
+                num = 100
+
             changes = yield self.master.db.changes.getRecentChanges(num)
 
             response = ["I found the following recent changes:"]
@@ -729,12 +716,12 @@ class Contact:
         pname_validate = self.master.config.validation['property_name']
         pval_validate = self.master.config.validation['property_value']
         if branch and not branch_validate.match(branch):
-            log.msg("bad branch '{}'".format(branch))
-            self.send("sorry, bad branch '{}'".format(branch))
+            self.bot.log("Force: bad branch '{}'".format(branch))
+            self.send("Sorry, bad branch '{}'".format(branch))
             return
         if revision and not revision_validate.match(revision):
-            log.msg("bad revision '{}'".format(revision))
-            self.send("sorry, bad revision '{}'".format(revision))
+            self.bot.log("Force: bad revision '{}'".format(revision))
+            self.send("Sorry, bad revision '{}'".format(revision))
             return
 
         properties = Properties()
@@ -754,9 +741,9 @@ class Contact:
                 pvalue = pdict[prop]
                 if not pname_validate.match(pname) \
                         or not pval_validate.match(pvalue):
-                    log.msg("bad property name='{}', value='{}'"
-                            .format(pname, pvalue))
-                    self.send("sorry, bad property name='{}', value='{}'"
+                    self.bot.log("Force: bad property name='{}', value='{}'"
+                                 .format(pname, pvalue))
+                    self.send("Sorry, bad property name='{}', value='{}'"
                               .format(pname, pvalue))
                     return
                 properties.setProperty(pname, pvalue, "Force Build Chat")
@@ -854,7 +841,7 @@ class Contact:
                 complete_at = lastBuild['complete_at']
                 if complete_at:
                     complete_at = util.datetime2epoch(complete_at)
-                    ago = util.fuzzyInterval(int(self.bot.reactor.seconds() -
+                    ago = util.fuzzyInterval(int(reactor.seconds() -
                                                  complete_at))
                 else:
                     ago = "??"
@@ -868,30 +855,30 @@ class Contact:
 
     command_LAST.usage = "last [_which_] - list last build status for builder _which_"
 
-    def build_commands(self):
+    @classmethod
+    def build_commands(cls):
         commands = []
-        for k in dir(self):
+        for k in dir(cls):
             if k.startswith('command_'):
-                commands.append(self.bot.commandPrefix + k[8:].lower())
+                commands.append(k[8:].lower())
         commands.sort()
         return commands
 
     def describeUser(self):
-        if self.channel != self.user:
-            return "User <{}> on {}".format(self.user, self.channel)
-        return "User <{}>".format(self.user)
+        if self.is_private_chat:
+            return self.user_id
+        return "{} on {}".format(self.user_id, self.channel.id)
 
     # commands
 
     def command_HELP(self, args, **kwargs):
         """give help for a command or one of it's arguments"""
         args = self.splitArgs(args)
-        lp = len(self.bot.commandPrefix)
         if not args:
             commands = self.build_commands()
             response = []
             for command in commands:
-                meth = self.getCommandMethod(command[lp:], True)
+                meth = getattr(self, 'command_' + command.upper())
                 doc = getattr(meth, '__doc__', None)
                 if doc:
                     response.append("{} - {}".format(command, doc))
@@ -900,8 +887,8 @@ class Contact:
             return
         command = args[0]
         if command.startswith(self.bot.commandPrefix):
-            command = command[lp:]
-        meth = self.getCommandMethod(command, True)
+            command = command[len(self.bot.commandPrefix):]
+        meth = getattr(self, 'command_' + command.upper(), None)
         if not meth:
             raise UsageError("There is no such command '{}'.".format(args[0]))
         doc = getattr(meth, 'usage', None)
@@ -935,17 +922,9 @@ class Contact:
     def command_COMMANDS(self, args, **kwargs):
         """list available commands"""
         commands = self.build_commands()
-        str = "Buildbot commands: " + ", ".join(commands)
+        str = "Buildbot commands: " + ", ".join(self.bot.commandPrefix + c for c in commands)
         self.send(str)
     command_COMMANDS.usage = "commands - List available commands"
-
-    def command_DANCE(self, args, **kwargs):
-        """dance, dance academy..."""
-        self.bot.reactor.callLater(1.0, self.send, "<(^.^<)")
-        self.bot.reactor.callLater(2.0, self.send, "<(^.^)>")
-        self.bot.reactor.callLater(3.0, self.send, "(>^.^)>")
-        self.bot.reactor.callLater(3.5, self.send, "(7^.^)7")
-        self.bot.reactor.callLater(5.0, self.send, "(>^.^<)")
 
     @dangerousCommand
     def command_SHUTDOWN(self, args, **kwargs):
@@ -976,7 +955,7 @@ class Contact:
                 botmaster.cancelCleanShutdown()
         elif args == 'now':
             self.send("Stopping buildbot.")
-            self.bot.reactor.stop()
+            reactor.stop()
     command_SHUTDOWN.usage = {
         None: "shutdown check|start|stop|now - shutdown the buildbot master",
         "check": "shutdown check - check if the buildbot master is running or shutting down",
@@ -986,7 +965,6 @@ class Contact:
 
 
 class StatusBot(service.AsyncMultiService):
-
     """ Abstract status bot """
 
     contactClass = Contact
@@ -1011,7 +989,6 @@ class StatusBot(service.AsyncMultiService):
         self.authz = self.expand_authz(authz)
         self.contacts = {}
         self.channels = {}
-        self.reactor = reactor
 
     @staticmethod
     def expand_authz(authz):
@@ -1025,22 +1002,35 @@ class StatusBot(service.AsyncMultiService):
                 expanded_authz[cmd.upper()] = val
         return expanded_authz
 
-    def getContact(self, user, channel=None):
+    def isValidUser(self, user):
+        for auth in self.authz.values():
+            if auth is True \
+                    or (isinstance(auth, (list, tuple)) and user in auth)\
+                    or user == auth:
+                return True
+        # If user is in '', we have already returned; otherwise check if defaults apply
+        return '' not in self.authz
+
+    def getContact(self, user, channel):
         """ get a Contact instance for ``user`` on ``channel`` """
         try:
             return self.contacts[(channel, user)]
         except KeyError:
-            new_contact = self.contactClass(self, user=user, channel=channel)
-            self.contacts[(channel, user)] = new_contact
+            valid = self.isValidUser(user)
+            new_contact = self.contactClass(user=user,
+                                            channel=self.getChannel(channel, valid))
+            if valid:
+                self.contacts[(channel, user)] = new_contact
             return new_contact
 
-    def getChannel(self, channel):
+    def getChannel(self, channel, valid=True):
         try:
             return self.channels[channel]
         except KeyError:
             new_channel = self.channelClass(self, channel)
-            self.channels[channel] = new_channel
-            new_channel.setServiceParent(self)
+            if valid:
+                self.channels[channel] = new_channel
+                new_channel.setServiceParent(self)
             return new_channel
 
     def _get_object_id(self):
@@ -1051,13 +1041,13 @@ class StatusBot(service.AsyncMultiService):
     def _save_channels_state(self, attr, json_type=None):
         if json_type is None:
             json_type = lambda x: x
-        data = [(channel.id, json_type(getattr(channel, attr)))
-                for channel in self.channels.values()]
+        data = [(k, v) for k, v in ((channel.id, json_type(getattr(channel, attr)))
+                                    for channel in self.channels.values()) if v]
         try:
             objectid = yield self._get_object_id()
             yield self.master.db.state.setState(objectid, attr, data)
         except Exception as err:
-            log.err(err, "saveState '{}'".format(attr))
+            self.log_err(err, "saveState '{}'".format(attr))
 
     @defer.inlineCallbacks
     def _load_channels_state(self, attr, setter):
@@ -1065,14 +1055,14 @@ class StatusBot(service.AsyncMultiService):
             objectid = yield self._get_object_id()
             data = yield self.master.db.state.getState(objectid, attr, ())
         except Exception as err:
-            log.err(err, "loadState ({})".format(attr))
+            self.log_err(err, "loadState ({})".format(attr))
         else:
             if data is not None:
                 for c, d in data:
                     try:
                         setter(self.getChannel(c), d)
                     except Exception as err:
-                        log.err(err, "loadState '{}' ({})".format(attr, c))
+                        self.log_err(err, "loadState '{}' ({})".format(attr, c))
 
     @defer.inlineCallbacks
     def loadState(self):
@@ -1087,15 +1077,24 @@ class StatusBot(service.AsyncMultiService):
     def saveMissingWorkers(self):
         yield self._save_channels_state('missing_workers', list)
 
-    def send_message(self, channel, message, **kwargs):
+    def send_message(self, chat, message, **kwargs):
         raise NotImplementedError()
 
-    def log(self, msg):
+    def _get_log_system(self, source):
+        if source is None:
+            source = self.__class__.__name__
         try:
-            name = self.parent.name
+            parent = self.parent.name
         except AttributeError:
-            name = self.__class__.__name__
-        log.msg("{}: {}".format(name, msg))
+            parent = '-'
+        name = "{},{}".format(parent, source)
+        return name
+
+    def log(self, msg, source=None):
+        log.callWithContext({"system": self._get_log_system(source)}, log.msg, msg)
+
+    def log_err(self, error=None, why=None, source=None):
+        log.callWithContext({"system": (self._get_log_system(source))}, log.err, error, why)
 
     def builderMatchesAnyTag(self, builder_tags):
         return any(tag for tag in builder_tags if tag in self.tags)
@@ -1147,7 +1146,7 @@ class StatusBot(service.AsyncMultiService):
                     complete_at = lastBuild['complete_at']
                     if complete_at:
                         complete_at = util.datetime2epoch(complete_at)
-                        ago = util.fuzzyInterval(int(self.reactor.seconds() -
+                        ago = util.fuzzyInterval(int(reactor.seconds() -
                                                      complete_at))
                     else:
                         ago = "??"
@@ -1257,3 +1256,58 @@ class ThrottledClientFactory(protocol.ClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         reactor.callLater(self.failedDelay, connector.connect)
+
+
+class WebhookResource(resource.Resource, service.AsyncService):
+    """
+    This is a service be used by chat bots based on web-hooks.
+    It automatically sets and deletes the resource and calls ``process_webhook``
+    method of its parent.
+    """
+
+    def __init__(self, path):
+        resource.Resource.__init__(self)
+        www = get_plugins('www', None, load_now=True)
+        if 'base' not in www:
+            raise RuntimeError("could not find buildbot-www; is it installed?")
+        self._root = www.get('base').resource
+        self.path = path
+
+    def startService(self):
+        self._root.putChild(unicode2bytes(self.path), self)
+        try:
+            super().startService()
+        except AttributeError:
+            pass
+
+    def stopService(self):
+        try:
+            super().stopService()
+        except AttributeError:
+            pass
+        self._root.delEntity(unicode2bytes(self.path))
+
+    def render_GET(self, request):
+        return self.render_POST(request)
+
+    def render_POST(self, request):
+        try:
+            d = self.parent.process_webhook(request)
+        except Exception:
+            d = defer.fail()
+
+        def ok(_):
+            request.setResponseCode(202)
+            request.finish()
+
+        def err(error):
+            try:
+                self.parent.log_err(error, "processing telegram request", self.__class__.__name__)
+            except AttributeError:
+                log.err(error, "processing telegram request")
+            request.setResponseCode(500)
+            request.finish()
+
+        d.addCallbacks(ok, err)
+
+        return server.NOT_DONE_YET

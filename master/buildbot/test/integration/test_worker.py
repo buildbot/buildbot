@@ -186,5 +186,33 @@ class Tests(RunFakeMasterTestCase):
 
         self.assertIs(worker.machine, machine)
 
+    @defer.inlineCallbacks
+    def test_worker_reconfigure_with_new_builder(self):
+        """
+        Checks if we can successfully reconfigure if we add new builders to worker.
+        """
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="builder1",
+                              workernames=['local1'],
+                              factory=BuildFactory()),
+            ],
+            'workers': [self.createLocalWorker('local1', max_builds=1)],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        yield self.getMaster(config_dict)
+
+        config_dict['builders'] += [
+            BuilderConfig(name="builder2",
+                          workernames=['local1'],
+                          factory=BuildFactory()),
+        ]
+        config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
+
+        # reconfig should succeed
+        yield self.reconfigMaster(config_dict)
+
     if RemoteWorker is None:
         skip = "buildbot-worker package is not installed"

@@ -61,7 +61,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'gerrit_branch'])
+                                 'gerrit_branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
@@ -107,7 +107,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'refs/changes/34/1234/567'])
+                                 'refs/changes/34/1234/567', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
@@ -153,7 +153,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'refs/changes/34/1234/567'])
+                                 'refs/changes/34/1234/567', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
@@ -199,7 +199,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'HEAD'])
+                                 'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])

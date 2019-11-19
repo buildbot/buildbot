@@ -95,7 +95,7 @@ class HTTPClientService(service.SharedService):
     checkAvailable = mock.Mock()
 
     def expect(self, method, ep, params=None, data=None, json=None, code=200,
-               content=None, content_json=None):
+               content=None, content_json=None, files=None):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
 
@@ -104,13 +104,13 @@ class HTTPClientService(service.SharedService):
 
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
-            content=content))
+            content=content, files=files))
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),
                               "expected more http requests:\n {!r}".format(self._expected))
 
-    def _doRequest(self, method, ep, params=None, data=None, json=None):
+    def _doRequest(self, method, ep, params=None, data=None, json=None, files=None, timeout=None):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",
@@ -118,21 +118,25 @@ class HTTPClientService(service.SharedService):
         if json is not None:
             # ensure that the json is really jsonable
             jsonmodule.dumps(json, default=toJson)
+        if files is not None:
+            files = dict((k, v.read()) for (k, v) in files.items())
         if not self._expected:
             raise AssertionError(
                 "Not expecting a request, while we got: "
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
-                    method, ep, params, data, json))
+                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}".format(
+                    method, ep, params, data, json, files))
         expect = self._expected.pop(0)
+        # pylint: disable=too-many-boolean-expressions
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
-                expect['data'] != data or expect['json'] != json):
+                expect['data'] != data or expect['json'] != json or expect['files'] != files):
             raise AssertionError(
                 "expecting:\n"
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}\n"
+                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}\n"
                 "got      :\n"
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
-                    expect['method'], expect['ep'], expect['params'], expect['data'], expect['json'],
-                    method, ep, params, data, json,
+                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}".format(
+                    expect['method'], expect['ep'], expect['params'],
+                    expect['data'], expect['json'], expect['files'],
+                    method, ep, params, data, json, files,
                 ))
         if not self.quiet:
             log.debug("{method} {ep} -> {code} {content!r}",

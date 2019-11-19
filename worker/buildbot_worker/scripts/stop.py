@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import signal
 import time
 
 from buildbot_worker.scripts import base
@@ -43,7 +44,6 @@ def stopWorker(basedir, quiet, signame="TERM"):
 
     @raise WorkerNotRunning: if worker pid file is not found
     """
-    import signal
 
     os.chdir(basedir)
     try:

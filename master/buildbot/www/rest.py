@@ -269,23 +269,19 @@ class V2RootResource(resource.Resource):
             if arg == b'order':
                 order = tuple([bytes2unicode(o) for o in reqArgs[arg]])
                 checkFields(order, True)
-                continue
             elif arg == b'field':
                 fields = reqArgs[arg]
                 checkFields(fields, False)
-                continue
             elif arg == b'limit':
                 try:
                     limit = int(reqArgs[arg][0])
                 except Exception:
                     raise BadRequest('invalid limit')
-                continue
             elif arg == b'offset':
                 try:
                     offset = int(reqArgs[arg][0])
                 except Exception:
                     raise BadRequest('invalid offset')
-                continue
             elif arg == b'property':
                 try:
                     props = []
@@ -298,7 +294,6 @@ class V2RootResource(resource.Resource):
                     raise BadRequest(
                         'invalid property value for {}'.format(arg))
                 properties.append(resultspec.Property(arg, 'eq', props))
-                continue
             elif argStr in entityType.fieldNames:
                 field = entityType.fields[argStr]
                 try:
@@ -308,7 +303,6 @@ class V2RootResource(resource.Resource):
                         'invalid filter value for {}'.format(argStr))
 
                 filters.append(resultspec.Filter(argStr, 'eq', values))
-                continue
             elif '__' in argStr:
                 field, op = argStr.rsplit('__', 1)
                 args = reqArgs[arg]
@@ -324,9 +318,9 @@ class V2RootResource(resource.Resource):
                         raise BadRequest(
                             'invalid filter value for {}'.format(argStr))
                     filters.append(resultspec.Filter(field, op, values))
-                    continue
-            raise BadRequest(
-                "unrecognized query parameter '{}'".format(argStr))
+            else:
+                raise BadRequest(
+                    "unrecognized query parameter '{}'".format(argStr))
 
         # if ordering or filtering is on a field that's not in fields, bail out
         if fields:

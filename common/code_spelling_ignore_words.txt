@@ -80,6 +80,7 @@ atm
 atomicity
 attachscheduler
 attr
+attrs
 attributeerror
 aug
 auth

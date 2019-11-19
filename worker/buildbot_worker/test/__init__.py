@@ -60,7 +60,7 @@ __all__ = []
 # import mock so we bail out early if it's not installed
 try:
     import mock
-    mock = mock
+    [mock]
 except ImportError:
     raise ImportError("Buildbot tests require the 'mock' module; "
                       "try 'pip install mock'")

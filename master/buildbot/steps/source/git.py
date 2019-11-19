@@ -72,7 +72,7 @@ class Git(Source, GitStepMixin):
                    "codebase", "mode", "method", "origin"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
-                 reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
+                 reference=None, submodules=False, shallow=False, progress=True, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
                  origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, **kwargs):
 
@@ -81,7 +81,6 @@ class Git(Source, GitStepMixin):
 
         self.branch = branch
         self.method = method
-        self.prog = progress
         self.repourl = repourl
         self.reference = reference
         self.retryFetch = retryFetch
@@ -89,6 +88,7 @@ class Git(Source, GitStepMixin):
         self.shallow = shallow
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
+        self.prog = progress
         self.getDescription = getDescription
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
@@ -325,7 +325,10 @@ class Git(Source, GitStepMixin):
             # long fetches killed due to lack of output, but only works
             # with Git 1.7.2 or later.
             if self.prog:
-                command.append('--progress')
+                if self.supportsProgress:
+                    command.append('--progress')
+                else:
+                    print("Git versions < 1.7.2 don't support progress")
 
             yield self._dovccmd(command)
 
@@ -383,7 +386,10 @@ class Git(Source, GitStepMixin):
         command += [self.repourl, '.']
 
         if self.prog:
-            command.append('--progress')
+            if self.supportsProgress:
+                command.append('--progress')
+            else:
+                print("Git versions < 1.7.2 don't support progress")
         if self.retry:
             abandonOnFailure = (self.retry[1] <= 0)
         else:
@@ -684,7 +690,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     renderables = ['paths', 'messages']
 
     def __init__(self, workdir=None, paths=None, messages=None, env=None,
-                 timeout=20 * 60, logEnviron=True,
+                 timeout=20 * 60, logEnviron=True, emptyCommits='disallow',
                  config=None, **kwargs):
 
         self.workdir = workdir
@@ -694,6 +700,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.timeout = timeout
         self.logEnviron = logEnviron
         self.config = config
+        self.emptyCommits = emptyCommits
         # The repourl, sshPrivateKey and sshHostKey attributes are required by
         # GitStepMixin, but aren't needed by git add and commit operations
         self.repourl = " "
@@ -716,6 +723,10 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         if not isinstance(self.paths, list):
             bbconfig.error('GitCommit: paths must be a list')
+
+        if self.emptyCommits not in ('disallow', 'create-empty-commit', 'ignore'):
+            bbconfig.error('GitCommit: emptyCommits must be one of "disallow", '
+                           '"create-empty-commit" and "ignore"')
 
     @defer.inlineCallbacks
     def run(self):
@@ -741,11 +752,29 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
             raise buildstep.BuildStepFailed
 
     @defer.inlineCallbacks
+    def _checkHasSomethingToCommit(self):
+        cmd = ['status', '--porcelain=v1']
+        stdout = yield self._dovccmd(cmd, collectStdout=True)
+
+        for line in stdout.splitlines(False):
+            if line[0] in 'MADRCU':
+                return True
+        return False
+
+    @defer.inlineCallbacks
     def _doCommit(self):
+        if self.emptyCommits == 'ignore':
+            has_commit = yield self._checkHasSomethingToCommit()
+            if not has_commit:
+                return 0
+
         cmd = ['commit']
 
         for message in self.messages:
             cmd.extend(['-m', message])
+
+        if self.emptyCommits == 'create-empty-commit':
+            cmd.extend(['--allow-empty'])
 
         ret = yield self._dovccmd(cmd)
         return ret

@@ -68,6 +68,7 @@ class GitMixin:
 
         self.gitInstalled = False
         self.supportsBranch = False
+        self.supportsProgress = False
         self.supportsSubmoduleForce = False
         self.supportsSubmoduleCheckout = False
         self.supportsSshPrivateKeyAsEnvOption = False
@@ -86,6 +87,8 @@ class GitMixin:
         self.gitInstalled = True
         if LooseVersion(version) >= LooseVersion("1.6.5"):
             self.supportsBranch = True
+        if LooseVersion(version) >= LooseVersion("1.7.2"):
+            self.supportsProgress = True
         if LooseVersion(version) >= LooseVersion("1.7.6"):
             self.supportsSubmoduleForce = True
         if LooseVersion(version) >= LooseVersion("1.7.8"):

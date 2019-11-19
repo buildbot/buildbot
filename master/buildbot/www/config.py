@@ -61,7 +61,7 @@ class IndexResource(resource.Resource):
         res = {}
         allowed_ext = [".html"]
         try:
-            import pyjade
+            import pyjade   # pylint: disable=import-outside-toplevel
             allowed_ext.append(".jade")
         except ImportError:  # pragma: no cover
             log.msg("pyjade not installed. Ignoring .jade files from %s" %
@@ -91,15 +91,15 @@ class IndexResource(resource.Resource):
                         compiler = pyjade.ext.html.Compiler(
                             block, pretty=False)
                         html = compiler.compile()
-                res[template_name % (basename,)] = json.dumps(html)
+                res[template_name % (basename,)] = html
 
         return res
 
     @staticmethod
     def getEnvironmentVersions():
-        import sys
-        import twisted
-        from buildbot import version as bbversion
+        import sys   # pylint: disable=import-outside-toplevel
+        import twisted   # pylint: disable=import-outside-toplevel
+        from buildbot import version as bbversion   # pylint: disable=import-outside-toplevel
 
         pyversion = '.'.join(map(str, sys.version_info[:3]))
 

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import operator
+import posixpath
 
 from mock import Mock
 from mock import call
@@ -369,7 +370,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         worker_lock_1.release(workerforbuilder1, counting_access)
 
     def testBuilddirPropType(self):
-        import posixpath
 
         b = self.build
 

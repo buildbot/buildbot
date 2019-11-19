@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+import unittest
 from builtins import int
 
 from twisted.python import util
@@ -36,8 +38,6 @@ def onlyOnce(fn):
 
 @onlyOnce
 def patch_testcase_timeout():
-    import unittest
-    import os
     # any test that should take more than 5 second should be annotated so.
     unittest.TestCase.timeout = 5
 
@@ -58,7 +58,7 @@ def patch_mysqlclient_warnings():
     try:
         from _mysql_exceptions import Warning
         # MySQLdb.compat is only present in mysqlclient
-        import MySQLdb.compat  # noqa pylint: disable=unused-import
+        import MySQLdb.compat  # noqa pylint: disable=unused-import,import-outside-toplevel
     except ImportError:
         return
     # workaround for https://twistedmatrix.com/trac/ticket/9005
