@@ -12,5 +12,6 @@ Dockerfile.py3:
 	sed -e "s|python-dev|python3-dev|g" \
             -e "s|python-setuptool|python3-setuptool|g" \
             -e "s|pip install|pip3 install|g" \
-            -e "s|easy_install|easy_install3|g" \
+            -e "s|python-pip|python3-pip|g" \
+            -e "s|pip --no-cache-dir|pip3 --no-cache-dir|g" \
             Dockerfile >> Dockerfile.py3
