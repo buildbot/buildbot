@@ -31,11 +31,11 @@ class Api:
     app = Klein()
 
     default = {  # note that these defaults are documented in configuration/www.rst
-        "left_pad"  : 5,
+        "left_pad": 5,
         "left_text": "Build Status",
         "left_color": "#555",
-        "right_pad" : 5,
-        "border_radius" : 5,
+        "right_pad": 5,
+        "border_radius": 5,
         "style": "plastic",
         "template_name": "{style}.svg.j2",
         "font_face": "DejaVu Sans",
