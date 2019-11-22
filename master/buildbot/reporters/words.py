@@ -35,6 +35,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
@@ -1224,6 +1225,7 @@ class StatusBot(service.AsyncMultiService):
         return ["TODO"]
 
     results_descriptions = {
+        SKIPPED: "was skipped",
         SUCCESS: "completed successfully",
         WARNINGS: "completed with warnings",
         FAILURE: "failed",
@@ -1233,7 +1235,7 @@ class StatusBot(service.AsyncMultiService):
     }
 
     results_severity = (
-        SUCCESS, WARNINGS, FAILURE, CANCELLED, EXCEPTION
+        SKIPPED, SUCCESS, WARNINGS, FAILURE, CANCELLED, EXCEPTION
     )
 
     def format_build_status(self, build, short=False):

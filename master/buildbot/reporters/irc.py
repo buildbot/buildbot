@@ -25,6 +25,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters.words import Channel
@@ -350,6 +351,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         SUCCESS: 'GREEN',
         WARNINGS: 'YELLOW',
         FAILURE: 'RED',
+        SKIPPED: 'ROYAL_BLUE',
         EXCEPTION: 'PURPLE',
         RETRY: 'AQUA_LIGHT',
         CANCELLED: 'PINK',
@@ -359,6 +361,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         SUCCESS: ", Success",
         WARNINGS: ", Warnings",
         FAILURE: ", Failure",
+        SKIPPED: ", Skipped",
         EXCEPTION: ", Exception",
         RETRY: ", Retry",
         CANCELLED: ", Cancelled",

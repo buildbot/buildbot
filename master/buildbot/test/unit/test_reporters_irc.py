@@ -24,6 +24,7 @@ from twisted.trial import unittest
 
 from buildbot.config import ConfigErrors
 from buildbot.process.properties import Interpolate
+from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import irc
 from buildbot.reporters import words
@@ -398,8 +399,22 @@ class TestIrcStatusBot(unittest.TestCase):
     def test_format_build_status_colors(self):
         b = self.makeBot()
         b.useColors = True
-        self.assertEquals(b.format_build_status({'results': SUCCESS}),
-                          "\x033completed successfully\x0f")
+        self.assertEqual(b.format_build_status({'results': SUCCESS}),
+                         "\x033completed successfully\x0f")
+        colors_used = set()
+        status_texts = set()
+        for result in ALL_RESULTS:
+            status = b.format_build_status({'results': result})
+            self.assertTrue(status.startswith('\x03'))
+            self.assertTrue(status.endswith('\x0f'))
+            for i, c in enumerate(status[1:-1], start=2):
+                if c.isnumeric():
+                    continue
+                break
+            colors_used.add(status[1:i])
+            status_texts.add(status[i:-1])
+        self.assertEqual(len(colors_used), len(ALL_RESULTS))
+        self.assertEqual(len(status_texts), len(ALL_RESULTS))
 
     def test_getNames(self):
         b = self.makeBot()
