@@ -908,7 +908,7 @@ In this case, you can look at the source code for detailed examples on how to wr
 
 Role matchers
 +++++++++++++
-Endpoint matchers are responsible for creating rules to match people and grant them roles.
+Role matchers are responsible for creating rules to match people and grant them roles.
 You can grant roles from groups information provided by the Auth plugins, or if you prefer directly to people's email.
 
 
