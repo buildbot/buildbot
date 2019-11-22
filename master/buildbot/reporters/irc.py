@@ -61,7 +61,7 @@ _irc_colors = (
     'TEAL',
     'AQUA_LIGHT',
     'ROYAL_BLUE',
-    'HOT_PINK',
+    'PINK',
     'DARK_GRAY',
     'LIGHT_GRAY'
 )
