@@ -968,6 +968,11 @@ angular@1.7.8:
   resolved "https://registry.yarnpkg.com/angular/-/angular-1.7.8.tgz#b77ede272ce1b261e3be30c1451a0b346905a3c9"
   integrity sha512-wtef/y4COxM7ZVhddd7JtAAhyYObq9YXKar9tsW7558BImeVYteJiTxCKeJOL45lJ/+7B4wrAC49j8gTFYEthg==
 
+angular@1.7.9:
+  version "1.7.9"
+  resolved "https://registry.yarnpkg.com/angular/-/angular-1.7.9.tgz#e52616e8701c17724c3c238cfe4f9446fd570bc4"
+  integrity sha512-5se7ZpcOtu0MBFlzGv5dsM1quQDoDeUTwZrWjGtTNA7O88cD8TEk5IEKCTDa3uECV9XnvKREVUr7du1ACiWGFQ==
+
 ansi-colors@^3.0.0:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-3.2.4.tgz#e3a3da4bfbae6c86a9c285625de124a234026fbf"
@@ -1555,12 +1560,47 @@ buffer@^4.3.0:
     isarray "^1.0.0"
 
 "buildbot-build-common@link:../build_common":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
+  dependencies:
+    "@babel/core" "^7.4.3"
+    "@babel/plugin-syntax-dynamic-import" "^7.2.0"
+    "@babel/plugin-transform-runtime" "^7.4.3"
+    "@babel/preset-env" "^7.4.3"
+    "@babel/runtime" "^7.4.3"
+    autoprefixer "^9.5.1"
+    babel-loader "^8.0.5"
+    css-loader "^2.1.1"
+    file-loader "^3.0.1"
+    html-webpack-plugin "^3.2.0"
+    import-glob-loader "^1.1.0"
+    istanbul-instrumenter-loader "^3.0.1"
+    jasmine-core "^3.4.0"
+    karma "^4.1.0"
+    karma-chrome-launcher "^2.2.0"
+    karma-coverage "^1.1.2"
+    karma-jasmine "^2.0.1"
+    karma-sourcemap-loader "^0.3.7"
+    karma-spec-reporter "^0.0.32"
+    karma-webpack "^3.0.5"
+    less "^3.9.0"
+    less-loader "^5.0.0"
+    mini-css-extract-plugin "^0.6.0"
+    node-libs-browser "^2.2.0"
+    null-loader "^1.0.0"
+    postcss-loader "^3.0.0"
+    pug "^2.0.3"
+    raw-loader "^2.0.0"
+    style-loader "^0.23.1"
+    webpack "^4.30.0"
+    webpack-cli "^3.3.1"
+    webpack-dev-server "^3.3.1"
+    webpack-fix-style-only-entries "^0.2.1"
+    webpack-shell-plugin "^0.5.0"
 
 "buildbot-data-js@link:../data_module":
-  version "0.0.0"
-  uid ""
+  version "3.0.1"
+  dependencies:
+    angular "1.7.8"
 
 builtin-status-codes@^3.0.0:
   version "3.0.0"
@@ -3233,8 +3273,14 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.15, graceful-fs@^4.1.2, graceful-fs@^4.1.6
   integrity sha512-IItsdsea19BoLC7ELy13q1iJFNmd7ofZH5+X/pJr90/nRoPEX0DJo1dHDbgtYWOhJhcCgMDTOw84RZ72q6lB+Q==
 
 "guanlecoja-ui@link:../guanlecoja-ui":
-  version "0.0.0"
-  uid ""
+  version "2.0.0"
+  dependencies:
+    "@uirouter/angularjs" "^1.0.15"
+    angular "1.7.8"
+    angular-animate "1.7.8"
+    angular-ui-bootstrap "^2.5.6"
+    jquery "^3.4.0"
+    lodash "^4.17.11"
 
 handle-thing@^2.0.0:
   version "2.0.0"
