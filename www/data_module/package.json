@@ -12,12 +12,12 @@
     "test-watch": "karma start --auto-watch --no-single-run"
   },
   "devDependencies": {
-    "angular-mocks": "1.7.8",
+    "angular-mocks": "^1.7.9",
     "buildbot-build-common": "link:../build_common",
     "rimraf": "^2.6.3"
   },
   "dependencies": {
-    "angular": "1.7.8"
+    "angular": "^1.7.9"
   },
   "license": "MIT"
 }
