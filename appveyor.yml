@@ -14,7 +14,6 @@ install:
   - "python -c \"import sys; print(sys.exec_prefix)\""
   - "python -c \"import sys; print(sys.executable)\""
   - "python -V -V"
-
   - "python -m pip install -U pip"
   - "python -m pip install -r requirements-ci.txt"
   # Twisted requires pywin32 on Windows in order to spawn processes.
