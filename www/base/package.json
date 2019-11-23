@@ -12,7 +12,7 @@
         "test-watch": "karma start --auto-watch --no-single-run"
     },
     "devDependencies": {
-        "angular-mocks": "1.7.8",
+        "angular-mocks": "^1.7.9",
         "buildbot-build-common": "link:../build_common",
         "copy-webpack-plugin": "^5.0.3",
         "lodash": "^4.17.11",
@@ -22,8 +22,8 @@
     },
     "dependencies": {
         "@uirouter/angularjs": "^1.0.22",
-        "angular": "1.7.8",
-        "angular-animate": "1.7.8",
+        "angular": "^1.7.9",
+        "angular-animate": "^1.7.9",
         "angular-bootstrap-multiselect": "^1.1.11",
         "angular-recursion": "^1.0.5",
         "angular-ui-bootstrap": "^2.5.6",
