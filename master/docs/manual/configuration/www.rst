@@ -278,9 +278,12 @@ The default templates are very much configurable via the following options.
 .. code-block:: python
 
     {
+        "left_pad"  : 5,  
         "left_text": "Build Status",  # text on the left part of the image
         "left_color": "#555",  # color of the left part of the image
-        "style": "flat",  # style of the template availables are "flat", "flat-square", "plastic"
+        "right_pad" : 5,
+        "border_radius" : 5, #Border Radius on flat and plastic badges
+        "style": "plastic",  # style of the template availables are "flat", "flat-square", "plastic"
         "template_name": "{style}.svg.j2",  # name of the template
         "font_face": "DejaVu Sans",
         "font_size": 11,
