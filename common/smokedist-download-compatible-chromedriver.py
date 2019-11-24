@@ -2,9 +2,10 @@
 
 import argparse
 import re
+from subprocess import DEVNULL
 from subprocess import check_call
 from subprocess import check_output
-from subprocess import DEVNULL
+
 
 def parse_chrome_major_version(output):
     for line in output.splitlines():
