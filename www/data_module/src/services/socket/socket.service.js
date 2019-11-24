@@ -7,7 +7,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 class Socket {
-    constructor($log, $q, $rootScope, $location, Stream, webSocketService) {
+    constructor($log, $q, $rootScope, $location, Stream, webSocketService, $timeout) {
         let SocketService;
         return new ((SocketService = (function() {
             SocketService = class SocketService {
@@ -79,9 +79,14 @@ class Socket {
                         // if the WebSocket is not open yet, add the data to the queue
                         this.queue.push(data);
                     }
-
+                    // socket is not watched by protractor, so we need to
+                    // create a timeout while we are using the socket so that protractor waits for it
+                    const to = $timeout( ()=> {}, 20000)
                     // return promise, which will be resolved once a response message has the same id
-                    return this.deferred[id].promise;
+                    return this.deferred[id].promise.then((r) => {
+                        $timeout.cancel(to);
+                        return r;
+                    })
                 }
 
                 flush() {
@@ -147,4 +152,4 @@ class Socket {
 
 
 angular.module('bbData')
-.service('socketService', ['$log', '$q', '$rootScope', '$location', 'Stream', 'webSocketService', Socket]);
+.service('socketService', ['$log', '$q', '$rootScope', '$location', 'Stream', 'webSocketService', '$timeout', Socket]);
