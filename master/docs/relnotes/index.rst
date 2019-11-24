@@ -10,6 +10,20 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.5.1`` ( ``2019-11-24`` )
+=====================================
+
+Bug fixes
+---------
+
+- Updates supported browser list so that Ubuntu Chromium will not always be flagged as out of date.
+- Fixed IRC notification color of cancelled builds.
+- Updated url in description of worker service for Windows (no functionality impact).
+- Updated templates of www-badges to support additional padding configuration (:issue:`5079`)
+- Fix issue with custom_templates loading path (:issue:`5035`)
+- Fix url display when step do not contain any logs (:issue:`5047`)
+
+
 Buildbot ``2.5.0`` ( ``2019-10-17`` )
 =====================================
 
