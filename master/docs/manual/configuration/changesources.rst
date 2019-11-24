@@ -1119,8 +1119,8 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
     parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
 
 ``encoding``
-    Set encoding will be used to parse author's name and commit message.
-    Default encoding is ``'utf-8'``.
+    This parameter is deprecated and has no effects.
+    Author's name and commit message are always parsed in ``'utf-8'``.
 
 A minimal configuration for the Bitbucket pull request poller might look like this:
 
