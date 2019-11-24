@@ -2,6 +2,7 @@
 
 import argparse
 import re
+from subprocess import DEVNULL
 from subprocess import check_call
 from subprocess import check_output
 
@@ -20,9 +21,9 @@ def parse_chrome_major_version(output):
 def get_chrome_version(browsers):
     for browser in browsers:
         try:
-            # FIXME: Use subprocess.DEVNULL on python3
-            output = check_output([browser + ' --version'],
-                                  stderr=None, shell=True)
+            print([browser, ' --version'])
+            output = check_output([browser, ' --version'],
+                                  stderr=DEVNULL)
             output = output.decode('utf-8', errors='ignore')
 
             version = parse_chrome_major_version(output)

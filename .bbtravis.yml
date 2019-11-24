@@ -191,13 +191,13 @@ script:
     condition: TESTS == "smokes"
     cmd: make tarballs
 
-  # - title: protractor tests
-  #   condition: TESTS == "smokes"
-  #   cmd: ./common/smokedist.sh whl
+  - title: protractor tests
+    condition: TESTS == "smokes"
+    cmd: ./common/smokedist.sh whl
 
-  # - title: tarballs protractor tests
-  #   condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
-  #   cmd: ./common/smokedist.sh tar.gz
+  - title: tarballs protractor tests
+    condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
+    cmd: ./common/smokedist.sh tar.gz
 
 notifications:
   email: false

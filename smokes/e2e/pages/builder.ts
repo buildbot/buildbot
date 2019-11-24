@@ -56,14 +56,19 @@ export class BuilderPage extends BasePage {
             return 0;
         }
         let numberstr = await elements[0].getText();
+        if (numberstr == "SUCCESS") {
+            await browser.actions().mouseMove(element(by.css('.navbar-brand'))).perform();
+            numberstr = await elements[0].getText();
+        }
         return +numberstr;
     }
 
     async waitNextBuildFinished(reference) {
         const self = this;
-        const buildCountIncrement = () =>
-            self.getLastSuccessBuildNumber().then(currentBuildCount => currentBuildCount === (reference + 1))
-        ;
+        async function buildCountIncrement() {
+            let currentBuildCount = await self.getLastSuccessBuildNumber();
+            return currentBuildCount == (reference + 1);
+        }
         await browser.wait(buildCountIncrement, 20000);
     }
 

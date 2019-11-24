@@ -41,6 +41,6 @@ else
     # manual mode: install locally
     yarn install
     ../common/smokedist-download-compatible-chromedriver.py \
-        ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser
+        ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome
     ./node_modules/protractor/bin/protractor protractor.conf.js
 fi
