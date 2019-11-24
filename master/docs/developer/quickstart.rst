@@ -48,6 +48,15 @@ Following is a quick shell session to put you on the right track, including runn
     # run only one test module
     trial buildbot.test.unit.test_reporters_mail
 
+    # you can also skip the virtualenv activation using make
+    make trial
+
+    # and pass options using TRIALOPTS
+    make trial TRIALOPTS='-j16 buildbot'
+
+    # or test with a specific Python version
+    make trial VENV_PY_VERSION=/usr/local/bin/python3
+
 
 Create a JavaScript Frontend Environment
 ----------------------------------------
