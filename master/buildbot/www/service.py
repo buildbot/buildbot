@@ -151,6 +151,10 @@ class BuildbotSite(server.Site):
         return LogFile.fromFullPath(
             path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles)
 
+    def getResourceFor(self, request):
+        request.responseHeaders.removeHeader('Server')
+        return server.Site.getResourceFor(self, request)
+
     def setSessionSecret(self, secret):
         self.session_secret = secret
 
