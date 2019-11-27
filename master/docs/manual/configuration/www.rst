@@ -37,6 +37,13 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'plugins': {'waterfall_view': True}
         }
 
+``default_page``
+    Configure the default landing page of the web server, for example to forward directly to another plugin, for example:
+
+    .. code-block:: python
+
+        c['www']['default_page'] = 'console'
+
 ``debug``
     If true, then debugging information will be output to the browser.
     This is best set to false (the default) on production systems, to avoid the possibility of information leakage.
