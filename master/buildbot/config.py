@@ -758,6 +758,7 @@ class MasterConfig(util.ComparableMixin):
                    'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
                    'logRotateLength', 'maxRotatedFiles', 'versions',
                    'change_hook_dialects', 'change_hook_auth',
+                   'default_page',
                    'custom_templates_dir', 'cookie_expiration_time',
                    'ui_default_config'}
         unknown = set(list(www_cfg)) - allowed
