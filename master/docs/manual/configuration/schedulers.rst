@@ -1184,7 +1184,7 @@ NestedParameter
 
 .. code-block:: python
 
-    NestedParameter(name="options", label="Build options" layout="vertical", fields=[...]),
+    NestedParameter(name="options", label="Build options", layout="vertical", fields=[...]),
 
 This parameter type is a special parameter which contains other parameters.
 This can be used to group a set of parameters together, and define the layout of your form.
