@@ -76,19 +76,22 @@ class BaseLock:
         if count > old_max_count:
             self._tryWakeUp()
 
+    def _find_waiting(self, requester):
+        for idx, waiter in enumerate(self.waiting):
+            if waiter[0] is requester:
+                return idx
+        return None
+
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
         debuglog("%s isAvailable(%s, %s): self.owners=%r"
                  % (self, requester, access, self.owners))
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
-        # Find all waiters ahead of the requester in the wait queue
-        for idx, waiter in enumerate(self.waiting):
-            if waiter[0] is requester:
-                w_index = idx
-                break
-        else:
+        w_index = self._find_waiting(requester)
+        if w_index is None:
             w_index = len(self.waiting)
+
         ahead = self.waiting[:w_index]
 
         if access.mode == 'counting':
@@ -191,10 +194,8 @@ class BaseLock:
         d = defer.Deferred()
 
         # Are we already in the wait queue?
-        w_indexes = [i for i, w in enumerate(self.waiting) if w[0] is owner]
-        if w_indexes:
-            # note that len(w_indexes) can't be larger than 1
-            w_index = w_indexes[0]
+        w_index = self._find_waiting(owner)
+        if w_index is not None:
             _, _, old_d = self.waiting[w_index]
             assert old_d is None, "waitUntilMaybeAvailable() must not be called again before the " \
                                   "previous deferred fired"
