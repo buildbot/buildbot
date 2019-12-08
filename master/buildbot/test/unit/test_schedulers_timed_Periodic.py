@@ -133,12 +133,13 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         d = sched.deactivate()
         return d
 
+    @defer.inlineCallbacks
     def test_start_build_error(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    periodicBuildTimer=10,
                                    firstBuildError=True)  # error during first build start
 
-        sched.activate()
+        yield sched.activate()
         self.reactor.advance(0)  # let it trigger the first (error) build
         while self.reactor.seconds() < 40:
             self.reactor.advance(1)
@@ -146,8 +147,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.state.get('last_build'), 40)
         self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
 
-        d = sched.deactivate()
-        return d
+        yield sched.deactivate()
 
     def test_iterations_stop_while_starting_build(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
