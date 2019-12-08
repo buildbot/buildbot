@@ -177,11 +177,12 @@ class BaseLock:
                 eventually(d.callback, self)
 
     def waitUntilMaybeAvailable(self, owner, access):
-        """Fire when the lock *might* be available. The caller will need to
-        check with isAvailable() when the deferred fires. This loose form is
-        used to avoid deadlocks. If we were interested in a stronger form,
-        this would be named 'waitUntilAvailable', and the deferred would fire
-        after the lock had been claimed.
+        """Fire when the lock *might* be available. The deferred may be fired spuriously and
+        the lock is not necessarily available, thus the caller will need to check with
+        isAvailable() when the deferred fires.
+
+        A single requester must not have more than one pending waitUntilMaybeAvailable() on a
+        single lock.
         """
         debuglog("%s waitUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
@@ -190,9 +191,14 @@ class BaseLock:
         d = defer.Deferred()
 
         # Are we already in the wait queue?
-        w = [i for i, w in enumerate(self.waiting) if w[0] is owner]
-        if w:
-            self.waiting[w[0]] = (owner, access, d)
+        w_indexes = [i for i, w in enumerate(self.waiting) if w[0] is owner]
+        if w_indexes:
+            # note that len(w_indexes) can't be larger than 1
+            w_index = w_indexes[0]
+            _, _, old_d = self.waiting[w_index]
+            assert old_d is None, "waitUntilMaybeAvailable() must not be called again before the " \
+                                  "previous deferred fired"
+            self.waiting[w_index] = (owner, access, d)
         else:
             self.waiting.append((owner, access, d))
         return d

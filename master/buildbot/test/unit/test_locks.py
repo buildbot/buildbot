@@ -208,6 +208,21 @@ class BaseLockTests(unittest.TestCase):
         lock.release(req_waiter1, access)
 
     @parameterized.expand(['counting', 'exclusive'])
+    def test_duplicate_wait_until_maybe_available_throws(self, mode):
+        req = Requester()
+        req_waiter = Requester()
+
+        lock = BaseLock('test', maxCount=1)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = mode
+
+        lock.claim(req, access)
+        lock.waitUntilMaybeAvailable(req_waiter, access)
+        with self.assertRaises(AssertionError):
+            lock.waitUntilMaybeAvailable(req_waiter, access)
+        lock.release(req, access)
+
+    @parameterized.expand(['counting', 'exclusive'])
     def test_stop_waiting_raises_after_release(self, mode):
         req = Requester()
         req_waiter = Requester()
