@@ -23,6 +23,10 @@ from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 
 
+class TestException(Exception):
+    pass
+
+
 class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     OBJECTID = 23
@@ -48,7 +52,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             # TODO: check branch
             isFirst = (self.events == [])
             if self.reactor.seconds() == 0 and firstBuildError:
-                1 / 0
+                raise TestException()
             self.events.append('B@%d' % self.reactor.seconds())
             if isFirst and firstBuildDuration:
                 d = defer.Deferred()
@@ -145,7 +149,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             self.reactor.advance(1)
         self.assertEqual(self.events, ['B@10', 'B@20', 'B@30', 'B@40'])
         self.assertEqual(self.state.get('last_build'), 40)
-        self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
+        self.assertEqual(1, len(self.flushLoggedErrors(TestException)))
 
         yield sched.deactivate()
 
