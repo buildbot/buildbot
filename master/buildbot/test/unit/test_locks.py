@@ -241,6 +241,42 @@ class BaseLockTests(unittest.TestCase):
         lock.release(req, access)
 
     @parameterized.expand(['counting', 'exclusive'])
+    def test_stop_waiting_fires_deferred_if_not_woken(self, mode):
+        req = Requester()
+        req_waiter = Requester()
+
+        lock = BaseLock('test', maxCount=1)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = mode
+
+        lock.claim(req, access)
+        d = lock.waitUntilMaybeAvailable(req_waiter, access)
+        lock.stopWaitingUntilAvailable(req_waiter, access, d)
+        self.assertTrue(d.called)
+
+        lock.release(req, access)
+
+    @parameterized.expand(['counting', 'exclusive'])
+    @defer.inlineCallbacks
+    def test_stop_waiting_does_not_fire_deferred_if_already_woken(self, mode):
+        req = Requester()
+        req_waiter = Requester()
+
+        lock = BaseLock('test', maxCount=1)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = mode
+
+        lock.claim(req, access)
+        d = lock.waitUntilMaybeAvailable(req_waiter, access)
+        lock.release(req, access)
+        yield flushEventualQueue()
+        self.assertTrue(d.called)
+
+        # note that if the function calls the deferred again, an exception would be thrown from
+        # inside Twisted.
+        lock.stopWaitingUntilAvailable(req_waiter, access, d)
+
+    @parameterized.expand(['counting', 'exclusive'])
     def test_stop_waiting_does_not_raise_after_release(self, mode):
         req = Requester()
         req_waiter = Requester()
