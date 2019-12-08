@@ -223,7 +223,25 @@ class BaseLockTests(unittest.TestCase):
         lock.release(req, access)
 
     @parameterized.expand(['counting', 'exclusive'])
-    def test_stop_waiting_raises_after_release(self, mode):
+    def test_stop_waiting_ensures_deferred_was_previous_result_of_wait(self, mode):
+        req = Requester()
+        req_waiter = Requester()
+
+        lock = BaseLock('test', maxCount=1)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = mode
+
+        lock.claim(req, access)
+
+        lock.waitUntilMaybeAvailable(req_waiter, access)
+        with self.assertRaises(AssertionError):
+            wrong_d = defer.Deferred()
+            lock.stopWaitingUntilAvailable(req_waiter, access, wrong_d)
+
+        lock.release(req, access)
+
+    @parameterized.expand(['counting', 'exclusive'])
+    def test_stop_waiting_does_not_raise_after_release(self, mode):
         req = Requester()
         req_waiter = Requester()
 
@@ -237,8 +255,7 @@ class BaseLockTests(unittest.TestCase):
         self.assertFalse(lock.isAvailable(req, access))
         self.assertTrue(lock.isAvailable(req_waiter, access))
 
-        with self.assertRaises(AssertionError):
-            lock.stopWaitingUntilAvailable(req_waiter, access, d)
+        lock.stopWaitingUntilAvailable(req_waiter, access, d)
 
         lock.claim(req_waiter, access)
         lock.release(req_waiter, access)

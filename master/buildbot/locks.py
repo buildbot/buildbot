@@ -205,10 +205,18 @@ class BaseLock:
         return d
 
     def stopWaitingUntilAvailable(self, owner, access, d):
+        """ Stop waiting for lock to become available. `d` must be the result of a previous call
+            to `waitUntilMaybeAvailable()`.
+        """
         debuglog("%s stopWaitingUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
-        assert (owner, access, d) in self.waiting
-        self.waiting = [w for w in self.waiting if w[0] is not owner]
+
+        w_index = self._find_waiting(owner)
+        assert w_index is not None, "The owner was not waiting for the lock"
+        _, _, old_d = self.waiting[w_index]
+        if old_d is not None:
+            assert d is old_d, "The supplied deferred must be a result of waitUntilMaybeAvailable()"
+            del self.waiting[w_index]
 
     def isOwner(self, owner, access):
         return (owner, access) in self.owners
