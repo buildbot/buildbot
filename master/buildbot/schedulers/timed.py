@@ -206,6 +206,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         "Similar to util.now, but patchable by tests"
         return util.now(self._reactor)
 
+    @defer.inlineCallbacks
     def _scheduleNextBuild_locked(self):
         # clear out the existing timer
         if self.actuateAtTimer:
@@ -213,23 +214,23 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         self.actuateAtTimer = None
 
         # calculate the new time
-        d = self.getNextBuildTime(self.lastActuated)
+        actuateAt = yield self.getNextBuildTime(self.lastActuated)
 
-        # set up the new timer
-        @d.addCallback
-        def set_timer(actuateAt):
+        if actuateAt is None:
+            self.actuateAt = None
+        else:
+            # set up the new timer
             now = self.now()
             self.actuateAt = max(actuateAt, now)
-            if actuateAt is not None:
-                untilNext = self.actuateAt - now
-                if untilNext == 0:
-                    log.msg(("%s scheduler <%s>: missed scheduled build time"
-                             " - building immediately") %
-                            (self.__class__.__name__, self.name))
-                self.actuateAtTimer = self._reactor.callLater(untilNext,
-                                                              self._actuate)
-        return d
+            untilNext = self.actuateAt - now
+            if untilNext == 0:
+                log.msg(("%s scheduler <%s>: missed scheduled build time"
+                         " - building immediately") %
+                        (self.__class__.__name__, self.name))
+            self.actuateAtTimer = self._reactor.callLater(untilNext,
+                                                          self._actuate)
 
+    @defer.inlineCallbacks
     def _actuate(self):
         # called from the timer when it's time to start a build
         self.actuateAtTimer = None
@@ -245,16 +246,15 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             self.actuateAt = None
             yield self.setState('last_build', self.lastActuated)
 
-            # start the build
-            yield self.startBuild()
-
-            # schedule the next build (noting the lock is already held)
-            yield self._scheduleNextBuild_locked()
-        d = self.actuationLock.run(set_state_and_start)
-
-        # this function can't return a deferred, so handle any failures via
-        # log.err
-        d.addErrback(log.err, 'while actuating')
+            try:
+                # start the build
+                yield self.startBuild()
+            except Exception as e:
+                log.err(e, 'while actuating')
+            finally:
+                # schedule the next build (noting the lock is already held)
+                yield self._scheduleNextBuild_locked()
+        yield self.actuationLock.run(set_state_and_start)
 
 
 class Periodic(Timed):
