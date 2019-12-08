@@ -329,6 +329,31 @@ class BaseLockTests(unittest.TestCase):
         self.assertTrue(lock.isAvailable(req_waiter2, access))
 
     @parameterized.expand(['counting', 'exclusive'])
+    @defer.inlineCallbacks
+    def test_stop_waiting_wakes_up_next_deferred_if_already_woken(self, mode):
+        req = Requester()
+        req_waiter1 = Requester()
+        req_waiter2 = Requester()
+
+        lock = BaseLock('test', maxCount=1)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = mode
+
+        lock.claim(req, access)
+        d1 = lock.waitUntilMaybeAvailable(req_waiter1, access)
+        d2 = lock.waitUntilMaybeAvailable(req_waiter2, access)
+        lock.release(req, access)
+        yield flushEventualQueue()
+
+        self.assertTrue(d1.called)
+        self.assertFalse(d2.called)
+
+        lock.stopWaitingUntilAvailable(req_waiter1, access, d1)
+
+        yield flushEventualQueue()
+        self.assertTrue(d2.called)
+
+    @parameterized.expand(['counting', 'exclusive'])
     def test_can_release_non_waited_lock(self, mode):
         req = Requester()
         req_not_waited = Requester()

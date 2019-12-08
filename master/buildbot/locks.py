@@ -186,6 +186,9 @@ class BaseLock:
 
         A single requester must not have more than one pending waitUntilMaybeAvailable() on a
         single lock.
+
+        If the lock is available, the caller must claim it. When the caller is no longer interested
+        into the lock it must call stopWaitingUntilAvailable().
         """
         debuglog("%s waitUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
@@ -219,6 +222,12 @@ class BaseLock:
             assert d is old_d, "The supplied deferred must be a result of waitUntilMaybeAvailable()"
             del self.waiting[w_index]
             d.callback(None)
+        else:
+            del self.waiting[w_index]
+            # if the callback has already been woken up, then it must schedule another waiter,
+            # otherwise we will have an available lock with a waiter list and no-one to wake the
+            # waiters up.
+            self._tryWakeUp()
 
     def isOwner(self, owner, access):
         return (owner, access) in self.owners
