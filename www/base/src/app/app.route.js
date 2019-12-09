@@ -6,7 +6,7 @@
 class Route {
     constructor($urlRouterProvider, glMenuServiceProvider, config) {
         let apptitle;
-        $urlRouterProvider.otherwise('/');
+        $urlRouterProvider.otherwise(config.default_page || '/');
         // the app title needs to be < 18 chars else the UI looks bad
         // we try to find best option
         if (config.title != null) {

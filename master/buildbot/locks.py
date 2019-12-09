@@ -76,19 +76,22 @@ class BaseLock:
         if count > old_max_count:
             self._tryWakeUp()
 
+    def _find_waiting(self, requester):
+        for idx, waiter in enumerate(self.waiting):
+            if waiter[0] is requester:
+                return idx
+        return None
+
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
         debuglog("%s isAvailable(%s, %s): self.owners=%r"
                  % (self, requester, access, self.owners))
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
-        # Find all waiters ahead of the requester in the wait queue
-        for idx, waiter in enumerate(self.waiting):
-            if waiter[0] is requester:
-                w_index = idx
-                break
-        else:
+        w_index = self._find_waiting(requester)
+        if w_index is None:
             w_index = len(self.waiting)
+
         ahead = self.waiting[:w_index]
 
         if access.mode == 'counting':
@@ -177,11 +180,15 @@ class BaseLock:
                 eventually(d.callback, self)
 
     def waitUntilMaybeAvailable(self, owner, access):
-        """Fire when the lock *might* be available. The caller will need to
-        check with isAvailable() when the deferred fires. This loose form is
-        used to avoid deadlocks. If we were interested in a stronger form,
-        this would be named 'waitUntilAvailable', and the deferred would fire
-        after the lock had been claimed.
+        """Fire when the lock *might* be available. The deferred may be fired spuriously and
+        the lock is not necessarily available, thus the caller will need to check with
+        isAvailable() when the deferred fires.
+
+        A single requester must not have more than one pending waitUntilMaybeAvailable() on a
+        single lock.
+
+        If the lock is available, the caller must claim it. When the caller is no longer interested
+        into the lock it must call stopWaitingUntilAvailable().
         """
         debuglog("%s waitUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
@@ -190,18 +197,37 @@ class BaseLock:
         d = defer.Deferred()
 
         # Are we already in the wait queue?
-        w = [i for i, w in enumerate(self.waiting) if w[0] is owner]
-        if w:
-            self.waiting[w[0]] = (owner, access, d)
+        w_index = self._find_waiting(owner)
+        if w_index is not None:
+            _, _, old_d = self.waiting[w_index]
+            assert old_d is None, "waitUntilMaybeAvailable() must not be called again before the " \
+                                  "previous deferred fired"
+            self.waiting[w_index] = (owner, access, d)
         else:
             self.waiting.append((owner, access, d))
         return d
 
     def stopWaitingUntilAvailable(self, owner, access, d):
+        """ Stop waiting for lock to become available. `d` must be the result of a previous call
+            to `waitUntilMaybeAvailable()`. If `d` has not been woken up already by calling its
+            callback, it will be done as part of this function
+        """
         debuglog("%s stopWaitingUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
-        assert (owner, access, d) in self.waiting
-        self.waiting = [w for w in self.waiting if w[0] is not owner]
+
+        w_index = self._find_waiting(owner)
+        assert w_index is not None, "The owner was not waiting for the lock"
+        _, _, old_d = self.waiting[w_index]
+        if old_d is not None:
+            assert d is old_d, "The supplied deferred must be a result of waitUntilMaybeAvailable()"
+            del self.waiting[w_index]
+            d.callback(None)
+        else:
+            del self.waiting[w_index]
+            # if the callback has already been woken up, then it must schedule another waiter,
+            # otherwise we will have an available lock with a waiter list and no-one to wake the
+            # waiters up.
+            self._tryWakeUp()
 
     def isOwner(self, owner, access):
         return (owner, access) in self.owners
