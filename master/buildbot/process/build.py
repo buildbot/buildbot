@@ -597,7 +597,6 @@ class Build(properties.PropertiesMixin):
             if self._acquiringLock:
                 lock, access, d = self._acquiringLock
                 lock.stopWaitingUntilAvailable(self, access, d)
-                d.callback(None)
 
     def controlStopBuild(self, key, params):
         return self.stopBuild(**params)
@@ -623,7 +622,6 @@ class Build(properties.PropertiesMixin):
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
-            d.callback(None)
 
     def allStepsDone(self):
         if self.results == FAILURE:

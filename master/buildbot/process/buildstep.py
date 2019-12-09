@@ -747,7 +747,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
-            d.callback(None)
 
         if self._waitingForLocks:
             self.addCompleteLog(
