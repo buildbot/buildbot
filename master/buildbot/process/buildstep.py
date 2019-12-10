@@ -643,6 +643,10 @@ class BuildStep(results.ResultComputingConfigMixin,
             return defer.succeed(None)
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
+            for waited_lock, _, _ in self._acquiringLocks:
+                if lock is waited_lock:
+                    continue
+
             if not lock.isAvailable(self, access):
                 self._waitingForLocks = True
                 log.msg("step %s waiting for lock %s" % (self, lock))
