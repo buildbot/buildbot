@@ -187,8 +187,10 @@ class BaseLock:
         A single requester must not have more than one pending waitUntilMaybeAvailable() on a
         single lock.
 
-        If the lock is available, the caller must claim it. When the caller is no longer interested
-        into the lock it must call stopWaitingUntilAvailable().
+        The caller must guarantee, that once the returned deferred is fired, either the lock is
+        checked for availability and claimed if it's available, or the it is indicated as no
+        longer interesting by calling stopWaitingUntilAvailable(). The caller does not need to
+        do this immediately after deferred is fired, an eventual execution is sufficient.
         """
         debuglog("%s waitUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
