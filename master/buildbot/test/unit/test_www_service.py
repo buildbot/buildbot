@@ -274,3 +274,20 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
                              algorithms=[service.SESSION_SECRET_ALGORITHM])
         self.assertEqual(decoded['user_info'], {'anonymous': True})
         self.assertIn('exp', decoded)
+
+    def test_absentServerHeader(self):
+
+        class FakeChannel:
+            transport = None
+
+            def isSecure(self):
+                return False
+
+            def getPeer(self):
+                return None
+
+            def getHost(self):
+                return None
+
+        request = Request(FakeChannel(), False)
+        self.assertEqual(request.responseHeaders.hasHeader('Server'), False)
