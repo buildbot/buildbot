@@ -322,7 +322,7 @@ class MailNotifier(NotifierBase):
     def sendMail(self, m, recipients):
         s = m.as_string()
         twlog.msg("sending mail ({} bytes) to".format(len(s)), recipients)
-        if self.dumpMailsToLog:
+        if self.dumpMailsToLog:  # pragma: no cover
             twlog.msg("mail data:\n{0}".format(s))
 
         result = defer.Deferred()
