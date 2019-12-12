@@ -93,7 +93,8 @@ class MailNotifier(NotifierBase):
                     addPatch=True, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
                     schedulers=None, branches=None,
-                    watchedWorkers='all', messageFormatterMissingWorker=None):
+                    watchedWorkers='all', messageFormatterMissingWorker=None,
+                    dumpMailsToLog=False):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
@@ -137,7 +138,8 @@ class MailNotifier(NotifierBase):
                         addPatch=True, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
                         schedulers=None, branches=None,
-                        watchedWorkers='all', messageFormatterMissingWorker=None):
+                        watchedWorkers='all', messageFormatterMissingWorker=None,
+                        dumpMailsToLog=False):
 
         super(MailNotifier, self).reconfigService(
             mode=mode, tags=tags, builders=builders,
@@ -161,6 +163,7 @@ class MailNotifier(NotifierBase):
         self.smtpUser = smtpUser
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
+        self.dumpMailsToLog = dumpMailsToLog
 
     def patch_to_attachment(self, patch, index):
         # patches are specifically converted to unicode before entering the db
@@ -319,6 +322,8 @@ class MailNotifier(NotifierBase):
     def sendMail(self, m, recipients):
         s = m.as_string()
         twlog.msg("sending mail ({} bytes) to".format(len(s)), recipients)
+        if self.dumpMailsToLog:
+            twlog.msg("mail data:\n{0}".format(s))
 
         result = defer.Deferred()
 
