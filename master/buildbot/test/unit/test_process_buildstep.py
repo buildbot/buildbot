@@ -16,6 +16,8 @@
 import mock
 
 from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.task import deferLater
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -199,6 +201,96 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
             locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_cancelWhileLocksAvailable(self):
+
+        def _owns_lock(step, lock):
+            access = [step_access for step_lock, step_access in step.locks if step_lock == lock][0]
+            return lock.isOwner(step, access)
+
+        def _lock_available(step, lock):
+            access = [step_access for step_lock, step_access in step.locks if step_lock == lock][0]
+            return lock.isAvailable(step, access)
+
+        lock1 = locks.MasterLock("masterlock1")
+        real_lock1 = locks.RealMasterLock(lock1)
+        lock2 = locks.MasterLock("masterlock2")
+        real_lock2 = locks.RealMasterLock(lock2)
+
+        stepa = self.setupStep(self.FakeBuildStep(locks=[
+            (real_lock1, locks.LockAccess(lock1, 'exclusive'))
+        ]))
+        stepb = self.setupStep(self.FakeBuildStep(locks=[
+            (real_lock2, locks.LockAccess(lock2, 'exclusive'))
+        ]))
+
+        stepc = self.setupStep(self.FakeBuildStep(locks=[
+            (real_lock1, locks.LockAccess(lock1, 'exclusive')),
+            (real_lock2, locks.LockAccess(lock2, 'exclusive'))
+        ]))
+        stepd = self.setupStep(self.FakeBuildStep(locks=[
+            (real_lock1, locks.LockAccess(lock1, 'exclusive')),
+            (real_lock2, locks.LockAccess(lock2, 'exclusive'))
+        ]))
+
+        # Start all the steps
+        yield stepa.acquireLocks()
+        yield stepb.acquireLocks()
+        c_d = stepc.acquireLocks()
+        d_d = stepd.acquireLocks()
+
+        # Check that step a and step b have the locks
+        self.assertTrue(_owns_lock(stepa, real_lock1))
+        self.assertTrue(_owns_lock(stepb, real_lock2))
+
+        # Check that step c does not have a lock
+        self.assertFalse(_owns_lock(stepc, real_lock1))
+        self.assertFalse(_owns_lock(stepc, real_lock2))
+
+        # Check that step d does not have a lock
+        self.assertFalse(_owns_lock(stepd, real_lock1))
+        self.assertFalse(_owns_lock(stepd, real_lock2))
+
+        # Release lock 1
+        stepa.releaseLocks()
+        yield deferLater(reactor, 0, lambda: None)
+
+        # lock1 should be available for step c
+        self.assertTrue(_lock_available(stepc, real_lock1))
+        self.assertFalse(_lock_available(stepc, real_lock2))
+        self.assertFalse(_lock_available(stepd, real_lock1))
+        self.assertFalse(_lock_available(stepd, real_lock2))
+
+        # Cancel step c
+        stepc.interrupt("cancelling")
+        yield c_d
+
+        # Check that step c does not have a lock
+        self.assertFalse(_owns_lock(stepc, real_lock1))
+        self.assertFalse(_owns_lock(stepc, real_lock2))
+
+        # No lock should be available for step c
+        self.assertFalse(_lock_available(stepc, real_lock1))
+        self.assertFalse(_lock_available(stepc, real_lock2))
+
+        # lock 1 should be available for step d
+        self.assertTrue(_lock_available(stepd, real_lock1))
+        self.assertFalse(_lock_available(stepd, real_lock2))
+
+        # Release lock 2
+        stepb.releaseLocks()
+
+        # Both locks should be available for step d
+        self.assertTrue(_lock_available(stepd, real_lock1))
+        self.assertTrue(_lock_available(stepd, real_lock2))
+
+        # So it should run
+        yield d_d
+
+        # Check that step d owns the locks
+        self.assertTrue(_owns_lock(stepd, real_lock1))
+        self.assertTrue(_owns_lock(stepd, real_lock2))
 
     @defer.inlineCallbacks
     def test_runCommand(self):

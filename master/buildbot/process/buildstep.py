@@ -355,7 +355,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             config.error("BuildStep updateBuildSummaryPolicy must be "
                          "a list of result ids or boolean but it is %r" %
                          (self.updateBuildSummaryPolicy,))
-        self._acquiringLock = None
+        self._acquiringLocks = []
         self.stopped = False
         self.master = None
         self.statistics = {}
@@ -637,23 +637,27 @@ class BuildStep(results.ResultComputingConfigMixin,
         return ok
 
     def acquireLocks(self, res=None):
-        self._acquiringLock = None
         if not self.locks:
             return defer.succeed(None)
         if self.stopped:
             return defer.succeed(None)
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
+            for waited_lock, _, _ in self._acquiringLocks:
+                if lock is waited_lock:
+                    continue
+
             if not lock.isAvailable(self, access):
                 self._waitingForLocks = True
                 log.msg("step %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
+                self._acquiringLocks.append((lock, access, d))
                 d.addCallback(self.acquireLocks)
-                self._acquiringLock = (lock, access, d)
                 return d
         # all locks are available, claim them all
         for lock, access in self.locks:
             lock.claim(self, access)
+        self._acquiringLocks = []
         self._waitingForLocks = False
         return defer.succeed(None)
 
@@ -744,9 +748,10 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def interrupt(self, reason):
         self.stopped = True
-        if self._acquiringLock:
-            lock, access, d = self._acquiringLock
-            lock.stopWaitingUntilAvailable(self, access, d)
+        if self._acquiringLocks:
+            for (lock, access, d) in self._acquiringLocks:
+                lock.stopWaitingUntilAvailable(self, access, d)
+            self._acquiringLocks = []
 
         if self._waitingForLocks:
             self.addCompleteLog(
