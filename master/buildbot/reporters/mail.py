@@ -15,6 +15,7 @@
 
 import re
 from email import charset
+from email.header import Header
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -301,6 +302,12 @@ class MailNotifier(NotifierBase):
 
         return recipients
 
+    def formatAddress(self, addr):
+        r = parseaddr(addr)
+        if not r[0]:
+            return r[1]
+        return "\"%s\" <%s>" % (Header(r[0], 'utf-8').encode(), r[1])
+
     def processRecipients(self, blamelist, m):
         to_recipients = set(blamelist)
         cc_recipients = set()
@@ -313,9 +320,9 @@ class MailNotifier(NotifierBase):
         else:
             to_recipients.update(self.extraRecipients)
 
-        m['To'] = ", ".join(sorted(to_recipients))
+        m['To'] = ", ".join([self.formatAddress(addr) for addr in sorted(to_recipients)])
         if cc_recipients:
-            m['CC'] = ", ".join(sorted(cc_recipients))
+            m['CC'] = ", ".join([self.formatAddress(addr) for addr in sorted(cc_recipients)])
 
         return list(to_recipients | cc_recipients)
 
