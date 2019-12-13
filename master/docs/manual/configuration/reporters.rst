@@ -329,6 +329,10 @@ MailNotifier arguments
     This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
     Templates can either be given inline (as string), or read from the filesystem.
 
+``dumpMailsToLog``
+    If set to ``True``, all completely formatted mails will be dumped to the log before being sent. This can be useful to debug problems with your mail provider.
+    Be sure to only turn this on if you really need it, especially if you attach logs to emails. This can dump sensitive information to logs, and make them very large.
+
 
 MessageFormatter arguments
 ++++++++++++++++++++++++++
