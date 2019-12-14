@@ -26,6 +26,7 @@ from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.status.worker import WorkerStatus
+from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
@@ -501,13 +502,10 @@ class AbstractWorker(service.BuildbotService):
         # When this Deferred fires, we'll be ready to accept the new worker
         return self._disconnect(self.conn)
 
+    @defer.inlineCallbacks
     def _disconnect(self, conn):
-        # all kinds of teardown will happen as a result of
-        # loseConnection(), but it happens after a reactor iteration or
-        # two. Hook the actual disconnect so we can know when it is safe
-        # to connect the new worker. We have to wait one additional
-        # iteration (with callLater(0)) to make sure the *other*
-        # notifyOnDisconnect handlers have had a chance to run.
+        # This function waits until the disconnection to happened and the disconnection
+        # notifications have been delivered and acted upon
         d = defer.Deferred()
 
         # notifyOnDisconnect runs the callback
@@ -516,8 +514,8 @@ class AbstractWorker(service.BuildbotService):
         conn.notifyOnDisconnect(_disconnected)
         conn.loseConnection()
         log.msg("waiting for worker to finish disconnecting")
-
-        return d
+        yield d
+        yield conn.waitForNotifyDisconnectedDelivered()
 
     @defer.inlineCallbacks
     def sendBuilderList(self):
