@@ -60,8 +60,7 @@ def patch_environ(case, key, value):
 
 
 class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
-                    db.RealDatabaseMixin, TestReactorMixin,
-                    unittest.TestCase):
+                    TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
@@ -124,11 +123,19 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         # complain
         self.flushLoggedErrors()
 
-    @flaky(bugNumber=4406, onPlatform='win32')
-    @defer.inlineCallbacks
-    def test_cleanup(self):
+    def assertDictAlmostEqual(self, d1, d2):
+        # The test shows each methods return different size
+        # but we still make a fuzzy comparison to resist if underlying libraries
+        # improve efficiency
+        self.assertEqual(len(d1), len(d2))
+        for k in d2.keys():
+            self.assertApproximates(d1[k], d2[k], 10)
 
-        # we reuse RealDatabaseMixin to setup the db
+class TestCleanupDbRealDb(db.RealDatabaseMixin, TestCleanupDb):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        super().setUp()
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
                                                   'workers'])
@@ -138,6 +145,13 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         self.db.setServiceParent(master)
         self.db.pool = self.db_pool
 
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tearDownRealDatabase()
+
+    @flaky(bugNumber=4406, onPlatform='win32')
+    @defer.inlineCallbacks
+    def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
         yield self.insertTestData(test_db_logs.Tests.backgroundData)
 
@@ -173,11 +187,3 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
         self.assertDictAlmostEqual(
             lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})
-
-    def assertDictAlmostEqual(self, d1, d2):
-        # The test shows each methods return different size
-        # but we still make a fuzzy comparison to resist if underlying libraries
-        # improve efficiency
-        self.assertEqual(len(d1), len(d2))
-        for k in d2.keys():
-            self.assertApproximates(d1[k], d2[k], 10)

@@ -80,6 +80,10 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
         # as we will open the db twice, we can't use in memory sqlite
         yield self.setUpRealDatabase(table_names=[], sqlite_memory=False)
 
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tearDownRealDatabase()
+
     def createDbConfig(self, db_url=None):
         return dbconfig.DbConfig({"db_url": db_url or self.db_url}, self.basedir)
 
