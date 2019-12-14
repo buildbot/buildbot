@@ -27,7 +27,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-from buildbot.test.util.decorators import flaky
 from buildbot.test.util.misc import TestReactorMixin
 
 from . import test_db_logs
@@ -131,6 +130,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         for k in d2.keys():
             self.assertApproximates(d1[k], d2[k], 10)
 
+
 class TestCleanupDbRealDb(db.RealDatabaseMixin, TestCleanupDb):
 
     @defer.inlineCallbacks
@@ -149,7 +149,6 @@ class TestCleanupDbRealDb(db.RealDatabaseMixin, TestCleanupDb):
     def tearDown(self):
         yield self.tearDownRealDatabase()
 
-    @flaky(bugNumber=4406, onPlatform='win32')
     @defer.inlineCallbacks
     def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
