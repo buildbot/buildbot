@@ -35,6 +35,9 @@ class FakeConnection(base.Connection):
             'system': 'nt',
         }
 
+    def loseConnection(self):
+        self.notifyDisconnected()
+
     def remotePrint(self, message):
         self.remoteCalls.append(('remotePrint', message))
         return defer.succeed(None)

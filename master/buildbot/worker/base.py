@@ -138,6 +138,12 @@ class AbstractWorker(service.BuildbotService):
         # a protocol connection, if we're currently connected
         self.conn = None
 
+        # during disconnection self.conn will be set to None before all disconnection notifications
+        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to a
+        # notifier and allows interested users to wait until all disconnection notifications are
+        # delivered.
+        self._pending_disconnection_delivery_notifier = None
+
         self._old_builder_list = None
         self._configured_builderid_list = None
 
@@ -348,6 +354,14 @@ class AbstractWorker(service.BuildbotService):
         self.stopQuarantineTimer()
         # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
+
+        # during master shutdown we need to wait until the disconnection notification deliveries
+        # are completed, otherwise some of the events may still be firing long after the master
+        # is completely shut down.
+        yield self.disconnect()
+        if self._pending_disconnection_delivery_notifier is not None:
+            yield self._pending_disconnection_delivery_notifier.wait()
+
         yield super().stopService()
 
     def isCompatibleWithBuild(self, build_props):
@@ -464,6 +478,13 @@ class AbstractWorker(service.BuildbotService):
                     name, self.defaultProperties.getProperty(name), "Worker")
 
     @defer.inlineCallbacks
+    def _handle_disconnection_delivery_notifier(self):
+        self._pending_disconnection_delivery_notifier = Notifier()
+        yield self.conn.waitForNotifyDisconnectedDelivered()
+        self._pending_disconnection_delivery_notifier.notify(None)
+        self._pending_disconnection_delivery_notifier = None
+
+    @defer.inlineCallbacks
     def detached(self):
         # protect against race conditions in conn disconnect path and someone
         # calling detached directly. At the moment the null worker does that.
@@ -471,6 +492,9 @@ class AbstractWorker(service.BuildbotService):
             return
 
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
+
+        self._handle_disconnection_delivery_notifier()
+
         self.conn = None
         self._old_builder_list = []
         self.worker_status.setConnected(False)
