@@ -38,6 +38,9 @@ class FakeBot:
     def loseConnection(self):
         self.n()
 
+    def waitForNotifyDisconnectedDelivered(self):
+        return defer.succeed(None)
+
 
 class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
     def setUp(self):

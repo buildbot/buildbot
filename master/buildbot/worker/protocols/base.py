@@ -45,6 +45,9 @@ class Connection:
     def notifyOnDisconnect(self, cb):
         return self._disconnectSubs.subscribe(cb)
 
+    def waitForNotifyDisconnectedDelivered(self):
+        return self._disconnectSubs.waitForDeliveriesToFinish()
+
     def notifyDisconnected(self):
         self._disconnectSubs.deliver()
 

@@ -37,6 +37,9 @@ class FakeBot:
     def loseConnection(self):
         self.n()
 
+    def waitForNotifyDisconnectedDelivered(self):
+        return defer.succeed(None)
+
 
 class FakeResult:
     code = 204
