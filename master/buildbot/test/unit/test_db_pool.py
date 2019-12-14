@@ -181,7 +181,11 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         def thd(conn):
             native_tests.drop(bind=self.db_engine, checkfirst=True)
         yield self.pool.do(thd)
+
+        # tearDownRealDatabase() won't shutdown the pool as want_pool was false in
+        # setUpRealDatabase call
         yield self.pool.shutdown()
+
         yield self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
