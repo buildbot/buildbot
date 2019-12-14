@@ -213,6 +213,7 @@ class RealDatabaseMixin:
     def tearDownRealDatabase(self):
         if self.__want_pool:
             yield self.db_pool.do(self.__thd_clean_database)
+            yield self.db_pool.shutdown()
 
     @defer.inlineCallbacks
     def insertTestData(self, rows):
