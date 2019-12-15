@@ -77,7 +77,7 @@ frontend_yarn_upgrade:
 hooks:
 	cp common/hooks/* `git rev-parse --git-dir`/hooks
 rmpyc:
-	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
+	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
 
 isort:
 	isort -rc worker master
