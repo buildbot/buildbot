@@ -43,7 +43,7 @@ describe('force and cancel', function() {
         await builder.go();
         await builder.goForce();
         await force.setReason("New Test Reason");
-        await force.setYourName("FaceLess User");
+        await force.setYourName("user@example.com");
         await force.setProjectName("BBOT9");
         await force.setBranchName("Gerrit Branch");
         await force.setRepo("http//name.com");
