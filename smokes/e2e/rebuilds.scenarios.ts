@@ -26,7 +26,7 @@ describe('rebuilds', function() {
         await builder.go();
         const lastbuild: number = await builder.getLastSuccessBuildNumber();
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
         await builder.goBuild(lastbuild);

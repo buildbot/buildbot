@@ -28,12 +28,12 @@ describe('previousnextlink', function() {
         const lastbuild = await builder.getLastSuccessBuildNumber();
         // Build #1
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
         // Build #2
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitNextBuildFinished(+lastbuild + 1);
         await builder.goBuild(+lastbuild + 2);
@@ -65,7 +65,7 @@ describe('forceandstop', function() {
     it('should create a build with a dedicated reason and stop it during execution', async () => {
 
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         expect(await browser.getCurrentUrl()).toMatch("/builders/\[1-9]/builds/\[1-9]");
         let stopButton = builder.getStopButton();
         await browser.wait(EC.elementToBeClickable(stopButton),

@@ -24,7 +24,7 @@ describe('force and cancel', function() {
         await builder.go();
         let lastbuild = await builder.getLastSuccessBuildNumber();
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
     });
@@ -48,6 +48,6 @@ describe('force and cancel', function() {
         await force.setBranchName("Gerrit Branch");
         await force.setRepo("http//name.com");
         await force.setRevisionName("12345");
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
     });
 });
