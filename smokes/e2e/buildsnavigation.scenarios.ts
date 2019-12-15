@@ -25,7 +25,7 @@ describe('previousnextlink', function() {
 
     it('should navigate in the builds history by using the previous next links', async () => {
         await builder.go();
-        const lastbuild = await builder.getLastSuccessBuildNumber();
+        const lastbuild = await builder.getLastFinishedBuildNumber();
         // Build #1
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();

@@ -22,7 +22,7 @@ describe('force and cancel', function() {
 
     it('should create a build', async () => {
         await builder.go();
-        let lastbuild = await builder.getLastSuccessBuildNumber();
+        let lastbuild = await builder.getLastFinishedBuildNumber();
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();

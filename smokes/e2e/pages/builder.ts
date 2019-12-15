@@ -50,8 +50,15 @@ export class BuilderPage extends BasePage {
         await buildLink.click();
     }
 
-    async getLastSuccessBuildNumber() {
-        let elements = await element.all(By.css('span.badge-status.results_SUCCESS'));
+    async getLastFinishedBuildNumber() {
+        let finishedBuildCss = 'span.badge-status.results_SUCCESS, ' +
+                               'span.badge-status.results_WARNINGS, ' +
+                               'span.badge-status.results_FAILURE, ' +
+                               'span.badge-status.results_SKIPPED, ' +
+                               'span.badge-status.results_EXCEPTION, ' +
+                               'span.badge-status.results_RETRY, ' +
+                               'span.badge-status.results_CANCELLED ';
+        let elements = await element.all(By.css(finishedBuildCss));
         if (elements.length === 0) {
             return 0;
         }
@@ -66,7 +73,7 @@ export class BuilderPage extends BasePage {
     async waitNextBuildFinished(reference) {
         const self = this;
         async function buildCountIncrement() {
-            let currentBuildCount = await self.getLastSuccessBuildNumber();
+            let currentBuildCount = await self.getLastFinishedBuildNumber();
             return currentBuildCount == (reference + 1);
         }
         await browser.wait(buildCountIncrement, 20000);
