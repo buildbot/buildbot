@@ -148,6 +148,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
     def tearDown(self):
         if self.master:
             yield self.master.www.stopService()
+        yield self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
     def testWebhook(self):

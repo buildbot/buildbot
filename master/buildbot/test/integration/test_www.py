@@ -124,6 +124,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             yield self.pool.closeCachedConnections()
         if self.master:
             yield self.master.www.stopService()
+        yield self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
     def apiGet(self, url, expect200=True):

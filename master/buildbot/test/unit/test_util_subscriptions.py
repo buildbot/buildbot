@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.util import subscription
@@ -62,3 +63,48 @@ class subscriptions(unittest.TestCase):
         # log.err will cause Trial to complain about this error anyway, unless
         # we clean it up
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+
+    def test_deliveries_finished(self):
+        state = []
+
+        def create_cb(d):
+            def cb(*args):
+                state.append(args)
+                return d
+            return cb
+
+        d1 = defer.Deferred()
+        d2 = defer.Deferred()
+        self.subpt.subscribe(create_cb(d1))
+        self.subpt.subscribe(create_cb(d2))
+        self.assertEqual(state, [])
+
+        self.subpt.deliver(1, 2)
+        self.assertEqual(state, [(1, 2), (1, 2)])
+
+        d = self.subpt.waitForDeliveriesToFinish()
+        self.assertFalse(d.called)
+
+        d1.callback(None)
+        self.assertFalse(d.called)
+
+        d2.callback(None)
+        self.assertTrue(d.called)
+
+        # when there are no waiting deliveries, should call the callback immediately
+        d = self.subpt.waitForDeliveriesToFinish()
+        self.assertTrue(d.called)
+
+    def test_deliveries_not_finished_within_callback(self):
+        state = []
+
+        def cb(*args):
+            state.append(args)
+            d = self.subpt.waitForDeliveriesToFinish()
+            self.assertFalse(d.called)
+
+        self.subpt.subscribe(cb)
+        self.assertEqual(state, [])
+
+        self.subpt.deliver(1, 2)
+        self.assertEqual(state, [(1, 2)])
