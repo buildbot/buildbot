@@ -22,9 +22,9 @@ describe('force and cancel', function() {
 
     it('should create a build', async () => {
         await builder.go();
-        let lastbuild = await builder.getLastSuccessBuildNumber();
+        let lastbuild = await builder.getLastFinishedBuildNumber();
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
     });
@@ -43,11 +43,11 @@ describe('force and cancel', function() {
         await builder.go();
         await builder.goForce();
         await force.setReason("New Test Reason");
-        await force.setYourName("FaceLess User");
+        await force.setYourName("user@example.com");
         await force.setProjectName("BBOT9");
         await force.setBranchName("Gerrit Branch");
         await force.setRepo("http//name.com");
         await force.setRevisionName("12345");
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
     });
 });

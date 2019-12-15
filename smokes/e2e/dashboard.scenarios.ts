@@ -34,7 +34,7 @@ describe('dashboard page', function() {
 
     it('should go to the dashboard page and see no error', async () => {
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await home.waitAllBuildsFinished();
         await dashboard.go();
     });

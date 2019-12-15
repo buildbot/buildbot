@@ -20,7 +20,7 @@ describe('change hook', function() {
 
     it('should create a build', async () => {
         await builder.go();
-        let lastbuild = await builder.getLastSuccessBuildNumber();
+        let lastbuild = await builder.getLastFinishedBuildNumber();
         await post(`${testPageUrl}/change_hook/base`).form({
             comments:'sd',
             project:'pyflakes',

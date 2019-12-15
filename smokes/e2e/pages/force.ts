@@ -49,6 +49,17 @@ export class ForcePage extends BasePage {
         await button.click();
     }
 
+    async clickStartButtonAndWaitRedirectToBuild() {
+        let previousUrl = await browser.getCurrentUrl();
+        await this.clickStartButton();
+        await browser.wait(EC.not(EC.urlIs(previousUrl)),
+                           5000,
+                           "failed to create a buildrequest");
+        await browser.wait(EC.not(EC.urlContains('redirect_to_build=true')),
+                           5000,
+                           "failed to create a build");
+    }
+
     async clickCancelWholeQueue() {
         let button = this.getCancelWholeQueue();
         await browser.wait(EC.elementToBeClickable(button),

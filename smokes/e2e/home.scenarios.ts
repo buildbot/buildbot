@@ -26,7 +26,7 @@ describe('home page', function() {
         };
         await builder.go();
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await home.go();
         const panel0 = home.getPanel(0);
         expect(await panel0.getText()).toContain(builderName[0]);
