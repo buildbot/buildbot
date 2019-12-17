@@ -30,6 +30,7 @@ from twisted.internet.endpoints import clientFromString
 from twisted.python import log
 from twisted.spread import pb
 
+from buildbot_worker import util
 from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
@@ -76,6 +77,11 @@ class BotFactory(AutoLoginPBFactory):
         AutoLoginPBFactory.__init__(self)
         self.keepaliveInterval = keepaliveInterval
         self.keepalive_lock = defer.DeferredLock()
+        self._shutting_down = False
+
+        # notified when shutdown is complete.
+        self._shutdown_notifier = util.Notifier()
+        self._active_keepalives = 0
 
     def gotPerspective(self, perspective):
         log.msg("Connected to buildmaster; worker is ready")
@@ -99,6 +105,7 @@ class BotFactory(AutoLoginPBFactory):
 
         @defer.inlineCallbacks
         def doKeepalive():
+            self._active_keepalives += 1
             self.keepaliveTimer = None
             self.startTimers()
 
@@ -119,14 +126,29 @@ class BotFactory(AutoLoginPBFactory):
                 log.err(e, "error sending keepalive")
             finally:
                 self.keepalive_lock.release()
+                self._active_keepalives -= 1
+                self._checkNotifyShutdown()
 
         self.keepaliveTimer = self._reactor.callLater(self.keepaliveInterval,
                                                       doKeepalive)
 
+    def _checkNotifyShutdown(self):
+        if self._active_keepalives == 0 and self._shutting_down and \
+                self._shutdown_notifier is not None:
+            self._shutdown_notifier.notify(None)
+            self._shutdown_notifier = None
+
     def stopTimers(self):
+        self._shutting_down = True
+
         if self.keepaliveTimer:
+            # by cancelling the timer we are guaranteed that doKeepalive() won't be called again,
+            # as there's no interruption point between doKeepalive() beginning and call to
+            # startTimers()
             self.keepaliveTimer.cancel()
             self.keepaliveTimer = None
+
+        self._checkNotifyShutdown()
 
     def activity(self, res=None):
         """Subclass or monkey-patch this method to be alerted whenever there is
@@ -135,6 +157,13 @@ class BotFactory(AutoLoginPBFactory):
     def stopFactory(self):
         self.stopTimers()
         AutoLoginPBFactory.stopFactory(self)
+
+    @defer.inlineCallbacks
+    def waitForCompleteShutdown(self):
+        # This function waits for a complete shutdown to happen. It's fired when all keepalives
+        # have been finished and there are no pending ones.
+        if self._shutdown_notifier is not None:
+            yield self._shutdown_notifier.wait()
 
 
 class Worker(WorkerBase, service.MultiService):
@@ -209,11 +238,13 @@ class Worker(WorkerBase, service.MultiService):
             self.shutdown_loop = loop = task.LoopingCall(self._checkShutdownFile)
             loop.start(interval=10)
 
+    @defer.inlineCallbacks
     def stopService(self):
         if self.shutdown_loop:
             self.shutdown_loop.stop()
             self.shutdown_loop = None
-        return service.MultiService.stopService(self)
+        yield service.MultiService.stopService(self)
+        yield self.bf.waitForCompleteShutdown()
 
     def _handleSIGHUP(self, *args):
         log.msg("Initiating shutdown because we got SIGHUP")
