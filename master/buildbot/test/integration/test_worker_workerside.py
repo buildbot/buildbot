@@ -64,21 +64,6 @@ class FakeBuilder(builder.Builder):
         return defer.succeed(None)
 
 
-class MasterSideWorker(worker.Worker):
-
-    detach_d = None
-
-    def attached(self, conn):
-        self.detach_d = defer.Deferred()
-        return super().attached(conn)
-
-    @defer.inlineCallbacks
-    def detached(self):
-        yield super().detached()
-        self.detach_d, d = None, self.detach_d
-        d.callback(None)
-
-
 class TestingWorker(buildbot_worker.bot.Worker):
     """Add more introspection and scheduling hooks to the real Worker class.
 
@@ -127,7 +112,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
     @ivar master: fake build master
     @ivar pbmanager: L{PBManager} instance
     @ivar botmaster: L{BotMaster} instance
-    @ivar buildworker: L{MasterSideWorker} instance
+    @ivar buildworker: L{worker.Worker} instance
     @ivar port: actual TCP port of the master PB service (fixed after call to
                 ``addMasterSideWorker``)
     """
@@ -161,7 +146,6 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         self.buildworker = None
         self.port = None
         self.workerworker = None
-        self._detach_deferreds = []
 
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
@@ -170,21 +154,18 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         self.tmpdirs = set()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         for tmp in self.tmpdirs:
             if os.path.exists(tmp):
                 shutil.rmtree(tmp)
-        deferreds = self._detach_deferreds + [
-            self.pbmanager.stopService(),
-            self.botmaster.stopService(),
-            self.workers.stopService(),
-        ]
+        yield self.pbmanager.stopService()
+        yield self.botmaster.stopService()
+        yield self.workers.stopService()
 
         # if the worker is still attached, wait for it to detach, too
-        if self.buildworker and self.buildworker.detach_d:
-            deferreds.append(self.buildworker.detach_d)
-
-        return defer.gatherResults(deferreds)
+        if self.buildworker:
+            yield self.buildworker.waitForCompleteShutdown()
 
     @defer.inlineCallbacks
     def addMasterSideWorker(self,
@@ -198,7 +179,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         @param **kwargs: arguments to pass to the L{Worker} constructor.
         """
-        self.buildworker = MasterSideWorker(name, password, **kwargs)
+        self.buildworker = worker.Worker(name, password, **kwargs)
 
         # reconfig the master to get it set up
         new_config = self.master.config
