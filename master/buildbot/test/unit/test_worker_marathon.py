@@ -23,22 +23,29 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import subscription
 from buildbot.worker.marathon import MarathonLatentWorker
 
 
 class FakeBot:
     info = {}
 
-    def notifyOnDisconnect(self, n):
-        self.n = n
+    def __init__(self):
+        self._disconnectSubs = subscription.SubscriptionPoint("disconnections from FakeBot")
 
-    def remoteSetBuilderList(self, builders):
-        return defer.succeed(None)
-
-    def loseConnection(self):
-        self.n()
+    def notifyOnDisconnect(self, cb):
+        return self._disconnectSubs.subscribe(cb)
 
     def waitForNotifyDisconnectedDelivered(self):
+        return self._disconnectSubs.waitForDeliveriesToFinish()
+
+    def notifyDisconnected(self):
+        self._disconnectSubs.deliver()
+
+    def loseConnection(self):
+        self.notifyDisconnected()
+
+    def remoteSetBuilderList(self, builders):
         return defer.succeed(None)
 
 
