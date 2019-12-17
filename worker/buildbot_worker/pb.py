@@ -113,6 +113,8 @@ class BotFactory(AutoLoginPBFactory):
                 log.msg("Master replied to keepalive, everything's fine")
                 self.currentKeepaliveWaiter.callback(details)
                 self.currentKeepaliveWaiter = None
+            except (pb.PBConnectionLost, pb.DeadReferenceError):
+                log.msg("connection already shut down when attempting keepalive")
             except Exception as e:
                 log.err(e, "error sending keepalive")
             finally:
