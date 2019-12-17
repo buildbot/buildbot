@@ -55,15 +55,15 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setUpTestReactor()
 
+    @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
         config = KubeHardcodedConfig(master_url="https://kube.example.com")
         self.worker = worker = kubernetes.KubeLatentWorker(
             *args, kube_config=config, **kwargs)
         master = fakemaster.make_master(self, wantData=True)
-        self._kube = self.successResultOf(
-            KubeClientService.getFakeService(master, self, kube_config=config))
+        self._kube = yield KubeClientService.getFakeService(master, self, kube_config=config)
         worker.setServiceParent(master)
-        self.successResultOf(master.startService())
+        yield master.startService()
         self.assertTrue(config.running)
 
         def cleanup():
@@ -90,11 +90,12 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         # http is lazily created on worker substantiation
         self.assertNotEqual(self.worker._kube, None)
 
+    @defer.inlineCallbacks
     def test_start_worker(self):
-        worker = self.setupWorker('worker')
+        worker = yield self.setupWorker('worker')
         d = worker.substantiate(None, FakeBuild())
         worker.attached(FakeBot())
-        self.successResultOf(d)
+        yield d
         self.assertEqual(len(worker._kube.pods), 1)
         pod_name = list(worker._kube.pods.keys())[0]
         self.assertRegex(pod_name, r'default/buildbot-worker-[0-9a-f]+')
@@ -108,13 +109,14 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                          'rendered:buildbot/buildbot-worker')
         self.assertEqual(pod['spec']['restartPolicy'], 'Never')
 
+    @defer.inlineCallbacks
     def test_start_worker_but_error(self):
-        worker = self.setupWorker('worker')
+        worker = yield self.setupWorker('worker')
 
         def createPod(self, namespace, spec):
             raise KubeError({'message': "yeah, but no"})
 
         self.patch(self._kube, 'createPod', createPod)
-        d = worker.substantiate(None, FakeBuild())
-        self.failureResultOf(d)
+        with self.assertRaises(KubeError):
+            yield worker.substantiate(None, FakeBuild())
         self.assertEqual(worker.instance, None)
