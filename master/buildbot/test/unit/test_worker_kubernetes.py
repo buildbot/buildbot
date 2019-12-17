@@ -19,34 +19,12 @@ from twisted.trial import unittest
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
+from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
 from buildbot.test.fake.kube import KubeClientService
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import subscription
 from buildbot.util.kubeclientservice import KubeError
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
 from buildbot.worker import kubernetes
-
-
-class FakeBot:
-    info = {}
-
-    def __init__(self):
-        self._disconnectSubs = subscription.SubscriptionPoint("disconnections from FakeBot")
-
-    def notifyOnDisconnect(self, cb):
-        return self._disconnectSubs.subscribe(cb)
-
-    def waitForNotifyDisconnectedDelivered(self):
-        return self._disconnectSubs.waitForDeliveriesToFinish()
-
-    def notifyDisconnected(self):
-        self._disconnectSubs.deliver()
-
-    def loseConnection(self):
-        self.notifyDisconnected()
-
-    def remoteSetBuilderList(self, builders):
-        return defer.succeed(None)
 
 
 class FakeResult:
