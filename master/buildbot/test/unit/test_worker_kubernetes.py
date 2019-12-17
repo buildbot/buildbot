@@ -16,6 +16,7 @@
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.kube import KubeClientService
@@ -78,15 +79,17 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         # class instantiation configures nothing
         self.assertEqual(getattr(worker, '_kube', None), None)
 
+    @defer.inlineCallbacks
     def test_wrong_arg(self):
-        self.assertRaises(
-            TypeError, self.setupWorker, 'worker', wrong_param='wrong_param')
+        with self.assertRaises(TypeError):
+            yield self.setupWorker('worker', wrong_param='wrong_param')
 
     def test_service_arg(self):
         return self.setupWorker('worker')
 
+    @defer.inlineCallbacks
     def test_start_service(self):
-        self.setupWorker('worker')
+        yield self.setupWorker('worker')
         # http is lazily created on worker substantiation
         self.assertNotEqual(self.worker._kube, None)
 
@@ -113,10 +116,10 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     def test_start_worker_but_error(self):
         worker = yield self.setupWorker('worker')
 
-        def createPod(self, namespace, spec):
+        def createPod(namespace, spec):
             raise KubeError({'message': "yeah, but no"})
 
         self.patch(self._kube, 'createPod', createPod)
-        with self.assertRaises(KubeError):
+        with self.assertRaises(LatentWorkerFailedToSubstantiate):
             yield worker.substantiate(None, FakeBuild())
         self.assertEqual(worker.instance, None)

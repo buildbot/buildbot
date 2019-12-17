@@ -42,7 +42,7 @@ class FakeBot:
         return defer.succeed(None)
 
 
-class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
+class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setUpTestReactor()
         self.build = Properties(
@@ -63,29 +63,30 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         # class instantiation configures nothing
         self.assertEqual(worker._http, None)
 
+    @defer.inlineCallbacks
     def makeWorker(self, **kwargs):
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
         master = fakemaster.make_master(self, wantData=True)
-        self._http = self.successResultOf(
-            fakehttpclientservice.HTTPClientService.getFakeService(
-                master, self, 'tcp://marathon.local', auth=kwargs.get(
-                    'auth')))
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+                master, self, 'tcp://marathon.local', auth=kwargs.get('auth'))
         worker.setServiceParent(master)
         worker.reactor = self.reactor
-        self.successResultOf(master.startService())
+        yield master.startService()
         worker.masterhash = "masterhash"
         return worker
 
+    @defer.inlineCallbacks
     def test_start_service(self):
-        worker = self.worker = self.makeWorker()
+        worker = self.worker = yield self.makeWorker()
         # http is lazily created on worker substantiation
         self.assertNotEqual(worker._http, None)
 
+    @defer.inlineCallbacks
     def test_start_worker(self):
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
-        worker = self.makeWorker()
+        worker = yield self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
         self._http.expect(
@@ -116,13 +117,14 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
-        self.successResultOf(d)
+        yield d
 
         self.assertEqual(worker.instance, {'Id': 'id'})
         # teardown makes sure all containers are cleaned up
 
+    @defer.inlineCallbacks
     def test_start_worker_but_no_connection_and_shutdown(self):
-        worker = self.makeWorker()
+        worker = yield self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
         self._http.expect(
@@ -155,8 +157,9 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         self.assertEqual(worker.instance, {'Id': 'id'})
         # teardown makes sure all containers are cleaned up
 
+    @defer.inlineCallbacks
     def test_start_worker_but_error(self):
-        worker = self.makeWorker()
+        worker = yield self.makeWorker()
         self._http.expect(
             method='delete',
             ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
@@ -187,13 +190,15 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
             ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(.1)
-        self.failureResultOf(d)
+        with self.assertRaises(Exception):
+            yield d
         self.assertEqual(worker.instance, None)
         # teardown makes sure all containers are cleaned up
 
+    @defer.inlineCallbacks
     def test_start_worker_with_params(self):
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
-        worker = self.makeWorker(marathon_extra_config={
+        worker = yield self.makeWorker(marathon_extra_config={
             'container': {
                 'docker': {
                     'network': None
@@ -234,7 +239,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
-        self.successResultOf(d)
+        yield d
 
         self.assertEqual(worker.instance, {'Id': 'id'})
         # teardown makes sure all containers are cleaned up
