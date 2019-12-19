@@ -359,8 +359,7 @@ class AbstractWorker(service.BuildbotService):
         # are completed, otherwise some of the events may still be firing long after the master
         # is completely shut down.
         yield self.disconnect()
-        if self._pending_disconnection_delivery_notifier is not None:
-            yield self._pending_disconnection_delivery_notifier.wait()
+        yield self.waitForCompleteShutdown()
 
         yield super().stopService()
 
@@ -526,20 +525,32 @@ class AbstractWorker(service.BuildbotService):
         # When this Deferred fires, we'll be ready to accept the new worker
         return self._disconnect(self.conn)
 
+    def waitForCompleteShutdown(self):
+        # This function waits until the disconnection to happen and the disconnection
+        # notifications have been delivered and acted upon.
+        return self._waitForCompleteShutdownImpl(self.conn)
+
+    @defer.inlineCallbacks
+    def _waitForCompleteShutdownImpl(self, conn):
+        if conn:
+            d = defer.Deferred()
+
+            def _disconnected():
+                eventually(d.callback, None)
+            conn.notifyOnDisconnect(_disconnected)
+            yield d
+            yield conn.waitForNotifyDisconnectedDelivered()
+        elif self._pending_disconnection_delivery_notifier is not None:
+            yield self._pending_disconnection_delivery_notifier.wait()
+
     @defer.inlineCallbacks
     def _disconnect(self, conn):
-        # This function waits until the disconnection to happened and the disconnection
+        # This function waits until the disconnection to happen and the disconnection
         # notifications have been delivered and acted upon
-        d = defer.Deferred()
-
-        # notifyOnDisconnect runs the callback
-        def _disconnected():
-            eventually(d.callback, None)
-        conn.notifyOnDisconnect(_disconnected)
+        d = self._waitForCompleteShutdownImpl(conn)
         conn.loseConnection()
         log.msg("waiting for worker to finish disconnecting")
         yield d
-        yield conn.waitForNotifyDisconnectedDelivered()
 
     @defer.inlineCallbacks
     def sendBuilderList(self):

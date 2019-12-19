@@ -20,6 +20,7 @@ import textwrap
 import time
 
 from ._hangcheck import HangCheckFactory
+from ._notifier import Notifier
 
 __all__ = [
     "remove_userpassword",
@@ -27,6 +28,7 @@ __all__ = [
     "Obfuscated",
     "rewrap",
     "HangCheckFactory",
+    "Notifier",
 ]
 
 
