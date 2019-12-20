@@ -60,5 +60,6 @@ class QueueRef:
             x.addErrback(log.err, 'while invoking %r' % (self.callback,))
 
     def stopConsuming(self):
-        # subclasses should set self.callback to None in this method
+        # This method may return a Deferred.
+        # subclasses should set self.callback to None in this method.
         raise NotImplementedError
