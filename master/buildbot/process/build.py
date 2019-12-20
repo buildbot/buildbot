@@ -755,6 +755,9 @@ class Build(properties.PropertiesMixin):
             ('builds', str(self.buildid), 'finished'),
             lambda: self.finished)
 
+    def getWorkerInfo(self):
+        return self.workerforbuilder.worker.worker_status.info
+
     # IBuildControl
 
     def getStatus(self):
