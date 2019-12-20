@@ -145,12 +145,13 @@ class Channel(service.AsyncService):
                           "(Success|Warnings|Failure|Exception))$").match(event):
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off _EVENT_'.")
 
+    @defer.inlineCallbacks
     def list_notified_events(self):
         if self.notify_events:
-            self.send("The following events are being notified: {}."
-                      .format(", ".join(sorted(self.notify_events))))
+            yield self.send("The following events are being notified: {}."
+                            .format(", ".join(sorted(self.notify_events))))
         else:
-            self.send("No events are being notified.")
+            yield self.send("No events are being notified.")
 
     def notify_for(self, *events):
         for event in events:
@@ -602,6 +603,7 @@ class Contact:
             self.send('\n'.join(response))
     command_STATUS.usage = "status [_which_] - list status of a builder (or all builders)"
 
+    @defer.inlineCallbacks
     def command_NOTIFY(self, args, **kwargs):
         """notify me about build events"""
         args = self.splitArgs(args)
@@ -617,7 +619,7 @@ class Contact:
             self.channel.add_notification_events(events)
 
             if action == "on":
-                self.channel.list_notified_events()
+                yield self.channel.list_notified_events()
             self.bot.saveNotifyEvents()
 
         elif action in ("off", "off-quiet"):
@@ -627,11 +629,11 @@ class Contact:
                 self.channel.remove_all_notification_events()
 
             if action == "off":
-                self.channel.list_notified_events()
+                yield self.channel.list_notified_events()
             self.bot.saveNotifyEvents()
 
         elif action == "list":
-            self.channel.list_notified_events()
+            yield self.channel.list_notified_events()
 
         else:
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off|list [_EVENT_]'.")
