@@ -49,13 +49,14 @@ class TelegramChannel(Channel):
         super().__init__(bot, channel['id'])
         self.chat_info = channel
 
+    @defer.inlineCallbacks
     def list_notified_events(self):
         if self.notify_events:
-            self.send("The following events are being notified:\n{}"
-                      .format("\n".join(sorted(
-                          "🔔 **{}**".format(n) for n in self.notify_events))))
+            yield self.send("The following events are being notified:\n{}"
+                            .format("\n".join(sorted(
+                                    "🔔 **{}**".format(n) for n in self.notify_events))))
         else:
-            self.send("🔕 No events are being notified.")
+            yield self.send("🔕 No events are being notified.")
 
 
 def collect_fields(fields):
@@ -597,12 +598,13 @@ class TelegramStatusBot(StatusBot):
 
         self.nickname = None
 
+    @defer.inlineCallbacks
     def startService(self):
-        super().startService()
+        yield super().startService()
         for c in self.chat_ids:
             channel = self.getChannel(c)
             channel.add_notification_events(self.notify_events)
-        self.loadState()
+        yield self.loadState()
 
     results_emoji = {
         SUCCESS: ' ✅',
@@ -826,12 +828,13 @@ class TelegramWebhookBot(TelegramStatusBot):
         self.webhook = WebhookResource('telegram' + token)
         self.webhook.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def startService(self):
-        super().startService()
+        yield super().startService()
         url = bytes2unicode(self.master.config.buildbotURL)
         if not url.endswith('/'):
             url += '/'
-        self.set_webhook(url + self.webhook.path, self._certificate)
+        yield self.set_webhook(url + self.webhook.path, self._certificate)
 
     def process_webhook(self, request):
         update = self.get_update(request)
@@ -850,15 +853,16 @@ class TelegramWebhookBot(TelegramStatusBot):
                              .format(content_type))
         return update
 
+    @defer.inlineCallbacks
     def set_webhook(self, url, certificate=None):
         if not certificate:
             self.log("Setting up webhook to: {}".format(url))
-            self.post('/setWebhook', json=dict(url=url))
+            yield self.post('/setWebhook', json=dict(url=url))
         else:
             self.log("Setting up webhook to: {} (custom certificate)".format(url))
             certificate = io.BytesIO(unicode2bytes(certificate))
-            self.post('/setWebhook', data=dict(url=url),
-                      files=dict(certificate=certificate))
+            yield self.post('/setWebhook', data=dict(url=url),
+                            files=dict(certificate=certificate))
 
 
 class TelegramPollingBot(TelegramStatusBot):
@@ -902,7 +906,7 @@ class TelegramPollingBot(TelegramStatusBot):
                 if updates:
                     offset = max(update['update_id'] for update in updates) + 1
                     for update in updates:
-                        self.process_update(update)
+                        yield self.process_update(update)
 
 
 class TelegramBot(service.BuildbotService):

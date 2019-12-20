@@ -120,18 +120,20 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.contact1 = self.contactClass(user=self.USER, channel=self.channelClass(self.bot, self.PRIVATE))
         yield self.contact1.channel.setServiceParent(self.master)
 
+    @defer.inlineCallbacks
     def test_list_notified_events(self):
         self.patch_send()
         channel = telegram.TelegramChannel(self.bot, self.CHANNEL)
         channel.notify_events = {'success'}
-        channel.list_notified_events()
+        yield channel.list_notified_events()
         self.assertEquals(self.sent[0][1], "The following events are being notified:\n🔔 **success**")
 
+    @defer.inlineCallbacks
     def test_list_notified_events_empty(self):
         self.patch_send()
         channel = telegram.TelegramChannel(self.bot, self.CHANNEL)
         channel.notify_events = set()
-        channel.list_notified_events()
+        yield channel.list_notified_events()
         self.assertEquals(self.sent[0][1], "🔕 No events are being notified.")
 
     def testDescribeUser(self):
