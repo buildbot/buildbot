@@ -441,6 +441,7 @@ class Contact:
             return self.access_denied
         return method
 
+    @defer.inlineCallbacks
     def handleMessage(self, message, **kwargs):
         message = message.lstrip()
         parts = message.split(' ', 1)
@@ -462,29 +463,25 @@ class Contact:
         if not meth:
             if message[-1] == '!':
                 self.send("What you say!")
-                return defer.succeed(None)
+                return
             elif cmd.startswith(self.bot.commandPrefix):
                 self.send("I don't get this '{}'...".format(cmd))
                 meth = self.command_COMMANDS
             else:
                 if self.is_private_chat:
                     self.send("Say what?")
-                return defer.succeed(None)
+                return
 
-        d = defer.maybeDeferred(meth, args.strip(), **kwargs)
-
-        @d.addErrback
-        def usageError(f):
-            f.trap(UsageError)
-            self.send(str(f.value))
-
-        @d.addErrback
-        def logErr(f):
-            self.bot.log_err(f)
+        try:
+            result = yield meth(args.strip(), **kwargs)
+        except UsageError as e:
+            self.send(str(e))
+            return
+        except Exception as e:
+            self.bot.log_err(e)
             self.send("Something bad happened (see logs)")
-
-        d.addErrback(self.bot.log_err)
-        return d
+            return
+        return result
 
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
