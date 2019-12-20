@@ -656,6 +656,7 @@ class TelegramStatusBot(StatusBot):
                 new_channel.setServiceParent(self)
             return new_channel
 
+    @defer.inlineCallbacks
     def process_update(self, update):
         data = {}
 
@@ -664,7 +665,7 @@ class TelegramStatusBot(StatusBot):
             query = update.get('callback_query')
             if query is None:
                 self.log('No message in Telegram update object')
-                return defer.succeed('no message')
+                return 'no message'
             original_message = query.get('message', {})
             data = query.get('data', 0)
             try:
@@ -705,22 +706,22 @@ class TelegramStatusBot(StatusBot):
         user = message.get('from')
         if user is None:
             self.log('No user in incoming message')
-            return defer.succeed('no user')
+            return 'no user'
 
         text = message.get('text')
         if not text:
-            return defer.succeed('no text in the message')
+            return 'no text in the message'
 
         contact = self.getContact(user=user, channel=chat)
         data['tmessage'] = message
         template, contact.template = contact.template, None
         if text.startswith(self.commandPrefix):
-            d = contact.handleMessage(text, **data)
+            result = yield contact.handleMessage(text, **data)
         else:
             if template:
                 text = template.format(shlex.quote(text))
-            d = contact.handleMessage(text, **data)
-        return d
+            result = yield contact.handleMessage(text, **data)
+        return result
 
     @defer.inlineCallbacks
     def post(self, path, **kwargs):
