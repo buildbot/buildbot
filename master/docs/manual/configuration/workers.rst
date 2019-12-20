@@ -64,6 +64,11 @@ You may use the ``defaultProperties`` parameter that will only be added to :ref:
                      defaultProperties={'parallel_make': 10}),
    ]
 
+:class:`Worker` collects and exposes ``/etc/os-release`` fields for :ref:<interpolation `Interpolate-DictStyle`>.
+These can be used to determine details about the running operating system, such as distribution and version.
+See https://www.linux.org/docs/man5/os-release.html for details on possible fields.
+Each field is imported with ``os_`` prefix and in lower case. ``os_id``, ``os_id_like``, ``os_version_id`` and ``os_version_codename`` are always set, but can be null.
+
 Limiting Concurrency
 ++++++++++++++++++++
 
