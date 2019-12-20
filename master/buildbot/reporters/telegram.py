@@ -35,6 +35,7 @@ from buildbot.reporters.words import UsageError
 from buildbot.reporters.words import WebhookResource
 from buildbot.schedulers.forcesched import CollectedValidationError
 from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.util import Notifier
 from buildbot.util import asyncSleep
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
@@ -870,11 +871,19 @@ class TelegramPollingBot(TelegramStatusBot):
 
     def __init__(self, *args, poll_timeout=120, **kwargs):
         super().__init__(*args, **kwargs)
+        self._polling_finished_notifier = Notifier()
         self.poll_timeout = poll_timeout
 
     def startService(self):
         super().startService()
+        self._polling_continue = True
         self.do_polling()
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        self._polling_continue = False
+        yield self._polling_finished_notifier.wait()
+        yield super().stopService()
 
     @defer.inlineCallbacks
     def do_polling(self):
@@ -882,7 +891,7 @@ class TelegramPollingBot(TelegramStatusBot):
         offset = 0
         kwargs = {'json': {'timeout': self.poll_timeout}}
         logme = True
-        while self.running:
+        while self._polling_continue:
             if offset:
                 kwargs['json']['offset'] = offset
             try:
@@ -907,6 +916,8 @@ class TelegramPollingBot(TelegramStatusBot):
                     offset = max(update['update_id'] for update in updates) + 1
                     for update in updates:
                         yield self.process_update(update)
+
+        self._polling_finished_notifier.notify(None)
 
 
 class TelegramBot(service.BuildbotService):
