@@ -361,6 +361,7 @@ dateutil's
 dave
 david
 dbapi
+DBConnector
 dbpool
 dbs
 ddl
