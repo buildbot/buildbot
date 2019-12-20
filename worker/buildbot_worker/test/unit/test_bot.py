@@ -86,6 +86,9 @@ class TestBot(unittest.TestCase):
 
         info = yield self.bot.callRemote("getWorkerInfo")
 
+        # remove any os_ fields as they are dependent on the test environment
+        info = {k: v for k, v in info.items() if not k.startswith("os_")}
+
         self.assertEqual(info, dict(
             admin='testy!', foo='bar',
             environ=os.environ, system=os.name, basedir=self.basedir,
@@ -96,6 +99,8 @@ class TestBot(unittest.TestCase):
     @defer.inlineCallbacks
     def test_getWorkerInfo_nodir(self):
         info = yield self.bot.callRemote("getWorkerInfo")
+
+        info = {k: v for k, v in info.items() if not k.startswith("os_")}
 
         self.assertEqual(set(info.keys()), set(
             ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version']))

@@ -241,6 +241,8 @@ class BotBase(service.MultiService):
     name = "bot"
     WorkerForBuilder = WorkerForBuilderBase
 
+    os_release_file = "/etc/os-release"
+
     def __init__(self, basedir, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
@@ -248,6 +250,10 @@ class BotBase(service.MultiService):
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding(
         ) or 'ascii'
         self.builders = {}
+
+    # for testing purposes
+    def setOsReleaseFile(self, os_release_file):
+        self.os_release_file = os_release_file
 
     def startService(self):
         assert os.path.isdir(self.basedir)
@@ -321,6 +327,20 @@ class BotBase(service.MultiService):
                 if os.path.isfile(filename):
                     with open(filename, "r") as fin:
                         files[f] = fin.read()
+
+        if os.path.exists(self.os_release_file):
+            with open(self.os_release_file, "r") as fin:
+                for line in fin:
+                    line = line.strip("\r\n")
+                    # as per man page: Lines beginning with "#" shall be ignored as comments.
+                    if len(line) == 0 or line.startswith('#'):
+                        continue
+                    # parse key-values
+                    key, value = line.split("=", 1)
+                    if value:
+                        key = 'os_%s' % key.lower()
+                        files[key] = value.strip('"')
+
         if not self.numcpus:
             try:
                 self.numcpus = multiprocessing.cpu_count()
