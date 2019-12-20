@@ -59,23 +59,24 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
             log.err('wampmq: persistent queues are not persisted: %s %s' %
                     (persistent_name, _filter))
 
-        qr = QueueRef(callback)
+        qr = QueueRef(self, callback)
 
         self._startConsuming(qr, callback, _filter)
         return defer.succeed(qr)
 
     def _startConsuming(self, qr, callback, _filter, persistent_name=None):
-        return qr.subscribe(self.master.wamp, _filter)
+        return qr.subscribe(self.master.wamp, self, _filter)
 
 
 class QueueRef(base.QueueRef):
 
-    def __init__(self, callback):
+    def __init__(self, mq, callback):
         super().__init__(callback)
         self.unreg = None
+        self.mq = mq
 
     @defer.inlineCallbacks
-    def subscribe(self, service, _filter):
+    def subscribe(self, connector_service, wamp_service, _filter):
         self.filter = _filter
         self.emulated = False
         options = dict(details_arg=str('details'))
@@ -83,18 +84,18 @@ class QueueRef(base.QueueRef):
             options["match"] = "wildcard"
         options = SubscribeOptions(**options)
         _filter = WampMQ.messageTopic(_filter)
-        self.unreg = yield service.subscribe(self.invoke, _filter, options=options)
+        self.unreg = yield connector_service.subscribe(self.wampInvoke, _filter, options=options)
         if self.callback is None:
             yield self.stopConsuming()
 
-    def invoke(self, msg, details):
+    def wampInvoke(self, msg, details):
         if details.topic is not None:
             # in the case of a wildcard, wamp router sends the topic
             topic = WampMQ.routingKeyFromMessageTopic(details.topic)
         else:
             # in the case of an exact match, then we can use our own topic
             topic = self.filter
-        return super().invoke(topic, msg)
+        self.mq.invokeQref(self, topic, msg)
 
     @defer.inlineCallbacks
     def stopConsuming(self):
