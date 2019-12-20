@@ -11,11 +11,12 @@
                             label.checkbox-inline
                                 input(type="checkbox" name="{{item.name}}" ng-model="item.value" ng-value="item.value")
                                 | {{ item.caption }}
-                        form-group(ng-switch-when="choices")
-                            div(ng-repeat="answer in item.answers")
-                                label.radio-inline
-                                    input(type="radio" name="{{group.name + '_' + answer.name}}" ng-model="item.value" ng-value="answer.name")
-                                    | {{ answer.name }}
+                        .form-group(ng-switch-when="choices")
+                            div(ng-if="item.caption")
+                                label {{ item.caption }}
+                            label(ng-repeat="answer in item.answers").radio-inline
+                                input(type="radio" name="{{group.name + '_' + answer.name}}" ng-model="item.value" ng-value="answer.name")
+                                | {{ answer.name }}
                         .form-group(ng-switch-when="integer")
                             label {{ item.caption }}
                             input.form-control(type="number" name="{{item.name}}" ng-model="item.value")
