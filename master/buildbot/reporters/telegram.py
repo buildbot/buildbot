@@ -992,4 +992,4 @@ class TelegramBot(service.BuildbotService):
             if self.bot.nickname is None:
                 raise RuntimeError("No bot username specified and I cannot get it from Telegram")
 
-        self.bot.setServiceParent(self)
+        yield self.bot.setServiceParent(self)
