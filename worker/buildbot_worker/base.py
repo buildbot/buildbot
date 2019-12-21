@@ -70,8 +70,9 @@ class WorkerForBuilderBase(service.Service):
     def __repr__(self):
         return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
 
+    @defer.inlineCallbacks
     def setServiceParent(self, parent):
-        service.Service.setServiceParent(self, parent)
+        yield service.Service.setServiceParent(self, parent)
         self.bot = self.parent
         # note that self.parent will go away when the buildmaster's config
         # file changes and this Builder is removed (possibly because it has

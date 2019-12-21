@@ -30,7 +30,7 @@ from buildbot.util import in_reactor
 def dataspec(config):
     master = yield fakemaster.make_master(None, wantRealReactor=True)
     data = connector.DataConnector()
-    data.setServiceParent(master)
+    yield data.setServiceParent(master)
     if config['out'] != '--':
         dirs = os.path.dirname(config['out'])
         if dirs and not os.path.exists(dirs):

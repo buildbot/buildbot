@@ -50,7 +50,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         master = fakemaster.make_master(self)
         self.db = connector.DBConnector(self.basedir)
-        self.db.setServiceParent(master)
+        yield self.db.setServiceParent(master)
         self.db.pool = self.db_pool
 
     def tearDownMigrateTest(self):

@@ -194,7 +194,7 @@ class RunMasterBase(unittest.TestCase):
             self.w = None
 
         if self.w is not None:
-            self.w.setServiceParent(m)
+            yield self.w.setServiceParent(m)
 
         @defer.inlineCallbacks
         def dump():
