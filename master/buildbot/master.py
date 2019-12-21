@@ -268,7 +268,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.reactor.stop()
                 return
 
-            self.mq.setup()
+            yield self.mq.setup()
 
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):

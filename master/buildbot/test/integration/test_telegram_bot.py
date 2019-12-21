@@ -98,7 +98,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         master.config.mq = dict(type='simple')
         master.mq = mqconnector.MQConnector()
         yield master.mq.setServiceParent(master)
-        master.mq.setup()
+        yield master.mq.setup()
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',

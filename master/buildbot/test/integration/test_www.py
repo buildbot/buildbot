@@ -79,7 +79,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         master.config.mq = dict(type='simple')
         master.mq = mqconnector.MQConnector()
         yield master.mq.setServiceParent(master)
-        master.mq.setup()
+        yield master.mq.setup()
 
         master.data = dataconnector.DataConnector()
         yield master.data.setServiceParent(master)
