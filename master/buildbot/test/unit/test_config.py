@@ -465,6 +465,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_title(self):
         self.do_test_load_global(dict(title='hi'), title='hi')
 
+    def test_load_global_title_too_long(self):
+        with assertProducesWarning(config.ConfigWarning,
+                                   message_pattern=r"Title is too long"):
+            self.do_test_load_global(dict(title="Very very very very very long title"))
+
     def test_load_global_projectURL(self):
         self.do_test_load_global(dict(projectName='hey'), title='hey')
 
