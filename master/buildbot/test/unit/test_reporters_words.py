@@ -41,6 +41,7 @@ class ContactMixin(TestReactorMixin):
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
@@ -79,8 +80,8 @@ class ContactMixin(TestReactorMixin):
 
         self.contact = self.contactClass(user=self.USER,
                                          channel=self.bot.getChannel(self.CHANNEL))
-        self.contact.channel.setServiceParent(self.master)
-        return self.master.startService()
+        yield self.contact.channel.setServiceParent(self.master)
+        yield self.master.startService()
 
     def patch_send(self):
         self.sent = []

@@ -799,6 +799,6 @@ class SharedService(unittest.TestCase):
     def test_already_stopped_last(self):
         parent = service.AsyncMultiService()
         o = UnderTestDependentService()
-        o.setServiceParent(parent)
+        yield o.setServiceParent(parent)
         yield parent.startService()
         yield parent.stopService()

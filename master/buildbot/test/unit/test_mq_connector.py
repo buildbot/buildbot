@@ -42,12 +42,13 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 class MQConnector(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
-        self.conn.setServiceParent(self.master)
+        yield self.conn.setServiceParent(self.master)
 
     def patchFakeMQ(self, name='fake'):
         self.patch(connector.MQConnector, 'classes',

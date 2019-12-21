@@ -199,7 +199,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             verify=None)
         self.cp = BitbucketServerPRCommentPush(
             "serv", Interpolate("username"), Interpolate("passwd"), verbose=verbose, **kwargs)
-        self.cp.setServiceParent(self.master)
+        yield self.cp.setServiceParent(self.master)
         self.cp.messageFormatter = Mock(spec=self.cp.messageFormatter)
         self.cp.messageFormatter.formatMessageForBuildResults.return_value = \
             {"body": UNICODE_BODY, "type": "text"}

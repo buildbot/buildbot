@@ -1594,11 +1594,11 @@ class ReconfigurableServiceMixin(unittest.TestCase):
     def test_multiservice(self):
         svc = FakeMultiService()
         ch1 = FakeService()
-        ch1.setServiceParent(svc)
+        yield ch1.setServiceParent(svc)
         ch2 = FakeMultiService()
-        ch2.setServiceParent(svc)
+        yield ch2.setServiceParent(svc)
         ch3 = FakeService()
-        ch3.setServiceParent(ch2)
+        yield ch3.setServiceParent(ch2)
         yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         self.assertTrue(svc.called)
@@ -1610,13 +1610,13 @@ class ReconfigurableServiceMixin(unittest.TestCase):
     def test_multiservice_priority(self):
         parent = FakeMultiService()
         svc128 = FakeService()
-        svc128.setServiceParent(parent)
+        yield svc128.setServiceParent(parent)
 
         services = [svc128]
         for i in range(20, 1, -1):
             svc = FakeService()
             svc.reconfig_priority = i
-            svc.setServiceParent(parent)
+            yield svc.setServiceParent(parent)
             services.append(svc)
 
         yield parent.reconfigServiceWithBuildbotConfig(mock.Mock())
@@ -1629,7 +1629,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
     def test_multiservice_nested_failure(self):
         svc = FakeMultiService()
         ch1 = FakeService()
-        ch1.setServiceParent(svc)
+        yield ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
             yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())

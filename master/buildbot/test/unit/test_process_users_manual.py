@@ -219,13 +219,14 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
 class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase,
                                  ManualUsersMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.setUpManualUsers()
         self.manual_component = manual.CommandlineUserManager(username="user",
                                                               passwd="userpw",
                                                               port="9990")
-        self.manual_component.setServiceParent(self.master)
+        yield self.manual_component.setServiceParent(self.master)
 
     def test_no_userpass(self):
         d = defer.maybeDeferred(manual.CommandlineUserManager)

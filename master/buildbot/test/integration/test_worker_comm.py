@@ -171,20 +171,20 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         # set the worker port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
-        self.pbmanager.setServiceParent(self.master)
+        yield self.pbmanager.setServiceParent(self.master)
 
         # remove the fakeServiceParent from fake service hierarchy, and replace
         # by a real one
         yield self.master.workers.disownServiceParent()
         self.workers = self.master.workers = workermanager.WorkerManager(
             self.master)
-        self.workers.setServiceParent(self.master)
+        yield self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()
-        self.botmaster.setServiceParent(self.master)
+        yield self.botmaster.setServiceParent(self.master)
 
         self.master.status = master.Status()
-        self.master.status.setServiceParent(self.master)
+        yield self.master.status.setServiceParent(self.master)
         self.master.botmaster = self.botmaster
         self.master.data.updates.workerConfigured = lambda *a, **k: None
         yield self.master.startService()

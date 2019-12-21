@@ -47,7 +47,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin,
         self.master = fakemaster.make_master(self)
         self.master.config = config.MasterConfig()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
-        self.db.setServiceParent(self.master)
+        yield self.db.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def tearDown(self):

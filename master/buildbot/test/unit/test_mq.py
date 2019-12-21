@@ -144,8 +144,9 @@ class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
 class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         self.mq = simple.SimpleMQ()
-        self.mq.setServiceParent(self.master)
+        yield self.mq.setServiceParent(self.master)

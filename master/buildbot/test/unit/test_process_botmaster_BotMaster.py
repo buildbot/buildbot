@@ -29,11 +29,12 @@ from buildbot.test.util.misc import TestReactorMixin
 
 class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantData=True)
         self.botmaster = BotMaster()
-        self.botmaster.setServiceParent(self.master)
+        yield self.botmaster.setServiceParent(self.master)
         self.botmaster.startService()
 
     def assertReactorStopped(self, _=None):
@@ -147,13 +148,14 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
 class TestBotMaster(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.master.botmaster.disownServiceParent()
         self.botmaster = BotMaster()
-        self.botmaster.setServiceParent(self.master)
+        yield self.botmaster.setServiceParent(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()
 

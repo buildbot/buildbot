@@ -92,7 +92,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         self.master = master = fakemaster.make_master(self)
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(self.basedir)
-        self.db.setServiceParent(master)
+        yield self.db.setServiceParent(master)
         yield self.db.setup(check_version=False)
 
         self._sql_log_handler = querylog.start_log_queries()

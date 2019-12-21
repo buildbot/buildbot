@@ -26,6 +26,7 @@ from buildbot.test.util.misc import TestReactorMixin
 class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
                                     unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self, version):
         self.setUpTestReactor()
         self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
@@ -35,7 +36,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
         self._http = self.successResultOf(
             fakehttpclientservice.HTTPClientService.getFakeService(
                 self.master, self, 'http://vaultServer', headers={'X-Vault-Token': "someToken"}))
-        self.srvcVault.setServiceParent(self.master)
+        yield self.srvcVault.setServiceParent(self.master)
         self.successResultOf(self.master.startService())
 
     @defer.inlineCallbacks

@@ -15,6 +15,7 @@
 
 import mock
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
@@ -26,11 +27,12 @@ from buildbot.worker.protocols import base
 
 class TestListener(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def test_constructor(self):
         self.setUpTestReactor()
         master = fakemaster.make_master(self)
         listener = base.Listener()
-        listener.setServiceParent(master)
+        yield listener.setServiceParent(master)
         self.assertEqual(listener.master, master)
 
 

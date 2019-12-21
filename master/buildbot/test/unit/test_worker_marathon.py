@@ -56,7 +56,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         master = fakemaster.make_master(self, wantData=True)
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
                 master, self, 'tcp://marathon.local', auth=kwargs.get('auth'))
-        worker.setServiceParent(master)
+        yield worker.setServiceParent(master)
         worker.reactor = self.reactor
         yield master.startService()
         worker.masterhash = "masterhash"

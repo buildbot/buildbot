@@ -59,7 +59,7 @@ class TestHgPollerBase(gpo.GetProcessOutputMixin,
                                         bookmarks=self.bookmarks,
                                         revlink=lambda branch, revision:
                                             self.remote_hgweb.format(revision))
-        self.poller.setServiceParent(self.master)
+        yield self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
         yield self.master.db.setup()

@@ -196,7 +196,7 @@ class TestGitPollerBase(gpo.GetProcessOutputMixin,
         yield self.setUpChangeSource()
 
         self.poller = self.createPoller()
-        self.poller.setServiceParent(self.master)
+        yield self.poller.setServiceParent(self.master)
 
     def tearDown(self):
         return self.tearDownChangeSource()

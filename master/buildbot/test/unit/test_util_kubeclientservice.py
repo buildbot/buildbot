@@ -265,12 +265,13 @@ class RealKubeClientServiceTest(TestReactorMixin, unittest.TestCase):
     def expect(self, *args, **kwargs):
         pass
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         self.createKube()
-        self.kube.setServiceParent(self.master)
-        return self.master.startService()
+        yield self.kube.setServiceParent(self.master)
+        yield self.master.startService()
 
     def tearDown(self):
         return self.master.stopService()

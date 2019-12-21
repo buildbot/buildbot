@@ -39,9 +39,10 @@ class FakeMaster:
 
 class TestPBManager(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.pbm = pbmanager.PBManager()
-        self.pbm.setServiceParent(FakeMaster())
+        yield self.pbm.setServiceParent(FakeMaster())
         self.pbm.startService()
         self.connections = []
 
