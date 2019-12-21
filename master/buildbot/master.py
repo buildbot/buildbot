@@ -96,7 +96,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.initLock = defer.DeferredLock()
 
         # set up child services
-        self.create_child_services()
+        self._services_d = self.create_child_services()
 
         # db configured values
         self.configured_db_url = None
@@ -131,64 +131,65 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
+    @defer.inlineCallbacks
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
 
         self.metrics = metrics.MetricLogObserver()
-        self.metrics.setServiceParent(self)
+        yield self.metrics.setServiceParent(self)
 
         self.caches = cache.CacheManager()
-        self.caches.setServiceParent(self)
+        yield self.caches.setServiceParent(self)
 
         self.pbmanager = buildbot.pbmanager.PBManager()
-        self.pbmanager.setServiceParent(self)
+        yield self.pbmanager.setServiceParent(self)
 
         self.workers = workermanager.WorkerManager(self)
-        self.workers.setServiceParent(self)
+        yield self.workers.setServiceParent(self)
 
         self.change_svc = ChangeManager()
-        self.change_svc.setServiceParent(self)
+        yield self.change_svc.setServiceParent(self)
 
         self.botmaster = BotMaster()
-        self.botmaster.setServiceParent(self)
+        yield self.botmaster.setServiceParent(self)
 
         self.machine_manager = MachineManager()
-        self.machine_manager.setServiceParent(self)
+        yield self.machine_manager.setServiceParent(self)
 
         self.scheduler_manager = SchedulerManager()
-        self.scheduler_manager.setServiceParent(self)
+        yield self.scheduler_manager.setServiceParent(self)
 
         self.user_manager = UserManagerManager(self)
-        self.user_manager.setServiceParent(self)
+        yield self.user_manager.setServiceParent(self)
 
         self.db = dbconnector.DBConnector(self.basedir)
-        self.db.setServiceParent(self)
+        yield self.db.setServiceParent(self)
 
         self.wamp = wampconnector.WampConnector()
-        self.wamp.setServiceParent(self)
+        yield self.wamp.setServiceParent(self)
 
         self.mq = mqconnector.MQConnector()
-        self.mq.setServiceParent(self)
+        yield self.mq.setServiceParent(self)
 
         self.data = dataconnector.DataConnector()
-        self.data.setServiceParent(self)
+        yield self.data.setServiceParent(self)
 
         self.www = wwwservice.WWWService()
-        self.www.setServiceParent(self)
+        yield self.www.setServiceParent(self)
 
         self.debug = debug.DebugServices()
-        self.debug.setServiceParent(self)
+        yield self.debug.setServiceParent(self)
 
         self.status = Status()
-        self.status.setServiceParent(self)
+        yield self.status.setServiceParent(self)
 
         self.secrets_manager = SecretManager()
-        self.secrets_manager.setServiceParent(self)
+        yield self.secrets_manager.setServiceParent(self)
         self.secrets_manager.reconfig_priority = 2000
 
         self.service_manager = service.BuildbotServiceManager()
-        self.service_manager.setServiceParent(self)
+        yield self.service_manager.setServiceParent(self)
         self.service_manager.reconfig_priority = 1000
 
         self.masterHouskeepingTimer = 0
@@ -212,6 +213,12 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     def startService(self):
         assert not self._already_started, "can only start the master once"
         self._already_started = True
+
+        # ensure child services have been set up. Normally we would do this in serServiceParent,
+        # but buildmaster is used in contexts we can't control.
+        if self._services_d is not None:
+            yield self._services_d
+            self._services_d = None
 
         log.msg("Starting BuildMaster -- buildbot.version: %s" %
                 buildbot.version)
