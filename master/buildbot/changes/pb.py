@@ -142,25 +142,25 @@ class PBChangeSource(base.ChangeSource):
         # and, if it's changed, re-register
         if port != self.registered_port and self.isActive():
             yield self._unregister()
-            self._register(port)
+            yield self._register(port)
 
         yield super().reconfigServiceWithBuildbotConfig(new_config)
 
+    @defer.inlineCallbacks
     def activate(self):
         port = self._calculatePort(self.master.config)
-        self._register(port)
-        return defer.succeed(None)
+        yield self._register(port)
 
     def deactivate(self):
         return self._unregister()
 
+    @defer.inlineCallbacks
     def _register(self, port):
         if not port:
             return
         self.registered_port = port
-        self.registration = self.master.pbmanager.register(
-            port, self.user, self.passwd,
-            self.getPerspective)
+        self.registration = yield self.master.pbmanager.register(port, self.user, self.passwd,
+                                                                 self.getPerspective)
 
     def _unregister(self):
         self.registered_port = None

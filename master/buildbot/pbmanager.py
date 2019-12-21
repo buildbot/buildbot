@@ -47,6 +47,7 @@ class PBManager(service.AsyncMultiService):
         self.setName('pbmanager')
         self.dispatchers = {}
 
+    @defer.inlineCallbacks
     def register(self, portstr, username, password, pfactory):
         """
         Register a perspective factory PFACTORY to be executed when a PB
@@ -61,7 +62,7 @@ class PBManager(service.AsyncMultiService):
 
         if portstr not in self.dispatchers:
             disp = self.dispatchers[portstr] = Dispatcher(portstr)
-            disp.setServiceParent(self)
+            yield disp.setServiceParent(self)
         else:
             disp = self.dispatchers[portstr]
 
@@ -69,6 +70,7 @@ class PBManager(service.AsyncMultiService):
 
         return reg
 
+    @defer.inlineCallbacks
     def _unregister(self, registration):
         disp = self.dispatchers[registration.portstr]
         disp.unregister(registration.username)
@@ -76,8 +78,7 @@ class PBManager(service.AsyncMultiService):
         if not disp.users:
             disp = self.dispatchers[registration.portstr]
             del self.dispatchers[registration.portstr]
-            return defer.maybeDeferred(disp.disownServiceParent)
-        return defer.succeed(None)
+            yield disp.disownServiceParent()
 
 
 class Registration:

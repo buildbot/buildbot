@@ -48,8 +48,8 @@ class Listener(base.Listener):
                 yield currentReg.unregister()
                 del self._registrations[username]
             if portStr and password:
-                reg = self.master.pbmanager.register(
-                    portStr, username, password, self._getPerspective)
+                reg = yield self.master.pbmanager.register(portStr, username, password,
+                                                           self._getPerspective)
                 self._registrations[username] = (password, portStr, reg)
                 return reg
 

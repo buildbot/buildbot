@@ -813,6 +813,7 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin,
                                      self.OBJECTID, self.SCHEDULERID)
         return sched
 
+    @defer.inlineCallbacks
     def test_service(self):
         sched = self.makeScheduler(name='tsched', builderNames=['a'],
                                    port='tcp:9999', userpass=[('fred', 'derf')])
@@ -826,15 +827,16 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin,
             self.assertEqual([portstr, user, passwd],
                              ['tcp:9999', 'fred', 'derf'])
             self.got_factory = factory
-            return registration
+            return defer.succeed(registration)
+
         sched.master.pbmanager.register = register
         # start it
-        sched.startService()
+        yield sched.startService()
         # make a fake connection by invoking the factory, and check that we
         # get the correct perspective
         persp = self.got_factory(mock.Mock(), 'fred')
         self.assertTrue(isinstance(persp, trysched.Try_Userpass_Perspective))
-        return sched.stopService()
+        yield sched.stopService()
 
     @defer.inlineCallbacks
     def test_service_but_not_active(self):
