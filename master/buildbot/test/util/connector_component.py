@@ -60,8 +60,6 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
     @defer.inlineCallbacks
     def tearDownConnectorComponent(self):
         yield self.tearDownRealDatabase()
-
-        self.db_pool.shutdown()
         # break some reference loops, just for fun
         del self.db.pool
         del self.db.model
