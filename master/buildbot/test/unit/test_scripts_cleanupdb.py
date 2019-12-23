@@ -21,7 +21,6 @@ import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.db.connector import DBConnector
 from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
@@ -131,23 +130,23 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
             self.assertApproximates(d1[k], d2[k], 10)
 
 
-class TestCleanupDbRealDb(db.RealDatabaseMixin, TestCleanupDb):
+class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
 
     @defer.inlineCallbacks
     def setUp(self):
         super().setUp()
-        yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
-                                                  'masters', 'buildrequests', 'buildsets',
-                                                  'workers'])
-        master = fakemaster.make_master(self)
-        master.config.db['db_url'] = self.db_url
-        self.db = DBConnector(self.basedir)
-        self.db.setServiceParent(master)
-        self.db.pool = self.db_pool
+
+        table_names = [
+            'logs', 'logchunks', 'steps', 'builds', 'builders',
+            'masters', 'buildrequests', 'buildsets', 'workers'
+        ]
+
+        self.master = fakemaster.make_master(self, wantRealReactor=True)
+        yield self.setUpRealDatabaseWithConnector(self.master, table_names=table_names)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownRealDatabase()
+        yield self.tearDownRealDatabaseWithConnector()
 
     @defer.inlineCallbacks
     def test_cleanup(self):
@@ -156,12 +155,12 @@ class TestCleanupDbRealDb(db.RealDatabaseMixin, TestCleanupDb):
 
         # insert a log with lots of redundancy
         LOGDATA = "xx\n" * 2000
-        logid = yield self.db.logs.addLog(102, "x", "x", "s")
-        yield self.db.logs.appendLog(logid, LOGDATA)
+        logid = yield self.master.db.logs.addLog(102, "x", "x", "s")
+        yield self.master.db.logs.appendLog(logid, LOGDATA)
 
         # test all methods
         lengths = {}
-        for mode in self.db.logs.COMPRESSION_MODE:
+        for mode in self.master.db.logs.COMPRESSION_MODE:
             if mode == "lz4" and not hasLz4:
                 # ok.. lz4 is not installed, don't fail
                 lengths["lz4"] = 40
@@ -173,16 +172,16 @@ class TestCleanupDbRealDb(db.RealDatabaseMixin, TestCleanupDb):
 
             # make sure the compression don't change the data we can retrieve
             # via api
-            res = yield self.db.logs.getLogLines(logid, 0, 2000)
+            res = yield self.master.db.logs.getLogLines(logid, 0, 2000)
             self.assertEqual(res, LOGDATA)
 
             # retrieve the actual data size in db using raw sqlalchemy
             def thd(conn):
-                tbl = self.db.model.logchunks
+                tbl = self.master.db.model.logchunks
                 q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
                 q = q.where(tbl.c.logid == logid)
                 return conn.execute(q).fetchone()[0]
-            lengths[mode] = yield self.db.pool.do(thd)
+            lengths[mode] = yield self.master.db.pool.do(thd)
 
         self.assertDictAlmostEqual(
             lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})
