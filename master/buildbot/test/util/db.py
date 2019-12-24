@@ -26,6 +26,7 @@ from twisted.trial import unittest
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import pool
+from buildbot.db.connector import DBConnector
 from buildbot.util.sautils import sa_version
 from buildbot.util.sautils import withoutSqliteForeignKeys
 
@@ -57,17 +58,21 @@ class RealDatabaseMixin:
     @ivar db_url: the DB URL used to run these tests
 
     @ivar db_engine: the engine created for the test database
+
+    Note that this class uses the production database model.  A
+    re-implementation would be virtually identical and just require extra
+    work to keep synchronized.
+
+    Similarly, this class uses the production DB thread pool.  This achieves
+    a few things:
+     - affords more thorough tests for the pool
+     - avoids repetitive implementation
+     - cooperates better at runtime with thread-sensitive DBAPI's
+
+    Finally, it duplicates initialization performed in db.connector.DBConnector.setup().
+    Never call that method in tests that use RealDatabaseMixin, use
+    RealDatabaseWithConnectorMixin.
     """
-
-    # Note that this class uses the production database model.  A
-    # re-implementation would be virtually identical and just require extra
-    # work to keep synchronized.
-
-    # Similarly, this class uses the production DB thread pool.  This achieves
-    # a few things:
-    #  - affords more thorough tests for the pool
-    #  - avoids repetitive implementation
-    #  - cooperates better at runtime with thread-sensitive DBAPI's
 
     def __thd_clean_database(self, conn):
         # In general it's nearly impossible to do "bullet proof" database
@@ -213,6 +218,7 @@ class RealDatabaseMixin:
     def tearDownRealDatabase(self):
         if self.__want_pool:
             yield self.db_pool.do(self.__thd_clean_database)
+            yield self.db_pool.shutdown()
 
     @defer.inlineCallbacks
     def insertTestData(self, rows):
@@ -239,6 +245,22 @@ class RealDatabaseMixin:
                         log.msg("while inserting %s - %s" % (row, row.values))
                         raise
         yield self.db_pool.do(thd)
+
+
+class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
+    # Same as RealDatabaseMixin, except that a real DBConnector is also setup in a correct way.
+
+    @defer.inlineCallbacks
+    def setUpRealDatabaseWithConnector(self, master, table_names=None, basedir='basedir',
+                                       want_pool=True, sqlite_memory=True):
+        yield self.setUpRealDatabase(table_names, basedir, want_pool, sqlite_memory)
+        master.config.db['db_url'] = self.db_url
+        master.db = DBConnector(self.basedir)
+        master.db.setServiceParent(master)
+        master.db.pool = self.db_pool
+
+    def tearDownRealDatabaseWithConnector(self):
+        return self.tearDownRealDatabase()
 
 
 class TestCase(unittest.TestCase):

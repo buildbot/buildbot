@@ -1,0 +1,1 @@
+The new option dumpMailsToLog of MailNotifier allows to dump formatted mails to the log before sending.

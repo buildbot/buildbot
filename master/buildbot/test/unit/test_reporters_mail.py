@@ -244,19 +244,19 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             lookup="example.org",
             exp_called_with=['Big Bob <bob@mayhem.net>',
                              'narrator@example.org'],
-            exp_TO="Big Bob <bob@mayhem.net>, "
-            "narrator@example.org")
+            exp_TO='"=?utf-8?q?Big_Bob?=" <bob@mayhem.net>, '
+            'narrator@example.org')
 
     def test_buildMessage_sendToInterestedUsers_no_lookup(self):
         return self.do_test_sendToInterestedUsers(
             exp_called_with=['Big Bob <bob@mayhem.net>'],
-            exp_TO="Big Bob <bob@mayhem.net>")
+            exp_TO='"=?utf-8?q?Big_Bob?=" <bob@mayhem.net>')
 
     def test_buildMessage_sendToInterestedUsers_extraRecipients(self):
         return self.do_test_sendToInterestedUsers(
             extraRecipients=["marla@mayhem.net"],
             exp_called_with=['Big Bob <bob@mayhem.net>', 'marla@mayhem.net'],
-            exp_TO="Big Bob <bob@mayhem.net>",
+            exp_TO='"=?utf-8?q?Big_Bob?=" <bob@mayhem.net>',
             exp_CC="marla@mayhem.net")
 
     def test_sendToInterestedUsers_False(self):

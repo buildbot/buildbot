@@ -23,9 +23,9 @@ describe('force', function() {
     it('should create a build', async () => {
         let lastbuild = 0;
         await builder.go();
-        lastbuild = await builder.getLastSuccessBuildNumber();
+        lastbuild = await builder.getLastFinishedBuildNumber();
         await builder.goForce();
-        await force.clickStartButton();
+        await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
     });

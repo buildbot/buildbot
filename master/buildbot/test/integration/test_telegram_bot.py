@@ -26,7 +26,6 @@ from twisted.web.iweb import IBodyProducer
 from zope.interface import implementer
 
 from buildbot.data import connector as dataconnector
-from buildbot.db import connector as dbconnector
 from buildbot.mq import connector as mqconnector
 from buildbot.reporters import telegram
 from buildbot.test.fake import fakedb
@@ -34,6 +33,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import db
 from buildbot.test.util import www
+from buildbot.test.util.decorators import flaky
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
@@ -58,7 +58,7 @@ class BytesProducer(object):
         pass
 
 
-class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
+class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     master = None
 
@@ -81,19 +81,19 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpRealDatabase(table_names=['objects', 'object_state', 'masters',
-                                                  'workers', 'configured_workers', 'connected_workers',
-                                                  'builder_masters', 'builders'],
-                                     sqlite_memory=False)
-        master = fakemaster.FakeMaster(reactor)
+        table_names = [
+            'objects', 'object_state', 'masters',
+            'workers', 'configured_workers', 'connected_workers',
+            'builder_masters', 'builders'
+        ]
+
+        master = fakemaster.make_master(self, wantRealReactor=True)
+
+        yield self.setUpRealDatabaseWithConnector(master, table_names=table_names,
+                                                  sqlite_memory=False)
 
         master.data = dataconnector.DataConnector()
         master.data.setServiceParent(master)
-
-        master.config.db = dict(db_url=self.db_url)
-        master.db = dbconnector.DBConnector('basedir')
-        master.db.setServiceParent(master)
-        yield master.db.setup(check_version=False)
 
         master.config.mq = dict(type='simple')
         master.mq = mqconnector.MQConnector()
@@ -148,7 +148,9 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
     def tearDown(self):
         if self.master:
             yield self.master.www.stopService()
+        yield self.tearDownRealDatabaseWithConnector()
 
+    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testWebhook(self):
         payload = unicode2bytes(json.dumps({
@@ -177,6 +179,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         self.assertIn('123456789', self.sent_messages[0][1])
         self.assertIn('-12345678', self.sent_messages[1][1])
 
+    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testReconfig(self):
         tb = self.master.config.services['TelegramBot']
@@ -185,6 +188,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
             chat_ids=[-123456], notify_events=['problem']
         )
 
+    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testLoadState(self):
         tboid = yield self.master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramWebhookBot')
@@ -201,6 +205,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         self.assertEquals(c.channel.notify_events, {'started', 'finished'})
         self.assertEquals(c.channel.missing_workers, {12})
 
+    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testSaveState(self):
         tb = self.master.config.services['TelegramBot']
@@ -227,6 +232,7 @@ class TelegramBot(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase)
         self.assertIn([99, ['cancelled']], notify_events)
         self.assertIn([99, [13]], missing_workers)
 
+    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testMissingWorker(self):
         yield self.insertTestData([fakedb.Worker(id=1, name='local1')])

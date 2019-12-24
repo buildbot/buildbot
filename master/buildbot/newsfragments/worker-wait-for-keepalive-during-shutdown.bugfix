@@ -1,0 +1,1 @@
+Worker will now wait for any pending keep-alive requests to finish leaving them in indeterminate state during shutdown.

@@ -77,6 +77,8 @@ def getMaster(case, reactor, config_dict):
     master.db.setup = lambda: None
 
     yield master.startService()
+
+    case.addCleanup(master.db.pool.shutdown)
     case.addCleanup(master.stopService)
 
     return master

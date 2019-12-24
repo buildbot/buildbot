@@ -361,6 +361,7 @@ dateutil's
 dave
 david
 dbapi
+DBConnector
 dbpool
 dbs
 ddl
@@ -726,6 +727,7 @@ jobfiles
 jobid
 joe
 jonathan
+js
 json
 jsonable
 jsonapi
