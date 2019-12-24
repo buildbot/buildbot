@@ -362,12 +362,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
             # SELECT steps.id FROM steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
             res = conn.execute(
-                sa.select([model.steps.c.id, model.builders.c.id])
+                sa.select([model.steps.c.id])
                 .where(model.steps.c.started_at < older_than_timestamp)
                 .order_by(model.steps.c.id.desc())
                 .limit(1)
             )
             res_list = res.fetchone()
+            print(res_list)
             stepid_max = None
             if res_list:
                 stepid_max = res_list[0]
