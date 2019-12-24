@@ -346,7 +346,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return saved
 
     # returns a Deferred that returns a value
-    def deleteOldLogChunks(self, older_than_timestamp):
+    def deleteOldLogChunks(self, older_than_timestamp, exceptions=[]):
         def thddeleteOldLogs(conn):
             model = self.db.model
             res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
@@ -360,9 +360,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # times are effectively sorted and we only need to find the steps.id at the upper
             # bound of steps to update.
 
-            # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
+            # SELECT steps.id FROM steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
             res = conn.execute(
-                sa.select([model.steps.c.id])
+                sa.select([model.steps.c.id, model.builders.c.id])
                 .where(model.steps.c.started_at < older_than_timestamp)
                 .order_by(model.steps.c.id.desc())
                 .limit(1)
@@ -373,11 +373,31 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 stepid_max = res_list[0]
             res.close()
 
-            # UPDATE logs SET logs.type = 'd' WHERE logs.stepid <= stepid_max AND type != 'd';
+            stepid_exceptions = []
+            if exceptions:
+                # sqlite doesn't support multiple-table criteria in UPDATE
+                # so we select the corresponding ids before
+
+                # SELECT steps.id FROM steps
+                # WHERE steps.buildid = builds.id
+                # AND builds.builderid = builders.id
+                # AND builders.name NOT IN exceptions
+                res = conn.execute(
+                    sa.select([model.steps.c.id])
+                    .where(sa.and_(model.steps.c.buildid == model.builds.c.id,
+                                   model.builds.c.builderid == model.builders.c.id,
+                                   model.builders.c.name.in_(exceptions)))
+                )
+                stepid_exceptions = [i[0] for i in res.fetchall()]
+                res.close()
+
+            # UPDATE logs SET logs.type = 'd' WHERE logs.stepid NOT IN stepid_exceptions
+            # AND logs.stepid <= stepid_max AND type != 'd';
             if stepid_max:
                 res = conn.execute(
                     model.logs.update()
-                    .where(sa.and_(model.logs.c.stepid <= stepid_max,
+                    .where(sa.and_(model.logs.c.stepid.notin_(stepid_exceptions),
+                                   model.logs.c.stepid <= stepid_max,
                                    model.logs.c.type != 'd'))
                     .values(type='d')
                 )
@@ -405,6 +425,80 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             res.close()
             return count1 - count2
         return self.db.pool.do(thddeleteOldLogs)
+
+    # returns a Deferred that returns a dictionary
+    def deleteBuilderLogs(self, builderTimestamps):
+        def thddeleteBuilderLogs(conn):
+            model = self.db.model
+            builder_names = tuple(builderTimestamps.keys())
+            deleted_logchunks = {}
+            for builder in builder_names:
+                res = conn.execute(
+                    sa.select([sa.func.count(model.logchunks.c.logid)])
+                    .where(sa.and_(model.logchunks.c.logid == model.logs.c.id,
+                                   model.logs.c.stepid == model.steps.c.id,
+                                   model.steps.c.buildid == model.builds.c.id,
+                                   model.builds.c.builderid == model.builders.c.id,
+                                   model.builders.c.name == builder))
+                )
+                deleted_logchunks[builder] = res.fetchone()[0]
+                res.close()
+
+            for builder in builder_names:
+                # SELECT steps.id from steps
+                # WHERE steps.c.buildid = builds.c.id
+                # AND builds.c.builderid = builders.c.id
+                # AND builders.c.name = builder
+                # AND steps.started_at < builderTimestamps[builder]
+                res = conn.execute(
+                    sa.select([model.steps.c.id])
+                    .where(sa.and_(model.steps.c.buildid == model.builds.c.id,
+                                   model.builds.c.builderid == model.builders.c.id,
+                                   model.builders.c.name == builder,
+                                   model.steps.c.started_at < builderTimestamps[builder]))
+                )
+                builder_stepids = [i[0] for i in res.fetchall()]
+                res.close()
+
+                # UPDATE logs SET logs.type = 'd' WHERE logs.stepid IN builder_stepids AND type != 'd';
+                res = conn.execute(
+                    model.logs.update()
+                    .where(sa.and_(model.logs.c.stepid.in_(builder_stepids),
+                                   model.logs.c.type != 'd'))
+                    .values(type='d')
+                )
+                res.close()
+
+            # query all logs with type 'd' and delete their chunks.
+            if self.db._engine.dialect.name == 'sqlite':
+                # sqlite does not support delete with a join, so for this case we use a subquery,
+                # which is much slower
+                q = sa.select([model.logs.c.id])
+                q = q.select_from(model.logs)
+                q = q.where(model.logs.c.type == 'd')
+
+                # delete their logchunks
+                q = model.logchunks.delete().where(model.logchunks.c.logid.in_(q))
+            else:
+                q = model.logchunks.delete()
+                q = q.where(model.logs.c.id == model.logchunks.c.logid)
+                q = q.where(model.logs.c.type == 'd')
+
+            res = conn.execute(q)
+            res.close()
+            for builder in builder_names:
+                res = conn.execute(
+                    sa.select([sa.func.count(model.logchunks.c.logid)])
+                    .where(sa.and_(model.logchunks.c.logid == model.logs.c.id,
+                                   model.logs.c.stepid == model.steps.c.id,
+                                   model.steps.c.buildid == model.builds.c.id,
+                                   model.builds.c.builderid == model.builders.c.id,
+                                   model.builders.c.name == builder))
+                )
+                deleted_logchunks[builder] -= res.fetchone()[0]
+                res.close()
+            return deleted_logchunks
+        return self.db.pool.do(thddeleteBuilderLogs)
 
     def _logdictFromRow(self, row):
         rv = dict(row)
