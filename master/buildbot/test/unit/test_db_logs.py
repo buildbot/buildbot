@@ -143,7 +143,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_deleteOldLogChunks(self):
         @self.assertArgSpecMatches(self.db.logs.deleteOldLogChunks)
-        def deleteOldLogChunks(self, older_than_timestamp):
+        def deleteOldLogChunks(self, older_than_timestamp, exceptions=[]):
             pass
 
     # method tests
@@ -565,6 +565,80 @@ class RealTests(Tests):
         self.assertEqual(deleted_chunks, 0)
         deleted_chunks = yield self.db.logs.deleteOldLogChunks(0)
         self.assertEqual(deleted_chunks, 0)
+        for logid in logids:
+            logdict = yield self.db.logs.getLog(logid)
+            self.assertEqual(logdict['type'], 'd')
+
+            # we make sure we can still getLogLines, it will just return empty value
+            lines = yield self.db.logs.getLogLines(logid, 0, logdict['num_lines'])
+            self.assertEqual(lines, '')
+
+    @defer.inlineCallbacks
+    def test_deleteOldLogChunks_exceptions(self):
+        yield self.insertTestData(
+            self.backgroundData + [
+                fakedb.Builder(id=89, name='b2'),
+                fakedb.Builder(id=90, name='b3'),
+                fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
+                             builderid=89, workerid=47),
+                fakedb.Build(id=32, buildrequestid=41, number=9, masterid=88,
+                             builderid=90, workerid=47),
+                fakedb.Step(id=104, buildid=31, number=3, name='three', started_at=300000),
+                fakedb.Step(id=105, buildid=32, number=4, name='four', started_at=400000),
+            ]
+        )
+        logids = []
+        for stepid in (101, 102, 104, 105):
+            for i in range(stepid):
+                logid = yield self.db.logs.addLog(
+                    stepid=stepid, name='another' + str(i), slug='another' + str(i), type='s')
+                yield self.db.logs.appendLog(logid, 'xyz\n')
+                logids.append(logid)
+        exceptions = ['b2', 'b1']
+        deleted_chunks = yield self.db.logs.deleteOldLogChunks(400001, exceptions)
+        self.assertEqual(deleted_chunks, 105)
+        for logid in logids:
+            logdict = yield self.db.logs.getLog(logid)
+            if logdict['stepid'] in (101, 102, 104):
+                self.assertEqual(logdict['type'], 's')
+                continue
+            self.assertEqual(logdict['type'], 'd')
+
+            # we make sure we can still getLogLines, it will just return empty value
+            lines = yield self.db.logs.getLogLines(logid, 0, logdict['num_lines'])
+            self.assertEqual(lines, '')
+
+    @defer.inlineCallbacks
+    def test_deleteBuilderLogs_basic(self):
+        yield self.insertTestData(
+            self.backgroundData + [
+                fakedb.Builder(id=89, name='b2'),
+                fakedb.Builder(id=90, name='b3'),
+                fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
+                             builderid=89, workerid=47),
+                fakedb.Build(id=32, buildrequestid=41, number=9, masterid=88,
+                             builderid=90, workerid=47),
+                fakedb.Step(id=103, buildid=31, number=3, name='three', started_at=300000),
+                fakedb.Step(id=104, buildid=32, number=4, name='four', started_at=400000),
+            ]
+        )
+        logids = []
+        for stepid in (101, 102, 103, 104):
+            for i in range(stepid):
+                logid = yield self.db.logs.addLog(
+                    stepid=stepid, name='another' + str(i), slug='another' + str(i), type='s')
+                yield self.db.logs.appendLog(logid, 'xyz\n')
+                logids.append(logid)
+
+        deleted_chunks = yield self.db.logs.deleteBuilderLogs(
+            {'b1': self.TIMESTAMP_STEP101 + 1, 'b2': 300001})
+        self.assertEqual(deleted_chunks, {'b1': 101, 'b2': 103})
+        deleted_chunks = yield self.db.logs.deleteBuilderLogs(
+            {'b1': self.TIMESTAMP_STEP102 + 1, 'b2': 300001, 'b3': 400001})
+        self.assertEqual(deleted_chunks, {'b1': 102, 'b2': 0, 'b3': 104})
+        deleted_chunks = yield self.db.logs.deleteBuilderLogs(
+            {'b1': 0, 'b2': 0, 'b3': 0})
+        self.assertEqual(deleted_chunks, {'b1': 0, 'b2': 0, 'b3': 0})
         for logid in logids:
             logdict = yield self.db.logs.getLog(logid)
             self.assertEqual(logdict['type'], 'd')

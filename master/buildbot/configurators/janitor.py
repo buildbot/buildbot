@@ -58,13 +58,13 @@ class LogChunksJanitor(BuildStep):
             for builder, deleted in results.items():
                 self.descriptionDone += ["deleted", str(deleted), "logchunks from", builder, '\n']
             self.descriptionDone.pop()
-            
+
         if self.logHorizon is not None:
             older_than_timestamp = datetime2epoch(now() - self.logHorizon)
             builders = None
             if self.buildersLogHorizon is not None:
                 builders = list(self.buildersLogHorizon.keys())
-            deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp, filtering=builders)
+            deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp, exceptions=builders)
             if self.descriptionDone != []:
                 self.descriptionDone += ['\n']
             self.descriptionDone += ["deleted", str(deleted), "logchunks"]
@@ -96,7 +96,7 @@ class JanitorConfigurator(ConfiguratorBase):
         for arg in ('minute', 'dayOfMonth', 'month', 'dayOfWeek'):
             if arg in kwargs:
                 nightly_kwargs[arg] = kwargs[arg]
-            
+
         self.schedulers.append(Nightly(
             name=JANITOR_NAME, builderNames=[JANITOR_NAME], hour=hour, **nightly_kwargs))
 

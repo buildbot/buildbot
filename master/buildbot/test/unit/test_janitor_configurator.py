@@ -47,8 +47,8 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
 
     def test_basic(self):
         self.setupConfigurator(logHorizon=timedelta(weeks=1),
-                               buildersLogHorizon={"Builder1":timedelta(days=6),
-                                                   "Builder2":timedelta(weeks=3)})
+                               buildersLogHorizon={"Builder1": timedelta(days=6),
+                                                   "Builder2": timedelta(weeks=3)})
         self.expectWorker(JANITOR_NAME, LocalWorker)
         self.expectScheduler(JANITOR_NAME, Nightly)
         self.expectScheduler(JANITOR_NAME + "_force", ForceScheduler)
@@ -80,17 +80,16 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
         yield self.runStep()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp, filtering=None)
-        
+
     @defer.inlineCallbacks
     def test_deleting_specific_logs(self):
         self.setupStep(
-            LogChunksJanitor(buildersLogHorizon={"Builder1":timedelta(days=6),
-                                                 "Builder2":timedelta(weeks=3)}))
-        self.master.db.logs.deleteBuilderLog = mock.Mock(return_value={"Builder1":2, "Builder2":4})
+            LogChunksJanitor(buildersLogHorizon={"Builder1": timedelta(days=6),
+                                                 "Builder2": timedelta(weeks=3)}))
+        self.master.db.logs.deleteBuilderLog = mock.Mock(return_value={"Builder1": 2, "Builder2": 4})
         self.expectOutcome(result=SUCCESS,
                            state_string="deleted 2 logchunks from Builder1 \n deleted 4 logchunks from Builder2")
         yield self.runStep()
-        expected_builder_timestamps = {"Builder1":datetime2epoch(datetime.datetime(year=2016, month=12, day=26)),
-                                       "Builder2":datetime2epoch(datetime.datetime(year=2016, month=12, day=11))}
+        expected_builder_timestamps = {"Builder1": datetime2epoch(datetime.datetime(year=2016, month=12, day=26)),
+                                       "Builder2": datetime2epoch(datetime.datetime(year=2016, month=12, day=11))}
         self.master.db.logs.deleteBuilderLog.assert_called_with(expected_builder_timestamps)
-        
