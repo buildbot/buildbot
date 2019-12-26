@@ -32,19 +32,21 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
 
+    @defer.inlineCallbacks
     def makeListener(self):
         listener = pb.Listener()
-        listener.setServiceParent(self.master)
+        yield listener.setServiceParent(self.master)
         return listener
 
+    @defer.inlineCallbacks
     def test_constructor(self):
-        listener = self.makeListener()
+        listener = yield self.makeListener()
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
     @defer.inlineCallbacks
     def test_updateRegistration_simple(self):
-        listener = self.makeListener()
+        listener = yield self.makeListener()
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
                          [('tcp:1234', 'example', 'pass')])
@@ -53,7 +55,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_pass_changed(self):
-        listener = self.makeListener()
+        listener = yield self.makeListener()
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(
@@ -63,7 +65,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_port_changed(self):
-        listener = self.makeListener()
+        listener = yield self.makeListener()
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(
@@ -73,7 +75,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getPerspective(self):
-        listener = self.makeListener()
+        listener = yield self.makeListener()
         worker = mock.Mock()
         worker.workername = 'test'
         mind = mock.Mock()

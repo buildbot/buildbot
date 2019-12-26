@@ -42,12 +42,13 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 class MQConnector(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
-        self.conn.setServiceParent(self.master)
+        yield self.conn.setServiceParent(self.master)
 
     def patchFakeMQ(self, name='fake'):
         self.patch(connector.MQConnector, 'classes',
@@ -55,15 +56,17 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
                     {'class': 'buildbot.test.unit.test_mq_connector.FakeMQ'},
                     })
 
+    @defer.inlineCallbacks
     def test_setup_unknown_type(self):
         self.mqconfig['type'] = 'unknown'
         with self.assertRaises(AssertionError):
-            self.conn.setup()
+            yield self.conn.setup()
 
+    @defer.inlineCallbacks
     def test_setup_simple_type(self):
         self.patchFakeMQ(name='simple')
         self.mqconfig['type'] = 'simple'
-        self.conn.setup()
+        yield self.conn.setup()
         self.assertIsInstance(self.conn.impl, FakeMQ)
         self.assertEqual(self.conn.impl.produce, self.conn.produce)
         self.assertEqual(self.conn.impl.startConsuming,
@@ -84,7 +87,7 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
     def test_reconfigService_change_type(self):
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
-        self.conn.setup()
+        yield self.conn.setup()
         new_config = mock.Mock()
         new_config.mq = dict(type='other')
         try:

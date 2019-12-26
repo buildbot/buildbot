@@ -27,12 +27,13 @@ from buildbot.test.util.misc import TestReactorMixin
 
 class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantData=True)
         self.cm = manager.ChangeManager()
         self.master.startService()
-        self.cm.setServiceParent(self.master)
+        yield self.cm.setServiceParent(self.master)
         self.new_config = mock.Mock()
 
     def tearDown(self):
@@ -46,7 +47,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_reconfigService_add(self):
         src1, src2 = self.make_sources(2)
-        src1.setServiceParent(self.cm)
+        yield src1.setServiceParent(self.cm)
         self.new_config.change_sources = [src1, src2]
 
         yield self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
@@ -57,7 +58,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_reconfigService_remove(self):
         src1, = self.make_sources(1)
-        src1.setServiceParent(self.cm)
+        yield src1.setServiceParent(self.cm)
         self.new_config.change_sources = []
 
         self.assertTrue(src1.running)
@@ -68,7 +69,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_reconfigService_change_reconfigurable(self):
         src1, = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=1)
-        src1.setServiceParent(self.cm)
+        yield src1.setServiceParent(self.cm)
 
         src2, = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=2)
 
@@ -85,7 +86,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_reconfigService_change_legacy(self):
         src1, = self.make_sources(1, base.PollingChangeSource, pollInterval=1)
-        src1.setServiceParent(self.cm)
+        yield src1.setServiceParent(self.cm)
 
         src2, = self.make_sources(1, base.PollingChangeSource, pollInterval=2)
 

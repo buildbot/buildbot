@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
 from twisted.python.reflect import namedObject
 
 from buildbot.util import service
@@ -38,6 +39,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.impl = None  # set in setup
         self.impl_type = None  # set in setup
 
+    @defer.inlineCallbacks
     def setup(self):
         assert not self.impl
 
@@ -50,7 +52,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.impl = cls()
 
         # set up the impl as a child service
-        self.impl.setServiceParent(self)
+        yield self.impl.setServiceParent(self)
 
         # configure it (early)
         self.impl.reconfigServiceWithBuildbotConfig(self.master.config)

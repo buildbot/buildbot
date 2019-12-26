@@ -219,13 +219,14 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin,
 class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase,
                                  ManualUsersMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.setUpManualUsers()
         self.manual_component = manual.CommandlineUserManager(username="user",
                                                               passwd="userpw",
                                                               port="9990")
-        self.manual_component.setServiceParent(self.master)
+        yield self.manual_component.setServiceParent(self.master)
 
     def test_no_userpass(self):
         d = defer.maybeDeferred(manual.CommandlineUserManager)
@@ -236,6 +237,7 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase,
                                 username="x", passwd="y")
         return self.assertFailure(d, AssertionError)
 
+    @defer.inlineCallbacks
     def test_service(self):
         # patch out the pbmanager's 'register' command both to be sure
         # the registration is correct and to get a copy of the factory
@@ -247,13 +249,13 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase,
             self.assertEqual([portstr, user, passwd],
                              ['9990', 'user', 'userpw'])
             self.got_factory = factory
-            return registration
+            return defer.succeed(registration)
         self.master.pbmanager.register = register
 
-        self.manual_component.startService()
+        yield self.manual_component.startService()
 
         persp = self.got_factory(mock.Mock(), 'user')
         self.assertTrue(
             isinstance(persp, manual.CommandlineUserManagerPerspective))
 
-        return self.manual_component.stopService()
+        yield self.manual_component.stopService()

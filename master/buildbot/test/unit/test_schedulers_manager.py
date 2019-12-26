@@ -24,6 +24,7 @@ from buildbot.schedulers import manager
 
 class SchedulerManager(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.next_objectid = 13
         self.objectids = {}
@@ -49,8 +50,8 @@ class SchedulerManager(unittest.TestCase):
         self.new_config = mock.Mock()
 
         self.sm = manager.SchedulerManager()
-        self.sm.setServiceParent(self.master)
-        return self.sm.startService()
+        yield self.sm.setServiceParent(self.master)
+        yield self.sm.startService()
 
     def tearDown(self):
         if self.sm.running:

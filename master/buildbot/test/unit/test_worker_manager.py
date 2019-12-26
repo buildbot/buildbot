@@ -47,17 +47,18 @@ class FakeWorker2(FakeWorker):
 
 class TestWorkerManager(TestReactorMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.workers = workermanager.WorkerManager(self.master)
-        self.workers.setServiceParent(self.master)
+        yield self.workers.setServiceParent(self.master)
         # workers expect a botmaster as well as a manager.
         self.master.botmaster.disownServiceParent()
         self.botmaster = botmaster.BotMaster()
         self.master.botmaster = self.botmaster
-        self.master.botmaster.setServiceParent(self.master)
+        yield self.master.botmaster.setServiceParent(self.master)
 
         self.new_config = mock.Mock()
         self.workers.startService()
@@ -85,7 +86,7 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceWorkers_reconfig(self):
         worker = FakeWorker('worker1')
-        worker.setServiceParent(self.workers)
+        yield worker.setServiceParent(self.workers)
         worker.parent = self.master
         worker.manager = self.workers
         worker.botmaster = self.master.botmaster
@@ -101,7 +102,7 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceWorkers_class_changes(self):
         worker = FakeWorker('worker1')
-        worker.setServiceParent(self.workers)
+        yield worker.setServiceParent(self.workers)
 
         worker_new = FakeWorker2('worker1')
         self.new_config.workers = [worker_new]

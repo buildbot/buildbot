@@ -41,7 +41,7 @@ class TestDebugServices(TestReactorMixin, unittest.TestCase):
     def test_reconfigService_manhole(self):
         master = fakemaster.make_master(self)
         ds = debug.DebugServices()
-        ds.setServiceParent(master)
+        yield ds.setServiceParent(master)
         yield master.startService()
 
         # start off with no manhole

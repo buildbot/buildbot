@@ -39,9 +39,10 @@ class FakeMaster:
 
 class TestPBManager(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.pbm = pbmanager.PBManager()
-        self.pbm.setServiceParent(FakeMaster())
+        yield self.pbm.setServiceParent(FakeMaster())
         self.pbm.startService()
         self.connections = []
 
@@ -55,8 +56,9 @@ class TestPBManager(unittest.TestCase):
         self.connections.append(username)
         return defer.succeed(persp)
 
+    @defer.inlineCallbacks
     def test_repr(self):
-        reg = self.pbm.register(
+        reg = yield self.pbm.register(
             'tcp:0:interface=127.0.0.1', "x", "y", self.perspectiveFactory)
         self.assertEqual(repr(self.pbm.dispatchers['tcp:0:interface=127.0.0.1']),
                          '<pbmanager.Dispatcher for x on tcp:0:interface=127.0.0.1>')
@@ -66,8 +68,7 @@ class TestPBManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
-        reg = self.pbm.register(
-            portstr, "boris", "pass", self.perspectiveFactory)
+        reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
         # make sure things look right
         self.assertIn(portstr, self.pbm.dispatchers)
@@ -92,8 +93,8 @@ class TestPBManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_double_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
-        reg1 = self.pbm.register(portstr, "boris", "pass", None)
-        reg2 = self.pbm.register(portstr, "ivona", "pass", None)
+        reg1 = yield self.pbm.register(portstr, "boris", "pass", None)
+        reg2 = yield self.pbm.register(portstr, "ivona", "pass", None)
 
         # make sure things look right
         self.assertEqual(len(self.pbm.dispatchers), 1)
@@ -116,8 +117,7 @@ class TestPBManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_requestAvatarId_noinitLock(self):
         portstr = "tcp:0:interface=127.0.0.1"
-        reg = self.pbm.register(
-            portstr, "boris", "pass", self.perspectiveFactory)
+        reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
         disp = self.pbm.dispatchers[portstr]
 
@@ -130,8 +130,7 @@ class TestPBManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_requestAvatarId_initLock(self):
         portstr = "tcp:0:interface=127.0.0.1"
-        reg = self.pbm.register(
-            portstr, "boris", "pass", self.perspectiveFactory)
+        reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
         disp = self.pbm.dispatchers[portstr]
 

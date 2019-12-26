@@ -105,12 +105,13 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
         A router which only accepts one subscriber on one topic
     """
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         self.master.wamp = FakeWampConnector()
         self.mq = wamp.WampMQ()
-        self.mq.setServiceParent(self.master)
+        yield self.mq.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def test_startConsuming_basic(self):

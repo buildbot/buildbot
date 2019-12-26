@@ -80,8 +80,9 @@ class DBConnector(service.ReconfigurableServiceMixin,
         self._engine = None  # set up in reconfigService
         self.pool = None  # set up in reconfigService
 
+    @defer.inlineCallbacks
     def setServiceParent(self, p):
-        d = super().setServiceParent(p)
+        yield super().setServiceParent(p)
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.changesources = changesources.ChangeSourcesConnectorComponent(
@@ -104,8 +105,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                                                    self._doCleanup)
         self.cleanup_timer.clock = self.master.reactor
-        self.cleanup_timer.setServiceParent(self)
-        return d
+        yield self.cleanup_timer.setServiceParent(self)
 
     @defer.inlineCallbacks
     def setup(self, check_version=True, verbose=True):

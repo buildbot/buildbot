@@ -114,10 +114,11 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             self.stickers += 1
         self.bot.send_sticker = send_sticker
 
+    @defer.inlineCallbacks
     def setUp(self):
         ContactMixin.setUp(self)
         self.contact1 = self.contactClass(user=self.USER, channel=self.channelClass(self.bot, self.PRIVATE))
-        self.contact1.channel.setServiceParent(self.master)
+        yield self.contact1.channel.setServiceParent(self.master)
 
     def test_list_notified_events(self):
         self.patch_send()

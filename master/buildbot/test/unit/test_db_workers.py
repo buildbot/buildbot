@@ -655,11 +655,12 @@ class RealTests(Tests):
 
 class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         self.db = fakedb.FakeDBConnector(self)
-        self.db.setServiceParent(self.master)
+        yield self.db.setServiceParent(self.master)
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 

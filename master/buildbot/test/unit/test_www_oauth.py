@@ -59,6 +59,7 @@ class FakeResponse:
 class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                  unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         if requests is None:
@@ -93,7 +94,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                                                          "client-secret": "secretClientSecret"})
         secret_service = SecretManager()
         secret_service.services = [fake_storage_service]
-        secret_service.setServiceParent(self._master)
+        yield secret_service.setServiceParent(self._master)
         self.githubAuth_secret.reconfigAuth(master, master.config)
 
     @defer.inlineCallbacks

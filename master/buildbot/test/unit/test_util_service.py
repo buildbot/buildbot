@@ -45,9 +45,10 @@ class AsyncMultiService(unittest.TestCase):
         yield self.svc.startService()
         yield self.svc.stopService()
 
+    @defer.inlineCallbacks
     def test_waits_for_child_services(self):
         child = DeferredStartStop()
-        child.setServiceParent(self.svc)
+        yield child.setServiceParent(self.svc)
 
         d = self.svc.startService()
         self.assertFalse(d.called)
@@ -59,9 +60,10 @@ class AsyncMultiService(unittest.TestCase):
         child.d.callback(None)
         self.assertTrue(d.called)
 
+    @defer.inlineCallbacks
     def test_child_fails(self):
         child = DeferredStartStop()
-        child.setServiceParent(self.svc)
+        yield child.setServiceParent(self.svc)
 
         d = self.svc.startService()
         self.assertFalse(d.called)
@@ -752,48 +754,51 @@ class UnderTestDependentService(service.AsyncService):
         assert self.dependent.running
 
 
-class SharedService(unittest.SynchronousTestCase):
+class SharedService(unittest.TestCase):
+    @defer.inlineCallbacks
     def test_bad_constructor(self):
         parent = service.AsyncMultiService()
-        self.failureResultOf(
-            UnderTestSharedService.getService(parent, arg2="foo"))
+        with self.assertRaises(Exception):
+            yield UnderTestSharedService.getService(parent, arg2="foo")
 
+    @defer.inlineCallbacks
     def test_creation(self):
         parent = service.AsyncMultiService()
-        r = self.successResultOf(UnderTestSharedService.getService(parent))
-        r2 = self.successResultOf(UnderTestSharedService.getService(parent))
-        r3 = self.successResultOf(
-            UnderTestSharedService.getService(parent, "arg1"))
-        r4 = self.successResultOf(
-            UnderTestSharedService.getService(parent, "arg1"))
+        r = yield UnderTestSharedService.getService(parent)
+        r2 = yield UnderTestSharedService.getService(parent)
+        r3 = yield UnderTestSharedService.getService(parent, "arg1")
+        r4 = yield UnderTestSharedService.getService(parent, "arg1")
         self.assertIdentical(r, r2)
         self.assertNotIdentical(r, r3)
         self.assertIdentical(r3, r4)
         self.assertEqual(len(list(iter(parent))), 2)
 
+    @defer.inlineCallbacks
     def test_startup(self):
         """the service starts when parent starts and stop"""
         parent = service.AsyncMultiService()
-        r = self.successResultOf(UnderTestSharedService.getService(parent))
+        r = yield UnderTestSharedService.getService(parent)
         self.assertEqual(r.running, 0)
-        self.successResultOf(parent.startService())
+        yield parent.startService()
         self.assertEqual(r.running, 1)
-        self.successResultOf(parent.stopService())
+        yield parent.stopService()
         self.assertEqual(r.running, 0)
 
+    @defer.inlineCallbacks
     def test_already_started(self):
         """the service starts during the getService if parent already started"""
         parent = service.AsyncMultiService()
-        self.successResultOf(parent.startService())
-        r = self.successResultOf(UnderTestSharedService.getService(parent))
+        yield parent.startService()
+        r = yield UnderTestSharedService.getService(parent)
         self.assertEqual(r.running, 1)
         # then we stop the parent, and the shared service stops
-        self.successResultOf(parent.stopService())
+        yield parent.stopService()
         self.assertEqual(r.running, 0)
 
+    @defer.inlineCallbacks
     def test_already_stopped_last(self):
         parent = service.AsyncMultiService()
         o = UnderTestDependentService()
-        o.setServiceParent(parent)
-        self.successResultOf(parent.startService())
-        self.successResultOf(parent.stopService())
+        yield o.setServiceParent(parent)
+        yield parent.startService()
+        yield parent.stopService()

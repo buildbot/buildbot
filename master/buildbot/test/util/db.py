@@ -256,7 +256,7 @@ class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
         yield self.setUpRealDatabase(table_names, basedir, want_pool, sqlite_memory)
         master.config.db['db_url'] = self.db_url
         master.db = DBConnector(self.basedir)
-        master.db.setServiceParent(master)
+        yield master.db.setServiceParent(master)
         master.db.pool = self.db_pool
 
     def tearDownRealDatabaseWithConnector(self):

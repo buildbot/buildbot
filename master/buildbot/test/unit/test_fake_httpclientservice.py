@@ -39,26 +39,31 @@ class myTestedService(service.BuildbotService):
         return res_json
 
 
-class Test(unittest.SynchronousTestCase):
+class Test(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         baseurl = 'http://127.0.0.1:8080'
         self.parent = service.MasterService()
-        self._http = self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
-            self.parent, self, baseurl))
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.parent, self, baseurl)
         self.tested = myTestedService(baseurl)
 
-        self.successResultOf(self.tested.setServiceParent(self.parent))
-        self.successResultOf(self.parent.startService())
+        yield self.tested.setServiceParent(self.parent)
+        yield self.parent.startService()
 
+    @defer.inlineCallbacks
     def test_root(self):
         self._http.expect("get", "/", content_json={'foo': 'bar'})
 
-        response = self.successResultOf(self.tested.doGetRoot())
+        response = yield self.tested.doGetRoot()
         self.assertEqual(response, {'foo': 'bar'})
 
+    @defer.inlineCallbacks
     def test_root_error(self):
         self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
 
-        response = self.failureResultOf(self.tested.doGetRoot())
-        self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
+        try:
+            yield self.tested.doGetRoot()
+        except Exception as e:
+            self.assertEqual(str(e), '404: server did not succeed')

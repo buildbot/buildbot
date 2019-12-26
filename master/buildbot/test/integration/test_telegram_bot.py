@@ -93,12 +93,12 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
                                                   sqlite_memory=False)
 
         master.data = dataconnector.DataConnector()
-        master.data.setServiceParent(master)
+        yield master.data.setServiceParent(master)
 
         master.config.mq = dict(type='simple')
         master.mq = mqconnector.MQConnector()
-        master.mq.setServiceParent(master)
-        master.mq.setup()
+        yield master.mq.setServiceParent(master)
+        yield master.mq.setup()
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
@@ -108,7 +108,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
             avatar_methods=[],
             logfileName='http.log')
         master.www = wwwservice.WWWService()
-        master.www.setServiceParent(master)
+        yield master.www.setServiceParent(master)
         yield master.www.startService()
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
         session = mock.Mock()
@@ -133,7 +133,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
             chat_ids=[-123456], notify_events=['worker']
         )
         tb._get_http = self.get_http
-        tb.setServiceParent(self.master)
+        yield tb.setServiceParent(self.master)
         self.bot_url = self.url + b"telegram12345:secret"
 
         yield tb.startService()

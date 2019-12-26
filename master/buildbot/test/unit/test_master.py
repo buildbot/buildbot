@@ -98,12 +98,12 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
         self.master.sendBuildbotNetUsageData = mock.Mock()
         self.master.botmaster = FakeBotMaster()
         self.db = self.master.db = fakedb.FakeDBConnector(self)
-        self.db.setServiceParent(self.master)
+        yield self.db.setServiceParent(self.master)
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
-        self.mq.setServiceParent(self.master)
+        yield self.mq.setServiceParent(self.master)
         self.data = self.master.data = fakedata.FakeDataConnector(
             self.master, self)
-        self.data.setServiceParent(self.master)
+        yield self.data.setServiceParent(self.master)
 
     def tearDown(self):
         return self.tearDownDirs()

@@ -205,15 +205,15 @@ class CommandlineUserManager(service.AsyncMultiService):
         self.port = port
         self.registration = None
 
+    @defer.inlineCallbacks
     def startService(self):
         # set up factory and register with buildbot.pbmanager
         def factory(mind, username):
             return CommandlineUserManagerPerspective(self.master)
-        self.registration = self.master.pbmanager.register(self.port,
-                                                           self.username,
-                                                           self.passwd,
-                                                           factory)
-        return super().startService()
+
+        self.registration = yield self.master.pbmanager.register(self.port, self.username,
+                                                                 self.passwd, factory)
+        yield super().startService()
 
     def stopService(self):
         d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)

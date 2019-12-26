@@ -447,9 +447,8 @@ class Try_Userpass(TryBase):
         def factory(mind, username):
             return Try_Userpass_Perspective(self, username)
         for user, passwd in self.userpass:
-            self.registrations.append(
-                self.master.pbmanager.register(
-                    self.port, user, passwd, factory))
+            reg = yield self.master.pbmanager.register(self.port, user, passwd, factory)
+            self.registrations.append(reg)
 
     @defer.inlineCallbacks
     def deactivate(self):

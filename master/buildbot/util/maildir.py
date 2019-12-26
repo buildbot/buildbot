@@ -63,6 +63,7 @@ class MaildirService(service.BuildbotService):
         self.newdir = os.path.join(self.basedir, "new")
         self.curdir = os.path.join(self.basedir, "cur")
 
+    @defer.inlineCallbacks
     def startService(self):
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir("invalid maildir '%s'" % self.basedir)
@@ -81,9 +82,9 @@ class MaildirService(service.BuildbotService):
         if not self.dnotify:
             self.timerService = internet.TimerService(
                 self.pollinterval, self.poll)
-            self.timerService.setServiceParent(self)
+            yield self.timerService.setServiceParent(self)
         self.poll()
-        return super().startService()
+        yield super().startService()
 
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")

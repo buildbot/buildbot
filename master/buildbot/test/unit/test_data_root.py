@@ -49,12 +49,13 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = root.SpecEndpoint
     resourceTypeClass = root.Spec
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
         # replace fakeConnector with real DataConnector
         self.master.data.disownServiceParent()
         self.master.data = connector.DataConnector()
-        self.master.data.setServiceParent(self.master)
+        yield self.master.data.setServiceParent(self.master)
 
     def tearDown(self):
         self.tearDownEndpoint()
