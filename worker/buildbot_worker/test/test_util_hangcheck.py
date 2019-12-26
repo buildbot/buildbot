@@ -235,15 +235,20 @@ class EndToEndHangCheckTests(TestCase):
 
         self.patch(HangCheckProtocol, '_HUNG_CONNECTION_TIMEOUT', 0.1)
 
-        connected_server_and_client(
+        d_connected = connected_server_and_client(
             self, site, client,
         )
 
-        timer = reactor.callLater(2, result.cancel)
+        def cancel_all():
+            result.cancel()
+            d_connected.cancel()
+
+        timer = reactor.callLater(2, cancel_all)
 
         try:
             yield result
         except defer.CancelledError:
             raise Exception('Timeout did not happen')
         finally:
+            d_connected.cancel()
             timer.cancel()
