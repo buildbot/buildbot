@@ -373,35 +373,43 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 stepid_max = res_list[0]
             res.close()
 
-            stepid_exceptions = []
-            if exceptions:
-                # sqlite doesn't support multiple-table criteria in UPDATE
-                # so we select the corresponding ids before
-
-                # SELECT steps.id FROM steps
-                # WHERE steps.buildid = builds.id
-                # AND builds.builderid = builders.id
-                # AND builders.name NOT IN exceptions
-                res = conn.execute(
-                    sa.select([model.steps.c.id])
-                    .where(sa.and_(model.steps.c.buildid == model.builds.c.id,
-                                   model.builds.c.builderid == model.builders.c.id,
-                                   model.builders.c.name.in_(exceptions)))
-                )
-                stepid_exceptions = [i[0] for i in res.fetchall()]
-                res.close()
-
-            # UPDATE logs SET logs.type = 'd' WHERE logs.stepid NOT IN stepid_exceptions
-            # AND logs.stepid <= stepid_max AND type != 'd';
             if stepid_max:
-                res = conn.execute(
-                    model.logs.update()
-                    .where(sa.and_(model.logs.c.stepid.notin_(stepid_exceptions),
-                                   model.logs.c.stepid <= stepid_max,
-                                   model.logs.c.type != 'd'))
-                    .values(type='d')
-                )
-                res.close()
+                if exceptions:
+                    # sqlite doesn't support multiple-table criteria in UPDATE
+                    # so we select the corresponding ids before
+                    
+                    # SELECT steps.id FROM steps
+                    # WHERE steps.buildid = builds.id
+                    # AND builds.builderid = builders.id
+                    # AND builders.name IN exceptions
+                    res = conn.execute(
+                        sa.select([model.steps.c.id])
+                        .where(sa.and_(model.steps.c.buildid == model.builds.c.id,
+                                       model.builds.c.builderid == model.builders.c.id,
+                                       model.builders.c.name.in_(exceptions)))
+                    )
+                    stepid_exceptions = [i[0] for i in res.fetchall()]
+                    res.close()
+
+                    # UPDATE logs SET logs.type = 'd' WHERE logs.stepid NOT IN stepid_exceptions
+                    # AND logs.stepid <= stepid_max AND type != 'd';
+                    res = conn.execute(
+                        model.logs.update()
+                        .where(sa.and_(model.logs.c.stepid.notin_(stepid_exceptions),
+                                       model.logs.c.stepid <= stepid_max,
+                                       model.logs.c.type != 'd'))
+                        .values(type='d')
+                    )
+                    res.close()
+                else:
+                    # UPDATE logs SET logs.type = 'd' WHERE logs.stepid <= stepid_max AND type != 'd';
+                    res = conn.execute(
+                        model.logs.update()
+                        .where(sa.and_(model.logs.c.stepid <= stepid_max,
+                                       model.logs.c.type != 'd'))
+                        .values(type='d')
+                    )
+                    res.close()
 
             # query all logs with type 'd' and delete their chunks.
             if self.db._engine.dialect.name == 'sqlite':
@@ -459,6 +467,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 )
                 builder_stepids = [i[0] for i in res.fetchall()]
                 res.close()
+                if not builder_stepids:
+                    continue
 
                 # UPDATE logs SET logs.type = 'd' WHERE logs.stepid IN builder_stepids AND type != 'd';
                 res = conn.execute(
