@@ -10,6 +10,84 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.5.2-dev85`` ( ``2019-12-26`` )
+===========================================
+
+Bug fixes
+---------
+
+- Fix a potential deadlock when interrupting a step that is waiting for a lock to become available.
+- Fix mail recipient formatting to make sure address comments are separately escaped instead of escaping the whole To: or CC: header, which is not RFC compliant.
+- Remove server header from response.
+- Fix multiple race conditions in Telegram reporter that were visible in tests.
+- Improve reliability of timed scheduler.
+- Warn if Buildbot title in the configuration is too long and will be ignored.
+- Worker will now wait for any pending keep-alive requests to finish leaving them in indeterminate state during shutdown.
+
+Features
+--------
+
+- Gerrit reporter now passes a tag for versions that support it.
+  This enables filtering out buildbot's messages.
+- Web front end now allows you to configure the default landing page with `c['www']['default_page'] = 'name-of-page'`.
+- The JanitorConfigurator now has the option to specify the log horizons for builders.
+  The deleteOldLogChunks function can now filter builders.
+  The deleteBuilderLogs function deletes logchunks from specific builders.
+- The new option dumpMailsToLog of MailNotifier allows to dump formatted mails to the log before sending.
+
+
+Buildbot ``2.5.2-dev85`` ( ``2019-12-26`` )
+===========================================
+
+Bug fixes
+---------
+
+- Fix a potential deadlock when interrupting a step that is waiting for a lock to become available.
+- Fix mail recipient formatting to make sure address comments are separately escaped instead of escaping the whole To: or CC: header, which is not RFC compliant.
+- Remove server header from response.
+- Fix multiple race conditions in Telegram reporter that were visible in tests.
+- Improve reliability of timed scheduler.
+- Warn if Buildbot title in the configuration is too long and will be ignored.
+- Worker will now wait for any pending keep-alive requests to finish leaving them in indeterminate state during shutdown.
+
+Features
+--------
+
+- Gerrit reporter now passes a tag for versions that support it.
+  This enables filtering out buildbot's messages.
+- Web front end now allows you to configure the default landing page with `c['www']['default_page'] = 'name-of-page'`.
+- The configurator Janitor now has the option to log horizons to specific builders.
+  The deleteOldLogChunks function can now filter builders.
+  The deleteBuilderLogs function deletes logchunks from specific builders.
+- The new option dumpMailsToLog of MailNotifier allows to dump formatted mails to the log before sending.
+
+
+Buildbot ``2.5.2-dev85`` ( ``2019-12-26`` )
+===========================================
+
+Bug fixes
+---------
+
+- Fix a potential deadlock when interrupting a step that is waiting for a lock to become available.
+- Fix mail recipient formatting to make sure address comments are separately escaped instead of escaping the whole To: or CC: header, which is not RFC compliant.
+- Remove server header from response.
+- Fix multiple race conditions in Telegram reporter that were visible in tests.
+- Improve reliability of timed scheduler.
+- Warn if Buildbot title in the configuration is too long and will be ignored.
+- Worker will now wait for any pending keep-alive requests to finish leaving them in indeterminate state during shutdown.
+
+Features
+--------
+
+- Gerrit reporter now passes a tag for versions that support it.
+  This enables filtering out buildbot's messages.
+- Web front end now allows you to configure the default landing page with `c['www']['default_page'] = 'name-of-page'`.
+- The configurator Janitor now has the option to log horizons to specific builders.
+  The deleteOldLogChunks function can now filter builders.
+  The deleteBuilderLogs function deletes logchunks from specific builders.
+- The new option dumpMailsToLog of MailNotifier allows to dump formatted mails to the log before sending.
+
+
 Buildbot ``2.5.1`` ( ``2019-11-24`` )
 =====================================
 

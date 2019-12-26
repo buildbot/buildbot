@@ -377,7 +377,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 if exceptions:
                     # sqlite doesn't support multiple-table criteria in UPDATE
                     # so we select the corresponding ids before
-                    
+
                     # SELECT steps.id FROM steps
                     # WHERE steps.buildid = builds.id
                     # AND builds.builderid = builders.id
