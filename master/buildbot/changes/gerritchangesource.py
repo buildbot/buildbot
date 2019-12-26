@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import copy
 import datetime
 import json
 
@@ -28,6 +29,35 @@ from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
+
+
+def _canonicalize_event(event):
+    """
+    Return an event dictionary which is consistent between the gerrit
+    event stream and the gerrit event log formats.
+    """
+    # For "patchset-created" the events-log JSON looks like:
+    #   "project": {"name": "buildbot"}
+    # while the stream-events JSON looks like:
+    #   "project": "buildbot"
+    # so we canonicalize them to the latter
+    if "change" not in event:
+        return event
+
+    change = event["change"]
+    if "project" not in change:
+        return event
+
+    project = change["project"]
+    if not isinstance(project, dict):
+        return event
+
+    if "name" not in project:
+        return event
+
+    event = copy.deepcopy(event)
+    event["change"]["project"] = project["name"]
+    return event
 
 
 class GerritChangeFilter(ChangeFilter):
@@ -127,23 +157,52 @@ class GerritChangeSourceBase(base.ChangeSource):
 
         properties = {}
         flatten(properties, "event", event)
-        event_with_change = "change" in event and "patchSet" in event
+        properties["event.source"] = self.__class__.__name__
         func_name = "eventReceived_%s" % event["type"].replace("-", "_")
         func = getattr(self, func_name, None)
-        if func is None and event_with_change:
+        if func is None:
             return self.addChangeFromEvent(properties, event)
-        elif func is None:
-            if self.debug:
-                log.msg("unsupported event %s" % (event["type"],))
-            return defer.succeed(None)
-        else:
-            return func(properties, event)
 
+        return func(properties, event)
+
+    @defer.inlineCallbacks
     def addChange(self, chdict):
-        d = self.master.data.updates.addChange(**chdict)
-        # eat failures..
-        d.addErrback(log.err, 'error adding change from GerritChangeSource')
-        return d
+        stampdict = {
+            "branch": chdict["branch"],
+            "revision": chdict["revision"],
+            "patch_author": chdict["author"],
+            "patch_comment": chdict["comments"],
+            "repository": chdict["repository"],
+            "project": chdict["project"],
+        }
+
+        stampid, found_existing = yield(
+             self.master.db.sourcestamps.findOrCreateId(**stampdict))
+
+        if found_existing:
+            if self.debug or True:
+                eventstr = "{}/{} -- {}:{}".format(
+                    self.gitBaseURL, chdict["project"], chdict["branch"],
+                    chdict["revision"])
+                message = (
+                    "gerrit: duplicate change event {} by {}"
+                    .format(eventstr, self.__class__.__name__))
+                log.msg(message.encode("utf-8"))
+            defer.returnValue(None)
+
+        if self.debug:
+            eventstr = "{} -- {}:{}".format(
+                chdict["repository"], chdict["branch"], chdict["revision"])
+            message = (
+                "gerrit: adding change from {} in {}"
+                .format(eventstr, self.__class__.__name__))
+            log.msg(message.encode("utf-8"))
+
+        try:
+            yield self.master.data.updates.addChange(**chdict)
+        except Exception:
+            # eat failures..
+            log.err('error adding change from GerritChangeSource')
 
     def getGroupingPolicyFromEvent(self, event):
         # At the moment, buildbot's change grouping strategy is hardcoded at various place
@@ -160,28 +219,38 @@ class GerritChangeSourceBase(base.ChangeSource):
 
     @defer.inlineCallbacks
     def addChangeFromEvent(self, properties, event):
-        if "change" in event and "patchSet" in event:
-            event_change = event["change"]
+        if "change" not in event:
+            if self.debug:
+                log.msg("unsupported event %s" % (event["type"],))
+            return defer.returnValue(None)
 
-            files = ["unknown"]
-            if self._get_files:
-                files = yield self.getFiles(
-                    change=event_change["number"],
-                    patchset=event["patchSet"]["number"]
-                )
+        if "patchSet" not in event:
+            if self.debug:
+                log.msg("unsupported event %s" % (event["type"],))
+            return defer.returnValue(None)
 
-            yield self.addChange({
-                'author': _gerrit_user_to_author(event_change["owner"]),
-                'project': util.bytes2unicode(event_change["project"]),
-                'repository': "{}/{}".format(
-                    self.gitBaseURL, event_change["project"]),
-                'branch': self.getGroupingPolicyFromEvent(event),
-                'revision': event["patchSet"]["revision"],
-                'revlink': event_change["url"],
-                'comments': event_change["subject"],
-                'files': files,
-                'category': event["type"],
-                'properties': properties})
+        event = _canonicalize_event(event)
+        event_change = event["change"]
+
+        files = ["unknown"]
+        if self._get_files:
+            files = yield self.getFiles(
+                change=event_change["number"],
+                patchset=event["patchSet"]["number"]
+            )
+
+        yield self.addChange({
+            'author': _gerrit_user_to_author(event_change["owner"]),
+            'project': util.bytes2unicode(event_change["project"]),
+            'repository': "{}/{}".format(
+                self.gitBaseURL, event_change["project"]),
+            'branch': self.getGroupingPolicyFromEvent(event),
+            'revision': event["patchSet"]["revision"],
+            'revlink': event_change["url"],
+            'comments': event_change["subject"],
+            'files': files,
+            'category': event["type"],
+            'properties': properties})
 
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
@@ -377,12 +446,14 @@ class GerritChangeSource(GerritChangeSourceBase):
 class GerritEventLogPoller(GerritChangeSourceBase):
 
     POLL_INTERVAL_SEC = 30
+    FIRST_FETCH_LOOKBACK_DAYS = 30
 
     def checkConfig(self,
                     baseURL,
                     auth,
                     pollInterval=POLL_INTERVAL_SEC,
                     pollAtLaunch=True,
+                    firstFetchLookback=FIRST_FETCH_LOOKBACK_DAYS,
                     **kwargs):
         if self.name is None:
             self.name = "GerritEventLogPoller:{}".format(baseURL)
@@ -394,6 +465,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                         auth,
                         pollInterval=POLL_INTERVAL_SEC,
                         pollAtLaunch=True,
+                        firstFetchLookback=FIRST_FETCH_LOOKBACK_DAYS,
                         **kwargs):
 
         yield super().reconfigService(**kwargs)
@@ -406,6 +478,9 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, baseURL, auth=auth)
 
+        self._first_fetch_lookback = firstFetchLookback
+        self._last_event_time = None
+
     @staticmethod
     def now():
         """patchable now (datetime is not patchable as builtin)"""
@@ -415,10 +490,16 @@ class GerritEventLogPoller(GerritChangeSourceBase):
     def poll(self):
         last_event_ts = yield self.master.db.state.getState(self._oid, 'last_event_ts', None)
         if last_event_ts is None:
-            last_event = self.now()
+            # If there is not last event time stored in the database, then set
+            # the last event time to some historical look-back
+            last_event = self.now() - datetime.timedelta(days=self._first_fetch_lookback)
         else:
             last_event = datetime.datetime.utcfromtimestamp(last_event_ts)
         last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
+
+        if self.debug:
+            log.msg("Polling gerrit: {}".format(last_event_formatted).encode("utf-8"))
+
         res = yield self._http.get("/plugins/events-log/events/", params=dict(t1=last_event_formatted))
         lines = yield res.content()
         for line in lines.splitlines():
