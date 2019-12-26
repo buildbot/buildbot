@@ -368,7 +368,6 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 .limit(1)
             )
             res_list = res.fetchone()
-            print(res_list)
             stepid_max = None
             if res_list:
                 stepid_max = res_list[0]
@@ -428,10 +427,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thddeleteOldLogs)
 
     # returns a Deferred that returns a dictionary
-    def deleteBuilderLogs(self, builderTimestamps):
+    def deleteBuilderLogs(self, builder_timestamps):
         def thddeleteBuilderLogs(conn):
             model = self.db.model
-            builder_names = tuple(builderTimestamps.keys())
+            builder_names = tuple(builder_timestamps.keys())
             deleted_logchunks = {}
             for builder in builder_names:
                 res = conn.execute(
@@ -450,13 +449,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 # WHERE steps.c.buildid = builds.c.id
                 # AND builds.c.builderid = builders.c.id
                 # AND builders.c.name = builder
-                # AND steps.started_at < builderTimestamps[builder]
+                # AND steps.started_at < builder_timestamps[builder]
                 res = conn.execute(
                     sa.select([model.steps.c.id])
                     .where(sa.and_(model.steps.c.buildid == model.builds.c.id,
                                    model.builds.c.builderid == model.builders.c.id,
                                    model.builders.c.name == builder,
-                                   model.steps.c.started_at < builderTimestamps[builder]))
+                                   model.steps.c.started_at < builder_timestamps[builder]))
                 )
                 builder_stepids = [i[0] for i in res.fetchall()]
                 res.close()

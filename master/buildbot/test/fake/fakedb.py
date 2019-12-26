@@ -2238,6 +2238,11 @@ class FakeLogsComponent(FakeDBComponent):
         self._deleted = older_than_timestamp
         return defer.succeed(1)
 
+    def deleteBuilderLogs(self, builder_timestamps):
+        # not implemented
+        self._deleted = builder_timestamps
+        return defer.succeed(1)
+
 
 class FakeUsersComponent(FakeDBComponent):
 
