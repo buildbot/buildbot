@@ -1352,7 +1352,7 @@ Note that the decision of whether to use :bb:chsrc:`GerritEventLogPoller` and :b
 1. :bb:chsrc:`GerritChangeSource` is low-overhead and reacts instantaneously to events, but a broken connection to Gerrit will lead to missed changes
 2. :bb:chsrc:`GerritEventLogPoller` is subject to polling overhead and reacts only at it's polling rate, but is robust to a broken connection to Gerrit and missed changes will be discovered when a connection is restored.
 
-However, you probably do not want use both at the same time as they do not coordinate and changes will be duplicated in this case.
+You can use both at the same time to get the advantages of each. They will coordinate through the database to avoid duplicate changes generated for buildbot.
 
 .. note::
 

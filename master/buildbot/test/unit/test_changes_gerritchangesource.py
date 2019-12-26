@@ -143,7 +143,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                                       'event.change.branch': 'br',
                                       'event.type': 'patchset-created',
                                       'event.patchSet.revision': 'abcdef',
-                                      'event.patchSet.number': '12'}}
+                                      'event.patchSet.number': '12',
+                                      'event.source': 'GerritChangeSource'}}
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
@@ -165,6 +166,63 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         c = self.master.data.updates.changesAdded[0]
         for k, v in c.items():
             self.assertEqual(self.expected_change[k], v)
+
+    @defer.inlineCallbacks
+    def test_duplicate_events_ignored(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        yield s.lineReceived(json.dumps(dict(
+            type="patchset-created",
+            change=dict(
+                branch="br",
+                project="pr",
+                number="4321",
+                owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                url="http://buildbot.net",
+                subject="fix 1234"
+            ),
+            patchSet=dict(revision="abcdef", number="12")
+        )))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+
+        yield s.lineReceived(json.dumps(dict(
+            type="patchset-created",
+            change=dict(
+                branch="br",
+                # Note that this time "project" is a dictionary
+                project=dict(name="pr"),
+                number="4321",
+                owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                url="http://buildbot.net",
+                subject="fix 1234"
+            ),
+            patchSet=dict(revision="abcdef", number="12")
+        )))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+
+    @defer.inlineCallbacks
+    def test_malformed_events_ignored(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        # "change" not in event
+        yield s.lineReceived(json.dumps(dict(
+            type="patchset-created",
+            patchSet=dict(revision="abcdef", number="12")
+        )))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+        # "patchSet" not in event
+        yield s.lineReceived(json.dumps(dict(
+            type="patchset-created",
+            change=dict(
+                branch="br",
+                # Note that this time "project" is a dictionary
+                project=dict(name="pr"),
+                number="4321",
+                owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                url="http://buildbot.net",
+                subject="fix 1234"
+            ),
+        )))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     change_merged_event = {
         "type": "change-merged",
@@ -359,8 +417,12 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         yield self.newChangeSource(get_files=True)
         self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(
             self.NOW_TIMESTAMP)
+        thirty_days_ago = (
+            datetime.datetime.utcfromtimestamp(self.NOW_TIMESTAMP)
+            - datetime.timedelta(days=30))
         self._http.expect(method='get', ep='/plugins/events-log/events/',
-                          params={'t1': self.NOW_FORMATTED},
+                          params={'t1':
+                              thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")},
                           content_json=dict(
                               type="patchset-created",
                               change=dict(
@@ -387,10 +449,13 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
         c = self.master.data.updates.changesAdded[0]
+        expected_change = dict(TestGerritChangeSource.expected_change)
+        expected_change['properties'] = dict(expected_change['properties'])
+        expected_change['properties']['event.source'] = 'GerritEventLogPoller'
         for k, v in c.items():
             if k == 'files':
                 continue
-            self.assertEqual(TestGerritChangeSource.expected_change[k], v)
+            self.assertEqual(expected_change[k], v)
         self.master.db.state.assertState(
             self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
 

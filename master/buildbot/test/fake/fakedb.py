@@ -1173,6 +1173,17 @@ class FakeSourceStampsComponent(FakeDBComponent):
                           patch_body=None, patch_level=None,
                           patch_author=None, patch_comment=None,
                           patch_subdir=None):
+        d = self.findOrCreateId(
+            branch, revision, repository, project, codebase, patch_body,
+            patch_level, patch_author, patch_comment, patch_subdir)
+        d.addCallback(lambda pair: pair[0])
+        return d
+
+    def findOrCreateId(self, branch=None, revision=None, repository=None,
+                       project=None, codebase=None,
+                       patch_body=None, patch_level=None,
+                       patch_author=None, patch_comment=None,
+                       patch_subdir=None):
         if patch_body:
             patchid = len(self.patches) + 1
             while patchid in self.patches:
@@ -1194,13 +1205,13 @@ class FakeSourceStampsComponent(FakeDBComponent):
             keys = ['branch', 'revision', 'repository',
                     'codebase', 'project', 'patchid']
             if [ssdict[k] for k in keys] == [new_ssdict[k] for k in keys]:
-                return defer.succeed(id)
+                return defer.succeed((id, True))
 
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
             id += 1
         self.sourcestamps[id] = new_ssdict
-        return defer.succeed(id)
+        return defer.succeed((id, False))
 
     def getSourceStamp(self, key, no_cache=False):
         return defer.succeed(self._getSourceStamp_sync(key))

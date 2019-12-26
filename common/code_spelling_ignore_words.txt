@@ -233,6 +233,7 @@ callwhenrunning
 cancelcleanshutdown
 cancelled
 cancelling
+canonicalize
 canstartbuild
 canstartwithworkerforbuilder
 cb

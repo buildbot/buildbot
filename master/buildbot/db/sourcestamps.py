@@ -43,6 +43,16 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                           project=None, codebase=None, patch_body=None,
                           patch_level=None, patch_author=None,
                           patch_comment=None, patch_subdir=None):
+        sourcestampid, _ = yield self.findOrCreateId(
+            branch, revision, repository, project, codebase, patch_body,
+            patch_level, patch_author, patch_comment, patch_subdir)
+        return sourcestampid
+
+    @defer.inlineCallbacks
+    def findOrCreateId(self, branch=None, revision=None, repository=None,
+                       project=None, codebase=None, patch_body=None,
+                       patch_level=None, patch_author=None,
+                       patch_comment=None, patch_subdir=None):
         tbl = self.db.model.sourcestamps
 
         assert codebase is not None, "codebase cannot be None"
@@ -72,7 +82,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
         ss_hash = self.hashColumns(branch, revision, repository, project,
                                    codebase, patchid)
-        sourcestampid = yield self.findSomethingId(
+        sourcestampid, found = yield self.findOrCreateSomethingId(
             tbl=tbl,
             whereclause=tbl.c.ss_hash == ss_hash,
             insert_values={
@@ -85,7 +95,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 'ss_hash': ss_hash,
                 'created_at': self.master.reactor.seconds(),
             })
-        return sourcestampid
+        return sourcestampid, found
 
     # returns a Deferred that returns a value
     @base.cached("ssdicts")

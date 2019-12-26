@@ -71,6 +71,19 @@ class DBConnectorComponent:
     # returns a Deferred that returns a value
     def findSomethingId(self, tbl, whereclause, insert_values,
                         _race_hook=None, autoCreate=True):
+        d = self.findOrCreateSomethingId(tbl, whereclause, insert_values,
+                                         _race_hook, autoCreate)
+        d.addCallback(lambda pair: pair[0])
+        return d
+
+    def findOrCreateSomethingId(self, tbl, whereclause, insert_values,
+                                _race_hook=None, autoCreate=True):
+        """
+        Find a matching row and if one cannot be found optionally create it.
+        Returns a deferred which resolves to the pair (id, found) where
+        id is the primary key of the matching row and `found` is True if
+        a match was found. `found` will be false if a new row was created.
+        """
         def thd(conn, no_recurse=False):
             # try to find the master
             q = sa.select([tbl.c.id],
@@ -81,16 +94,16 @@ class DBConnectorComponent:
 
             # found it!
             if row:
-                return row.id
+                return row.id, True
 
             if not autoCreate:
-                return None
+                return None, False
 
             _race_hook and _race_hook(conn)
 
             try:
                 r = conn.execute(tbl.insert(), [insert_values])
-                return r.inserted_primary_key[0]
+                return r.inserted_primary_key[0], False
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # try it all over again, in case there was an overlapping,
                 # identical call, but only retry once.
