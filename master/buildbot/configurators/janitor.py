@@ -55,7 +55,7 @@ class LogChunksJanitor(BuildStep):
             for builder in self.buildersLogHorizon:
                 builder_timestamps[builder] = datetime2epoch(now() - self.buildersLogHorizon[builder])
             results = yield self.master.db.logs.deleteBuilderLogs(builder_timestamps)
-            for builder, deleted in results.items():
+            for builder, deleted in sorted(results.items()):
                 self.descriptionDone += ["deleted", str(deleted), "logchunks from", builder, '\n']
             self.descriptionDone.pop()
 
