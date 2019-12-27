@@ -112,6 +112,12 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
         self.master.wamp = FakeWampConnector()
         self.mq = wamp.WampMQ()
         yield self.mq.setServiceParent(self.master)
+        yield self.mq.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        if self.mq.running:
+            yield self.mq.stopService()
 
     @defer.inlineCallbacks
     def test_startConsuming_basic(self):
@@ -151,6 +157,34 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
         self.assertEqual(self.master.wamp.last_data, 'foo')
+
+    @defer.inlineCallbacks
+    def test_waits_for_called_callback(self):
+        def callback(_, __):
+            return defer.succeed(None)
+
+        yield self.mq.startConsuming(callback, ('a', None))
+        yield self.mq._produce(('a', 'b'), 'foo')
+        self.assertEqual(self.master.wamp.last_data, 'foo')
+
+        d = self.mq.stopService()
+        self.assertTrue(d.called)
+
+    @defer.inlineCallbacks
+    def test_waits_for_non_called_callback(self):
+        d1 = defer.Deferred()
+
+        def callback(_, __):
+            return d1
+
+        yield self.mq.startConsuming(callback, ('a', None))
+        yield self.mq._produce(('a', 'b'), 'foo')
+        self.assertEqual(self.master.wamp.last_data, 'foo')
+
+        d = self.mq.stopService()
+        self.assertFalse(d.called)
+        d1.callback(None)
+        self.assertTrue(d.called)
 
 
 class FakeConfig:
