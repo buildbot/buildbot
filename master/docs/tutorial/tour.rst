@@ -28,7 +28,7 @@ Let's start simple by looking at where you would customize the buildbot's projec
 
 We continue where we left off in the :ref:`first-run-label` tutorial.
 
-Open a new terminal, and first enter the same sandbox you created before (where ``$EDITOR`` is your editor of choice like vim, gedit, or emacs):
+Open a new terminal, go to the directory you created master in, activate the same virtualenv instance you created before, and open the master configuration file with an editor (here ``$EDITOR`` is your editor of choice like vim, gedit, or emacs):
 
 .. code-block:: bash
 
@@ -162,7 +162,7 @@ Buildbot includes an IRC bot that you can tell to join a channel and control to 
 
 .. note:: Security Note
 
-    Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
+    Please note that any user having access to your irc channel or can send the private message to the bot will be able to create or stop builds :bug:`3377`.
 
 First, start an IRC client of your choice, connect to irc.freenode.net and join an empty channel.
 In this example we will use ``#buildbot-test``, so go join that channel.
