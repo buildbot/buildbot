@@ -35,6 +35,7 @@ from buildbot.reporters.words import UsageError
 from buildbot.reporters.words import WebhookResource
 from buildbot.schedulers.forcesched import CollectedValidationError
 from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.util import Notifier
 from buildbot.util import asyncSleep
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
@@ -49,13 +50,14 @@ class TelegramChannel(Channel):
         super().__init__(bot, channel['id'])
         self.chat_info = channel
 
+    @defer.inlineCallbacks
     def list_notified_events(self):
         if self.notify_events:
-            self.send("The following events are being notified:\n{}"
-                      .format("\n".join(sorted(
-                          "🔔 **{}**".format(n) for n in self.notify_events))))
+            yield self.send("The following events are being notified:\n{}"
+                            .format("\n".join(sorted(
+                                    "🔔 **{}**".format(n) for n in self.notify_events))))
         else:
-            self.send("🔕 No events are being notified.")
+            yield self.send("🔕 No events are being notified.")
 
 
 def collect_fields(fields):
@@ -597,12 +599,13 @@ class TelegramStatusBot(StatusBot):
 
         self.nickname = None
 
+    @defer.inlineCallbacks
     def startService(self):
-        super().startService()
+        yield super().startService()
         for c in self.chat_ids:
             channel = self.getChannel(c)
             channel.add_notification_events(self.notify_events)
-        self.loadState()
+        yield self.loadState()
 
     results_emoji = {
         SUCCESS: ' ✅',
@@ -656,6 +659,7 @@ class TelegramStatusBot(StatusBot):
                 new_channel.setServiceParent(self)
             return new_channel
 
+    @defer.inlineCallbacks
     def process_update(self, update):
         data = {}
 
@@ -664,7 +668,7 @@ class TelegramStatusBot(StatusBot):
             query = update.get('callback_query')
             if query is None:
                 self.log('No message in Telegram update object')
-                return defer.succeed('no message')
+                return 'no message'
             original_message = query.get('message', {})
             data = query.get('data', 0)
             try:
@@ -705,22 +709,22 @@ class TelegramStatusBot(StatusBot):
         user = message.get('from')
         if user is None:
             self.log('No user in incoming message')
-            return defer.succeed('no user')
+            return 'no user'
 
         text = message.get('text')
         if not text:
-            return defer.succeed('no text in the message')
+            return 'no text in the message'
 
         contact = self.getContact(user=user, channel=chat)
         data['tmessage'] = message
         template, contact.template = contact.template, None
         if text.startswith(self.commandPrefix):
-            d = contact.handleMessage(text, **data)
+            result = yield contact.handleMessage(text, **data)
         else:
             if template:
                 text = template.format(shlex.quote(text))
-            d = contact.handleMessage(text, **data)
-        return d
+            result = yield contact.handleMessage(text, **data)
+        return result
 
     @defer.inlineCallbacks
     def post(self, path, **kwargs):
@@ -825,12 +829,13 @@ class TelegramWebhookBot(TelegramStatusBot):
         self.webhook = WebhookResource('telegram' + token)
         self.webhook.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def startService(self):
-        super().startService()
+        yield super().startService()
         url = bytes2unicode(self.master.config.buildbotURL)
         if not url.endswith('/'):
             url += '/'
-        self.set_webhook(url + self.webhook.path, self._certificate)
+        yield self.set_webhook(url + self.webhook.path, self._certificate)
 
     def process_webhook(self, request):
         update = self.get_update(request)
@@ -849,15 +854,16 @@ class TelegramWebhookBot(TelegramStatusBot):
                              .format(content_type))
         return update
 
+    @defer.inlineCallbacks
     def set_webhook(self, url, certificate=None):
         if not certificate:
             self.log("Setting up webhook to: {}".format(url))
-            self.post('/setWebhook', json=dict(url=url))
+            yield self.post('/setWebhook', json=dict(url=url))
         else:
             self.log("Setting up webhook to: {} (custom certificate)".format(url))
             certificate = io.BytesIO(unicode2bytes(certificate))
-            self.post('/setWebhook', data=dict(url=url),
-                      files=dict(certificate=certificate))
+            yield self.post('/setWebhook', data=dict(url=url),
+                            files=dict(certificate=certificate))
 
 
 class TelegramPollingBot(TelegramStatusBot):
@@ -865,11 +871,19 @@ class TelegramPollingBot(TelegramStatusBot):
 
     def __init__(self, *args, poll_timeout=120, **kwargs):
         super().__init__(*args, **kwargs)
+        self._polling_finished_notifier = Notifier()
         self.poll_timeout = poll_timeout
 
     def startService(self):
         super().startService()
+        self._polling_continue = True
         self.do_polling()
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        self._polling_continue = False
+        yield self._polling_finished_notifier.wait()
+        yield super().stopService()
 
     @defer.inlineCallbacks
     def do_polling(self):
@@ -877,7 +891,7 @@ class TelegramPollingBot(TelegramStatusBot):
         offset = 0
         kwargs = {'json': {'timeout': self.poll_timeout}}
         logme = True
-        while self.running:
+        while self._polling_continue:
             if offset:
                 kwargs['json']['offset'] = offset
             try:
@@ -901,7 +915,9 @@ class TelegramPollingBot(TelegramStatusBot):
                 if updates:
                     offset = max(update['update_id'] for update in updates) + 1
                     for update in updates:
-                        self.process_update(update)
+                        yield self.process_update(update)
+
+        self._polling_finished_notifier.notify(None)
 
 
 class TelegramBot(service.BuildbotService):

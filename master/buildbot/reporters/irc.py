@@ -143,11 +143,11 @@ class IRCContact(Contact):
     @defer.inlineCallbacks
     def command_MUTE(self, args, **kwargs):
         if (yield self.op_required('mute')):
-            self.send("Only channel operators or explicitly allowed users "
-                      "can mute me here, {}... Blah, blah, blah...".format(self.user_id))
+            yield self.send("Only channel operators or explicitly allowed users "
+                            "can mute me here, {}... Blah, blah, blah...".format(self.user_id))
             return
         # The order of these is important! ;)
-        self.send("Shutting up for now.")
+        yield self.send("Shutting up for now.")
         self.channel.muted = True
     command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
 
@@ -158,9 +158,9 @@ class IRCContact(Contact):
                 return
             # The order of these is important! ;)
             self.channel.muted = False
-            self.send("I'm baaaaaaaaaaack!")
+            yield self.send("I'm baaaaaaaaaaack!")
         else:
-            self.send(
+            yield self.send(
                 "No one had told me to be quiet, but it's the thought that counts, right?")
     command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
@@ -171,9 +171,9 @@ class IRCContact(Contact):
             argv = self.splitArgs(args)
             if argv and argv[0] in ('on', 'off') and \
                     (yield self.op_required('notify')):
-                self.send("Only channel operators can change notified events for this channel. "
-                          "And you, {}, are neither!"
-                          .format(self.user_id))
+                yield self.send("Only channel operators can change notified events for this channel. "
+                                "And you, {}, are neither!"
+                                .format(self.user_id))
                 return
         super().command_NOTIFY(args, **kwargs)
 

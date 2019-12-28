@@ -116,7 +116,7 @@ class ContactMixin(TestReactorMixin):
             else:
                 self.fail("no UsageError")
         else:
-            cmd(args, **kwargs)
+            yield cmd(args, **kwargs)
         if clock_ticks:
             self.reactor.pump(clock_ticks)
 

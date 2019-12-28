@@ -145,12 +145,13 @@ class Channel(service.AsyncService):
                           "(Success|Warnings|Failure|Exception))$").match(event):
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off _EVENT_'.")
 
+    @defer.inlineCallbacks
     def list_notified_events(self):
         if self.notify_events:
-            self.send("The following events are being notified: {}."
-                      .format(", ".join(sorted(self.notify_events))))
+            yield self.send("The following events are being notified: {}."
+                            .format(", ".join(sorted(self.notify_events))))
         else:
-            self.send("No events are being notified.")
+            yield self.send("No events are being notified.")
 
     def notify_for(self, *events):
         for event in events:
@@ -441,6 +442,7 @@ class Contact:
             return self.access_denied
         return method
 
+    @defer.inlineCallbacks
     def handleMessage(self, message, **kwargs):
         message = message.lstrip()
         parts = message.split(' ', 1)
@@ -462,29 +464,25 @@ class Contact:
         if not meth:
             if message[-1] == '!':
                 self.send("What you say!")
-                return defer.succeed(None)
+                return
             elif cmd.startswith(self.bot.commandPrefix):
                 self.send("I don't get this '{}'...".format(cmd))
                 meth = self.command_COMMANDS
             else:
                 if self.is_private_chat:
                     self.send("Say what?")
-                return defer.succeed(None)
+                return
 
-        d = defer.maybeDeferred(meth, args.strip(), **kwargs)
-
-        @d.addErrback
-        def usageError(f):
-            f.trap(UsageError)
-            self.send(str(f.value))
-
-        @d.addErrback
-        def logErr(f):
-            self.bot.log_err(f)
+        try:
+            result = yield meth(args.strip(), **kwargs)
+        except UsageError as e:
+            self.send(str(e))
+            return
+        except Exception as e:
+            self.bot.log_err(e)
             self.send("Something bad happened (see logs)")
-
-        d.addErrback(self.bot.log_err)
-        return d
+            return
+        return result
 
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
@@ -605,6 +603,7 @@ class Contact:
             self.send('\n'.join(response))
     command_STATUS.usage = "status [_which_] - list status of a builder (or all builders)"
 
+    @defer.inlineCallbacks
     def command_NOTIFY(self, args, **kwargs):
         """notify me about build events"""
         args = self.splitArgs(args)
@@ -620,7 +619,7 @@ class Contact:
             self.channel.add_notification_events(events)
 
             if action == "on":
-                self.channel.list_notified_events()
+                yield self.channel.list_notified_events()
             self.bot.saveNotifyEvents()
 
         elif action in ("off", "off-quiet"):
@@ -630,11 +629,11 @@ class Contact:
                 self.channel.remove_all_notification_events()
 
             if action == "off":
-                self.channel.list_notified_events()
+                yield self.channel.list_notified_events()
             self.bot.saveNotifyEvents()
 
         elif action == "list":
-            self.channel.list_notified_events()
+            yield self.channel.list_notified_events()
 
         else:
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off|list [_EVENT_]'.")
