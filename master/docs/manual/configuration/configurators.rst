@@ -28,6 +28,7 @@ At the moment it only supports cleaning of logs, but it will contain more featur
     # and will run on sundays at noon
     c['configurators'] = [util.JanitorConfigurator(
         logHorizon=timedelta(weeks=4),
+	buildersLogHorizon={'b1': timedelta(weeks=2), 'b2': timedelta(months=2)},
         hour=12,
         dayOfWeek=6
     )]
@@ -37,6 +38,9 @@ Parameters for :bb:configurator:`JanitorConfigurator` are:
 
 ``logHorizon``
     a ``timedelta`` object describing the minimum time for which the log data should be maintained
+
+``buildersLogHorizon``
+    a ``timedelta`` object describing the minimum time for which the log data should be maintained for each specified builder
 
 ``hour``, ``dayOfWeek``, ...
     Arguments given to the :bb:sched:`Nightly` scheduler which is backing the :bb:configurator:`JanitorConfigurator`.

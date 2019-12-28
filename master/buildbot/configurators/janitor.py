@@ -42,7 +42,7 @@ class LogChunksJanitor(BuildStep):
     name = 'LogChunksJanitor'
     renderables = ["logHorizon", "buildersLogHorizon"]
 
-    def __init__(self, logHorizon=None, buildersLogHorizon=[]):
+    def __init__(self, logHorizon=None, buildersLogHorizon=None):
         super().__init__()
         self.logHorizon = logHorizon
         self.buildersLogHorizon = buildersLogHorizon
@@ -50,7 +50,7 @@ class LogChunksJanitor(BuildStep):
     @defer.inlineCallbacks
     def run(self):
         self.descriptionDone = []
-        if self.buildersLogHorizon != []:
+        if self.buildersLogHorizon is not None:
             builder_timestamps = {}
             for builder in self.buildersLogHorizon:
                 builder_timestamps[builder] = datetime2epoch(now() - self.buildersLogHorizon[builder])
@@ -62,31 +62,31 @@ class LogChunksJanitor(BuildStep):
         if self.logHorizon is not None:
             older_than_timestamp = datetime2epoch(now() - self.logHorizon)
             builders = []
-            if self.buildersLogHorizon != []:
+            if self.buildersLogHorizon is not None:
                 builders = list(self.buildersLogHorizon.keys())
             deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp, exceptions=builders)
             if self.descriptionDone != []:
                 self.descriptionDone += ['\n']
             self.descriptionDone += ["deleted", str(deleted), "logchunks"]
 
-        if self.logHorizon is not None or self.buildersLogHorizon != []:
+        if self.logHorizon is not None or self.buildersLogHorizon is not None:
             return SUCCESS
 
 
 class JanitorConfigurator(ConfiguratorBase):
-    def __init__(self, logHorizon=None, hour=0, buildersLogHorizon=[], **kwargs):
+    def __init__(self, logHorizon=None, buildersLogHorizon=None, hour=0, **kwargs):
         super().__init__()
         self.logHorizon = logHorizon
-        self.hour = hour
         self.buildersLogHorizon = buildersLogHorizon
+        self.hour = hour
         self.kwargs = kwargs
 
     def configure(self, config_dict):
-        if self.logHorizon is None and self.buildersLogHorizon == []:
+        if self.logHorizon is None and self.buildersLogHorizon is None:
             return
         logHorizon = self.logHorizon
-        hour = self.hour
         buildersLogHorizon = self.buildersLogHorizon
+        hour = self.hour
         kwargs = self.kwargs
 
         super().configure(config_dict)

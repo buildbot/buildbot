@@ -50,6 +50,26 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Step(id=102, buildid=30, number=2, name='two', started_at=TIMESTAMP_STEP102),
     ]
 
+    deleteBuildLogsData = [
+        fakedb.Worker(id=47, name='linux'),
+        fakedb.Buildset(id=20),
+        fakedb.Builder(id=88, name='b1'),
+        fakedb.Builder(id=89, name='b2'),
+        fakedb.Builder(id=90, name='b3'),
+        fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
+        fakedb.Master(id=88),
+        fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
+                     builderid=88, workerid=47),
+        fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
+                     builderid=89, workerid=47),
+        fakedb.Build(id=32, buildrequestid=41, number=9, masterid=88,
+                     builderid=90, workerid=47),
+        fakedb.Step(id=101, buildid=30, number=1, name='one', started_at=TIMESTAMP_STEP101),
+        fakedb.Step(id=102, buildid=30, number=2, name='two', started_at=TIMESTAMP_STEP102),
+        fakedb.Step(id=103, buildid=31, number=3, name='three', started_at=300000),
+        fakedb.Step(id=104, buildid=32, number=4, name='four', started_at=400000),
+    ]
+
     testLogLines = [
         fakedb.Log(id=201, stepid=101, name='stdio', slug='stdio',
                    complete=0, num_lines=7, type='s'),
@@ -575,20 +595,9 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_deleteOldLogChunks_exceptions(self):
-        yield self.insertTestData(
-            self.backgroundData + [
-                fakedb.Builder(id=89, name='b2'),
-                fakedb.Builder(id=90, name='b3'),
-                fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
-                             builderid=89, workerid=47),
-                fakedb.Build(id=32, buildrequestid=41, number=9, masterid=88,
-                             builderid=90, workerid=47),
-                fakedb.Step(id=104, buildid=31, number=3, name='three', started_at=300000),
-                fakedb.Step(id=105, buildid=32, number=4, name='four', started_at=400000),
-            ]
-        )
+        yield self.insertTestData(self.deleteBuildLogsData)
         logids = []
-        for stepid in (101, 102, 104, 105):
+        for stepid in (101, 102, 103, 104):
             for i in range(stepid):
                 logid = yield self.db.logs.addLog(
                     stepid=stepid, name='another' + str(i), slug='another' + str(i), type='s')
@@ -596,10 +605,10 @@ class RealTests(Tests):
                 logids.append(logid)
         exceptions = ['b2', 'b1']
         deleted_chunks = yield self.db.logs.deleteOldLogChunks(400001, exceptions)
-        self.assertEqual(deleted_chunks, 105)
+        self.assertEqual(deleted_chunks, 104)
         for logid in logids:
             logdict = yield self.db.logs.getLog(logid)
-            if logdict['stepid'] in (101, 102, 104):
+            if logdict['stepid'] in (101, 102, 103):
                 self.assertEqual(logdict['type'], 's')
                 continue
             self.assertEqual(logdict['type'], 'd')
@@ -610,18 +619,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_deleteBuilderLogs_basic(self):
-        yield self.insertTestData(
-            self.backgroundData + [
-                fakedb.Builder(id=89, name='b2'),
-                fakedb.Builder(id=90, name='b3'),
-                fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
-                             builderid=89, workerid=47),
-                fakedb.Build(id=32, buildrequestid=41, number=9, masterid=88,
-                             builderid=90, workerid=47),
-                fakedb.Step(id=103, buildid=31, number=3, name='three', started_at=300000),
-                fakedb.Step(id=104, buildid=32, number=4, name='four', started_at=400000),
-            ]
-        )
+        yield self.insertTestData(self.deleteBuildLogsData)
         logids = []
         for stepid in (101, 102, 103, 104):
             for i in range(stepid):
