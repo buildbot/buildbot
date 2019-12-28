@@ -98,6 +98,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         master.mq = mqconnector.MQConnector()
         yield master.mq.setServiceParent(master)
         yield master.mq.setup()
+        yield master.mq.startService()
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
@@ -147,6 +148,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
     def tearDown(self):
         if self.master:
             yield self.master.www.stopService()
+            yield self.master.mq.stopService()
         yield self.tearDownRealDatabaseWithConnector()
 
     @defer.inlineCallbacks
