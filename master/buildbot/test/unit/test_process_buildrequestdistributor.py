@@ -18,7 +18,6 @@ import random
 import mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
 
@@ -111,7 +110,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
         def maybeStartBuild(worker, builds):
             self.startedBuilds.append((worker.name, builds))
             d = defer.Deferred()
-            reactor.callLater(0, d.callback, True)
+            self.reactor.callLater(0, d.callback, True)
             return d
         bldr.maybeStartBuild = maybeStartBuild
         bldr.getCollapseRequestsFn = lambda: False
@@ -193,7 +192,7 @@ class Test(TestBRDBase):
         def slow_sorter(master, bldrs):
             bldrs.sort(key=lambda b1: b1.name)
             d = defer.Deferred()
-            reactor.callLater(0, d.callback, bldrs)
+            self.reactor.callLater(0, d.callback, bldrs)
 
             def done(_):
                 return _
@@ -217,8 +216,7 @@ class Test(TestBRDBase):
         def _maybeStartBuildsOnBuilder(n):
             # fail slowly, so that the activity loop doesn't exit too soon
             d = defer.Deferred()
-            reactor.callLater(0,
-                              d.errback, failure.Failure(RuntimeError("oh noes")))
+            self.reactor.callLater(0, d.errback, failure.Failure(RuntimeError("oh noes")))
             return d
         self.brd._maybeStartBuildsOnBuilder = _maybeStartBuildsOnBuilder
 
@@ -460,7 +458,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             res_d = old_getBuildRequests(*args, **kwargs)
             long_d = defer.Deferred()
             long_d.addCallback(lambda _: res_d)
-            reactor.callLater(0, long_d.callback, None)
+            self.reactor.callLater(0, long_d.callback, None)
             return long_d
         self.master.db.buildrequests.getBuildRequests = longGetBuildRequests
 
