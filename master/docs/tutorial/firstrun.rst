@@ -19,6 +19,21 @@ For those more familiar with Docker_, there also exists a :ref:`docker version o
 
 You should be able to cut and paste each shell block from this tutorial directly into a terminal.
 
+Simple introduction to BuildBot
+-------------------------------
+
+Before trying to run BuildBot it's helpful to know what BuildBot is.
+
+BuildBot is a continuous integration framework written in Python.
+It consists of a master daemon and potentially many worker daemons that usually run on other machines.
+The master daemon runs a web server that allows the end user to start new builds and to control the behaviour of the BuildBot instance.
+The master also distributes builds to the workers.
+The worker daemons connect to the master daemon and execute builds whenever master tells them to do so.
+
+In this tutorial we will run a single master and a single worker on the same machine.
+
+A more throughout explanation can be found in the :ref:`manual section <Introduction>` of the Buildbot documentation.
+
 .. _Docker: https://docker.com
 
 .. _getting-code-label:
@@ -81,6 +96,8 @@ Now that buildbot is installed, it's time to create the master:
   buildbot create-master master
 
 Buildbot's activity is controlled by a configuration file.
+Buildbot by default uses configuration from file at ``master.cfg``.
+Buildbot comes with a sample configuration file named ``master.cfg.sample``.
 We will use the sample configuration file unchanged:
 
 .. code-block:: bash
@@ -187,7 +204,7 @@ You should now be able to go to http://localhost:8010, where you will see a web 
 .. image:: _images/index.png
    :alt: index page
 
-Click on "Builds" at the left to open the submenu and then `Builders <http://localhost:8010/#/builders>`_ to see that the worker you just started has connected to the master:
+Click on "Builds" at the left to open the submenu and then `Builders <http://localhost:8010/#/builders>`_ to see that the worker you just started (identified by the green bubble) has connected to the master:
 
 .. image:: _images/builders.png
    :alt: builder runtests is active.
