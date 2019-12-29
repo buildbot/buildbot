@@ -52,9 +52,7 @@ class Tests(RunFakeMasterTestCase):
         # give time for any delayed actions to complete
         self.reactor.advance(1)
 
-        yield master.botmaster.cleanShutdown(quickMode=quick_mode,
-                                             _reactor=self.reactor,
-                                             stopReactor=False)
+        yield master.botmaster.cleanShutdown(quickMode=quick_mode, stopReactor=False)
         self.flushLoggedErrors(PingException)
 
     def test_terminates_ping_on_shutdown_quick_mode(self):
