@@ -13,7 +13,7 @@ describe('previousnextlink', function() {
 
     beforeEach(function() {
         builder = new BuilderPage('runtests', 'force');
-        return force =  new ForcePage();
+        force = new ForcePage();
     });
     afterEach(async () => {
         const homePage = new HomePage();
