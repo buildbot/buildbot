@@ -26,7 +26,7 @@ describe('force and cancel', function() {
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
-        await builder.waitNextBuildFinished(lastbuild);
+        await builder.waitBuildFinished(lastbuild + 1);
     });
 
     it('should create a build with a dedicated reason and cancel it', async () => {

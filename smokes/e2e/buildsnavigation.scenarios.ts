@@ -30,12 +30,12 @@ describe('previousnextlink', function() {
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
-        await builder.waitNextBuildFinished(lastbuild);
+        await builder.waitBuildFinished(lastbuild + 1);
         // Build #2
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
-        await builder.waitNextBuildFinished(+lastbuild + 1);
+        await builder.waitBuildFinished(lastbuild + 2);
         await builder.goBuild(+lastbuild + 2);
         const lastBuildURL = await browser.getCurrentUrl();
         let previousButton = builder.getPreviousButton();
