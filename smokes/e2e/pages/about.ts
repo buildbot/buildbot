@@ -26,7 +26,7 @@ export class AboutPage extends BasePage {
 
     async checkConfigTitle() {
         const configurationTitle = element.all(By.css('h2')).get(1);
-        const title:string = await configurationTitle.getText()
+        const title:string = await configurationTitle.getText();
         expect(title).toContain('Configuration');
     }
 
