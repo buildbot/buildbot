@@ -20,7 +20,7 @@ describe('dashboard page', function() {
         force =  new ForcePage();
         dashboard = new DashboardPage();
         home = new HomePage();
-        await builder.goDefault();
+        await builder.goBuildersList();
     });
 
     afterEach(done =>

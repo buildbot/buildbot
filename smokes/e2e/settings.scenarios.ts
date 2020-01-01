@@ -14,7 +14,7 @@ describe('', function() {
         builder = new BuilderPage('runtests', 'force');
         waterfall = new WaterfallPage('runtests');
         settings =  new SettingsPage('runtests');
-        return builder.goDefault();
+        return builder.goBuildersList();
     });
 
     const scallingVar = '10';

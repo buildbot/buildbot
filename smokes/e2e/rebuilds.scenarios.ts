@@ -14,7 +14,7 @@ describe('rebuilds', function() {
     beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
-        await builder.goDefault();
+        await builder.goBuildersList();
     });
 
     afterEach(async () => {

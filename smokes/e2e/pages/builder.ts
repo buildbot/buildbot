@@ -13,7 +13,7 @@ export class BuilderPage extends BasePage {
         this.forceName=forcename;
     }
 
-    async goDefault() {
+    async goBuildersList() {
         await browser.get('#/builders');
         await browser.wait(EC.urlContains('#/builders'),
                            10000,
