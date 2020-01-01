@@ -19,7 +19,7 @@
                     | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
                 span
                   | #{' '}{{buildsummary.build.state_string}}#{' '}
-                .label(ng-class="results2class(buildsummary.build)")
+                .label.bb-build-result(ng-class="results2class(buildsummary.build)")
                   | {{results2text(buildsummary.build)}}
                 span(ng-if="buildsummary.parentbuild")
                     | #{' '}

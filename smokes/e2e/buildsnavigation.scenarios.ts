@@ -72,5 +72,15 @@ describe('forceandstop', function() {
                            5000,
                            "stop button not clickable");
         await stopButton.click();
+
+        const buildStatusIsCancelled = async () =>
+        {
+            let elements = await element.all(By.css('.bb-build-result.results_CANCELLED'));
+            return (elements.length !== 0);
+        };
+
+        await browser.wait(buildStatusIsCancelled,
+                           5000,
+                           "build could not be cancelled");
     });
 });
