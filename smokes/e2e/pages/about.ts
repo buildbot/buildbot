@@ -17,11 +17,6 @@ export class AboutPage extends BasePage {
                            "URL does not contain #/about");
     }
 
-    async checkAboutPage() {
-        const url = await browser.getCurrentUrl();
-        expect(url).toContain('#/about');
-    }
-
     async checkBuildbotTitle() {
         const aboutTitle = element.all(By.css('h2')).first();
         const title:string = await aboutTitle.getText();

@@ -12,7 +12,6 @@ describe('', function() {
     describe('check about page', () =>
         it('should navigate to the about page, check the default elements inside', async () => {
             await about.goAbout();
-            await about.checkAboutPage();
             await about.checkBuildbotTitle();
             await about.checkConfigTitle();
             await about.checkAPIDescriptionTitle();
