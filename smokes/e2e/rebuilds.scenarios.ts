@@ -29,7 +29,7 @@ describe('rebuilds', function() {
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitBuildFinished(lastbuild + 1);
-        await builder.goBuild(lastbuild);
+        await builder.goBuild(lastbuild + 1);
         await browser.getCurrentUrl();
         let rebuildButton = builder.getRebuildButton();
         await browser.wait(EC.elementToBeClickable(rebuildButton),
