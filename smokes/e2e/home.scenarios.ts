@@ -20,15 +20,18 @@ describe('home page', function() {
 
     afterEach(async () => await home.logOut());
 
-    it('should go to the home page and check the different builder', async () => {
+    it('should go to the home page and check if panel with builder name exists', async () => {
         const builderName = {
             "0" : "runtests"
         };
         await builder.go();
+        const buildnumber = await builder.getLastFinishedBuildNumber();
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
+        await builder.go();
+        await builder.waitBuildFinished(buildnumber + 1);
         await home.go();
-        const panel0 = home.getPanel(0);
+        const panel0 = home.getPanel().first();
         expect(await panel0.getText()).toContain(builderName[0]);
     });
 });
