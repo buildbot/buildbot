@@ -71,7 +71,7 @@ export class WaterfallPage extends BasePage {
         await this.checkBuilder();
     }
 
-    async goTagAndCheck() {
+    async goTagAndCheckUrl() {
         const firstTag = element.all(By.binding('tag'));
         await firstTag.click();
         expect(browser.getCurrentUrl()).toContain(firstTag.getText());
