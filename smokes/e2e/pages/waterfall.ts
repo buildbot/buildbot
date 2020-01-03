@@ -1,4 +1,4 @@
-// this file will contains the different generic functions which
+// this file contains the different generic functions which
 // will be called by the different tests
 
 import { BasePage } from "./base";
@@ -71,8 +71,11 @@ export class WaterfallPage extends BasePage {
         await this.checkBuilder();
     }
 
-    async goTagAndCheck() {
-        const firstTag = element.all(By.binding('tag'));
+    async goTagAndCheckUrl() {
+        const firstTag = element.all(By.binding('tag')).first();
+        await browser.wait(EC.elementToBeClickable(firstTag),
+                           5000,
+                           "first tag close not clickable");
         await firstTag.click();
         expect(browser.getCurrentUrl()).toContain(firstTag.getText());
     }
@@ -80,6 +83,6 @@ export class WaterfallPage extends BasePage {
     async goUrlAndCheckTag() {
         await browser.get('#/waterfall?tags=runt');
         const selectedTag = element(by.className('label-success'));
-        expect(browser.getCurrentUrl()).toContain(selectedTag.getText());
+        expect(await selectedTag.getText()).toContain('runt');
     }
 }

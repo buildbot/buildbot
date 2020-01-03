@@ -35,7 +35,7 @@ else
         ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser
     PROTRACTOR=./node_modules/protractor/bin/protractor
 fi
-if [ -f /usr/bin/xvfb-run ] ; then
+if [ -f /usr/bin/xvfb-run ] && [[ ! -n "$SMOKES_DONT_USE_XVFB" ]] ; then
     xvfb-run --server-args="-screen 0 1024x768x24" $PROTRACTOR protractor-headless.conf.js
 else
     # manual mode: install locally

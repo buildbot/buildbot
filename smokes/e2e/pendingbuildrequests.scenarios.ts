@@ -16,7 +16,7 @@ describe('pending build requests', function() {
         builder = new BuilderPage('slowruntests', 'force');
         force =  new ForcePage();
         pendingBuildrequests = new PendingBuildrequestsPage();
-        await builder.goDefault();
+        await builder.goBuildersList();
     });
 
     afterEach(async () => {

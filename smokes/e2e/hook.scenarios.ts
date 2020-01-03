@@ -30,7 +30,7 @@ describe('change hook', function() {
             revision: 'HEAD',
             branch:'master'
         });
-        await builder.waitNextBuildFinished(lastbuild);
+        await builder.waitBuildFinished(lastbuild + 1);
         await console.go();
         expect(await console.countSuccess()).toBeGreaterThan(0);
     });

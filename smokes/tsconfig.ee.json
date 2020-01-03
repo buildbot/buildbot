@@ -2,6 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/e2e",
+    "sourceMap": true,
+    "removeComments": false,
     "baseUrl": "./",
     "module": "commonjs",
     "target": "es2017",
