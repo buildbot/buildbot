@@ -885,6 +885,7 @@ userlist
 username
 Username
 usernames
+useTLS
 utf
 UTF
 util

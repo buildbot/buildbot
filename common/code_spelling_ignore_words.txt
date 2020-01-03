@@ -1543,6 +1543,7 @@ usepty
 usererrors
 username
 usetestcasenames
+usetls
 usr
 utc
 utf
