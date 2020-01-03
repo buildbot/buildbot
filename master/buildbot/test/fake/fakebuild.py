@@ -66,6 +66,14 @@ components.registerAdapter(
     FakeBuildStatus, interfaces.IProperties)
 
 
+class FakeWorkerStatus(properties.PropertiesMixin):
+
+    def __init__(self, name):
+        self.name = name
+        self.info = properties.Properties()
+        self.info.setProperty("test", "test", "Worker")
+
+
 class FakeBuild(properties.PropertiesMixin):
 
     def __init__(self, props=None, master=None):
@@ -74,6 +82,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.workerforbuilder = mock.Mock(
             spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
+        self.workerforbuilder.worker.worker_status = FakeWorkerStatus("mock")
         self.builder.config = config.BuilderConfig(
             name='bldr',
             workernames=['a'],
@@ -115,6 +124,9 @@ class FakeBuild(properties.PropertiesMixin):
 
     def getBuilder(self):
         return self.builder
+
+    def getWorkerInfo(self):
+        return self.workerforbuilder.worker.worker_status.info
 
 
 components.registerAdapter(

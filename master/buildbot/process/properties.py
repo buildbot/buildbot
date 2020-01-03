@@ -461,6 +461,16 @@ _thePropertyDict = _PropertyDict()
 
 
 @implementer(IRenderable)
+class _WorkerPropertyDict:
+
+    def getRenderingFor(self, build):
+        return build.getBuild().getWorkerInfo()
+
+
+_theWorkerPropertyDict = _WorkerPropertyDict()
+
+
+@implementer(IRenderable)
 class _SecretRenderer:
 
     def __init__(self, secret_name):
@@ -602,6 +612,13 @@ class Interpolate(util.ComparableMixin):
                 "Attribute must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
+
+    def _parse_worker(self, arg):
+        try:
+            prop, repl = arg.split(":", 1)
+        except ValueError:
+            prop, repl = arg, None
+        return _theWorkerPropertyDict, prop, repl
 
     def _parse_kw(self, arg):
         try:

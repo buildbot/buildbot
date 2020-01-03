@@ -48,7 +48,21 @@ class TestBot(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
+        # create test-release-file
+        with open("%s/test-release-file" % self.basedir, "w") as fout:
+            fout.write(
+"""
+# unit test release file
+OS_NAME="Test"
+VERSION="1.0"
+ID=test
+ID_LIKE=generic
+PRETTY_NAME="Test 1.0 Generic"
+VERSION_ID="1"
+"""
+            )
         self.real_bot = base.BotBase(self.basedir, False)
+        self.real_bot.setOsReleaseFile("%s/test-release-file" % self.basedir)
         self.real_bot.startService()
 
         self.bot = FakeRemote(self.real_bot)
@@ -86,6 +100,9 @@ class TestBot(unittest.TestCase):
 
         info = yield self.bot.callRemote("getWorkerInfo")
 
+        # remove any os_ fields as they are dependent on the test environment
+        info = {k: v for k, v in info.items() if not k.startswith("os_")}
+
         self.assertEqual(info, dict(
             admin='testy!', foo='bar',
             environ=os.environ, system=os.name, basedir=self.basedir,
@@ -96,6 +113,8 @@ class TestBot(unittest.TestCase):
     @defer.inlineCallbacks
     def test_getWorkerInfo_nodir(self):
         info = yield self.bot.callRemote("getWorkerInfo")
+
+        info = {k: v for k, v in info.items() if not k.startswith("os_")}
 
         self.assertEqual(set(info.keys()), set(
             ['environ', 'system', 'numcpus', 'basedir', 'worker_commands', 'version']))
