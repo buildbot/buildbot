@@ -105,7 +105,9 @@ class CreateWorkerOptions(MakerBase):
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
         ["no-logrotate", "n",
-         "Do not permit buildmaster rotate logs by itself"]
+         "Do not permit buildmaster rotate logs by itself"],
+        ['use-tls', None,
+         "Uses TLS to connect to master"],
     ]
     optParameters = [
         ["keepalive", "k", 600,

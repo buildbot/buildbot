@@ -479,6 +479,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         "no-logrotate": False,
         "relocatable": False,
         "quiet": False,
+        "use-tls": False,
         # options
         "basedir": "bdir",
         "allow-shutdown": None,
@@ -621,6 +622,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
             maxdelay=options["maxdelay"],
             allow_shutdown=options["allow-shutdown"],
             maxRetries=options["maxretries"],
+            useTls=options["use-tls"],
             )
 
         # check that Worker instance attached to application
@@ -728,11 +730,11 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def testUseTLS(self):
         """
-        test that when --useTLS options is used, correct connection_string
+        test that when --use-tls options is used, correct connection_string
         is generated
         """
         options = self.options.copy()
-        options["useTLS"] = True
+        options["use-tls"] = True
 
         # patch _make*() functions to do nothing
         self.setUpMakeFunctions()
@@ -742,8 +744,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
                          "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
-        expected_tac_contents = (create_worker.workerTACTemplate[0] +
-                                 create_worker.workerTACTemplate[2]) % options
+        expected_tac_contents = ("".join(create_worker.workerTACTemplate)) % options
         self.assertMakeFunctionsCalls(self.options["basedir"],
                                       expected_tac_contents,
                                       self.options["quiet"])

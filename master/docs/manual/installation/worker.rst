@@ -165,7 +165,7 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
     Both master and worker must be at least version 0.8.3 for this feature to work.
 
-.. option:: --useTLS
+.. option:: --use-tls
 
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
     If set, the generated connection string starts with ``tls`` instead of with ``tcp``, allowing encrypted connection to the buildmaster.
@@ -195,7 +195,7 @@ Worker TLS Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``tls``
-    See ``--useTLS`` option above as an alternative to setting the ``conneciton_string`` manually.
+    See ``--useTls`` option above as an alternative to setting the ``conneciton_string`` manually.
 
 
 ``connection_string``

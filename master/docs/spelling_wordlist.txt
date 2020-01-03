@@ -811,6 +811,7 @@ testsuite
 textarea
 tgrid
 tgz
+tls
 th
 timestamp
 Todo
@@ -885,7 +886,7 @@ userlist
 username
 Username
 usernames
-useTLS
+useTls
 utf
 UTF
 util
