@@ -72,7 +72,10 @@ export class WaterfallPage extends BasePage {
     }
 
     async goTagAndCheckUrl() {
-        const firstTag = element.all(By.binding('tag'));
+        const firstTag = element.all(By.binding('tag')).first();
+        await browser.wait(EC.elementToBeClickable(firstTag),
+                           5000,
+                           "first tag close not clickable");
         await firstTag.click();
         expect(browser.getCurrentUrl()).toContain(firstTag.getText());
     }
