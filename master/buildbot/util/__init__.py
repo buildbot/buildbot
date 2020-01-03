@@ -384,8 +384,12 @@ def string2boolean(str):
     }[str.lower()]
 
 
-def asyncSleep(delay):
-    from twisted.internet import reactor, defer
+def asyncSleep(delay, reactor=None):
+    from twisted.internet import defer
+    from twisted.internet import reactor as internet_reactor
+    if reactor is None:
+        reactor = internet_reactor
+
     d = defer.Deferred()
     reactor.callLater(delay, d.callback, None)
     return d

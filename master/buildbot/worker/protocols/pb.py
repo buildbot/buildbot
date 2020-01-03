@@ -16,11 +16,11 @@
 import contextlib
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
 
 from buildbot.pbutil import decode
+from buildbot.util import deferwaiter
 from buildbot.worker.protocols import base
 
 
@@ -129,6 +129,10 @@ class Connection(base.Connection, pb.Avatar):
     def __init__(self, master, worker, mind):
         super().__init__(master, worker)
         self.mind = mind
+        self._keepalive_waiter = deferwaiter.DeferWaiter()
+        self._keepalive_action_handler = \
+            deferwaiter.RepeatedActionHandler(master.reactor, self._keepalive_waiter,
+                                              self.keepalive_interval, self._do_keepalive)
 
     # methods called by the PBManager
 
@@ -147,6 +151,10 @@ class Connection(base.Connection, pb.Avatar):
         self.notifyDisconnected()
 
     # disconnection handling
+    @defer.inlineCallbacks
+    def waitShutdown(self):
+        self.stopKeepaliveTimer()
+        yield self._keepalive_waiter.wait()
 
     def loseConnection(self):
         self.stopKeepaliveTimer()
@@ -170,18 +178,15 @@ class Connection(base.Connection, pb.Avatar):
 
     # keepalive handling
 
-    def doKeepalive(self):
+    def _do_keepalive(self):
         return self.mind.callRemote('print', message="keepalive")
 
     def stopKeepaliveTimer(self):
-        if self.keepalive_timer and self.keepalive_timer.active():
-            self.keepalive_timer.cancel()
-            self.keepalive_timer = None
+        self._keepalive_action_handler.stop()
 
     def startKeepaliveTimer(self):
         assert self.keepalive_interval
-        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
-                                                 self.doKeepalive)
+        self._keepalive_action_handler.start()
 
     # methods to send messages to the worker
 

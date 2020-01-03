@@ -494,6 +494,7 @@ class AbstractWorker(service.BuildbotService):
 
         self._handle_disconnection_delivery_notifier()
 
+        yield self.conn.waitShutdown()
         self.conn = None
         self._old_builder_list = []
         self.worker_status.setConnected(False)
