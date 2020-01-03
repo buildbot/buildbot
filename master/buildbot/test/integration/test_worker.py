@@ -214,5 +214,39 @@ class Tests(RunFakeMasterTestCase):
         # reconfig should succeed
         yield self.reconfigMaster(config_dict)
 
+    @defer.inlineCallbacks
+    def test_worker_os_release_info_roundtrip(self):
+        """
+        Checks if we can successfully get information about the platform the worker is running on.
+        This is very similar to test_worker_comm.TestWorkerComm.test_worker_info, except that
+        we check details such as whether the information is passed in correct encoding.
+        """
+        worker = self.createLocalWorker('local1')
+
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="builder1",
+                              workernames=['local1'],
+                              factory=BuildFactory()),
+            ],
+            'workers': [worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        yield self.getMaster(config_dict)
+
+        props = worker.worker_status.info
+
+        from buildbot_worker.base import BotBase
+
+        expected_props_dict = {}
+        BotBase._read_os_release(BotBase.os_release_file, expected_props_dict)
+
+        for key, value in expected_props_dict.items():
+            self.assertTrue(isinstance(key, str))
+            self.assertTrue(isinstance(value, str))
+            self.assertEqual(props.getProperty(key), value)
+
     if RemoteWorker is None:
         skip = "buildbot-worker package is not installed"
