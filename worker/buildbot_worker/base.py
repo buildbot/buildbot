@@ -311,6 +311,23 @@ class BotBase(service.MultiService):
     def remote_print(self, message):
         log.msg("message from master:", message)
 
+    @staticmethod
+    def _read_os_release(os_release_file, props):
+        if not os.path.exists(os_release_file):
+            return
+
+        with open(os_release_file, "r") as fin:
+            for line in fin:
+                line = line.strip("\r\n")
+                # as per man page: Lines beginning with "#" shall be ignored as comments.
+                if len(line) == 0 or line.startswith('#'):
+                    continue
+                # parse key-values
+                key, value = line.split("=", 1)
+                if value:
+                    key = 'os_%s' % key.lower()
+                    props[key] = value.strip('"')
+
     def remote_getWorkerInfo(self):
         """This command retrieves data from the files in WORKERDIR/info/* and
         sends the contents to the buildmaster. These are used to describe
@@ -328,18 +345,7 @@ class BotBase(service.MultiService):
                     with open(filename, "r") as fin:
                         files[f] = fin.read()
 
-        if os.path.exists(self.os_release_file):
-            with open(self.os_release_file, "r") as fin:
-                for line in fin:
-                    line = line.strip("\r\n")
-                    # as per man page: Lines beginning with "#" shall be ignored as comments.
-                    if len(line) == 0 or line.startswith('#'):
-                        continue
-                    # parse key-values
-                    key, value = line.split("=", 1)
-                    if value:
-                        key = 'os_%s' % key.lower()
-                        files[key] = value.strip('"')
+        self._read_os_release(self.os_release_file, files)
 
         if not self.numcpus:
             try:
