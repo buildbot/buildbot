@@ -5,9 +5,8 @@ Tests for `buildbot_worker.util._hangcheck`.
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.internet.defer import CancelledError
-from twisted.internet.defer import Deferred
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.error import ConnectionDone
@@ -189,40 +188,7 @@ class HangCheckTests(SynchronousTestCase):
         assert_clock_idle(self, clock)
 
 
-def reportUnhandledErrors(case, d):
-    """
-    Make sure that any unhandled errors from the
-    given deferred are reported when the test case
-    ends.
-
-    :param case: The test case that will handle cleanup.
-    :param Deferred d: The deferred to check for unhandled errors.
-    """
-    def cleanup():
-        if isinstance(d.result, Failure):
-            return d
-    case.addCleanup(cleanup)
-    return d
-
-
-def listen(case, endpoint, factory):
-    """
-    Listen on an endpoint and cleanup when the
-    test case ends.
-
-    :param case: The test case that will handle cleanup.
-    :param IStreamServerEndpoint endpoint: The endpoint to listen on.
-    :param IProtocolFactory factory: The factory for the server protocol.
-    """
-    d = endpoint.listen(factory)
-
-    def registerCleanup(listeningPort):
-        case.addCleanup(listeningPort.stopListening)
-        return listeningPort
-    d.addCallback(registerCleanup)
-    return reportUnhandledErrors(case, d)
-
-
+@defer.inlineCallbacks
 def connected_server_and_client(case, server_factory, client_factory):
     """
     Create a server and client connected to that server.
@@ -238,11 +204,16 @@ def connected_server_and_client(case, server_factory, client_factory):
        Figure out what a sensible value to return is. The existing caller doesn't
        use the return value.
     """
+    try:
+        listening_port = yield TCP4ServerEndpoint(reactor, 0).listen(server_factory)
+        case.addCleanup(listening_port.stopListening)
 
-    def connect_client(listening_port):
-        return TCP4ClientEndpoint(reactor, '127.0.0.1', listening_port.getHost().port).connect(client_factory)
+        endpoint = TCP4ClientEndpoint(reactor, '127.0.0.1', listening_port.getHost().port)
+        yield endpoint.connect(client_factory)
 
-    return listen(case, TCP4ServerEndpoint(reactor, 0), server_factory).addCallback(connect_client)
+    except Exception as e:
+        f = Failure(e)  # we can't use `e` from the lambda itself
+        case.addCleanup(lambda: f)
 
 
 class EndToEndHangCheckTests(TestCase):
@@ -250,12 +221,13 @@ class EndToEndHangCheckTests(TestCase):
     End to end test for HangCheckProtocol.
     """
 
+    @defer.inlineCallbacks
     def test_http(self):
         """
         When connecting to a HTTP server, a PB connection times
         out.
         """
-        result = Deferred()
+        result = defer.Deferred()
 
         site = Site(Data("", "text/plain"))
         client = HangCheckFactory(
@@ -263,16 +235,20 @@ class EndToEndHangCheckTests(TestCase):
 
         self.patch(HangCheckProtocol, '_HUNG_CONNECTION_TIMEOUT', 0.1)
 
-        connected_server_and_client(
+        d_connected = connected_server_and_client(
             self, site, client,
         )
 
-        timer = reactor.callLater(2, result.cancel)
-        result.addCallback(lambda _: timer.cancel())
+        def cancel_all():
+            result.cancel()
+            d_connected.cancel()
 
-        def check_for_timeout(reason):
-            reason.trap(CancelledError)
-            raise Exception("Didn't not hangup")
-        result.addErrback(check_for_timeout)
+        timer = reactor.callLater(2, cancel_all)
 
-        return result
+        try:
+            yield result
+        except defer.CancelledError:
+            raise Exception('Timeout did not happen')
+        finally:
+            d_connected.cancel()
+            timer.cancel()
