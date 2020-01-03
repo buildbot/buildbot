@@ -80,6 +80,6 @@ export class WaterfallPage extends BasePage {
     async goUrlAndCheckTag() {
         await browser.get('#/waterfall?tags=runt');
         const selectedTag = element(by.className('label-success'));
-        expect(browser.getCurrentUrl()).toContain(selectedTag.getText());
+        expect(await selectedTag.getText()).toContain('runt');
     }
 }
