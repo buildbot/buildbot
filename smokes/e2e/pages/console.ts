@@ -1,4 +1,4 @@
-// this file will contains the different generic functions which
+// this file contains the different generic functions which
 // will be called by the different tests
 
 import { BasePage } from "./base";
