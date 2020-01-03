@@ -6,7 +6,7 @@
 export const testPageUrl = 'http://localhost:8011'
 
 export class BasePage {
-    // accessors for elements that all pages have have (menu, login, etc)
+    // accessors for elements that all pages have (menu, login, etc)
     constructor() {}
 
     async logOut() {
