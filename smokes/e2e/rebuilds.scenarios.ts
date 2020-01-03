@@ -3,17 +3,14 @@
 
 
 import { HomePage } from './pages/home';
-import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('rebuilds', function() {
-    let force = null;
     let builder = null;
 
     beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
-        force =  new ForcePage();
         await builder.goBuildersList();
     });
 
@@ -25,7 +22,7 @@ describe('rebuilds', function() {
     it('should navigate to a dedicated build and to use the rebuild button', async () => {
         await builder.go();
         const lastbuild: number = await builder.getLastFinishedBuildNumber();
-        await builder.goForce();
+        let force = await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitBuildFinished(lastbuild + 1);

@@ -2,6 +2,7 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
+import { ForcePage } from './force';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 export class BuilderPage extends BasePage {
@@ -39,6 +40,7 @@ export class BuilderPage extends BasePage {
                            5000,
                            "force button not clickable");
         await forceButton.click();
+        return new ForcePage();
     }
 
     async goBuild(buildRef) {
