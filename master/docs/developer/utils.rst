@@ -200,10 +200,12 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     It returns the result of the wrapped function.
     If the wrapped function fails, its traceback will be printed, the reactor halted, and ``None`` returned.
 
-.. py:function:: asyncSleep(secs)
+.. py:function:: asyncSleep(secs, reactor=None)
 
     Yield a deferred that will fire with no result after ``secs`` seconds.
     This is the asynchronous equivalent to ``time.sleep``, and can be useful in tests.
+    In case a custom reactor is used, the ``reactor`` parameter may be set.
+    By default, ``twisted.internet.reactor`` is used.
 
 .. py:function:: stripUrlPassword(url)
 

@@ -1,0 +1,1 @@
+Master side keep-alive requests are now repeated instead of being single-shot (:issue:`3630`).

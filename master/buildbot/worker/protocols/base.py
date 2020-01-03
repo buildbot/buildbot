@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.util import service
 from buildbot.util import subscription
 
@@ -41,6 +43,9 @@ class Connection:
             newargs[k] = v
         return newargs
     # disconnection handling
+
+    def waitShutdown(self):
+        return defer.succeed(None)
 
     def notifyOnDisconnect(self, cb):
         return self._disconnectSubs.subscribe(cb)

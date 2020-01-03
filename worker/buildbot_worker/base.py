@@ -241,6 +241,8 @@ class BotBase(service.MultiService):
     name = "bot"
     WorkerForBuilder = WorkerForBuilderBase
 
+    os_release_file = "/etc/os-release"
+
     def __init__(self, basedir, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
@@ -248,6 +250,10 @@ class BotBase(service.MultiService):
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding(
         ) or 'ascii'
         self.builders = {}
+
+    # for testing purposes
+    def setOsReleaseFile(self, os_release_file):
+        self.os_release_file = os_release_file
 
     def startService(self):
         assert os.path.isdir(self.basedir)
@@ -305,6 +311,23 @@ class BotBase(service.MultiService):
     def remote_print(self, message):
         log.msg("message from master:", message)
 
+    @staticmethod
+    def _read_os_release(os_release_file, props):
+        if not os.path.exists(os_release_file):
+            return
+
+        with open(os_release_file, "r") as fin:
+            for line in fin:
+                line = line.strip("\r\n")
+                # as per man page: Lines beginning with "#" shall be ignored as comments.
+                if len(line) == 0 or line.startswith('#'):
+                    continue
+                # parse key-values
+                key, value = line.split("=", 1)
+                if value:
+                    key = 'os_%s' % key.lower()
+                    props[key] = value.strip('"')
+
     def remote_getWorkerInfo(self):
         """This command retrieves data from the files in WORKERDIR/info/* and
         sends the contents to the buildmaster. These are used to describe
@@ -321,6 +344,9 @@ class BotBase(service.MultiService):
                 if os.path.isfile(filename):
                     with open(filename, "r") as fin:
                         files[f] = fin.read()
+
+        self._read_os_release(self.os_release_file, files)
+
         if not self.numcpus:
             try:
                 self.numcpus = multiprocessing.cpu_count()

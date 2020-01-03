@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import locks
@@ -103,7 +102,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.brd.setServiceParent(self)
 
     @defer.inlineCallbacks
-    def cleanShutdown(self, quickMode=False, stopReactor=True, _reactor=reactor):
+    def cleanShutdown(self, quickMode=False, stopReactor=True):
         """Shut down the entire process, once all currently-running builds are
         complete.
         quickMode will mark all builds as retry (except the ones that were triggered)
@@ -168,7 +167,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             else:
                 if stopReactor and self.shuttingDown:
                     log.msg("Stopping reactor")
-                    _reactor.stop()
+                    self.master.reactor.stop()
                 break
 
         if not self.shuttingDown:

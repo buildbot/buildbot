@@ -112,95 +112,72 @@ Each scheduler creates and submits :class:`BuildSet` objects to the :class:`Buil
 Scheduler instances are activated by placing them in the :bb:cfg:`schedulers` list in the buildmaster config file.
 Each scheduler must have a unique name.
 
-.. _BuildSet:
+.. _Concepts-Build:
+
+Builds
+------
+
+A :class:`Build` represents a single compile or test run of a particular version of the source code.
+A build is comprised of a series of steps.
+The steps may be arbitrary. For example, for compiled software a build generally consists of the checkout, configure, make, and make check sequence.
+For interpreted projects like Python modules, a build is generally a checkout followed by an invocation of the bundled test suite.
+
+Builds are created by instances of :class:`Builder` (see below).
+A :class:`BuildFactory` (see below) that is attached to the :class:`Builder` creates a list of the steps for the new build.
+
+.. _Concepts-BuildSet:
 
 BuildSets
 ---------
 
-A :class:`BuildSet` is the name given to a set of :class:`Build`\s that all compile/test the same version of the tree on multiple :class:`Builder`\s.
-In general, all these component :class:`Build`\s will perform the same sequence of :class:`Step`\s, using the same source code, but on different platforms or against a different set of libraries.
-
-The :class:`BuildSet` is tracked as a single unit, which fails if any of the component :class:`Build`\s have failed, and therefore can succeed only if *all* of the component :class:`Build`\s have succeeded.
-There are two kinds of status notification messages that can be emitted for a :class:`BuildSet`: the ``firstFailure`` type (which fires as soon as we know the :class:`BuildSet` will fail), and the ``Finished`` type (which fires once the :class:`BuildSet` has completely finished, regardless of whether the overall set passed or failed).
-
-A :class:`BuildSet` is created with set of one or more *source stamp* tuples of ``(branch, revision, changes, patch)``, some of which may be ``None``, and a list of :class:`Builder`\s on which it is to be run.
-They are then given to the BuildMaster, which is responsible for creating a separate :class:`BuildRequest` for each :class:`Builder`.
-
-There are a couple of different likely values for the ``SourceStamp``:
-
-:samp:`(revision=None, changes={CHANGES}, patch=None)`
-    This is a :class:`SourceStamp` used when a series of :class:`Change`\s have triggered a build.
-    The VC step will attempt to check out a tree that contains *CHANGES* (and any changes that occurred before *CHANGES*, but not any that occurred after them.)
-
-:samp:`(revision=None, changes=None, patch=None)`
-    This builds the most recent code on the default branch.
-    This is the sort of :class:`SourceStamp` that would be used on a :class:`Build` that was triggered by a user request, or a :bb:sched:`Periodic` scheduler.
-    It is also possible to configure the VC Source Step to always check out the latest sources rather than paying attention to the :class:`Change`\s in the :class:`SourceStamp`, which will result in same behavior as this.
-
-:samp:`(branch={BRANCH}, revision=None, changes=None, patch=None)`
-    This builds the most recent code on the given *BRANCH*.
-    Again, this is generally triggered by a user request or a :bb:sched:`Periodic` scheduler.
-
-:samp:`(revision={REV}, changes=None, patch=({LEVEL}, {DIFF}, {SUBDIR_ROOT}))`
-    This checks out the tree at the given revision *REV*, then applies a patch (using ``patch -pLEVEL <DIFF``) from inside the relative directory *SUBDIR_ROOT*.
-    Item *SUBDIR_ROOT* is optional and defaults to the builder working directory.
-    The :bb:cmdline:`try` command creates this kind of :class:`SourceStamp`.
-    If ``patch`` is ``None``, the patching step is bypassed.
-
-The buildmaster is responsible for turning the :class:`BuildSet` into a set of :class:`BuildRequest` objects and queueing them on the appropriate :class:`Builder`\s.
+A :class:`BuildSet` represents a set of potentially not yet created :class:`Build`\s that all compile and/or test the same version of the source tree.
+It tracks whether this set of builds as a whole succeeded or not.
+The information that is stored in a BuildSet is a set of :class:`SourceStamp`\s which define the version of the code to test and a set of :class:`Builder`\s which define what builds to create.
 
 .. _BuildRequest:
 
 BuildRequests
 -------------
 
-A :class:`BuildRequest` is a request to build a specific set of source code (specified by one or more source stamps) on a single :class:`Builder`.
-Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. when an associated worker becomes free).
-:class:`BuildRequest`\s are prioritized from oldest to newest, so when a worker becomes free, the :class:`Builder` with the oldest :class:`BuildRequest` is run.
+A :class:`BuildRequest` is a request to start a specific build.
+A :class:`BuildRequest` consists of the following information:
 
-The :class:`BuildRequest` contains one :class:`SourceStamp` specification per codebase.
-The actual process of running the build (the series of :class:`Step`\s that will be executed) is implemented by the :class:`Build` object.
-In the future this might be changed, to have the :class:`Build` define *what* gets built, and a separate :class:`BuildProcess` (provided by the Builder) to define *how* it gets built.
+ - the name of the :class:`Builder` (see below) that will start the build.
 
-The :class:`BuildRequest` may be mergeable with other compatible :class:`BuildRequest`\s.
-Builds that are triggered by incoming :class:`Change`\s will generally be mergeable.
-Builds that are triggered by user requests are generally not, unless they are multiple requests to build the *latest sources* of the same branch.
-A merge of buildrequests is performed per codebase, thus on changes having the same codebase.
+ - the set of :class:`SourceStamp`\s (see above) that specify the version of the source tree to build and/or test.
+
+A :class:`BuildRequest` may be merged with another :class:`BuildRequest` if they represent the same version of the source code and the same builder.
+The user may configure additional restrictions for determining mergeability of build requests.
 
 .. _Builder:
 
-Builders
---------
-
-A :class:`Builder` handles the process of scheduling work to workers.
-Each :class:`Builder` is responsible for a certain type of build, which usually consist of identical or very similar sequence of steps.
-
-The class serves as a kind of queue for that particular type of build.
-In general, each :class:`Builder` runs independently, but it's possible to constrain the behavior of :class:`Builder`\s using various kinds of interlocks.
-
-Each builder is a long-lived object which controls a sequence of :class:`Build`\s.
-A :class:`Builder` is created when the config file is first parsed, and lives forever (or rather until it is removed from the config file).
-It mediates the connections to the workers that do all the work, and is responsible for creating the :class:`Build` objects - :ref:`Concepts-Build`.
-
-Each builder gets a unique name, and the path name of a directory where it gets to do all its work.
-This path is used in two ways.
-On the buildmaster-side a directory is created for keeping status information.
-On the worker-side a directory is created where the actual checkout, compile and test commands are executed.
-
 .. _Concepts-Build-Factories:
 
-Build Factories
----------------
+Builders and Build Factories
+----------------------------
 
-A builder also has a :class:`BuildFactory`, which is responsible for creating new :class:`Build` instances: because the :class:`Build` instance is what actually performs each build, choosing the :class:`BuildFactory` is the way to specify what happens each time a build is done (:ref:`Concepts-Build`).
+A :class:`Builder` is responsible for creating new builds from :class:`BuildRequest`\s.
+Creating a new build is essentially determining the exact steps and other properties of the build and/or test sequence to execute.
+This is performed by a :class:`BuildFactory` that is attached to each :class:`Builder`.
+
+A :class:`Builder` will attempt to create a :class:`Build` from a :class:`BuildRequest` as soon as it is possible, that is, as soon as the associated worker becomes free.
+When a worker becomes free, the build master will select the oldest :class:`BuildRequest` that can run on that worker and notify the corresponding :class:`Builder` to maybe start a build out of it.
+
+Each :class:`Builder` by default runs completely independently.
+This means, that a worker that has N builders attached to it, may potentially attempt to run N builds concurrently.
+This level of concurrency may be controlled by various kinds of :ref:`Interlocks`.
+
+At a low level, each builder has its own exclusive directory on the build master and one exclusive directory on each of the workers it is attached to.
+The directory on the master is used for keeping status information.
+The directories on the workers are used as a location where the actual checkout, compilation and testing steps happen.
 
 .. _Concepts-Workers:
 
 Workers
 -------
 
-A :class:`Worker`\s corresponds to an environment where builds are executed.
-A single physical machine must run at least one :class:`Worker`\s in order for Buildbot to be able to utilize it for running builds.
+A :class:`Worker` corresponds to an environment where builds are executed.
+A single physical machine must run at least one :class:`Worker` in order for Buildbot to be able to utilize it for running builds.
 Multiple :class:`Worker`\s may run on a single machine to provide different environments that can reuse the same hardware by means of containers or virtual machines.
 
 Each builder is associated with one or more :class:`Worker`\s.
@@ -211,18 +188,6 @@ In addition, multiple workers will allow multiple simultaneous builds for the sa
 
 Ideally, each :class:`Worker` that is configured for a builder should be identical.
 Otherwise build or test failures will be dependent on which worker the build is ran and this will complicate investigation of failures.
-
-.. _Concepts-Build:
-
-Builds
-------
-
-A :class:`Build` is a single compile or test run of a particular version of the source code, and is comprised of a series of steps.
-The steps may be arbitrary. For example, for compiled software a build generally consists of the checkout, configure, make, and make check sequence.
-For interpreted projects like Python modules, a build is generally a checkout followed by an invocation of the bundled test suite.
-
-A :class:`BuildFactory` describes the steps a build will perform.
-The builder which starts a build uses its configured build factory to determine the build's steps.
 
 .. _Concepts-Users:
 
@@ -364,27 +329,23 @@ Build Properties
 ----------------
 
 Each build has a set of *Build Properties*, which can be used by its build steps to modify their actions.
-These properties, in the form of key-value pairs, provide a general framework for dynamically altering the behavior of a build based on its circumstances.
 
-Properties form a simple kind of variable in a build.
-Some properties are set when the build starts, and properties can be changed as a build progresses -- properties set or changed in one step may be accessed in subsequent steps.
-Property values can be numbers, strings, lists, or dictionaries - basically, anything that can be represented in JSON.
+The properties are represented as a set of key-value pairs.
+Effectively, a single property is a variable that, once set, can be used by subsequent steps in a build to modify their behaviour.
+The value of a property can be a number, a string, a list or a dictionary.
+Lists and dictionaries can contain other lists or dictionaries.
+Thus, the value of a property could be arbitrarily complex structure.
 
-Properties are very flexible, and can be used to implement all manner of functionality.
-Here are some examples:
+Properties work pretty much like variables, so they can be used to implement all manner of functionality.
 
-Most Source steps record the revision that they checked out in the ``got_revision`` property.
-A later step could use this property to specify the name of a fully-built tarball, dropped in an easily-accessible directory for later testing.
+The following are several examples:
 
-.. note::
+ - By default, the name of the worker that runs the build is set to the ``workername`` property.
+   If there are multiple different workers and the actions of the build depend on the exact worker, some users may decide that it's more convenient to vary the actions depending on the ``workername`` property instead of creating separate builders for each worker.
 
-   In builds with more than one codebase, the ``got_revision`` property is a dictionary, keyed by codebase.
-
-Some projects want to perform nightly builds as well as building in response to committed changes.
-Such a project would run two schedulers, both pointing to the same set of builders, but could provide an ``is_nightly`` property so that steps can distinguish the nightly builds, perhaps to run more resource-intensive tests.
-
-Some projects have different build processes on different systems.
-Rather than create a build factory for each worker, the steps can use worker properties to identify the unique aspects of each worker and adapt the build process dynamically.
+ - In most cases the build does not know the exact code revision that will be tested until it checks out the code.
+   This information is only known after a :ref:`source step <Source-Checkout>` runs.
+   To give this information to the subsequent steps, the source step records the checked out revision into the ``got_revision`` property.
 
 .. _Multiple-Codebase-Builds:
 

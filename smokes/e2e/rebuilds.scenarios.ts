@@ -14,7 +14,7 @@ describe('rebuilds', function() {
     beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
-        await builder.goDefault();
+        await builder.goBuildersList();
     });
 
     afterEach(async () => {
@@ -28,8 +28,8 @@ describe('rebuilds', function() {
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
-        await builder.waitNextBuildFinished(lastbuild);
-        await builder.goBuild(lastbuild);
+        await builder.waitBuildFinished(lastbuild + 1);
+        await builder.goBuild(lastbuild + 1);
         await browser.getCurrentUrl();
         let rebuildButton = builder.getRebuildButton();
         await browser.wait(EC.elementToBeClickable(rebuildButton),

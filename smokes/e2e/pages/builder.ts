@@ -13,7 +13,7 @@ export class BuilderPage extends BasePage {
         this.forceName=forcename;
     }
 
-    async goDefault() {
+    async goBuildersList() {
         await browser.get('#/builders');
         await browser.wait(EC.urlContains('#/builders'),
                            10000,
@@ -70,11 +70,11 @@ export class BuilderPage extends BasePage {
         return +numberstr;
     }
 
-    async waitNextBuildFinished(reference) {
+    async waitBuildFinished(reference) {
         const self = this;
         async function buildCountIncrement() {
             let currentBuildCount = await self.getLastFinishedBuildNumber();
-            return currentBuildCount == (reference + 1);
+            return currentBuildCount == reference;
         }
         await browser.wait(buildCountIncrement, 20000);
     }

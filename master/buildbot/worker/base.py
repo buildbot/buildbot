@@ -229,6 +229,12 @@ class AbstractWorker(service.BuildbotService):
         self.worker_status.setAccessURI(info.get("access_uri", None))
         self.worker_status.setVersion(info.get("version", "(unknown)"))
 
+        # store everything as Properties
+        for k, v in info.items():
+            if k in ('environ', 'worker_commands'):
+                continue
+            self.worker_status.info.setProperty(k, v, "Worker")
+
     @defer.inlineCallbacks
     def _getWorkerInfo(self):
         worker = yield self.master.data.get(
@@ -494,6 +500,7 @@ class AbstractWorker(service.BuildbotService):
 
         self._handle_disconnection_delivery_notifier()
 
+        yield self.conn.waitShutdown()
         self.conn = None
         self._old_builder_list = []
         self.worker_status.setConnected(False)

@@ -13,7 +13,7 @@ describe('previousnextlink', function() {
 
     beforeEach(function() {
         builder = new BuilderPage('runtests', 'force');
-        return force =  new ForcePage();
+        force = new ForcePage();
     });
     afterEach(async () => {
         const homePage = new HomePage();
@@ -30,12 +30,12 @@ describe('previousnextlink', function() {
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
-        await builder.waitNextBuildFinished(lastbuild);
+        await builder.waitBuildFinished(lastbuild + 1);
         // Build #2
         await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
-        await builder.waitNextBuildFinished(+lastbuild + 1);
+        await builder.waitBuildFinished(lastbuild + 2);
         await builder.goBuild(+lastbuild + 2);
         const lastBuildURL = await browser.getCurrentUrl();
         let previousButton = builder.getPreviousButton();
@@ -72,5 +72,15 @@ describe('forceandstop', function() {
                            5000,
                            "stop button not clickable");
         await stopButton.click();
+
+        const buildStatusIsCancelled = async () =>
+        {
+            let elements = await element.all(By.css('.bb-build-result.results_CANCELLED'));
+            return (elements.length !== 0);
+        };
+
+        await browser.wait(buildStatusIsCancelled,
+                           5000,
+                           "build could not be cancelled");
     });
 });

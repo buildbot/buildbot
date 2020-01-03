@@ -94,7 +94,12 @@ class FakeWorkerWorker(pb.Referenceable):
             'info': 'here',
             'worker_commands': {
                 'x': 1,
-            }
+            },
+            'numcpus': 1,
+            'none': None,
+            'os_release': b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
+            b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82\xb9\xe3'
+            b'\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(): b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
         }
 
     def remote_getVersion(self):
@@ -333,6 +338,26 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         self.workerSideDisconnect(worker)
 
         # wait for the resulting detach
+        yield worker.waitForDetach()
+
+    @defer.inlineCallbacks
+    def test_worker_info(self):
+        yield self.addWorker()
+        worker = yield self.connectWorker()
+        props = self.buildworker.worker_status.info
+        # check worker info passing
+        self.assertEqual(props.getProperty("info"),
+                         "here")
+        # check worker info passing with UTF-8
+        self.assertEqual(props.getProperty("os_release"),
+                         b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode())
+        self.assertEqual(props.getProperty(b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82'
+                                           b'\xb9\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode()),
+                         b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode())
+        self.assertEqual(props.getProperty("none"), None)
+        self.assertEqual(props.getProperty("numcpus"), 1)
+
+        self.workerSideDisconnect(worker)
         yield worker.waitForDetach()
 
     @defer.inlineCallbacks

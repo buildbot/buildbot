@@ -1534,6 +1534,11 @@ class Renderer(unittest.TestCase):
         self.assertIn('args=[\'a\']', repr(rend))
         self.assertIn('kwargs={\'kwarg\': \'kw\'}', repr(rend))
 
+    @defer.inlineCallbacks
+    def test_interpolate_worker(self):
+        rend = yield self.build.render(Interpolate("%(worker:test)s"))
+        self.assertEqual(rend, "test")
+
 
 class Compare(unittest.TestCase):
 
@@ -1584,6 +1589,11 @@ class Compare(unittest.TestCase):
         self.assertEqual(
             Interpolate('testing: %(kw:test)s', test="test", other=3),
             Interpolate('testing: %(kw:test)s', test="test", other=3))
+
+    def test_Interpolate_worker(self):
+        self.assertEqual(
+            Interpolate('testing: %(worker:test)s'),
+            Interpolate('testing: %(worker:test)s'))
 
     def test_renderer(self):
         self.assertNotEqual(

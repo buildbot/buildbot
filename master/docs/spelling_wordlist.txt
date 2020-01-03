@@ -489,6 +489,7 @@ MaxQ
 maxWarnCount
 mbcs
 md
+mergeability
 mergeable
 metabuildbot
 metacharacters

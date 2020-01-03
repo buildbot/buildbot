@@ -5,7 +5,7 @@ import { BuilderPage } from './pages/builder';
 import { WaterfallPage } from './pages/waterfall';
 import { SettingsPage } from './pages/settings';
 
-describe('', function() {
+describe('manage settings', function() {
     let builder = null;
     let waterfall = null;
     let settings = null;
@@ -14,72 +14,64 @@ describe('', function() {
         builder = new BuilderPage('runtests', 'force');
         waterfall = new WaterfallPage('runtests');
         settings =  new SettingsPage('runtests');
-        return builder.goDefault();
+        return builder.goBuildersList();
     });
 
-    const scallingVar = '10';
-    describe('manage settings', () =>
-        it('should navigate to the setting, change the scalling factor and check it', async () => {
+    describe('waterfall', () => {
+        const scalingFactor = '10';
+        it('change the "scalling factor" and check it', async () => {
             await settings.goSettings();
-            await settings.changeScallingFactor(scallingVar);
+            await settings.changeScallingFactor(scalingFactor);
             await waterfall.go();
             await settings.goSettings();
-            await settings.checkScallingFactor(scallingVar);
+            await settings.checkScallingFactor(scalingFactor);
         })
-    );
 
-    const columnVar = '450';
-    describe('manage settings', () =>
-        it('should navigate to the settings, change the Column Width and check it', async () => {
+        const scalingWidth = '450';
+        it('change the "minimum column width" and check it', async () => {
             await settings.goSettings();
-            await settings.changeColumnWidth(columnVar);
+            await settings.changeColumnWidth(scalingWidth);
             await waterfall.go();
             await settings.goSettings();
-            await settings.checkColumnWidth(columnVar);
+            await settings.checkColumnWidth(scalingWidth);
         })
-    );
 
-    const lazyLoadingLimit = '30';
-    describe('manage settings', () =>
-        it('should navigate to the settings, change the Lazy Loading and check it', async () => {
+        const lazyLoadingLimit = '30';
+        it('change the "lazy loading limit" and check it', async () => {
             await settings.goSettings();
             await settings.changeLazyLoadingLimit(lazyLoadingLimit);
             await waterfall.go();
             await settings.goSettings();
             await settings.checkLazyLoadingLimit(lazyLoadingLimit);
         })
-    );
 
-    const idleTimeVar = '15';
-    describe('manage settings', () =>
-        it('should navigate to the settings, change the Idle Time value and check it', async () => {
+        const idleTimeThreshold = '15';
+        it('change the "idle time threshold" and check it', async () => {
             await settings.goSettings();
-            await settings.changeIdleTime(idleTimeVar);
+            await settings.changeIdleTime(idleTimeThreshold);
             await waterfall.go();
             await settings.goSettings();
-            await settings.checkIdleTime(idleTimeVar);
+            await settings.checkIdleTime(idleTimeThreshold);
         })
-    );
+    });
 
-    const maxBuildVar = '130';
-    describe('manage settings', () =>
-        it('should navigate to the settings, change the Max Build value and check it', async () => {
+    describe('console', () => {
+        const buildsToFetch = '130';
+        it('change the "number of builds to fetch" and check it', async () => {
             await settings.goSettings();
-            await settings.changeMaxBuild(maxBuildVar);
+            await settings.changeMaxBuild(buildsToFetch);
             await waterfall.go();
             await settings.goSettings();
-            await settings.checkMaxBuild(maxBuildVar);
+            await settings.checkMaxBuild(buildsToFetch);
         })
-    );
 
-    const maxBuildersVar='45';
-    describe('manage settings', () =>
-        it('should navigate to the settings, change the Max Builder value and check it', async () => {
+        const changesToFetch='45';
+        it('change the "number of changes to fetch" and check it', async () => {
             await settings.goSettings();
-            await settings.changeMaxRecentsBuilders(maxBuildersVar);
+            await settings.changeMaxRecentsBuilders(changesToFetch);
             await waterfall.go();
             await settings.goSettings();
-            await settings.checkMaxRecentsBuilders(maxBuildersVar);
-    })
-);
+            await settings.checkMaxRecentsBuilders(changesToFetch);
+        })
+    });
 });

@@ -27,6 +27,9 @@ class FakeTrivialConnection:
     def __init__(self):
         self._disconnectSubs = subscription.SubscriptionPoint("disconnections from Fake")
 
+    def waitShutdown(self):
+        return defer.succeed(None)
+
     def notifyOnDisconnect(self, cb):
         return self._disconnectSubs.subscribe(cb)
 

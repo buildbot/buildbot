@@ -21,7 +21,6 @@ from datetime import datetime
 from dateutil.tz import tzutc
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.failure import Failure
 
@@ -487,7 +486,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         self.active = False
 
     @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
+    def _maybeStartBuildsOnBuilder(self, bldr):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
         bc = self.createBuildChooser(bldr, self.master)
@@ -499,7 +498,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
             # claim brid's
             brids = [br.id for br in breqs]
-            claimed_at_epoch = _reactor.seconds()
+            claimed_at_epoch = self.master.reactor.seconds()
             claimed_at = epoch2datetime(claimed_at_epoch)
             if not (yield self.master.data.updates.claimBuildRequests(
                     brids, claimed_at=claimed_at)):

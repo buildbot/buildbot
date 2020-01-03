@@ -218,6 +218,9 @@ The following selectors are supported.
 ``secrets``
     The key refers to a secret provided by a provider declared in :bb:cfg:`secretsProviders` .
 
+``worker``
+    The key refers to a info item provided by :bb:cfg:`workers`.
+
 The following ways of interpreting the value are available.
 
 ``-replacement``
