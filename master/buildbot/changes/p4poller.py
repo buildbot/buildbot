@@ -165,7 +165,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         if server_tz is not None and self.server_tz is None:
             raise P4PollerError("Failed to get timezone from server_tz string '{}'".format(server_tz))
 
-        self._ticket_passwd = None
         self._ticket_login_counter = 0
 
     def describe(self):
@@ -194,17 +193,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
 
-    def _parseTicketPassword(self, stdout):
-        try:
-            stdout = stdout.decode(self.encoding, errors='strict')
-        except Exception as e:
-            raise P4PollerError('Failed to parse P4 ticket: {}'.format(e))
-
-        lines = stdout.splitlines()
-        if len(lines) < 2:
-            return None
-        return lines[-1].strip()
-
     @defer.inlineCallbacks
     def _poll(self):
         if self.use_tickets:
@@ -217,16 +205,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                     self.p4passwd + "\n", self.p4base)
                 self._acquireTicket(protocol)
                 yield protocol.deferred
-
-                self._ticket_passwd = self._parseTicketPassword(
-                    protocol.stdout)
-                self._ticket_login_counter = max(
-                    self.ticket_login_interval / self.pollInterval, 1)
-                if debug_logging:
-                    log.msg("P4Poller: got ticket password: %s" %
-                            self._ticket_passwd)
-                    log.msg(
-                        "P4Poller: next ticket acquisition in %d polls" % self._ticket_login_counter)
 
         args = []
         if self.p4port:
