@@ -50,10 +50,12 @@ exports.config = {
             },
             spec: {
                 displayFailed: true,
-                displayDuration: true
+                displayDuration: true,
+                displayStacktrace: true
             },
             summary: {
-                displayFailed: true
+                displayFailed: true,
+                displayStacktrace: true
             }
         }));
 
