@@ -102,7 +102,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                      "server_tz")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET", "PATH", "P4CONFIG"]
+                "P4CHARSET", "P4CONFIG", "PATH", "HOME"]
 
     changes_line_re = re.compile(
         r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
@@ -205,11 +205,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             return None
         return lines[-1].strip()
 
-    def _getPasswd(self):
-        if self.use_tickets:
-            return self._ticket_passwd
-        return self.p4passwd
-
     @defer.inlineCallbacks
     def _poll(self):
         if self.use_tickets:
@@ -236,10 +231,11 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         args = []
         if self.p4port:
             args.extend(['-p', self.p4port])
-        if self.p4user:
-            args.extend(['-u', self.p4user])
-        if self.p4passwd:
-            args.extend(['-P', self._getPasswd()])
+        if not self.use_tickets:
+            if self.p4user:
+                args.extend(['-u', self.p4user])
+            if self.p4passwd:
+                args.extend(['-P', self.p4passwd])
         args.extend(['changes'])
         if self.last_change is not None:
             args.extend(
@@ -281,10 +277,11 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             args = []
             if self.p4port:
                 args.extend(['-p', self.p4port])
-            if self.p4user:
-                args.extend(['-u', self.p4user])
-            if self.p4passwd:
-                args.extend(['-P', self._getPasswd()])
+            if not self.use_tickets:
+                if self.p4user:
+                    args.extend(['-u', self.p4user])
+                if self.p4passwd:
+                    args.extend(['-P', self.p4passwd])
             args.extend(['describe', '-s', str(num)])
             result = yield self._get_process_output(args)
 
