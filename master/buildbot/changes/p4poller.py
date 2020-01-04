@@ -102,7 +102,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                      "server_tz")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET", "P4CONFIG", "PATH", "HOME"]
+                "P4CHARSET", "P4CONFIG", "P4TICKETS", "PATH", "HOME"]
 
     changes_line_re = re.compile(
         r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
