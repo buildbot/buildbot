@@ -340,8 +340,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertEqual([cmd, argv],
                              ['p4', [b'p4', b'login', b'-p']])
             pp.makeConnection(transport)
-            self.assertEqual('pass\n', transport.msg)
-            pp.outReceived('Enter password:\nSuccess:  Password verified.\nTICKET_ID_GOES_HERE\n')
+            self.assertEqual(b'pass\n', transport.msg)
+            pp.outReceived(b'Enter password:\nSuccess:  Password verified.\nTICKET_ID_GOES_HERE\n')
             so = error.ProcessDone(None)
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
@@ -370,8 +370,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertEqual([cmd, argv],
                              ['p4', [b'p4', b'login', b'-p']])
             pp.makeConnection(transport)
-            self.assertEqual('pass\n', transport.msg)
-            pp.outReceived('Enter password:\nTICKET_ID_GOES_HERE\n')
+            self.assertEqual(b'pass\n', transport.msg)
+            pp.outReceived(b'Enter password:\nTICKET_ID_GOES_HERE\n')
             so = error.ProcessDone(None)
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
@@ -400,9 +400,9 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertEqual([cmd, argv],
                              ['p4', [b'p4', b'login', b'-p']])
             pp.makeConnection(transport)
-            self.assertEqual('pass\n', transport.msg)
-            pp.outReceived('Enter password:\n')
-            pp.errReceived("Password invalid.\n'auth-check' validation failed: Incorrect password!\n")
+            self.assertEqual(b'pass\n', transport.msg)
+            pp.outReceived(b'Enter password:\n')
+            pp.errReceived(b"Password invalid.\n'auth-check' validation failed: Incorrect password!\n")
             so = error.ProcessDone(status=1)
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
@@ -411,6 +411,34 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
         self.assertEqual(
             self.changesource._ticket_passwd, None)
+
+    @defer.inlineCallbacks
+    def test_acquire_ticket_auth_invalid_encoding(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None, p4passwd='pass',
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1),
+                     use_tickets=True))
+
+        transport = FakeTransport()
+
+        # p4poller uses only those arguments at the moment
+        def spawnProcess(pp, cmd, argv, env):
+            self.assertEqual([cmd, argv],
+                             ['p4', [b'p4', b'login', b'-p']])
+            pp.makeConnection(transport)
+            self.assertEqual(b'pass\n', transport.msg)
+            pp.outReceived(b'\xff\xff\xff\xff\xff')
+            so = error.ProcessDone(None)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+
+        yield self.changesource.poll()
+
+        errors = self.flushLoggedErrors(P4PollerError)
+        self.assertEqual(len(errors), 1)
+        self.assertIn('\'utf-8\' codec can\'t decode byte 0xff', errors[0].getErrorMessage())
+        self.assertIn('Failed to parse P4 ticket', errors[0].getErrorMessage())
 
     @defer.inlineCallbacks
     def test_poll_split_file(self):

@@ -50,9 +50,9 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
 
     def __init__(self, stdin, p4base):
         self.deferred = defer.Deferred()
-        self.stdin = stdin
-        self.stdout = ''
-        self.stderr = ''
+        self.stdin = stdin.encode('ascii')
+        self.stdout = b''
+        self.stderr = b''
         self.p4base = p4base
 
     def connectionMade(self):
@@ -194,8 +194,13 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
 
-    def _parseTicketPassword(self, text):
-        lines = text.splitlines()
+    def _parseTicketPassword(self, stdout):
+        try:
+            stdout = stdout.decode(self.encoding, errors='strict')
+        except Exception as e:
+            raise P4PollerError('Failed to parse P4 ticket: {}'.format(e))
+
+        lines = stdout.splitlines()
         if len(lines) < 2:
             return None
         return lines[-1].strip()
