@@ -60,6 +60,7 @@ export class BuilderPage extends BasePage {
     }
 
     async getLastFinishedBuildNumber() {
+        var buildLinks = element.all(By.css('.bb-buildid-link'));
         let finishedBuildCss = 'span.badge-status.results_SUCCESS, ' +
                                'span.badge-status.results_WARNINGS, ' +
                                'span.badge-status.results_FAILURE, ' +
@@ -67,7 +68,7 @@ export class BuilderPage extends BasePage {
                                'span.badge-status.results_EXCEPTION, ' +
                                'span.badge-status.results_RETRY, ' +
                                'span.badge-status.results_CANCELLED ';
-        let elements = await element.all(By.css(finishedBuildCss));
+        let elements = await buildLinks.all(By.css(finishedBuildCss));
         if (elements.length === 0) {
             return 0;
         }
