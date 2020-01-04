@@ -360,6 +360,7 @@ hardcodes
 hardcoding
 hasn
 Hassler
+hgpoller
 hgweb
 highlevel
 hipchat

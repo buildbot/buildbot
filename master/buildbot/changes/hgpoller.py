@@ -50,9 +50,6 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        if name is None:
-            name = repourl
-
         self.repourl = repourl
 
         if branch and branches:
@@ -63,6 +60,13 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             self.branches = branches or []
 
         self.bookmarks = bookmarks or []
+
+        if name is None:
+            name = repourl
+            if self.bookmarks:
+                name += "_" + "_".join(self.bookmarks)
+            if self.branches:
+                name += "_" + "_".join(self.branches)
 
         if not self.branches and not self.bookmarks:
             self.branches = ['default']
@@ -261,6 +265,16 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             yield self._processBranchChanges(rev, branch)
 
     @defer.inlineCallbacks
+    def _getRevNodeList(self, revset):
+        revListArgs = ['log', '-r', revset, r'--template={rev}:{node}\n']
+        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
+                                               path=self._absWorkdir(), env=os.environ, errortoo=False)
+        results = results.decode(self.encoding)
+
+        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
+        defer.returnValue(revNodeList)
+
+    @defer.inlineCallbacks
     def _processBranchChanges(self, new_rev, branch):
         prev_rev = yield self._getCurrentRev(branch)
         if new_rev == prev_rev:
@@ -272,15 +286,15 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
-        revset = '{}::{}'.format(prev_rev, new_rev)
-        revListArgs = ['log', '-r', revset, r'--template={rev}:{node}\n']
-        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                                               path=self._absWorkdir(), env=os.environ, errortoo=False)
-        results = results.decode(self.encoding)
+        revNodeList = yield self._getRevNodeList('{}::{}'.format(prev_rev, new_rev))
 
-        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
         # revsets are inclusive. Strip the already-known "current" changeset.
-        del revNodeList[0]
+        if not revNodeList:
+            # empty revNodeList probably means the branch has changed head (strip of force push?)
+            # in that case, we should still produce a change for that new rev (but we can't know how many parents were pushed)
+            revNodeList = yield self._getRevNodeList(new_rev)
+        else:
+            del revNodeList[0]
 
         log.msg('hgpoller: processing %d changes in branch %r: %r in %r'
                 % (len(revNodeList), branch, revNodeList, self._absWorkdir()))

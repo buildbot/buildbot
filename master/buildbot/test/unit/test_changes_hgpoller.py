@@ -244,6 +244,11 @@ class TestHgPoller(TestHgPollerBase):
             self.remote_repo, name="MyName", workdir='/some/dir')
         self.assertEqual("MyName", other.name)
 
+        # and one with explicit branches...
+        other = hgpoller.HgPoller(
+            self.remote_repo, branches=["b1", "b2"], workdir='/some/dir')
+        self.assertEqual(self.remote_repo + "_b1_b2", other.name)
+
     def test_hgbin_default(self):
         self.assertEqual(self.poller.hgbin, "hg")
 
@@ -306,6 +311,48 @@ class TestHgPoller(TestHgPollerBase):
                        '--template={rev}:{node}\\n')
             .path('/some/dir').stdout(LINESEP_BYTES.join([
                         b'4:1aaa5',
+                        b'5:784bd',
+                    ])),
+            gpo.Expect('hg', 'log', '-r', '784bd',
+                       '--template={date|hgdate}' + os.linesep +
+                       '{author}' + os.linesep +
+                       "{files % '{file}" +
+                       os.pathsep + "'}" +
+                       os.linesep + '{desc|strip}')
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                b'1273258009.0 -7200',
+                b'Joe Test <joetest@example.org>',
+                b'file1 file2',
+                b'Comment for rev 5',
+                b''])),
+        )
+
+        yield self.poller._setCurrentRev(4)
+
+        yield self.poller.poll()
+        yield self.check_current_rev(5)
+
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        change = self.master.data.updates.changesAdded[0]
+        self.assertEqual(change['revision'], '784bd')
+        self.assertEqual(change['comments'], 'Comment for rev 5')
+
+    @defer.inlineCallbacks
+    def test_poll_force_push(self):
+        #  There's a previous revision, but not linked with new rev
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-b', 'default',
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
+            gpo.Expect(
+                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
+            .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
+            gpo.Expect('hg', 'log', '-r', '4::5',
+                       '--template={rev}:{node}\\n')
+            .path('/some/dir').stdout(b""),
+            gpo.Expect('hg', 'log', '-r', '5',
+                       '--template={rev}:{node}\\n')
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
                         b'5:784bd',
                     ])),
             gpo.Expect('hg', 'log', '-r', '784bd',

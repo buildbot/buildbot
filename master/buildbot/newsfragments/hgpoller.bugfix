@@ -1,0 +1,1 @@
+Prepare unique hgpoller name when using multiple hgpoller for multiple branches (:issue:`5004`)
