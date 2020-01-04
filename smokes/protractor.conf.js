@@ -46,9 +46,6 @@ exports.config = {
 
     onPrepare() {
         jasmine.getEnv().addReporter(new SpecReporter({
-            suite: {
-                displayNumber: true
-            },
             spec: {
                 displayFailed: true,
                 displayDuration: true,
