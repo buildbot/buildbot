@@ -45,10 +45,16 @@ exports.config = {
 
     onPrepare() {
         jasmine.getEnv().addReporter(new SpecReporter({
-            displayFailuresSummary: true,
-            displayFailuredSpec: true,
-            displaySuiteNumber: true,
-            displaySpecDuration: true
+            suite: {
+                displayNumber: true
+            },
+            spec: {
+                displayFailed: true,
+                displayDuration: true
+            },
+            summary: {
+                displayFailed: true
+            }
         }));
 
         require('ts-node').register({
