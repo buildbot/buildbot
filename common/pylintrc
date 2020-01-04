@@ -98,6 +98,7 @@ disable=
   unexpected-keyword-arg,
   redundant-keyword-arg,
   import-error,
+  import-outside-toplevel,
   exec-used,
   star-args,
   unreachable,
