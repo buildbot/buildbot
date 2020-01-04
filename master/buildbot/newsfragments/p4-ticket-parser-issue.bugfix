@@ -1,0 +1,1 @@
+Fix encoding errors during P4Poller ticket parsing :issue:`5148`.
