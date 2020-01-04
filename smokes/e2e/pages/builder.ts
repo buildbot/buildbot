@@ -60,6 +60,8 @@ export class BuilderPage extends BasePage {
     }
 
     async getLastFinishedBuildNumber() {
+        await browser.actions().mouseMove(element(by.css('.navbar-brand'))).perform();
+
         var buildLinks = element.all(By.css('.bb-buildid-link'));
         let finishedBuildCss = 'span.badge-status.results_SUCCESS, ' +
                                'span.badge-status.results_WARNINGS, ' +
@@ -72,12 +74,7 @@ export class BuilderPage extends BasePage {
         if (elements.length === 0) {
             return 0;
         }
-        let numberstr = await elements[0].getText();
-        if (numberstr == "SUCCESS") {
-            await browser.actions().mouseMove(element(by.css('.navbar-brand'))).perform();
-            numberstr = await elements[0].getText();
-        }
-        return +numberstr;
+        return +await elements[0].getText();
     }
 
     async waitBuildFinished(reference) {
