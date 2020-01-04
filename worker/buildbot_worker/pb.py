@@ -178,7 +178,7 @@ class Worker(WorkerBase, service.MultiService):
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
-                 maxdelay=None, numcpus=None, unicode_encoding=None,
+                 maxdelay=None, numcpus=None, unicode_encoding=None, useTls=None,
                  allow_shutdown=None, maxRetries=None, connection_string=None):
 
         assert usePTY is None, "worker-side usePTY is not supported anymore"
@@ -211,7 +211,13 @@ class Worker(WorkerBase, service.MultiService):
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
         if connection_string is None:
-            connection_string = 'tcp:host={}:port={}'.format(
+            if useTls:
+                connection_type = 'tls'
+            else:
+                connection_type = 'tcp'
+
+            connection_string = '{}:host={}:port={}'.format(
+                connection_type,
                 buildmaster_host.replace(':', r'\:'),  # escape ipv6 addresses
                 port)
         endpoint = clientFromString(reactor, connection_string)

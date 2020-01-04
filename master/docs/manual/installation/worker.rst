@@ -165,6 +165,12 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
     Both master and worker must be at least version 0.8.3 for this feature to work.
 
+.. option:: --use-tls
+
+    Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
+    If set, the generated connection string starts with ``tls`` instead of with ``tcp``, allowing encrypted connection to the buildmaster.
+    Make sure the worker trusts the buildmasters certificate. If you have an non-authoritative certificate (CA is self-signed) see ``connection_string`` below.
+
 .. _Other-Worker-Configuration:
 
 Other Worker Configuration
@@ -187,6 +193,10 @@ Other Worker Configuration
 
 Worker TLS Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+``tls``
+    See ``--useTls`` option above as an alternative to setting the ``conneciton_string`` manually.
+
 
 ``connection_string``
     For TLS connections to the master the ``connection_string``-argument must be used to ``Worker.__init__`` function. ``buildmaster_host`` and ``port`` must then be ``None``.

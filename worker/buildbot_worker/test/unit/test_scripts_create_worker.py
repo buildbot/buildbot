@@ -479,6 +479,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         "no-logrotate": False,
         "relocatable": False,
         "quiet": False,
+        "use-tls": False,
         # options
         "basedir": "bdir",
         "allow-shutdown": None,
@@ -621,6 +622,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
             maxdelay=options["maxdelay"],
             allow_shutdown=options["allow-shutdown"],
             maxRetries=options["maxretries"],
+            useTls=options["use-tls"],
             )
 
         # check that Worker instance attached to application
@@ -719,6 +721,30 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         # check _make*() functions were called with correct arguments
         expected_tac_contents = (create_worker.workerTACTemplate[0] +
                                  create_worker.workerTACTemplate[2]) % options
+        self.assertMakeFunctionsCalls(self.options["basedir"],
+                                      expected_tac_contents,
+                                      self.options["quiet"])
+
+        # check that correct info message was printed
+        self.assertStdoutEqual("worker configured in bdir\n")
+
+    def testUseTLS(self):
+        """
+        test that when --use-tls options is used, correct connection_string
+        is generated
+        """
+        options = self.options.copy()
+        options["use-tls"] = True
+
+        # patch _make*() functions to do nothing
+        self.setUpMakeFunctions()
+
+        # call createWorker() and check that we get success exit code
+        self.assertEqual(create_worker.createWorker(options), 0,
+                         "unexpected exit code")
+
+        # check _make*() functions were called with correct arguments
+        expected_tac_contents = ("".join(create_worker.workerTACTemplate)) % options
         self.assertMakeFunctionsCalls(self.options["basedir"],
                                       expected_tac_contents,
                                       self.options["quiet"])
