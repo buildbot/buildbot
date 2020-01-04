@@ -45,7 +45,14 @@ export class BuilderPage extends BasePage {
 
     async goBuild(buildRef) {
         await this.go();
-        var buildLink = element(By.linkText(buildRef.toString()));
+
+        const matchLink = async (elem) => {
+            return await elem.getText() == buildRef.toString();
+        };
+
+        var buildLink = element.all(By.css('.bb-buildid-link'))
+                               .filter(matchLink)
+                               .first();
         await browser.wait(EC.elementToBeClickable(buildLink),
                            5000,
                            "build link not clickable");
