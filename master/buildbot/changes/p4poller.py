@@ -188,7 +188,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             command.extend(['-p', self.p4port])
         if self.p4user:
             command.extend(['-u', self.p4user])
-        command.extend(['login', '-p'])
+        command.append('login')
         command = [c.encode('utf-8') for c in command]
 
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
