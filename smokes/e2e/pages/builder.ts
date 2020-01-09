@@ -31,6 +31,13 @@ export class BuilderPage extends BasePage {
                            5000,
                            "local builder not clickable");
         await localBuilder.click();
+
+        const isBuilderPage = async () =>
+        {
+            let url = await browser.getCurrentUrl();
+            return (new RegExp("#/builders/[0-9]+$")).test(url);
+        };
+        await browser.wait(isBuilderPage, 5000, "Did not got to builder page");
     }
 
     async goForce() {
