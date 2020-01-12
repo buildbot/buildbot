@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import json
 import os
 import shutil
 import stat
@@ -104,7 +105,8 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def testConstructorModeType(self):
         with self.assertRaises(config.ConfigErrors):
-            transfer.FileUpload(workersrc=__file__, masterdest='xyz', mode='g+rwx')
+            transfer.FileUpload(workersrc=__file__,
+                                masterdest='xyz', mode='g+rwx')
 
     def testBasic(self):
         self.setupStep(
@@ -175,7 +177,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def testDescriptionDone(self):
         self.setupStep(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file",
-                descriptionDone="Test File Uploaded"))
+                                descriptionDone="Test File Uploaded"))
 
         self.step.addURL = Mock()
 
@@ -389,7 +391,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.assertEqual(behavior.writer.cancel.called, True)
         self.assertEqual(
-                len(self.flushLoggedErrors(RuntimeError)), 1)
+            len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_init_workersrc_keyword(self):
         step = transfer.DirectoryUpload(
@@ -531,7 +533,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
-            Expect('glob', dict(path=os.path.join('wkdir', 'src*'), logEnviron=False))
+            Expect('glob', dict(path=os.path.join(
+                'wkdir', 'src*'), logEnviron=False))
             + Expect.update('files', ["srcfile"])
             + 0,
             Expect('stat', dict(file="srcfile",
@@ -555,11 +558,13 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
-            Expect('glob', {'path': os.path.join('wkdir', 'src*'), 'logEnviron': False})
+            Expect('glob', {'path': os.path.join(
+                'wkdir', 'src*'), 'logEnviron': False})
             + Expect.update('files', [])
             + 1,
         )
-        self.expectOutcome(result=SKIPPED, state_string="uploading 0 files (skipped)")
+        self.expectOutcome(
+            result=SKIPPED, state_string="uploading 0 files (skipped)")
         d = self.runStep()
         return d
 
@@ -684,7 +689,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.assertEqual(behavior.writer.cancel.called, True)
         self.assertEqual(
-                len(self.flushLoggedErrors(RuntimeError)), 1)
+            len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     def testSubclass(self):
@@ -860,8 +865,8 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
     def testModeConfError(self):
         with self.assertRaisesRegex(config.ConfigErrors,
-                "StringDownload step's mode must be an integer or None,"
-                " got 'not-a-number'"):
+                                    "StringDownload step's mode must be an integer or None,"
+                                    " got 'not-a-number'"):
             transfer.StringDownload("string", "file", mode="not-a-number")
 
     @defer.inlineCallbacks
@@ -1040,7 +1045,9 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to props.json")
         yield self.runStep()
-        self.assertEqual(b''.join(read), b'{"properties": {"key1": "value1"}, "sourcestamps": []}')
+        # we decode as key order is dependent of python version
+        self.assertEqual(json.loads(b''.join(read)), {
+                         "properties": {"key1": "value1"}, "sourcestamps": []})
 
     def test_init_workerdest_keyword(self):
         step = transfer.JSONPropertiesDownload(workerdest='dstfile')
