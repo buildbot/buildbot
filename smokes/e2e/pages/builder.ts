@@ -84,6 +84,36 @@ export class BuilderPage extends BasePage {
         return +await elements[0].getText();
     }
 
+
+    async getBuildResult(buildNumber) {
+        const matchElement = async (elem) => {
+            return await elem.getText() == buildNumber.toString();
+        };
+
+        var buildLink = element.all(By.css('.bb-buildid-link')).filter(matchElement);
+        if (await buildLink.count() == 0) {
+            return "NOT FOUND";
+        }
+
+        var resultTypes = [
+            ['.badge-status.results_SUCCESS', "SUCCESS"],
+            ['.badge-status.results_WARNINGS', "WARNINGS"],
+            ['.badge-status.results_FAILURE', "FAILURE"],
+            ['.badge-status.results_SKIPPED', "SKIPPED"],
+            ['.badge-status.results_EXCEPTION', "EXCEPTION"],
+            ['.badge-status.results_RETRY', "RETRY"],
+            ['.badge-status.results_CANCELLED', "CANCELLED"]
+        ];
+
+        for (let i = 0; i < resultTypes.length; i++) {
+            var answer = buildLink.all(By.css(resultTypes[i][0]));
+            if (await answer.count() > 0) {
+                return resultTypes[i][1];
+            }
+        }
+        return "NOT FOUND";
+    }
+
     async waitBuildFinished(reference) {
         const self = this;
         async function buildCountIncrement() {
