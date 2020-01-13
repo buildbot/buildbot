@@ -282,12 +282,63 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
     def test_validateMasterArgument_ok(self):
         """
         test calling CreateWorkerOptions.validateMasterArgument()
-        on <master> without host and port parts specified.
+        on <master> with host and port parts specified.
         """
         opts = runner.CreateWorkerOptions()
         self.assertEqual(opts.validateMasterArgument("mstrhost:4321"),
                          ("mstrhost", 4321),
                          "incorrect master host and/or port")
+
+    def test_validateMasterArgument_ipv4(self):
+        """
+        test calling CreateWorkerOptions.validateMasterArgument()
+        on <master> with ipv4 host specified.
+        """
+        opts = runner.CreateWorkerOptions()
+        self.assertEqual(opts.validateMasterArgument("192.168.0.0"),
+                         ("192.168.0.0", 9989),
+                         "incorrect master host and/or port")
+
+    def test_validateMasterArgument_ipv4_port(self):
+        """
+        test calling CreateWorkerOptions.validateMasterArgument()
+        on <master> with ipv4 host and port parts specified.
+        """
+        opts = runner.CreateWorkerOptions()
+        self.assertEqual(opts.validateMasterArgument("192.168.0.0:4321"),
+                         ("192.168.0.0", 4321),
+                         "incorrect master host and/or port")
+
+    def test_validateMasterArgument_ipv6(self):
+        """
+        test calling CreateWorkerOptions.validateMasterArgument()
+        on <master> with ipv6 host specified.
+        """
+        opts = runner.CreateWorkerOptions()
+        self.assertEqual(opts.validateMasterArgument("[2001:1:2:3:4::1]"),
+                         ("2001:1:2:3:4::1", 9989),
+                         "incorrect master host and/or port")
+
+    def test_validateMasterArgument_ipv6_port(self):
+        """
+        test calling CreateWorkerOptions.validateMasterArgument()
+        on <master> with ipv6 host and port parts specified.
+        """
+        opts = runner.CreateWorkerOptions()
+        self.assertEqual(opts.validateMasterArgument("[2001:1:2:3:4::1]:4321"),
+                         ("2001:1:2:3:4::1", 4321),
+                         "incorrect master host and/or port")
+
+    def test_validateMasterArgument_ipv6_no_bracket(self):
+        """
+        test calling CreateWorkerOptions.validateMasterArgument()
+        on <master> with ipv6 without [] specified.
+        """
+        opts = runner.CreateWorkerOptions()
+        with self.assertRaisesRegex(usage.UsageError,
+                              r"invalid <master> argument '2001:1:2:3:4::1:4321', "
+                              r"if it is an ipv6 address, it must be enclosed by \[\]"):
+            opts.validateMasterArgument("2001:1:2:3:4::1:4321")
 
 
 class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
