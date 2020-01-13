@@ -37,7 +37,7 @@ from buildbot.util.eventual import eventually
 def makeStatusRemoteCommand(step, remote_command, args):
     self = remotecommand.RemoteCommand(
         remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
-    self.useLogDelayed('stdio', lambda arg: step.step_status.addLog('stdio'), True)
+    self.useLog(step.stdio_log)
     return self
 
 
@@ -125,6 +125,7 @@ class FileUpload(_TransferBuildStep):
 
     def start(self):
         self.checkWorkerHasCommand("uploadFile")
+        self.stdio_log = self.addLog("stdio")
 
         source = self.workersrc
         masterdest = self.masterdest
@@ -210,6 +211,7 @@ class DirectoryUpload(_TransferBuildStep):
 
     def start(self):
         self.checkWorkerHasCommand("uploadDirectory")
+        self.stdio_log = self.addLog("stdio")
 
         source = self.workersrc
         masterdest = self.masterdest
@@ -327,6 +329,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         return self.runTransferCommand(cmd, dirWriter)
 
+    @defer.inlineCallbacks
     def startUpload(self, source, destdir):
         masterdest = os.path.join(destdir, os.path.basename(source))
         args = {
@@ -335,25 +338,23 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         }
 
         cmd = makeStatusRemoteCommand(self, 'stat', args)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
+        if cmd.rc != 0:
+            self.addCompleteLog('stderr',
+                                'File {} not available at worker'.format(args))
+            return FAILURE
+        s = cmd.updates['stat'][-1]
+        if stat.S_ISDIR(s[stat.ST_MODE]):
+            result = yield self.uploadDirectory(source, masterdest)
+        elif stat.S_ISREG(s[stat.ST_MODE]):
+            result = yield self.uploadFile(source, masterdest)
+        else:
+            self.addCompleteLog('stderr',
+                                '{} is neither a regular file, nor a directory'.format(source))
+            return FAILURE
 
-        @d.addCallback
-        def checkStat(_):
-            s = cmd.updates['stat'][-1]
-            if stat.S_ISDIR(s[stat.ST_MODE]):
-                return self.uploadDirectory(source, masterdest)
-            elif stat.S_ISREG(s[stat.ST_MODE]):
-                return self.uploadFile(source, masterdest)
-            return defer.fail('%r is neither a regular file, nor a directory' % source)
-
-        @d.addCallback
-        def uploadDone(result):
-            d = defer.maybeDeferred(
-                self.uploadDone, result, source, masterdest)
-            d.addCallback(lambda _: result)
-            return d
-
-        return d
+        yield self.uploadDone(result, source, masterdest)
+        return result
 
     def uploadDone(self, result, source, masterdest):
         pass
@@ -367,6 +368,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         self.checkWorkerHasCommand("uploadDirectory")
         self.checkWorkerHasCommand("uploadFile")
         self.checkWorkerHasCommand("stat")
+        self.stdio_log = self.addLog("stdio")
 
         masterdest = os.path.expanduser(self.masterdest)
         sources = self.workersrcs if isinstance(self.workersrcs, list) else [self.workersrcs]
@@ -452,6 +454,7 @@ class FileDownload(_TransferBuildStep):
 
     def start(self):
         self.checkWorkerHasCommand("downloadFile")
+        self.stdio_log = self.addLog("stdio")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -523,6 +526,7 @@ class StringDownload(_TransferBuildStep):
     def start(self):
         # we use 'downloadFile' remote command on the worker
         self.checkWorkerHasCommand("downloadFile")
+        self.stdio_log = self.addLog("stdio")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
