@@ -57,7 +57,8 @@ class SandboxedWorker(AsyncService):
 
         res = subprocess.run([self.sandboxed_worker_path, "create-worker", '-q', self.workerdir,
                              self.masterhost + ":" + str(self.port), self.workername, self.workerpasswd],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             check=False)
         if res.returncode != 0:
             # we do care about finding out why it failed though
             raise RuntimeError("\n".join([
