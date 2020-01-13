@@ -1046,7 +1046,7 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
             result=SUCCESS, state_string="downloading to props.json")
         yield self.runStep()
         # we decode as key order is dependent of python version
-        self.assertEqual(json.loads(b''.join(read)), {
+        self.assertEqual(json.loads((b''.join(read)).decode()), {
                          "properties": {"key1": "value1"}, "sourcestamps": []})
 
     def test_init_workerdest_keyword(self):
