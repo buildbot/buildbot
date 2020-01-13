@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from subprocess import check_call
+import subprocess
 
 from twisted.internet import defer
 from twisted.internet import protocol
@@ -48,13 +48,24 @@ class SandboxedWorker(AsyncService):
         self.workerpasswd = passwd
         self.workerdir = workerdir
         self.sandboxed_worker_path = sandboxed_worker_path
+        self.worker = None
 
     def startService(self):
 
         # Note that we create the worker with sync API
         # We don't really care as we are in tests
-        check_call([self.sandboxed_worker_path, "create-worker", '-q', self.workerdir,
-                    self.masterhost + ":" + str(self.port), self.workername, self.workerpasswd])
+
+        res = subprocess.run([self.sandboxed_worker_path, "create-worker", '-q', self.workerdir,
+                             self.masterhost + ":" + str(self.port), self.workername, self.workerpasswd],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             check=False)
+        if res.returncode != 0:
+            # we do care about finding out why it failed though
+            raise RuntimeError("\n".join([
+                "Unable to create worker!",
+                res.stdout.decode(),
+                res.stderr.decode()
+            ]))
 
         self.processprotocol = processProtocol = WorkerProcessProtocol()
         # we need to spawn the worker asynchronously though
@@ -66,6 +77,8 @@ class SandboxedWorker(AsyncService):
 
     @defer.inlineCallbacks
     def shutdownWorker(self):
+        if self.worker is None:
+            return
         # on windows, we killing a process does not work well.
         # we use the graceful shutdown feature of buildbot-worker instead to kill the worker
         # but we must do that before the master is stopping.

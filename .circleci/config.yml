@@ -26,7 +26,7 @@ jobs:
             env
             python3 -m venv .venv
             . .venv/bin/activate
-            pip install -U 'pip<19' setuptools
+            pip install -U pip 'setuptools<45.0.0'
             pip install -r requirements-ci.txt
             pip install -r requirements-cidocs.txt
             pip install pyinstaller

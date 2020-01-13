@@ -19,6 +19,7 @@ import shutil
 
 from twisted.internet import defer
 
+from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
@@ -41,6 +42,42 @@ class TransferStepsMasterPb(RunMasterBase):
                 with open(fn) as f:
                     contents[fn] = f.read()
         return contents
+
+    def get_config_single_step(self, step):
+        c = {}
+        from buildbot.config import BuilderConfig
+        from buildbot.process.factory import BuildFactory
+        from buildbot.plugins import steps, schedulers
+
+        c['schedulers'] = [
+            schedulers.ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+
+        f.addStep(steps.FileUpload(workersrc="dir/noexist_path", masterdest="master_dest"))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          workernames=["local1"],
+                          factory=f)
+        ]
+        return c
+
+    def get_non_existing_file_upload_config(self):
+        from buildbot.plugins import steps
+        step = steps.FileUpload(workersrc="dir/noexist_path", masterdest="master_dest")
+        return self.get_config_single_step(step)
+
+    def get_non_existing_directory_upload_config(self):
+        from buildbot.plugins import steps
+        step = steps.DirectoryUpload(workersrc="dir/noexist_path", masterdest="master_dest")
+        return self.get_config_single_step(step)
+
+    def get_non_existing_multiple_file_upload_config(self):
+        from buildbot.plugins import steps
+        step = steps.MultipleFileUpload(workersrcs=["dir/noexist_path"], masterdest="master_dest")
+        return self.get_config_single_step(step)
 
     @flaky(bugNumber=4407, onPlatform='win32')
     @defer.inlineCallbacks
@@ -74,6 +111,30 @@ class TransferStepsMasterPb(RunMasterBase):
 
         # cleanup
         shutil.rmtree("dest")
+
+    @defer.inlineCallbacks
+    def test_no_exist_file_upload(self):
+        yield self.setupConfig(self.get_non_existing_file_upload_config())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['results'], FAILURE)
+        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        self.assertTrue(res)
+
+    @defer.inlineCallbacks
+    def test_no_exist_directory_upload(self):
+        yield self.setupConfig(self.get_non_existing_directory_upload_config())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['results'], FAILURE)
+        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        self.assertTrue(res)
+
+    @defer.inlineCallbacks
+    def test_no_exist_multiple_file_upload(self):
+        yield self.setupConfig(self.get_non_existing_multiple_file_upload_config())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['results'], FAILURE)
+        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        self.assertTrue(res)
 
 
 class TransferStepsMasterNull(TransferStepsMasterPb):

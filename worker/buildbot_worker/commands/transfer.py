@@ -102,7 +102,7 @@ class WorkerFileUploadCommand(TransferCommand):
             if self.debug:
                 log.msg("Cannot open file '{0}' for upload".format(self.path))
 
-        self.sendStatus({'header': "sending {0}".format(self.path)})
+        self.sendStatus({'header': "sending {0}\n".format(self.path)})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -230,7 +230,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Transfer it
         self.fp.seek(0)
 
-        self.sendStatus({'header': "sending {0}".format(self.path)})
+        self.sendStatus({'header': "sending {0}\n".format(self.path)})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)

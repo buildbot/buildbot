@@ -1,0 +1,1 @@
+transfer steps now correctly report errors from workers :issue:`5058`

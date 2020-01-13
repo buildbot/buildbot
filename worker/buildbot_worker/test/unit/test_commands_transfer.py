@@ -146,7 +146,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datafile)},
+            {'header': 'sending {0}\n'.format(self.datafile)},
             'write 64', 'write 64', 'write 52', 'close',
             {'rc': 0}
         ])
@@ -167,7 +167,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datafile)},
+            {'header': 'sending {0}\n'.format(self.datafile)},
             'write 64', 'write 36', 'close',
             {'rc': 1,
              'stderr': "Maximum filesize reached, truncating file '{0}'".format(self.datafile)}
@@ -188,7 +188,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         df = self.datafile + "-nosuch"
         self.assertUpdates([
-            {'header': 'sending {0}'.format(df)},
+            {'header': 'sending {0}\n'.format(df)},
             'close',
             {'rc': 1,
              'stderr': "Cannot open file '{0}' for upload".format(df)}
@@ -211,7 +211,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datafile)},
+            {'header': 'sending {0}\n'.format(self.datafile)},
             'write 64', 'close',
             {'rc': 1}
         ])
@@ -243,7 +243,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datafile)},
+            {'header': 'sending {0}\n'.format(self.datafile)},
             'write(s)', 'close', {'rc': 1}
         ])
 
@@ -265,7 +265,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datafile)},
+            {'header': 'sending {0}\n'.format(self.datafile)},
             'write 64', 'write 64', 'write 52',
             'close', 'utime - {0}'.format(timestamp[0]),
             {'rc': 0}
@@ -311,7 +311,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datadir)},
+            {'header': 'sending {0}\n'.format(self.datadir)},
             'write(s)', 'unpack',  # note no 'close"
             {'rc': 0}
         ])
@@ -354,7 +354,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
-            {'header': 'sending {0}'.format(self.datadir)},
+            {'header': 'sending {0}\n'.format(self.datadir)},
             'write(s)', 'unpack',
             {'rc': 1}
         ])
