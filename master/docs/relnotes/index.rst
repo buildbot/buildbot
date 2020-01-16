@@ -23,7 +23,7 @@ Bug fixes
 - Master side keep-alive requests are now repeated instead of being single-shot (:issue:`3630`).
 - The message queues will now wait until the delivered callbacks are fully completed during shutdown.
 - Fix encoding errors during P4Poller ticket parsing :issue:`5148`.
-- Remove server header from response.
+- Remove server header from HTTP response served by the web component.
 - Fix multiple race conditions in Telegram reporter that were visible in tests.
 - The Telegram reporter will now wait until in-progress polls finish during shutdown.
 - Improve reliability of timed scheduler.
