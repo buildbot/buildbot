@@ -33,8 +33,10 @@ umask = None
 maxdelay = 300
 allow_shutdown = None
 maxretries = 10
+delete_leftover_dirs = False
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
            keepalive, umask=umask, maxdelay=maxdelay,
-           allow_shutdown=allow_shutdown, maxRetries=maxretries)
+           allow_shutdown=allow_shutdown, maxRetries=maxretries,
+           delete_leftover_dirs=delete_leftover_dirs)
 s.setServiceParent(application)

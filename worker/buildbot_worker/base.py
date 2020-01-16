@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import multiprocessing
 import os.path
+import shutil
 import socket
 import sys
 
@@ -243,12 +244,13 @@ class BotBase(service.MultiService):
 
     os_release_file = "/etc/os-release"
 
-    def __init__(self, basedir, unicode_encoding=None):
+    def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.numcpus = None
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding(
         ) or 'ascii'
+        self.delete_leftover_dirs = delete_leftover_dirs
         self.builders = {}
 
     # for testing purposes
@@ -302,9 +304,18 @@ class BotBase(service.MultiService):
         for dir in os.listdir(self.basedir):
             if os.path.isdir(os.path.join(self.basedir, dir)):
                 if dir not in wanted_dirs:
-                    log.msg("I have a leftover directory '{0}' that is not "
-                            "being used by the buildmaster: you can delete "
-                            "it now".format(dir))
+                    if self.delete_leftover_dirs:
+                        log.msg("Deleting directory '{0}' that is not being "
+                                "used by the buildmaster".format(dir))
+                        try:
+                            shutil.rmtree(dir)
+                        except OSError as e:
+                            log.msg("Cannot remove directory '{0}': "
+                                    "{1}".format(dir, e))
+                    else:
+                        log.msg("I have a leftover directory '{0}' that is not "
+                                "being used by the buildmaster: you can delete "
+                                "it now".format(dir))
 
         defer.returnValue(retval)
 
@@ -381,11 +392,13 @@ class WorkerBase(service.MultiService):
 
     def __init__(self, name, basedir,
                  umask=None,
-                 unicode_encoding=None):
+                 unicode_encoding=None,
+                 delete_leftover_dirs=False):
 
         service.MultiService.__init__(self)
         self.name = name
-        bot = self.Bot(basedir, unicode_encoding=unicode_encoding)
+        bot = self.Bot(basedir, unicode_encoding=unicode_encoding,
+                       delete_leftover_dirs=delete_leftover_dirs)
         bot.setServiceParent(self)
         self.bot = bot
         self.umask = umask

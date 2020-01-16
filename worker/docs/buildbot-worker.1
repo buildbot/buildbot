@@ -62,6 +62,9 @@ create-worker
 .I COUNT
 ]
 [
+.BR \-\-delete\-leftover\-dirs
+]
+[
 .BR \-\-verbose
 ]
 .I PATH
@@ -167,6 +170,9 @@ for more details.
 Set whether child processes should be run in a pty (0 means do not run in a
 pty).
 Default value is 0.
+.TP
+.BR \-\-delete\-leftover\-dirs
+Set to remove unexpected directories in worker base directory.
 .TP
 .I PATH
 Path to worker base directory.

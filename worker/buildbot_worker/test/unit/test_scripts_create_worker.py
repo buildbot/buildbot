@@ -480,6 +480,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         "relocatable": False,
         "quiet": False,
         "use-tls": False,
+        "delete-leftover-dirs": False,
         # options
         "basedir": "bdir",
         "allow-shutdown": None,
@@ -623,6 +624,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
             allow_shutdown=options["allow-shutdown"],
             maxRetries=options["maxretries"],
             useTls=options["use-tls"],
+            delete_leftover_dirs=options["delete-leftover-dirs"],
             )
 
         # check that Worker instance attached to application
@@ -802,3 +804,26 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # there should be no output on stdout
         self.assertWasQuiet()
+
+    def testDeleteLeftoverDirs(self):
+        """
+        test calling createWorker() with --delete-leftover-dirs flag
+        """
+        options = self.options.copy()
+        options["delete-leftover-dirs"] = True
+
+        # patch _make*() functions to do nothing
+        self.setUpMakeFunctions()
+
+        # call createWorker() and check that we get success exit code
+        self.assertEqual(create_worker.createWorker(options), 0,
+                         "unexpected exit code")
+
+        # check _make*() functions were called with correct arguments
+        expected_tac_contents = ("".join(create_worker.workerTACTemplate)) % options
+        self.assertMakeFunctionsCalls(self.options["basedir"],
+                                      expected_tac_contents,
+                                      self.options["quiet"])
+
+        # check that correct info message was printed
+        self.assertStdoutEqual("worker configured in bdir\n")

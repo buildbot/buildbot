@@ -171,6 +171,12 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
     If set, the generated connection string starts with ``tls`` instead of with ``tcp``, allowing encrypted connection to the buildmaster.
     Make sure the worker trusts the buildmasters certificate. If you have an non-authoritative certificate (CA is self-signed) see ``connection_string`` below.
 
+.. option:: --delete-leftover-dirs
+
+    Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
+    If set, unexpected directories in worker base directory will be removed.
+    Otherwise, a warning will be displayed in :file:`twistd.log` so that you can manually remove them.
+
 .. _Other-Worker-Configuration:
 
 Other Worker Configuration
