@@ -2,20 +2,17 @@
 // to use previous and next link
 
 
-import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
 import { WaterfallPage } from './pages/waterfall';
 import { HomePage } from './pages/home';
 import { SettingsPage } from './pages/settings';
 
 describe('waterfall', function() {
-    let force = null;
     let builder = null;
     let waterfall = null;
 
     beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
-        force =  new ForcePage();
         waterfall = new WaterfallPage('runtests');
         const settings =  new SettingsPage('runtests');
         await settings.goSettings();
@@ -31,7 +28,7 @@ describe('waterfall', function() {
     const createBuildAndWaitForFinish = async () => {
         await builder.go();
         const lastbuildid = await builder.getLastFinishedBuildNumber();
-        await builder.goForce();
+        let force = await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitBuildFinished(lastbuildid + 1);

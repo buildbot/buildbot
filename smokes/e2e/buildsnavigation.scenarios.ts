@@ -2,18 +2,15 @@
 // to use previous and next link
 
 
-import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
 import { HomePage } from './pages/home';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('previousnextlink', function() {
-    let force = null;
     let builder = null;
 
     beforeEach(function() {
         builder = new BuilderPage('runtests', 'force');
-        force = new ForcePage();
     });
     afterEach(async () => {
         const homePage = new HomePage();
@@ -27,12 +24,12 @@ describe('previousnextlink', function() {
         await builder.go();
         const lastbuild = await builder.getLastFinishedBuildNumber();
         // Build #1
-        await builder.goForce();
+        let force = await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitBuildFinished(lastbuild + 1);
         // Build #2
-        await builder.goForce();
+        force = await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         await builder.go();
         await builder.waitBuildFinished(lastbuild + 2);
@@ -54,17 +51,15 @@ describe('previousnextlink', function() {
 });
 
 describe('forceandstop', function() {
-    let force = null;
     let builder = null;
 
     beforeEach(function() {
         builder = new BuilderPage('slowruntests', 'force');
-        force =  new ForcePage();
     });
 
     it('should create a build with a dedicated reason and stop it during execution', async () => {
 
-        await builder.goForce();
+        let force = await builder.goForce();
         await force.clickStartButtonAndWaitRedirectToBuild();
         expect(await browser.getCurrentUrl()).toMatch("/builders/\[1-9]/builds/\[1-9]");
         let stopButton = builder.getStopButton();

@@ -45,12 +45,17 @@ exports.config = {
     },
 
     onPrepare() {
-         jasmine.getEnv().addReporter(new SpecReporter({
-             displayFailuresSummary: true,
-             displayFailuredSpec: true,
-             displaySuiteNumber: true,
-             displaySpecDuration: true
-         }));
+        jasmine.getEnv().addReporter(new SpecReporter({
+            spec: {
+                displayFailed: true,
+                displayDuration: true,
+                displayStacktrace: true
+            },
+            summary: {
+                displayFailed: true,
+                displayStacktrace: true
+            }
+        }));
 
         require('ts-node').register({
           project: './tsconfig.ee.json'

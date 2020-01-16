@@ -3,18 +3,15 @@
 
 import { HomePage } from './pages/home';
 import { PendingBuildrequestsPage } from './pages/pendingbuildrequests';
-import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('pending build requests', function() {
-    let force = null;
     let builder = null;
     let pendingBuildrequests = null;
 
     beforeEach(async () => {
         builder = new BuilderPage('slowruntests', 'force');
-        force =  new ForcePage();
         pendingBuildrequests = new PendingBuildrequestsPage();
         await builder.goBuildersList();
     });
@@ -25,7 +22,7 @@ describe('pending build requests', function() {
     });
 
     it('shows', async () => {
-        await builder.goForce();
+        let force = await builder.goForce();
         await force.clickStartButton();
         await builder.goForce();
         await force.clickStartButton();

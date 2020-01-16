@@ -2,6 +2,7 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
+import { ForcePage } from './force';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 export class BuilderPage extends BasePage {
@@ -30,6 +31,13 @@ export class BuilderPage extends BasePage {
                            5000,
                            "local builder not clickable");
         await localBuilder.click();
+
+        const isBuilderPage = async () =>
+        {
+            let url = await browser.getCurrentUrl();
+            return (new RegExp("#/builders/[0-9]+$")).test(url);
+        };
+        await browser.wait(isBuilderPage, 5000, "Did not got to builder page");
     }
 
     async goForce() {
@@ -39,11 +47,19 @@ export class BuilderPage extends BasePage {
                            5000,
                            "force button not clickable");
         await forceButton.click();
+        return new ForcePage();
     }
 
     async goBuild(buildRef) {
         await this.go();
-        var buildLink = element(By.linkText(buildRef.toString()));
+
+        const matchLink = async (elem) => {
+            return await elem.getText() == buildRef.toString();
+        };
+
+        var buildLink = element.all(By.css('.bb-buildid-link'))
+                               .filter(matchLink)
+                               .first();
         await browser.wait(EC.elementToBeClickable(buildLink),
                            5000,
                            "build link not clickable");
@@ -51,6 +67,9 @@ export class BuilderPage extends BasePage {
     }
 
     async getLastFinishedBuildNumber() {
+        await browser.actions().mouseMove(element(by.css('.navbar-brand'))).perform();
+
+        var buildLinks = element.all(By.css('.bb-buildid-link'));
         let finishedBuildCss = 'span.badge-status.results_SUCCESS, ' +
                                'span.badge-status.results_WARNINGS, ' +
                                'span.badge-status.results_FAILURE, ' +
@@ -58,16 +77,41 @@ export class BuilderPage extends BasePage {
                                'span.badge-status.results_EXCEPTION, ' +
                                'span.badge-status.results_RETRY, ' +
                                'span.badge-status.results_CANCELLED ';
-        let elements = await element.all(By.css(finishedBuildCss));
+        let elements = await buildLinks.all(By.css(finishedBuildCss));
         if (elements.length === 0) {
             return 0;
         }
-        let numberstr = await elements[0].getText();
-        if (numberstr == "SUCCESS") {
-            await browser.actions().mouseMove(element(by.css('.navbar-brand'))).perform();
-            numberstr = await elements[0].getText();
+        return +await elements[0].getText();
+    }
+
+
+    async getBuildResult(buildNumber) {
+        const matchElement = async (elem) => {
+            return await elem.getText() == buildNumber.toString();
+        };
+
+        var buildLink = element.all(By.css('.bb-buildid-link')).filter(matchElement);
+        if (await buildLink.count() == 0) {
+            return "NOT FOUND";
         }
-        return +numberstr;
+
+        var resultTypes = [
+            ['.badge-status.results_SUCCESS', "SUCCESS"],
+            ['.badge-status.results_WARNINGS', "WARNINGS"],
+            ['.badge-status.results_FAILURE', "FAILURE"],
+            ['.badge-status.results_SKIPPED', "SKIPPED"],
+            ['.badge-status.results_EXCEPTION', "EXCEPTION"],
+            ['.badge-status.results_RETRY', "RETRY"],
+            ['.badge-status.results_CANCELLED', "CANCELLED"]
+        ];
+
+        for (let i = 0; i < resultTypes.length; i++) {
+            var answer = buildLink.all(By.css(resultTypes[i][0]));
+            if (await answer.count() > 0) {
+                return resultTypes[i][1];
+            }
+        }
+        return "NOT FOUND";
     }
 
     async waitBuildFinished(reference) {

@@ -14,7 +14,7 @@
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
           td(ng-show="builders") {{ builders.get(build.builderid).name }}
           td
-            a(ui-sref="build({builder:build.builderid, build:build.number})")
+            a.bb-buildid-link(ui-sref="build({builder:build.builderid, build:build.number})")
               span.badge-status(ng-class="results2class(build, 'pulse')")
                   span.badge-inactive
                     | {{build.number}}
