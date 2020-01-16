@@ -1,1 +1,0 @@
-The message queues will now wait until the delivered callbacks are fully completed during shutdown.

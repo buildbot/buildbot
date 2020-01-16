@@ -1,1 +1,0 @@
-Fix multiple race conditions in Telegram reporter that were visible in tests.
