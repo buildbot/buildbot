@@ -69,8 +69,8 @@ class SandboxedWorker(AsyncService):
 
         self.processprotocol = processProtocol = WorkerProcessProtocol()
         # we need to spawn the worker asynchronously though
-        self.process = reactor.spawnProcess(
-            processProtocol, self.sandboxed_worker_path, args=['bbw', 'start', '--nodaemon', self.workerdir])
+        args = [self.sandboxed_worker_path, 'start', '--nodaemon', self.workerdir]
+        self.process = reactor.spawnProcess(processProtocol, self.sandboxed_worker_path, args=args)
 
         self.worker = self.master.workers.getWorkerByName(self.workername)
         return super().startService()
