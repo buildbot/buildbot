@@ -1,1 +1,0 @@
-Fix hgpoller crash when force pushing a branch (:issue:`4876`)

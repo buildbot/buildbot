@@ -1,1 +1,0 @@
-:py:class:`GerritEventLogPoller` and :py:class:`GerritChangeSource` coordinate so as not to generate duplicate changes, resolves :issue:`4786`

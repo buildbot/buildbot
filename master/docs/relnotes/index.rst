@@ -10,6 +10,45 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.6.0`` ( ``2020-01-16`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix a potential deadlock when interrupting a step that is waiting for a lock to become available.
+- Prepare unique hgpoller name when using multiple hgpoller for multiple branches (:issue:`5004`)
+- Fix hgpoller crash when force pushing a branch (:issue:`4876`)
+- Fix mail recipient formatting to make sure address comments are separately escaped instead of escaping the whole To: or CC: header, which is not RFC compliant.
+- Master side keep-alive requests are now repeated instead of being single-shot (:issue:`3630`).
+- The message queues will now wait until the delivered callbacks are fully completed during shutdown.
+- Fix encoding errors during P4Poller ticket parsing :issue:`5148`.
+- Remove server header from HTTP response served by the web component.
+- Fix multiple race conditions in Telegram reporter that were visible in tests.
+- The Telegram reporter will now wait until in-progress polls finish during shutdown.
+- Improve reliability of timed scheduler.
+- transfer steps now correctly report errors from workers :issue:`5058`
+- Warn if Buildbot title in the configuration is too long and will be ignored.
+- Worker will now wait for any pending keep-alive requests to finish leaving them in indeterminate state during shutdown.
+
+Improved Documentation
+----------------------
+
+- Mention that QueueRef.stopConsuming() may return a Deferred.
+
+Features
+--------
+
+- Add the parameter --use-tls to `buildbot-worker create-worker` to automatically enable TLS in the connection string
+- Gerrit reporter now passes a tag for versions that support it.
+  This enables filtering out buildbot's messages.
+- :py:class:`GerritEventLogPoller` and :py:class:`GerritChangeSource` coordinate so as not to generate duplicate changes, resolves :issue:`4786`
+- Web front end now allows you to configure the default landing page with `c['www']['default_page'] = 'name-of-page'`.
+- The new option dumpMailsToLog of MailNotifier allows to dump formatted mails to the log before sending.
+- bb:cfg:`workers` will now attempt to read ``/etc/os-release`` and stores them into worker info as ``os_<field>`` items.
+  Add new interpolation ``worker`` that can be used for accessing worker info items.
+
+
 Buildbot ``2.5.1`` ( ``2019-11-24`` )
 =====================================
 
