@@ -10,7 +10,7 @@ Release Notes
 
 .. towncrier release notes start
 
-Buildbot ``2.6.0`` ( ``2020-01-16`` )
+Buildbot ``2.6.0`` ( ``2020-01-21`` )
 =====================================
 
 Bug fixes
