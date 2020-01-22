@@ -179,7 +179,8 @@ class Worker(WorkerBase, service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=None, numcpus=None, unicode_encoding=None, useTls=None,
-                 allow_shutdown=None, maxRetries=None, connection_string=None):
+                 allow_shutdown=None, maxRetries=None, connection_string=None,
+                 delete_leftover_dirs=False):
 
         assert usePTY is None, "worker-side usePTY is not supported anymore"
         assert (connection_string is None or
@@ -189,7 +190,8 @@ class Worker(WorkerBase, service.MultiService):
 
         service.MultiService.__init__(self)
         WorkerBase.__init__(
-            self, name, basedir, umask=umask, unicode_encoding=unicode_encoding)
+            self, name, basedir, umask=umask, unicode_encoding=unicode_encoding,
+            delete_leftover_dirs=delete_leftover_dirs)
         if keepalive == 0:
             keepalive = None
 

@@ -108,6 +108,8 @@ class CreateWorkerOptions(MakerBase):
          "Do not permit buildmaster rotate logs by itself"],
         ['use-tls', None,
          "Uses TLS to connect to master"],
+        ['delete-leftover-dirs', None,
+         'Delete folders that are not required by the master on connection'],
     ]
     optParameters = [
         ["keepalive", "k", 600,
