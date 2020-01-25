@@ -492,7 +492,9 @@ class AbstractLatentWorker(AbstractWorker):
         # the worker might be insubstantiating from buildWaitTimeout
         if self.state in [States.INSUBSTANTIATING,
                           States.INSUBSTANTIATING_SUBSTANTIATING]:
-            yield self._insubstantiation_notifier.wait()
+            self._log_start_stop_locked('stopService')
+            yield self._start_stop_lock.acquire()
+            self._start_stop_lock.release()
 
         if self.conn is not None or self.state in [States.SUBSTANTIATING,
                                                    States.SUBSTANTIATED]:

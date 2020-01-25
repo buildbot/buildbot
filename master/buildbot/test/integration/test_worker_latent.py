@@ -461,6 +461,31 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(1, RETRY)
 
     @defer.inlineCallbacks
+    def test_insubstantiation_during_stop_service_waits_for_insubstantiation(self):
+        """
+        When stopService is called and a worker is insubstantiating, we should wait for this
+        process to complete.
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=1))
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Wait until worker starts insubstantiation and then shutdown master
+        self.reactor.advance(1)
+        self.assertTrue(controller.stopping)
+
+        d = master.stopService()
+        self.assertFalse(d.called)
+        yield controller.stop_instance(True)
+        yield d
+
+    @defer.inlineCallbacks
     def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):
         """
         We should cancel substantiation if we insubstantiate when that substantiation is waiting
