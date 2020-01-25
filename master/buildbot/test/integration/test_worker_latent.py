@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.python.failure import Failure
 from twisted.spread import pb
 
 from buildbot.config import BuilderConfig
+from buildbot.config import MasterConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
@@ -130,6 +132,15 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         ]
 
         return controller, master, builder_ids
+
+    def reconfig_workers_remove_all(self, master):
+        # returns a deferred that fires when the worker has been successfully removed
+        config_dict = {
+            'workers': [],
+            'multiMaster': True
+        }
+        config = MasterConfig.loadFromDict(config_dict, '<dict>')
+        return master.workers.reconfigServiceWithBuildbotConfig(config)
 
     @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
@@ -459,6 +470,62 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield d
 
         yield self.assertBuildResults(1, RETRY)
+
+    @defer.inlineCallbacks
+    def test_stopservice_during_insubstantiation_completes(self):
+        """
+        When stopService is called and a worker is insubstantiating, we should wait for this
+        process to complete.
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=1))
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Wait until worker starts insubstantiation and then shutdown worker
+        self.reactor.advance(1)
+        self.assertTrue(controller.stopping)
+
+        d = self.reconfig_workers_remove_all(master)
+        self.assertFalse(d.called)
+        yield controller.stop_instance(True)
+        yield d
+
+    @parameterized.expand([
+        ('with_substantiation_failure', False, False),
+        ('without_worker_connecting', True, False),
+        ('with_worker_connecting', True, True),
+    ])
+    @defer.inlineCallbacks
+    def test_stopservice_during_substantiation_completes(self, name, subst_success,
+                                                         worker_connects):
+        """
+        When stopService is called and a worker is substantiating, we should wait for this
+        process to complete.
+        """
+        controller, master, builder_id = yield self.create_single_worker_config(
+            controller_kwargs=dict(build_wait_timeout=1))
+        controller.auto_connect_worker = worker_connects
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        self.assertTrue(controller.starting)
+
+        d = self.reconfig_workers_remove_all(master)
+        self.assertFalse(d.called)
+
+        yield controller.start_instance(subst_success)
+
+        # we should stop the instance immediately after it substantiates regardless of the result
+        self.assertTrue(controller.stopping)
+
+        yield controller.stop_instance(True)
+        yield d
 
     @defer.inlineCallbacks
     def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):

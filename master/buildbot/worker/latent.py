@@ -61,6 +61,10 @@ class States(enum.Enum):
     # When in this state self.substantiation_build is not None.
     INSUBSTANTIATING_SUBSTANTIATING = 5
 
+    # This state represents a worker that is shut down. Effectively, it's NOT_SUBSTANTIATED
+    # plus that we will abort if anyone tries to substantiate it.
+    SHUT_DOWN = 6
+
 
 @implementer(ILatentWorker)
 class AbstractLatentWorker(AbstractWorker):
@@ -148,7 +152,9 @@ class AbstractLatentWorker(AbstractWorker):
         then either of:
             INSUBSTANTIATING_SUBSTANTIATING -> SUBSTANTIATING
             INSUBSTANTIATING -> NOT_SUBSTANTIATED
-        """
+
+    stopService():
+        NOT_SUBSTANTIATED -> SHUT_DOWN
     '''
 
     def checkConfig(self, name, password,
@@ -208,6 +214,9 @@ class AbstractLatentWorker(AbstractWorker):
 
     def substantiate(self, wfb, build):
         log.msg("substantiating worker %s" % (wfb,))
+
+        if self.state == States.SHUT_DOWN:
+            return defer.succeed(False)
 
         if self.state == States.SUBSTANTIATED and self.conn is not None:
             self._setBuildWaitTimer()
@@ -416,7 +425,7 @@ class AbstractLatentWorker(AbstractWorker):
             assert self.state not in [States.INSUBSTANTIATING,
                                       States.INSUBSTANTIATING_SUBSTANTIATING]
 
-            if self.state == States.NOT_SUBSTANTIATED:
+            if self.state in [States.NOT_SUBSTANTIATED, States.SHUT_DOWN]:
                 return
 
             prev_state = self.state
@@ -460,13 +469,6 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False, stopping_service=False):
-        if self.building:
-            # If there are builds running or about to start on this worker, don't disconnect.
-            # soft_disconnect happens during master reconfiguration or shutdown. It's not a good
-            # reason to kill these builds. We effectively slow down reconfig until all workers
-            # that have been unconfigured finish their builds.
-            return
-
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if not stopping_service and self.build_wait_timeout < 0:
@@ -489,14 +491,26 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def stopService(self):
-        # the worker might be insubstantiating from buildWaitTimeout
-        if self.state in [States.INSUBSTANTIATING,
-                          States.INSUBSTANTIATING_SUBSTANTIATING]:
-            yield self._insubstantiation_notifier.wait()
+        # stops the service. Waits for any pending substantiations, insubstantiations or builds
+        # that are running or about to start to complete.
+        while self.state not in [States.NOT_SUBSTANTIATED, States.SHUT_DOWN]:
+            if self.state in [States.INSUBSTANTIATING,
+                              States.INSUBSTANTIATING_SUBSTANTIATING,
+                              States.SUBSTANTIATING,
+                              States.SUBSTANTIATING_STARTING]:
+                self._log_start_stop_locked('stopService')
+                yield self._start_stop_lock.acquire()
+                self._start_stop_lock.release()
 
-        if self.conn is not None or self.state in [States.SUBSTANTIATING,
-                                                   States.SUBSTANTIATED]:
-            yield self._soft_disconnect(stopping_service=True)
+            if self.conn is not None or self.state in [States.SUBSTANTIATED,
+                                                       States.SUBSTANTIATING_STARTING]:
+                yield self._soft_disconnect(stopping_service=True)
+
+        # prevent any race conditions with any future builds that are in the process of
+        # being started.
+        if self.state == States.NOT_SUBSTANTIATED:
+            self.state = States.SHUT_DOWN
+
         self._clearBuildWaitTimer()
         res = yield super().stopService()
         return res
