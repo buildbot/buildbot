@@ -460,13 +460,6 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False, stopping_service=False):
-        if self.building:
-            # If there are builds running or about to start on this worker, don't disconnect.
-            # soft_disconnect happens during master reconfiguration or shutdown. It's not a good
-            # reason to kill these builds. We effectively slow down reconfig until all workers
-            # that have been unconfigured finish their builds.
-            return
-
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if not stopping_service and self.build_wait_timeout < 0:
