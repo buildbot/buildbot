@@ -6,19 +6,18 @@ import requests
 import yaml
 
 
-def download(url, fn):
+def download(session, url, fn):
     if os.path.exists(fn):
         print('Removing old file {}'.format(fn))
         os.unlink(fn)
     print('Downloading {} from {}'.format(fn, url))
     with open(fn, 'wb') as f:
-        r = s.get(url, stream=True)
+        r = session.get(url, stream=True)
         for c in r.iter_content(1024):
             f.write(c)
 
 
 def main():
-    global s
     with open(os.path.expanduser("~/.config/hub")) as f:
         conf = yaml.safe_load(f)
         token = conf['github.com'][0]['oauth_token']
@@ -37,11 +36,11 @@ def main():
     for url in (a['browser_download_url'] for a in assets):
         if url.endswith(".whl") or url.endswith(".tar.gz"):
             fn = os.path.join('dist', url.split('/')[-1])
-            download(url, fn)
+            download(s, url, fn)
     # download tag archive
     url = "https://github.com/buildbot/buildbot/archive/{tag}.tar.gz".format(tag=tag)
     fn = os.path.join('dist', "buildbot-{tag}.gitarchive.tar.gz".format(tag=tag))
-    download(url, fn)
+    download(s, url, fn)
     sigfn = fn + ".sig"
     if os.path.exists(sigfn):
         os.unlink(sigfn)
