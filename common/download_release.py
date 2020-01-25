@@ -33,7 +33,7 @@ def main():
     assets = s.get("https://api.github.com/repos/buildbot/buildbot/releases/{id}/assets".format(id=r['id']))
     assets.raise_for_status()
     assets = assets.json()
-    os.system("mkdir -p dist")
+    os.makedirs('dist', exist_ok=True)
     for url in (a['browser_download_url'] for a in assets):
         if url.endswith(".whl") or url.endswith(".tar.gz"):
             fn = os.path.join('dist', url.split('/')[-1])
