@@ -13,6 +13,7 @@ def download(session, url, fn):
     print('Downloading {} from {}'.format(fn, url))
     with open(fn, 'wb') as f:
         r = session.get(url, stream=True)
+        r.raise_for_status()
         for c in r.iter_content(1024):
             f.write(c)
 
