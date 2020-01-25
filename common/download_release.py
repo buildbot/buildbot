@@ -7,9 +7,10 @@ import yaml
 
 
 def download(url, fn):
-    print(url, fn)
     if os.path.exists(fn):
-        return
+        print('Removing old file {}'.format(fn))
+        os.unlink(fn)
+    print('Downloading {} from {}'.format(fn, url))
     with open(fn, 'wb') as f:
         r = s.get(url, stream=True)
         for c in r.iter_content(1024):
