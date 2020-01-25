@@ -484,10 +484,6 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 # it has already called, so do not call it again
                 child.stopService = lambda: None
                 yield child.disownServiceParent()
-                # HACK: we still keep a reference to the master for some cleanup tasks which are not waited by
-                # to stopService (like the complex worker disconnection mechanism)
-                # http://trac.buildbot.net/ticket/3583
-                child.parent = self.master
 
             for n in added_names:
                 child = new_by_name[n]
