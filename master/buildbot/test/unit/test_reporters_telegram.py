@@ -15,11 +15,13 @@
 
 import json
 import sys
+from unittest.case import SkipTest
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
+from buildbot.plugins.db import get_plugins
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import telegram
@@ -563,6 +565,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         if chat_ids is None:
             chat_ids = []
         http = self.setupFakeHttp()
+        www = get_plugins('www', None, load_now=True)
+        if 'base' not in www:
+            raise SkipTest('telegram tests need buildbot-www installed')
         return telegram.TelegramWebhookBot('12345:secret', http, chat_ids, authz, *args, **kwargs)
 
     def test_getContact(self):
