@@ -28,6 +28,7 @@ from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
+from buildbot.util import deferwaiter
 from buildbot.worker.base import AbstractWorker
 
 
@@ -167,6 +168,7 @@ class AbstractLatentWorker(AbstractWorker):
                         **kwargs):
         self._substantiation_notifier = Notifier()
         self._start_stop_lock = defer.DeferredLock()
+        self._deferwaiter = deferwaiter.DeferWaiter()
         self.build_wait_timeout = build_wait_timeout
         return super().reconfigService(name, password, **kwargs)
 
@@ -312,7 +314,7 @@ class AbstractLatentWorker(AbstractWorker):
             msg = 'Worker %s received connection while not trying to ' \
                 'substantiate.  Disconnecting.' % (self.name,)
             log.msg(msg)
-            self._disconnect(bot)
+            self._deferwaiter.add(self._disconnect(bot))
             raise RuntimeError(msg)
 
         try:
@@ -346,8 +348,11 @@ class AbstractLatentWorker(AbstractWorker):
         if self.state in [States.SUBSTANTIATING,
                           States.SUBSTANTIATING_STARTING]:
             self._fireSubstantiationNotifier(failure)
+
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
+        self._deferwaiter.add(d)
+
         # notify people, but only if we're still in the config
         if not self.parent or not self.notify_on_missing:
             return
@@ -413,6 +418,8 @@ class AbstractLatentWorker(AbstractWorker):
         log.msg("insubstantiating worker {}".format(self))
 
         if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
+            # there's another insubstantiation ongoing. We'll wait for it to finish by waiting
+            # on self._start_stop_lock
             self.state = States.INSUBSTANTIATING
             self.substantiation_build = None
             self._fireSubstantiationNotifier(
@@ -477,14 +484,15 @@ class AbstractLatentWorker(AbstractWorker):
 
         self.stopMissingTimer()
 
+        # we add the Deferreds to DeferWaiter because we don't wait for a Deferred if
+        # the other Deferred errbacks
         yield defer.DeferredList([
-            super().disconnect(),
-            self.insubstantiate(fast)
+            self._deferwaiter.add(super().disconnect()),
+            self._deferwaiter.add(self.insubstantiate(fast))
         ], consumeErrors=True, fireOnOneErrback=True)
 
     def disconnect(self):
-        # This returns a Deferred but we don't use it
-        self._soft_disconnect()
+        self._deferwaiter.add(self._soft_disconnect())
         # this removes the worker from all builders.  It won't come back
         # without a restart (or maybe a sighup)
         self.botmaster.workerLost(self)
@@ -505,6 +513,8 @@ class AbstractLatentWorker(AbstractWorker):
             if self.conn is not None or self.state in [States.SUBSTANTIATED,
                                                        States.SUBSTANTIATING_STARTING]:
                 yield self._soft_disconnect(stopping_service=True)
+
+            yield self._deferwaiter.wait()
 
         # prevent any race conditions with any future builds that are in the process of
         # being started.
