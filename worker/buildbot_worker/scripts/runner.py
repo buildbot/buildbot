@@ -158,11 +158,24 @@ class CreateWorkerOptions(MakerBase):
         if master_arg[:5] == "http:":
             raise usage.UsageError("<master> is not a URL - do not use URL")
 
-        if ":" not in master_arg:
+        if master_arg.startswith("[") and "]" in master_arg:
+            # detect ipv6 address with format [2001:1:2:3:4::1]:4321
+            master, port_tmp = master_arg.split("]")
+            master = master[1:]
+            if ":" not in port_tmp:
+                port = 9989
+            else:
+                port = port_tmp.split(":")[1]
+
+        elif ":" not in master_arg:
             master = master_arg
             port = 9989
         else:
-            master, port = master_arg.split(":")
+            try:
+                master, port = master_arg.split(":")
+            except ValueError:
+                raise usage.UsageError("invalid <master> argument '{}', "
+                                       "if it is an ipv6 address, it must be enclosed by []".format(master_arg))
 
         if not master:
             raise usage.UsageError("invalid <master> argument '{}'".format(
