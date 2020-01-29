@@ -162,7 +162,7 @@ This means that buildmaster will be able to start new builds that would otherwis
    Buildbot's reconfiguration system is fragile for a few difficult-to-fix reasons:
 
    * Any modules imported by the configuration file are not automatically reloaded.
-     Python modules such as http://pypi.python.org/pypi/lazy-reload may help here, but reloading modules is fraught with subtleties and difficult-to-decipher failure cases.
+     Python modules such as https://docs.python.org/3/library/importlib.html and `importlib.reload()` may help here, but reloading modules is fraught with subtleties and difficult-to-decipher failure cases.
 
    * During the reconfiguration, active internal objects are divorced from the service hierarchy, leading to tracebacks in the web interface and other components.
      These are ordinarily transient, but with HTTP connection caching (either by the browser or an intervening proxy) they can last for a long time.
