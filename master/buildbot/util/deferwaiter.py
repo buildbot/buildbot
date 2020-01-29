@@ -37,6 +37,7 @@ class DeferWaiter:
 
         self._waited.add(id(d))
         d.addBoth(self._finished, d)
+        return d
 
     @defer.inlineCallbacks
     def wait(self):

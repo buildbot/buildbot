@@ -42,11 +42,11 @@ def main():
     url = "https://github.com/buildbot/buildbot/archive/{tag}.tar.gz".format(tag=tag)
     fn = os.path.join('dist', "buildbot-{tag}.gitarchive.tar.gz".format(tag=tag))
     download(s, url, fn)
-    sigfn = fn + ".sig"
+    sigfn = fn + ".asc"
     if os.path.exists(sigfn):
         os.unlink(sigfn)
     # sign the tag archive for debian
-    os.system("gpg --output {} -b {}".format(sigfn, fn))
+    os.system("gpg --armor --detach-sign --output {} {}".format(sigfn, fn))
     sigfnbase = os.path.basename(sigfn)
     r = s.post(upload_url,
                headers={'Content-Type': "application/pgp-signature"},
