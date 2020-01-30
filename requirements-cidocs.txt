@@ -1,5 +1,6 @@
 Sphinx==2.0.1 # pyup: ignore
 sphinx-jinja==1.1.0
+sphinx-rtd-theme==0.4.3
 sphinxcontrib-blockdiag==1.5.5
 sphinxcontrib-spelling==4.3.0
 sphinxcontrib-websupport==1.1.2
