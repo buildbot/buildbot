@@ -196,6 +196,7 @@ class BBDomain(Domain):
         'event': ObjType('event', 'event'),
         'rtype': ObjType('rtype', 'rtype'),
         'rpath': ObjType('rpath', 'rpath'),
+        'raction': ObjType('raction', 'raction'),
     }
 
     directives = {
