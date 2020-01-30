@@ -11,6 +11,7 @@ And finally, perform the upgrade to the next major version.
 .. toctree::
    :maxdepth: 1
 
+   2.0-upgrade
    1.0-upgrade
    0.9-upgrade
    0.9-new-style-steps
