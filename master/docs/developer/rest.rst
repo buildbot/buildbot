@@ -186,5 +186,26 @@ Raml Specs
 The Data API is documented in `RAML 1.0 format <https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md>`_.
 RAML describes and documents all our data, rest, and javascript APIs in a format that can be easily manipulated by human and machines.
 
-.. jinja:: data_api
-    :file: templates/raml.jinja
+.. toctree::
+    :maxdepth: 1
+
+    raml/builder
+    raml/buildrequest
+    raml/build
+    raml/buildset
+    raml/change
+    raml/changesource
+    raml/forcescheduler
+    raml/identifier
+    raml/logchunk
+    raml/log
+    raml/master
+    raml/patch
+    raml/rootlink
+    raml/scheduler
+    raml/sourcedproperties
+    raml/sourcestamp
+    raml/spec
+    raml/step
+    raml/worker
+    raml/raw-endpoints
