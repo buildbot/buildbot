@@ -3,7 +3,7 @@
 Messaging and Queues
 ====================
 
-As of version 0.9.0, Buildbot uses a message-queueing structure to handle asynchronous notifications in a distributed fashion.
+Buildbot uses a message-queueing structure to handle asynchronous notifications in a distributed fashion.
 This avoids, for the most part, the need for each master to poll the database, allowing masters to react to events as they happen.
 
 Overview

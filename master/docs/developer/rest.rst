@@ -9,10 +9,13 @@
 REST API
 ========
 
-The REST API is a thin wrapper around the data API's "Getter" and "Control" sections.
+The REST API is a public interface which can be used by external code to control Buildbot.
+Internally, the REST API a thin wrapper around the data API's "Getter" and "Control" sections.
 It is also designed, in keeping with REST principles, to be discoverable.
 As such, the details of the paths and resources are not documented here.
 Begin at the root URL, and see the :ref:`Data_API` documentation for more information.
+
+The precise specifications in RAML format are described in :ref:`REST_API_specs` documentation.
 
 .. contents:: :local:
 
@@ -177,35 +180,3 @@ Authentication to the REST API is performed in the same manner as authentication
     s = requests.Session()
     s.get("https://<buildbot_url>/auth/login", params={"token": OAUTH_TOKEN})
     builders = s.get("https://<buildbot_url>/api/v2/builders").json()
-
-.. _Raml-Spec:
-
-Raml Specs
-~~~~~~~~~~
-
-The Data API is documented in `RAML 1.0 format <https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md>`_.
-RAML describes and documents all our data, rest, and javascript APIs in a format that can be easily manipulated by human and machines.
-
-.. toctree::
-    :maxdepth: 1
-
-    raml/builder
-    raml/buildrequest
-    raml/build
-    raml/buildset
-    raml/change
-    raml/changesource
-    raml/forcescheduler
-    raml/identifier
-    raml/logchunk
-    raml/log
-    raml/master
-    raml/patch
-    raml/rootlink
-    raml/scheduler
-    raml/sourcedproperties
-    raml/sourcestamp
-    raml/spec
-    raml/step
-    raml/worker
-    raml/raw-endpoints
