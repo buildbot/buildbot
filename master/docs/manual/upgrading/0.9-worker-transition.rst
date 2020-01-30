@@ -1,7 +1,7 @@
 .. _Transition-to-worker-terminology:
 
-Transition to "worker" terminology
-==================================
+Transition to "worker" terminology in BuildBot 0.9.0
+====================================================
 
 Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated
 in favor of "worker"-based terminology.

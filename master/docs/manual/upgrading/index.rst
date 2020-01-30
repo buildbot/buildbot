@@ -4,8 +4,8 @@ Upgrading
 This section describes the process of upgrading from old versions of Buildbot.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   nine-upgrade
-   new-style-steps
-   worker-transition
+   0.9-upgrade
+   0.9-new-style-steps
+   0.9-worker-transition
