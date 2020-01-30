@@ -88,12 +88,3 @@ The ``content-disposition`` http header is set, so that the browser knows which 
 {{config['get'].description}}
 
 {% endfor %}
-
-Raml spec verbatim
-..................
-
-Sometimes Raml is just clearer than formatted text.
-
-.. code-block:: yaml
-
-    {{raml.reindent(raml.rawraml, 4*1)}}
