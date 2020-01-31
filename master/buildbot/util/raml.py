@@ -88,8 +88,16 @@ class RamlSpec:
             elif k in ['get', 'post']:
                 if 'is' in v:
                     for _is in v['is']:
+                        if not isinstance(_is, dict):
+                            raise Exception('Unexpected "is" target {}: {}'.format(
+                                type(_is), _is))
+
                         if 'bbget' in _is:
-                            v['eptype'] = _is['bbget']['bbtype']
+                            try:
+                                v['eptype'] = _is['bbget']['bbtype']
+                            except TypeError:
+                                raise Exception('Unexpected "is" target {}'.format(_is['bbget']))
+
                             self.endpoints_by_type.setdefault(v['eptype'], {})
                             self.endpoints_by_type[v['eptype']][base] = api
                         if 'bbgetraw' in _is:
