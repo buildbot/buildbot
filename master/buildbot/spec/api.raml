@@ -58,6 +58,13 @@ types:
     patch: !include types/patch.raml
     spec: !include types/spec.raml
     step: !include types/step.raml
+    test_code_path: !include types/test_code_path.raml
+    test_name: !include types/test_name.raml
+    test_raw_result: !include types/test_raw_result.raml
+    test_raw_result_chunk: !include types/test_raw_result_chunk.raml
+    test_result: !include types/test_result.raml
+    test_result_set: !include types/test_result_set.raml
+    test_result_unparsed_set: !include types/test_result_unparsed_set.raml
 /:
     get:
         is:
@@ -298,6 +305,28 @@ types:
             get:
                 is:
                 - bbget: {bbtype: master}
+
+        /test_result_sets:
+            description: |
+                This selects all test result sets that have been created for a particular builder
+            get:
+                is:
+                - bbget: {bbtype: test_result_set}
+
+        /test_code_paths:
+            description: |
+                This selects all test code paths that have been created for a particular builder
+            get:
+                is:
+                - bbget: {bbtype: test_code_path}
+
+        /test_names:
+            description: |
+                This selects all test names that have been created for a particular builder
+            get:
+                is:
+                - bbget: {bbtype: test_name}
+
 /buildrequests:
     /{buildrequestid}:
         uriParameters:
@@ -413,6 +442,19 @@ types:
                                     This path downloads the whole log
                                 is:
                                 - bbgetraw:
+                /test_result_sets:
+                    description: |
+                        This selects all test result sets that have been created for a particular step
+                    get:
+                        is:
+                        - bbget: {bbtype: test_result_set}
+        /test_result_sets:
+            description: |
+                This selects all test result sets that have been created for a particular build
+            get:
+                is:
+                - bbget: {bbtype: test_result_set}
+
 /buildsets:
     description: this path selects all buildsets
     get:
@@ -700,3 +742,49 @@ types:
                             This path downloads the whole log
                         is:
                         - bbgetraw:
+        /test_result_sets:
+            description: |
+                This selects all test result sets that have been created for a particular step
+            get:
+                is:
+                - bbget: {bbtype: test_result_set}
+
+/test_result_set:
+    /{test_result_setid}:
+        description: Selects a test result set by id
+        uriParameters:
+            test_result_setid:
+                type: number
+                description: the id of the test result set
+        get:
+            description: This path selects specific test result set.
+            is:
+            - bbget: {bbtype: test_result_set}
+        /results:
+            description: This path selects all test results for the given test result set
+            get:
+                is:
+                - bbget: {bbtype: test_result}
+        /raw_results:
+            description: This path selects the raw data for the test result set, if available
+            get:
+                is:
+                - bbget: {bbtype: test_raw_result}
+
+/test_raw_result:
+    /{test_raw_resultid}:
+        description: Selects a test raw result by id
+        uriParameters:
+            test_raw_resultid:
+                type: number
+                description: the id of the test raw result
+        get:
+            description: This path selects specific test raw result
+            is:
+            - bbget: {bbtype: test_raw_result}
+        /raw:
+            get:
+                description: This path downloads the whole raw data for the result
+                is:
+                - bbgetraw:
+

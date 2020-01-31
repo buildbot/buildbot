@@ -1,0 +1,30 @@
+#%RAML 1.0 DataType
+displayName: Test name
+description: |
+    This resource represents a test name.
+    It is intended to be immutable once added.
+    A separate instance of the test name resource is added for each builder using a particular test name.
+
+    Update Methods
+    --------------
+
+    TODO
+
+properties:
+    test_nameid:
+        description: the unique ID of this test name.
+        type: integer
+    builderid:
+        description: |
+            id of the builder for this test name.
+            Multiple builders will have separate instances of the test name even if the name is equivalent.
+        type: integer
+    name:
+        description: The name of the test.
+        type: string
+
+type: object
+example:
+    test_nameid: 31
+    builderid: 14
+    name: 'buildbot.test.unit.test_db_builders.TestFakeDB.test_addBuilderMaster_already_present'

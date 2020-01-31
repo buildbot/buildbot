@@ -1,0 +1,48 @@
+#%RAML 1.0 DataType
+displayName: Test result
+description: |
+    This resource represents a test result.
+    Test results that are produced by a single test run are grouped by a relation to a test result set.
+    Single test result set may represent thousands of test results.
+
+    TODO: It may make sense to add an option to return the test names in one go. Otherwise we would
+    need to make a join on the client side which may not be optimal in case of thousands of test
+    results.
+
+    Update Methods
+    --------------
+
+    TODO
+
+properties:
+    test_resultid:
+        description: the unique ID of this test result.
+        type: integer
+    builderid:
+        description: id of the builder for this test result.
+        type: integer
+    test_result_setid:
+        description: id of the test result set that the test result belongs to.
+        type: integer
+    test_nameid:
+        description: id of the test name
+        type: integer
+    test_code_pathid:
+        description: id of the test code path
+        type: integer
+    line?:
+        description: the number of the line in the code path that produced this result
+        type: integer
+    value:
+        description: the value of the test.
+        type: string
+
+type: object
+example:
+    test_resultid: 1042
+    builderid: 14
+    test_result_setid: 412
+    test_nameid: 31
+    test_code_pathid: 41
+    line: 123
+    value: '31.1382'

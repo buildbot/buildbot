@@ -1,0 +1,31 @@
+#%RAML 1.0 DataType
+displayName: Test raw result
+description: |
+    This resource represents a set of binary data that produces a set of test results comprising a test result set.
+    This type of data is transient.
+    It's only useful for debugging purposes and during processing of test result sets.
+    After all test results have been created for a test result set this data is not used.
+
+    Update Methods
+    --------------
+
+    TODO
+
+properties:
+    test_raw_resultid:
+        description: the unique ID of this test raw result.
+        type: integer
+    test_result_setid:
+        description: id of the test result set this raw result corresponds to
+        type: integer
+    type:
+        description: |
+            The type of the test result.
+            This is used to select the parsing method internally.
+        type: string
+
+type: object
+example:
+    test_raw_resultid: 4123
+    test_result_setid: 412
+    type: 'benchmark-dot-net-xml'

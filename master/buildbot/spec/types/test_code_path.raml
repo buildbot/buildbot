@@ -1,0 +1,30 @@
+#%RAML 1.0 DataType
+displayName: Test code path
+description: |
+    This resource represents a relative path to the code file that produced a test result.
+    It is intended to be immutable once added.
+    A separate instance of the test name resource is added for each builder using a particular test name.
+
+    Update Methods
+    --------------
+
+    TODO
+
+properties:
+    test_code_pathid:
+        description: the unique ID of this test code path.
+        type: integer
+    builderid:
+        description: |
+            id of the builder for this test code path.
+            Multiple builders will have separate instances of the test code path even if the path is equivalent.
+        type: integer
+    path:
+        description: The relative path to the code file.
+        type: string
+
+type: object
+example:
+    test_code_pathid: 31
+    builderid: 14
+    path: 'master/buildbot/spec/types/test_code_path.raml'

@@ -1,0 +1,27 @@
+#%RAML 1.0 DataType
+displayName: Unparsed test result set
+description: |
+    This resource represents an unparsed test result set.
+    Any objects in this table correspond to test result set objects with ``parsed`` property being ``false``.
+
+    Update Methods
+    --------------
+
+    TODO
+
+properties:
+    test_result_setid:
+        description: id of the corresponding test result set that is not yet parsed.
+        type: integer
+    status:
+        description: |
+            The status of the parsing process.
+            0 - corresponds to a test result set whose parsing has not yet been started.
+            1 - corresponds to a test result set whose parsing has been started.
+            TODO: maybe switch to char?
+        type: integer
+
+type: object
+example:
+    test_result_setid: 412
+    status: 1

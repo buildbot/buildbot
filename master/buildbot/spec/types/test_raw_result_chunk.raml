@@ -1,0 +1,31 @@
+#%RAML 1.0 DataType
+displayName: Test raw result chunk.
+description: |
+    This resource represents a part of test raw result.
+    All chunks for a sequence with the ``sequence`` value increasing sequentially starting from 0.
+    The content may potentially be compressed.
+
+    Update Methods
+    --------------
+
+    TODO
+
+properties:
+    test_raw_resultid:
+        description: the unique ID of this test raw result.
+        type: integer
+    sequence:
+        description: the sequence number of the chunk
+        type: integer
+    content:
+        description: The binary data of the chunk
+        type: string
+    compressed:
+        description: Whether the chunk is compressed.
+        type: boolean
+
+type: object
+example:
+    test_raw_resultid: 4123
+    test_result_setid: 412
+    type: 'benchmark-dot-net-xml'
