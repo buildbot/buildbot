@@ -64,7 +64,8 @@ class Model(base.DBConnectorComponent):
     # * sqlalchemy does not handle sa.Boolean very well on MySQL or Postgres;
     #   use sa.SmallInteger instead
 
-    # build requests
+    # Tables related to build requests
+    # --------------------------------
 
     # A BuildRequest is a request for a particular build to be performed.  Each
     # BuildRequest is a part of a Buildset.  BuildRequests are claimed by
@@ -114,7 +115,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
 
-    # builds
+    # Tables related to builds
+    # ------------------------
 
     # This table contains the build properties
     build_properties = sautils.Table(
@@ -162,7 +164,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('results', sa.Integer),
     )
 
-    # steps
+    # Tables related to steps
+    # -----------------------
 
     steps = sautils.Table(
         'steps', metadata,
@@ -181,7 +184,8 @@ class Model(base.DBConnectorComponent):
             'hidden', sa.SmallInteger, nullable=False, server_default='0'),
     )
 
-    # logs
+    # Tables related to logs
+    # ----------------------
 
     logs = sautils.Table(
         'logs', metadata,
@@ -212,7 +216,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('compressed', sa.SmallInteger, nullable=False),
     )
 
-    # buildsets
+    # Tables related to buildsets
+    # ---------------------------
 
     # This table contains input properties for buildsets
     buildset_properties = sautils.Table(
@@ -259,7 +264,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('parent_relationship', sa.Text),
     )
 
-    # changesources
+    # Tables related to change sources
+    # --------------------------------
 
     # The changesources table gives a unique identifier to each ChangeSource.  It
     # also links to other tables used to ensure only one master runs each
@@ -289,7 +295,9 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
-    # workers
+    # Tables related to workers
+    # -------------------------
+
     workers = sautils.Table(
         "workers", metadata,
         sa.Column("id", sa.Integer, primary_key=True),
@@ -324,7 +332,8 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
-    # changes
+    # Tables related to changes
+    # ----------------------------
 
     # Files touched in changes
     change_files = sautils.Table(
@@ -420,7 +429,8 @@ class Model(base.DBConnectorComponent):
                   nullable=True),
     )
 
-    # sourcestamps
+    # Tables related to sourcestamps
+    # ------------------------------
 
     # Patches for SourceStamps that were generated through the try mechanism
     patches = sautils.Table(
@@ -495,7 +505,8 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
-    # schedulers
+    # Tables related to schedulers
+    # ----------------------------
 
     # The schedulers table gives a unique identifier to each scheduler.  It
     # also links to other tables used to ensure only one master runs each
@@ -546,7 +557,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('important', sa.Integer),
     )
 
-    # builders
+    # Tables related to builders
+    # --------------------------
 
     builders = sautils.Table(
         'builders', metadata,
@@ -573,7 +585,9 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
-    # tags
+    # Tables related to tags
+    # ----------------------
+
     tags = sautils.Table(
         'tags', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
@@ -595,7 +609,8 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
-    # objects
+    # Tables related to objects
+    # -------------------------
 
     # This table uniquely identifies objects that need to maintain state across
     # invocations.
@@ -623,7 +638,8 @@ class Model(base.DBConnectorComponent):
         sa.Column("value_json", sa.Text, nullable=False),
     )
 
-    # users
+    # Tables related to users
+    # -----------------------
 
     # This table identifies individual users, and contains buildbot-specific
     # information about those users.
@@ -658,7 +674,8 @@ class Model(base.DBConnectorComponent):
         sa.Column("attr_data", sa.String(128), nullable=False),
     )
 
-    # masters
+    # Tables related to masters
+    # -------------------------
 
     masters = sautils.Table(
         "masters", metadata,
@@ -678,7 +695,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('last_active', sa.Integer, nullable=False),
     )
 
-    # indexes
+    # Indexes
+    # -------
 
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_builderid', buildrequests.c.builderid)
@@ -795,9 +813,8 @@ class Model(base.DBConnectorComponent):
                  name='parent_changeids')),
     ]
 
-    #
-    # migration support
-    #
+    # Migration support
+    # -----------------
 
     # this is a bit more complicated than might be expected because the first
     # seven database versions were once implemented using a homespun migration
