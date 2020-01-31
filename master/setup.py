@@ -269,6 +269,7 @@ setup_args = {
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
             ('buildbot.steps.cmake', ['CMake']),
+            ('buildbot.steps.ctest', ['CTest']),
             ('buildbot.steps.cppcheck', ['Cppcheck']),
             ('buildbot.steps.http', [
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',

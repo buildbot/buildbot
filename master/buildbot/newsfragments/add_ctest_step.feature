@@ -1,0 +1,1 @@
+New ``CTest`` step :py:class:`~buildbot.steps.ctest.CTest`.

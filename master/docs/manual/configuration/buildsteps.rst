@@ -1593,6 +1593,25 @@ In addition to the parameters :bb:step:`ShellCommand` supports, this step accept
 
     ...
 
+.. bb:step:: CTest
+
+CTest
++++++
+
+.. py:class:: buildbot.steps.ctest.CTest
+
+This is intended to handle the :command:`ctest` step for projects that use `CMake-based build systems <http://cmake.org>`_.
+
+.. note::
+
+   Links below point to the latest CMake documentation.
+   Make sure that you check the documentation for the CMake you use.
+
+This is meant to handle CTest tests.
+The default command is :command:`ctest --output-on-failure`.
+The other arguments are identical to :bb:step:`ShellCommand`.
+Refer to `ctest(1) <https://cmake.org/cmake/help/latest/manual/ctest.1.html>`_ for more information.
+
 .. bb:step:: Compile
 
 Compile
