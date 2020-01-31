@@ -609,6 +609,149 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
+    # Tables related to test results
+    # ------------------------------
+
+    # Represents a single test result set. A step can any number of test result sets,
+    # each of which may contain any number of test results.
+    test_result_sets = sautils.Table(
+        'test_result_sets', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # In the future we will want to rearrange the underlying data in the database according
+        # to (builderid, buildid) tuple, so that huge number of entries in the table does not
+        # reduce the efficiency of retrieval of data for a particular build.
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('buildid', sa.Integer,
+                  sa.ForeignKey('builds.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('stepid', sa.Integer,
+                  sa.ForeignKey('steps.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('category', sa.Text, nullable=False),
+
+        sa.Column('value_unit', sa.Text, nullable=False),
+
+        # true when all test results associated with test result set have been generated.
+        sa.Column('complete', sa.SmallInteger, nullable=False),
+    )
+
+    # This is just a list of test result sets whose data is not yet parsed.
+    test_result_unparsed_sets = sautils.Table(
+        'test_result_unparsed_sets', metadata,
+
+        sa.Column('test_result_setid', sa.Integer,
+                  sa.ForeignKey('test_result_sets.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('status', sa.SmallInteger, nullable=False),
+    )
+
+    # Represents a test result. A single test result set will represent thousands of test results
+    # in any significant codebase that's tested.
+    test_results = sautils.Table(
+        'test_results', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # The builder ID of the test result set that the test result belongs to.
+        # This is included for future partitioning support.
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('test_result_setid', sa.Integer,
+                  sa.ForeignKey('test_result_sets.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('test_nameid', sa.Integer,
+                  sa.ForeignKey('test_names.id', ondelete='CASCADE'),
+                  nullable=True),
+
+        sa.Column('test_code_pathid', sa.Integer,
+                  sa.ForeignKey('test_code_paths.id', ondelete='CASCADE'),
+                  nullable=True),
+
+        # The code line that the test originated from
+        sa.Column('line', sa.Integer, nullable=True),
+
+        # The result of the test converted to a string.
+        sa.Column('value', sa.Text, nullable=False),
+    )
+
+    # Represents the test names of test results.
+    test_names = sautils.Table(
+        'test_names', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # The builder ID of the test result set that the test result belongs to.
+        # This is included for future partitioning support and also for querying all test names
+        # for a builder.
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('name', sa.Text, nullable=False),
+    )
+
+    # Represents the file paths of test results.
+    test_code_paths = sautils.Table(
+        'test_code_paths', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # The builder ID of the test result set that the test result belongs to.
+        # This is included for future partitioning support
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('path', sa.Text, nullable=False),
+    )
+
+    # Represents raw data that is needed to produce the results of a test result set. Differently
+    # from a logs of a step, this may be a binary artifact uploaded by a step. Additionally,
+    # we may want different persistence policy for this raw data. In some cases, we may delete an
+    # entry as soon as it was parsed and the test results were produced.
+    #
+    # A test result set may need more than one raw data instance in order to be parsed.
+    test_raw_results = sautils.Table(
+        'test_raw_results', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        sa.Column('test_result_setid', sa.Integer,
+                  sa.ForeignKey('test_result_sets.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('type', sa.Text, nullable=False),
+    )
+
+    test_raw_result_chunks = sautils.Table(
+        'test_raw_result_chunks', metadata,
+
+        sa.Column('test_raw_resultid', sa.Integer,
+                  sa.ForeignKey('test_raw_results.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        # 0-based sequence ID of the chunk. First chunk will have sequence ID of 0, second - 1 and
+        # so on.
+        sa.Column('sequence', sa.Integer, nullable=False),
+
+        # the contents of the chunk. If 'compressed' is not 0, it's compressed with
+        # gzip, bzip2 or lz4
+        sa.Column('content', sa.LargeBinary(65536)),
+
+        sa.Column('compressed', sa.SmallInteger, nullable=False),
+    )
+
     # Tables related to objects
     # -------------------------
 
