@@ -1,1 +1,1 @@
-Updated newsfragments readme to no longer refer to renamed class :py:class:`~buildbot.reporters.http.HttpStatusBase`
+Updated newsfragments README.txt to no longer refer to renamed class :py:class:`~buildbot.reporters.http.HttpStatusBase`

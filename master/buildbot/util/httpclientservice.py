@@ -153,7 +153,7 @@ class HTTPClientService(service.SharedService):
         # we manually do the json encoding in order to automatically convert timestamps
         # for txrequests and treq
         json = kwargs.pop('json', None)
-        if isinstance(json, (dict,list)):
+        if isinstance(json, (dict, list)):
             jsonStr = jsonmodule.dumps(json, default=toJson)
             kwargs['headers']['Content-Type'] = 'application/json'
             if self.skipEncoding:
