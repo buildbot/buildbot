@@ -1160,6 +1160,7 @@ It requires either `txrequests`_ or `treq`_ to be installed to allow interaction
     :param boolean wantPreviousBuild: include 'prev_build' in the build dictionary
     :param boolean debug: logs every requests and their response
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean skipEncoding: disables encoding of json data to bytes before pushing to server
 
 Json object spec
 ++++++++++++++++
