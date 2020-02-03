@@ -88,6 +88,9 @@ class BaseLock:
                                                                  repr(self.owners)))
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
+        if not access.count:
+            return True
+
         w_index = self._find_waiting(requester)
         if w_index is None:
             w_index = len(self.waiting)
@@ -96,20 +99,21 @@ class BaseLock:
 
         if access.mode == 'counting':
             # Wants counting access
-            return num_excl == 0 and num_counting + len(ahead) < self.maxCount \
+            return not num_excl \
+                and num_counting + len(ahead) + access.count <= self.maxCount \
                 and all([w[1].mode == 'counting' for w in ahead])
         # else Wants exclusive access
-        return num_excl == 0 and num_counting == 0 and not ahead
+        return not num_excl and not num_counting and not ahead
 
     def _addOwner(self, owner, access):
         self.owners.append((owner, access))
         if access.mode == 'counting':
-            self._claimed_counting += 1
+            self._claimed_counting += access.count
         else:
             self._claimed_excl += 1
 
-        assert (self._claimed_excl == 1 and self._claimed_counting == 0) \
-            or (self._claimed_excl == 0 and self._claimed_excl <= self.maxCount)
+        assert (self._claimed_excl and not self._claimed_counting) \
+            or (not self._claimed_excl and self._claimed_excl <= self.maxCount)
 
     def _removeOwner(self, owner, access):
         # returns True if owner removed, False if the lock has been already
@@ -120,7 +124,7 @@ class BaseLock:
 
         self.owners.remove(entry)
         if access.mode == 'counting':
-            self._claimed_counting -= 1
+            self._claimed_counting -= access.count
         else:
             self._claimed_excl -= 1
         return True
@@ -133,10 +137,19 @@ class BaseLock:
 
         assert isinstance(access, LockAccess)
         assert access.mode in ['counting', 'exclusive']
+        assert isinstance(access.count, int)
+        if access.mode == 'exclusive':
+            assert access.count == 1
+        else:
+            assert access.count >= 0
+        if not access.count:
+            return
+
         self.waiting = [w for w in self.waiting if w[0] is not owner]
         self._addOwner(owner, access)
 
-        debuglog(" {} is claimed '{}'".format(self, access.mode))
+        debuglog(" {} is claimed '{}', {} units".format(self, access.mode,
+                  access.count))
 
     def subscribeToReleases(self, callback):
         """Schedule C{callback} to be invoked every time this lock is
@@ -147,7 +160,11 @@ class BaseLock:
         """ Release the lock """
         assert isinstance(access, LockAccess)
 
-        debuglog("{} release({}, {})".format(self, owner, access.mode))
+        if not access.count:
+            return
+
+        debuglog("{} release({}, {}, {})".format(self, owner, access.mode,
+                  access.count))
         if not self._removeOwner(owner, access):
             debuglog("{} already released".format(self))
             return
@@ -166,12 +183,12 @@ class BaseLock:
             if w_access.mode == 'counting':
                 if num_excl > 0 or num_counting >= self.maxCount:
                     break
-                num_counting = num_counting + 1
+                num_counting = num_counting + w_access.count
             else:
                 # w_access.mode == 'exclusive'
                 if num_excl > 0 or num_counting > 0:
                     break
-                num_excl = num_excl + 1
+                num_excl = num_excl + w_access.count
 
             # If the waiter has a deferred, wake it up and clear the deferred
             # from the wait queue entry to indicate that it has been woken.
@@ -320,16 +337,26 @@ class LockAccess(util.ComparableMixin):
 
     @param mode: Mode of accessing the lock.
     @type  mode: A string, either 'counting' or 'exclusive'.
+
+    @param count: How many units does the access occupy
+    @type  count: Integer, not negative, default is 1 for backwards
+                  compatibility
     """
 
-    compare_attrs = ('lockid', 'mode')
+    compare_attrs = ('lockid', 'mode', 'count')
 
-    def __init__(self, lockid, mode):
+    def __init__(self, lockid, mode, count=1):
         self.lockid = lockid
         self.mode = mode
+        self.count = count
 
         assert isinstance(lockid, (MasterLock, WorkerLock))
         assert mode in ['counting', 'exclusive']
+        assert isinstance(count, int)
+        if mode == 'exclusive':
+            assert count == 1
+        else:
+            assert count >= 0
 
 
 class BaseLockId(util.ComparableMixin):
@@ -345,10 +372,12 @@ class BaseLockId(util.ComparableMixin):
       class variable.
     """
 
-    def access(self, mode):
+    def access(self, mode, count=1):
         """ Express how the lock should be accessed """
         assert mode in ['counting', 'exclusive']
-        return LockAccess(self, mode)
+        assert isinstance(count, int)
+        assert count >= 0
+        return LockAccess(self, mode, count)
 
     def defaultAccess(self):
         """ For buildbot 0.7.7 compatibility: When user doesn't specify an access

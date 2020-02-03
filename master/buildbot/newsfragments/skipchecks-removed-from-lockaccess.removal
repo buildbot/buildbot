@@ -1,0 +1,1 @@
+Removed `_skipChecks` from `LockAccess` as it's obsolete
