@@ -20,11 +20,14 @@ from sphinx.domains import Domain
 from sphinx.domains import Index
 from sphinx.domains import ObjType
 from sphinx.roles import XRefRole
+from sphinx.util import logging
 from sphinx.util import ws_re
 from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.docfields import Field
 from sphinx.util.docfields import TypedField
 from sphinx.util.nodes import make_refnode
+
+logger = logging.getLogger(__name__)
 
 
 class BBRefTargetDirective(Directive):
@@ -193,6 +196,7 @@ class BBDomain(Domain):
         'event': ObjType('event', 'event'),
         'rtype': ObjType('rtype', 'rtype'),
         'rpath': ObjType('rpath', 'rpath'),
+        'raction': ObjType('raction', 'raction'),
     }
 
     directives = {
@@ -341,6 +345,39 @@ class BBDomain(Domain):
             return dir.resolve_ref(self, env, fromdocname, builder, typ,
                                    target, node, contnode)
 
+    def merge_domaindata(self, docnames, otherdata):
+        for typ in self.object_types:
+            if typ not in otherdata['targets']:
+                continue
+
+            if typ not in self.data['targets']:
+                self.data['targets'][typ] = otherdata['targets'][typ]
+                continue
+
+            self_data = self.data['targets'][typ]
+            other_data = otherdata['targets'][typ]
+
+            for target_name, target_data in other_data.items():
+                if target_name in self_data:
+                    # for some reason we end up with multiple references to the same things in
+                    # multiple domains. If both instances point to the same location, ignore it,
+                    # otherwise issue a warning.
+                    if other_data[target_name] == self_data[target_name]:
+                        continue
+
+                    self_path = '{0}#{1}'.format(self.env.doc2path(self_data[target_name][0]),
+                                                 self_data[target_name][1])
+
+                    other_path = '{0}#{1}'.format(self.env.doc2path(other_path[target_name][0]),
+                                                  other_path[target_name][1])
+
+                    logger.warning(('Duplicate index {} reference {} in {}, '
+                                    'other instance in {}').format(typ, target_name,
+                                                                   self_path, other_path))
+                else:
+                    self_data[target_name] = target_data
+
 
 def setup(app):
     app.add_domain(BBDomain)
+    return {'parallel_read_safe': True, 'parallel_write_safe': True}

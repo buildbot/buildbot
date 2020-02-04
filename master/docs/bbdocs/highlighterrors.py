@@ -93,3 +93,4 @@ def setup(app):
             of Sphinx is %s.  Check disabled.
             """) % (sphinx.__version__, required_sphinx_version)
         sys.stderr.write(msg)
+    return {'parallel_read_safe': True, 'parallel_write_safe': True}
