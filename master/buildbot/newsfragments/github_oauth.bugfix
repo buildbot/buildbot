@@ -1,0 +1,1 @@
+:class:`GitHubAuth` is not using `Authorization` headers instead of `access_token` query parameter, as the later was deprecated by Github. (:issue:`5188`)
