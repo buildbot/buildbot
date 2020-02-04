@@ -202,21 +202,29 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def test_GithubVerifyCode(self):
+        test = self
         requests.get.side_effect = []
         requests.post.side_effect = [
             FakeResponse(dict(access_token="TOK3N"))]
-        self.githubAuth.get = mock.Mock(side_effect=[
-            dict(  # /user
-                login="bar",
-                name="foo bar",
-                email="buzz@bar"),
-            [  # /user/emails
-                {'email': 'buzz@bar', 'verified': True, 'primary': False},
-                {'email': 'bar@foo', 'verified': True, 'primary': True}],
-            [  # /user/orgs
-                dict(login="hello"),
-                dict(login="grp"),
-            ]])
+
+        def fake_get(self, ep, **kwargs):
+            test.assertEqual(self.headers, {'Authorization': 'token TOK3N'})
+            if ep == '/user':
+                return dict(
+                    login="bar",
+                    name="foo bar",
+                    email="buzz@bar")
+            if ep == '/user/emails':
+                return [
+                    {'email': 'buzz@bar', 'verified': True, 'primary': False},
+                    {'email': 'bar@foo', 'verified': True, 'primary': True}]
+            if ep == '/user/orgs':
+                return [
+                    dict(login="hello"),
+                    dict(login="grp"),
+                ]
+        self.githubAuth.get = fake_get
+
         res = yield self.githubAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',

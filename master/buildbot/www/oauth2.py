@@ -284,6 +284,12 @@ class GitHubAuth(OAuth2Auth):
                     username=user['login'],
                     groups=[org['login'] for org in orgs])
 
+    def createSessionFromToken(self, token):
+        s = requests.Session()
+        s.headers = {'Authorization': 'token ' + token['access_token']}
+        s.verify = self.sslVerify
+        return s
+
     def getUserInfoFromOAuthClient_v4(self, c):
         graphql_query = textwrap.dedent('''
             query {
