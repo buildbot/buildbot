@@ -8,8 +8,6 @@ include docs/*.rst
 include docs/_images/*
 include docs/_static/*
 include docs/_templates/*
-include docs/_themes/qtile/*
-include docs/_themes/qtile/static/*
 include docs/tutorial/*.rst
 include docs/tutorial/_images/*.png
 include docs/manual/*.rst
