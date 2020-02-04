@@ -1,0 +1,8 @@
+.. _1.0_Upgrading:
+
+Upgrading to Buildbot 1.0
+=========================
+
+Upgrading a Buildbot instance from 0.9.x to 1.0 does not require any changes in the master configuration.
+Despite the major version bump, Buildbot 1.0 does not have major difference with the 0.9 series.
+1.0.0 is rather the mark of API stability.

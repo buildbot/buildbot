@@ -1,7 +1,7 @@
 .. _Upgrading To Nine:
 
-Upgrading from Buildbot 0.8.x
-=============================
+Upgrading to Buildbot 0.9.0
+===========================
 
 Upgrading a Buildbot instance from 0.8.x to 0.9.x may require a number of changes to the master configuration.
 Those changes are summarized here.

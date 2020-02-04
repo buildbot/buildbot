@@ -1,7 +1,7 @@
 .. _New-Style-Build-Steps:
 
-New-Style Build Steps
-=====================
+New-Style Build Steps in Buildbot 0.9.0
+=======================================
 
 In Buildbot-0.9.0, many operations performed by BuildStep subclasses return a Deferred.
 As a result, custom build steps which call these methods will need to be rewritten.

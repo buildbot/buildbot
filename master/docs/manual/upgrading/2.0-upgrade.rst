@@ -1,0 +1,25 @@
+.. _2.0_Upgrading:
+
+Upgrading to Buildbot 2.0
+=========================
+
+Upgrading a Buildbot instance from 1.x to 2.0 may require some work to achieve.
+The primary changes are removal of deprecated APIs and removal of Python 2.7 support.
+
+The recommended upgrade procedure is as follows:
+
+  - Upgrade to the last released BuildBot version in 1.x series.
+
+  - Remove usage of the deprecated APIs.
+    All usages of deprecated APIs threw a deprecation warning at the point of use.
+    If the code does not emit deprecation warnings, it's in a good shape in this regard.
+
+  - Upgrade master to Python 3.
+    Note that 1.x series has some bugs in Python 3 support, so any Python-related issues
+    encountered in this step are relatively harmless as they will be fixed after upgrading to 2.0.
+
+  - Upgrade to Buildbot 2.0.
+
+  - (Optional) Upgrade to newest Buildbot 2.x.
+    The newest point release will contain bug fixes and functionality improvements.
+    Note that BuildBot 2.3.0 drops support for Internet Explorer 11 and some other old browsers.
