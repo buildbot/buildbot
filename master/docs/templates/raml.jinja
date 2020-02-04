@@ -1,0 +1,70 @@
+..
+   sphinx wants to have at least same number of underline chars than actual tile
+   but has the title is generated, this is a bit more complicated.
+   So we generate hundred of them
+
+{{type.get("displayName", name)}}
+{{"="*100}}
+
+.. bb:rtype:: {{name}}
+
+    {% if 'properties' in type -%}
+    {% for key, value in type.properties.items() -%}
+    :attr {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+    {% endfor %}
+{% if 'example' in type -%}
+
+``example``
+
+    .. code-block:: javascript
+
+        {{raml.format_json(type.example, indent=4*2)}}
+
+{% endif %}
+{% if 'examples' in type -%}
+``examples``
+
+{% for example in type.examples -%}
+
+    .. code-block:: javascript
+
+        {{raml.format_json(example, indent=4*2)}}
+
+{% endfor %}
+{% endif %}
+
+{{type.description}}
+{% endif %}
+{% if name in raml.endpoints_by_type -%}{# if type has endpoints #}
+Endpoints
+---------
+{% for ep, config in raml.endpoints_by_type[name].items()|sort -%}
+.. bb:rpath:: {{ep}}
+
+    {% for key, value in config.uriParameters.items() -%}
+        :pathkey {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+    {% endfor %}
+{{config.description}}
+
+{% if 'get' in config -%}
+{% set method_ep = config['get'] -%}
+``GET``
+    {% if method_ep['eptype'] -%}
+    ``returns``
+        :bb:rtype:`collection` of :bb:rtype:`{{method_ep['eptype']}}`
+    {% endif %}
+
+{% endif %}{# if ep has get #}
+
+{% for method, action in raml.iter_actions(config) -%}
+.. bb:raction:: {{ep}} (method={{method}})
+
+    :body string method:  must be ``{{ method }}``
+
+    {% for key, value in action['body'].items() -%}
+    :body {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+    {% endfor %}
+
+{% endfor %}{# endpoints #}
+{% endfor %}{# endpoints #}
+{% endif %}{# if type has endpoints #}

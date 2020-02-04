@@ -3,8 +3,10 @@
 Data API
 ========
 
-The data layer combines access to stored state and messages, ensuring consistency between them, and exposing a well-defined API that can be used both internally and externally.
-Using caching and the clock information provided by the db and mq layers, this layer ensures that its callers can easily receive a dump of current state plus changes to that state, without missing or duplicating messages.
+The data API is an interface against which various internal and external components can be written against.
+It is a lower-level interface compared to the REST API and exposes more functionality.
+It combines access to stored state and messages, ensuring consistency between them.
+The callers can receive a dump of current state plus changes to that state, without missing or duplicating messages.
 
 Sections
 --------
@@ -128,7 +130,7 @@ Within the buildmaster process, the root of the data API is available at `self.m
         :returns: list of endpoint specifications
 
         This method returns the deprecated API spec.
-        Please use :ref:`Raml-Spec` instead.
+        Please use :ref:`REST_API_specs` instead.
 
     .. py:attribute:: rtypes
 

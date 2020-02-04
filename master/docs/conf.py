@@ -327,6 +327,18 @@ jinja_contexts = {
     "telegram": {'commands': TelegramContact.describe_commands()},
 }
 
+raml_spec = RamlSpec()
+for raml_typename, raml_type in sorted(raml_spec.types.items()):
+    jinja_contexts['data_api_' + raml_typename] = {
+        'raml': raml_spec,
+        'name': raml_typename,
+        'type': raml_type,
+    }
+
+    doc_path = 'developer/raml/{}.rst'.format(raml_typename)
+    if not os.path.exists(doc_path):
+        raise Exception('File {} for RAML type {} does not exist'.format(doc_path, raml_typename))
+
 # Spell checker.
 try:
     import enchant  # noqa # pylint: disable=unused-import

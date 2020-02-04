@@ -3,10 +3,9 @@
 Database
 ========
 
-As of version 0.8.0, Buildbot has used a database as part of its storage
-backend.  This section describes the database connector classes, which allow
-other parts of Buildbot to access the database.  It also describes how to
-modify the database schema and the connector classes themselves.
+BuildBot stores most of its state in a database.
+This section describes the database connector classes, which allow other parts of Buildbot to access the database.
+It also describes how to modify the database schema and the connector classes themselves.
 
 
 Database Overview
