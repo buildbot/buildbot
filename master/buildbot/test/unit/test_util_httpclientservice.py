@@ -125,6 +125,32 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
                                                             })
 
 
+class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
+
+    def setUp(self):
+        super().setUp()
+        self._http = self.successResultOf(
+            httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
+                                                           headers=self.base_headers,
+                                                           skipEncoding=True))
+
+    def test_post_raw(self):
+        self._http.post('/bar', json={'foo': 'bar'})
+        jsonStr = json.dumps(dict(foo='bar'))
+        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
+                                                            background_callback=mock.ANY,
+                                                            data=jsonStr,
+                                                            headers={'Content-Type': 'application/json'})
+
+    def test_post_rawlist(self):
+        self._http.post('/bar', json=[{'foo': 'bar'}])
+        jsonStr = json.dumps([dict(foo='bar')])
+        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
+                                                            background_callback=mock.ANY,
+                                                            data=jsonStr,
+                                                            headers={'Content-Type': 'application/json'})
+
+
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
     def setUp(self):
@@ -198,6 +224,33 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
                                                             auth=auth,
                                                             headers={
                                                             })
+
+
+class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
+
+    def setUp(self):
+        super().setUp()
+        self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
+        self._http = self.successResultOf(
+            httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
+                                                           headers=self.base_headers,
+                                                           skipEncoding=True))
+
+    def test_post_raw(self):
+        self._http.post('/bar', json={'foo': 'bar'})
+        json_str = json.dumps(dict(foo='bar'))
+        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
+                                                            agent=mock.ANY,
+                                                            data=json_str,
+                                                            headers={'Content-Type': ['application/json']})
+
+    def test_post_rawlist(self):
+        self._http.post('/bar', json=[{'foo': 'bar'}])
+        json_str = json.dumps([dict(foo='bar')])
+        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
+                                                            agent=mock.ANY,
+                                                            data=json_str,
+                                                            headers={'Content-Type': ['application/json']})
 
 
 class MyResource(resource.Resource):
@@ -375,29 +428,3 @@ class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):
 
     def expect(self, *arg, **kwargs):
         self._http.expect(*arg, **kwargs)
-
-
-class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
-
-    def setUp(self):
-        super().setUp()
-        self._http = self.successResultOf(
-            httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
-                                                           headers=self.base_headers,
-                                                           skipEncoding=True))
-
-    def test_post_raw(self):
-        self._http.post('/bar', json={'foo': 'bar'})
-        jsonStr = json.dumps(dict(foo='bar'))
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonStr,
-                                                            headers={'Content-Type': 'application/json'})
-
-    def test_post_rawlist(self):
-        self._http.post('/bar', json=[{'foo': 'bar'}])
-        jsonStr = json.dumps([dict(foo='bar')])
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonStr,
-                                                            headers={'Content-Type': 'application/json'})
