@@ -557,21 +557,24 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
+    # returns a Deferred
     def setupFakeHttp(self):
-        return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.telegram.org/bot12345:secret'))
+        url = 'https://api.telegram.org/bot12345:secret'
+        return fakehttpclientservice.HTTPClientService.getFakeService(self.master, self, url)
 
+    @defer.inlineCallbacks
     def makeBot(self, chat_ids=None, authz=None, *args, **kwargs):
         if chat_ids is None:
             chat_ids = []
-        http = self.setupFakeHttp()
+        http = yield self.setupFakeHttp()
         www = get_plugins('www', None, load_now=True)
         if 'base' not in www:
             raise SkipTest('telegram tests need buildbot-www installed')
         return telegram.TelegramWebhookBot('12345:secret', http, chat_ids, authz, *args, **kwargs)
 
+    @defer.inlineCallbacks
     def test_getContact(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         c1 = bot.getContact(self.USER, self.PRIVATE)
         c2 = bot.getContact(self.USER, self.CHANNEL)
         c1b = bot.getContact(self.USER, self.PRIVATE)
@@ -580,9 +583,10 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.assertIn((-12345678, 123456789), bot.contacts)
         self.assertEqual({123456789, -12345678}, set(bot.channels.keys()))
 
+    @defer.inlineCallbacks
     def test_getContact_update(self):
         try:
-            bot = self.makeBot()
+            bot = yield self.makeBot()
             contact = bot.getContact(self.USER, self.CHANNEL)
             updated_user = self.USER.copy()
             updated_user['username'] = "dirtyharry"
@@ -592,8 +596,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         finally:
             self.USER['username'] = "harrypotter"
 
+    @defer.inlineCallbacks
     def test_getContact_invalid(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.authz = {'': None}
 
         u = bot.getContact(user=self.USER, channel=self.CHANNEL)
@@ -606,8 +611,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         del u
         self.assertEqual(sys.getrefcount(c), 2)  # local, sys
 
+    @defer.inlineCallbacks
     def test_getContact_valid(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.authz = {'': None, 'command': 123456789}
 
         bot.getContact(user=self.USER, channel=self.CHANNEL)
@@ -615,7 +621,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_webhook(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect("post", "/setWebhook",
                                json={'url': 'our.webhook'},
                                content_json={'ok': 1})
@@ -623,7 +629,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_webhook_cert(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect("post", "/setWebhook",
                                data={'url': 'our.webhook'},
                                files={'certificate': b"this is certificate"},
@@ -632,7 +638,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_send_message(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect("post", "/sendMessage",
                                json={'chat_id': 1234, 'text': 'Hello',
                                      'parse_mode': 'Markdown'},
@@ -642,7 +648,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_send_message_long(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
 
         text1 = '\n'.join("{:039d}".format(i + 1) for i in range(102))
         text2 = '\n'.join("{:039d}".format(i + 1) for i in range(102, 204))
@@ -671,7 +677,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_edit_message(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect("post", "/editMessageText",
                                json={'chat_id': 1234, 'message_id': 9876, 'text': 'Hello',
                                      'parse_mode': 'Markdown'},
@@ -681,7 +687,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_delete_message(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect("post", "/deleteMessage",
                                json={'chat_id': 1234, 'message_id': 9876},
                                content_json={'ok': 1})
@@ -689,7 +695,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_send_sticker(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect("post", "/sendSticker",
                                json={'chat_id': 1234, 'sticker': 'xxxxx'},
                                content_json={'ok': 1, 'result': {'message_id': 9876}})
@@ -698,7 +704,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_nickname(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         self.assertIsNone(bot.nickname)
         bot.http_client.expect("post", "/getMe",
                                content_json={'ok': 1, 'result': {'username': 'testbot'}})
@@ -736,31 +742,35 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                 "date": 1566688888,
         }})
 
+    @defer.inlineCallbacks
     def test_get_update(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         request = self.request_message("test")
         update = bot.get_update(request)
         self.assertEquals(update['message']['from'], self.USER)
         self.assertEquals(update['message']['chat'], self.CHANNEL)
 
+    @defer.inlineCallbacks
     def test_get_update_bad_content_type(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         request = self.request_message("test")
         request.received_headers[b'Content-Type'] = b"application/data"
         with self.assertRaises(ValueError):
             bot.get_update(request)
 
+    @defer.inlineCallbacks
     def test_render_POST(self):
         # This actually also tests process_incoming
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.contactClass = FakeContact
         request = self.request_message("test")
         bot.webhook.render_POST(request)
         contact = bot.getContact(self.USER, self.CHANNEL)
         self.assertEquals(contact.messages, ["test"])
 
+    @defer.inlineCallbacks
     def test_parse_query_cached(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache.update({
             100: "good"
@@ -772,8 +782,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.process_webhook(request)
         self.assertEquals(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
+    @defer.inlineCallbacks
     def test_parse_query_cached_dict(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache = {
             100: {'command': "good", 'notify': "hello"}
@@ -785,8 +796,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.process_webhook(request)
         self.assertEquals(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
+    @defer.inlineCallbacks
     def test_parse_query_explicit(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache = {
             100: "bad"
@@ -798,8 +810,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.process_webhook(request)
         self.assertEquals(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
+    @defer.inlineCallbacks
     def test_parse_query_bad(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache.update({
             100: "bad"
@@ -814,16 +827,17 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         request = self.request_query("101")
         bot.process_webhook(request)
 
+    @defer.inlineCallbacks
     def makePollingBot(self, updates, chat_ids=None, authz=None, *args, **kwargs):
         if chat_ids is None:
             chat_ids = []
-        http = self.setupFakeHttp()
+        http = yield self.setupFakeHttp()
 
         return TestPollingBot(updates, '12345:secret', http, chat_ids, authz, *args, **kwargs)
 
     @defer.inlineCallbacks
     def test_polling(self):
-        bot = self.makePollingBot(2)
+        bot = yield self.makePollingBot(2)
         bot._polling_continue = True
         bot.http_client.expect("post", "/deleteWebhook", content_json={"ok": 1})
         bot.http_client.expect(
@@ -858,13 +872,15 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             content_json={'ok': 1, 'result': {'message_id': 125}})
         yield bot.do_polling()
 
+    @defer.inlineCallbacks
     def test_format_build_status(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         build = {'results': SUCCESS}
         self.assertEqual(bot.format_build_status(build), "completed successfully ✅")
 
+    @defer.inlineCallbacks
     def test_format_build_status_short(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         build = {'results': WARNINGS}
         self.assertEqual(bot.format_build_status(build, short=True), " ⚠️")
 
@@ -886,13 +902,14 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
                 self.succeeded = True
             return super().post(ep, **kwargs)
 
+    # returns a Deferred
     def setupFakeHttpWithErrors(self, skip, errs):
-        return self.successResultOf(self.HttpServiceWithErrors.getFakeService(
-            self.master, self, skip, errs, 'https://api.telegram.org/bot12345:secret'))
+        url = 'https://api.telegram.org/bot12345:secret'
+        return self.HttpServiceWithErrors.getFakeService(self.master, self, skip, errs, url)
 
     @defer.inlineCallbacks
     def test_post_not_ok(self):
-        bot = self.makeBot()
+        bot = yield self.makeBot()
         bot.http_client.expect(
             "post", "/post",
             content_json={'ok': 0})
@@ -905,9 +922,10 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         yield bot.post("/post")
         self.assertIn("ERROR", logs[0])
 
+    @defer.inlineCallbacks
     def test_post_need_repeat(self):
-        bot = self.makeBot()
-        bot.http_client = self.setupFakeHttpWithErrors(0, 2)
+        bot = yield self.makeBot()
+        bot.http_client = yield self.setupFakeHttpWithErrors(0, 2)
         bot.http_client.expect(
             "post", "/post",
             content_json={'ok': 1})
@@ -924,10 +942,11 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
         self.assertTrue(bot.http_client.succeeded)
 
+    @defer.inlineCallbacks
     def test_polling_need_repeat(self):
-        bot = self.makePollingBot(1)
+        bot = yield self.makePollingBot(1)
         bot.reactor = self.reactor
-        bot.http_client = self.setupFakeHttpWithErrors(1, 2)
+        bot.http_client = yield self.setupFakeHttpWithErrors(1, 2)
         bot._polling_continue = True
         bot.http_client.expect("post", "/deleteWebhook", content_json={"ok": 1})
         bot.http_client.expect(
