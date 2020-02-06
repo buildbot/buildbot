@@ -240,17 +240,21 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
     def verify_thd(self, conn):
         pass
 
+    @defer.inlineCallbacks
     def test_gotError(self):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
         self.db.model.upgrade = upgrade
-        self.failureResultOf(self.do_test_upgrade(), unittest.SkipTest)
+        with self.assertRaises(unittest.SkipTest):
+            yield self.do_test_upgrade()
 
+    @defer.inlineCallbacks
     def test_gotError2(self):
         def upgrade():
             return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
         self.db.model.upgrade = upgrade
-        self.failureResultOf(self.do_test_upgrade(), unittest.SkipTest)
+        with self.assertRaises(unittest.SkipTest):
+            yield self.do_test_upgrade()
 
 
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
