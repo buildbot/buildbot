@@ -37,9 +37,9 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
+    # returns a Deferred
     def setupFakeHttp(self, base_url='https://api.pushjet.io'):
-        return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, base_url))
+        return fakehttpclientservice.HTTPClientService.getFakeService(self.master, self, base_url)
 
     @defer.inlineCallbacks
     def setupPushjetNotifier(self, secret=Interpolate("1234"), **kwargs):
@@ -50,7 +50,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_sendMessage(self):
-        _http = self.setupFakeHttp()
+        _http = yield self.setupFakeHttp()
         pn = yield self.setupPushjetNotifier(levels={'passing': 2})
         _http.expect("post", "/message",
                      data={'secret': "1234", 'level': 2,
@@ -62,7 +62,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_sendNotification(self):
-        _http = self.setupFakeHttp('https://tests.io')
+        _http = yield self.setupFakeHttp('https://tests.io')
         pn = yield self.setupPushjetNotifier(base_url='https://tests.io')
         _http.expect("post", "/message",
                      data={'secret': "1234", 'message': "Test"},
