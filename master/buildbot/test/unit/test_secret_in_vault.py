@@ -33,11 +33,10 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
                                                       vaultToken="someToken",
                                                       apiVersion=version)
         self.master = fakemaster.make_master(self, wantData=True)
-        self._http = self.successResultOf(
-            fakehttpclientservice.HTTPClientService.getFakeService(
-                self.master, self, 'http://vaultServer', headers={'X-Vault-Token': "someToken"}))
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+                self.master, self, 'http://vaultServer', headers={'X-Vault-Token': "someToken"})
         yield self.srvcVault.setServiceParent(self.master)
-        self.successResultOf(self.master.startService())
+        yield self.master.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -96,9 +95,8 @@ class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testReconfigSecretInVaultService(self):
-        self._http = self.successResultOf(
-            fakehttpclientservice.HTTPClientService.getFakeService(
-                self.master, self, 'serveraddr', headers={'X-Vault-Token': "someToken"}))
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+                self.master, self, 'serveraddr', headers={'X-Vault-Token': "someToken"})
         yield self.srvcVault.reconfigService(vaultServer="serveraddr",
                                              vaultToken="someToken")
         self.assertEqual(self.srvcVault.vaultServer, "serveraddr")
