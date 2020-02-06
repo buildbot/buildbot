@@ -86,7 +86,7 @@ class HTTPClientService(service.SharedService):
     PREFER_TREQ = False
     MAX_THREADS = 5
 
-    def __init__(self, base_url, auth=None, headers=None, verify=None, debug=False):
+    def __init__(self, base_url, auth=None, headers=None, verify=None, debug=False, skipEncoding=False):
         assert not base_url.endswith(
             "/"), "baseurl should not end with /: " + base_url
         super().__init__()
@@ -97,6 +97,7 @@ class HTTPClientService(service.SharedService):
         self._session = None
         self.verify = verify
         self.debug = debug
+        self.skipEncoding = skipEncoding
 
     def updateHeaders(self, headers):
         if self._headers is None:
@@ -152,11 +153,14 @@ class HTTPClientService(service.SharedService):
         # we manually do the json encoding in order to automatically convert timestamps
         # for txrequests and treq
         json = kwargs.pop('json', None)
-        if isinstance(json, dict):
+        if isinstance(json, (dict, list)):
             jsonStr = jsonmodule.dumps(json, default=toJson)
-            jsonBytes = unicode2bytes(jsonStr)
             kwargs['headers']['Content-Type'] = 'application/json'
-            kwargs['data'] = jsonBytes
+            if self.skipEncoding:
+                kwargs['data'] = jsonStr
+            else:
+                jsonBytes = unicode2bytes(jsonStr)
+                kwargs['data'] = jsonBytes
         return url, kwargs
 
     @defer.inlineCallbacks

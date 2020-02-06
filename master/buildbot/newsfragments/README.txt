@@ -14,4 +14,4 @@ Buildbot project does not require a tracking ticket to be made for each contribu
 
 Please point to the trac bug using syntax: (:bug:`NNN`)
 Please point to the github bug using syntax: (:issue:`NNN`)
-please point to classes using syntax: :py:class:`~buildbot.reporters.http.HttpStatusBase`
+please point to classes using syntax: :py:class:`~buildbot.reporters.http.HttpStatusPushBase`

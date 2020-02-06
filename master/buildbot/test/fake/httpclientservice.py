@@ -60,7 +60,7 @@ class HTTPClientService(service.SharedService):
     """
     quiet = False
 
-    def __init__(self, base_url, auth=None, headers=None, debug=None, verify=None):
+    def __init__(self, base_url, auth=None, headers=None, debug=None, verify=None, skipEncoding=None):
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
         self._base_url = base_url
