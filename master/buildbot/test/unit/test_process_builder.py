@@ -414,8 +414,9 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
         self.assertEqual(builderid, 13)
         fbi.assert_not_called()
 
+    @defer.inlineCallbacks
     def test_expectations_deprecated(self):
-        self.successResultOf(self.makeBuilder())
+        yield self.makeBuilder()
 
         with assertProducesWarning(
                 Warning,
