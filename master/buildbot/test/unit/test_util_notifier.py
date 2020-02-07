@@ -19,8 +19,9 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from twisted.internet import defer
 from twisted.python.failure import Failure
-from twisted.trial.unittest import SynchronousTestCase
+from twisted.trial import unittest
 
 from buildbot.util import Notifier
 
@@ -32,7 +33,7 @@ class TestException(Exception):
     """
 
 
-class Tests(SynchronousTestCase):
+class Tests(unittest.TestCase):
 
     def test_wait(self):
         """
@@ -50,6 +51,7 @@ class Tests(SynchronousTestCase):
         n.notify(object())
         # Does not raise.
 
+    @defer.inlineCallbacks
     def test_notify_multiple_waiters(self):
         """
         If there all multiple waiters, `Notifier.notify` fires all
@@ -59,11 +61,11 @@ class Tests(SynchronousTestCase):
         n = Notifier()
         ds = [n.wait(), n.wait()]
         n.notify(value)
-        self.assertEqual(
-            [self.successResultOf(d) for d in ds],
-            [value] * 2,
-        )
 
+        self.assertEqual((yield ds[0]), value)
+        self.assertEqual((yield ds[1]), value)
+
+    @defer.inlineCallbacks
     def test_new_waiters_not_notified(self):
         """
         If a new waiter is added while notifying, it won't be
@@ -80,10 +82,11 @@ class Tests(SynchronousTestCase):
         self.assertNoResult(box[0])
         n.notify(value)
         self.assertEqual(
-            self.successResultOf(box[0]),
+            (yield box[0]),
             value,
         )
 
+    @defer.inlineCallbacks
     def test_notify_failure(self):
         """
         If a failure is passed to `Notifier.notify` then the waiters
@@ -92,7 +95,8 @@ class Tests(SynchronousTestCase):
         n = Notifier()
         d = n.wait()
         n.notify(Failure(TestException()))
-        self.failureResultOf(d, TestException)
+        with self.assertRaises(TestException):
+            yield d
 
     def test_nonzero_waiters(self):
         """

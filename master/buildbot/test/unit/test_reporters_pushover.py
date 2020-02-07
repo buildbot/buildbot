@@ -37,9 +37,10 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
+    # returns a Deferred
     def setupFakeHttp(self):
-        return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.pushover.net'))
+        return fakehttpclientservice.HTTPClientService.getFakeService(self.master, self,
+                                                                      'https://api.pushover.net')
 
     @defer.inlineCallbacks
     def setupPushoverNotifier(self, user_key="1234", api_token=Interpolate("abcd"), **kwargs):
@@ -50,7 +51,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_sendMessage(self):
-        _http = self.setupFakeHttp()
+        _http = yield self.setupFakeHttp()
         pn = yield self.setupPushoverNotifier(priorities={'passing': 2})
         _http.expect("post", "/1/messages.json",
                      params={'user': "1234", 'token': "abcd",
@@ -63,7 +64,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_sendNotification(self):
-        _http = self.setupFakeHttp()
+        _http = yield self.setupFakeHttp()
         pn = yield self.setupPushoverNotifier(otherParams={'sound': "silent"})
         _http.expect("post", "/1/messages.json",
                      params={'user': "1234", 'token': "abcd",

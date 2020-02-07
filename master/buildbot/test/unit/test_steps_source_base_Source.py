@@ -15,6 +15,7 @@
 
 import mock
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.steps.source import Source
@@ -88,6 +89,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.assertEqual(step.description, ['updating'])
 
+    @defer.inlineCallbacks
     def test_start_with_codebase(self):
         step = self.setupStep(Source(codebase='codebase'))
         step.branch = 'branch'
@@ -96,7 +98,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.describe(), ['updating', 'codebase'])
-        step.name = self.successResultOf(step.build.render(step.name))
+        step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
@@ -104,6 +106,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.assertEqual(step.describe(True), ['update', 'codebase'])
 
+    @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self):
         step = self.setupStep(Source(codebase='my-code',
                                      descriptionSuffix='suffix'))
@@ -113,7 +116,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.describe(), ['updating', 'suffix'])
-        step.name = self.successResultOf(step.build.render(step.name))
+        step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())

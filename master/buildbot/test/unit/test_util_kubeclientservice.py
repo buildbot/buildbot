@@ -59,7 +59,7 @@ class MockFileBase:
 
 
 class KubeClientServiceTestClusterConfig(
-        MockFileBase, config.ConfigErrorsMixin, unittest.SynchronousTestCase):
+        MockFileBase, config.ConfigErrorsMixin, unittest.TestCase):
 
     file_mock_config = {
         'token': 'BASE64_TOKEN',
@@ -79,10 +79,11 @@ class KubeClientServiceTestClusterConfig(
         with self.assertRaisesConfigError('kube_dir not found:'):
             kubeclientservice.KubeInClusterConfigLoader()
 
+    @defer.inlineCallbacks
     def test_basic(self):
         self.patchExist(True)
         config = kubeclientservice.KubeInClusterConfigLoader()
-        self.successResultOf(config.startService())
+        yield config.startService()
         self.assertEqual(
             config.getConfig(), {
                 'headers': {
