@@ -28,6 +28,7 @@ from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
+import buildbot
 from buildbot.process.properties import Secret
 from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake.secrets import FakeSecretStorage
@@ -208,7 +209,12 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
             FakeResponse(dict(access_token="TOK3N"))]
 
         def fake_get(self, ep, **kwargs):
-            test.assertEqual(self.headers, {'Authorization': 'token TOK3N'})
+            test.assertEqual(
+                self.headers,
+                {
+                    'Authorization': 'token TOK3N',
+                    'User-Agent': 'buildbot/%s' % buildbot.version,
+                })
             if ep == '/user':
                 return dict(
                     login="bar",
