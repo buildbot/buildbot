@@ -317,6 +317,26 @@ Those options can be configured either using the plugin configuration:
 Or via the URL arguments like ``http://<buildbotURL>/badges/<buildername>.svg?left_color=222``.
 Custom templates can also be specified in a ``template`` directory nearby the ``master.cfg``.
 
+The badgeio template
+^^^^^^^^^^^^^^^^^^^^
+
+A badges template was developed to standardize upon a consistent "look and feel" across the usage of
+multiple CI/CD solutions; eg: use of Buildbot, Codecov.io, and Travis-CI. An example is shown below.
+
+.. image:: ../_images/badges-badgeio.png
+
+To ensure the correct "look and feel", the following Buildbot configuration is needed:
+
+.. code-block:: python
+
+      c['www'] = {
+          'plugins': {'badges': {"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"}}
+      }
+
+.. note::
+
+    It is highly recommended to use only with SVG.
+
 .. _CAIRO: https://www.cairographics.org/
 
 .. _Web-Authentication:
