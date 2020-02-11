@@ -113,7 +113,7 @@ class Api:
         ctx = cairo.Context(surface)
         ctx.select_font_face(config['font_face'],
                              cairo.FONT_SLANT_NORMAL,
-                             cairo.FONT_WEIGHT_BOLD)
+                             cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(int(config['font_size']))
         return ctx.text_extents(text)[4]
 

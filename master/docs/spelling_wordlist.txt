@@ -48,6 +48,7 @@ backends
 Backends
 backoff
 backported
+badgeio
 balancer
 balancers
 basedir
@@ -168,6 +169,7 @@ codebase
 Codebase
 codebaseGenerator
 codebases
+Codecov
 coffeelint
 Coffeelint
 coffeescript
