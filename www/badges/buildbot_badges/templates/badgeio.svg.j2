@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ 8+16+left.width+right.width }}" height="20">
+  <linearGradient id="smooth" x2="0" y2="100%">
+    <stop offset="0"  stop-color="#fff" stop-opacity=".7"/>
+    <stop offset=".1" stop-color="#aaa" stop-opacity=".1"/>
+    <stop offset=".9" stop-color="#000" stop-opacity=".3"/>
+    <stop offset="1"  stop-color="#000" stop-opacity=".5"/>
+  </linearGradient>
+  <rect rx="3" width="{{ 8+16+left.width+right.width }}" height="20" fill="{{ left.color }}"/>
+  <rect rx="3" x="{{ 4+8+left.width }}" width="{{ 4+8+right.width }}" height="20" fill="{{ right.color }}"/>
+  <rect x="{{ 4+8+left.width }}" width="4" height="20" fill="{{ right.color }}"/>
+  <rect rx="3" width="{{ 8+16+left.width+right.width }}" height="20" fill="url(#smooth)"/>
+  <g fill="#fff" text-anchor="left" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="{{ config.font_size }}">
+    <text x="6" y="15" fill="#010101" fill-opacity=".3">{{ left.text }}</text>
+    <text x="6" y="14">{{ left.text }}</text>
+    <text x="{{ 6+8+2+left.width }}" y="15" fill="#010101" fill-opacity=".3">{{ right.text }}</text>
+    <text x="{{ 6+8+2+left.width }}" y="14">{{ right.text }}</text>
+  </g>
+</svg>
