@@ -26,10 +26,11 @@ class DeferWaiter:
         self._waited = set()
         self._finish_notifier = Notifier()
 
-    def _finished(self, _, d):
+    def _finished(self, result, d):
         self._waited.remove(id(d))
         if not self._waited:
             self._finish_notifier.notify(None)
+        return result
 
     def add(self, d):
         if not isinstance(d, defer.Deferred):

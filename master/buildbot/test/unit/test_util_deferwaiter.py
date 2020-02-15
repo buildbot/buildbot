@@ -54,6 +54,20 @@ class WaiterTests(unittest.TestCase):
         d1.callback(None)
         self.assertTrue(d.called)
 
+    @defer.inlineCallbacks
+    def test_passes_result(self):
+        w = DeferWaiter()
+
+        d1 = defer.Deferred()
+        w.add(d1)
+
+        d1.callback(123)
+        res = yield d1
+        self.assertEqual(res, 123)
+
+        d = w.wait()
+        self.assertTrue(d.called)
+
 
 class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
