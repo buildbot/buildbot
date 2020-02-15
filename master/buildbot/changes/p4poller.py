@@ -102,7 +102,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                      "server_tz")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET", "PATH", "P4CONFIG"]
+                "P4CHARSET", "P4CONFIG", "P4TICKETS", "PATH", "HOME"]
 
     changes_line_re = re.compile(
         r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
@@ -165,7 +165,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         if server_tz is not None and self.server_tz is None:
             raise P4PollerError("Failed to get timezone from server_tz string '{}'".format(server_tz))
 
-        self._ticket_passwd = None
         self._ticket_login_counter = 0
 
     def describe(self):
@@ -189,26 +188,10 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             command.extend(['-p', self.p4port])
         if self.p4user:
             command.extend(['-u', self.p4user])
-        command.extend(['login', '-p'])
+        command.append('login')
         command = [c.encode('utf-8') for c in command]
 
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
-
-    def _parseTicketPassword(self, stdout):
-        try:
-            stdout = stdout.decode(self.encoding, errors='strict')
-        except Exception as e:
-            raise P4PollerError('Failed to parse P4 ticket: {}'.format(e))
-
-        lines = stdout.splitlines()
-        if len(lines) < 2:
-            return None
-        return lines[-1].strip()
-
-    def _getPasswd(self):
-        if self.use_tickets:
-            return self._ticket_passwd
-        return self.p4passwd
 
     @defer.inlineCallbacks
     def _poll(self):
@@ -223,23 +206,14 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                 self._acquireTicket(protocol)
                 yield protocol.deferred
 
-                self._ticket_passwd = self._parseTicketPassword(
-                    protocol.stdout)
-                self._ticket_login_counter = max(
-                    self.ticket_login_interval / self.pollInterval, 1)
-                if debug_logging:
-                    log.msg("P4Poller: got ticket password: %s" %
-                            self._ticket_passwd)
-                    log.msg(
-                        "P4Poller: next ticket acquisition in %d polls" % self._ticket_login_counter)
-
         args = []
         if self.p4port:
             args.extend(['-p', self.p4port])
-        if self.p4user:
-            args.extend(['-u', self.p4user])
-        if self.p4passwd:
-            args.extend(['-P', self._getPasswd()])
+        if not self.use_tickets:
+            if self.p4user:
+                args.extend(['-u', self.p4user])
+            if self.p4passwd:
+                args.extend(['-P', self.p4passwd])
         args.extend(['changes'])
         if self.last_change is not None:
             args.extend(
@@ -281,10 +255,11 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             args = []
             if self.p4port:
                 args.extend(['-p', self.p4port])
-            if self.p4user:
-                args.extend(['-u', self.p4user])
-            if self.p4passwd:
-                args.extend(['-P', self._getPasswd()])
+            if not self.use_tickets:
+                if self.p4user:
+                    args.extend(['-u', self.p4user])
+                if self.p4passwd:
+                    args.extend(['-P', self.p4passwd])
             args.extend(['describe', '-s', str(num)])
             result = yield self._get_process_output(args)
 
