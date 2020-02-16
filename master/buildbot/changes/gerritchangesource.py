@@ -20,7 +20,6 @@ import json
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import utils
-from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 
 from buildbot import config
@@ -29,6 +28,7 @@ from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
+from buildbot.util.protocol import LineProcessProtocol
 
 
 def _canonicalize_event(event):
@@ -324,29 +324,24 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
         return super().reconfigService(**kwargs)
 
-    class LocalPP(ProcessProtocol):
+    class LocalPP(LineProcessProtocol):
 
         def __init__(self, change_source):
+            super().__init__()
             self.change_source = change_source
-            self.data = b""
 
         @defer.inlineCallbacks
-        def outReceived(self, data):
-            """Do line buffering."""
-            self.data += data
-            lines = self.data.split(b"\n")
-            # last line is either empty or incomplete
-            self.data = lines.pop(-1)
-            for line in lines:
-                if self.change_source.debug:
-                    log.msg(b"gerrit: " + line)
-                yield self.change_source.lineReceived(line)
-
-        def errReceived(self, data):
+        def outLineReceived(self, line):
             if self.change_source.debug:
-                log.msg(b"gerrit stderr: " + data)
+                log.msg(b"gerrit: " + line)
+            yield self.change_source.lineReceived(line)
 
-        def processEnded(self, status_object):
+        def errLineReceived(self, line):
+            if self.change_source.debug:
+                log.msg(b"gerrit stderr: " + line)
+
+        def processEnded(self, status):
+            super().processEnded(status)
             self.change_source.streamProcessStopped()
 
     def streamProcessStopped(self):
