@@ -21,13 +21,13 @@ import time
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.error import ProcessExitedAlready
-from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
 
 from buildbot import config
 from buildbot.util import asyncSleep
 from buildbot.util.httpclientservice import HTTPClientService
 from buildbot.util.logger import Logger
+from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.service import BuildbotService
 
 log = Logger()
@@ -113,23 +113,23 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
     """
     kube_ctl_proxy_cmd = ['kubectl', 'proxy']  # for tests override
 
-    class LocalPP(ProcessProtocol):
+    class LocalPP(LineProcessProtocol):
         def __init__(self):
+            super().__init__()
             self.got_output_deferred = defer.Deferred()
             self.terminated_deferred = defer.Deferred()
             self.first_line = b""
 
-        def outReceived(self, data):
+        def outLineReceived(self, line):
             if not self.got_output_deferred.called:
-                self.first_line += data
-                if b"\n" in self.first_line:
-                    self.got_output_deferred.callback(self.first_line.split(b"\n")[0])
+                self.got_output_deferred.callback(line)
 
-        def errReceived(self, data):
+        def errLineReceived(self, line):
             if not self.got_output_deferred.called:
-                self.got_output_deferred.errback(Failure(RuntimeError(data)))
+                self.got_output_deferred.errback(Failure(RuntimeError(line)))
 
-        def processEnded(self, status_object):
+        def processEnded(self, status):
+            super().processEnded(status)
             self.terminated_deferred.callback(None)
 
     def checkConfig(self, proxy_port=8001, namespace="default"):
