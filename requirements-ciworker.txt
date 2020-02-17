@@ -11,5 +11,5 @@ pbr==5.4.4
 PyHamcrest==1.9.0
 six==1.14.0
 Twisted==19.7.0
-zope.interface==4.6.0
+zope.interface==4.7.1
 -e worker
