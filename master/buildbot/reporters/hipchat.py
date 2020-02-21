@@ -69,9 +69,10 @@ class HipChatStatusPush(HttpStatusPushBase):
 
     def getMessage(self, build, event_name):
         event_messages = {
-            'new': 'Buildbot started build %s here: %s' % (build['builder']['name'], build['url']),
-            'finished': 'Buildbot finished build %s with result %s here: %s'
-                        % (build['builder']['name'], statusToString(build['results']), build['url'])
+            'new': 'Buildbot started build {} here: {}'.format(build['builder']['name'],
+                                                               build['url']),
+            'finished': 'Buildbot finished build {} with result {} here: {}'.format(
+                build['builder']['name'], statusToString(build['results']), build['url'])
         }
         return event_messages.get(event_name, '')
 
