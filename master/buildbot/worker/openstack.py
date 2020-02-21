@@ -181,8 +181,8 @@ class OpenStackLatentWorker(AbstractLatentWorker,
             snap = nova.volume_snapshots.get(source_uuid)
             return snap.size
         else:
-            unknown_source = ("The source type '%s' for UUID '%s' is"
-                              " unknown" % (source_type, source_uuid))
+            unknown_source = ("The source type '{}' for UUID '{}' is unknown".format(source_type,
+                                                                                     source_uuid))
             raise ValueError(unknown_source)
 
     @defer.inlineCallbacks
@@ -238,33 +238,32 @@ class OpenStackLatentWorker(AbstractLatentWorker,
             raise LatentWorkerFailedToSubstantiate(
                 instance.id, BUILD)
         self.instance = instance
-        log.msg('%s %s starting instance %s (image %s)' %
-                (self.__class__.__name__, self.workername, instance.id,
-                 image_uuid))
+        log.msg('{} {} starting instance {} (image {})'.format(self.__class__.__name__,
+                                                               self.workername, instance.id,
+                                                               image_uuid))
         duration = 0
         interval = self._poll_resolution
         while instance.status.startswith(BUILD):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
-                log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.workername, duration // 60,
-                         instance.id))
+                log.msg(('{} {} has waited {} minutes for instance {}'
+                         ).format(self.__class__.__name__, self.workername, duration // 60,
+                                  instance.id))
             try:
                 instance = self.novaclient.servers.get(instance.id)
             except NotFound:
-                log.msg('%s %s instance %s (%s) went missing' %
-                        (self.__class__.__name__, self.workername,
-                         instance.id, instance.name))
+                log.msg('{} {} instance {} ({}) went missing'.format(self.__class__.__name__,
+                                                                     self.workername,
+                                                                     instance.id, instance.name))
                 raise LatentWorkerFailedToSubstantiate(
                     instance.id, instance.status)
         if instance.status == ACTIVE:
             minutes = duration // 60
             seconds = duration % 60
-            log.msg('%s %s instance %s (%s) started '
-                    'in about %d minutes %d seconds' %
-                    (self.__class__.__name__, self.workername,
-                     instance.id, instance.name, minutes, seconds))
+            log.msg('{} {} instance {} ({}) started in about {} minutes {} seconds'.format(
+                    self.__class__.__name__, self.workername, instance.id, instance.name, minutes,
+                    seconds))
             return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
@@ -285,12 +284,12 @@ class OpenStackLatentWorker(AbstractLatentWorker,
             instance = self.novaclient.servers.get(instance.id)
         except NotFound:
             # If can't find the instance, then it's already gone.
-            log.msg('%s %s instance %s (%s) already terminated' %
-                    (self.__class__.__name__, self.workername, instance.id,
-                     instance.name))
+            log.msg('{} {} instance {} ({}) already terminated'.format(self.__class__.__name__,
+                                                                       self.workername, instance.id,
+                                                                       instance.name))
             return
         if instance.status not in (DELETED, UNKNOWN):
             instance.delete()
-            log.msg('%s %s terminating instance %s (%s)' %
-                    (self.__class__.__name__, self.workername, instance.id,
-                     instance.name))
+            log.msg('{} {} terminating instance {} ({})'.format(self.__class__.__name__,
+                                                                self.workername, instance.id,
+                                                                instance.name))
