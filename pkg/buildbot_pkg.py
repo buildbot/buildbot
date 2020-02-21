@@ -215,9 +215,8 @@ class BuildJsCommand(distutils.cmd.Command):
             shell = bool(os.name == 'nt')
 
             for command in commands:
-                self.announce(
-                    'Running command: %s' % str(" ".join(command)),
-                    level=distutils.log.INFO)
+                self.announce('Running command: {}'.format(str(" ".join(command))),
+                              level=distutils.log.INFO)
                 subprocess.check_call(command, shell=shell)
 
         self.copy_tree(os.path.join(package, 'static'), os.path.join(

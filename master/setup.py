@@ -45,7 +45,7 @@ def include(d, e):
     'd' -- A directory
     'e' -- A glob pattern"""
 
-    return (d, [f for f in glob.glob('%s/%s' % (d, e)) if os.path.isfile(f)])
+    return (d, [f for f in glob.glob('{}/{}'.format(d, e)) if os.path.isfile(f)])
 
 
 def include_statics(d):
@@ -104,7 +104,7 @@ def define_plugin_entry(name, module_name):
         entry, name = name
     else:
         entry = name
-    return '%s = %s:%s' % (entry, module_name, name)
+    return '{} = {}:{}'.format(entry, module_name, name)
 
 
 def concat_dicts(*dicts):

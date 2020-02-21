@@ -51,7 +51,7 @@ class BBRefTargetDirective(Directive):
         self.env = env = self.state.document.settings.env
         # normalize whitespace in fullname like XRefRole does
         fullname = ws_re.sub(' ', self.arguments[0].strip())
-        targetname = '%s-%s' % (self.ref_type, fullname)
+        targetname = '{}-{}'.format(self.ref_type, fullname)
 
         # keep the target; this may be used to generate a BBIndex later
         targets = env.domaindata['bb']['targets'].setdefault(self.ref_type, {})
@@ -90,7 +90,7 @@ class BBRefTargetDirective(Directive):
             signode = addnodes.desc_signature(fullname, '')
 
             if self.name_annotation:
-                annotation = "%s " % self.name_annotation
+                annotation = "{} ".format(self.name_annotation)
                 signode += addnodes.desc_annotation(annotation, annotation)
             signode += addnodes.desc_name(fullname, fullname)
             descnode += signode
@@ -114,7 +114,7 @@ class BBRefTargetDirective(Directive):
         try:
             todocname, targetname = targets[target]
         except KeyError:
-            env.warn(fromdocname, "Missing BB reference: bb:%s:%s" % (cls.ref_type, target),
+            env.warn(fromdocname, "Missing BB reference: bb:{}:{}".format(cls.ref_type, target),
                      node.line)
             return None
 
@@ -129,7 +129,7 @@ def make_ref_target_directive(ref_type, indextemplates=None, **kwargs):
     """
     class_vars = dict(ref_type=ref_type, indextemplates=indextemplates)
     class_vars.update(kwargs)
-    return type("BB%sRefTargetDirective" % (ref_type.capitalize(),),
+    return type("BB{}RefTargetDirective".format(ref_type.capitalize()),
                 (BBRefTargetDirective,), class_vars)
 
 
@@ -161,7 +161,7 @@ class BBIndex(Index):
         using the index's C{localname} as the content of the link.
         """
         # indexes appear to be automatically generated at doc DOMAIN-NAME
-        todocname = "bb-%s" % target
+        todocname = "bb-{}".format(target)
 
         node = nodes.reference('', '', internal=True)
         node['refuri'] = builder.get_relative_uri(fromdocname, todocname)
@@ -174,7 +174,7 @@ def make_index(name, localname):
     """
     Create and return a L{BBIndex} subclass, for use in the domain's C{indices}
     """
-    return type("BB%sIndex" % (name.capitalize(),),
+    return type("BB{}Index".format(name.capitalize()),
                 (BBIndex,),
                 dict(name=name, localname=localname))
 
@@ -337,7 +337,7 @@ class BBDomain(Domain):
                 if idx.name == target:
                     break
             else:
-                raise KeyError("no index named '%s'" % target)
+                raise KeyError("no index named '{}'".format(target))
             return idx.resolve_ref(self, env, fromdocname, builder, typ,
                                    target, node, contnode)
         elif typ in self.directives:
