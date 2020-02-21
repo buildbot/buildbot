@@ -80,7 +80,7 @@ class Reconfigurator:
             # we were probably unable to open the file in the first place
             self.sighup()
         else:
-            print("Error while following twistd.log: %s" % why)
+            print("Error while following twistd.log: {}".format(why))
 
 
 @in_reactor
