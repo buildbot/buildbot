@@ -359,8 +359,8 @@ class MTR(Test):
                     if retryCount >= 5:
                         raise
                     excType, excValue, excTraceback = sys.exc_info()
-                    log.msg("Database transaction failed (caught exception %s(%s)), retrying ..." % (
-                        excType, excValue))
+                    log.msg(("Database transaction failed (caught exception {}({})),"
+                             "retrying ...").format(excType, excValue))
                     txn.close()
                     txn.reconnect()
                     txn.reopen()
@@ -450,7 +450,7 @@ VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
         super().start()
 
     def reportError(self, err):
-        log.msg("Error in async insert into database: %s" % err)
+        log.msg("Error in async insert into database: {}".format(err))
 
     class MyMtrLogObserver(MtrLogObserver):
 
