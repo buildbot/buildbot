@@ -104,9 +104,9 @@ class PBChangeSource(base.ChangeSource):
 
         if name is None:
             if prefix:
-                name = "PBChangeSource:%s:%s" % (prefix, port)
+                name = "PBChangeSource:{}:{}".format(prefix, port)
             else:
-                name = "PBChangeSource:%s" % (port,)
+                name = "PBChangeSource:{}".format(port)
 
         super().__init__(name=name)
 
@@ -121,7 +121,7 @@ class PBChangeSource(base.ChangeSource):
         portname = self.registered_port
         d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
-            d += " (prefix '%s')" % self.prefix
+            d += " (prefix '{}')".format(self.prefix)
         return d
 
     def _calculatePort(self, cfg):

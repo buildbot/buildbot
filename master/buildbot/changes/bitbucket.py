@@ -73,8 +73,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
     def describe(self):
         return "BitbucketPullrequestPoller watching the "\
-            "Bitbucket repository %s/%s, branch: %s" % (
-                self.owner, self.slug, self.branch)
+            "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch)
 
     @deferredLocked('initLock')
     def poll(self):
@@ -86,9 +85,9 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def _getChanges(self):
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
-                "Bitbucket repository %s/%s, branch: %s" % (self.owner, self.slug, self.branch))
-        url = "https://bitbucket.org/api/2.0/repositories/%s/%s/pullrequests" % (
-            self.owner, self.slug)
+                "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch))
+        url = "https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
+                                                                                     self.slug)
         return client.getPage(url, timeout=self.pollInterval)
 
     @defer.inlineCallbacks
@@ -148,8 +147,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                         committer=None,
                         revision=bytes2unicode(revision),
                         revlink=bytes2unicode(revlink),
-                        comments='pull-request #%d: %s\n%s' % (
-                            nr, title, prlink),
+                        comments='pull-request #{}: {}\n{}'.format(nr, title, prlink),
                         when_timestamp=datetime2epoch(updated),
                         branch=bytes2unicode(branch),
                         category=self.category,
@@ -194,4 +192,4 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def _getStateObjectId(self):
         # Return a deferred for object id in state db.
         return self.master.db.state.getObjectId(
-            '%s/%s#%s' % (self.owner, self.slug, self.branch), self.db_class_name)
+            '{}/{}#{}'.format(self.owner, self.slug, self.branch), self.db_class_name)
