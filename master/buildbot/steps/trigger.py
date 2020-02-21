@@ -190,15 +190,16 @@ class Trigger(BuildStep):
             if isinstance(results, tuple):
                 results, brids_dict = results
 
+                # brids_dict.values() represents the list of brids kicked by a certain scheduler.
+                # We want to ignore the result of ANY brid that was kicked off
+                # by an UNimportant scheduler.
+                if set(unimportant_brids).issuperset(set(brids_dict.values())):
+                    continue
+
             if not was_cb:
                 yield self.addLogWithFailure(results)
                 results = EXCEPTION
 
-            # brids_dict.values() represents the list of brids kicked by a certain scheduler.
-            # We want to ignore the result of ANY brid that was kicked off
-            # by an UNimportant scheduler.
-            if set(unimportant_brids).issuperset(set(brids_dict.values())):
-                continue
             overall_results = worst_status(overall_results, results)
         return overall_results
 
