@@ -110,14 +110,12 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         if not row:
             if default is self.Thunk:
-                raise KeyError("no such state value '%s' for object %d" %
-                               (name, objectid))
+                raise KeyError("no such state value '{}' for object {}".format(name, objectid))
             return default
         try:
             return json.loads(row.value_json)
         except ValueError:
-            raise TypeError("JSON error loading state value '%s' for %d" %
-                            (name, objectid))
+            raise TypeError("JSON error loading state value '{}' for {}".format(name, objectid))
 
     # returns a Deferred that returns a value
     def setState(self, objectid, name, value):

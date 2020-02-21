@@ -865,7 +865,7 @@ class Model(base.DBConnectorComponent):
 
         def table_exists(engine, tbl):
             try:
-                r = engine.execute("select * from %s limit 1" % tbl)
+                r = engine.execute("select * from {} limit 1".format(tbl))
                 r.close()
                 return True
             except Exception:
@@ -880,8 +880,7 @@ class Model(base.DBConnectorComponent):
             changeset = schema.changeset(None)
             with sautils.withoutSqliteForeignKeys(engine):
                 for version, change in changeset:
-                    log.msg('migrating schema version %s -> %d'
-                            % (version, version + 1))
+                    log.msg('migrating schema version {} -> {}'.format(version, version + 1))
                     schema.runchange(version, change, 1)
 
         def check_sqlalchemy_migrate_version():
@@ -899,10 +898,10 @@ class Model(base.DBConnectorComponent):
                 except Exception:
                     version = "0.0"
             version_tup = tuple(map(int, version.split('-', 1)[0].split('.')))
-            log.msg("using SQLAlchemy-Migrate version %s" % (version,))
+            log.msg("using SQLAlchemy-Migrate version {}".format(version))
             if version_tup < (0, 6, 1):
-                raise RuntimeError("You are using SQLAlchemy-Migrate %s. "
-                                   "The minimum version is 0.6.1." % (version,))
+                raise RuntimeError(("You are using SQLAlchemy-Migrate {}. "
+                                    "The minimum version is 0.6.1.").format(version))
 
         def version_control(engine, version=None):
             ControlledSchema.create(engine, self.repo_path, version)
