@@ -37,10 +37,8 @@ class InsertFromSelect(Executable, ClauseElement):
 
 @compiler.compiles(InsertFromSelect)
 def _visit_insert_from_select(element, compiler, **kw):
-    return "INSERT INTO %s %s" % (
-        compiler.process(element.table, asfrom=True),
-        compiler.process(element.select)
-    )
+    return "INSERT INTO {} {}".format(compiler.process(element.table, asfrom=True),
+                                      compiler.process(element.select))
 
 
 def sa_version():

@@ -107,8 +107,8 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def addService(self, service):
         if service.name is not None:
             if service.name in self.namedServices:
-                raise RuntimeError("cannot have two services with same name"
-                                   " '%s'" % service.name)
+                raise RuntimeError(("cannot have two services with same name"
+                                    " '{}'").format(service.name))
             self.namedServices[service.name] = service
         self.services.append(service)
         if self.running:
@@ -179,8 +179,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
             self.name = bytes2unicode(name)
         self.checkConfig(*args, **kwargs)
         if self.name is None:
-            raise ValueError(
-                "%s: must pass a name to constructor" % type(self))
+            raise ValueError("{}: must pass a name to constructor".format(type(self)))
         self._config_args = args
         self._config_kwargs = kwargs
         self.rendered = False
@@ -344,7 +343,8 @@ class ClusteredBuildbotService(BuildbotService):
                 yield self.deactivate()
                 yield self._unclaimService()
             except Exception as e:
-                log.err(e, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
+                msg = "Caught exception while deactivating ClusteredService({})".format(self.name)
+                log.err(e, _why=msg)
 
         yield super().stopService()
 
@@ -384,8 +384,9 @@ class ClusteredBuildbotService(BuildbotService):
             try:
                 claimed = yield self._claimService()
             except Exception:
-                log.err(
-                    _why='WARNING: ClusteredService(%s) got exception while trying to claim' % self.name)
+                msg = ('WARNING: ClusteredService({}) got exception while trying to claim'
+                       ).format(self.name)
+                log.err(_why=msg)
                 return
 
             if not claimed:
@@ -404,8 +405,8 @@ class ClusteredBuildbotService(BuildbotService):
                 yield self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
-                log.err(
-                    _why='WARNING: ClusteredService(%s) is only partially active' % self.name)
+                msg = 'WARNING: ClusteredService({}) is only partially active'.format(self.name)
+                log.err(_why=msg)
             finally:
                 # cannot wait for its deactivation
                 # with yield self._stopActivityPolling
@@ -418,8 +419,8 @@ class ClusteredBuildbotService(BuildbotService):
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to
             # fail
-            log.err(
-                _why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
+            msg = 'WARNING: ClusteredService({}) failed during activity poll'.format(self.name)
+            log.err(_why=msg)
 
 
 class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
@@ -445,8 +446,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         elif isinstance(new_config_attr, dict):
             new_by_name = new_config_attr
         else:
-            raise TypeError(
-                "config.%s should be a list or dictionary" % (self.config_attr))
+            raise TypeError("config.{} should be a list or dictionary".format(self.config_attr))
         new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs
@@ -471,8 +471,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                     added_names.add(n)
 
         if removed_names or added_names:
-            log.msg("adding %d new %s, removing %d" %
-                    (len(added_names), self.config_attr, len(removed_names)))
+            log.msg("adding {} new {}, removing {}".format(len(added_names), self.config_attr,
+                                                           len(removed_names)))
 
             for n in removed_names:
                 child = old_by_name[n]
@@ -489,8 +489,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 child = new_by_name[n]
                 # setup service's objectid
                 if hasattr(child, 'objectid'):
-                    class_name = '%s.%s' % (child.__class__.__module__,
-                                            child.__class__.__name__)
+                    class_name = '{}.{}'.format(child.__class__.__module__,
+                                                child.__class__.__name__)
                     objectid = yield self.master.db.state.getObjectId(
                         child.name, class_name)
                     child.objectid = objectid

@@ -451,9 +451,9 @@ def command_to_string(command):
     if not words:
         return None
     if len(words) < 3:
-        rv = "'%s'" % (' '.join(words))
+        rv = "'{}'".format(' '.join(words))
     else:
-        rv = "'%s ...'" % (' '.join(words[:2]))
+        rv = "'{} ...'".format(' '.join(words[:2]))
 
     return rv
 

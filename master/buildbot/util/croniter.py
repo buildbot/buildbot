@@ -90,8 +90,7 @@ class croniter:
 
                     if (not low or not high or int(low) > int(high) or
                             not only_int_re.search(str(step))):
-                        raise ValueError(
-                            "[%s] is not acceptable" % expr_format)
+                        raise ValueError("[{}] is not acceptable".format(expr_format))
 
                     for j in range(int(low), int(high) + 1):
                         if j % int(step) == 0:
@@ -110,8 +109,7 @@ class croniter:
 
                     if t != '*' and (int(t) < self.RANGES[i][0] or
                                      int(t) > self.RANGES[i][1]):
-                        raise ValueError(
-                            "[%s] is not acceptable, out of range" % expr_format)
+                        raise ValueError("[{}] is not acceptable, out of range".format(expr_format))
 
                     res.append(t)
 

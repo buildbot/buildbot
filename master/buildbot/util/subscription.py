@@ -30,7 +30,7 @@ class SubscriptionPoint:
         self._unfinished_notifier = Notifier()
 
     def __str__(self):
-        return "<SubscriptionPoint '%s'>" % self.name
+        return "<SubscriptionPoint '{}'>".format(self.name)
 
     def subscribe(self, callback):
         sub = Subscription(self, callback)
@@ -47,8 +47,8 @@ class SubscriptionPoint:
                     d.addBoth(self._notify_delivery_finished, d)
 
             except Exception:
-                log.err(failure.Failure(),
-                        'while invoking callback %s to %s' % (sub.callback, self))
+                log.err(failure.Failure(), 'while invoking callback {} to {}'.format(sub.callback,
+                                                                                     self))
 
         self._notify_delivery_finished(None, self)
 
