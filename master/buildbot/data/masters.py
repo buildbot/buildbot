@@ -132,7 +132,7 @@ class Master(base.ResourceType):
 
     @defer.inlineCallbacks
     def _masterDeactivatedHousekeeping(self, masterid, name):
-        log.msg("doing housekeeping for master %d %s" % (masterid, name))
+        log.msg("doing housekeeping for master {} {}".format(masterid, name))
 
         # common code for deactivating a master
         yield self.master.data.rtypes.worker._masterDeactivated(
