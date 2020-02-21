@@ -274,11 +274,10 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
             except expectedException:
                 pass
             except Exception as e:
-                self.fail('%s exception should be raised, but got %r' %
-                          (expectedException, e))
+                self.fail('{} exception should be raised, but got {}'.format(expectedException,
+                                                                             repr(e)))
             else:
-                self.fail('%s exception should be raised' %
-                          (expectedException,))
+                self.fail('{} exception should be raised'.format(expectedException))
         else:
             res = yield method(*methodargs, **methodkwargs)
             self.assertEqual(res, expectedRes)

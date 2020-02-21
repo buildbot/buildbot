@@ -26,7 +26,7 @@ from buildbot.clients import tryclient
 class createJobfile(unittest.TestCase):
 
     def makeNetstring(self, *strings):
-        return ''.join(['%d:%s,' % (len(s), s) for s in strings])
+        return ''.join(['{}:{},'.format(len(s), s) for s in strings])
 
     # version 1 is deprecated and not produced by the try client
 

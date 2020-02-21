@@ -213,7 +213,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                 self.headers,
                 {
                     'Authorization': 'token TOK3N',
-                    'User-Agent': 'buildbot/%s' % buildbot.version,
+                    'User-Agent': 'buildbot/{}'.format(buildbot.version),
                 })
             if ep == '/user':
                 return dict(

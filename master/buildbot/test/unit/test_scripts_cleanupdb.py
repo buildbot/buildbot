@@ -166,7 +166,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 lengths["lz4"] = 40
                 continue
             # create a master.cfg with different compression method
-            self.createMasterCfg("c['logCompressionMethod'] = '%s'" % (mode,))
+            self.createMasterCfg("c['logCompressionMethod'] = '{}'".format(mode))
             res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 

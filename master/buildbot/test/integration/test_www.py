@@ -139,7 +139,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         # check this *after* reading the body, otherwise Trial will
         # complain that the response is half-read
         if expect200 and pg.code != 200:
-            self.fail("did not get 200 response for '%s'" % (url,))
+            self.fail("did not get 200 response for '{}'".format(url))
 
         return json.loads(bytes2unicode(body))
 

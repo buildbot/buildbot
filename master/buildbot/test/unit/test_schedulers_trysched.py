@@ -252,7 +252,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             sched.parseJob(NativeStringIO('1:9,'))
 
     def makeNetstring(self, *strings):
-        return ''.join(['%d:%s,' % (len(s), s) for s in strings])
+        return ''.join(['{}:{},'.format(len(s), s) for s in strings])
 
     def test_parseJob_v1(self):
         sched = trysched.Try_Jobdir(

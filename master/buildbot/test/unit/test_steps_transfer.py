@@ -161,7 +161,8 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS,
-            state_string="uploading %s" % os.path.basename(__file__))
+            state_string="uploading {}".format(os.path.basename(__file__))
+            )
 
         yield self.runStep()
 
@@ -213,7 +214,8 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS,
-            state_string="uploading %s" % os.path.basename(__file__))
+            state_string="uploading {}".format(os.path.basename(__file__))
+            )
 
         yield self.runStep()
 
@@ -237,7 +239,8 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS,
-            state_string="uploading %s" % os.path.basename(__file__))
+            state_string="uploading {}".format(os.path.basename(__file__))
+            )
 
         yield self.runStep()
 

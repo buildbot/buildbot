@@ -98,7 +98,7 @@ class TestPropertyMap(unittest.TestCase):
     @defer.inlineCallbacks
     def doTestSimpleWithProperties(self, fmtstring, expect, **kwargs):
         res = yield self.build.render(WithProperties(fmtstring, **kwargs))
-        self.assertEqual(res, "%s" % expect)
+        self.assertEqual(res, "{}".format(expect))
 
     def testSimpleStr(self):
         return self.doTestSimpleWithProperties('%(prop_str)s', 'a-string')
@@ -1360,7 +1360,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty("x", "X", "test")
 
         def rend(p):
-            return 'x%sx' % p.getProperty('x')
+            return 'x{}x'.format(p.getProperty('x'))
 
         res = yield self.build.render(renderer(rend))
         self.assertEqual('xXx', res)
@@ -1382,7 +1382,7 @@ class Renderer(unittest.TestCase):
 
         @renderer
         def rend(p):
-            return 'x%sx' % p.getProperty('x')
+            return 'x{}x'.format(p.getProperty('x'))
 
         res = yield self.build.render(rend)
         self.assertEqual('xXx', res)
@@ -1392,7 +1392,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty("x", "X", "test")
 
         def rend(p):
-            return defer.succeed('y%sy' % p.getProperty('x'))
+            return defer.succeed('y{}y'.format(p.getProperty('x')))
 
         res = yield self.build.render(renderer(rend))
         self.assertEqual('yXy', res)
@@ -1431,7 +1431,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty("x", "X", "test")
 
         def rend(p, arg, kwarg='y'):
-            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+            return 'x-{}-{}-{}'.format(p.getProperty('x'), arg, kwarg)
 
         res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
         self.assertEqual('x-X-a-kw', res)
@@ -1455,7 +1455,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty('kw', 'KW', 'test3')
 
         def rend(p, arg, kwarg='y'):
-            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+            return 'x-{}-{}-{}'.format(p.getProperty('x'), arg, kwarg)
 
         res = yield self.build.render(
             renderer(rend).withArgs(Property('arg'), kwarg=Property('kw')))
@@ -1467,7 +1467,7 @@ class Renderer(unittest.TestCase):
 
         @renderer
         def rend(p, arg, kwarg='y'):
-            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+            return 'x-{}-{}-{}'.format(p.getProperty('x'), arg, kwarg)
 
         res = yield self.build.render(rend.withArgs('a', kwarg='kw'))
         self.assertEqual('x-X-a-kw', res)
@@ -1478,7 +1478,7 @@ class Renderer(unittest.TestCase):
 
         @renderer
         def rend(p, *args, **kwargs):
-            return 'x-%s-%s-%s' % (p.getProperty('x'), str(args), str(kwargs))
+            return 'x-{}-{}-{}'.format(p.getProperty('x'), str(args), str(kwargs))
 
         rend1 = rend.withArgs('a', kwarg1='kw1')
         rend2 = rend.withArgs('b', kwarg2='kw2')
@@ -1494,8 +1494,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty("x", "X", "test")
 
         def rend(p, arg, kwarg='y'):
-            return defer.succeed('x-%s-%s-%s' %
-                    (p.getProperty('x'), arg, kwarg))
+            return defer.succeed('x-{}-{}-{}'.format(p.getProperty('x'), arg, kwarg))
 
         res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
         self.assertEqual('x-X-a-kw', res)

@@ -134,7 +134,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertFalse(os.path.exists(self.basedir))
         create_master.makeBasedir(mkconfig(basedir=self.basedir))
         self.assertTrue(os.path.exists(self.basedir))
-        self.assertInStdout('mkdir %s' % (self.basedir,))
+        self.assertInStdout('mkdir {}'.format(self.basedir))
 
     def test_makeBasedir_quiet(self):
         self.assertFalse(os.path.exists(self.basedir))

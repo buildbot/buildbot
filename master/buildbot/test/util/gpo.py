@@ -24,7 +24,7 @@ def _check_env_is_expected(test, expected_env, env):
     env = env or {}
     for var, value in expected_env.items():
         test.assertEqual(env.get(var), value,
-                         'Expected environment to have %s = %r' % (var, value))
+                         'Expected environment to have {} = {}'.format(var, repr(value)))
 
 
 class Expect:
@@ -69,7 +69,7 @@ class Expect:
         return (self._stdout, self._stderr, self._exit)
 
     def __repr__(self):
-        return "<gpo.Expect(bin=%s, args=%s)>" % (self._bin, self._args)
+        return "<gpo.Expect(bin={}, args={})>".format(self._bin, self._args)
 
 
 class GetProcessOutputMixin:
@@ -101,8 +101,7 @@ class GetProcessOutputMixin:
         _check_env_is_expected(self, self._gpo_expect_env, env)
 
         if not self._expected_commands:
-            self.fail("got command %s %s when no further commands were expected"
-                      % (bin, args))
+            self.fail("got command {} {} when no further commands were expected".format(bin, args))
 
         expect = self._expected_commands.pop(0)
         return defer.succeed(expect.check(self, bin, path, args, env))

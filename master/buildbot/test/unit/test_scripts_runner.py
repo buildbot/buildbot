@@ -43,8 +43,7 @@ class OptionsMixin:
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(" %s: expected %r, got %r" %
-                               (k, exp[k], opts[k]))
+                    msg.append(" {}: expected {}, got {}".format(k, repr(exp[k]), repr(opts[k])))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
@@ -94,7 +93,7 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
                         **{'no-logrotate': False, 'log-size': 10000000,
                            'log-count': 10})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
-        assert not unk_keys, "invalid keys %s" % (unk_keys,)
+        assert not unk_keys, "invalid keys {}".format(unk_keys)
         opts = defaults.copy()
         opts.update(kwargs)
         return opts
@@ -224,7 +223,7 @@ class BaseTestSimpleOptions(OptionsMixin):
 
     def test_synopsis(self):
         opts = self.optionsClass()
-        self.assertIn('buildbot %s' % self.commandName, opts.getSynopsis())
+        self.assertIn('buildbot {}'.format(self.commandName), opts.getSynopsis())
 
     def test_defaults(self):
         opts = self.parse()

@@ -76,7 +76,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         cte_lines = [l for l in m.as_string().split("\n")
                      if l.startswith('Content-Transfer-Encoding:')]
         self.assertEqual(cte_lines,
-                         ['Content-Transfer-Encoding: %s' % expEncoding],
+                         ['Content-Transfer-Encoding: {}'.format(expEncoding)],
                          repr(m.as_string()))
 
     def test_createEmail_message_content_transfer_encoding_7bit(self):
@@ -380,6 +380,6 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
 
 def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
-    unibody = 'Unicode body with non-ascii (%s).' % funny_chars
+    unibody = 'Unicode body with non-ascii ({}).'.format(funny_chars)
     msg_dict = dict(body=unibody, type='plain')
     return msg_dict

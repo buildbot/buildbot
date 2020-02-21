@@ -348,18 +348,15 @@ class BuildStepMixin:
                     self.exp_state_string,
                     stepStateString[stepids[0]]))
         for pn, (pv, ps) in self.exp_properties.items():
-            self.assertTrue(self.properties.hasProperty(pn),
-                            "missing property '%s'" % pn)
-            self.assertEqual(self.properties.getProperty(pn),
-                             pv, "property '%s'" % pn)
+            self.assertTrue(self.properties.hasProperty(pn), "missing property '{}'".format(pn))
+            self.assertEqual(self.properties.getProperty(pn), pv, "property '{}'".format(pn))
             if ps is not None:
                 self.assertEqual(
                     self.properties.getPropertySource(pn), ps,
                     "property {0!r} source has source {1!r}".format(
                         pn, self.properties.getPropertySource(pn)))
         for pn in self.exp_missing_properties:
-            self.assertFalse(self.properties.hasProperty(pn),
-                             "unexpected property '%s'" % pn)
+            self.assertFalse(self.properties.hasProperty(pn), "unexpected property '{}'".format(pn))
         for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout
             if got != exp:
@@ -393,8 +390,7 @@ class BuildStepMixin:
         if exp.shouldAssertCommandEqualExpectation():
             # handle any incomparable args
             for arg in exp.incomparable_args:
-                self.assertTrue(arg in got[1],
-                                "incomparable arg '%s' not received" % (arg,))
+                self.assertTrue(arg in got[1], "incomparable arg '{}' not received".format(arg))
                 del got[1][arg]
 
             # first check any ExpectedRemoteReference instances

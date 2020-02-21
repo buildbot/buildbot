@@ -3377,10 +3377,10 @@ class TestGit(sourcesteps.SourceStepMixin,
         name = 'url.http://github.com.insteadOf'
         value = 'blahblah'
         self.setupStep(
-            self.stepClass(repourl='%s/buildbot/buildbot.git' % (value,),
+            self.stepClass(repourl='{}/buildbot/buildbot.git'.format(value),
                            mode='full', method='clean',
                            config={name: value}))
-        prefix = ['git', '-c', '%s=%s' % (name, value)]
+        prefix = ['git', '-c', '{}={}'.format(name, value)]
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=prefix + ['--version'])
@@ -3399,8 +3399,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         command=prefix + ['fetch', '-t',
-                                          '%s/buildbot/buildbot.git' % (
-                                              value,),
+                                          '{}/buildbot/buildbot.git'.format(value),
                                           'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',

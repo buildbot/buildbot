@@ -50,10 +50,10 @@ class TypeMixin:
     def test_validate(self):
         for o in self.good:
             errors = list(self.ty.validate(repr(o), o))
-            self.assertEqual(errors, [], "%s -> %s" % (repr(o), errors))
+            self.assertEqual(errors, [], "{} -> {}".format(repr(o), errors))
         for o in self.bad:
             errors = list(self.ty.validate(repr(o), o))
-            self.assertNotEqual(errors, [], "no error for %s" % (repr(o),))
+            self.assertNotEqual(errors, [], "no error for {}".format(repr(o)))
 
 
 class NoneOk(TypeMixin, unittest.TestCase):
