@@ -264,8 +264,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
-                raise RuntimeError(
-                    "could not find plugin %s; is it installed?" % (key,))
+                raise RuntimeError("could not find plugin {}; is it installed?".format(key))
             app = self.apps.get(key)
             app.setMaster(self.master)
             app.setConfiguration(plugin)

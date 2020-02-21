@@ -50,18 +50,17 @@ class GitLabHandler(BaseHookHandler):
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `%s': Not a branch" % refname)
+            log.msg("Ignoring refname `{}': Not a branch".format(refname))
             return changes
 
         branch = match.group(2)
         if payload.get('deleted'):
-            log.msg("Branch `%s' deleted, ignoring" % branch)
+            log.msg("Branch `{}' deleted, ignoring".format(branch))
             return changes
 
         for commit in payload['commits']:
             if not commit.get('distinct', True):
-                log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
-                        (commit['id'],))
+                log.msg('Commit `{}` is a non-distinct commit, ignoring...'.format(commit['id']))
                 continue
 
             files = []
@@ -70,11 +69,10 @@ class GitLabHandler(BaseHookHandler):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: %s" % commit['id'][:8])
+            log.msg("New revision: {}".format(commit['id'][:8]))
 
             change = {
-                'author': '%s <%s>' % (commit['author']['name'],
-                                       commit['author']['email']),
+                'author': '{} <{}>'.format(commit['author']['name'], commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
@@ -126,8 +124,7 @@ class GitLabHandler(BaseHookHandler):
             return []
 
         changes = [{
-            'author': '%s <%s>' % (commit['author']['name'],
-                                   commit['author']['email']),
+            'author': '{} <{}>'.format(commit['author']['name'], commit['author']['email']),
             'files': [],  # @todo use rest API
             'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'], attrs['description']),
             'revision': commit['id'],

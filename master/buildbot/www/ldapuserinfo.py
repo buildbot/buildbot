@@ -107,8 +107,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                                   self.accountEmail, self.accountFullName] +
                               self.accountExtraFields)
             if len(res) != 1:
-                raise KeyError(
-                    "ldap search \"%s\" returned %d results" % (pattern, len(res)))
+                raise KeyError("ldap search \"{}\" returned {} results".format(pattern, len(res)))
             dn, ldap_infos = res[0]['dn'], res[0]['attributes']
 
             def getFirstLdapInfo(x):
