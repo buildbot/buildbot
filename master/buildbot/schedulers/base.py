@@ -81,9 +81,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 else:
                     unk = set(attrs) - known_keys
                     if unk:
-                        config.error(
-                            "Unknown codebase keys %s for codebase %s"
-                            % (', '.join(unk), codebase))
+                        config.error("Unknown codebase keys {} for codebase {}".format(
+                            ', '.join(unk), codebase))
 
         self.codebases = codebases
 
@@ -207,8 +206,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 if not important and onlyImportant:
                     return
             except Exception:
-                log.err(failure.Failure(),
-                        'in fileIsImportant check for %s' % change)
+                log.err(failure.Failure(), 'in fileIsImportant check for {}'.format(change))
                 return
         else:
             important = True
