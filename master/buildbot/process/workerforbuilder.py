@@ -102,8 +102,7 @@ class AbstractWorkerForBuilder:
             self.worker.addWorkerForBuilder(self)
         else:
             assert self.worker == worker
-        log.msg("Worker %s attached to %s" % (worker.workername,
-                                              self.builder_name))
+        log.msg("Worker {} attached to {}".format(worker.workername, self.builder_name))
 
         yield self.worker.conn.remotePrint(message="attached")
         return self
@@ -139,8 +138,7 @@ class AbstractWorkerForBuilder:
             d.callback(res)
 
     def detached(self):
-        log.msg("Worker %s detached from %s" % (self.worker.workername,
-                                                self.builder_name))
+        log.msg("Worker {} detached from {}".format(self.worker.workername, self.builder_name))
         if self.worker:
             self.worker.removeWorkerForBuilder(self)
         self.worker = None
@@ -214,8 +212,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.state = States.AVAILABLE
         self.setBuilder(builder)
         self.worker.addWorkerForBuilder(self)
-        log.msg("Latent worker %s attached to %s" % (worker.workername,
-                                                     self.builder_name))
+        log.msg("Latent worker {} attached to {}".format(worker.workername, self.builder_name))
 
     def prepare(self, build):
         # If we can't lock, then don't bother trying to substantiate
