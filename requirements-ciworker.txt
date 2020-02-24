@@ -7,7 +7,7 @@ hyperlink==19.0.0
 idna==2.9
 incremental==17.5.0
 mock==4.0.1
-pbr==5.4.3
+pbr==5.4.4
 PyHamcrest==1.9.0
 six==1.12.0
 Twisted==19.7.0
