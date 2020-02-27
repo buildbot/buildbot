@@ -1,1 +1,0 @@
-p4poller will no longer override Perforce login ticket handling behavior which fixes random crashes (:issue:`5042`).
