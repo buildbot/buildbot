@@ -1,1 +1,0 @@
-``jQuery`` and ``$`` are available again as a global variable for UI plugins (:issue:`5161`).
