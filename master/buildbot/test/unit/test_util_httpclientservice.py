@@ -128,8 +128,9 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
 class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
+        yield super().setUp()
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
                                                            headers=self.base_headers,
@@ -229,8 +230,9 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
 class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
+        yield super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
