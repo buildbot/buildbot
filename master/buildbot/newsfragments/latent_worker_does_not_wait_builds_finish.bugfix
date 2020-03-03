@@ -1,2 +1,0 @@
-Latent workers will no longer wait for builds to finish when worker is reconfigured.
-The builds will still be retried on other workers and the operators will not need to potentially wait multiple hours for builds to finish.

@@ -134,7 +134,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
 
     @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
+        yield super().setUp()
 
         table_names = [
             'logs', 'logchunks', 'steps', 'builds', 'builders',

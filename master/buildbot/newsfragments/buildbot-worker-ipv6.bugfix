@@ -1,1 +1,0 @@
-Command `buildbot-worker create-worker` now supports ipv6 address for buildmaster connection.

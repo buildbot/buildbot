@@ -367,7 +367,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
+        yield super().setUp()
 
         self.startedBuilds = []
 

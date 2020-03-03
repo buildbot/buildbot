@@ -86,15 +86,25 @@ class RamlSpec:
                     endpoints[ep] = v
                 self.parse_endpoints(endpoints, ep, v, p)
             elif k in ['get', 'post']:
-                if 'is' in v:
-                    for _is in v['is']:
-                        if 'bbget' in _is:
+                if 'is' not in v:
+                    continue
+
+                for _is in v['is']:
+                    if not isinstance(_is, dict):
+                        raise Exception('Unexpected "is" target {}: {}'.format(type(_is), _is))
+
+                    if 'bbget' in _is:
+                        try:
                             v['eptype'] = _is['bbget']['bbtype']
-                            self.endpoints_by_type.setdefault(v['eptype'], {})
-                            self.endpoints_by_type[v['eptype']][base] = api
-                        if 'bbgetraw' in _is:
-                            self.rawendpoints.setdefault(base, {})
-                            self.rawendpoints[base] = api
+                        except TypeError:
+                            raise Exception('Unexpected "is" target {}'.format(_is['bbget']))
+
+                        self.endpoints_by_type.setdefault(v['eptype'], {})
+                        self.endpoints_by_type[v['eptype']][base] = api
+
+                    if 'bbgetraw' in _is:
+                        self.rawendpoints.setdefault(base, {})
+                        self.rawendpoints[base] = api
         return endpoints
 
     def reindent(self, s, indent):
