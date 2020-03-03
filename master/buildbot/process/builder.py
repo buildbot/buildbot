@@ -88,7 +88,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if builder_config.name == self.name:
                 found_config = True
                 break
-        assert found_config, "no config found for builder '%s'" % self.name
+        assert found_config, "no config found for builder '{}'".format(self.name)
 
         # set up a builder status object on the first reconfig
         if not self.builder_status:
@@ -247,11 +247,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if wfb.worker == worker:
                 break
         else:
-            log.msg("WEIRD: Builder.detached(%s) (%s)"
-                    " not in attaching_workers(%s)"
-                    " or workers(%s)" % (worker, worker.workername,
-                                         self.attaching_workers,
-                                         self.workers))
+            log.msg(("WEIRD: Builder.detached({}) ({})"
+                     " not in attaching_workers({})"
+                     " or workers({})").format(worker, worker.workername, self.attaching_workers,
+                                               self.workers))
             return
 
         if wfb in self.attaching_workers:
@@ -324,8 +323,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         Build.setupPropertiesKnownBeforeBuildStarts(
             props, build.requests, build.builder, workerforbuilder)
 
-        log.msg("starting build %s using worker %s" %
-                (build, workerforbuilder))
+        log.msg("starting build {} using worker {}".format(build, workerforbuilder))
 
         # set up locks
         locks = yield build.render(self.config.locks)

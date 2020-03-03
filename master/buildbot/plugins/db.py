@@ -118,11 +118,10 @@ class _NSNode:
             if child is not None:
                 assert isinstance(child, _PluginEntry)
                 if child != entry:
-                    raise PluginDBError('Duplicate entry point for "%s:%s".\n'
-                                        '  Previous definition %s\n'
-                                        '  This definition %s' %
-                                        (child.group, child.name, child.info,
-                                         entry.info))
+                    raise PluginDBError(('Duplicate entry point for "{}:{}".\n'
+                                         '  Previous definition {}\n'
+                                         '  This definition {}').format(child.group, child.name,
+                                                                        child.info, entry.info))
             else:
                 self._children[key] = entry
         else:
@@ -135,7 +134,7 @@ class _NSNode:
     def __getattr__(self, name):
         child = self._children.get(name)
         if child is None:
-            raise PluginDBError('Unknown component name: %s' % name)
+            raise PluginDBError('Unknown component name: {}'.format(name))
 
         if isinstance(child, _PluginEntry):
             return child.value
@@ -159,11 +158,10 @@ class _NSNode:
 
         if isinstance(child, _PluginEntry):
             if not is_leaf:
-                raise PluginDBError('Excessive namespace specification: %s' %
-                                    path[0])
+                raise PluginDBError('Excessive namespace specification: {}'.format(path[0]))
             return child
         elif child is None:
-            raise PluginDBError('Unknown component name: %s' % name)
+            raise PluginDBError('Unknown component name: {}'.format(name))
         else:
             return child._get(path[0])
 
@@ -174,7 +172,7 @@ class _NSNode:
                 result.append((key, child.info))
             else:
                 result.extend([
-                    ('%s.%s' % (key, name), value)
+                    ('{}.{}'.format(key, name), value)
                     for name, value in child.info_all().items()
                 ])
         return result
@@ -193,7 +191,7 @@ class _Plugins:
         if interface is not None:
             assert interface.isOrExtends(IPlugin)
 
-        self._group = '%s.%s' % (_NAMESPACE_BASE, namespace)
+        self._group = '{}.{}'.format(_NAMESPACE_BASE, namespace)
 
         self._interface = interface
         self._check_extras = check_extras
@@ -206,24 +204,21 @@ class _Plugins:
             try:
                 entry.require()
             except Exception as err:
-                raise PluginDBError('Requirements are not satisfied '
-                                    'for %s:%s: %s' % (self._group,
-                                                       entry.name,
-                                                       str(err)))
+                raise PluginDBError(('Requirements are not satisfied '
+                                     'for {}:{}: {}').format(self._group, entry.name, str(err)))
         try:
             result = entry.load()
         except Exception as err:
             # log full traceback of the bad entry to help support
             traceback.print_exc()
-            raise PluginDBError('Unable to load %s:%s: %s' %
-                                (self._group, entry.name, str(err)))
+            raise PluginDBError('Unable to load {}:{}: {}'.format(self._group, entry.name,
+                                                                  str(err)))
         if self._interface:
             try:
                 verifyClass(self._interface, result)
             except Invalid as err:
-                raise PluginDBError('Plugin %s:%s does not implement %s: %s' %
-                                    (self._group, entry.name,
-                                     self._interface.__name__, str(err)))
+                raise PluginDBError('Plugin {}:{} does not implement {}: {}'.format(self._group,
+                        entry.name, self._interface.__name__, str(err)))
         return result
 
     @property

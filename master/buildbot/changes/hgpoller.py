@@ -101,10 +101,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
-        return ("HgPoller watching the remote Mercurial repository %r, "
-                "branches: %r, in workdir %r %s") % (self.repourl,
-                                                     ', '.join(self.branches),
-                                                     self.workdir, status)
+        return (("HgPoller watching the remote Mercurial repository '{}', "
+                 "branches: {}, in workdir '{}' {}").format(self.repourl, ', '.join(self.branches),
+                                                            self.workdir, status))
 
     @deferredLocked('initLock')
     def poll(self):
@@ -163,7 +162,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         """
         if self._isRepositoryReady():
             return defer.succeed(None)
-        log.msg('hgpoller: initializing working dir from %s' % self.repourl)
+        log.msg('hgpoller: initializing working dir from {}'.format(self.repourl))
         d = utils.getProcessOutputAndValue(self.hgbin,
                                            ['init', self._absWorkdir()],
                                            env=os.environ)
@@ -177,8 +176,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.lastPoll = time.time()
 
         d = self._initRepository()
-        d.addCallback(lambda _: log.msg(
-            "hgpoller: polling hg repo at %s" % self.repourl))
+        d.addCallback(lambda _: log.msg("hgpoller: polling hg repo at {}".format(self.repourl)))
 
         # get a deferred object that performs the fetch
         args = ['pull']
@@ -329,8 +327,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         "utility method to handle the result of getProcessOutputAndValue"
         (stdout, stderr, code) = res
         if code != 0:
-            raise EnvironmentError(
-                'command failed with exit code %d: %s' % (code, stderr))
+            raise EnvironmentError('command failed with exit code {}: {}'.format(code, stderr))
         return (stdout, stderr, code)
 
     def _stopOnFailure(self, f):

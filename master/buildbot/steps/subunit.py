@@ -115,10 +115,7 @@ class SubunitShellCommand(ShellCommand):
         if not count:
             results = SUCCESS
             if total:
-                text += ["%d %s" %
-                         (total,
-                          total == 1 and "test" or "tests"),
-                         "passed"]
+                text += ["{} {}".format(total, total == 1 and "test" or "tests"), "passed"]
             else:
                 if self.failureOnNoTests:
                     results = FAILURE
@@ -127,18 +124,13 @@ class SubunitShellCommand(ShellCommand):
             results = FAILURE
             text.append("Total %d test(s)" % total)
             if failures:
-                text.append("%d %s" %
-                            (failures,
-                             failures == 1 and "failure" or "failures"))
+                text.append("{} {}".format(failures, failures == 1 and "failure" or "failures"))
             if errors:
-                text.append("%d %s" %
-                            (errors,
-                             errors == 1 and "error" or "errors"))
-            text2 = "%d %s" % (count, (count == 1 and 'test' or 'tests'))
+                text.append("{} {}".format(errors, errors == 1 and "error" or "errors"))
+            text2 = "{} {}".format(count, (count == 1 and 'test' or 'tests'))
 
         if skips:
-            text.append("%d %s" % (skips,
-                                   skips == 1 and "skip" or "skips"))
+            text.append("{} {}".format(skips, skips == 1 and "skip" or "skips"))
 
         # TODO: expectedFailures/unexpectedSuccesses
 
@@ -155,7 +147,7 @@ class SubunitShellCommand(ShellCommand):
         ob = self.ioObserver
         problems = ""
         for test, err in ob.errors + ob.failures:
-            problems += "%s\n%s" % (test.id(), err)
+            problems += "{}\n{}".format(test.id(), err)
         if problems:
             self.addCompleteLog("problems", problems)
         warnings = ob.warningio.getvalue()

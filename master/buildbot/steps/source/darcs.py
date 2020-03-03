@@ -48,8 +48,8 @@ class Darcs(Source):
         errors = []
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode %s is not one of %s" %
-                          (self.mode, self._listAttrGroupMembers('mode')))
+            errors.append("mode {} is not one of {}".format(self.mode,
+                                                            self._listAttrGroupMembers('mode')))
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
 
@@ -57,7 +57,7 @@ class Darcs(Source):
             if self.method is None:
                 self.method = 'copy'
             elif self.method not in self.possible_methods:
-                errors.append("Invalid method for mode == %s" % (self.mode))
+                errors.append("Invalid method for mode == {}".format(self.mode))
 
         if repourl is None:
             errors.append("you must provide repourl")
@@ -206,8 +206,7 @@ class Darcs(Source):
         @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " %
-                    (self.cmd))
+            log.msg("Closing log, sending result of the command {} ".format(self.cmd))
             return results
         d.addCallback(self.finished)
         return d
@@ -239,7 +238,7 @@ class Darcs(Source):
         @d.addCallback
         def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
+                log.msg("Source step failed while running command {}".format(cmd))
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout

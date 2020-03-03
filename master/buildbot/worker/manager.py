@@ -31,7 +31,7 @@ class WorkerRegistration:
         self.worker = worker
 
     def __repr__(self):
-        return "<%s for %r>" % (self.__class__.__name__, self.worker.workername)
+        return "<{} for {}>".format(self.__class__.__name__, repr(self.worker.workername))
 
     @defer.inlineCallbacks
     def unregister(self):
@@ -102,8 +102,8 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     @defer.inlineCallbacks
     def newConnection(self, conn, workerName):
         if workerName in self.connections:
-            log.msg("Got duplication connection from '%s'"
-                    " starting arbitration procedure" % workerName)
+            log.msg(("Got duplication connection from '{}'"
+                     " starting arbitration procedure").format(workerName))
             old_conn = self.connections[workerName]
             try:
                 yield misc.cancelAfter(self.PING_TIMEOUT,
@@ -113,24 +113,22 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                 raise RuntimeError("rejecting duplicate worker")
             except defer.CancelledError:
                 old_conn.loseConnection()
-                log.msg("Connected worker '%s' ping timed out after %d seconds"
-                        % (workerName, self.PING_TIMEOUT))
+                log.msg("Connected worker '{}' ping timed out after {} seconds".format(workerName,
+                        self.PING_TIMEOUT))
             except RuntimeError:
                 raise
             except Exception as e:
                 old_conn.loseConnection()
-                log.msg("Got error while trying to ping connected worker %s:"
-                        "%s" % (workerName, e))
-            log.msg("Old connection for '%s' was lost, accepting new" %
-                    workerName)
+                log.msg("Got error while trying to ping connected worker {}:{}".format(workerName,
+                                                                                       e))
+            log.msg("Old connection for '{}' was lost, accepting new".format(workerName))
 
         try:
             yield conn.remotePrint(message="attached")
             info = yield conn.remoteGetWorkerInfo()
-            log.msg("Got workerinfo from '%s'" % workerName)
+            log.msg("Got workerinfo from '{}'".format(workerName))
         except Exception as e:
-            log.msg("Failed to communicate with worker '%s'\n"
-                    "%s" % (workerName, e))
+            log.msg("Failed to communicate with worker '{}'\n{}".format(workerName, e))
             raise
 
         conn.info = info

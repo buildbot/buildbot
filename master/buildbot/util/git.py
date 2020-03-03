@@ -202,7 +202,7 @@ class GitStepMixin(GitMixin):
         if self.config is not None:
             for name, value in self.config.items():
                 full_command.append('-c')
-                full_command.append('%s=%s' % (name, value))
+                full_command.append('{}={}'.format(name, value))
 
         if self._isSshPrivateKeyNeededForGitCommand(command):
             self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
@@ -246,7 +246,7 @@ class GitStepMixin(GitMixin):
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command %s" % cmd)
+            log.msg("Source step failed while running command {}".format(cmd))
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout

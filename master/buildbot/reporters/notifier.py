@@ -63,8 +63,7 @@ class NotifierBase(service.BuildbotService):
                     config.error(
                         "mode 'all' is not valid in an iterator and must be passed in as a separate string")
                 else:
-                    config.error(
-                        "mode %s is not a valid mode" % (m,))
+                    config.error("mode {} is not a valid mode".format(m))
         if self.name is None:
             self.name = self.__class__.__name__
             if tags is not None:
@@ -299,6 +298,6 @@ class NotifierBase(service.BuildbotService):
         else:
             subject = "Buildbot worker {name} missing".format(**worker)
         assert msg['type'] in ('plain', 'html'), \
-            "'%s' message type must be 'plain' or 'html'." % msg['type']
+            "'{}' message type must be 'plain' or 'html'.".format(msg['type'])
 
         yield self.sendMessage(text, subject, msg['type'], users=worker['notify'], worker=worker['name'])

@@ -253,7 +253,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', 'all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
-            self.assertIn('`%s` ❌' % builder, self.sent[0][1])
+            self.assertIn('`{}` ❌'.format(builder), self.sent[0][1])
 
     @defer.inlineCallbacks
     def test_command_list_workers(self):
@@ -265,7 +265,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
-            self.assertIn('`%s` ❌' % worker, self.sent[0][1])
+            self.assertIn('`{}` ❌'.format(worker), self.sent[0][1])
 
     @defer.inlineCallbacks
     def test_command_list_workers_online(self):

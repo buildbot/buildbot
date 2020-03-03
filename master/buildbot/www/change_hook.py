@@ -150,9 +150,9 @@ class ChangeHookResource(resource.Resource):
         uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
 
         if not uriRE:
-            log.msg("URI doesn't match change_hook regex: %s" % request.uri)
-            raise ValueError(
-                "URI doesn't match change_hook regex: %s" % request.uri)
+            msg = "URI doesn't match change_hook regex: {}".format(request.uri)
+            log.msg(msg)
+            raise ValueError(msg)
 
         changes = []
         src = None
@@ -185,4 +185,4 @@ class ChangeHookResource(resource.Resource):
                 chdict['properties'] = dict((bytes2unicode(k), v)
                                             for k, v in chdict['properties'].items())
             chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
-            log.msg("injected change %s" % chid)
+            log.msg("injected change {}".format(chid))

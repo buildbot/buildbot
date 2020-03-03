@@ -95,10 +95,10 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                 return
             dbs = [r[0] for r in engine.execute("show tables")]
             for tbl in dbs:
-                r = engine.execute("show create table %s" % tbl)
+                r = engine.execute("show create table {}".format(tbl))
                 create_table = r.fetchone()[1]
                 self.assertIn('DEFAULT CHARSET=utf8', create_table,
-                              "table %s does not have the utf8 charset" % tbl)
+                              "table {} does not have the utf8 charset".format(tbl))
         yield self.db.pool.do(check_table_charsets_thd)
 
         def verify_thd(engine):

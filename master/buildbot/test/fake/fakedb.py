@@ -85,13 +85,13 @@ class Row:
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
-            assert col in kwargs, "%s not specified: %s" % (col, kwargs)
+            assert col in kwargs, "{} not specified: {}".format(col, kwargs)
         for col in self.lists:
             setattr(self, col, [])
         for col in self.dicts:
             setattr(self, col, {})
         for col in kwargs:
-            assert col in self.defaults, "%s is not a valid column" % col
+            assert col in self.defaults, "{} is not a valid column".format(col)
         # cast to unicode
         for k, v in self.values.items():
             if isinstance(v, str):
@@ -147,7 +147,7 @@ class Row:
         return self.values >= other.values
 
     def __repr__(self):
-        return '%s(**%r)' % (self.__class__.__name__, self.values)
+        return '{}(**{})'.format(self.__class__.__name__, repr(self.values))
 
     def nextId(self):
         id = Row._next_id if Row._next_id is not None else 1
@@ -185,7 +185,7 @@ class Row:
                 if key is not None:
                     val = yield accessors[foreign_key](key)
                     t.assertTrue(val is not None,
-                                 "foreign key %s:%r does not exit" % (foreign_key, key))
+                                 "foreign key {}:{} does not exit".format(foreign_key, repr(key)))
             else:
                 raise ValueError(
                     "warning, unsupported foreign key", foreign_key, self.table)
@@ -1562,9 +1562,9 @@ class FakeWorkersComponent(FakeDBComponent):
         buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
                             if mid == masterid and builderid in builderids]
         if len(buildermasterids) != len(builderids):
-            raise ValueError("Some builders are not configured for this master: "
-                             "builders: %s, master: %s buildermaster:%s" %
-                             (builderids, masterid, self.db.builders.builder_masters))
+            raise ValueError(("Some builders are not configured for this master: "
+                              "builders: {}, master: {} buildermaster:{}"
+                              ).format(builderids, masterid, self.db.builders.builder_masters))
 
         allbuildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
                                if mid == masterid]
@@ -1693,7 +1693,7 @@ class FakeStateComponent(FakeDBComponent):
             missing_keys = []
         state = self.states[objectid]
         for k in missing_keys:
-            self.t.assertFalse(k in state, "%s in %s" % (k, state))
+            self.t.assertFalse(k in state, "{} in {}".format(k, state))
         for k, v in kwargs.items():
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,
@@ -2079,9 +2079,9 @@ class FakeStepsComponent(FakeDBComponent):
             names = {r['name'] for r in build_steps}
             if name in names:
                 i = 1
-                while '%s_%d' % (name, i) in names:
+                while '{}_{}'.format(name, i) in names:
                     i += 1
-                name = '%s_%d' % (name, i)
+                name = '{}_{}'.format(name, i)
         else:
             number = 0
 

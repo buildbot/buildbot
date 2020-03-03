@@ -161,18 +161,18 @@ class Change:
         data = ""
         data += "Files:\n"
         for f in self.files:
-            data += " %s\n" % f
+            data += " {}\n".format(f)
         if self.repository:
-            data += "On: %s\n" % self.repository
+            data += "On: {}\n".format(self.repository)
         if self.project:
-            data += "For: %s\n" % self.project
-        data += "At: %s\n" % self.getTime()
-        data += "Changed By: %s\n" % self.who
-        data += "Committed By: %s\n" % self.committer
-        data += "Comments: %s" % self.comments
+            data += "For: {}\n".format(self.project)
+        data += "At: {}\n".format(self.getTime())
+        data += "Changed By: {}\n".format(self.who)
+        data += "Committed By: {}\n".format(self.committer)
+        data += "Comments: {}".format(self.comments)
         data += "Properties: \n"
         for prop in self.properties.asList():
-            data += "  %s: %s" % (prop[0], prop[1])
+            data += "  {}: {}".format(prop[0], prop[1])
         data += '\n\n'
         return data
 

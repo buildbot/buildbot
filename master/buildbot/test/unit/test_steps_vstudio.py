@@ -362,11 +362,11 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             installdir + r'\Common\TOOLS;',
         ]
         if p:
-            path.insert(0, '%s;' % p)
+            path.insert(0, '{};'.format(p))
         if i:
-            include.insert(0, '%s;' % i)
+            include.insert(0, '{};'.format(i))
         if LIB:
-            lib.insert(0, '%s;' % LIB)
+            lib.insert(0, '{};'.format(LIB))
         return dict(
             INCLUDE=''.join(include),
             LIB=''.join(lib),
@@ -466,11 +466,11 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             installdir + r'\Common7\Tools\bin;',
         ]
         if p:
-            path.insert(0, '%s;' % p)
+            path.insert(0, '{};'.format(p))
         if i:
-            include.insert(0, '%s;' % i)
+            include.insert(0, '{};'.format(i))
         if LIB:
-            lib.insert(0, '%s;' % LIB)
+            lib.insert(0, '{};'.format(LIB))
         return dict(
             INCLUDE=''.join(include),
             LIB=''.join(lib),
@@ -568,11 +568,11 @@ class VC8ExpectedEnvMixin:
             path.insert(1, installdir + r'\VC\BIN\x86_amd64;')
             lib = [lb[:-1] + r'\amd64;' for lb in lib]
         if LIB:
-            lib.insert(0, '%s;' % LIB)
+            lib.insert(0, '{};'.format(LIB))
         if p:
-            path.insert(0, '%s;' % p)
+            path.insert(0, '{};'.format(p))
         if i:
-            include.insert(0, '%s;' % i)
+            include.insert(0, '{};'.format(i))
         return dict(
             INCLUDE=''.join(include),
             LIB=''.join(lib),

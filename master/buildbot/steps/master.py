@@ -70,8 +70,7 @@ class MasterShellCommand(BuildStep):
                 self.step.stdio_log.addHeader(
                     "exit status %d\n" % status_object.value.exitCode)
             if status_object.value.signal is not None:
-                self.step.stdio_log.addHeader(
-                    "signal %s\n" % status_object.value.signal)
+                self.step.stdio_log.addHeader("signal {}\n".format(status_object.value.signal))
             self.step.processEnded(status_object)
 
     def start(self):
@@ -106,8 +105,8 @@ class MasterShellCommand(BuildStep):
         else:
             stdio_log.addHeader(" ".join(command) + "\n\n")
         stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
-        stdio_log.addHeader(" in dir %s\n" % os.getcwd())
-        stdio_log.addHeader(" argv: %s\n" % (argv,))
+        stdio_log.addHeader(" in dir {}\n".format(os.getcwd()))
+        stdio_log.addHeader(" argv: {}\n".format(argv))
         self.step_status.setText(self.describe())
 
         if self.env is None:
@@ -133,8 +132,8 @@ class MasterShellCommand(BuildStep):
             for key, v in env.items():
                 if v is not None:
                     if not isinstance(v, (str, bytes)):
-                        raise RuntimeError("'env' values must be strings or "
-                                           "lists; key '%s' is incorrect" % (key,))
+                        raise RuntimeError(("'env' values must be strings or "
+                                            "lists; key '{}' is incorrect").format(key))
                     newenv[key] = p.sub(subst, env[key])
             env = newenv
 
@@ -148,7 +147,7 @@ class MasterShellCommand(BuildStep):
 
     def processEnded(self, status_object):
         if status_object.value.signal is not None:
-            self.descriptionDone = ["killed (%s)" % status_object.value.signal]
+            self.descriptionDone = ["killed ({})".format(status_object.value.signal)]
             self.step_status.setText(self.describe(done=True))
             self.finished(FAILURE)
         elif status_object.value.exitCode != 0:

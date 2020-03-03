@@ -311,8 +311,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
 
         # call _makeInfoFiles() and check that correct exception is raised
         with self.assertRaisesRegex(create_worker.CreateWorkerError,
-                                    "error creating directory %s: err-msg" %
-                                    _regexp_path("bdir", "info")):
+                                    "error creating directory {}: err-msg".format(
+                                            _regexp_path("bdir", "info"))):
             create_worker._makeInfoFiles("bdir", quiet)
 
         # check output to stdout
@@ -368,8 +368,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
             self.assertWasQuiet()
         else:
             self.assertStdoutEqual(
-                "Creating %s, you need to edit it appropriately.\n" %
-                os.path.join("info", "admin"))
+                "Creating {}, you need to edit it appropriately.\n".format(
+                        os.path.join("info", "admin")))
 
     def testOpenError(self):
         """
@@ -432,15 +432,15 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
             self.assertWasQuiet()
         else:
             self.assertStdoutEqual(
-                "mkdir %s\n"
-                "Creating %s, you need to edit it appropriately.\n"
-                "Creating %s, you need to edit it appropriately.\n"
-                "Not creating %s - add it if you wish\n"
-                "Please edit the files in %s appropriately.\n" %
-                (info_path, os.path.join("info", "admin"),
-                 os.path.join("info", "host"),
-                 os.path.join("info", "access_uri"),
-                 info_path))
+                ("mkdir {}\n"
+                 "Creating {}, you need to edit it appropriately.\n"
+                 "Creating {}, you need to edit it appropriately.\n"
+                 "Not creating {} - add it if you wish\n"
+                 "Please edit the files in {} appropriately.\n").format(
+                info_path, os.path.join("info", "admin"),
+                os.path.join("info", "host"),
+                os.path.join("info", "access_uri"),
+                info_path))
 
     def testCreatedSuccessfully(self):
         """

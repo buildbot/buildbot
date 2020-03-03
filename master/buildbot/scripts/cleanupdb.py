@@ -29,7 +29,7 @@ from buildbot.util import in_reactor
 @defer.inlineCallbacks
 def doCleanupDatabase(config, master_cfg):
     if not config['quiet']:
-        print("cleaning database (%s)" % (master_cfg.db['db_url']))
+        print("cleaning database ({})".format(master_cfg.db['db_url']))
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
@@ -89,11 +89,11 @@ def _cleanupDatabase(config, _noMonkey=False):
     os.chdir(config['basedir'])
 
     with base.captureErrors((SyntaxError, ImportError),
-                            "Unable to load 'buildbot.tac' from '%s':" % (config['basedir'],)):
+                            "Unable to load 'buildbot.tac' from '{}':".format(config['basedir'])):
         configFile = base.getConfigFileFromTac(config['basedir'])
 
     with base.captureErrors(config_module.ConfigErrors,
-                            "Unable to load '%s' from '%s':" % (configFile, config['basedir'])):
+                            "Unable to load '{}' from '{}':".format(configFile, config['basedir'])):
         master_cfg = base.loadConfig(config, configFile)
 
     if not master_cfg:

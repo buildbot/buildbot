@@ -84,8 +84,8 @@ class BaseLock:
 
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
-        debuglog("%s isAvailable(%s, %s): self.owners=%r"
-                 % (self, requester, access, self.owners))
+        debuglog("{} isAvailable({}, {}): self.owners={}".format(self, requester, access,
+                                                                 repr(self.owners)))
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
         w_index = self._find_waiting(requester)
@@ -127,7 +127,7 @@ class BaseLock:
 
     def claim(self, owner, access):
         """ Claim the lock (lock must be available) """
-        debuglog("%s claim(%s, %s)" % (self, owner, access.mode))
+        debuglog("{} claim({}, {})".format(self, owner, access.mode))
         assert owner is not None
         assert self.isAvailable(owner, access), "ask for isAvailable() first"
 
@@ -136,7 +136,7 @@ class BaseLock:
         self.waiting = [w for w in self.waiting if w[0] is not owner]
         self._addOwner(owner, access)
 
-        debuglog(" %s is claimed '%s'" % (self, access.mode))
+        debuglog(" {} is claimed '{}'".format(self, access.mode))
 
     def subscribeToReleases(self, callback):
         """Schedule C{callback} to be invoked every time this lock is
@@ -147,9 +147,9 @@ class BaseLock:
         """ Release the lock """
         assert isinstance(access, LockAccess)
 
-        debuglog("%s release(%s, %s)" % (self, owner, access.mode))
+        debuglog("{} release({}, {})".format(self, owner, access.mode))
         if not self._removeOwner(owner, access):
-            debuglog("%s already released" % self)
+            debuglog("{} already released".format(self))
             return
 
         self._tryWakeUp()
@@ -192,7 +192,7 @@ class BaseLock:
         longer interesting by calling stopWaitingUntilAvailable(). The caller does not need to
         do this immediately after deferred is fired, an eventual execution is sufficient.
         """
-        debuglog("%s waitUntilAvailable(%s)" % (self, owner))
+        debuglog("{} waitUntilAvailable({})".format(self, owner))
         assert isinstance(access, LockAccess)
         if self.isAvailable(owner, access):
             return defer.succeed(self)
@@ -214,7 +214,7 @@ class BaseLock:
             to `waitUntilMaybeAvailable()`. If `d` has not been woken up already by calling its
             callback, it will be done as part of this function
         """
-        debuglog("%s stopWaitingUntilAvailable(%s)" % (self, owner))
+        debuglog("{} stopWaitingUntilAvailable({})".format(self, owner))
         assert isinstance(access, LockAccess)
 
         w_index = self._find_waiting(owner)

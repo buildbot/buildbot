@@ -63,7 +63,7 @@ def stop(config, signame="TERM", wait=None):
 
     if not wait:
         if not quiet:
-            print("sent SIG%s to process" % signame)
+            print("sent SIG{} to process".format(signame))
         return 0
 
     time.sleep(0.1)

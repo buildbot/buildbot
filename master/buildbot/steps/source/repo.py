@@ -61,7 +61,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin):
         for cur_re in self.parse_download_re:
             res = cur_re.search(s)
             while res:
-                ret.append("%s %s" % (res.group(1), res.group(2)))
+                ret.append("{} {}".format(res.group(1), res.group(2)))
                 s = s[:res.start(0)] + s[res.end(0):]
                 res = cur_re.search(s)
         return ret
@@ -83,10 +83,9 @@ class RepoDownloadsFromChangeSource(util.ComparableMixin):
         for change in changes:
             if ("event.type" in change.properties and
                     change.properties["event.type"] == "patchset-created"):
-                downloads.append("%s %s/%s" % (change.properties["event.change.project"],
-                                               change.properties[
-                                                   "event.change.number"],
-                                               change.properties["event.patchSet.number"]))
+                downloads.append("{} {}/{}".format(change.properties["event.change.project"],
+                                                   change.properties["event.change.number"],
+                                                   change.properties["event.patchSet.number"]))
         return downloads
 
 
@@ -217,18 +216,16 @@ class Repo(Source):
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
-        self.stdio_log.addHeader(
-            "Starting command: %s\n" % (" ".join(command), ))
-        self.step_status.setText(["%s" % (" ".join(command[:2]))])
+        self.stdio_log.addHeader("Starting command: {}\n".format(" ".join(command)))
+        self.step_status.setText(["{}".format(" ".join(command[:2]))])
         d = self.runCommand(cmd)
 
         @d.addCallback
         def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
-                self.descriptionDone = "repo failed at: %s" % (
-                    " ".join(command[:2]))
-                self.stdio_log.addStderr(
-                    "Source step failed while running command %s\n" % cmd)
+                self.descriptionDone = "repo failed at: {}".format(" ".join(command[:2]))
+                self.stdio_log.addStderr(("Source step failed while running command {}\n"
+                                          ).format(cmd))
                 raise buildstep.BuildStepFailed()
             return cmd.rc
         return d
@@ -295,8 +292,8 @@ class Repo(Source):
                              '--depth', str(self.depth)])
 
         if self.manifestOverrideUrl:
-            self.stdio_log.addHeader(
-                "overriding manifest with %s\n" % (self.manifestOverrideUrl))
+            self.stdio_log.addHeader(("overriding manifest with {}\n"
+                                      ).format(self.manifestOverrideUrl))
             local_file = yield self.pathExists(self.build.path_module.join(self.workdir,
                                                                            self.manifestOverrideUrl))
             if local_file:
@@ -317,8 +314,8 @@ class Repo(Source):
         if self.syncQuietly:
             command.append('-q')
         self.step_status.setText(["repo sync"])
-        self.stdio_log.addHeader("synching manifest %s from branch %s from %s\n"
-                                 % (self.manifestFile, self.manifestBranch, self.manifestURL))
+        self.stdio_log.addHeader("synching manifest {} from branch {} from {}\n".format(
+                self.manifestFile, self.manifestBranch, self.manifestURL))
         yield self._repoCmd(command)
 
         command = ['manifest', '-r', '-o', 'manifest-original.xml']
@@ -345,8 +342,7 @@ class Repo(Source):
         self.repo_downloaded = ""
         for download in self.repoDownloads:
             command = ['download'] + download.split(' ')
-            self.stdio_log.addHeader("downloading changeset %s\n"
-                                     % (download))
+            self.stdio_log.addHeader("downloading changeset {}\n".format(download))
 
             retry = self.mirror_sync_retry + 1
             while retry > 0:
@@ -355,13 +351,12 @@ class Repo(Source):
                 if not self._findErrorMessages(self.ref_not_found_re):
                     break
                 retry -= 1
-                self.stdio_log.addStderr(
-                    "failed downloading changeset %s\n" % (download))
+                self.stdio_log.addStderr("failed downloading changeset {}\n".format(download))
                 self.stdio_log.addHeader("wait one minute for mirror sync\n")
                 yield self._sleep(self.mirror_sync_sleep)
 
             if retry == 0:
-                self.descriptionDone = "repo: change %s does not exist" % download
+                self.descriptionDone = "repo: change {} does not exist".format(download)
                 raise buildstep.BuildStepFailed()
 
             if self.lastCommand.didFail() or self._findErrorMessages(self.cherry_pick_error_re):
@@ -369,7 +364,7 @@ class Repo(Source):
                 # in stdout, which reveals the merge errors and exit
                 command = ['forall', '-c', 'git', 'diff', 'HEAD']
                 yield self._repoCmd(command, abandonOnFailure=False)
-                self.descriptionDone = "download failed: %s" % download
+                self.descriptionDone = "download failed: {}".format(download)
                 raise buildstep.BuildStepFailed()
 
             if hasattr(self.lastCommand, 'stderr'):
@@ -381,9 +376,8 @@ class Repo(Source):
                     if not match2:
                         match2 = self.re_head.match(line)
                 if match1 and match2:
-                    self.repo_downloaded += "%s/%s %s " % (match1.group(1),
-                                                           match1.group(2),
-                                                           match2.group(1))
+                    self.repo_downloaded += "{}/{} {} ".format(match1.group(1), match1.group(2),
+                                                               match2.group(1))
 
         self.setProperty("repo_downloaded", self.repo_downloaded, "Source")
 

@@ -39,20 +39,20 @@ def installFile(config, target, source, overwrite=False):
         if old_contents != new_contents:
             if overwrite:
                 if not config['quiet']:
-                    print("%s has old/modified contents" % target)
+                    print("{} has old/modified contents".format(target))
                     print(" overwriting it with new contents")
                 with open(target, "wt") as f:
                     f.write(new_contents)
             else:
                 if not config['quiet']:
-                    print("%s has old/modified contents" % target)
-                    print(" writing new contents to %s.new" % target)
+                    print("{} has old/modified contents".format(target))
+                    print(" writing new contents to {}.new".format(target))
                 with open(target + ".new", "wt") as f:
                     f.write(new_contents)
         # otherwise, it's up to date
     else:
         if not config['quiet']:
-            print("creating %s" % target)
+            print("creating {}".format(target))
         with open(target, "wt") as f:
             f.write(new_contents)
 
@@ -74,17 +74,16 @@ def upgradeFiles(config):
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
-        print("upgrading database (%s)"
-              % (stripUrlPassword(master_cfg.db['db_url'])))
+        print("upgrading database ({})".format(stripUrlPassword(master_cfg.db['db_url'])))
         print("Warning: Stopping this process might cause data loss")
 
     def sighandler(signum, frame):
         msg = " ".join("""
-        WARNING: ignoring signal %s.
+        WARNING: ignoring signal {}.
         This process should not be interrupted to avoid database corruption.
         If you really need to terminate it, use SIGKILL.
         """.split())
-        print(msg % signum)
+        print(msg.format(signum))
 
     prev_handlers = {}
     try:
@@ -122,8 +121,7 @@ def upgradeMaster(config, _noMonkey=False):
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
     except (SyntaxError, ImportError):
-        print("Unable to load 'buildbot.tac' from '%s':" %
-              config['basedir'], file=sys.stderr)
+        print("Unable to load 'buildbot.tac' from '{}':".format(config['basedir'], file=sys.stderr))
         e = traceback.format_exc()
         print(e, file=sys.stderr)
         return defer.succeed(1)

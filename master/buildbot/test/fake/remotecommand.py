@@ -227,8 +227,8 @@ class Expect:
         elif behavior == 'callable':
             return defer.maybeDeferred(lambda: args[0](command))
         else:
-            return defer.fail(failure.Failure(
-                AssertionError('invalid behavior %s' % behavior)))
+            return defer.fail(failure.Failure(AssertionError('invalid behavior {}'.format(
+                    behavior))))
         return defer.succeed(None)
 
     @defer.inlineCallbacks

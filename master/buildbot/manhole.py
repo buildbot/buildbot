@@ -204,7 +204,7 @@ class _BaseManhole(service.AsyncMultiService):
             via = "via SSH"
         else:
             via = "via telnet"
-        log.msg("Manhole listening %s on port %s" % (via, self.port))
+        log.msg("Manhole listening {} on port {}".format(via, self.port))
         return super().startService()
 
 
@@ -354,8 +354,8 @@ def show(x):
         elif isinstance(v, (int, type(None))):
             v = str(v)
         elif isinstance(v, (list, tuple, dict)):
-            v = "%s (%d elements)" % (v, len(v))
+            v = "{} ({} elements)".format(v, len(v))
         else:
             v = str(type(v))
-        print("%*s : %s" % (maxlen, k, v))
+        print("{} : {}".format(k.ljust(maxlen), v))
     return x

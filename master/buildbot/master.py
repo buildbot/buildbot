@@ -125,8 +125,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.hostname = socket.getfqdn()
 
         # public attributes
-        self.name = ("%s:%s" % (self.hostname,
-                                os.path.abspath(self.basedir or '.')))
+        self.name = ("{}:{}".format(self.hostname, os.path.abspath(self.basedir or '.')))
         if isinstance(self.name, bytes):
             self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
@@ -220,8 +219,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             yield self._services_d
             self._services_d = None
 
-        log.msg("Starting BuildMaster -- buildbot.version: %s" %
-                buildbot.version)
+        log.msg("Starting BuildMaster -- buildbot.version: {}".format(buildbot.version))
 
         # Set umask
         if self.umask is not None:

@@ -88,9 +88,9 @@ def setup(app):
         sphinx.highlighting.PygmentsBridge.highlight_block = patched_highlight_block
     else:
         msg = textwrap.dedent("""\
-            WARNING: Your Sphinx version %s is too old and will not work with
+            WARNING: Your Sphinx version {} is too old and will not work with
             monkey-patch for checking unhighlighted code.  Minimal required version
-            of Sphinx is %s.  Check disabled.
-            """) % (sphinx.__version__, required_sphinx_version)
+            of Sphinx is {}.  Check disabled.
+            """).format(sphinx.__version__, required_sphinx_version)
         sys.stderr.write(msg)
     return {'parallel_read_safe': True, 'parallel_write_safe': True}

@@ -172,7 +172,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         for f in [
                 'test/master.cfg.sample',
         ]:
-            self.assertTrue(os.path.exists(f), "%s not found" % f)
+            self.assertTrue(os.path.exists(f), "{} not found".format(f))
         self.assertInStdout('upgrading basedir')
 
     def test_upgradeFiles_notice_about_unused_public_html(self):

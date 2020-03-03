@@ -39,7 +39,7 @@ class MaxQ(ShellCommand):
     def __init__(self, testdir=None, **kwargs):
         if not testdir:
             config.error("please pass testdir")
-        kwargs['command'] = 'run_maxq.py %s' % (testdir,)
+        kwargs['command'] = 'run_maxq.py {}'.format(testdir)
         super().__init__(**kwargs)
         self.observer = MaxQObserver()
         self.addLogObserver('stdio', self.observer)
