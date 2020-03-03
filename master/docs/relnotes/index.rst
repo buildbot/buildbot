@@ -10,6 +10,37 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.7.0`` ( ``2020-02-27`` )
+=====================================
+
+Bug fixes
+---------
+
+- Command `buildbot-worker create-worker` now supports ipv6 address for buildmaster connection.
+- Fix crash in latent worker stopService() when the worker is insubstantiating (:issue:`4935`).
+- Fix race condition between latent worker's stopService() and substantiate().
+- :class:`GitHubAuth` is now using `Authorization` headers instead of `access_token` query parameter, as the latter was deprecated by Github. (:issue:`5188`)
+- ``jQuery`` and ``$`` are available again as a global variable for UI plugins (:issue:`5161`).
+- Latent workers will no longer wait for builds to finish when worker is reconfigured.
+  The builds will still be retried on other workers and the operators will not need to potentially wait multiple hours for builds to finish.
+- p4poller will no longer override Perforce login ticket handling behavior which fixes random crashes (:issue:`5042`).
+
+Improved Documentation
+----------------------
+
+- The procedures of upgrading to Buildbot 1.x and 2.x have been clarified in separate documents.
+- The layout of the specification of the REST API has been improved.
+- Updated newsfragments README.txt to no longer refer to renamed class :py:class:`~buildbot.reporters.http.HttpStatusBase`
+- The documentation now uses the read-the-docs theme which is more readable.
+
+Features
+--------
+
+- A new www badges style was added: ``badgeio``
+- :py:class:`~buildbot.reporters.http.HttpStatusPushBase` now allows you to skip unicode to bytes encoding while pushing data to server
+- New ``buildbot-worker create-worker --delete-leftover-dirs`` option to automatically remove obsolete builder directories
+
+
 Buildbot ``2.6.0`` ( ``2020-01-21`` )
 =====================================
 
