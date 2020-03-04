@@ -89,7 +89,6 @@ disable=
   maybe-no-member,
   locally-disabled,
   bad-classmethod-argument,
-  line-too-long,
   method-hidden,
   no-name-in-module,
   no-member,
@@ -231,7 +230,7 @@ ignore-imports=no
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=80
+max-line-length=100
 
 # Maximum number of lines in a module
 max-module-lines=1000

@@ -3,8 +3,7 @@
 show-source = yes
 statistics = yes
 count = yes
-# gradually reduce to 100 (previously this warning was disabled)
-max-line-length = 140
+max-line-length = 100
 
 # List of currently ignored PEP8 issues.  Some of them definetely should be
 # enabled in future.
