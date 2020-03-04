@@ -59,7 +59,8 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
     builds = flatten(builds, types=(list, UserList))
     if builds:
         yield getDetailsForBuilds(master, buildset, builds, wantProperties=wantProperties,
-                                  wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
+                                  wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild,
+                                  wantLogs=wantLogs)
 
     return dict(buildset=buildset, builds=builds)
 

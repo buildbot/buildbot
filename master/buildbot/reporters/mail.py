@@ -104,7 +104,8 @@ class MailNotifier(NotifierBase):
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,
             schedulers=schedulers, branches=branches,
-            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
+            watchedWorkers=watchedWorkers,
+            messageFormatterMissingWorker=messageFormatterMissingWorker)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -146,7 +147,8 @@ class MailNotifier(NotifierBase):
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,
             schedulers=schedulers, branches=branches,
-            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
+            watchedWorkers=watchedWorkers,
+            messageFormatterMissingWorker=messageFormatterMissingWorker)
         if extraRecipients is None:
             extraRecipients = []
         self.extraRecipients = extraRecipients

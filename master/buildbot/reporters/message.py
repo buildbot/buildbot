@@ -184,7 +184,8 @@ class MessageFormatter(MessageFormatterBase):
         return text
 
     @defer.inlineCallbacks
-    def formatMessageForBuildResults(self, mode, buildername, buildset, build, master, previous_results, blamelist):
+    def formatMessageForBuildResults(self, mode, buildername, buildset, build, master,
+                                     previous_results, blamelist):
         """Generate a buildbot mail message and return a dictionary
            containing the message body, type and subject."""
         ss_list = buildset['sourcestamps']

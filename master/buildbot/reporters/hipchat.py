@@ -94,7 +94,8 @@ class HipChatStatusPush(HttpStatusPushBase):
             urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
 
         for url in urls:
-            response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
+            response = yield self._http.post(url, params=dict(auth_token=self.auth_token),
+                                             json=postData)
             if response.code != 200:
                 content = yield response.content()
                 log.error("{code}: unable to upload status: {content}",
