@@ -32,7 +32,10 @@ class KubeClientService(fakehttpclientservice.HTTPClientService):
     def createPod(self, namespace, spec):
         if 'metadata' not in spec:
             raise KubeError({
-                'message': 'Pod "" is invalid: metadata.name: Required value: name or generateName is required'})
+                'message':
+                    'Pod "" is invalid: metadata.name: '
+                    'Required value: name or generateName is required'
+            })
         name = spec['metadata']['name']
         pod = {
             'kind': 'Pod',
