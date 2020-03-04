@@ -91,7 +91,8 @@ class FieldBase:
         return (d for d in data if f(d[fld], v))
 
     def __repr__(self):
-        return "resultspec.{}('{}','{}',{})".format(self.__class__.__name__, self.field, self.op, self.values)
+        return "resultspec.{}('{}','{}',{})".format(self.__class__.__name__, self.field, self.op,
+                                                    self.values)
 
     def __eq__(self, b):
         for i in self.__slots__:
@@ -314,7 +315,8 @@ class ResultSpec:
         # we cannot limit in sql if there is missing filtering or ordering
         if unmatched_filters or unmatched_order:
             if self.offset is not None or self.limit is not None:
-                log.msg("Warning: limited data api query is not backed by db because of following filters",
+                log.msg("Warning: limited data api query is not backed by db "
+                        "because of following filters",
                         unmatched_filters, unmatched_order)
             self.filters = unmatched_filters
             self.order = tuple(unmatched_order)
