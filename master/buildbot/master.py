@@ -362,9 +362,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         # notify every 10 seconds that the reconfig is still going on, although
         # reconfigs should not take that long!
-        self.reconfig_notifier = task.LoopingCall(lambda:
-                                                  log.msg("reconfig is ongoing for %d s" %
-                                                          (self.reactor.seconds() - self.reconfig_active)))
+        self.reconfig_notifier = task.LoopingCall(
+            lambda: log.msg("reconfig is ongoing for {} s".format(self.reactor.seconds() -
+                                                                  self.reconfig_active)))
         self.reconfig_notifier.start(10, now=False)
 
         timer = metrics.Timer("BuildMaster.reconfig")

@@ -129,7 +129,8 @@ class Dispatcher(service.AsyncService):
         self.port = None
 
     def __repr__(self):
-        return "<pbmanager.Dispatcher for {} on {}>".format(", ".join(list(self.users)), self.portstr)
+        return "<pbmanager.Dispatcher for {} on {}>".format(", ".join(list(self.users)),
+                                                            self.portstr)
 
     def startService(self):
         assert not self.port

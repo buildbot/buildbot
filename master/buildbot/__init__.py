@@ -26,10 +26,11 @@ from subprocess import Popen
 
 def gitDescribeToPep440(version):
     # git describe produce version in the form: v0.9.8-20-gf0f45ca
-    # where 20 is the number of commit since last release, and gf0f45ca is the short commit id preceded by 'g'
-    # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit and add dev before 20)
+    # where 20 is the number of commit since last release, and gf0f45ca is the short commit id
+    # preceded by 'g' we parse this a transform into a pep440 release version 0.9.9.dev20
+    # (increment last digit and add dev before 20)
 
-    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
+    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')  # noqa pylint: disable=line-too-long
     v = VERSION_MATCH.search(version)
     if v:
         major = int(v.group('major'))
@@ -119,8 +120,8 @@ def getVersion(init_file):
         pass
 
     try:
-        # if we really can't find the version, we use the date of modification of the most recent file
-        # docker hub builds cannot use git describe
+        # if we really can't find the version, we use the date of modification of the most recent
+        # file docker hub builds cannot use git describe
         return mTimeVersion(init_file)
     except Exception:
         # bummer. lets report something
