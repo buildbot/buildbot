@@ -83,7 +83,8 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.assertEqual(step._cvsEntriesContainStickyDates(
             '/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'), True)
         self.assertEqual(step._cvsEntriesContainStickyDates(
-            '/file1/1.1/Fri May 17 23:20:00//\n/file2/1.1.2.3/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'), True)
+            '/file1/1.1/Fri May 17 23:20:00//\n'
+            '/file2/1.1.2.3/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'), True)
 
     def test_mode_full_clean_and_login(self):
         self.setupStep(

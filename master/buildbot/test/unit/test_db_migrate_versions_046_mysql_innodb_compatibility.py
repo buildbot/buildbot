@@ -125,58 +125,76 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                                           expected_msg)
 
     def test_invalid_author_in_changes(self):
+        msg_lines = [
+            "",
+            "- 'changes' table has invalid data:",
+            "    changes.change=1 has author, branch, revision or category longer than 255"
+        ]
         return self.do_invalid_test('changes', dict(changeid=1,
                                                     author="a" * 256,
                                                     branch="a",
                                                     revision="a",
                                                     category="a"),
-                                    "\n".join(["",
-                                               "- 'changes' table has invalid data:",
-                                               "    changes.change=1 has author, branch, revision or category longer than 255"]))
+                                    "\n".join(msg_lines))
 
     def test_invalid_branch_in_changes(self):
+        msg_lines = [
+            "",
+            "- 'changes' table has invalid data:",
+            "    changes.change=1 has author, branch, revision or category longer than 255"
+        ]
         return self.do_invalid_test('changes', dict(changeid=1,
                                                     author="a",
                                                     branch="a" * 256,
                                                     revision="a",
                                                     category="a"),
-                                    "\n".join(["",
-                                               "- 'changes' table has invalid data:",
-                                               "    changes.change=1 has author, branch, revision or category longer than 255"]))
+                                    "\n".join(msg_lines))
 
     def test_invalid_revision_in_changes(self):
+        msg_lines = [
+            "",
+            "- 'changes' table has invalid data:",
+            "    changes.change=1 has author, branch, revision or category longer than 255"
+        ]
         return self.do_invalid_test('changes', dict(changeid=1,
                                                     author="a",
                                                     branch="a",
                                                     revision="a" * 256,
                                                     category="a"),
-                                    "\n".join(["",
-                                               "- 'changes' table has invalid data:",
-                                               "    changes.change=1 has author, branch, revision or category longer than 255"]))
+                                    "\n".join(msg_lines))
 
     def test_invalid_category_in_changes(self):
+        msg_lines = [
+            "",
+            "- 'changes' table has invalid data:",
+            "    changes.change=1 has author, branch, revision or category longer than 255"
+        ]
         return self.do_invalid_test('changes', dict(changeid=1,
                                                     author="a",
                                                     branch="a",
                                                     revision="a",
                                                     category="a" * 256),
-                                    "\n".join(["",
-                                               "- 'changes' table has invalid data:",
-                                               "    changes.change=1 has author, branch, revision or category longer than 255"]))
+                                    "\n".join(msg_lines))
 
     def test_invalid_name_in_object_state(self):
+        msg_lines = [
+            "",
+            "- 'object_state' table has invalid data:",
+            "    object_state.objectid=1 has name longer than 255"
+        ]
         return self.do_invalid_test('object_state', dict(objectid=1,
                                                          name="a" * 256),
-                                    "\n".join(["",
-                                               "- 'object_state' table has invalid data:",
-                                               "    object_state.objectid=1 has name longer than 255"]))
+                                    "\n".join(msg_lines))
 
     def test_invalid_identifier_in_users(self):
+        msg_lines = [
+            "",
+            "- 'users_state' table has invalid data:",
+            "    users.uid=1 has identifier longer than 255"
+        ]
         return self.do_invalid_test('users', dict(uid=1,
                                                   identifier="a" * 256),
-                                    "\n".join(["",
-                                               "- 'users_state' table has invalid data:",
-                                               "    users.uid=1 has identifier longer than 255"]))
+                                    "\n".join(msg_lines))
 
     @defer.inlineCallbacks
     def test_multiple_invalid_values(self):
@@ -197,10 +215,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                                                       branch="a",
                                                       revision="a",
                                                       category="a")])
+        msg_lines = [
+            "",
+            "- 'changes' table has invalid data:",
+            "    changes.change=1 has author, branch, revision or category longer than 255",
+            "    changes.change=2 has author, branch, revision or category longer than 255",
+            "- 'users_state' table has invalid data:",
+            "    users.uid=1 has identifier longer than 255"
+        ]
         yield self.assertExpectedMessage(self.do_test_migration(45, 46, setup_thd, None),
-                                         "\n".join(["",
-                                                    "- 'changes' table has invalid data:",
-                                                    "    changes.change=1 has author, branch, revision or category longer than 255",
-                                                    "    changes.change=2 has author, branch, revision or category longer than 255",
-                                                    "- 'users_state' table has invalid data:",
-                                                    "    users.uid=1 has identifier longer than 255"]))
+                                         "\n".join(msg_lines))

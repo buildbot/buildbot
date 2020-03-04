@@ -117,7 +117,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_getDetailsForBuildsetWithLogs(self):
         self.setupDb()
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
-                                                wantSteps=True, wantPreviousBuild=True, wantLogs=True)
+                                                wantSteps=True, wantPreviousBuild=True,
+                                                wantLogs=True)
 
         build1 = res['builds'][0]
         self.assertEqual(

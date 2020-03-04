@@ -57,15 +57,33 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, b'/')
         res = json.loads(bytes2unicode(res))
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {
-            "name": "NoAuth"}, "user": {"anonymous": True}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
+        exp = {
+            "authz": {},
+            "titleURL": "http://buildbot.net",
+            "versions": vjson,
+            "title": "Buildbot",
+            "auth": {"name": "NoAuth"},
+            "user": {"anonymous": True},
+            "buildbotURL": "h:/a/b/",
+            "multiMaster": False,
+            "port": None
+        }
         self.assertEqual(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, b'/')
         res = json.loads(bytes2unicode(res))
-        exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {"name": "NoAuth"},
-               "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
+        exp = {
+            "authz": {},
+            "titleURL": "http://buildbot.net",
+            "versions": vjson,
+            "title": "Buildbot",
+            "auth": {"name": "NoAuth"},
+            "user": {"email": "me@me.org", "name": "me"},
+            "buildbotURL": "h:/a/b/",
+            "multiMaster": False,
+            "port": None
+        }
         self.assertEqual(res, exp)
 
         master = self.make_master(
@@ -73,8 +91,17 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, b'/')
         res = json.loads(bytes2unicode(res))
-        exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {
-            "name": "NoAuth"}, "user": {"anonymous": True}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
+        exp = {
+            "authz": {},
+            "titleURL": "http://buildbot.net",
+            "versions": vjson,
+            "title": "Buildbot",
+            "auth": {"name": "NoAuth"},
+            "user": {"anonymous": True},
+            "buildbotURL": "h:/a/b/",
+            "multiMaster": False,
+            "port": None
+        }
         self.assertEqual(res, exp)
 
     def test_parseCustomTemplateDir(self):

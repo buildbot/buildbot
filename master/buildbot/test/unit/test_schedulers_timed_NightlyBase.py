@@ -264,8 +264,10 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin,
                                              )
 
     def test_getNextBuildTime_dayOfWeek_multiple_hours(self):
+        # Tuesday, Thursday (2011-1-1 was a Saturday)
         sched = self.makeScheduler(name='test', builderNames=['test'],
-                                   dayOfWeek=[1, 3], hour=1)  # Tuesday, Thursday (2011-1-1 was a Saturday)
+                                   dayOfWeek=[1, 3], hour=1)
+
         return self.do_getNextBuildTime_test(sched,
                                              ((2011, 1, 3, 22, 19),
                                               (2011, 1, 4, 1, 0)),

@@ -187,7 +187,8 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             results_dict = {}
         if self.step.waitForFinish:
             for i in [11, 22, 33, 44]:
-                yield self.master.db.builds.finishBuild(BRID_TO_BID(i), results_dict.get(i, SUCCESS))
+                yield self.master.db.builds.finishBuild(BRID_TO_BID(i),
+                                                        results_dict.get(i, SUCCESS))
         d = super().runStep()
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;

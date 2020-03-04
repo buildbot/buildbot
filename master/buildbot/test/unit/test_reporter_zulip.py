@@ -30,7 +30,8 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, ConfigErrorsMixin, TestReactorMixin):
+class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, ConfigErrorsMixin,
+                          TestReactorMixin):
 
     def setUp(self):
         self.setUpTestReactor()
@@ -184,7 +185,8 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "url": "http://localhost:8080/#builders/79/builds/0",
                 "project": "testProject",
                 "timestamp": 1554161923
-            }, code=401, content_json={"result": "error", "msg": "Invalid API key", "code": "INVALID_API_KEY"})
+            }, code=401, content_json={"result": "error", "msg": "Invalid API key",
+                                       "code": "INVALID_API_KEY"})
         self.setUpLogging()
         self.sp.buildStarted(("build", 20, "new"), build)
         self.assertLogged('401: Error pushing build status to Zulip')

@@ -143,7 +143,8 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     def test_get_commit_comments(self):
         comments = ['this is a commit message\n\nthat is multiline',
                     'single line message', '']
-        return defer.DeferredList([self._test_get_commit_comments(commentStr) for commentStr in comments])
+        return defer.DeferredList([self._test_get_commit_comments(commentStr)
+                                  for commentStr in comments])
 
     def test_get_commit_files(self):
         filesBytes = b'\n\nfile1\nfile2\n"\146ile_octal"\nfile space'

@@ -650,7 +650,8 @@ class RealTests(Tests):
 
         codebase_ss = {}  # shared state between addChange and addBuild
 
-        def addChange(codebase, revision, author, committer, comments, branch='master', category='cat', project='proj', repository='repo'):
+        def addChange(codebase, revision, author, committer, comments, branch='master',
+                      category='cat', project='proj', repository='repo'):
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
             parent_changeids = codebase_ss.get(codebase, None)

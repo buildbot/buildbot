@@ -416,8 +416,12 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         yield sched.activate()
 
-        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True)
-        yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True)
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A',
+                                        number=0),
+                              True)
+        yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B',
+                                        number=1),
+                              True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
             'a': dict(branch='master', repository='A', revision='1234:abc', lastChange=0),
@@ -443,7 +447,9 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         # this change is not recorded, since it's older than
         # change 20
-        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=10), True)
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A',
+                                        number=10),
+                              True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
             'a': dict(branch='master', repository='A', revision='5555:def', lastChange=20)})

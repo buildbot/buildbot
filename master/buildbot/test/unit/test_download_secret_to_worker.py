@@ -94,7 +94,8 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
 
     def testBasic(self):
         self.setupStep(RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA"), "something"),
-                                               (os.path.join(self.temp_path, "pathB"), "somethingmore")]),
+                                               (os.path.join(self.temp_path, "pathB"),
+                                                "somethingmore")]),
                        worker_version={'*': '3.0'})
 
         args1 = {

@@ -2005,7 +2005,8 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
         )
         self.expectOutcome(result=SUCCESS, state_string="update")
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d',
+                            self.sourceName)
         return self.runStep()
 
     def test_mode_full_fresh_submodule_git_newer_1_7_6(self):
@@ -3143,8 +3144,9 @@ class TestGit(sourcesteps.SourceStepMixin,
         if codebase:
             self.expectOutcome(result=SUCCESS,
                                state_string="update " + codebase)
-            self.expectProperty(
-                'got_revision', {codebase: 'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, self.sourceName)
+            self.expectProperty('got_revision',
+                                {codebase: 'f6ad368298bd941e934a41f3babc827b2aa95a1d'},
+                                self.sourceName)
             self.expectProperty(
                 'commit-description', {codebase: 'Tag-1234'}, self.sourceName)
         else:

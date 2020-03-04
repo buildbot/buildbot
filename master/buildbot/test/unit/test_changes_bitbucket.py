@@ -109,7 +109,7 @@ class PullRequestRest():
     "id": %(id)d
 
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 
     def __init__(self, nr, title, description, display_name, source, created_on, updated_on=None):
         self.nr = nr
@@ -181,7 +181,7 @@ class PullRequestListRest():
             "merge_commit": null,
             "id": %(id)s
         }
-"""
+"""  # noqa pylint: disable=line-too-long
 
     def __init__(self, owner, slug, prs):
         self.owner = owner
@@ -232,7 +232,7 @@ class PullRequestListRest():
             r"https://bitbucket.org/!api/2.0/repositories/{}/{}/pullrequests/(?P<id>\d+)".format(
                     self.owner, self.slug))
         source_commit_url_re = re.compile(
-            r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")
+            r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")  # noqa pylint: disable=line-too-long
         source_url_re = re.compile(
             r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)")
 
@@ -449,7 +449,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'branch': 'default',
                 'category': None,
                 'codebase': None,
-                'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'comments':
+                    'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
                 'project': '',
                 'properties': {},
@@ -465,7 +466,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'branch': 'default',
                 'category': None,
                 'codebase': None,
-                'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'comments':
+                    'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
                 'project': '',
                 'properties': {},

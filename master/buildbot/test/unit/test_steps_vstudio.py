@@ -46,7 +46,7 @@ real_log = r"""
 2>Build log was saved at "file://c:\another\similar\path\to\debug\BuildLog.htm"
 2>product - 1 error(s), 0 warning(s)
 ========== Build: 1 succeeded, 1 failed, 6 up-to-date, 0 skipped ==========
-"""
+"""  # noqa pylint: disable=line-too-long
 
 
 class TestAddEnvPath(unittest.TestCase):
@@ -173,16 +173,16 @@ class MSLogLineObserver(unittest.TestCase):
             ('o',
              '2>------ Build started: Project: product, Configuration: debug Win32 ------'),
             ('e',
-             '2>LINK : fatal error LNK1168: cannot open ../../debug/directory/dllname.dll for writing')
+             '2>LINK : fatal error LNK1168: cannot open ../../debug/directory/dllname.dll for writing')  # noqa pylint: disable=line-too-long
         ]
         warnings = [
             '1>------ Build started: Project: lib1, Configuration: debug Win32 ------',
-            "1>c:\\absolute\\path\\to\\systemlog.cpp(7) : warning C4100: 'op' : unreferenced formal parameter",
-            "1>c:\\absolute\\path\\to\\systemlog.cpp(12) : warning C4100: 'statusword' : unreferenced formal parameter",
-            "1>c:\\absolute\\path\\to\\systemlog.cpp(12) : warning C4100: 'op' : unreferenced formal parameter",
-            "1>c:\\absolute\\path\\to\\systemlog.cpp(17) : warning C4100: 'retryCounter' : unreferenced formal parameter",
-            "1>c:\\absolute\\path\\to\\systemlog.cpp(17) : warning C4100: 'op' : unreferenced formal parameter",
-            "1>c:\\absolute\\path\\to\\systemlog.cpp(22) : warning C4100: 'op' : unreferenced formal parameter",
+            "1>c:\\absolute\\path\\to\\systemlog.cpp(7) : warning C4100: 'op' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
+            "1>c:\\absolute\\path\\to\\systemlog.cpp(12) : warning C4100: 'statusword' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
+            "1>c:\\absolute\\path\\to\\systemlog.cpp(12) : warning C4100: 'op' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
+            "1>c:\\absolute\\path\\to\\systemlog.cpp(17) : warning C4100: 'retryCounter' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
+            "1>c:\\absolute\\path\\to\\systemlog.cpp(17) : warning C4100: 'op' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
+            "1>c:\\absolute\\path\\to\\systemlog.cpp(22) : warning C4100: 'op' : unreferenced formal parameter",  # noqa pylint: disable=line-too-long
             '2>------ Build started: Project: product, Configuration: debug Win32 ------',
         ]
         self.assertResult(nbFiles=1, nbErrors=1, nbProjects=2, nbWarnings=6,
@@ -809,7 +809,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',
+                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             + 0
         )
@@ -823,7 +823,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',
+                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
             + 0
         )

@@ -274,7 +274,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupNotifier(**mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                                         "type": "text",
                                                                          "subject": "subject"}
         yield mn.buildMessage("mybldr", builds, SUCCESS)
         return (mn, builds)
