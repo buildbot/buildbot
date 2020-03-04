@@ -162,8 +162,8 @@ class Build(properties.PropertiesMixin):
                                                         statusToString(self.results))
 
     def blamelist(self):
-        # Note that this algorithm is also implemented in buildbot.reporters.utils.getResponsibleUsersForBuild,
-        # but using the data api.
+        # Note that this algorithm is also implemented in
+        # buildbot.reporters.utils.getResponsibleUsersForBuild, but using the data api.
         # it is important for the UI to have the blamelist easily available.
         # The best way is to make sure the owners property is set to full blamelist
         blamelist = []
@@ -310,7 +310,8 @@ class Build(properties.PropertiesMixin):
                                                                       str(self.buildid),
                                                                       "stop"))
 
-        # the preparation step counts the time needed for preparing the worker and getting the locks.
+        # the preparation step counts the time needed for preparing the worker and getting the
+        # locks.
         # we cannot use a real step as we don't have a worker yet.
         self.preparation_step = buildstep.BuildStep(name="worker_preparation")
         self.preparation_step.setBuild(self)
@@ -353,7 +354,8 @@ class Build(properties.PropertiesMixin):
             yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
             if self.stopped:
                 self.buildFinished(["worker", "cancelled"], self.results)
-            elif isinstance(ready_or_failure, Failure) and ready_or_failure.check(interfaces.LatentWorkerCannotSubstantiate):
+            elif isinstance(ready_or_failure, Failure) and \
+                    ready_or_failure.check(interfaces.LatentWorkerCannotSubstantiate):
                 self.buildFinished(["worker", "cannot", "substantiate"], EXCEPTION)
             else:
                 self.buildFinished(["worker", "not", "available"], RETRY)
