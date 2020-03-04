@@ -95,8 +95,8 @@ class ReconfigurablePollingChangeSource(ChangeSource):
 
 class PollingChangeSource(ReconfigurablePollingChangeSource):
     # Legacy code will be very painful to port to BuildbotService life cycle
-    # because the unit tests keep doing shortcuts for the Service life cycle (i.e by no calling startService)
-    # instead of porting everything at once, we make a class to support legacy
+    # because the unit tests keep doing shortcuts for the Service life cycle (i.e by no calling
+    # startService) instead of porting everything at once, we make a class to support legacy
 
     def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False, **kwargs):
         super().checkConfig(name=name, pollInterval=60 * 10, pollAtLaunch=False)

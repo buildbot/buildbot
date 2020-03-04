@@ -266,7 +266,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
     def _getRevNodeList(self, revset):
         revListArgs = ['log', '-r', revset, r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                                               path=self._absWorkdir(), env=os.environ, errortoo=False)
+                                               path=self._absWorkdir(), env=os.environ,
+                                               errortoo=False)
         results = results.decode(self.encoding)
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
@@ -289,7 +290,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         # revsets are inclusive. Strip the already-known "current" changeset.
         if not revNodeList:
             # empty revNodeList probably means the branch has changed head (strip of force push?)
-            # in that case, we should still produce a change for that new rev (but we can't know how many parents were pushed)
+            # in that case, we should still produce a change for that new rev (but we can't know
+            # how many parents were pushed)
             revNodeList = yield self._getRevNodeList(new_rev)
         else:
             del revNodeList[0]

@@ -169,7 +169,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         ]))
         my_json = yield result.json()
 
-        return [[c["commit"]["committer"]["name"], c["commit"]["committer"]["email"]] for c in my_json]
+        return [[c["commit"]["committer"]["name"],
+                 c["commit"]["committer"]["email"]] for c in my_json]
 
     @defer.inlineCallbacks
     def _getAuthors(self, prnumber):
@@ -240,8 +241,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 commits = pr['commits']
 
                 dl = defer.DeferredList(
-                    [self._getAuthors(prnumber), self._getCommitters(prnumber), self._getFiles(prnumber)],
-                    consumeErrors=True)
+                     [self._getAuthors(prnumber), self._getCommitters(prnumber),
+                      self._getFiles(prnumber)],
+                     consumeErrors=True)
 
                 results = yield dl
                 failures = [r[1] for r in results if not r[0]]

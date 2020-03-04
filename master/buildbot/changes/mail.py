@@ -227,10 +227,10 @@ class CVSMaildirSource(MaildirSource):
                 return
             fileList = fileList[len(path):].strip()
             singleFileRE = re.compile(
-                r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+                r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
         elif cvsmode == '1.12':
             singleFileRE = re.compile(
-                r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+                r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
             if path is None:
                 raise ValueError(
                     'CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
@@ -483,7 +483,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             # datetime.strptime() is supposed to support %z for time zone, but
             # it does not seem to work. So handle the time zone manually.
             match = re.search(
-                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)
+                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)  # noqa pylint: disable=line-too-long
             if match:
                 datestr = match.group(1)
                 tz_sign = match.group(2)
