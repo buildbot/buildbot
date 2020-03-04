@@ -16,7 +16,8 @@
 """
 This modules acts the same as twisted.internet.ssl except it does not raise ImportError
 
-Modules using this should call ensureHasSSL in order to make sure that the user installed buildbot[tls]
+Modules using this should call ensureHasSSL in order to make sure that the user installed
+buildbot[tls]
 """
 
 import unittest
@@ -34,8 +35,8 @@ except ImportError as e:
 
 def ensureHasSSL(module):
     if not has_ssl:
-        error("TLS dependencies required for {} are not installed : {}\n pip install 'buildbot[tls]'".format(
-            module, ssl_import_error))
+        error(("TLS dependencies required for {} are not installed : "
+               "{}\n pip install 'buildbot[tls]'").format(module, ssl_import_error))
 
 
 def skipUnless(f):

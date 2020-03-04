@@ -146,8 +146,8 @@ class RealDatabaseMixin:
 
             # Drop all reflected tables and indices. May fail, e.g. if
             # SQLAlchemy wouldn't be able to break circular references.
-            # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during that
-            # operation, even though we made our possible to use use_alter
+            # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during
+            # that operation, even though we made our possible to use use_alter
             with withoutSqliteForeignKeys(conn.engine, conn):
                 meta.drop_all()
 

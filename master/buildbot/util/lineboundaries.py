@@ -45,8 +45,9 @@ class LineBoundaryFinder:
             if len(self.partialLine) > self.MAX_LINELENGTH:
                 if not self.warned:
                     # Unfortunately we cannot give more hint as per which log that is
-                    log.warn("Splitting long line: {line_start} {length} (not warning anymore for this log)",
-                             line_start=self.partialLine[:30], length=len(self.partialLine))
+                    log.warn("Splitting long line: {line_start} {length} "
+                             "(not warning anymore for this log)", line_start=self.partialLine[:30],
+                             length=len(self.partialLine))
                     self.warned = True
                 # switch the variables, and return previous _partialLine_,
                 # split every MAX_LINELENGTH plus a trailing \n

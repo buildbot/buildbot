@@ -478,8 +478,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 child = old_by_name[n]
                 # disownServiceParent calls stopService after removing the relationship
                 # as child might use self.master.data to stop itself, its better to stop it first
-                # (this is related to the fact that self.master is found by recursively looking at self.parent
-                # for a master)
+                # (this is related to the fact that self.master is found by recursively looking at
+                # self.parent for a master)
                 yield child.stopService()
                 # it has already called, so do not call it again
                 child.stopService = lambda: None
