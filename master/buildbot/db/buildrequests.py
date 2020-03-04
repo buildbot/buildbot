@@ -128,7 +128,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             res = conn.execute(q)
 
-            return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid) for row in res.fetchall()])
+            return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid)
+                                      for row in res.fetchall()])
         res = yield self.db.pool.do(thd)
         return res
 
