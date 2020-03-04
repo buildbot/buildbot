@@ -589,7 +589,8 @@ def oneCodebase(**kw):
 
 
 class PatchParameter(NestedParameter):
-    """A patch parameter contains pre-configure UI for all the needed components for a sourcestamp patch
+    """A patch parameter contains pre-configure UI for all the needed components for a
+       sourcestamp patch
     """
     columns = 1
 
