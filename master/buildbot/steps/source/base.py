@@ -222,17 +222,22 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         if len(patch) >= 3:
             root = patch[2]
 
-        if (root and
-            self.build.path_module.abspath(self.build.path_module.join(self.workdir, root)
-                                           ).startswith(self.build.path_module.abspath(self.workdir))):
-            self.workdir = self.build.path_module.join(self.workdir, root)
+        if root:
+            workdir_root = self.build.path_module.join(self.workdir, root)
+            workdir_root_abspath = self.build.path_module.abspath(workdir_root)
+            workdir_abspath = self.build.path_module.abspath(self.workdir)
+
+            if workdir_root_abspath.startswith(workdir_abspath):
+                self.workdir = workdir_root
 
         d = self.downloadFileContentToWorker('.buildbot-diff', diff)
         d.addCallback(
             lambda _: self.downloadFileContentToWorker('.buildbot-patched', 'patched\n'))
         d.addCallback(lambda _: self.applyPatch(patch))
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
-                                                    'logEnviron': self.logEnviron})
+        cmd = remotecommand.RemoteCommand('rmdir',
+                                          {'dir': self.build.path_module.join(self.workdir,
+                                                                              ".buildbot-diff"),
+                                           'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d.addCallback(lambda _: self.runCommand(cmd))
 

@@ -98,7 +98,8 @@ class Mock(ShellCommand):
         self.addLogObserver('state.log', MockStateObserver())
 
         cmd = remotecommand.RemoteCommand('rmdir', {'dir':
-                                                    [self.build.path_module.join('build', self.logfiles[l])
+                                                    [self.build.path_module.join('build',
+                                                                                 self.logfiles[l])
                                                      for l in self.mock_logfiles]})
         d = self.runCommand(cmd)
         # must resolve super() outside of the callback context.

@@ -105,7 +105,8 @@ class Git(Source, GitStepMixin):
                 bbconfig.error("Git: mode must be {}".format(
                         ' or '.join(self._listAttrGroupMembers('mode'))))
             if isinstance(self.method, str):
-                if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
+                if self.mode == 'full' and \
+                        self.method not in ['clean', 'fresh', 'clobber', 'copy', None]:
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
                     bbconfig.error(

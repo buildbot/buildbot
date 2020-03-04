@@ -504,7 +504,8 @@ class MsBuild141(VisualStudio):
     def setupEnvironment(self, cmd):
         super().setupEnvironment(cmd)
         cmd.args['env']['VCENV_BAT'] = self.vcenv_bat
-        addEnvPath(cmd.args['env'], "PATH", 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
+        addEnvPath(cmd.args['env'], "PATH",
+                   'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
         addEnvPath(cmd.args['env'], "PATH", r'${PATH}')
 
     def describe(self, done=False):

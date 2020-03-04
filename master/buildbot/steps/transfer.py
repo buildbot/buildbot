@@ -384,8 +384,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         @defer.inlineCallbacks
         def globSources(sources):
             results = yield defer.gatherResults([
-                self.runGlob(
-                    os.path.join(self.workdir, source), abandonOnFailure=False) for source in sources
+                self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
+                for source in sources
             ])
             results = [self.workerPathToMasterPath(p) for p in flatten(results)]
             return results
