@@ -64,7 +64,8 @@ if runtime.platformType == 'win32':  # pragma: no cover
         os.chmod(dir, 0o700)
 
         # os.listdir below only returns a list of unicode filenames if the parameter is unicode
-        # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get garbled.
+        # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get
+        # garbled.
         # So force dir to be unicode.
         if not isinstance(dir, text_type):
             try:

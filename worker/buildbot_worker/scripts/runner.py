@@ -174,8 +174,9 @@ class CreateWorkerOptions(MakerBase):
             try:
                 master, port = master_arg.split(":")
             except ValueError:
-                raise usage.UsageError("invalid <master> argument '{}', "
-                                       "if it is an ipv6 address, it must be enclosed by []".format(master_arg))
+                raise usage.UsageError(("invalid <master> argument '{}', "
+                                        "if it is an ipv6 address, it must be enclosed by []"
+                                        ).format(master_arg))
 
         if not master:
             raise usage.UsageError("invalid <master> argument '{}'".format(

@@ -302,7 +302,11 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
         yield self.run_command()
         if sys.version_info[:] >= (3, 5):
-            filename = 'test\\testdir\\test.txt' if sys.platform == 'win32' else 'test/testdir/test.txt'
+            if sys.platform == 'win32':
+                filename = 'test\\testdir\\test.txt'
+            else:
+                filename = 'test/testdir/test.txt'
+
             self.assertEqual(
                 self.get_updates()[0]['files'], [os.path.join(self.basedir, filename)])
         else:

@@ -518,9 +518,11 @@ def ConfigureLogOnAsAServicePolicy(accountName):
             privileges = []
 
         if SE_SERVICE_LOGON_RIGHT in privileges:
-            print("Account {}({}) has granted {} privilege.".format(accountName, sid, SE_SERVICE_LOGON_RIGHT))
+            print("Account {}({}) has granted {} privilege.".format(accountName, sid,
+                                                                    SE_SERVICE_LOGON_RIGHT))
         else:
-            print("error: Account {}({}) does not have {} privilege.".format(accountName, sid, SE_SERVICE_LOGON_RIGHT))
+            print(("error: Account {}({}) does not have {} privilege."
+                   ).format(accountName, sid, SE_SERVICE_LOGON_RIGHT))
 
 
 # A custom install function.
