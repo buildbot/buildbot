@@ -171,9 +171,8 @@ class IRCContact(Contact):
             argv = self.splitArgs(args)
             if argv and argv[0] in ('on', 'off') and \
                     (yield self.op_required('notify')):
-                yield self.send("Only channel operators can change notified events for this channel. "
-                                "And you, {}, are neither!"
-                                .format(self.user_id))
+                yield self.send(("Only channel operators can change notified events for this "
+                                 "channel. And you, {}, are neither!").format(self.user_id))
                 return
         super().command_NOTIFY(args, **kwargs)
 

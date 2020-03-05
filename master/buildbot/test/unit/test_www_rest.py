@@ -546,9 +546,12 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
         self.maxDiff = None
         yield self.render_resource(self.rsrc, b'/test/0')
         self.assertRequest(
-            contentJson={'error': "not found while getting from endpoint for /test/n:testid with arguments"
-                                  " ResultSpec(**{'filters': [], 'fields': None, 'properties': [], "
-                                  "'order': None, 'limit': None, 'offset': None}) and {'testid': 0}"},
+            contentJson={'error': "not found while getting from endpoint for "
+                                  "/test/n:testid with arguments"
+                                  " ResultSpec(**{'filters': [], 'fields': None, "
+                                  "'properties': [], "
+                                  "'order': None, 'limit': None, 'offset': None}) "
+                                  "and {'testid': 0}"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=404)
 

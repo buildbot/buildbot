@@ -212,7 +212,8 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
                                   name='somebuilder', description=None, tags=[]),
                          ]))
         self.master.mq.assertProductions([(('builders', '1', 'started'),
-                                           {'builderid': 1, 'masterid': 13, 'name': 'somebuilder'})])
+                                           {'builderid': 1, 'masterid': 13,
+                                            'name': 'somebuilder'})])
 
         # add another
         yield self.rtype.updateBuilderList(13, ['somebuilder', 'another'])

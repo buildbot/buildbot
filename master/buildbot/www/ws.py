@@ -35,7 +35,8 @@ class WsProtocol(WebSocketServerProtocol):
         self.debug = self.master.config.www.get('debug', False)
 
     def sendJsonMessage(self, **msg):
-        return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson, separators=(',', ':'))))
+        return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson,
+                                                         separators=(',', ':'))))
 
     def onMessage(self, frame, isBinary):
         if self.debug:

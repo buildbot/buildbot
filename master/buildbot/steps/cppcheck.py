@@ -64,7 +64,8 @@ class Cppcheck(ShellCommand):
             summaries[m] = []
 
     def logConsumer(self):
-        line_re = re.compile(r'(?:\[.+\]: )?\((?P<severity>{})\) .+'.format('|'.join(self.MESSAGES)))
+        line_re = re.compile(
+                r'(?:\[.+\]: )?\((?P<severity>{})\) .+'.format('|'.join(self.MESSAGES)))
 
         while True:
             stream, line = yield

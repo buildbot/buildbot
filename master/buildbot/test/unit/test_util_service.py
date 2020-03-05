@@ -728,7 +728,8 @@ class BuildbotServiceManager(unittest.TestCase):
     def testRenderSecrets2Args(self):
         yield self.prepareService()
         service = self.manager.namedServices['basic']
-        test, test2 = yield service.renderSecrets(Interpolate('test_string'), 'ok_for_non_renderable')
+        test, test2 = yield service.renderSecrets(Interpolate('test_string'),
+                                                  'ok_for_non_renderable')
         self.assertEqual(test, 'test_string')
         self.assertEqual(test2, 'ok_for_non_renderable')
 

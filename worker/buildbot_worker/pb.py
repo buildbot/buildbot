@@ -285,7 +285,8 @@ class Worker(WorkerBase, service.MultiService):
         def _shutdownfailed(err):
             if err.check(AttributeError):
                 log.msg(
-                    "Master does not support worker initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+                    "Master does not support worker initiated shutdown.  Upgrade master to 0.8.3"
+                    "or later to use this feature.")
             else:
                 log.msg('callRemote("shutdown") failed')
                 log.err(err)

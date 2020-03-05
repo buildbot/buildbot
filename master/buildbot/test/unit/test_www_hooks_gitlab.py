@@ -28,7 +28,7 @@ from buildbot.www import change_hook
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
-# Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
+# Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html  # noqa pylint: disable=line-too-long
 # Added "modified" and "removed", and change email
 gitJsonPayload = b"""
 {
@@ -227,7 +227,7 @@ gitJsonPayloadMR_open = b"""
       "username" : "mmusterman"
    }
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 gitJsonPayloadMR_editdesc = b"""
 {
    "event_type" : "merge_request",
@@ -337,7 +337,7 @@ gitJsonPayloadMR_editdesc = b"""
       "username" : "mmusterman"
    }
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 gitJsonPayloadMR_addcommit = b"""
 {
    "event_type" : "merge_request",
@@ -448,7 +448,7 @@ gitJsonPayloadMR_addcommit = b"""
       "username" : "mmusterman"
    }
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 gitJsonPayloadMR_close = b"""
 {
    "event_type" : "merge_request",
@@ -558,7 +558,7 @@ gitJsonPayloadMR_close = b"""
       "username" : "mmusterman"
    }
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 gitJsonPayloadMR_reopen = b"""
 {
    "event_type" : "merge_request",
@@ -668,7 +668,7 @@ gitJsonPayloadMR_reopen = b"""
       "username" : "mmusterman"
    }
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 
 # == Merge requests from a fork of the project
 # (Captured more accurately than above test data)
@@ -794,7 +794,7 @@ gitJsonPayloadMR_open_forked = b"""
       "username" : "mmusterman"
    }
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 
 
 def FakeRequestMR(content):
@@ -825,7 +825,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
         )
         self.assertEqual(change["branch"], "v1.0.0")
 
-    def check_changes_mr_event(self, r, project='awesome_project', codebase=None, timestamp=1526309644, source_repo=None):
+    def check_changes_mr_event(self, r, project='awesome_project', codebase=None,
+                               timestamp=1526309644, source_repo=None):
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
 
@@ -863,8 +864,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
         self.assertEqual(
             change["comments"], "Update Catalan translation to e38cb41.")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change[
-            "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
+        self.assertEqual(change["revlink"],
+            "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
         change = self.changeHook.master.data.updates.changesAdded[1]
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
@@ -879,8 +880,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
             change["revision"], 'da1560886d4f094c3e6c9ef40349f7d38b5d27d7')
         self.assertEqual(change["comments"], "fixed readme")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change[
-            "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
+        self.assertEqual(change["revlink"],
+            "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 
         # FIXME: should we convert project name to canonical case?
         # Or should change filter be case insensitive?

@@ -92,7 +92,8 @@ class DockerBaseWorker(AbstractLatentWorker):
         return super().reconfigService(name, password, **kwargs)
 
     def getContainerName(self):
-        return ('buildbot-{worker}-{hash}'.format(worker=self.workername, hash=self.masterhash)).replace("_", "-")
+        return ('buildbot-{worker}-{hash}'.format(worker=self.workername,
+                                                  hash=self.masterhash)).replace("_", "-")
 
     @property
     def shortid(self):

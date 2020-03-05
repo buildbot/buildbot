@@ -664,9 +664,11 @@ class DevProxyOptions(base.BasedirMixin, base.SubcommandOptions):
         ["port", "p", 8011,
          "http port to use"],
         ["plugins", None, None,
-         "plugin config to use. As json string e.g: --plugins='{\"custom_plugin\": {\"option1\": true}}'"],
+         "plugin config to use. As json string e.g: "
+         "--plugins='{\"custom_plugin\": {\"option1\": true}}'"],
         ["auth_cookie", None, None,
-         "TWISTED_SESSION cookie to be used for auth (taken in developer console: in document.cookie variable)"],
+         "TWISTED_SESSION cookie to be used for auth "
+         "(taken in developer console: in document.cookie variable)"],
         ["buildbot_url", "b", "https://buildbot.buildbot.net",
          "real buildbot url to proxy to (can be http or https)"]
     ]

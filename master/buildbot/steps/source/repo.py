@@ -50,8 +50,9 @@ class RepoDownloadsFromProperties(util.ComparableMixin):
     def parseDownloadProperty(self, s):
         """
          lets try to be nice in the format we want
-         can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
-         or several instances of "proj number/patch" (simpler version)
+         can support several instances of "repo download proj number/patch"
+         (direct copy paste from gerrit web site) or several instances of "proj number/patch"
+         (simpler version)
          This feature allows integrator to build with several pending interdependent changes.
          returns list of repo downloads sent to the worker
          """
@@ -247,8 +248,8 @@ class Repo(Source):
         self.filterManifestPatches()
 
         if self.repoDownloads:
-            self.stdio_log.addHeader(
-                "will download:\n" + "repo download " + "\nrepo download ".join(self.repoDownloads) + "\n")
+            self.stdio_log.addHeader("will download:\nrepo download {}\n".format(
+                    "\nrepo download ".join(self.repoDownloads)))
 
         self.willRetryInCaseOfFailure = True
 
@@ -294,8 +295,9 @@ class Repo(Source):
         if self.manifestOverrideUrl:
             self.stdio_log.addHeader(("overriding manifest with {}\n"
                                       ).format(self.manifestOverrideUrl))
-            local_file = yield self.pathExists(self.build.path_module.join(self.workdir,
-                                                                           self.manifestOverrideUrl))
+
+            local_path = self.build.path_module.join(self.workdir, self.manifestOverrideUrl)
+            local_file = yield self.pathExists(local_path)
             if local_file:
                 yield self._Cmd(["cp", "-f", self.manifestOverrideUrl, "manifest_override.xml"])
             else:
@@ -304,7 +306,8 @@ class Repo(Source):
                             workdir=self.build.path_module.join(self.workdir, ".repo"))
 
         for command in self.manifestDownloads:
-            yield self._Cmd(command, workdir=self.build.path_module.join(self.workdir, ".repo", "manifests"))
+            yield self._Cmd(command, workdir=self.build.path_module.join(self.workdir, ".repo",
+                                                                         "manifests"))
 
         command = ['sync', '--force-sync']
         if self.jobs:
@@ -413,7 +416,8 @@ class Repo(Source):
             return
         # tarball path is absolute, so we cannot use worker's stat command
         # stat -c%Y gives mtime in second since epoch
-        res = yield self._Cmd(["stat", "-c%Y", self.tarball], collectStdout=True, abandonOnFailure=False)
+        res = yield self._Cmd(["stat", "-c%Y", self.tarball], collectStdout=True,
+                              abandonOnFailure=False)
         if not res:
             tarball_mtime = int(self.lastCommand.stdout)
             yield self._Cmd(["stat", "-c%Y", "."], collectStdout=True)

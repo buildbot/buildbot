@@ -66,7 +66,8 @@ class InitTests(unittest.SynchronousTestCase):
 
     def test_configfile_default(self):
         """
-        If neither configfile nor config_loader are specified, The default config_loader is a `FileLoader` pointing at `"master.cfg"`.
+        If neither configfile nor config_loader are specified, The default config_loader is a
+        `FileLoader` pointing at `"master.cfg"`.
         """
         m = master.BuildMaster(".", reactor=reactor)
         self.assertEqual(m.config_loader, config.FileLoader(".", "master.cfg"))

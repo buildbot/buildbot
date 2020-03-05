@@ -549,8 +549,10 @@ class RunProcess(object):
             msg = u" environment:\n"
             env_names = sorted(self.environ.keys())
             for name in env_names:
-                msg += u"  {0}={1}\n".format(bytes2unicode(name, encoding=self.builder.unicode_encoding),
-                                             bytes2unicode(self.environ[name], encoding=self.builder.unicode_encoding))
+                msg += u"  {0}={1}\n".format(bytes2unicode(name,
+                                                           encoding=self.builder.unicode_encoding),
+                                             bytes2unicode(self.environ[name],
+                                                           encoding=self.builder.unicode_encoding))
             log.msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
             self._addToBuffers(u'header', msg)
 

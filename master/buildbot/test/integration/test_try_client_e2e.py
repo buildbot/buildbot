@@ -36,7 +36,8 @@ class TryClientE2E(RunMasterBase):
                           "--property=foo:bar --username=alice --passwd=pw1 --vc=none")
             reactor.callInThread(thd)
 
-        build = yield self.doForceBuild(wantSteps=True, triggerCallback=trigger_callback, wantLogs=True, wantProperties=True)
+        build = yield self.doForceBuild(wantSteps=True, triggerCallback=trigger_callback,
+                                        wantLogs=True, wantProperties=True)
         self.assertEqual(build['buildid'], 1)
 
 

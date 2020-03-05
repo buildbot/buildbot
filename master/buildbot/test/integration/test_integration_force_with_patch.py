@@ -53,7 +53,8 @@ class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setupConfig(masterConfig())
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True, forceParams={'foo_patch_body': PATCH})
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True,
+                                        forceParams={'foo_patch_body': PATCH})
         self.assertEqual(build['buildid'], 1)
         # if makefile was not properly created, we would have a failure
         self.assertEqual(build['results'], SUCCESS)

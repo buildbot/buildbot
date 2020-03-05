@@ -544,7 +544,8 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             allowForce=True,
             allowShutdown=False)
         yield s.startService()
-        self.assertEqual(words.StatusBot.expand_authz(s.authz), {'FORCE': True, 'STOP': True, 'SHUTDOWN': False})
+        self.assertEqual(words.StatusBot.expand_authz(s.authz), {'FORCE': True, 'STOP': True,
+                                                                 'SHUTDOWN': False})
 
     # deprecated
     def test_allowForce_with_authz(self):

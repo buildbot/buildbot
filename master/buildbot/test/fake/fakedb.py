@@ -1432,7 +1432,11 @@ class FakeBuildsetsComponent(FakeDBComponent):
         del buildset['id']
 
         # clear out some columns if the caller doesn't care
-        for col in 'complete complete_at submitted_at results parent_buildid parent_relationship'.split():
+        columns = [
+            'complete', 'complete_at', 'submitted_at', 'results', 'parent_buildid',
+            'parent_relationship'
+        ]
+        for col in columns:
             if col not in expected_buildset:
                 del buildset[col]
 
@@ -1551,23 +1555,24 @@ class FakeWorkersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def deconfigureAllWorkersForMaster(self, masterid):
-        buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
-                            if mid == masterid]
+        buildermasterids = [_id for _id, (builderid, mid) in
+                            self.db.builders.builder_masters.items() if mid == masterid]
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
 
     def workerConfigured(self, workerid, masterid, builderids):
 
-        buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
+        buildermasterids = [_id for _id, (builderid, mid) in
+                            self.db.builders.builder_masters.items()
                             if mid == masterid and builderid in builderids]
         if len(buildermasterids) != len(builderids):
             raise ValueError(("Some builders are not configured for this master: "
                               "builders: {}, master: {} buildermaster:{}"
                               ).format(builderids, masterid, self.db.builders.builder_masters))
 
-        allbuildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
-                               if mid == masterid]
+        allbuildermasterids = [_id for _id, (builderid, mid) in
+                               self.db.builders.builder_masters.items() if mid == masterid]
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in allbuildermasterids and v['workerid'] == workerid:
                 del self.configured[k]
@@ -1909,7 +1914,8 @@ class FakeBuildsComponent(FakeDBComponent):
                 return defer.succeed(self._row2dict(row))
         return defer.succeed(None)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None,
+                  resultSpec=None):
         ret = []
         for (id, row) in self.builds.items():
             if builderid is not None and row['builderid'] != builderid:

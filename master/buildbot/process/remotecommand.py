@@ -135,7 +135,8 @@ class RemoteCommand(base.RemoteCommandImpl):
     def _finished(self, failure=None):
         self.active = False
         # the rc is send asynchronously and there is a chance it is still in the callback queue
-        # when finished is received, we have to workaround in the master because worker might be older
+        # when finished is received, we have to workaround in the master because worker might be
+        # older
         timeout = 10
         while self.rc is None and timeout > 0:
             yield util.asyncSleep(.1)

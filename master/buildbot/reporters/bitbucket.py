@@ -102,7 +102,8 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
     @staticmethod
     def get_owner_and_repo(repourl):
         """
-        Takes a git repository URL from Bitbucket and tries to determine the owner and repository name
+        Takes a git repository URL from Bitbucket and tries to determine the owner and repository
+        name
         :param repourl: Bitbucket git repo in the form of
                     git@bitbucket.com:OWNER/REPONAME.git
                     https://bitbucket.com/OWNER/REPONAME.git

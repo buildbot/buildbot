@@ -103,7 +103,8 @@ class Api:
             elif results >= 0 and results < len(Results):
                 results_txt = Results[results]
 
-        svgdata = self.makesvg(results_txt, results_txt, left_text=config['left_text'], config=config)
+        svgdata = self.makesvg(results_txt, results_txt, left_text=config['left_text'],
+                               config=config)
         defer.returnValue(svgdata)
 
     def textwidth(self, text, config):

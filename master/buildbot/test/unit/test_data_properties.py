@@ -116,8 +116,10 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin,
 
     def test_setBuildProperty(self):
         return self.do_test_callthrough('setBuildProperty', self.rtype.setBuildProperty,
-                                        buildid=1234, name='property', value=[42, 45], source='testsuite',
-                                        exp_args=(1234, 'property', [42, 45], 'testsuite'), exp_kwargs={})
+                                        buildid=1234, name='property', value=[42, 45],
+                                        source='testsuite',
+                                        exp_args=(1234, 'property', [42, 45], 'testsuite'),
+                                        exp_kwargs={})
 
     @defer.inlineCallbacks
     def test_setBuildProperties(self):

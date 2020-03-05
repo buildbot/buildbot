@@ -158,7 +158,8 @@ class RunMasterBase(unittest.TestCase):
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
-            config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"), missing_timeout=0)]
+            config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"),
+                                                  missing_timeout=0)]
             config_dict['protocols'] = proto
 
         m = yield getMaster(self, reactor, config_dict)
@@ -275,10 +276,12 @@ class RunMasterBase(unittest.TestCase):
                     step['logs'] = yield self.master.data.get(("steps", step['stepid'], "logs"))
                     step["logs"] = list(step['logs'])
                     for log in step["logs"]:
-                        log['contents'] = yield self.master.data.get(("logs", log['logid'], "contents"))
+                        log['contents'] = yield self.master.data.get(("logs", log['logid'],
+                                                                      "contents"))
 
         if wantProperties:
-            build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
+            build["properties"] = yield self.master.data.get(("builds", build['buildid'],
+                                                              "properties"))
 
     @defer.inlineCallbacks
     def printBuild(self, build, out=sys.stdout, withLogs=False):

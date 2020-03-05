@@ -33,7 +33,8 @@ def upgrade(migrate_engine):
                                        autoload=True)
     fks_to_change = []
     # we need to parse the reflected model in order to find the automatic fk name that was put
-    # mysql and pgsql have different naming convention so this is not very easy to have generic code working.
+    # mysql and pgsql have different naming convention so this is not very easy to have generic
+    # code working.
     for table, keys in [(builder_masters, (builders.c.id, masters.c.id)),
                         (configured_workers, (builder_masters.c.id, workers.c.id))]:
         for fk in table.constraints:

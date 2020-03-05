@@ -139,8 +139,8 @@ class AbstractWorker(service.BuildbotService):
         self.conn = None
 
         # during disconnection self.conn will be set to None before all disconnection notifications
-        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to a
-        # notifier and allows interested users to wait until all disconnection notifications are
+        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to
+        # a notifier and allows interested users to wait until all disconnection notifications are
         # delivered.
         self._pending_disconnection_delivery_notifier = None
 
@@ -335,7 +335,8 @@ class AbstractWorker(service.BuildbotService):
 
     @defer.inlineCallbacks
     def reconfigServiceWithSibling(self, sibling):
-        # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
+        # reconfigServiceWithSibling will only reconfigure the worker when it is configured
+        # differently.
         # However, the worker configuration depends on which builder it is configured
         yield super().reconfigServiceWithSibling(sibling)
 
@@ -346,7 +347,8 @@ class AbstractWorker(service.BuildbotService):
             b.getBuilderId() for b in self.botmaster.getBuildersForWorker(self.name)]
         bids = yield defer.gatherResults(bids, consumeErrors=True)
         if self._configured_builderid_list != bids:
-            yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
+            yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid,
+                                                            bids)
             yield self.updateWorker()
             self._configured_builderid_list = bids
 

@@ -111,7 +111,8 @@ class PushoverNotifier(NotifierBase):
         if type == 'html':
             msg['html'] = '1'
         try:
-            msg['priority'] = self.priorities[PRIORITIES[results] if worker is None else 'worker_missing']
+            priority_name = PRIORITIES[results] if worker is None else 'worker_missing'
+            msg['priority'] = self.priorities[priority_name]
         except KeyError:
             pass
         if subject is not None:

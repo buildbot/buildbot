@@ -402,7 +402,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_renderable_workdir(self):
         self.setupStep(
-            shell.SetPropertyFromCommand(property="res", command="cmd", workdir=properties.Interpolate('wkdir')))
+            shell.SetPropertyFromCommand(property="res", command="cmd",
+                                         workdir=properties.Interpolate('wkdir')))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
@@ -601,7 +602,8 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                     -------------------
                     foo.pl (Wstat: 0 Tests: 4 Failed: 1)
                       Failed test:  0
-                    Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr  0.01 csys =  0.11 CPU)
+                    Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr
+                    0.01 csys =  0.11 CPU)
                     Result: FAIL"""))
             + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
                     Failed 1/1 test programs. 1/4 subtests failed."""))
@@ -987,9 +989,10 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                    ("def.c", ".*", 22, 22),
         )
 
-        step = shell.WarningCountingShellCommand(command=['make'],
-                                                 suppressionList=properties.Property("suppressionsList"),
-                                                 warningExtractor=warningExtractor)
+        step = shell.WarningCountingShellCommand(
+            command=['make'],
+            suppressionList=properties.Property("suppressionsList"),
+            warningExtractor=warningExtractor)
 
         stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1

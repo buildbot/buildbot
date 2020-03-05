@@ -149,8 +149,8 @@ class Try_Jobdir(TryBase):
         p = netstrings.NetstringParser()
         f.seek(0, 2)
         if f.tell() > basic.NetstringReceiver.MAX_LENGTH:
-            raise BadJobfile(
-                "The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
+            raise BadJobfile("The patch size is greater that NetStringReceiver.MAX_LENGTH. "
+                             "Please Set this higher in the master.cfg")
         f.seek(0, 0)
         try:
             p.feed(f.read())
@@ -333,8 +333,8 @@ class RemoteBuild(pb.Referenceable):
                 return subscriber.callRemote('stepStarted',
                                              self.builderName, self, msg['name'], None)
             elif key[-1] == 'finished':
-                return subscriber.callRemote('stepFinished',
-                                             self.builderName, self, msg['name'], None, msg['results'])
+                return subscriber.callRemote('stepFinished', self.builderName, self, msg['name'],
+                                             None, msg['results'])
         self.consumer = yield self.master.mq.startConsuming(
             stepChanged,
             ('builds', str(self.builddict['buildid']), 'steps', None, None))

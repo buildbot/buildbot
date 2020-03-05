@@ -130,7 +130,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         _, builds = yield self.setupBuildResults(SUCCESS)
         builds[0]['properties']['hhh'] = ('vvv', 'fake')
         msgdict = create_msgdict()
-        mn = yield self.setupMailNotifier('from@example.org', extraHeaders=dict(hhh=properties.Property('hhh')))
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          extraHeaders=dict(hhh=properties.Property('hhh')))
         # add some Unicode to detect encoding problems
         m = yield mn.createEmail(msgdict, 'builder-n\u00E5me', 'project-n\u00E5me',
                                  SUCCESS, builds)
@@ -190,7 +191,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                                         "type": "text",
                                                                          "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
@@ -229,7 +231,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             extraRecipients = []
         _, builds = yield self.setupBuildResults(SUCCESS)
 
-        mn = yield self.setupMailNotifier('from@example.org', lookup=lookup, extraRecipients=extraRecipients,
+        mn = yield self.setupMailNotifier('from@example.org', lookup=lookup,
+                                          extraRecipients=extraRecipients,
                                           sendToInterestedUsers=sendToInterestedUsers)
 
         recipients = yield mn.findInterrestedUsersEmails(['Big Bob <bob@mayhem.net>', 'narrator'])
@@ -321,7 +324,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                                         "type": "text",
                                                                          "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
@@ -358,7 +362,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         """
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
-        mn, builds = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"), smtpPassword=Interpolate("pa$$word"))
+        mn, builds = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"),
+                                                    smtpPassword=Interpolate("pa$$word"))
 
         self.assertEqual(mn.smtpUser, "u$er")
         self.assertEqual(mn.smtpPassword, "pa$$word")

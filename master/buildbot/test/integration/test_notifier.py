@@ -134,10 +134,11 @@ def masterConfig():
                       workernames=["local1"],
                       factory=f)
     ]
-    notifier = reporters.PushoverNotifier('1234', 'abcd', mode="all", watchedWorkers=['local1'],
-                                          messageFormatter=MessageFormatter(template='This is a message.'),
-                                          messageFormatterMissingWorker=MessageFormatterMissingWorker(
-                                              template='No worker.'))
+    notifier = reporters.PushoverNotifier(
+        '1234', 'abcd', mode="all", watchedWorkers=['local1'],
+        messageFormatter=MessageFormatter(template='This is a message.'),
+        messageFormatterMissingWorker=MessageFormatterMissingWorker(
+        template='No worker.'))
     c['services'] = [
         reporters.MailNotifier("bot@foo.com", mode="all"),
         notifier

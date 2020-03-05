@@ -76,7 +76,8 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_recordChange(self):
-        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='1234:abc', branch='master', number=10))
+        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='1234:abc',
+                                                 branch='master', number=10))
         self.db.state.assertStateByClass('fake-name', 'FakeObject', lastCodebases={
             'a': {'repository': 'A', 'revision': '1234:abc', 'branch': 'master', 'lastChange': 10}})
 
@@ -89,7 +90,8 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
                                     'branch': 'master',
                                     'lastChange': 20}})
         yield self.object.getCodebaseDict('a')
-        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='1234:abc', branch='master', number=10))
+        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='1234:abc',
+                                                 branch='master', number=10))
         self.db.state.assertStateByClass('fake-name', 'FakeObject', lastCodebases={
             'a': {'repository': 'A', 'revision': '2345:bcd', 'branch': 'master', 'lastChange': 20}})
 
@@ -102,6 +104,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase,
                                     'branch': 'master',
                                     'lastChange': 10}})
         yield self.object.getCodebaseDict('a')
-        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='2345:bcd', branch='master', number=20))
+        yield self.object.recordChange(self.mkch(codebase='a', repository='A', revision='2345:bcd',
+                                                 branch='master', number=20))
         self.db.state.assertStateByClass('fake-name', 'FakeObject', lastCodebases={
             'a': {'repository': 'A', 'revision': '2345:bcd', 'branch': 'master', 'lastChange': 20}})

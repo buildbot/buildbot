@@ -110,7 +110,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def test_updateBuildSummaryPolicyDefaults(self):
         """
-        updateBuildSummaryPolicy builds default value according to resultsMixin parameters (flunkOnFailure..)
+        updateBuildSummaryPolicy builds default value according to resultsMixin
+        parameters (flunkOnFailure..)
         """
         step = buildstep.BuildStep()
         self.assertEqual(sorted(step.updateBuildSummaryPolicy), sorted([
@@ -135,8 +136,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         """
         updateBuildSummaryPolicy raise ConfigError in case of bad type
         """
-        with self.assertRaisesConfigError(
-                "BuildStep updateBuildSummaryPolicy must be a list of result ids or boolean but it is 2"):
+        with self.assertRaisesConfigError("BuildStep updateBuildSummaryPolicy must be "
+                                          "a list of result ids or boolean but it is 2"):
             buildstep.BuildStep(updateBuildSummaryPolicy=FAILURE)
 
     def test_getProperty(self):
@@ -652,7 +653,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         st = buildstep.BuildStep()
         st.results = FAILURE
         st.description = 'fooing'
-        self.checkSummary((yield st.getBuildResultSummary()), 'fooing (failure)', 'fooing (failure)')
+        self.checkSummary((yield st.getBuildResultSummary()), 'fooing (failure)',
+                          'fooing (failure)')
         self.checkSummary(st.getResultSummary(), 'fooing (failure)')
 
     @defer.inlineCallbacks

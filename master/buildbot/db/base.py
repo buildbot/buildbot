@@ -65,7 +65,8 @@ class DBConnectorComponent:
     def ensureLength(self, col, value):
         assert col.type.length, "column {} does not have a length".format(col)
         if value and len(value) > col.type.length:
-            value = value[:col.type.length // 2] + hashlib.sha1(unicode2bytes(value)).hexdigest()[:col.type.length // 2]
+            value = value[:col.type.length // 2] + \
+                    hashlib.sha1(unicode2bytes(value)).hexdigest()[:col.type.length // 2]
         return value
 
     # returns a Deferred that returns a value

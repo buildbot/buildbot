@@ -45,9 +45,8 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # keep track of builds in self.events
         self.events = []
 
-        def addBuildsetForSourceStampsWithDefaults(reason, sourcestamps,
-                                                   waited_for=False, properties=None, builderNames=None,
-                                                   **kw):
+        def addBuildsetForSourceStampsWithDefaults(reason, sourcestamps, waited_for=False,
+                                                   properties=None, builderNames=None, **kw):
             self.assertIn('Periodic scheduler named', reason)
             # TODO: check branch
             isFirst = (self.events == [])

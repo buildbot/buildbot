@@ -115,13 +115,14 @@ class ChangeHookResource(resource.Resource):
         if dialect not in self.dialects:
             m = "The dialect specified, '{}', wasn't whitelisted in change_hook".format(dialect)
             log.msg(m)
-            log.msg(
-                "Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
+            log.msg("Note: if dialect is 'base' then it's possible your URL is "
+                    "malformed and we didn't regex it properly")
             raise ValueError(m)
 
         if dialect not in self._dialect_handlers:
             if dialect not in self._plugins:
-                m = "The dialect specified, '{}', is not registered as a buildbot.webhook plugin".format(dialect)
+                m = ("The dialect specified, '{}', is not registered as "
+                     "a buildbot.webhook plugin").format(dialect)
                 log.msg(m)
                 raise ValueError(m)
             options = self.dialects[dialect]

@@ -215,8 +215,8 @@ class GitStepMixin(GitMixin):
 
         # If possible prefer to send a SIGTERM to git before we send a SIGKILL.
         # If we send a SIGKILL, git is prone to leaving around stale lockfiles.
-        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down gracefully
-        # before getting terminated
+        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down
+        # gracefully before getting terminated
         if not self.workerVersionIsOlderThan("shell", "2.16"):
             # git should shut-down quickly on SIGTERM.  If it doesn't don't let it
             # stick around for too long because this is on top of any timeout

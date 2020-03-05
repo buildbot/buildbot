@@ -345,10 +345,11 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            + ExpectShell.log(
-                'stdio',
-                stdout=('test.py:9: [W0311(bad-indentation), ] Bad indentation. Found 6 spaces, expected 4\n'
-                        'test.py:3: [C0111(missing-docstring), myFunc] Missing function docstring\n'))
+            + ExpectShell.log('stdio',
+                stdout=('test.py:9: [W0311(bad-indentation), ] Bad indentation. Found 6 '
+                        'spaces, expected 4\n'
+                        'test.py:3: [C0111(missing-docstring), myFunc] Missing '
+                        'function docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')

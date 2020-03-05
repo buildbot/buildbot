@@ -304,7 +304,8 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                           p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
                                       ('//depot/white space/...',
                                        'white space/...'),
-                                      ('-//depot/white space/excluded/...', 'white space/excluded/...')],
+                                      ('-//depot/white space/excluded/...',
+                                       'white space/excluded/...')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
@@ -730,7 +731,8 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                           p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
                                       ('//depot/trunk/white space/...',
                                        'white space/...'),
-                                      ('-//depot/trunk/white space/excluded/...', 'white space/excluded/...')],
+                                      ('-//depot/trunk/white space/excluded/...',
+                                       'white space/excluded/...')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'

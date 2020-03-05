@@ -30,7 +30,8 @@ def main():
     r = r.json()
     tag = r['name']
     upload_url = r['upload_url'].split('{')[0]
-    assets = s.get("https://api.github.com/repos/buildbot/buildbot/releases/{id}/assets".format(id=r['id']))
+    assets = s.get(("https://api.github.com/repos/buildbot/buildbot/releases/{id}/assets"
+                    ).format(id=r['id']))
     assets.raise_for_status()
     assets = assets.json()
     os.makedirs('dist', exist_ok=True)

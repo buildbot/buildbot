@@ -83,7 +83,8 @@ class Match:
 
     @defer.inlineCallbacks
     def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
-        props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'], "properties"))
+        props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'],
+                                            "properties"))
         if 'owner' in props:
             return props['owner'][0]
         return None

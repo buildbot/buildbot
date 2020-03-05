@@ -54,7 +54,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.owner = owner
         self.slug = slug
         self.branch = branch
-        super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+        super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval,
+                         pollAtLaunch=pollAtLaunch)
         if encoding != _UNSPECIFIED:
             config.warnDeprecated('2.6.0', 'encoding of BitbucketPullrequestPoller is deprecated.')
 
@@ -129,13 +130,15 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                         updated = epoch2datetime(self.master.reactor.seconds())
                     title = pr['title']
                     # parse commit api page
-                    page = yield client.getPage(str(pr['source']['commit']['links']['self']['href']))
+                    page = yield client.getPage(
+                            str(pr['source']['commit']['links']['self']['href']))
                     commit_json = json.loads(page)
                     # use the full-length hash from now on
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
                     # parse repo api page
-                    page = yield client.getPage(str(pr['source']['repository']['links']['self']['href']))
+                    page = yield client.getPage(
+                            str(pr['source']['repository']['links']['self']['href']))
                     repo_json = json.loads(page)
                     repo = repo_json['links']['html']['href']
 

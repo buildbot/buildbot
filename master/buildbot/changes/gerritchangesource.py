@@ -488,7 +488,8 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         if self.debug:
             log.msg("Polling gerrit: {}".format(last_event_formatted).encode("utf-8"))
 
-        res = yield self._http.get("/plugins/events-log/events/", params=dict(t1=last_event_formatted))
+        res = yield self._http.get("/plugins/events-log/events/",
+                                   params=dict(t1=last_event_formatted))
         lines = yield res.content()
         for line in lines.splitlines():
             yield self.lineReceived(line)

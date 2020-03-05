@@ -222,8 +222,8 @@ class Buildset(base.ResourceType):
         # mark it as completed in the database
         complete_at = epoch2datetime(int(self.master.reactor.seconds()))
         try:
-            yield self.master.db.buildsets.completeBuildset(bsid,
-                                                            cumulative_results, complete_at=complete_at)
+            yield self.master.db.buildsets.completeBuildset(bsid, cumulative_results,
+                                                            complete_at=complete_at)
         except AlreadyCompleteError:
             return
         # get the sourcestamps for the message

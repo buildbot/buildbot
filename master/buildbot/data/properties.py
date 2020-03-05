@@ -51,9 +51,10 @@ class Properties(base.ResourceType):
     entityType = types.SourcedProperties()
 
     def generateUpdateEvent(self, buildid, newprops):
-        # This event cannot use the produceEvent mechanism, as the properties resource type is a bit specific
-        # (this is a dictionary collection)
-        # We only send the new properties, and count on the client to merge the resulting properties dict
+        # This event cannot use the produceEvent mechanism, as the properties resource type is a bit
+        # specific (this is a dictionary collection)
+        # We only send the new properties, and count on the client to merge the resulting properties
+        # dict
         # We are good, as there is no way to delete a property.
         routingKey = ('builds', str(buildid), "properties", "update")
         newprops = self.sanitizeMessage(newprops)

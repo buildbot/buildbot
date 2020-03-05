@@ -214,8 +214,8 @@ class Properties(util.ComparableMixin):
     def useSecret(self, secret_value, secret_name):
         self._used_secrets[secret_value] = "<" + secret_name + ">"
 
-    # This method shall then be called to remove secrets from any text that could be logged somewhere
-    # and that could contain secrets
+    # This method shall then be called to remove secrets from any text that could be logged
+    # somewhere and that could contain secrets
     def cleanupTextFromSecrets(self, text):
         # Better be correct and inefficient than efficient and wrong
         for k, v in self._used_secrets.items():
@@ -414,7 +414,8 @@ class _Lookup(util.ComparableMixin):
             ', default={}'.format(repr(self.default)) if self.default is not None else '',
             ', defaultWhenFalse=False' if not self.defaultWhenFalse else '',
             ', hasKey={}'.format(repr(self.hasKey)) if self.hasKey != _notHasKey else '',
-            ', elideNoneAs={}'.format(repr(self.elideNoneAs)) if self.elideNoneAs is not None else ''
+            ', elideNoneAs={}'.format(repr(self.elideNoneAs))
+            if self.elideNoneAs is not None else ''
             )
 
     @defer.inlineCallbacks

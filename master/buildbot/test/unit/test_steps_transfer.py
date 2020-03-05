@@ -177,8 +177,8 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def testDescriptionDone(self):
         self.setupStep(
-            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file",
-                                descriptionDone="Test File Uploaded"))
+            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile,
+                                url="http://server/file", descriptionDone="Test File Uploaded"))
 
         self.step.addURL = Mock()
 
@@ -199,8 +199,8 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testURL(self):
-        self.setupStep(
-            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file"))
+        self.setupStep(transfer.FileUpload(workersrc=__file__, masterdest=self.destfile,
+                                           url="http://server/file"))
 
         self.step.addURL = Mock()
 
@@ -224,8 +224,9 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testURLText(self):
-        self.setupStep(
-            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file", urlText="testfile"))
+        self.setupStep(transfer.FileUpload(workersrc=__file__,
+                                           masterdest=self.destfile, url="http://server/file",
+                                           urlText="testfile"))
 
         self.step.addURL = Mock()
 

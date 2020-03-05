@@ -108,7 +108,8 @@ class GitLabHandler(BaseHookHandler):
         when_timestamp = dateparse(commit['timestamp'])
         # @todo provide and document a way to choose between http and ssh url
         repo_url = attrs['target']['git_http_url']
-        # project name from http headers is empty for me, so get it from object_attributes/target/name
+        # project name from http headers is empty for me, so get it from
+        # object_attributes/target/name
         project = attrs['target']['name']
 
         # Filter out uninteresting events
@@ -117,7 +118,8 @@ class GitLabHandler(BaseHookHandler):
             log.msg("GitLab MR#{}: Ignoring because state is {}".format(attrs['iid'], state))
             return []
         action = attrs['action']
-        if not re.match('^(open|reopen)$', action) and not (action == "update" and "oldrev" in attrs):
+        if not re.match('^(open|reopen)$', action) and \
+                not (action == "update" and "oldrev" in attrs):
             log.msg("GitLab MR#{}: Ignoring because action {} was not open or "
                     "reopen or an update that added code".format(attrs['iid'],
                                                                  action))
@@ -126,7 +128,8 @@ class GitLabHandler(BaseHookHandler):
         changes = [{
             'author': '{} <{}>'.format(commit['author']['name'], commit['author']['email']),
             'files': [],  # @todo use rest API
-            'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'], attrs['description']),
+            'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'],
+                                                 attrs['description']),
             'revision': commit['id'],
             'when_timestamp': when_timestamp,
             'branch': attrs['target_branch'],

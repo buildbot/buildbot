@@ -60,8 +60,8 @@ def naturalSort(array):
 def flattened_iterator(l, types=(list, tuple)):
     """
     Generator for a list/tuple that potentially contains nested/lists/tuples of arbitrary nesting
-    that returns every individual non-list/tuple element.  In other words, [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
-    will yield 5, 6, 8, 3, 2, 2, 1, 3, 4
+    that returns every individual non-list/tuple element.  In other words,
+    # [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]] will yield 5, 6, 8, 3, 2, 2, 1, 3, 4
 
     This is safe to call on something not a list/tuple - the original input is yielded.
     """
@@ -400,7 +400,8 @@ def check_functional_environment(config):
         locale.getdefaultlocale()
     except (KeyError, ValueError) as e:
         config.error("\n".join([
-            "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
+            "Your environment has incorrect locale settings. This means python cannot handle "
+            "strings safely.",
             " Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE'"
             " are either unset or set to a valid locale.", str(e)
         ]))

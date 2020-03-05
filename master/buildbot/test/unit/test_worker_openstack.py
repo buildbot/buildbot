@@ -92,7 +92,8 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual(bs.block_devices, [{'boot_index': 0,
                                              'delete_on_termination': True,
                                              'destination_type': 'volume', 'device_name': 'vda',
-                                             'source_type': 'image', 'volume_size': 10, 'uuid': 'uuid'}])
+                                             'source_type': 'image', 'volume_size': 10,
+                                             'uuid': 'uuid'}])
 
     @defer.inlineCallbacks
     def test_constructor_block_devices_get_sizes(self):

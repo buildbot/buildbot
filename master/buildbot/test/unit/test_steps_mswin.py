@@ -42,7 +42,8 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def _run_simple_test(self, source, destination, expected_args=None, expected_code=0, expected_res=SUCCESS, **kwargs):
+    def _run_simple_test(self, source, destination, expected_args=None, expected_code=0,
+                         expected_res=SUCCESS, **kwargs):
         s = mswin.Robocopy(source, destination, **kwargs)
         self.setupStep(s)
         s.rendered = True

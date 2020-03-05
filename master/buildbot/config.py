@@ -396,7 +396,8 @@ class MasterConfig(util.ComparableMixin):
 
         def copy_str_or_callable_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                       check_type=(str,), check_type_name='a string or callable', can_be_callable=True)
+                       check_type=(str,), check_type_name='a string or callable',
+                       can_be_callable=True)
 
         if "buildbotNetUsageData" not in config_dict:
             if _in_unit_tests:
@@ -441,8 +442,8 @@ class MasterConfig(util.ComparableMixin):
                 import lz4  # pylint: disable=import-outside-toplevel
                 [lz4]
             except ImportError:
-                error(
-                    "To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
+                error("To set c['logCompressionMethod'] to 'lz4' "
+                      "you must install the lz4 library ('pip install lz4')")
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')
@@ -494,8 +495,8 @@ class MasterConfig(util.ComparableMixin):
             self.multiMaster = config_dict["multiMaster"]
 
         if 'debugPassword' in config_dict:
-            log.msg(
-                "the 'debugPassword' parameter is unused and can be removed from the configuration file")
+            log.msg("the 'debugPassword' parameter is unused and "
+                    "can be removed from the configuration file")
 
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that
@@ -779,8 +780,8 @@ class MasterConfig(util.ComparableMixin):
         cookie_expiration_time = www_cfg.get('cookie_expiration_time')
         if cookie_expiration_time is not None:
             if not isinstance(cookie_expiration_time, datetime.timedelta):
-                error(
-                    'Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
+                error('Invalid www["cookie_expiration_time"] configuration should '
+                      'be a datetime.timedelta')
 
         self.www.update(www_cfg)
 

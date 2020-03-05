@@ -119,7 +119,8 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def assertUserForbidden(self, ep, action, options, user):
         try:
-            yield self.authz.assertUserAllowed(tuple(ep.split("/")), action, options, self.users[user])
+            yield self.authz.assertUserAllowed(tuple(ep.split("/")), action, options,
+                                               self.users[user])
         except authz.Forbidden as err:
             self.assertIn('need to have role', repr(err))
 

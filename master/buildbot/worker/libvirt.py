@@ -178,7 +178,8 @@ class LibVirtWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def _find_existing_instance(self):
         """
-        I find existing VMs that are already running that might be orphaned instances of this worker.
+        I find existing VMs that are already running that might be orphaned instances of this
+        worker.
         """
         if not self.connection:
             return None

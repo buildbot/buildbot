@@ -412,8 +412,8 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         self.options_file.update(dict(try_connect='pb', try_vc='cvs',
                                       try_branch='br', try_repository='rep', try_topdir='.',
                                       try_topfile='Makefile', try_host='h', try_username='u',
-                                      try_jobdir='j', try_password='p', try_master='m:8', try_who='w',
-                                      try_comment='comm', try_quiet='y', try_wait='y',
+                                      try_jobdir='j', try_password='p', try_master='m:8',
+                                      try_who='w', try_comment='comm', try_quiet='y', try_wait='y',
                                       try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
         opts = self.parse()
         exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',

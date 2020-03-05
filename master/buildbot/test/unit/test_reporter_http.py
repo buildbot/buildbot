@@ -31,7 +31,8 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 class BuildLookAlike:
 
-    """ a class whose instances compares to any build dict that this reporter is supposed to send out"""
+    """ a class whose instances compares to any build dict that this reporter is supposed to send
+    out"""
 
     def __init__(self, keys=None, **assertions):
         self.keys = [

@@ -41,8 +41,8 @@ from buildbot.worker.marathon import MarathonLatentWorker
 # following environment variable can be used to stress concurrent worker startup
 NUM_CONCURRENT = int(os.environ.get("MARATHON_TEST_NUM_CONCURRENT_BUILD", 1))
 
-# if you run the stress test against a real mesos deployment, you want to also use https and basic credentials
-# export BBTEST_MARATHON_CREDS=login:passwd
+# if you run the stress test against a real mesos deployment, you want to also use https and basic
+# credentials export BBTEST_MARATHON_CREDS=login:passwd
 
 
 class MarathonMaster(RunMasterBase):
@@ -111,7 +111,8 @@ def masterConfig(num_concurrent, extra_steps=None):
     marathon_extra_config = {
     }
     c['workers'] = [
-        MarathonLatentWorker('marathon' + str(i), url, user, password, 'buildbot/buildbot-worker:master',
+        MarathonLatentWorker('marathon' + str(i), url, user, password,
+                             'buildbot/buildbot-worker:master',
                              marathon_extra_config=marathon_extra_config,
                              masterFQDN=masterFQDN)
         for i in range(num_concurrent)

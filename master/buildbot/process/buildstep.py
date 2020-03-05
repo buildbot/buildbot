@@ -341,7 +341,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
-        if self.updateBuildSummaryPolicy is None:  # compute default value for updateBuildSummaryPolicy
+        if self.updateBuildSummaryPolicy is None:
+            # compute default value for updateBuildSummaryPolicy
             self.updateBuildSummaryPolicy = [EXCEPTION, RETRY, CANCELLED]
             if self.flunkOnFailure or self.haltOnFailure or self.warnOnFailure:
                 self.updateBuildSummaryPolicy.append(FAILURE)
@@ -457,7 +458,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def getBuildResultSummary(self):
         summary = yield self.getResultSummary()
-        if self.results in self.updateBuildSummaryPolicy and 'build' not in summary and 'step' in summary:
+        if self.results in self.updateBuildSummaryPolicy and \
+                'build' not in summary and 'step' in summary:
             summary['build'] = summary['step']
         return summary
 

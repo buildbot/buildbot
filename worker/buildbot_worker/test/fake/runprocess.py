@@ -97,7 +97,8 @@ class FakeRunProcess(object):
         have not taken place, this will raise the appropriate AssertionError.
         """
         if cls._expectations:
-            raise AssertionError("{0} expected instances not created".format(len(cls._expectations)))
+            raise AssertionError(("{0} expected instances not created"
+                                  ).format(len(cls._expectations)))
         del cls._expectations
 
     def __init__(self, builder, command, workdir, **kwargs):
@@ -130,7 +131,8 @@ class FakeRunProcess(object):
                 elif key not in kwargs:
                     msg.append('{0}: did not get expected arg'.format(key))
                 elif exp.kwargs[key] != kwargs[key]:
-                    msg.append('{0}: expected {1!r},\n  got {2!r}'.format(key, exp.kwargs[key], kwargs[key]))
+                    msg.append('{0}: expected {1!r},\n  got {2!r}'.format(key, exp.kwargs[key],
+                                                                          kwargs[key]))
             if msg:
                 msg.insert(
                     0,

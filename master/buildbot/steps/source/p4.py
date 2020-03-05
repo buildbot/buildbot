@@ -79,7 +79,8 @@ class P4(Source):
 
         super().__init__(**kwargs)
 
-        if self.mode not in self.possible_modes and not interfaces.IRenderable.providedBy(self.mode):
+        if self.mode not in self.possible_modes and \
+                not interfaces.IRenderable.providedBy(self.mode):
             config.error("mode {} is not an IRenderable, or one of {}".format(self.mode,
                                                                               self.possible_modes))
 
@@ -166,8 +167,8 @@ class P4(Source):
                                                            int(self.revision))], collectStdout=True)
         else:
             if debug_logging:
-                log.msg(
-                    "P4: full() sync command based on :base:%s no revision", self._getP4BaseForLog())
+                log.msg("P4: full() sync command based on :base:%s no revision",
+                        self._getP4BaseForLog())
             yield self._dovccmd(['sync'], collectStdout=True)
 
         if debug_logging:

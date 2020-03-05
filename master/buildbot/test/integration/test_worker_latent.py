@@ -600,7 +600,8 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         # sever connection just before ping()
-        with patchForDelay('buildbot.process.workerforbuilder.AbstractWorkerForBuilder.ping') as delay:
+        with patchForDelay(
+                'buildbot.process.workerforbuilder.AbstractWorkerForBuilder.ping') as delay:
             yield controller.start_instance(True)
             controller.sever_connection()
             delay.fire()

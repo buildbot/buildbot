@@ -179,8 +179,10 @@ class TelegramContact(Contact):
             self.send("Your ID is {}.".format(self.user_id))
         else:
             yield self.send("{}, your ID is {}.".format(self.user_name, self.user_id))
-            self.send("This {} ID is {}.".format(self.channel.chat_info.get('type', "group"), self.chat_id))
-    command_GETID.usage = "getid - get user and chat ID that can be put in the master configuration file"
+            self.send("This {} ID is {}.".format(self.channel.chat_info.get('type', "group"),
+                                                 self.chat_id))
+    command_GETID.usage = "getid - get user and chat ID that can be put in the master " \
+                          "configuration file"
 
     @defer.inlineCallbacks
     @Contact.overrideCommand
@@ -211,7 +213,8 @@ class TelegramContact(Contact):
             pass
 
         if not args:
-            raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
+            raise UsageError("Try '" + self.bot.commandPrefix +
+                             "list [all|N] builders|workers|changes'.")
 
         if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -248,10 +251,12 @@ class TelegramContact(Contact):
                 num = len(changes)
                 if num > 50:
                     keyboard = [
-                        [self.query_button("‼ Yes, flood me with all of them!", '/list {} changes'.format(num))],
+                        [self.query_button("‼ Yes, flood me with all of them!",
+                                           '/list {} changes'.format(num))],
                         [self.query_button("✅ No, just show last 50", '/list 50 changes')]
                     ]
-                    self.send("I found {} changes. Do you really want me to list them all?".format(num),
+                    self.send("I found {} changes. Do you really want me "
+                              "to list them all?".format(num),
                               reply_markup={'inline_keyboard': keyboard})
                     return
 
@@ -466,8 +471,9 @@ class TelegramContact(Contact):
 
         bldr = argv.pop(0)
         if bldr not in scheduler['builder_names']:
-            raise UsageError("Try '/force' and follow the instructions (`{}` not configured for _{}_ scheduler)"
-                             .format(bldr, scheduler['label']))
+            raise UsageError(("Try '/force' and follow the instructions "
+                              "(`{}` not configured for _{}_ scheduler)"
+                              ).format(bldr, scheduler['label']))
 
         try:
             params = dict(arg.split('=', 1) for arg in argv)
@@ -736,7 +742,8 @@ class TelegramStatusBot(StatusBot):
                 # just for tests
                 raise err
             except Exception as err:
-                msg = "ERROR: problem sending Telegram request {} (will try again): {}".format(path, err)
+                msg = "ERROR: problem sending Telegram request {} (will try again): {}".format(path,
+                                                                                               err)
                 if logme:
                     self.log(msg)
                     logme = False
@@ -905,7 +912,8 @@ class TelegramPollingBot(TelegramStatusBot):
             except AssertionError as err:
                 raise err
             except Exception as err:
-                msg = "ERROR: cannot send Telegram request /getUpdates (will try again): {}".format(err)
+                msg = ("ERROR: cannot send Telegram request /getUpdates (will try again): {}"
+                       ).format(err)
                 if logme:
                     self.log(msg)
                     logme = False

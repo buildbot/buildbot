@@ -344,7 +344,8 @@ class GitHubHandler(BaseHookHandler):
             'codebase': options.get('codebase', None),
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
-            'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'github_api_endpoint':
+                options.get('github_api_endpoint', None) or 'https://api.github.com',
             'pullrequest_ref': options.get('pullrequest_ref', None) or 'merge',
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
