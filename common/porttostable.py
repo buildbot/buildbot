@@ -15,7 +15,7 @@ with open(os.path.expanduser('~/.config/hub')) as f:
     s.auth = config['user'], config['oauth_token']
 
 os.system("git fetch --all")
-r = s.get("https://api.github.com/search/issues?q=label:\"port%20to%20stable\"+repo:buildbot/buildbot")
+r = s.get("https://api.github.com/search/issues?q=label:\"port%20to%20stable\"+repo:buildbot/buildbot") # noqa pylint: disable=line-too-long
 to_port = r.json()
 summary = ""
 for pr in to_port['items']:
