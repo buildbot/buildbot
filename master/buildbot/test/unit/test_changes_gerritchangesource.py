@@ -25,7 +25,7 @@ from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.changes import gerritchangesource
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource

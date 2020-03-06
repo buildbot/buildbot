@@ -24,7 +24,7 @@ from twisted.trial import unittest
 
 from buildbot.changes import filter
 from buildbot.schedulers import timed
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 

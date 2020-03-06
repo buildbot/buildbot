@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 
 
 class ReporterTestMixin:

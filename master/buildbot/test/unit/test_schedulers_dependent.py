@@ -23,7 +23,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.schedulers import base
 from buildbot.schedulers import dependent
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 

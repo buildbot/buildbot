@@ -30,7 +30,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.status import master
 from buildbot.steps import trigger
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
 from buildbot.test.util.misc import TestReactorMixin

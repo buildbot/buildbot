@@ -16,7 +16,7 @@
 from twisted.internet import defer
 
 from buildbot.reporters import utils
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 
 
 class NotifierTestMixin:

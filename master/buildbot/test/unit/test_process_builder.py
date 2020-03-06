@@ -25,7 +25,7 @@ from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning

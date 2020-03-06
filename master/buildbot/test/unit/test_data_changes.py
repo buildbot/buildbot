@@ -22,7 +22,7 @@ from twisted.trial import unittest
 from buildbot.data import changes
 from buildbot.data import resultspec
 from buildbot.process.users import users
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces

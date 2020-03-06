@@ -30,8 +30,8 @@ from buildbot import master
 from buildbot import monkeypatches
 from buildbot.db import exceptions
 from buildbot.interfaces import IConfigLoader
+from buildbot.test import fakedb
 from buildbot.test.fake import fakedata
-from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.util import dirs

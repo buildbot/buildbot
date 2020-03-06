@@ -24,7 +24,7 @@ from buildbot.changes import changes
 from buildbot.process import properties
 from buildbot.process.properties import Interpolate
 from buildbot.schedulers import base
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 

@@ -17,7 +17,7 @@
 from twisted.internet import defer
 
 from buildbot.db import state
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 

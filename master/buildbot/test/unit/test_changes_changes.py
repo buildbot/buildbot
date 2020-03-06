@@ -21,7 +21,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import changes
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 

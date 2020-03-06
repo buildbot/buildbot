@@ -27,7 +27,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import telegram
 from buildbot.reporters import words
 from buildbot.schedulers import forcesched
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
