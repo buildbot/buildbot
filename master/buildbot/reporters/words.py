@@ -349,20 +349,22 @@ class Channel(service.AsyncService):
 
         return False
 
+    @defer.inlineCallbacks
     def workerMissing(self, worker):
         self.missing_workers.add(worker['workerid'])
         if self.notify_for('worker'):
             self.send(("Worker `{name}` is missing. It was seen last on "
                        "{last_connection}.").format(**worker))
-        self.bot.saveMissingWorkers()
+        yield self.bot.saveMissingWorkers()
 
+    @defer.inlineCallbacks
     def workerConnected(self, worker):
         workerid = worker['workerid']
         if workerid in self.missing_workers:
             self.missing_workers.remove(workerid)
             if self.notify_for('worker'):
                 self.send("Worker `{name}` is back online.".format(**worker))
-            self.bot.saveMissingWorkers()
+            yield self.bot.saveMissingWorkers()
 
 
 class Contact:
