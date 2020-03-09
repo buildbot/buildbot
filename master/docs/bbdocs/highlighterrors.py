@@ -4,7 +4,7 @@ import sys
 import textwrap
 from pkg_resources import parse_version
 
-# Monkey-patch Sphinx to treat unhiglighted code as error.
+# Monkey-patch Sphinx to treat unhighlighted code as error.
 import sphinx
 import sphinx.highlighting
 from sphinx.errors import SphinxWarning
