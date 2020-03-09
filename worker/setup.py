@@ -24,7 +24,6 @@ from __future__ import print_function
 
 import os
 import sys
-from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils.core import setup
 
@@ -115,7 +114,7 @@ twisted_ver = ">= 17.9.0"
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools  # @UnusedImport
+    import setuptools  # noqa pylint: disable=unused-import
 except ImportError:
     pass
 else:
