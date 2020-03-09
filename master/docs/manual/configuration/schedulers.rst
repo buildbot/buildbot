@@ -678,7 +678,7 @@ This scheduler will perform a build each Monday morning at 6:23am and again at 8
 
     c['schedulers'].append(
         schedulers.Nightly(name='BeforeWork',
-                           branch=`default`,
+                           branch='default',
                            builderNames=['builder1'],
                            dayOfWeek=0, hour=[6,8], minute=23,
                            onlyIfChanged=True))
