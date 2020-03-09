@@ -33,10 +33,7 @@ from setuptools import setup
 
 from buildbot import version
 
-if "bdist_wheel" in sys.argv:
-    BUILDING_WHEEL = True
-else:
-    BUILDING_WHEEL = False
+BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
 
 def include(d, e):
@@ -335,7 +332,10 @@ setup_args = {
             ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
-            ('buildbot.reporters.bitbucketserver', ['BitbucketServerStatusPush', 'BitbucketServerPRCommentPush']),
+            ('buildbot.reporters.bitbucketserver', [
+                'BitbucketServerStatusPush',
+                'BitbucketServerPRCommentPush'
+            ]),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
             ('buildbot.reporters.telegram', ['TelegramBot']),
@@ -392,7 +392,9 @@ setup_args = {
                 ('repo.DownloadsFromProperties',
                  'RepoDownloadsFromProperties')]),
             ('buildbot.steps.shellsequence', ['ShellArg']),
-            ('buildbot.util.kubeclientservice', ['KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader']),
+            ('buildbot.util.kubeclientservice', [
+                'KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader'
+            ]),
             ('buildbot.www.avatar', ['AvatarGravatar']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
@@ -408,7 +410,9 @@ setup_args = {
                 'RolesFromDomain']),
             ('buildbot.www.authz.endpointmatchers', [
                 'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
-                'RebuildBuildEndpointMatcher', 'AnyControlEndpointMatcher', 'EnableSchedulerEndpointMatcher']),
+                'RebuildBuildEndpointMatcher', 'AnyControlEndpointMatcher',
+                'EnableSchedulerEndpointMatcher'
+            ]),
         ]),
         ('buildbot.webhooks', [
             ('buildbot.www.hooks.base', ['base']),

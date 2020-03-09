@@ -267,7 +267,8 @@ class BBDomain(Domain):
                                            has_content=True,
                                            name_annotation='resource type:',
                                            doc_field_types=[
-                                               TypedField('attr', label='Attributes', names=('attr',),
+                                               TypedField('attr', label='Attributes',
+                                                          names=('attr',),
                                                           typenames=('type',), can_collapse=True),
                                            ]),
         'rpath': make_ref_target_directive('rpath',
@@ -368,8 +369,8 @@ class BBDomain(Domain):
                     self_path = '{0}#{1}'.format(self.env.doc2path(self_data[target_name][0]),
                                                  self_data[target_name][1])
 
-                    other_path = '{0}#{1}'.format(self.env.doc2path(other_path[target_name][0]),
-                                                  other_path[target_name][1])
+                    other_path = '{0}#{1}'.format(self.env.doc2path(other_data[target_name][0]),
+                                                  other_data[target_name][1])
 
                     logger.warning(('Duplicate index {} reference {} in {}, '
                                     'other instance in {}').format(typ, target_name,
