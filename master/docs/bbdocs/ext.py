@@ -267,7 +267,8 @@ class BBDomain(Domain):
                                            has_content=True,
                                            name_annotation='resource type:',
                                            doc_field_types=[
-                                               TypedField('attr', label='Attributes', names=('attr',),
+                                               TypedField('attr', label='Attributes',
+                                                          names=('attr',),
                                                           typenames=('type',), can_collapse=True),
                                            ]),
         'rpath': make_ref_target_directive('rpath',
