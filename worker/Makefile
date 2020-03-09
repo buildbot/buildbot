@@ -1,9 +1,9 @@
 # developer utilities
 pylint:
-	pylint -j4 --rcfile=../common/pylintrc buildbot_worker
+	pylint -j4 --rcfile=../common/pylintrc buildbot_worker setup.py
 
 flake8:
-	flake8 --config=../common/flake8rc buildbot_worker
+	flake8 --config=../common/flake8rc buildbot_worker setup.py
 
 .PHONY: Dockerfile.py3
 
