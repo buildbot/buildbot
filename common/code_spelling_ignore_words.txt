@@ -111,6 +111,8 @@ basicauth
 baz
 bb
 bbot
+bbindex
+bbreftargetdirective
 bc
 bdict
 bdictlist
@@ -403,6 +405,7 @@ distutils
 dn
 dnotify
 doclobber
+docname
 doconfig
 docopy
 docstring
@@ -660,6 +663,7 @@ i'm
 impl
 ina
 incrementing
+indextemplates
 indices
 influxdb
 infos
@@ -784,6 +788,7 @@ listentcp
 liveness
 loadconfig
 localhost
+localname
 localtime
 lockaccess
 lockclass
@@ -916,6 +921,7 @@ multiservice's
 multithreading
 mumbo
 munge
+mydashboard
 mysql
 mysqlclient
 mysqld
@@ -1021,6 +1027,7 @@ pluggableauthenticationmoduleschecker
 plugin
 plugins
 pn
+png
 pollatlaunch
 pollatreconfigure
 poller
@@ -1068,6 +1075,7 @@ pullrequests
 pushjet
 pwd
 py
+py's
 pycrypto
 pyd
 pyflakes
@@ -1253,6 +1261,7 @@ setupmailnotifier
 setupsite
 setupsourcestep
 setupstep
+setuptools
 sha
 shellcommand
 shlex
@@ -1292,6 +1301,7 @@ spawnprocess
 specdir
 specfile
 specfiles
+spellcheck
 split
 splitter
 spulec
@@ -1395,6 +1405,7 @@ sys
 tac
 taichino
 tarball
+targetname
 tbl
 tcp
 tcpdump
@@ -1486,6 +1497,7 @@ unencrypted
 unexpectedsuccesses
 ungrouped
 unhandled
+unhighlighted
 unicast
 unicode
 unicoded
