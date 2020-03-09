@@ -52,16 +52,16 @@ def patched_unhighlighted(self, source):
             anonymous expression.
             """) % indented_source
         raise UnhighlightedError(msg)
-    else:
-        msg = textwrap.dedent("""\
-            Unhighlighted block:
 
-            %s
+    msg = textwrap.dedent("""\
+        Unhighlighted block:
 
-            """) % indented_source
-        sys.stderr.write(msg.encode('ascii', 'ignore'))
+        %s
 
-        return orig_unhiglighted(self, source)
+        """) % indented_source
+    sys.stderr.write(msg.encode('ascii', 'ignore'))
+
+    return orig_unhiglighted(self, source)
 
 # Compatible with PygmentsBridge.highlight_block since Sphinx'
 # 1860:19b394207746 changeset (v0.6.6 release)

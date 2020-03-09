@@ -33,10 +33,7 @@ from setuptools import setup
 
 from buildbot import version
 
-if "bdist_wheel" in sys.argv:
-    BUILDING_WHEEL = True
-else:
-    BUILDING_WHEEL = False
+BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
 
 def include(d, e):
