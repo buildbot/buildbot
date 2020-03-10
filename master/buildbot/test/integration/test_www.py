@@ -27,7 +27,7 @@ from twisted.web import client
 from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
 from buildbot.mq import connector as mqconnector
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import www

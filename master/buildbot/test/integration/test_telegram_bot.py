@@ -28,7 +28,7 @@ from zope.interface import implementer
 from buildbot.data import connector as dataconnector
 from buildbot.mq import connector as mqconnector
 from buildbot.reporters import telegram
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import db

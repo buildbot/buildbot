@@ -18,7 +18,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www.authz import endpointmatchers

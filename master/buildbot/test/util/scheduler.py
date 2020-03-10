@@ -17,7 +17,7 @@
 from twisted.internet import defer
 
 from buildbot.schedulers import base
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 

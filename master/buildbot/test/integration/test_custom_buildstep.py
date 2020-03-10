@@ -31,7 +31,7 @@ from buildbot.process import factory
 from buildbot.process import results
 from buildbot.process import workerforbuilder
 from buildbot.steps import shell
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.util.misc import TestReactorMixin

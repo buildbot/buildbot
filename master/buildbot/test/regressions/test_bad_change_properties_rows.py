@@ -18,7 +18,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import changes
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 
 

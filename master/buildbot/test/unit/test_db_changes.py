@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces

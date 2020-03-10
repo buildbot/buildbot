@@ -20,7 +20,7 @@ from twisted.trial import unittest
 
 from buildbot.data import logchunks
 from buildbot.data import resultspec
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import endpoint
 
 

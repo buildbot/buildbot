@@ -20,7 +20,7 @@ from twisted.trial import unittest
 
 from buildbot.process import buildrequest
 from buildbot.process.builder import Builder
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 

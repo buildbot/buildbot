@@ -17,7 +17,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import sourcestamps
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import endpoint
 
 

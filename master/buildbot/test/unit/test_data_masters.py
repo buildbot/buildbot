@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.data import masters
 from buildbot.process.results import RETRY
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces

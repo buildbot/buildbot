@@ -24,8 +24,8 @@ from buildbot import config
 from buildbot import locks
 from buildbot.machine.base import Machine
 from buildbot.process import properties
+from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
-from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
