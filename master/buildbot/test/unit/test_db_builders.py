@@ -19,11 +19,9 @@ from twisted.trial import unittest
 from buildbot.db import builders
 from buildbot.db import tags
 from buildbot.test import fakedb
-from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 
 
 def builderKey(builder):
@@ -249,14 +247,11 @@ class RealTests(Tests):
     pass
 
 
-class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
+        yield self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase,
