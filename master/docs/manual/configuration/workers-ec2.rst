@@ -288,12 +288,14 @@ See boto documentation for further details.
                                keypair_name='latent_buildbot_worker',
                                security_name='latent_buildbot_worker',
                                block_device_map= [
-                                 "DeviceName": "/dev/xvdb",
-                                 "Ebs" : {
-                                    "VolumeType": "io1",
-                                    "Iops": 1000,
-                                    "VolumeSize": 100
-                                  }
+                                 {
+                                    "DeviceName": "/dev/xvdb",
+                                    "Ebs" : {
+                                       "VolumeType": "io1",
+                                       "Iops": 1000,
+                                       "VolumeSize": 100
+                                    }
+                                 }
                                ]
                                )
     ]
