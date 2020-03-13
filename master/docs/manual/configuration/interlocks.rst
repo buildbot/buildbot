@@ -39,6 +39,10 @@ Count
 Often, not all workers are equal.
 To allow for this situation, Buildbot allows to have a separate upper limit on the count for each worker.
 In this way, you can have at most 3 concurrent builds at a fast worker, 2 at a slightly older worker, and 1 at all other workers.
+You can also specify the count during access request. This specifies how many
+units an access consumes from the lock. This way, you can for balance a shared
+resource which workers consume unevenly, for example the amount of memory or
+the number of CPU cores.
 
 Scope
 ~~~~~
@@ -80,7 +84,15 @@ In the latter case, the lock is claimed for use just before the step starts, and
 To prevent deadlocks, [#]_ it is not possible to claim or release locks at other times.
 
 To use locks, you add them with a ``locks`` argument to a build or a step.
-Each use of a lock is either in counting mode (that is, possibly shared with other builds) or in exclusive mode, and this is indicated with the syntax ``lock.access(mode)``, where :data:`mode` is one of ``"counting"`` or ``"exclusive"``.
+Each use of a lock is either in counting mode (that is, possibly shared with
+other builds) or in exclusive mode, and this is indicated with the syntax
+``lock.access(mode, count)``, where :data:`mode` is one of ``"counting"`` or
+``"exclusive"``.
+
+The optional argument :data:`count` is a non-negative integer (for counting
+locks) or 1 (for exclusive locks). If unspecified, it defaults to 1. If 0, the
+access always succeeds. This argument allows to use locks for balancing a
+shared resource that is utilized unevenly.
 
 A build or build step proceeds only when it has acquired all locks.
 If a build or step needs a lot of locks, it may be starved [#]_ by other builds that need fewer locks.
