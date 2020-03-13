@@ -228,7 +228,8 @@ setup_args = {
             ('buildbot.changes.bitbucket', ['BitbucketPullrequestPoller']),
             ('buildbot.changes.github', ['GitHubPullrequestPoller']),
             ('buildbot.changes.bonsaipoller', ['BonsaiPoller']),
-            ('buildbot.changes.gerritchangesource', ['GerritChangeSource']),
+            ('buildbot.changes.gerritchangesource', [
+                'GerritChangeSource', 'GerritEventLogPoller']),
             ('buildbot.changes.gitpoller', ['GitPoller']),
             ('buildbot.changes.hgpoller', ['HgPoller']),
             ('buildbot.changes.p4poller', ['P4Source']),

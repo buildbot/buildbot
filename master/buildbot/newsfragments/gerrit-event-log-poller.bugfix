@@ -1,0 +1,1 @@
+Fix :py:class:`GerritEventLogPoller` class to be declared as entry_point (can be used in master.cfg file)
