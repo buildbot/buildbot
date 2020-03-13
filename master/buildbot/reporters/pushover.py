@@ -105,7 +105,7 @@ class PushoverNotifier(NotifierBase):
                     logs=None, worker=None):
 
         if worker is not None and worker not in self.watchedWorkers:
-            return
+            return None
 
         msg = {'message': body}
         if type == 'html':

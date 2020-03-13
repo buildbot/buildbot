@@ -171,6 +171,7 @@ class TelegramContact(Contact):
                 self.send('\n'.join(response))
         else:
             return super().command_COMMANDS(args)
+        return None
 
     @defer.inlineCallbacks
     def command_GETID(self, args, **kwargs):
@@ -404,6 +405,7 @@ class TelegramContact(Contact):
             text = ""
         self.send(text + "What do you want to do?",
                   reply_markup={'inline_keyboard': keyboard})
+        return None
 
     @defer.inlineCallbacks
     def command_FORCE(self, args, tquery=None, partial=None, **kwargs):
