@@ -619,6 +619,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 return ['c']
             elif props.changes[0]['branch'] == 'unstable':
                 return ['a', 'b']
+            return None
 
         sched = self.makeScheduler(name='n', builderNames=names)
 

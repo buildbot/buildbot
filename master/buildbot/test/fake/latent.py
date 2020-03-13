@@ -137,7 +137,7 @@ class LatentController(SeverWorkerConnectionMixin):
     def disconnect_worker(self):
         super().disconnect_worker()
         if self.remote_worker is None:
-            return
+            return None
         self.worker.conn, conn = None, self.worker.conn
         self.remote_worker, worker = None, self.remote_worker
 

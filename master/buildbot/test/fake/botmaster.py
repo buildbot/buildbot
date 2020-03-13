@@ -46,3 +46,4 @@ class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
         if self.delayShutdown:
             self.shutdownDeferred = defer.Deferred()
             return self.shutdownDeferred
+        return None

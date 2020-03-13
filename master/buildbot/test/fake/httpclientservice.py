@@ -106,6 +106,7 @@ class HTTPClientService(service.SharedService):
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
             content=content, files=files))
+        return None
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),

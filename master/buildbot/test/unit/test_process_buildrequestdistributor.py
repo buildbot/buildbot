@@ -74,6 +74,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         if self.brd.running:
             return self.brd.stopService()
+        return None
 
     def make_workers(self, worker_count):
         rows = self.base_rows[:]

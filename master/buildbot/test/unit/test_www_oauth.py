@@ -229,6 +229,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                     dict(login="hello"),
                     dict(login="grp"),
                 ]
+            return None
         self.githubAuth.get = fake_get
 
         res = yield self.githubAuth.verifyCode("code!")
