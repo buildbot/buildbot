@@ -165,7 +165,7 @@ def fullData(master):
 
 def computeUsageData(master):
     if master.config.buildbotNetUsageData is None:
-        return
+        return None
     data = basicData(master)
 
     if master.config.buildbotNetUsageData != "basic":

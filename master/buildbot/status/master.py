@@ -193,6 +193,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if isinstance(thing, changes.Change):
                 change = thing
                 return "{}#changes/{}".format(prefix, change.number)
+        return None
 
     def getChangeSources(self):
         return list(self.master.change_svc)

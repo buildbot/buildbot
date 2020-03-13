@@ -648,6 +648,7 @@ class MasterConfig(util.ComparableMixin):
                 return BuilderConfig(**b)
             else:
                 error("%r is not a builder config (in c['builders']" % (b,))
+            return None
         builders = [mapper(b) for b in builders]
 
         for builder in builders:

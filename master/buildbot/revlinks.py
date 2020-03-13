@@ -29,6 +29,7 @@ class RevlinkMatch:
             m = url.match(repo)
             if m:
                 return m.expand(self.revlink) % rev
+        return None
 
 
 GithubRevlink = RevlinkMatch(
@@ -77,6 +78,7 @@ class RevlinkMultiplexer:
             url = revlink(rev, repo)
             if url:
                 return url
+        return None
 
 
 default_revlink_matcher = RevlinkMultiplexer(GithubRevlink,

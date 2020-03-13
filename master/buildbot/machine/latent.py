@@ -146,6 +146,7 @@ class AbstractLatentMachine(Machine):
 
         self.state = States.STOPPED
         self._stop_notifier.notify(None)
+        return None
 
     def notifyBuildStarted(self):
         self._clearMissingTimer()

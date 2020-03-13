@@ -143,4 +143,4 @@ class EventResource(resource.Resource):
             return server.NOT_DONE_YET
 
         self.finish(request, 200, b"ok")
-        return
+        return None
