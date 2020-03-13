@@ -158,6 +158,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             order=['submitted_at'], limit=1)
         if unclaimed:
             return unclaimed[0]['submitted_at']
+        return None
 
     @defer.inlineCallbacks
     def getNewestCompleteTime(self):
@@ -277,7 +278,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # don't unnecessarily setup properties for build
         def setupPropsIfNeeded(props):
             if props is not None:
-                return
+                return None
             props = Properties()
             Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
                                                         self, workerforbuilder)

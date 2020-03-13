@@ -535,6 +535,7 @@ class Build(properties.PropertiesMixin):
         d.addBoth(self._flushProperties)
         d.addCallback(self._stepDone, s)
         d.addErrback(self.buildException)
+        return None
 
     @defer.inlineCallbacks
     def _flushProperties(self, results):

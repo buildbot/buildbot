@@ -220,4 +220,5 @@ class CommandlineUserManager(service.AsyncMultiService):
         def unreg(_):
             if self.registration:
                 return self.registration.unregister()
+            return None
         return d
