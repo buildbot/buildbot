@@ -286,9 +286,9 @@ class RemoteBuildRequest(pb.Referenceable):
         # subscribe to any new builds..
         def gotBuild(key, msg):
             if msg['buildrequestid'] != self.brid or key[-1] != 'new':
-                return
+                return None
             if msg['buildid'] in reportedBuilds:
-                return
+                return None
             reportedBuilds.add(msg['buildid'])
             return subscriber.callRemote('newbuild',
                                          RemoteBuild(
@@ -335,6 +335,7 @@ class RemoteBuild(pb.Referenceable):
             elif key[-1] == 'finished':
                 return subscriber.callRemote('stepFinished', self.builderName, self, msg['name'],
                                              None, msg['results'])
+            return None
         self.consumer = yield self.master.mq.startConsuming(
             stepChanged,
             ('builds', str(self.builddict['buildid']), 'steps', None, None))
@@ -390,7 +391,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         # build the intersection of the request and our configured list
         builderNames = self.scheduler.filterBuilderList(builderNames)
         if not builderNames:
-            return
+            return None
 
         reason = "'try' job"
 
