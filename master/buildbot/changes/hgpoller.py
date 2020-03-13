@@ -230,7 +230,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         @d.addCallback
         def results(heads):
             if not heads:
-                return
+                return None
 
             if len(heads.split()) > 1:
                 log.err(("hgpoller: caught several heads in branch %r "
@@ -238,7 +238,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                          "You should wait until the situation is normal again "
                          "due to a merge or directly strip if remote repo "
                          "gets stripped later.") % (branch, self.repourl))
-                return
+                return None
 
             # in case of whole reconstruction, are we sure that we'll get the
             # same node -> rev assignations ?

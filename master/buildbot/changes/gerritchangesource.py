@@ -247,6 +247,7 @@ class GerritChangeSourceBase(base.ChangeSource):
             'files': files,
             'category': event["type"],
             'properties': properties})
+        return None
 
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
