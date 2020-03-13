@@ -398,6 +398,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             return [instance_id, image.id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
+        return None
 
     def stop_instance(self, fast=False):
 

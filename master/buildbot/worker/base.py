@@ -600,6 +600,7 @@ class AbstractWorker(service.BuildbotService):
             self.unpause()
         if key[-1] == "kill":
             self.shutdown()
+        return None
 
     def shutdownRequested(self):
         self._graceful = True
