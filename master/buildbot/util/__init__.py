@@ -274,6 +274,7 @@ deprecatedModuleAttribute(
 def toJson(obj):
     if isinstance(obj, datetime.datetime):
         return datetime2epoch(obj)
+    return None
 
 
 # changes and schedulers consider None to be a legitimate name for a branch,
