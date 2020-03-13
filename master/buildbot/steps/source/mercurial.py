@@ -292,6 +292,7 @@ class Mercurial(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     def _sourcedirIsUpdatable(self):
         return self.pathExists(self.build.path_module.join(self.workdir, '.hg'))

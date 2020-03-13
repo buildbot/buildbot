@@ -559,6 +559,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
+        return None
 
     def uploadDone(self, data):
         lines = data.split("\n")

@@ -181,6 +181,7 @@ class DebPbuilder(WarningCountingShellCommand):
         else:
             log.msg("{} is not a file or a directory.".format(self.basetgz))
             self.finished(FAILURE)
+        return None
 
     def startBuild(self, cmd):
         if cmd.rc != 0:
@@ -188,6 +189,7 @@ class DebPbuilder(WarningCountingShellCommand):
             self.finished(FAILURE)
         else:
             return super().start()
+        return None
 
     def logConsumer(self):
         r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")

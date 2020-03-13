@@ -261,6 +261,7 @@ class Bzr(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     def parseGotRevision(self, _):
         d = self._dovccmd(["version-info", "--custom", "--template='{revno}"],

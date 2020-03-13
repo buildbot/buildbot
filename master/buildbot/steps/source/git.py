@@ -361,6 +361,7 @@ class Git(Source, GitStepMixin):
             yield self.clobber()
         else:
             raise buildstep.BuildStepFailed()
+        return None
 
     @defer.inlineCallbacks
     def _clone(self, shallowClone):
@@ -501,6 +502,7 @@ class Git(Source, GitStepMixin):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):

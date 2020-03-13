@@ -266,6 +266,7 @@ class P4(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     def _sourcedirIsUpdatable(self):
         # In general you should always be able to write to the directory
