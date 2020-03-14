@@ -1,4 +1,4 @@
-Sphinx==2.0.1 # pyup: ignore
+Sphinx==2.4.4
 sphinx-jinja==1.1.0
 sphinx-rtd-theme==0.4.3
 sphinxcontrib-blockdiag==2.0.0

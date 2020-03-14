@@ -1252,7 +1252,7 @@ Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``.
 This template is a standard Jinja_ template which is the default templating engine of Flask_.
 
 .. literalinclude:: mydashboard.html
-   :language: guess
+   :language: html+django
 
 
 .. _Flask: http://flask.pocoo.org/
