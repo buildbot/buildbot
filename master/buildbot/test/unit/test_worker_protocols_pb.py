@@ -162,6 +162,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
                 return defer.succeed('TheVersion')
+            return None
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -199,6 +200,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
                 return defer.succeed('TheVersion')
+            return None
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -234,6 +236,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
                 return defer.succeed('TheVersion')
+            return None
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -258,6 +261,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
                 return defer.succeed('TheVersion')
+            return None
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -275,7 +279,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         # This should be real old worker...
         def side_effect(*args, **kwargs):
             if args[0] == 'print':
-                return
+                return None
             return defer.fail(twisted_pb.RemoteError(
                 'twisted.spread.flavors.NoSuchMethod', None, None))
 

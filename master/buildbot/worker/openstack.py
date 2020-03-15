@@ -186,6 +186,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
             unknown_source = ("The source type '{}' for UUID '{}' is unknown".format(source_type,
                                                                                      source_uuid))
             raise ValueError(unknown_source)
+        return None
 
     @defer.inlineCallbacks
     def _getImage(self, build):
@@ -280,6 +281,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
         instance = self.instance
         self.instance = None
         self._stop_instance(instance, fast)
+        return None
 
     def _stop_instance(self, instance, fast):
         try:

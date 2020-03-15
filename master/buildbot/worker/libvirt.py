@@ -192,6 +192,7 @@ class LibVirtWorker(AbstractLatentWorker):
                 break
 
         self.ready = True
+        return None
 
     def canStartBuild(self):
         if not self.ready:

@@ -121,7 +121,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def lineReceived(self, line):
         if not self.running:
-            return
+            return None
         if b"Log opened." in line:
             self.in_reconfig = True
         if b"beginning configuration update" in line:
@@ -151,3 +151,4 @@ class LogWatcher(LineOnlyReceiver):
             return self.finished("buildmaster")
         if b"BuildMaster startup failed" in line:
             return self.finished(Failure(BuildmasterStartupError()))
+        return None

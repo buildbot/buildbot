@@ -330,6 +330,7 @@ class GitExtractor(SourceStampExtractor):
             d = self.dovc(["remote"])
             d.addCallback(self.fixBranch)
             return d
+        return None
 
     # strip remote prefix from self.branch
     def fixBranch(self, remotes):
@@ -718,6 +719,7 @@ class Try(pb.Referenceable):
             assert self.buildsetStatus
             self._getStatus_1()
             return self.running
+        return None
 
     def _getStatus_1(self, res=None):
         if res:
@@ -810,6 +812,7 @@ class Try(pb.Referenceable):
         if not self.outstanding:
             # all done
             return self.statusDone()
+        return None
 
     def printStatus(self):
         try:

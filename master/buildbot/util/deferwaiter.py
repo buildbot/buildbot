@@ -34,7 +34,7 @@ class DeferWaiter:
 
     def add(self, d):
         if not isinstance(d, defer.Deferred):
-            return
+            return None
 
         self._waited[id(d)] = d
         d.addBoth(self._finished, d)

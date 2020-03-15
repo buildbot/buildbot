@@ -35,6 +35,7 @@ def captureErrors(errors, msg):
         print(msg)
         print(e)
         return 1
+    return None
 
 
 class BusyError(RuntimeError):
@@ -114,11 +115,11 @@ def loadConfig(config, configFileName='master.cfg'):
 
         for msg in e.errors:
             print("  " + msg)
-        return
+        return None
     except Exception:
         print("Errors loading configuration:")
         traceback.print_exc(file=sys.stdout)
-        return
+        return None
 
     return master_cfg
 

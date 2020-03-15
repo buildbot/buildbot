@@ -368,6 +368,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         yield self.pending_builders_lock.run(
             resetPendingBuildersList, new_builders)
+        return None
 
     @defer.inlineCallbacks
     def _defaultSorter(self, master, builders):

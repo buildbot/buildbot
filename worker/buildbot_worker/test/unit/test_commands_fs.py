@@ -353,6 +353,7 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
             for i in items:
                 if i:
                     return True
+            return None
 
         self.assertIn({'rc': 0},
                       self.get_updates(),

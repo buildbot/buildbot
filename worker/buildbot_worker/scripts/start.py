@@ -117,6 +117,7 @@ def startWorker(basedir, quiet, nodaemon):
     # watching it before we start the daemon
     time.sleep(0.2)
     launch(nodaemon)
+    return None
 
 
 def launch(nodaemon):

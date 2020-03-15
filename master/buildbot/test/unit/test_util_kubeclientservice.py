@@ -204,6 +204,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
     def tearDown(self):
         if self.config is not None:
             return self.config.stopService()
+        return None
 
     @defer.inlineCallbacks
     def test_basic(self):

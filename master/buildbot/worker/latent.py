@@ -354,7 +354,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         # notify people, but only if we're still in the config
         if not self.parent or not self.notify_on_missing:
-            return
+            return None
 
         return self.master.data.updates.workerMissing(
             workerid=self.workerid,

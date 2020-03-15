@@ -147,7 +147,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
         """
         # pass on this if we're not configured yet
         if not self.configured_url:
-            return
+            return None
 
         d = self.changes.pruneChanges(self.master.config.changeHorizon)
         d.addErrback(log.err, 'while pruning changes')

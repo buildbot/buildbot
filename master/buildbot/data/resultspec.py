@@ -221,6 +221,7 @@ class ResultSpec:
             if f.field == field and f.op == op:
                 self.filters.remove(f)
                 return f.values
+        return None
 
     def popOneFilter(self, field, op):
         v = self.popFilter(field, op)
@@ -233,11 +234,13 @@ class ResultSpec:
         neVals = self.popFilter(field, 'ne')
         if neVals and len(neVals) == 1:
             return not neVals[0]
+        return None
 
     def popStringFilter(self, field):
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
+        return None
 
     def popIntegerFilter(self, field):
         eqVals = self.popFilter(field, 'eq')
@@ -247,6 +250,7 @@ class ResultSpec:
             except ValueError:
                 raise ValueError("Filter value for {} should be integer, but got: {}".format(
                     field, eqVals[0]))
+        return None
 
     def removePagination(self):
         self.limit = self.offset = None

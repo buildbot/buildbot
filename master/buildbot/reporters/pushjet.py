@@ -91,7 +91,7 @@ class PushjetNotifier(NotifierBase):
                     logs=None, worker=None):
 
         if worker is not None and worker not in self.watchedWorkers:
-            return
+            return None
 
         msg = {'message': body}
         level = self.levels.get(LEVELS[results] if worker is None else 'worker_missing')

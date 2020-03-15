@@ -253,6 +253,7 @@ class Monotone(Source):
                 df.addCallback(lambda _: self._retryPull())
                 reactor.callLater(delay, df.callback, None)
                 yield df
+        return None
 
     @defer.inlineCallbacks
     def parseGotRevision(self):

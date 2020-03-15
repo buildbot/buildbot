@@ -35,13 +35,13 @@ class Reconfigurator:
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
             print("Reconfig (through SIGHUP) is not supported on Windows.")
-            return
+            return None
 
         with open(os.path.join(basedir, "twistd.pid"), "rt") as f:
             self.pid = int(f.read().strip())
         if quiet:
             os.kill(self.pid, signal.SIGHUP)
-            return
+            return None
 
         # keep reading twistd.log. Display all messages between "loading
         # configuration from ..." and "configuration update complete" or

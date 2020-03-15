@@ -108,7 +108,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         if isinstance(self.sch, trysched.Try_Userpass):
             def getSchedulerPort():
                 if not self.sch.registrations:
-                    return
+                    return None
                 self.serverPort = self.sch.registrations[0].getPort()
                 log.msg("Scheduler registered at port %d" % self.serverPort)
                 return True

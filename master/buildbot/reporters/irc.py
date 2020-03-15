@@ -261,6 +261,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             message = message[len("{}:".format(self.nickname)):]
             d = contact.handleMessage(message)
             return d
+        return None
 
     def action(self, user, channel, data):
         user = user.split('!', 1)[0]  # rest is ~user@hostname

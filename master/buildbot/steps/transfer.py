@@ -82,6 +82,7 @@ class _TransferBuildStep(BuildStep):
         if self.cmd:
             d = self.cmd.interrupt(reason)
             return d
+        return None
 
 
 class FileUpload(_TransferBuildStep):

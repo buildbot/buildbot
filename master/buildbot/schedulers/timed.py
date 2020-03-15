@@ -97,6 +97,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                                              onlyImportant=self.onlyImportant)
         else:
             yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
+        return None
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -115,6 +116,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                 self.actuateAtTimer.cancel()
             self.actuateAtTimer = None
         yield self.actuationLock.run(stop_actuating)
+        return None
 
     # Scheduler methods
 

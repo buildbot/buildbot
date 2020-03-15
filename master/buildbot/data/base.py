@@ -109,12 +109,12 @@ class BuildNestingMixin:
         else:
             builderid = yield self.getBuilderId(kwargs)
             if builderid is None:
-                return
+                return None
             build = yield self.master.db.builds.getBuildByNumber(
                 builderid=builderid,
                 number=kwargs['build_number'])
             if not build:
-                return
+                return None
             return build['id']
 
     @defer.inlineCallbacks
@@ -124,14 +124,14 @@ class BuildNestingMixin:
         else:
             buildid = yield self.getBuildid(kwargs)
             if buildid is None:
-                return
+                return None
 
             dbdict = yield self.master.db.steps.getStep(buildid=buildid,
                                                         number=kwargs.get(
                                                             'step_number'),
                                                         name=kwargs.get('step_name'))
             if not dbdict:
-                return
+                return None
             return dbdict['id']
 
     def getBuilderId(self, kwargs):

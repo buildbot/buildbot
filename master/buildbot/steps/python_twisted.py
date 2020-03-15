@@ -73,6 +73,7 @@ class HLint(ShellCommand):
         self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
 
         super().start()
+        return None
 
     def logConsumer(self):
         while True:

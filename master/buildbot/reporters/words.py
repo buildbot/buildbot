@@ -174,6 +174,7 @@ class Channel(service.AsyncService):
                 return self.workerMissing(msg)
             if key[2] == 'connected':
                 return self.workerConnected(msg)
+            return None
 
         for e, f in (("new", buildStarted),             # BuilderStarted
                      ("finished", buildFinished)):      # BuilderFinished
@@ -467,24 +468,24 @@ class Contact:
         if not meth:
             if message[-1] == '!':
                 self.send("What you say!")
-                return
+                return None
             elif cmd.startswith(self.bot.commandPrefix):
                 self.send("I don't get this '{}'...".format(cmd))
                 meth = self.command_COMMANDS
             else:
                 if self.is_private_chat:
                     self.send("Say what?")
-                return
+                return None
 
         try:
             result = yield meth(args.strip(), **kwargs)
         except UsageError as e:
             self.send(str(e))
-            return
+            return None
         except Exception as e:
             self.bot.log_err(e)
             self.send("Something bad happened (see logs)")
-            return
+            return None
         return result
 
     def splitArgs(self, args):
@@ -550,7 +551,6 @@ class Contact:
                     response.append(worker['name'])
                     response.append("[offline]")
             self.send(' '.join(response))
-            return
 
         elif args[0] == 'changes':
             if all:
@@ -666,6 +666,7 @@ class Contact:
         def watchForCompleteEvent(key, msg):
             if key[-1] in ('finished', 'complete'):
                 return self.channel.buildFinished(msg, watched=True)
+            return None
 
         for build in builds:
             startConsuming = self.master.mq.startConsuming

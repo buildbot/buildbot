@@ -635,7 +635,7 @@ class Interpolate(util.ComparableMixin):
         except ValueError:
             config.error(
                 "invalid Interpolate substitution without selector '{}'".format(fmt))
-            return
+            return None
 
         fn = getattr(self, "_parse_" + key, None)
         if not fn:

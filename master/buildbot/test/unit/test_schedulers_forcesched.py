@@ -439,6 +439,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                      'revision': '', 'codebase': ''},
                 ])),
         ])
+        return None
 
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",

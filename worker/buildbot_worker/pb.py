@@ -276,7 +276,7 @@ class Worker(WorkerBase, service.MultiService):
         if not self.bf.perspective:
             log.msg("No active connection, shutting down NOW")
             reactor.stop()
-            return
+            return None
 
         log.msg(
             "Telling the master we want to shutdown after any running builds are finished")

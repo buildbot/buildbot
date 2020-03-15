@@ -202,7 +202,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         num_lines = res.fetchone()
         res.close()
         if not num_lines:
-            return  # ignore a missing log
+            return None  # ignore a missing log
 
         return self.thdSplitAndAppendChunk(conn=conn,
                                            logid=logid,

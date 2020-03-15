@@ -37,15 +37,17 @@ class Db2DataMixin:
             return (props
                     if '*' in filters
                     else dict(((k, v) for k, v in props.items() if k in filters)))
+        return None
 
     @defer.inlineCallbacks
     def addPropertiesToBuildRequest(self, buildrequest, filters):
         if not filters:
-            return
+            return None
         props = yield self.master.db.buildsets.getBuildsetProperties(buildrequest['buildsetid'])
         filtered_properties = self._generate_filtered_properties(props, filters)
         if filtered_properties:
             buildrequest['properties'] = filtered_properties
+        return None
 
     def db2data(self, dbdict):
         data = {
@@ -131,6 +133,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         # references.
         yield self.master.data.updates.completeBuildRequests([brid],
                                                              results.CANCELLED)
+        return None
 
 
 class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):

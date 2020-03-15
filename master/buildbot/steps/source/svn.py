@@ -257,6 +257,7 @@ class SVN(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):

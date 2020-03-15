@@ -60,6 +60,7 @@ class ConfigErrorsMixin:
             return context
         with context:
             fn()
+        return None
 
     def assertNoConfigErrors(self, errors):
         self.assertEqual(errors.errors, [])

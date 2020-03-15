@@ -59,7 +59,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
     def get(self, resultSpec, kwargs):
         logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
         if logid is None:
-            return
+            return None
         firstline = int(resultSpec.offset or 0)
         lastline = None if resultSpec.limit is None else firstline + \
             int(resultSpec.limit) - 1
@@ -70,12 +70,12 @@ class LogChunkEndpoint(LogChunkEndpointBase):
             if not dbdict:
                 dbdict = yield self.master.db.logs.getLog(logid)
             if not dbdict:
-                return
+                return None
             lastline = int(max(0, dbdict['num_lines'] - 1))
 
         # bounds checks
         if firstline < 0 or lastline < 0 or firstline > lastline:
-            return
+            return None
 
         logLines = yield self.master.db.logs.getLogLines(
             logid, firstline, lastline)
@@ -103,12 +103,12 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     def get(self, resultSpec, kwargs):
         logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
         if logid is None:
-            return
+            return None
 
         if not dbdict:
             dbdict = yield self.master.db.logs.getLog(logid)
             if not dbdict:
-                return
+                return None
         lastline = max(0, dbdict['num_lines'] - 1)
 
         logLines = yield self.master.db.logs.getLogLines(

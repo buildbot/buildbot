@@ -126,3 +126,4 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def _toJson(self, obj):
         if isinstance(obj, datetime.datetime):
             return datetime2epoch(obj)
+        return None

@@ -300,3 +300,4 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             patch = None
 
         self.startVC(branch, revision, patch)
+        return None

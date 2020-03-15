@@ -52,6 +52,7 @@ class Listener(base.Listener):
                                                            self._getPerspective)
                 self._registrations[username] = (password, portStr, reg)
                 return reg
+        return None
 
     @defer.inlineCallbacks
     def _getPerspective(self, mind, workerName):

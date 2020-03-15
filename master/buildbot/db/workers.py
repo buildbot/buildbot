@@ -123,6 +123,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                                         _name=name, masterid=masterid, builderid=builderid)
         if workers:
             return workers[0]
+        return None
 
     # returns a Deferred that returns a value
     def getWorkers(self, _workerid=None, _name=None, masterid=None,

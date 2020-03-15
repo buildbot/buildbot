@@ -166,6 +166,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                                          ).format(name, tbl.name, gi, ei))
             if diff:
                 return "\n".join(diff)
+            return None
 
         d = self.db.pool.do_with_engine(comp)
 

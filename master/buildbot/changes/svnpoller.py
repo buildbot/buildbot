@@ -306,14 +306,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             log.msg(format="SVNPoller: ignoring path '%(path)s' which doesn't"
                     "start with prefix '%(prefix)s'",
                     path=path, prefix=self._prefix)
-            return
+            return None
         relative_path = path[len(self._prefix):]
         if relative_path.startswith("/"):
             relative_path = relative_path[1:]
         where = self.split_file(relative_path)
         # 'where' is either None, (branch, final_path) or a dict
         if not where:
-            return
+            return None
         if isinstance(where, tuple):
             where = dict(branch=where[0], path=where[1])
         return where

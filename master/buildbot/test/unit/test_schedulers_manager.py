@@ -56,6 +56,7 @@ class SchedulerManager(unittest.TestCase):
     def tearDown(self):
         if self.sm.running:
             return self.sm.stopService()
+        return None
 
     class Sched(base.BaseScheduler):
 

@@ -212,6 +212,7 @@ class RealDatabaseMixin:
         log.msg("cleaning database {}".format(self.db_url))
         yield self.db_pool.do(self.__thd_clean_database)
         yield self.db_pool.do(self.__thd_create_tables, table_names)
+        return None
 
     @defer.inlineCallbacks
     def tearDownRealDatabase(self):

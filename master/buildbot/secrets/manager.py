@@ -43,3 +43,4 @@ class SecretManager(service.BuildbotServiceManager):
             source_name = provider.__class__.__name__
             if value is not None:
                 return SecretDetails(source_name, secret, value)
+        return None

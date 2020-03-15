@@ -365,6 +365,7 @@ class ClusteredBuildbotService(BuildbotService):
             self._activityPollCall.stop()
             self._activityPollCall = None
             return self._activityPollDeferred
+        return None
 
     def _callbackStartServiceDeferred(self):
         if self._startServiceDeferred is not None:

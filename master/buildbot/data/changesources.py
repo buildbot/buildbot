@@ -51,7 +51,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
             kwargs['changesourceid'])
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
-                return
+                return None
         return (yield self.db2data(dbdict)) if dbdict else None
 
 

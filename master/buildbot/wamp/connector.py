@@ -114,7 +114,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             ret = yield service.publish(topic, data, options=options)
         except TransportLost:
             log.err(failure.Failure(), "while publishing event " + topic)
-            return
+            return None
         return ret
 
     @defer.inlineCallbacks

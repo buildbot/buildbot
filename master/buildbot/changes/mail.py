@@ -75,6 +75,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
                                                           **chdict)
             else:
                 log.msg("no change found in maildir file '{}'".format(filename))
+            return None
 
         return d
 
@@ -224,7 +225,7 @@ class CVSMaildirSource(MaildirSource):
             else:
                 log.msg(
                     'CVSMaildirSource can\'t get path from file list. Ignoring mail')
-                return
+                return None
             fileList = fileList[len(path):].strip()
             singleFileRE = re.compile(
                 r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
