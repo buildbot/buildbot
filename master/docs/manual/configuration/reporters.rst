@@ -124,11 +124,12 @@ For example, if only short emails are desired (e.g., for delivery to phones):
 .. code-block:: python
 
     from buildbot.plugins import reporters
-    mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
-                                sendToInterestedUsers=False,
-                                mode=('problem',),
-                                extraRecipients=['listaddr@example.org'],
-                                messageFormatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
+    mn = reporters.MailNotifier(
+        fromaddr="buildbot@example.org",
+        sendToInterestedUsers=False,
+        mode=('problem',),
+        extraRecipients=['listaddr@example.org'],
+        messageFormatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
 
 Another example of a function delivering a customized html email is given below:
 
@@ -1283,12 +1284,15 @@ Here's a complete example of posting build results as a github comment:
     def getresults(props):
         all_logs=[]
         master = props.master
-        steps = yield props.master.data.get(('builders', props.getProperty('buildername'), 'builds', props.getProperty('buildnumber'), 'steps'))
+        steps = yield props.master.data.get(
+            ('builders', props.getProperty('buildername'), 'builds',
+            props.getProperty('buildnumber'), 'steps'))
         for step in steps:
             if step['results'] == util.Results.index('failure'):
                 logs = yield master.data.get(("steps", step['stepid'], 'logs'))
                 for l in logs:
-                    all_logs.append('Step : {0} Result : {1}'.format(step['name'], util.Results[step['results']]))
+                    all_logs.append('Step : {0} Result : {1}'.format(
+                                        step['name'], util.Results[step['results']]))
                     all_logs.append('```')
                     l['stepname'] = step['name']
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
@@ -1452,7 +1456,8 @@ GitLabStatusPush
 
     from buildbot.plugins import reporters
 
-    gl = reporters.GitLabStatusPush('private-token', context='continuous-integration/buildbot', baseURL='https://git.yourcompany.com')
+    gl = reporters.GitLabStatusPush('private-token', context='continuous-integration/buildbot',
+                                    baseURL='https://git.yourcompany.com')
     c['services'].append(gl)
 
 :class:`GitLabStatusPush` publishes build status using `GitLab Commit Status API <http://doc.gitlab.com/ce/api/commits.html#commit-status>`_.
@@ -1655,7 +1660,8 @@ ZulipStatusPush
 
     from buildbot.plugins import reporters
 
-    zs = reporters.ZulipStatusPush(endpoint='your-organization@zulipchat.com', token='private-token', stream='stream_to_post_in')
+    zs = reporters.ZulipStatusPush(endpoint='your-organization@zulipchat.com',
+                                   token='private-token', stream='stream_to_post_in')
     c['services'].append(zs)
 
 :class:`ZulipStatusPush` sends build status using `The Zulip API <https://zulipchat.com/api/>`_.

@@ -659,9 +659,10 @@ Similar to the previous example but also resolves the branch and revision into a
 
     from buildbot.plugins import changes
 
-    s = changes.P4Source(p4base='//depot/project/',
-                         split_file=lambda branchfile: branchfile.split('/',1))
-                         revlink=lambda branch, revision: 'http://p4web:8080/@md=d&@/{}?ac=10'.format(revision)
+    s = changes.P4Source(
+        p4base='//depot/project/',
+        split_file=lambda branchfile: branchfile.split('/',1))
+        revlink=lambda branch, revision: 'http://p4web:8080/@md=d&@/{}?ac=10'.format(revision)
     c['change_source'] = s
 
 .. bb:chsrc:: SVNPoller
@@ -1410,11 +1411,11 @@ An example is following:
 
     # this scheduler will create builds when a patch is uploaded to gerrit
     # but only if it is uploaded to the "main" branch
-    schedulers.AnyBranchScheduler(name="main-precommit",
-                                  change_filter=util.GerritChangeFilter(branch="main",
-                                                                        eventtype="patchset-created"),
-                                  treeStableTimer=15*60,
-                                  builderNames=["main-precommit"])
+    schedulers.AnyBranchScheduler(
+        name="main-precommit",
+        change_filter=util.GerritChangeFilter(branch="main", eventtype="patchset-created"),
+        treeStableTimer=15*60,
+        builderNames=["main-precommit"])
 
     # this scheduler will create builds when a patch is merged in the "main" branch
     # for post-commit tests

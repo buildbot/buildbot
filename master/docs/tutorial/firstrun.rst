@@ -195,7 +195,8 @@ Meanwhile, from the other terminal, in the master log (:file:`twisted.log` in th
 
 .. code-block:: none
 
-  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] worker 'example-worker' attaching from IPv4Address(TCP, '127.0.0.1', 54015)
+  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] worker 'example-worker' attaching from
+  IPv4Address(TCP, '127.0.0.1', 54015)
   2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] Got workerinfo from 'example-worker'
   2014-11-01 15:56:51+0100 [-] bot attached
 

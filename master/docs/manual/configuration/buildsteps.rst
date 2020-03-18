@@ -522,8 +522,10 @@ If you are building from multiple branches, then you should create the :bb:step:
 
     from buildbot.plugins import steps, util
 
-    factory.addStep(steps.SVN(mode='incremental',
-                    repourl=util.Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
+    factory.addStep(
+        steps.SVN(mode='incremental',
+                  repourl=util.Interpolate(
+                      'svn://svn.example.org/svn/%(src::branch)s/myproject')))
 
 Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without :ref:`Interpolate`:
 
@@ -724,12 +726,13 @@ The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ cl
 
     from buildbot.plugins import steps, util
 
-    factory.addStep(steps.P4(p4port=p4port,
-                             p4client=util.WithProperties('%(P4USER)s-%(workername)s-%(buildername)s'),
-                             p4user=p4user,
-                             p4base='//depot',
-                             p4viewspec=p4viewspec,
-                             mode='incremental'))
+    factory.addStep(steps.P4(
+        p4port=p4port,
+        p4client=util.WithProperties('%(P4USER)s-%(workername)s-%(buildername)s'),
+        p4user=p4user,
+        p4base='//depot',
+        p4viewspec=p4viewspec,
+        mode='incremental'))
 
 You can specify the client spec in two different ways.
 You can use the ``p4base``, ``p4branch``, and (optionally) ``p4extra_views`` to build up the viewspec, or you can utilize the ``p4viewspec`` to specify the whole viewspec as a set of tuples.
@@ -1475,7 +1478,8 @@ A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderabl
         commands=[
             util.ShellArg(command=['configure']),
             util.ShellArg(command=['make'], logfile='make'),
-            util.ShellArg(command=['make', 'check_warning'], logfile='warning', warnOnFailure=True),
+            util.ShellArg(
+                command=['make', 'check_warning'], logfile='warning', warnOnFailure=True),
             util.ShellArg(command=['make', 'install'], logfile='make install')
         ]))
 
@@ -2673,18 +2677,26 @@ It is similar to :bb:step:`SetProperty`, and meant to be used with a :ref:`rende
 
         # First, see if we got a BINARYDIST_FILENAME output
         if reported_filename[:26] == "BINARYDIST_FILENAME=":
-            local_filename = util.Interpolate(reported_filename[26:].strip()+"%(prop:os_pkg_ext)s")
+            local_filename = util.Interpolate(reported_filename[26:].strip() +
+                                              "%(prop:os_pkg_ext)s")
         else:
             # If not, use non-sf/consistent_distnames naming
             if is_mac(props):
-                local_filename = util.Interpolate("contrib/mac/app/Julia-%(prop:version)s-%(prop:shortcommit)s.%(prop:os_pkg_ext)s")
+                template = \
+                    "path/to/Julia-%(prop:version)s-%(prop:shortcommit)s.%(prop:os_pkg_ext)s"
             elif is_winnt(props):
-                local_filename = util.Interpolate("julia-%(prop:version)s-%(prop:tar_arch)s.%(prop:os_pkg_ext)s")
+                template = \
+                    "julia-%(prop:version)s-%(prop:tar_arch)s.%(prop:os_pkg_ext)s"
             else:
-                local_filename = util.Interpolate("julia-%(prop:shortcommit)s-Linux-%(prop:tar_arch)s.%(prop:os_pkg_ext)s")
+                template = \
+                    "julia-%(prop:shortcommit)s-Linux-%(prop:tar_arch)s.%(prop:os_pkg_ext)s"
+
+            local_filename = util.Interpolate(template)
 
         # upload_filename always follows sf/consistent_distname rules
-        upload_filename = util.Interpolate("julia-%(prop:shortcommit)s-%(prop:os_name)s%(prop:bits)s.%(prop:os_pkg_ext)s")
+        upload_filename = util.Interpolate(
+            "julia-%(prop:shortcommit)s-%(prop:os_name)s%(prop:bits)s.%(prop:os_pkg_ext)s")
+
         return {
             "local_filename": local_filename
             "upload_filename": upload_filename

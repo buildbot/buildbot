@@ -128,10 +128,11 @@ In other cases, ``parent_buildid`` from buildset can be used:
             master.data.get(('buildsets', req1['buildsetid'])),
             master.data.get(('buildsets', req2['buildsetid']))
         ])
-        if canBeCollapsed and selfBuildset['parent_buildid'] != None and otherBuildset['parent_buildid'] != None:
-           return True
+        if canBeCollapsed and selfBuildset['parent_buildid'] != None and \
+                otherBuildset['parent_buildid'] != None:
+            return True
         else:
-           return False
+            return False
     c['collapseRequests'] = collapseRequests
 
 
@@ -199,7 +200,8 @@ the following approach might be helpful:
         def isBuilding(b):
             return bool(b.building) or bool(b.old_building)
 
-        builders.sort(key = lambda b: (isBuilding(b), b.getNewestCompleteTime(), b.getOldestRequestTime()))
+        builders.sort(key = lambda b: (isBuilding(b), b.getNewestCompleteTime(),
+                                       b.getOldestRequestTime()))
         return builders
 
     c['prioritizeBuilders'] = prioritizeBuilders

@@ -145,7 +145,8 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
         3
         4
 
-     Use this for extremely large lists to keep memory-usage down and improve performance when you only need to iterate once.
+     Use this for extremely large lists to keep memory-usage down and improve performance when
+     you only need to iterate once.
 
 .. py:function:: none_or_str(obj)
 
@@ -1307,7 +1308,8 @@ For example, a particular daily scheduler could be configured on multiple master
 
                 @defer.inlineCallbacks
                 def reconfigService(self, baseurl):
-                    self._http = yield httpclientservice.HTTPClientService.getService(self.master, baseurl)
+                    self._http = yield httpclientservice.HTTPClientService.getService(
+                        self.master, baseurl)
 
                 @defer.inlineCallbacks
                 def doGetRoot(self):
@@ -1316,7 +1318,8 @@ For example, a particular daily scheduler could be configured on multiple master
                     if res.code != 200:
                         raise Exception("%d: server did not succeed" % (res.code))
                     res_json = yield res.json()
-                    # res.json() returns a deferred to account for the time needed to fetch the entire body
+                    # res.json() returns a deferred to account for the time needed to fetch the
+                    # entire body
                     return res_json
 
 
@@ -1325,8 +1328,9 @@ For example, a particular daily scheduler could be configured on multiple master
                 def setUp(self):
                     baseurl = 'http://127.0.0.1:8080'
                     self.parent = service.MasterService()
-                    self._http = self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
-                        self.parent, self, baseurl))
+                    self._http = self.successResultOf(
+                        fakehttpclientservice.HTTPClientService.getFakeService(self.parent, self,
+                                                                               baseurl))
                     self.tested = myTestedService(baseurl)
 
                     self.successResultOf(self.tested.setServiceParent(self.parent))

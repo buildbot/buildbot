@@ -143,30 +143,32 @@ Configure remote libvirt server:
    
    # build-vm - VM name in virsh list --all
    # vm_base_image.qcow2 - base image file name, must exist in path /var/lib/libvirt/images/
-   # vm_temp_image.qcow2 - temporary image. Must not exist in path /var/lib/libvirt/images/, but defined in VM config file
+   # vm_temp_image.qcow2 - temporary image. Must not exist in path /var/lib/libvirt/images/, but
+   # defined in VM config file
    domains = {
        'build-vm' : ['vm_base_image.qcow2', 'vm_temp_image.qcow2'],
    }
 
    def delete_image_clone(vir_domain):
        if vir_domain in domains:
-	        domain = domains[vir_domain]
-	        os.remove(images_path + domain[1])
+           domain = domains[vir_domain]
+           os.remove(images_path + domain[1])
 
    def create_image_clone(vir_domain):
        if vir_domain in domains:
-	        domain = domains[vir_domain]
-	        cmd = ['/usr/bin/qemu-img', 'create', '-b', images_path + domain[0], '-f', 'qcow2', images_path + domain[1]]
-	        subprocess.call(cmd)
+           domain = domains[vir_domain]
+           cmd = ['/usr/bin/qemu-img', 'create', '-b', images_path + domain[0],
+                  '-f', 'qcow2', images_path + domain[1]]
+           subprocess.call(cmd)
 
    if __name__ == "__main__":
        vir_domain, action = sys.argv[1:3]
 
        if action in ["prepare"]:
-	        create_image_clone(vir_domain)
+           create_image_clone(vir_domain)
 
        if action in ["release"]:
-	        delete_image_clone(vir_domain)
+           delete_image_clone(vir_domain)
 
 Configure buildbot server:
 
@@ -177,8 +179,9 @@ Configure buildbot server:
 
     from buildbot.plugins import worker, util
     c['workers'] = [
-        worker.LibVirtWorker('minion1', 'sekrit',
-                             util.Connection("qemu+ssh://<user>@<ip address or DNS name>:<port>/session"),
-                             '/home/buildbot/images/minion1')
+        worker.LibVirtWorker(
+            'minion1', 'sekrit',
+            util.Connection("qemu+ssh://<user>@<ip address or DNS name>:<port>/session"),
+            '/home/buildbot/images/minion1')
     ]
 
