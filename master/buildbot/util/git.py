@@ -63,7 +63,7 @@ class GitMixin:
                 logname))
 
         if self.sshHostKey is not None and self.sshKnownHosts is not None:
-            config.error('{}: only one of sshPrivateKey and sshHostKey can be provided'.format(
+            config.error('{}: only one of sshKnownHosts and sshHostKey can be provided'.format(
                 logname))
 
         self.gitInstalled = False
