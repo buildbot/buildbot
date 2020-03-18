@@ -1920,7 +1920,7 @@ When you hit this problem, you will get error like the following:
 .. code-block:: none
 
     sqlalchemy.exc.OperationalError: (OperationalError) too many SQL variables
-    u'DELETE FROM scheduler_changes WHERE scheduler_changes.changeid IN (?, ?, ?, ......tons of ?? and IDs .... 9363, 9362, 9361)
+    u'DELETE FROM scheduler_changes WHERE scheduler_changes.changeid IN (?, ?, ?, ..., ?)
 
 You can use the method :py:meth:`doBatch` in order to write batching code in a consistent manner.
 

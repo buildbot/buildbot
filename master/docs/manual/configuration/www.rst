@@ -289,8 +289,9 @@ The default templates are very much configurable via the following options.
         "left_text": "Build Status",  # text on the left part of the image
         "left_color": "#555",  # color of the left part of the image
         "right_pad" : 5,
-        "border_radius" : 5, #Border Radius on flat and plastic badges
-        "style": "plastic",  # style of the template availables are "flat", "flat-square", "plastic"
+        "border_radius" : 5, # Border Radius on flat and plastic badges
+        # style of the template availables are "flat", "flat-square", "plastic"
+        "style": "plastic",
         "template_name": "{style}.svg.j2",  # name of the template
         "font_face": "DejaVu Sans",
         "font_size": 11,
@@ -329,9 +330,16 @@ To ensure the correct "look and feel", the following Buildbot configuration is n
 
 .. code-block:: python
 
-      c['www'] = {
-          'plugins': {'badges': {"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"}}
-      }
+    c['www'] = {
+        'plugins': {
+            'badges': {
+                "left_pad": 0,
+                "right_pad": 0,
+                "border_radius": 3,
+                "style": "badgeio"
+            }
+        }
+    }
 
 .. note::
 
@@ -355,7 +363,8 @@ To secure Buildbot, you will need to configure an authentication plugin.
 
    .. code-block:: python
 
-      c['www']['authz'] = util.Authz(allowRules=[util.AnyControlEndpointMatcher(role="admins")],roleMatchers=[])
+      c['www']['authz'] = util.Authz(allowRules=[util.AnyControlEndpointMatcher(role="admins")],
+                                     roleMatchers=[])
 
 .. note::
 
@@ -489,7 +498,8 @@ The available classes are described here:
         from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': util.GitHubAuth("clientid", "clientsecret", "https://git.corp.mycompany.com"),
+            'auth': util.GitHubAuth("clientid", "clientsecret",
+                                    "https://git.corp.mycompany.com"),
         }
 
     An example on fetching team membership could be:
@@ -499,7 +509,8 @@ The available classes are described here:
         from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': util.GitHubAuth("clientid", "clientsecret", apiVersion=4, getTeamsMembership=True),
+            'auth': util.GitHubAuth("clientid", "clientsecret", apiVersion=4,
+                                    getTeamsMembership=True),
             'authz': util.Authz(
                 allowRules=[
                   util.AnyControlEndpointMatcher(role="core-developers"),

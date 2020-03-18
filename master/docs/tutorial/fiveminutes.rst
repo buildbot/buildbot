@@ -94,10 +94,11 @@ A step can be a shell command object, or a dedicated object that checks out the 
 
     # step 5: upload packages to central server. This needs passwordless ssh
     # from the worker to the server (set it up in advance as part of worker setup)
-    uploadpackages = steps.ShellCommand(name="upload packages",
-                                        description="upload packages",
-                                        command="scp packages/*.rpm packages/*.deb packages/*.tgz someuser@somehost:/repository",
-                                        haltOnFailure=True)
+    uploadpackages = steps.ShellCommand(
+        name="upload packages",
+        description="upload packages",
+        command="scp packages/*.rpm packages/*.deb packages/*.tgz someuser@somehost:/repository",
+        haltOnFailure=True)
 
     # create the build factory and add the steps to it
     f_simplebuild = util.BuildFactory()
@@ -109,7 +110,8 @@ A step can be a shell command object, or a dedicated object that checks out the 
 
     # finally, declare the list of builders. In this case, we only have one builder
     c['builders'] = [
-        util.BuilderConfig(name="simplebuild", workernames=['worker1', 'worker2', 'worker3'], factory=f_simplebuild)
+        util.BuilderConfig(name="simplebuild", workernames=['worker1', 'worker2', 'worker3'],
+                           factory=f_simplebuild)
     ]
 
 So our builder is called ``simplebuild`` and can run on either of ``worker1``, ``worker2`` and ``worker3``.
@@ -184,10 +186,11 @@ First we create two builders, one for each branch (see the builders paragraph ab
                                                     builderNames=["simplebuild-trunk"])
 
     # define the dynamic scheduler for the 7.2 branch
-    branch72changed = schedulers.SingleBranchScheduler(name="branch72changed",
-                                                       change_filter=util.ChangeFilter(branch='branches/7.2'),
-                                                       treeStableTimer=300,
-                                                       builderNames=["simplebuild-72"])
+    branch72changed = schedulers.SingleBranchScheduler(
+        name="branch72changed",
+        change_filter=util.ChangeFilter(branch='branches/7.2'),
+        treeStableTimer=300,
+        builderNames=["simplebuild-72"])
 
     # define the available schedulers
     c['schedulers'] = [trunkchanged, branch72changed]
@@ -236,17 +239,19 @@ to watch only a specific branch.
 To watch another project, you need to create another change source -- and you need to filter changes by project.
 For instance, when you add a change source watching project 'superproject' to the above example, you need to change::
 
-    trunkchanged = schedulers.SingleBranchScheduler(name="trunkchanged",
-                                                    change_filter=filter.ChangeFilter(branch=None),
-                                                    # ...
-                                                    )
+    trunkchanged = schedulers.SingleBranchScheduler(
+        name="trunkchanged",
+        change_filter=filter.ChangeFilter(branch=None),
+        # ...
+        )
 
 to e.g.::
 
-    trunkchanged = schedulers.SingleBranchScheduler(name="trunkchanged",
-                                                    change_filter=filter.ChangeFilter(project="coolproject", branch=None),
-                                                    # ...
-                                                    )
+    trunkchanged = schedulers.SingleBranchScheduler(
+        name="trunkchanged",
+        change_filter=filter.ChangeFilter(project="coolproject", branch=None),
+        # ...
+        )
 
 else coolproject will be built when there's a change in superproject.
 
