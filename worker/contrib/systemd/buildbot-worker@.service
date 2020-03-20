@@ -4,6 +4,8 @@
 #   cd /var/lib/buildbot
 #   buildbot-worker create-worker [directory] [master hostname] [name] [password]
 #   systemctl enable --now buildbot-worker@[directory].service
+# You may also want to install extra files per common/contrib/systemd/README.md
+# to create the buildbot user/group and the /var/lib/buildbot directory
 [Unit]
 Description=Buildbot Worker
 After=network.target

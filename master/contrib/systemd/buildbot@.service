@@ -4,6 +4,8 @@
 #   cd /var/lib/buildbot
 #   buildbot create-master [directory]
 #   systemctl enable --now buildbot@[directory].service
+# You may also want to install extra files per common/contrib/systemd/README.md
+# to create the buildbot user/group and the /var/lib/buildbot directory
 [Unit]
 Description=Buildbot Master
 After=network.target
