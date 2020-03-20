@@ -21,7 +21,7 @@ from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
 
-# use the 'requests' lib: http://python-requests.org
+# use the 'requests' lib: https://requests.readthedocs.io/en/master/
 try:
     import txrequests
     import requests

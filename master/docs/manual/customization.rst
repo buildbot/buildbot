@@ -1261,7 +1261,7 @@ This template is a standard Jinja_ template which is the default templating engi
 .. _Bottle: https://bottlepy.org/docs/dev/
 .. _Bootstrap: http://getbootstrap.com/css/
 .. _Jinja: http://jinja.pocoo.org/
-.. _python-requests: http://docs.python-requests.org/en/master/
+.. _python-requests: https://requests.readthedocs.io/en/master/
 
 
 A Somewhat Whimsical Example (or "It's now customized, how do I deploy it?")
