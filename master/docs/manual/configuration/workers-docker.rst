@@ -40,7 +40,7 @@ Beware that in this case, overall performance will depend on how many builds the
     More in `master setup`_.
 
 .. _CoreOS: https://coreos.com/
-.. _boot2docker: http://boot2docker.io/
+.. _boot2docker: https://github.com/boot2docker/boot2docker
 .. _docker-py: https://pypi.python.org/pypi/docker-py
 
 CoreOS
@@ -316,7 +316,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ma
 .. _Marathon API: http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _treq: https://pypi.python.org/pypi/treq
-.. _requests authentication plugin: http://docs.python-requests.org/en/master/user/authentication/
+.. _requests authentication plugin: https://2.python-requests.org/en/master/user/authentication/
 
 Kubernetes latent worker
 ========================

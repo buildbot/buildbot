@@ -97,4 +97,4 @@ Authentication
 
         This method is called after a successful authentication to get additional information about the user from the oauth2 provider.
 
-.. _requests: http://docs.python-requests.org/en/latest/
+.. _requests: https://requests.readthedocs.io/en/master/

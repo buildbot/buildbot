@@ -69,7 +69,7 @@ This section contains information to help users or developers who are interested
 
            A string identifying the type that the parameter conforms to.
            It is used by the angular application to find which angular directive to use for showing the form widget.
-           The available values are visible in :src:`www/base/src/app/common/directives/forcefields/forcefields.directive.coffee`.
+           The available values are visible in :src:`www/base/src/app/common/directives/forcefields/forcefields.directive.js`.
 
            Examples of how to create a custom parameter widgets are available in the buildbot source code in directories:
 

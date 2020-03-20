@@ -2207,7 +2207,7 @@ Sphinx
 
 .. py:class:: buildbot.steps.python.Sphinx
 
-`Sphinx <http://sphinx.pocoo.org/>`_ is the Python Documentation Generator.
+`Sphinx <https://www.sphinx-doc.org/en/master/>`_ is the Python Documentation Generator.
 It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_ as input format.
 
 The :bb:step:`Sphinx` step will run :program:`sphinx-build` or any other program specified in its ``sphinx`` argument and count the various warnings and error it detects.
@@ -3150,7 +3150,7 @@ Using the :bb:step:`HTTPStep` step, it is possible to perform HTTP requests in o
 
 .. note::
 
-   This step requires the `txrequests <https://pypi.python.org/pypi/txrequests>`_ and `requests <http://python-requests.org>`_ Python libraries.
+   This step requires the `txrequests <https://pypi.python.org/pypi/txrequests>`_ and `requests <https://requests.readthedocs.io/en/master>`_ Python libraries.
 
 The parameters are the following:
 
@@ -3172,7 +3172,7 @@ The parameters are the following:
 
 ``other params``
     Any other keywords supported by the ``requests``
-    `api <http://docs.python-requests.org/en/master/api/#main-interface>`_
+    `api <https://2.python-requests.org/en/master/api/#main-interface>`_
     can be passed to this step.
 
     .. note::
