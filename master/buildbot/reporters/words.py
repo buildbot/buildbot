@@ -559,8 +559,8 @@ class Contact:
                           "to show.\n"
                           "Right now, I will show up to 100 recent changes.")
                 num = 100
-
-            changes = yield self.master.db.changes.getRecentChanges(num)
+            rs = resultspec.ResultSpec(order=['-changeid'], limit=num)
+            changes = yield self.master.db.changes.getChanges(resultSpec=rs)
 
             response = ["I found the following recent changes:"]
             for change in reversed(changes):

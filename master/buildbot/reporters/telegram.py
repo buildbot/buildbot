@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot import config
+from buildbot.data import resultspec
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -262,7 +263,8 @@ class TelegramContact(Contact):
                     return
 
             else:
-                changes = yield self.master.db.changes.getRecentChanges(num)
+                rs = resultspec.ResultSpec(order=['-changeid'], limit=num)
+                changes = yield self.master.db.changes.getChanges(resultSpec=rs)
                 self.bot.delete_message(self.channel.id, wait_message['message_id'])
 
             response = ["I found the following recent **changes**:\n"]
