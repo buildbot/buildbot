@@ -30,7 +30,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.status import master
 from buildbot.steps import trigger
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
 from buildbot.test.util.misc import TestReactorMixin
@@ -187,7 +187,8 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             results_dict = {}
         if self.step.waitForFinish:
             for i in [11, 22, 33, 44]:
-                yield self.master.db.builds.finishBuild(BRID_TO_BID(i), results_dict.get(i, SUCCESS))
+                yield self.master.db.builds.finishBuild(BRID_TO_BID(i),
+                                                        results_dict.get(i, SUCCESS))
         d = super().runStep()
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;

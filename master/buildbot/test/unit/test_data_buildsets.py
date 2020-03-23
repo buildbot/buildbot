@@ -22,7 +22,7 @@ from buildbot.data import buildsets
 from buildbot.data import resultspec
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces

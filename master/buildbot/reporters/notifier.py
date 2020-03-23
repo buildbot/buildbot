@@ -60,11 +60,10 @@ class NotifierBase(service.BuildbotService):
         for m in self.computeShortcutModes(mode):
             if m not in self.possible_modes:
                 if m == "all":
-                    config.error(
-                        "mode 'all' is not valid in an iterator and must be passed in as a separate string")
+                    config.error("mode 'all' is not valid in an iterator and must be "
+                                 "passed in as a separate string")
                 else:
-                    config.error(
-                        "mode %s is not a valid mode" % (m,))
+                    config.error("mode {} is not a valid mode".format(m))
         if self.name is None:
             self.name = self.__class__.__name__
             if tags is not None:
@@ -292,13 +291,15 @@ class NotifierBase(service.BuildbotService):
     def workerMissing(self, key, worker):
         if not self.isWorkerMessageNeeded(worker):
             return
-        msg = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
+        msg = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master,
+                                                                                     worker)
         text = msg['body'].encode(ENCODING)
         if 'subject' in msg:
             subject = msg['subject']
         else:
             subject = "Buildbot worker {name} missing".format(**worker)
         assert msg['type'] in ('plain', 'html'), \
-            "'%s' message type must be 'plain' or 'html'." % msg['type']
+            "'{}' message type must be 'plain' or 'html'.".format(msg['type'])
 
-        yield self.sendMessage(text, subject, msg['type'], users=worker['notify'], worker=worker['name'])
+        yield self.sendMessage(text, subject, msg['type'], users=worker['notify'],
+                               worker=worker['name'])

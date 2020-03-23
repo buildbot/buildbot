@@ -97,6 +97,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                                              onlyImportant=self.onlyImportant)
         else:
             yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
+        return None
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -115,6 +116,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                 self.actuateAtTimer.cancel()
             self.actuateAtTimer = None
         yield self.actuationLock.run(stop_actuating)
+        return None
 
     # Scheduler methods
 
@@ -149,9 +151,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
         if self.onlyIfChanged and not any(classifications.values()):
-            log.msg(("%s scheduler <%s>: skipping build " +
-                     "- No important changes") %
-                    (self.__class__.__name__, self.name))
+            log.msg(("{} scheduler <{}>: skipping build " +
+                     "- No important changes").format(self.__class__.__name__, self.name))
             return
 
         changeids = sorted(classifications.keys())
@@ -224,9 +225,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             self.actuateAt = max(actuateAt, now)
             untilNext = self.actuateAt - now
             if untilNext == 0:
-                log.msg(("%s scheduler <%s>: missed scheduled build time"
-                         " - building immediately") %
-                        (self.__class__.__name__, self.name))
+                log.msg(("{} scheduler <{}>: missed scheduled build time"
+                         " - building immediately").format(self.__class__.__name__, self.name))
             self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                           self._actuate)
 
@@ -321,11 +321,11 @@ class NightlyBase(Timed):
 
     def getNextBuildTime(self, lastActuated):
         dateTime = lastActuated or self.now()
-        sched = '%s %s %s %s %s' % (self._timeToCron(self.minute),
-                                    self._timeToCron(self.hour),
-                                    self._timeToCron(self.dayOfMonth),
-                                    self._timeToCron(self.month),
-                                    self._timeToCron(self.dayOfWeek, True))
+        sched = '{} {} {} {} {}'.format(self._timeToCron(self.minute),
+                                        self._timeToCron(self.hour),
+                                        self._timeToCron(self.dayOfMonth),
+                                        self._timeToCron(self.month),
+                                        self._timeToCron(self.dayOfWeek, True))
         cron = croniter.croniter(sched, dateTime)
         nextdate = cron.get_next(float)
         return defer.succeed(nextdate)

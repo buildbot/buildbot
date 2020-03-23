@@ -20,7 +20,7 @@ from twisted.trial import unittest
 
 from buildbot.process import buildrequest
 from buildbot.process.builder import Builder
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -135,13 +135,15 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     #
     # * Their codebase, branch, project, and repository attributes match exactly
     # * Neither source stamp has a patch (e.g., from a try scheduler)
-    # * Either both source stamps are associated with changes, or neither are associated with changes but they have matching revisions.
+    # * Either both source stamps are associated with changes, or neither are associated with
+    #   changes but they have matching revisions.
 
     def makeBuildRequestRows(self, brid, bsid, changeid, ssid, codebase, branch=None,
                              project=None, repository=None, patchid=None, revision=None):
         rows = [
             fakedb.SourceStamp(id=ssid, codebase=codebase, branch=branch,
-                               project=project, repository=repository, patchid=patchid, revision=revision),
+                               project=project, repository=repository, patchid=patchid,
+                               revision=revision),
             fakedb.Buildset(id=bsid, reason='foo',
                             submitted_at=1300305712, results=-1),
             fakedb.BuildsetSourceStamp(sourcestampid=ssid, buildsetid=bsid),

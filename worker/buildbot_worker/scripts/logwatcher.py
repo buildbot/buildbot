@@ -106,7 +106,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def lineReceived(self, line):
         if not self.running:
-            return
+            return None
         if b"Log opened." in line:
             self.in_reconfig = True
         if b"loading configuration from" in line:
@@ -117,3 +117,4 @@ class LogWatcher(LineOnlyReceiver):
 
         if b"message from master: attached" in line:
             return self.finished("buildbot-worker")
+        return None

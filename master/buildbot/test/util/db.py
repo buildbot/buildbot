@@ -36,8 +36,7 @@ def skip_for_dialect(dialect):
     def dec(fn):
         def wrap(self, *args, **kwargs):
             if self.db_engine.dialect.name == dialect:
-                raise unittest.SkipTest(
-                    "Not supported on dialect '%s'" % dialect)
+                raise unittest.SkipTest("Not supported on dialect '{}'".format(dialect))
             return fn(self, *args, **kwargs)
         return wrap
     return dec
@@ -147,8 +146,8 @@ class RealDatabaseMixin:
 
             # Drop all reflected tables and indices. May fail, e.g. if
             # SQLAlchemy wouldn't be able to break circular references.
-            # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during that
-            # operation, even though we made our possible to use use_alter
+            # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during
+            # that operation, even though we made our possible to use use_alter
             with withoutSqliteForeignKeys(conn.engine, conn):
                 meta.drop_all()
 
@@ -210,9 +209,10 @@ class RealDatabaseMixin:
 
         self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 
-        log.msg("cleaning database %s" % self.db_url)
+        log.msg("cleaning database {}".format(self.db_url))
         yield self.db_pool.do(self.__thd_clean_database)
         yield self.db_pool.do(self.__thd_create_tables, table_names)
+        return None
 
     @defer.inlineCallbacks
     def tearDownRealDatabase(self):
@@ -242,7 +242,7 @@ class RealDatabaseMixin:
                     try:
                         tbl.insert(bind=conn).execute(row.values)
                     except Exception:
-                        log.msg("while inserting %s - %s" % (row, row.values))
+                        log.msg("while inserting {} - {}".format(row, row.values))
                         raise
         yield self.db_pool.do(thd)
 

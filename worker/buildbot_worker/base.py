@@ -336,7 +336,7 @@ class BotBase(service.MultiService):
                 # parse key-values
                 key, value = line.split("=", 1)
                 if value:
-                    key = 'os_%s' % key.lower()
+                    key = 'os_{}'.format(key.lower())
                     props[key] = value.strip('"')
 
     def remote_getWorkerInfo(self):

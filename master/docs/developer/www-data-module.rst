@@ -123,7 +123,8 @@ Methods:
 
   .. code-block:: javascript
 
-    // assign builds to $scope.builds before the Collection is filled using the .getArray() function
+    // assign builds to $scope.builds before the Collection is filled using the
+    // .getArray() function
     $scope.builds = dataService.get('builds', {builderid: 1});
 
 

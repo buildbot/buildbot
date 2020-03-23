@@ -30,8 +30,7 @@ class Connection:
         self.master = master
         self.worker = worker
         name = worker.workername
-        self._disconnectSubs = subscription.SubscriptionPoint(
-            "disconnections from %s" % name)
+        self._disconnectSubs = subscription.SubscriptionPoint("disconnections from {}".format(name))
 
     # This method replace all Impl args by their Proxy protocol implementation
     def createArgsProxies(self, args):

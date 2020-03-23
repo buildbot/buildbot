@@ -69,9 +69,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         if self.source_tarball:
             tarball = util.sibpath(__file__, self.source_tarball)
             if not os.path.exists(tarball):
-                raise unittest.SkipTest(
-                    "'%s' not found (normal when not building from Git)"
-                    % tarball)
+                raise unittest.SkipTest("'{}' not found (normal when not building from Git)".format(
+                        tarball))
 
             tf = tarfile.open(tarball)
             prefixes = set()
@@ -153,22 +152,21 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     got_info = dict((idx['name'], idx) for idx in got)
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:
-                        diff.append("got unexpected index %s on table %s: %r"
-                                    % (name, tbl.name, got_info[name]))
+                        diff.append("got unexpected index {} on table {}: {}".format(name, tbl.name,
+                                repr(got_info[name])))
                     for name in exp_names - got_names:
-                        diff.append("missing index %s on table %s"
-                                    % (name, tbl.name))
+                        diff.append("missing index {} on table {}".format(name, tbl.name))
                     for name in got_names & exp_names:
                         gi = dict(name=name,
                                   unique=got_info[name]['unique'] and 1 or 0,
                                   column_names=sorted(got_info[name]['column_names']))
                         ei = exp_info[name]
                         if gi != ei:
-                            diff.append(
-                                "index %s on table %s differs: got %s; exp %s"
-                                % (name, tbl.name, gi, ei))
+                            diff.append(("index {} on table {} differs: got {}; exp {}"
+                                         ).format(name, tbl.name, gi, ei))
             if diff:
                 return "\n".join(diff)
+            return None
 
         d = self.db.pool.do_with_engine(comp)
 
@@ -193,9 +191,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         if "file is encrypted or is not a database" in str(e):
             self.flushLoggedErrors(sqlite3.DatabaseError)
             self.flushLoggedErrors(DatabaseError)
-            raise unittest.SkipTest(
-                "sqlite dump not readable on this machine %s"
-                % str(e))
+            raise unittest.SkipTest("sqlite dump not readable on this machine {}".format(str(e)))
         return e
 
     def do_test_upgrade(self, pre_callbacks=None):

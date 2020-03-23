@@ -69,8 +69,8 @@ class HTTPClientService(service.SharedService):
     that is suitable for use from buildbot services.
     """
     TREQ_PROS_AND_CONS = textwrap.dedent("""
-       txrequests is based on requests and is probably a bit more mature, but it requires threads to run,
-       so has more overhead.
+       txrequests is based on requests and is probably a bit more mature, but it requires threads
+       to run, so has more overhead.
        treq is better integrated in twisted and is more and more feature equivalent
 
        txrequests is 2.8x slower than treq due to the use of threads.
@@ -86,7 +86,8 @@ class HTTPClientService(service.SharedService):
     PREFER_TREQ = False
     MAX_THREADS = 5
 
-    def __init__(self, base_url, auth=None, headers=None, verify=None, debug=False, skipEncoding=False):
+    def __init__(self, base_url, auth=None, headers=None, verify=None, debug=False,
+                 skipEncoding=False):
         assert not base_url.endswith(
             "/"), "baseurl should not end with /: " + base_url
         super().__init__()
@@ -110,8 +111,9 @@ class HTTPClientService(service.SharedService):
            if neither txrequests or treq is installed
         """
         if txrequests is None and treq is None:
-            config.error("neither txrequests nor treq is installed, but {} is requiring it\n\n{}".format(
-                from_module, HTTPClientService.TREQ_PROS_AND_CONS))
+            config.error(("neither txrequests nor treq is installed, but {} is "
+                          "requiring it\n\n{}").format(from_module,
+                                                       HTTPClientService.TREQ_PROS_AND_CONS))
 
     def startService(self):
         # treq only supports basicauth, so we force txrequests if the auth is
@@ -124,7 +126,8 @@ class HTTPClientService(service.SharedService):
         elif treq is None:
             raise ImportError("{classname} requires either txrequest or treq install."
                               " Users should call {classname}.checkAvailable() during checkConfig()"
-                              " to properly alert the user.".format(classname=self.__class__.__name__))
+                              " to properly alert the user.".format(
+                                  classname=self.__class__.__name__))
         else:
             self._doRequest = self._doTReq
             self._pool = HTTPConnectionPool(self.master.reactor)

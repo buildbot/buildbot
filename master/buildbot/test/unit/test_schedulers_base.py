@@ -24,7 +24,7 @@ from buildbot.changes import changes
 from buildbot.process import properties
 from buildbot.process.properties import Interpolate
 from buildbot.schedulers import base
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -506,8 +506,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
         # note that the changeids are given out of order here; it should still
         # use the most recent for each codebase
-        bsid, brids = yield sched.addBuildsetForChanges(reason='power',
-                                                        waited_for=True, changeids=[14, 12, 17, 16, 13, 15])
+        bsid, brids = yield sched.addBuildsetForChanges(reason='power', waited_for=True,
+                                                        changeids=[14, 12, 17, 16, 13, 15])
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
 
         self.master.data.updates.addBuildset.assert_called_with(
@@ -531,8 +531,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp(self):
         sched = self.makeScheduler(name='n', builderNames=['b'])
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot',
-                                                             waited_for=False, sourcestamps=[91, {'sourcestamp': True}])
+        sourcestamps = [91, {'sourcestamp': True}]
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot', waited_for=False,
+                                                             sourcestamps=sourcestamps)
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
@@ -618,6 +619,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 return ['c']
             elif props.changes[0]['branch'] == 'unstable':
                 return ['a', 'b']
+            return None
 
         sched = self.makeScheduler(name='n', builderNames=names)
 
@@ -722,6 +724,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             self.fake_addBuildsetForSourceStampsWithDefaults,  # Fake
         )
         def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
-                                                   waited_for=False, properties=None, builderNames=None,
-                                                   **kw):
+                                                   waited_for=False, properties=None,
+                                                   builderNames=None, **kw):
             pass

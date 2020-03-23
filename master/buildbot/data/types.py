@@ -99,8 +99,7 @@ class Instance(Type):
 
     def validate(self, name, object):
         if not isinstance(object, self.types):
-            yield "%s (%r) is not a %s" % (
-                name, object, self.name or repr(self.types))
+            yield "{} ({}) is not a {}".format(name, repr(object), self.name or repr(self.types))
 
     def toRaml(self):
         return self.ramlType
@@ -171,14 +170,13 @@ class Identifier(Type):
 
     def validate(self, name, object):
         if not isinstance(object, str):
-            yield "%s - %r - is not a unicode string" % (name, object)
+            yield "{} - {} - is not a unicode string".format(name, repr(object))
         elif not self.identRe.match(object):
-            yield "%s - %r - is not an identifier" % (name, object)
+            yield "{} - {} - is not an identifier".format(name, repr(object))
         elif not object:
-            yield "%s - identifiers cannot be an empty string" % (name,)
+            yield "{} - identifiers cannot be an empty string".format(name)
         elif len(object) > self.len:
-            yield "%s - %r - is longer than %d characters" % (name, object,
-                                                              self.len)
+            yield "{} - {} - is longer than {} characters".format(name, repr(object), self.len)
 
     def toRaml(self):
         return {'type': self.ramlType,
@@ -200,11 +198,11 @@ class List(Type):
 
     def validate(self, name, object):
         if not isinstance(object, list):  # we want a list, and NOT a subclass
-            yield "%s (%r) is not a %s" % (name, object, self.name)
+            yield "{} ({}) is not a {}".format(name, repr(object), self.name)
             return
 
         for idx, elt in enumerate(object):
-            for msg in self.of.validate("%s[%d]" % (name, idx), elt):
+            for msg in self.of.validate("{}[{}]".format(name, idx), elt):
                 yield msg
 
     def valueFromString(self, arg):
@@ -234,21 +232,21 @@ class SourcedProperties(Type):
 
     def validate(self, name, object):
         if not isinstance(object, dict):  # we want a dict, and NOT a subclass
-            yield "%s is not sourced properties (not a dict)" % (name,)
+            yield "{} is not sourced properties (not a dict)".format(name)
             return
         for k, v in object.items():
             if not isinstance(k, str):
-                yield "%s property name %r is not unicode" % (name, k)
+                yield "{} property name {} is not unicode".format(name, repr(k))
             if not isinstance(v, tuple) or len(v) != 2:
-                yield "%s property value for '%s' is not a 2-tuple" % (name, k)
+                yield "{} property value for '{}' is not a 2-tuple".format(name, k)
                 return
             propval, propsrc = v
             if not isinstance(propsrc, str):
-                yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
+                yield "{}[{}] source {} is not unicode".format(name, k, repr(propsrc))
             try:
                 json.loads(bytes2unicode(propval))
             except ValueError:
-                yield "%s[%r] value is not JSON-able" % (name, k)
+                yield "{}[{}] value is not JSON-able".format(name, repr(k))
 
     def toRaml(self):
         return {'type': "object",
@@ -274,25 +272,23 @@ class Dict(Type):
 
     def validate(self, name, object):
         if not isinstance(object, dict):
-            yield "%s (%r) is not a dictionary (got type %s)" \
-                % (name, object, type(object))
+            yield "{} ({}) is not a dictionary (got type {})".format(name, repr(object),
+                                                                     type(object))
             return
 
         gotNames = set(object.keys())
 
         unexpected = gotNames - self.keys
         if unexpected:
-            yield "%s has unexpected keys %s" % (name,
-                                                 ", ".join([repr(n) for n in unexpected]))
+            yield "{} has unexpected keys {}".format(name, ", ".join([repr(n) for n in unexpected]))
 
         missing = self.keys - gotNames
         if missing:
-            yield "%s is missing keys %s" % (name,
-                                             ", ".join([repr(n) for n in missing]))
+            yield "{} is missing keys {}".format(name, ", ".join([repr(n) for n in missing]))
 
         for k in gotNames & self.keys:
             f = self.contents[k]
-            for msg in f.validate("%s[%r]" % (name, k), object[k]):
+            for msg in f.validate("{}[{}]".format(name, repr(k)), object[k]):
                 yield msg
 
     def getSpec(self):
@@ -314,15 +310,15 @@ class JsonObject(Type):
 
     def validate(self, name, object):
         if not isinstance(object, dict):
-            yield "%s (%r) is not a dictionary (got type %s)" \
-                % (name, object, type(object))
+            yield "{} ({}) is not a dictionary (got type {})".format(name, repr(object),
+                                                                     type(object))
             return
 
         # make sure JSON can represent it
         try:
             json.dumps(object)
         except Exception as e:
-            yield "%s is not JSON-able: %s" % (name, e)
+            yield "{} is not JSON-able: {}".format(name, e)
             return
 
     def toRaml(self):
@@ -352,25 +348,23 @@ class Entity(Type):
     def validate(self, name, object):
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
-            yield "%s (%r) is not a dictionary (got type %s)" \
-                % (name, object, type(object))
+            yield "{} ({}) is not a dictionary (got type {})".format(name, repr(object),
+                                                                     type(object))
             return
 
         gotNames = set(object.keys())
 
         unexpected = gotNames - self.fieldNames
         if unexpected:
-            yield "%s has unexpected keys %s" % (name,
-                                                 ", ".join([repr(n) for n in unexpected]))
+            yield "{} has unexpected keys {}".format(name, ", ".join([repr(n) for n in unexpected]))
 
         missing = self.fieldNames - gotNames
         if missing:
-            yield "%s is missing keys %s" % (name,
-                                             ", ".join([repr(n) for n in missing]))
+            yield "{} is missing keys {}".format(name, ", ".join([repr(n) for n in missing]))
 
         for k in gotNames & self.fieldNames:
             f = self.fields[k]
-            for msg in f.validate("%s[%r]" % (name, k), object[k]):
+            for msg in f.validate("{}[{}]".format(name, repr(k)), object[k]):
                 yield msg
 
     def getSpec(self):

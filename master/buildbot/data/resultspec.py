@@ -91,7 +91,8 @@ class FieldBase:
         return (d for d in data if f(d[fld], v))
 
     def __repr__(self):
-        return "resultspec.{}('{}','{}',{})".format(self.__class__.__name__, self.field, self.op, self.values)
+        return "resultspec.{}('{}','{}',{})".format(self.__class__.__name__, self.field, self.op,
+                                                    self.values)
 
     def __eq__(self, b):
         for i in self.__slots__:
@@ -220,6 +221,7 @@ class ResultSpec:
             if f.field == field and f.op == op:
                 self.filters.remove(f)
                 return f.values
+        return None
 
     def popOneFilter(self, field, op):
         v = self.popFilter(field, op)
@@ -232,11 +234,13 @@ class ResultSpec:
         neVals = self.popFilter(field, 'ne')
         if neVals and len(neVals) == 1:
             return not neVals[0]
+        return None
 
     def popStringFilter(self, field):
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
+        return None
 
     def popIntegerFilter(self, field):
         eqVals = self.popFilter(field, 'eq')
@@ -246,6 +250,7 @@ class ResultSpec:
             except ValueError:
                 raise ValueError("Filter value for {} should be integer, but got: {}".format(
                     field, eqVals[0]))
+        return None
 
     def removePagination(self):
         self.limit = self.offset = None
@@ -314,7 +319,8 @@ class ResultSpec:
         # we cannot limit in sql if there is missing filtering or ordering
         if unmatched_filters or unmatched_order:
             if self.offset is not None or self.limit is not None:
-                log.msg("Warning: limited data api query is not backed by db because of following filters",
+                log.msg("Warning: limited data api query is not backed by db "
+                        "because of following filters",
                         unmatched_filters, unmatched_order)
             self.filters = unmatched_filters
             self.order = tuple(unmatched_order)

@@ -35,11 +35,12 @@ class WsProtocol(WebSocketServerProtocol):
         self.debug = self.master.config.www.get('debug', False)
 
     def sendJsonMessage(self, **msg):
-        return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson, separators=(',', ':'))))
+        return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson,
+                                                         separators=(',', ':'))))
 
     def onMessage(self, frame, isBinary):
         if self.debug:
-            log.msg("FRAME %s" % frame)
+            log.msg("FRAME {}".format(frame))
         # parse the incoming request
 
         frame = json.loads(bytes2unicode(frame))
@@ -52,14 +53,16 @@ class WsProtocol(WebSocketServerProtocol):
         cmdmeth = "cmd_" + cmd
         meth = getattr(self, cmdmeth, None)
         if meth is None:
-            return self.sendJsonMessage(error="no such command '%s'" % (cmd, ), code=404, _id=_id)
+            return self.sendJsonMessage(error="no such command '{}'".format(cmd), code=404, _id=_id)
         try:
             return meth(**frame)
         except TypeError as e:
-            return self.sendJsonMessage(error="Invalid method argument '%s'" % (str(e), ), code=400, _id=_id)
+            return self.sendJsonMessage(error="Invalid method argument '{}'".format(str(e)),
+                                        code=400, _id=_id)
         except Exception as e:
-            log.err("while calling command %s" % (cmd, ))
-            return self.sendJsonMessage(error="Internal Error '%s'" % (str(e), ), code=500, _id=_id)
+            log.err("while calling command {}".format(cmd))
+            return self.sendJsonMessage(error="Internal Error '{}'".format(str(e)), code=500,
+                                        _id=_id)
 
     def ack(self, _id):
         return self.sendJsonMessage(msg="OK", code=200, _id=_id)
@@ -76,7 +79,8 @@ class WsProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def cmd_startConsuming(self, path, _id):
         if not self.isPath(path):
-            yield self.sendJsonMessage(error="invalid path format '%s'" % (str(path), ), code=400, _id=_id)
+            yield self.sendJsonMessage(error="invalid path format '{}'".format(str(path)), code=400,
+                                       _id=_id)
             return
 
         # if it's already subscribed, don't leak a subscription
@@ -102,7 +106,8 @@ class WsProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def cmd_stopConsuming(self, path, _id):
         if not self.isPath(path):
-            yield self.sendJsonMessage(error="invalid path format '%s'" % (str(path), ), code=400, _id=_id)
+            yield self.sendJsonMessage(error="invalid path format '{}'".format(str(path)), code=400,
+                                       _id=_id)
             return
 
         # only succeed if path has been started
@@ -111,7 +116,8 @@ class WsProtocol(WebSocketServerProtocol):
             yield qref.stopConsuming()
             yield self.ack(_id=_id)
             return
-        yield self.sendJsonMessage(error="path was not consumed '%s'" % (str(path), ), code=400, _id=_id)
+        yield self.sendJsonMessage(error="path was not consumed '{}'".format(str(path)), code=400,
+                                   _id=_id)
 
     def cmd_ping(self, _id):
         self.sendJsonMessage(msg="pong", code=200, _id=_id)

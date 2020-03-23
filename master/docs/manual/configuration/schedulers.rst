@@ -678,7 +678,7 @@ This scheduler will perform a build each Monday morning at 6:23am and again at 8
 
     c['schedulers'].append(
         schedulers.Nightly(name='BeforeWork',
-                           branch=`default`,
+                           branch='default',
                            builderNames=['builder1'],
                            dayOfWeek=0, hour=[6,8], minute=23,
                            onlyIfChanged=True))
@@ -893,7 +893,7 @@ NightlyTriggerable Scheduler
 
 The :bb:sched:`NightlyTriggerable` scheduler is a mix of the :bb:sched:`Nightly` and :bb:sched:`Triggerable` schedulers.
 This scheduler triggers builds at a particular time of day, week, or year, exactly as the :bb:sched:`Nightly` scheduler.
-However, the source stamp set that is used that provided by the last :bb:step:`Trigger` step that targeted this scheduler.
+However, the source stamp set that is used is provided by the last :bb:step:`Trigger` step that targeted this scheduler.
 
 The parameters are just the basics:
 
@@ -1057,7 +1057,8 @@ What you need in your config file is something like:
         # A completely customized property list.  The name of the
         # property is the name of the parameter
         properties=[
-            util.NestedParameter(name="options", label="Build Options", layout="vertical", fields=[
+            util.NestedParameter(name="options", label="Build Options",
+                                 layout="vertical", fields=[
                 util.StringParameter(name="pull_url",
                                      label="optionally give a public Git pull url:",
                                      default="", size=80),
@@ -1463,7 +1464,8 @@ You can customize any of these fields by overwriting their field name e.g:
         schedulers.ForceScheduler(
             name="force",
             codebases=[util.CodebaseParameter("foo", patch=util.PatchParameter(
-                body=FileParameter('body', maxsize=10000)))],  # override the maximum size of a patch to 10k instead of 10M
+                body=FileParameter('body', maxsize=10000)))],  # override the maximum size
+                                                               # of a patch to 10k instead of 10M
             builderNames=["testy"])]
 
 

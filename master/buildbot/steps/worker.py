@@ -67,7 +67,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
                 # note that the property is not uppercased
                 properties.setProperty(variable, value, self.source,
                                        runtime=True)
-                log.append("%s = %r" % (variable, value))
+                log.append("{} = {}".format(variable, repr(value)))
         self.addCompleteLog("properties", "\n".join(log))
         self.finished(SUCCESS)
 

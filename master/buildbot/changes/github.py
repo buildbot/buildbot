@@ -133,9 +133,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             category)
 
     def describe(self):
-        return "GitHubPullrequestPoller watching the "\
-            "GitHub repository %s/%s" % (
-                self.owner, self.repo)
+        return ("GitHubPullrequestPoller watching the "
+                "GitHub repository {}/{}").format(self.owner, self.repo)
 
     @defer.inlineCallbacks
     def _getPullInformation(self, pull_number):
@@ -146,9 +145,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
     @defer.inlineCallbacks
     def _getPulls(self):
-        log.debug("GitHubPullrequestPoller: polling "
-                  "GitHub repository %s/%s, branches: %s" %
-                  (self.owner, self.repo, self.branches))
+        log.debug(("GitHubPullrequestPoller: polling "
+                   "GitHub repository {}/{}, branches: {}").format(self.owner, self.repo,
+                                                                   self.branches))
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
@@ -170,7 +169,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         ]))
         my_json = yield result.json()
 
-        return [[c["commit"]["committer"]["name"], c["commit"]["committer"]["email"]] for c in my_json]
+        return [[c["commit"]["committer"]["name"],
+                 c["commit"]["committer"]["email"]] for c in my_json]
 
     @defer.inlineCallbacks
     def _getAuthors(self, prnumber):
@@ -201,8 +201,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
     @defer.inlineCallbacks
     def _getStateObjectId(self):
         # Return a deferred for object id in state db.
-        result = yield self.master.db.state.getObjectId(
-            '%s/%s' % (self.owner, self.repo), self.db_class_name)
+        result = yield self.master.db.state.getObjectId('{}/{}'.format(self.owner, self.repo),
+                                                        self.db_class_name)
         return result
 
     @defer.inlineCallbacks
@@ -241,8 +241,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 commits = pr['commits']
 
                 dl = defer.DeferredList(
-                    [self._getAuthors(prnumber), self._getCommitters(prnumber), self._getFiles(prnumber)],
-                    consumeErrors=True)
+                     [self._getAuthors(prnumber), self._getCommitters(prnumber),
+                      self._getFiles(prnumber)],
+                     consumeErrors=True)
 
                 results = yield dl
                 failures = [r[1] for r in results if not r[0]]

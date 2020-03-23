@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.data import builds
 from buildbot.data import resultspec
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
@@ -114,7 +114,8 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_action_rebuild(self):
         self.patch(self.master.data.updates, "rebuildBuildrequest",
-                   mock.Mock(spec=self.master.data.updates.rebuildBuildrequest, return_value=(1, [2])))
+                   mock.Mock(spec=self.master.data.updates.rebuildBuildrequest,
+                             return_value=(1, [2])))
         r = yield self.callControl("rebuild", {}, ('builders', 77, 'builds', 5))
         self.assertEqual(r, (1, [2]))
 
@@ -313,10 +314,12 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
         return self.do_test_event(addBuild,
                                   builderid=10, buildrequestid=13, workerid=20,
-                                  exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
+                                  exp_events=[(('builders', '10', 'builds', '1', 'new'),
+                                               self.new_build_event),
                                               (('builds', '100', 'new'),
                                                self.new_build_event),
-                                              (('workers', '20', 'builds', '100', 'new'), self.new_build_event)])
+                                              (('workers', '20', 'builds', '100', 'new'),
+                                               self.new_build_event)])
 
     def test_signature_setBuildStateString(self):
         @self.assertArgSpecMatches(

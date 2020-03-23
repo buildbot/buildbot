@@ -2005,7 +2005,8 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
         )
         self.expectOutcome(result=SUCCESS, state_string="update")
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d',
+                            self.sourceName)
         return self.runStep()
 
     def test_mode_full_fresh_submodule_git_newer_1_7_6(self):
@@ -3143,8 +3144,9 @@ class TestGit(sourcesteps.SourceStepMixin,
         if codebase:
             self.expectOutcome(result=SUCCESS,
                                state_string="update " + codebase)
-            self.expectProperty(
-                'got_revision', {codebase: 'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, self.sourceName)
+            self.expectProperty('got_revision',
+                                {codebase: 'f6ad368298bd941e934a41f3babc827b2aa95a1d'},
+                                self.sourceName)
             self.expectProperty(
                 'commit-description', {codebase: 'Tag-1234'}, self.sourceName)
         else:
@@ -3377,10 +3379,10 @@ class TestGit(sourcesteps.SourceStepMixin,
         name = 'url.http://github.com.insteadOf'
         value = 'blahblah'
         self.setupStep(
-            self.stepClass(repourl='%s/buildbot/buildbot.git' % (value,),
+            self.stepClass(repourl='{}/buildbot/buildbot.git'.format(value),
                            mode='full', method='clean',
                            config={name: value}))
-        prefix = ['git', '-c', '%s=%s' % (name, value)]
+        prefix = ['git', '-c', '{}={}'.format(name, value)]
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=prefix + ['--version'])
@@ -3399,8 +3401,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         command=prefix + ['fetch', '-t',
-                                          '%s/buildbot/buildbot.git' % (
-                                              value,),
+                                          '{}/buildbot/buildbot.git'.format(value),
                                           'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',

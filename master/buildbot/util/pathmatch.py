@@ -31,7 +31,7 @@ class Matcher:
         self._dirty = True
 
     def __setitem__(self, path, value):
-        assert path not in self._patterns, "duplicate path %s" % (path,)
+        assert path not in self._patterns, "duplicate path {}".format(path)
         self._patterns[path] = value
         self._dirty = True
 
@@ -57,7 +57,7 @@ class Matcher:
                             type_fn = self.type_fns[type_flag]
                         except Exception:
                             assert type_flag in self.type_fns, \
-                                "no such type flag %s" % type_flag
+                                    "no such type flag {}".format(type_flag)
                         try:
                             path_elt = type_fn(path_elt)
                         except Exception:

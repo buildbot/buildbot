@@ -48,7 +48,8 @@ def main():
 # Here we assume c['www']['plugins'] has already be created earlier.
 # Please see the web server documentation to understand how to configure
 # the other parts.
-c['www']['plugins']['wsgi_dashboards'] = [  # This is a list of dashboards, you can create several
+# This is a list of dashboards, you can create several
+c['www']['plugins']['wsgi_dashboards'] = [
     {
         'name': 'mydashboard',  # as used in URLs
         'caption': 'My Dashboard',  # Title displayed in the UI'
@@ -56,9 +57,9 @@ c['www']['plugins']['wsgi_dashboards'] = [  # This is a list of dashboards, you 
         # priority of the dashboard in the left menu (lower is higher in the
         # menu)
         'order': 5,
-        # An available icon list can be found at http://fontawesome.io/icons/. Double-check the
-        # buildbot about dashboard for the installed version of Font Awesome as the published icons
-        # may include more recently additions.
+        # An available icon list can be found at http://fontawesome.io/icons/. Double-check
+        # the buildbot about dashboard for the installed version of Font Awesome as the
+        # published icons may include more recently additions.
         'icon': 'area-chart'
     }
 ]

@@ -276,7 +276,7 @@ class Worker(WorkerBase, service.MultiService):
         if not self.bf.perspective:
             log.msg("No active connection, shutting down NOW")
             reactor.stop()
-            return
+            return None
 
         log.msg(
             "Telling the master we want to shutdown after any running builds are finished")
@@ -285,7 +285,8 @@ class Worker(WorkerBase, service.MultiService):
         def _shutdownfailed(err):
             if err.check(AttributeError):
                 log.msg(
-                    "Master does not support worker initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+                    "Master does not support worker initiated shutdown.  Upgrade master to 0.8.3"
+                    "or later to use this feature.")
             else:
                 log.msg('callRemote("shutdown") failed')
                 log.err(err)

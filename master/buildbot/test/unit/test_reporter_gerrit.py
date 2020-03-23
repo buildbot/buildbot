@@ -451,12 +451,14 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         gsp = yield self.setupGerritStatusPushSimple()
         spawnSkipFirstArg = Mock()
         gsp.spawnProcess = lambda _, *a, **k: spawnSkipFirstArg(*a, **k)
-        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.sendCodeReview("project", "revision",
+                                {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'], env=None)
         gsp.processVersion("2.6", lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.sendCodeReview("project", "revision",
+                                {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
@@ -465,7 +467,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         # <=2.5 uses other syntax
         gsp.processVersion("2.4", lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.sendCodeReview("project", "revision",
+                                 {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
@@ -476,26 +479,30 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         gsp._gerrit_notify = 'OWNER'
         gsp.processVersion('2.6', lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview('project', 'revision', {'message': 'bla', 'labels': {'Verified': 1}})
+        yield gsp.sendCodeReview('project', 'revision',
+                                 {'message': 'bla', 'labels': {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
-             '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1', 'revision'],
+             '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1',
+             'revision'],
             env=None)
 
         # gerrit versions <= 2.5 uses other syntax
         gsp.processVersion('2.4', lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview('project', 'revision', {'message': 'bla', 'labels': {'Verified': 1}})
+        yield gsp.sendCodeReview('project', 'revision',
+                                 {'message': 'bla', 'labels': {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
-            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project', '--notify OWNER',
-             "--message 'bla'", '--verified 1', 'revision'],
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
+            '--notify OWNER', "--message 'bla'", '--verified 1', 'revision'],
             env=None)
 
         gsp.processVersion("2.13", lambda: None)
         spawnSkipFirstArg = Mock()
-        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        yield gsp.sendCodeReview("project", "revision",
+                                 {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',

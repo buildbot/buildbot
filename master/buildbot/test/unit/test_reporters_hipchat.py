@@ -85,14 +85,15 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_interpolateAuth(self):
-        yield self.createReporter(auth_token=Interpolate('auth'), builder_user_map={'Builder0': '123'})
+        yield self.createReporter(auth_token=Interpolate('auth'),
+                                  builder_user_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
         self._http.expect(
             'post',
             '/v2/user/123/message',
             params=dict(auth_token='auth'),
-            json={'message':
-                  'Buildbot started build Builder0 here: http://localhost:8080/#builders/79/builds/0'})
+            json={'message': 'Buildbot started build Builder0 here: '
+                             'http://localhost:8080/#builders/79/builds/0'})
         self.sp.buildStarted(('build', 20, 'new'), build)
 
     @defer.inlineCallbacks
@@ -103,8 +104,8 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             'post',
             '/v2/user/123/message',
             params=dict(auth_token='abc'),
-            json={'message':
-                  'Buildbot started build Builder0 here: http://localhost:8080/#builders/79/builds/0'})
+            json={'message': 'Buildbot started build Builder0 here: '
+                             'http://localhost:8080/#builders/79/builds/0'})
         self.sp.buildStarted(('build', 20, 'new'), build)
 
     @defer.inlineCallbacks

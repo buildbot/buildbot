@@ -43,8 +43,7 @@ class OptionsMixin:
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(" %s: expected %r, got %r" %
-                               (k, exp[k], opts[k]))
+                    msg.append(" {}: expected {}, got {}".format(k, repr(exp[k]), repr(opts[k])))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
@@ -94,7 +93,7 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
                         **{'no-logrotate': False, 'log-size': 10000000,
                            'log-count': 10})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
-        assert not unk_keys, "invalid keys %s" % (unk_keys,)
+        assert not unk_keys, "invalid keys {}".format(unk_keys)
         opts = defaults.copy()
         opts.update(kwargs)
         return opts
@@ -224,7 +223,7 @@ class BaseTestSimpleOptions(OptionsMixin):
 
     def test_synopsis(self):
         opts = self.optionsClass()
-        self.assertIn('buildbot %s' % self.commandName, opts.getSynopsis())
+        self.assertIn('buildbot {}'.format(self.commandName), opts.getSynopsis())
 
     def test_defaults(self):
         opts = self.parse()
@@ -413,8 +412,8 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         self.options_file.update(dict(try_connect='pb', try_vc='cvs',
                                       try_branch='br', try_repository='rep', try_topdir='.',
                                       try_topfile='Makefile', try_host='h', try_username='u',
-                                      try_jobdir='j', try_password='p', try_master='m:8', try_who='w',
-                                      try_comment='comm', try_quiet='y', try_wait='y',
+                                      try_jobdir='j', try_password='p', try_master='m:8',
+                                      try_who='w', try_comment='comm', try_quiet='y', try_wait='y',
                                       try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
         opts = self.parse()
         exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',

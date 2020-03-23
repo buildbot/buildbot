@@ -136,7 +136,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 q = sch_mst_tbl.delete(
                     whereclause=(sch_mst_tbl.c.schedulerid == schedulerid))
                 conn.execute(q).close()
-                return
+                return None
 
             # try a blind insert..
             try:
@@ -155,9 +155,10 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 row = conn.execute(q).fetchone()
                 # ok, that was us, so we just do nothing
                 if row['masterid'] == masterid:
-                    return
+                    return None
                 raise SchedulerAlreadyClaimedError(
                     "already claimed by {}".format(row['name']))
+            return None
 
         return self.db.pool.do(thd)
 
@@ -166,6 +167,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         sch = yield self.getSchedulers(_schedulerid=schedulerid)
         if sch:
             return sch[0]
+        return None
 
     # returns a Deferred that returns a value
     def getSchedulers(self, active=None, masterid=None, _schedulerid=None):

@@ -75,6 +75,7 @@ class FakeMasterMethods(object):
             d = defer.Deferred()
             reactor.callLater(0.01, d.callback, None)
             return d
+        return None
 
     def remote_read(self, length):
         if self.count_reads:
@@ -97,6 +98,7 @@ class FakeMasterMethods(object):
         self.add_update('unpack')
         if self.unpack_fail:
             return defer.fail(failure.Failure(RuntimeError("out of space")))
+        return None
 
     def remote_utime(self, accessed_modified):
         self.add_update('utime - {0}'.format(accessed_modified[0]))

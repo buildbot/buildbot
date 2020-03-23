@@ -34,7 +34,7 @@ class MockStateObserver(logobserver.LogLineObserver):
         if m:
             state = m.group(1)
             if not state == 'end':
-                self.step.descriptionSuffix = ["[%s]" % m.group(1)]
+                self.step.descriptionSuffix = ["[{}]".format(m.group(1))]
             else:
                 self.step.descriptionSuffix = None
             self.step.step_status.setText(self.step.describe(False))
@@ -98,7 +98,8 @@ class Mock(ShellCommand):
         self.addLogObserver('state.log', MockStateObserver())
 
         cmd = remotecommand.RemoteCommand('rmdir', {'dir':
-                                                    [self.build.path_module.join('build', self.logfiles[l])
+                                                    [self.build.path_module.join('build',
+                                                                                 self.logfiles[l])
                                                      for l in self.mock_logfiles]})
         d = self.runCommand(cmd)
         # must resolve super() outside of the callback context.

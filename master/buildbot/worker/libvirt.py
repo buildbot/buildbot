@@ -178,7 +178,8 @@ class LibVirtWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def _find_existing_instance(self):
         """
-        I find existing VMs that are already running that might be orphaned instances of this worker.
+        I find existing VMs that are already running that might be orphaned instances of this
+        worker.
         """
         if not self.connection:
             return None
@@ -191,6 +192,7 @@ class LibVirtWorker(AbstractLatentWorker):
                 break
 
         self.ready = True
+        return None
 
     def canStartBuild(self):
         if not self.ready:
@@ -224,7 +226,7 @@ class LibVirtWorker(AbstractLatentWorker):
             "image": self.image,
         }
 
-        log.msg("Cloning base image: %s %s'" % (clone_cmd, clone_args))
+        log.msg("Cloning base image: {} {}'".format(clone_cmd, clone_args))
 
         d = utils.getProcessValue(clone_cmd, clone_args.split())
 
@@ -233,7 +235,7 @@ class LibVirtWorker(AbstractLatentWorker):
             return res
 
         def _log_error(err):
-            log.err("Cloning failed: %s" % err)
+            log.err("Cloning failed: {}".format(err))
             return err
 
         d.addCallbacks(_log_result, _log_error)
@@ -252,8 +254,7 @@ class LibVirtWorker(AbstractLatentWorker):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-            log.msg("Cannot start_instance '%s' as already active" %
-                    self.workername)
+            log.msg("Cannot start_instance '{}' as already active".format(self.workername))
             return False
 
         yield self._prepare_base_image()
@@ -266,8 +267,8 @@ class LibVirtWorker(AbstractLatentWorker):
                 yield self.domain.create()
         except Exception:
             log.err(failure.Failure(),
-                    "Cannot start a VM (%s), failing gracefully and triggering"
-                    "a new build check" % self.workername)
+                    ("Cannot start a VM ({}), failing gracefully and triggering"
+                     "a new build check").format(self.workername))
             self.domain = None
             return False
 
@@ -282,13 +283,12 @@ class LibVirtWorker(AbstractLatentWorker):
         """
         @defer.inlineCallbacks
         def _destroy_domain(res, domain):
-            log.msg('Graceful shutdown failed. Force destroying domain %s' %
-                    self.workername)
+            log.msg('Graceful shutdown failed. Force destroying domain {}'.format(self.workername))
             # Don't return res to stop propagating shutdown error if destroy
             # was successful.
             yield domain.destroy()
 
-        log.msg("Attempting to stop '%s'" % self.workername)
+        log.msg("Attempting to stop '{}'".format(self.workername))
         if self.domain is None:
             log.msg("I don't think that domain is even running, aborting")
             return defer.succeed(None)
@@ -297,7 +297,7 @@ class LibVirtWorker(AbstractLatentWorker):
         self.domain = None
 
         if self.graceful_shutdown and not fast:
-            log.msg("Graceful shutdown chosen for %s" % self.workername)
+            log.msg("Graceful shutdown chosen for {}".format(self.workername))
             d = domain.shutdown()
             d.addErrback(_destroy_domain, domain)
         else:
@@ -306,8 +306,7 @@ class LibVirtWorker(AbstractLatentWorker):
         if self.base_image:
             @d.addBoth
             def _remove_image(res):
-                log.msg('Removing base image %s for %s' % (self.image,
-                                                           self.workername))
+                log.msg('Removing base image {} for {}'.format(self.image, self.workername))
                 os.remove(self.image)
                 return res
 

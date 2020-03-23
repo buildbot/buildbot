@@ -95,13 +95,15 @@ class HttpStatusPush(HttpStatusPushBase):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
         if user is not None:
-            config.warnDeprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
+            config.warnDeprecated("0.9.1",
+                                  "user/password is deprecated, use 'auth=(user, password)'")
         if (format_fn is not None) and not callable(format_fn):
             config.error("format_fn must be a function")
         super().checkConfig(**kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
+    def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None,
+                        **kwargs):
         yield super().reconfigService(**kwargs)
         if user is not None:
             auth = (user, password)
@@ -117,5 +119,4 @@ class HttpStatusPush(HttpStatusPushBase):
     def send(self, build):
         response = yield self._http.post("", json=self.format_fn(build))
         if not self.isStatus2XX(response.code):
-            log.msg("%s: unable to upload status: %s" %
-                    (response.code, response.content))
+            log.msg("{}: unable to upload status: {}".format(response.code, response.content))

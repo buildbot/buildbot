@@ -49,7 +49,7 @@ class TestBot(unittest.TestCase):
         os.makedirs(self.basedir)
 
         # create test-release-file
-        with open("%s/test-release-file" % self.basedir, "w") as fout:
+        with open("{}/test-release-file".format(self.basedir), "w") as fout:
             fout.write(
 """
 # unit test release file
@@ -62,7 +62,7 @@ VERSION_ID="1"
 """
             )
         self.real_bot = base.BotBase(self.basedir, False)
-        self.real_bot.setOsReleaseFile("%s/test-release-file" % self.basedir)
+        self.real_bot.setOsReleaseFile("{}/test-release-file".format(self.basedir))
         self.real_bot.startService()
 
         self.bot = FakeRemote(self.real_bot)

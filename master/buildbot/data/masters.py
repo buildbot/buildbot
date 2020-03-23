@@ -132,7 +132,7 @@ class Master(base.ResourceType):
 
     @defer.inlineCallbacks
     def _masterDeactivatedHousekeeping(self, masterid, name):
-        log.msg("doing housekeeping for master %d %s" % (masterid, name))
+        log.msg("doing housekeeping for master {} {}".format(masterid, name))
 
         # common code for deactivating a master
         yield self.master.data.rtypes.worker._masterDeactivated(
@@ -146,7 +146,8 @@ class Master(base.ResourceType):
 
         # for each build running on that instance..
         builds = yield self.master.data.get(('builds',),
-                                            filters=[resultspec.Filter('masterid', 'eq', [masterid]),
+                                            filters=[resultspec.Filter('masterid', 'eq',
+                                                                       [masterid]),
                                                      resultspec.Filter('complete', 'eq', [False])])
         for build in builds:
             # stop any running steps..

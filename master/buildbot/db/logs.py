@@ -202,7 +202,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         num_lines = res.fetchone()
         res.close()
         if not num_lines:
-            return  # ignore a missing log
+            return None  # ignore a missing log
 
         return self.thdSplitAndAppendChunk(conn=conn,
                                            logid=logid,
@@ -360,7 +360,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # times are effectively sorted and we only need to find the steps.id at the upper
             # bound of steps to update.
 
-            # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY steps.id DESC LIMIT 1;
+            # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY
+            # steps.id DESC LIMIT 1;
             res = conn.execute(
                 sa.select([model.steps.c.id])
                 .where(model.steps.c.started_at < older_than_timestamp)

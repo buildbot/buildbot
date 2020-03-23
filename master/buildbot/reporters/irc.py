@@ -108,11 +108,11 @@ class IRCContact(Contact):
         words = action.split()
         verb = words[-2]
         if verb == "kicks":
-            response = "%s back" % verb
+            response = "{} back".format(verb)
         elif verb == "threatens":
-            response = "hosts a red wedding for %s" % self.user_id
+            response = "hosts a red wedding for {}".format(self.user_id)
         else:
-            response = "%s %s too" % (verb, self.user_id)
+            response = "{} {} too".format(verb, self.user_id)
         self.act(response)
 
     @defer.inlineCallbacks
@@ -171,9 +171,8 @@ class IRCContact(Contact):
             argv = self.splitArgs(args)
             if argv and argv[0] in ('on', 'off') and \
                     (yield self.op_required('notify')):
-                yield self.send("Only channel operators can change notified events for this channel. "
-                                "And you, {}, are neither!"
-                                .format(self.user_id))
+                yield self.send(("Only channel operators can change notified events for this "
+                                 "channel. And you, {}, are neither!").format(self.user_id))
                 return
         super().command_NOTIFY(args, **kwargs)
 
@@ -257,10 +256,12 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
         # is '#twisted' or the like.
         contact = self.getContact(user=user, channel=channel)
-        if message.startswith("%s:" % self.nickname) or message.startswith("%s," % self.nickname):
-            message = message[len("%s:" % self.nickname):]
+        if message.startswith("{}:".format(self.nickname)) or \
+                message.startswith("{},".format(self.nickname)):
+            message = message[len("{}:".format(self.nickname)):]
             d = contact.handleMessage(message)
             return d
+        return None
 
     def action(self, user, channel, data):
         user = user.split('!', 1)[0]  # rest is ~user@hostname
@@ -316,18 +317,16 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         return [n[1:] for n in names if n[0] in '@&~%']
 
     def joined(self, channel):
-        self.log("Joined %s" % (channel,))
+        self.log("Joined {}".format(channel))
         # trigger contact constructor, which in turn subscribes to notify events
         channel = self.getChannel(channel=channel)
         channel.add_notification_events(self.notify_events)
 
     def left(self, channel):
-        self.log("Left %s" % (channel,))
+        self.log("Left {}".format(channel))
 
     def kickedFrom(self, channel, kicker, message):
-        self.log("I have been kicked from %s by %s: %s" % (channel,
-                                                           kicker,
-                                                           message))
+        self.log("I have been kicked from {} by {}: {}".format(channel, kicker, message))
 
     def userLeft(self, user, channel):
         if user:
@@ -467,7 +466,7 @@ class IRC(service.BuildbotService):
                     ):
         deprecated_params = list(kwargs)
         if deprecated_params:
-            config.error("%s are deprecated" % (",".join(deprecated_params)))
+            config.error("{} are deprecated".format(",".join(deprecated_params)))
 
         # deprecated
         if allowForce is not None:

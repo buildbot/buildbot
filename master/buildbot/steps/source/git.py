@@ -55,13 +55,12 @@ git_describe_flags = [
     # string parameter
     ('match', lambda v: ['--match', v] if v else None),
     # numeric parameter
-    ('abbrev', lambda v: ['--abbrev=%s' % v]
+    ('abbrev', lambda v: ['--abbrev={}'.format(v)]
      if isTrueOrIsExactlyZero(v) else None),
-    ('candidates', lambda v: ['--candidates=%s' %
-                              v] if isTrueOrIsExactlyZero(v) else None),
+    ('candidates', lambda v: ['--candidates={}'.format(v)] if isTrueOrIsExactlyZero(v) else None),
     # optional string parameter
     ('dirty', lambda v: ['--dirty'] if (v is True or v == '') else None),
-    ('dirty', lambda v: ['--dirty=%s' % v] if (v and v is not True) else None),
+    ('dirty', lambda v: ['--dirty={}'.format(v)] if (v and v is not True) else None),
 ]
 
 
@@ -103,10 +102,11 @@ class Git(Source, GitStepMixin):
 
         if isinstance(self.mode, str):
             if not self._hasAttrGroupMember('mode', self.mode):
-                bbconfig.error("Git: mode must be %s" %
-                               (' or '.join(self._listAttrGroupMembers('mode'))))
+                bbconfig.error("Git: mode must be {}".format(
+                        ' or '.join(self._listAttrGroupMembers('mode'))))
             if isinstance(self.method, str):
-                if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
+                if self.mode == 'full' and \
+                        self.method not in ['clean', 'fresh', 'clobber', 'copy', None]:
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
                     bbconfig.error(
@@ -260,8 +260,7 @@ class Git(Source, GitStepMixin):
     @defer.inlineCallbacks
     def finish(self, res):
         self.setStatus(self.cmd, res)
-        log.msg("Closing log, sending result of the command %s " %
-                (self.cmd))
+        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
         yield self.finished(res)
 
     @defer.inlineCallbacks
@@ -270,7 +269,7 @@ class Git(Source, GitStepMixin):
         revision = stdout.strip()
         if len(revision) != GIT_HASH_LENGTH:
             raise buildstep.BuildStepFailed()
-        log.msg("Got Git revision %s" % (revision, ))
+        log.msg("Got Git revision {}".format(revision))
         self.updateSourceProperty('got_revision', revision)
 
         return RC_SUCCESS
@@ -362,6 +361,7 @@ class Git(Source, GitStepMixin):
             yield self.clobber()
         else:
             raise buildstep.BuildStepFailed()
+        return None
 
     @defer.inlineCallbacks
     def _clone(self, shallowClone):
@@ -502,6 +502,7 @@ class Git(Source, GitStepMixin):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):

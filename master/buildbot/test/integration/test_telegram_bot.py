@@ -28,12 +28,11 @@ from zope.interface import implementer
 from buildbot.data import connector as dataconnector
 from buildbot.mq import connector as mqconnector
 from buildbot.reporters import telegram
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import db
 from buildbot.test.util import www
-from buildbot.test.util.decorators import flaky
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
@@ -99,6 +98,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         master.mq = mqconnector.MQConnector()
         yield master.mq.setServiceParent(master)
         yield master.mq.setup()
+        yield master.mq.startService()
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
@@ -148,9 +148,9 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
     def tearDown(self):
         if self.master:
             yield self.master.www.stopService()
+            yield self.master.mq.stopService()
         yield self.tearDownRealDatabaseWithConnector()
 
-    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testWebhook(self):
         payload = unicode2bytes(json.dumps({
@@ -179,7 +179,6 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         self.assertIn('123456789', self.sent_messages[0][1])
         self.assertIn('-12345678', self.sent_messages[1][1])
 
-    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testReconfig(self):
         tb = self.master.config.services['TelegramBot']
@@ -188,10 +187,10 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
             chat_ids=[-123456], notify_events=['problem']
         )
 
-    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testLoadState(self):
-        tboid = yield self.master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramWebhookBot')
+        tboid = yield self.master.db.state.getObjectId(
+            'testbot', 'buildbot.reporters.telegram.TelegramWebhookBot')
         yield self.insertTestData([
             fakedb.ObjectState(objectid=tboid, name='notify_events',
                                value_json='[[123456789, ["started", "finished"]]]'),
@@ -205,11 +204,11 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         self.assertEquals(c.channel.notify_events, {'started', 'finished'})
         self.assertEquals(c.channel.missing_workers, {12})
 
-    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testSaveState(self):
         tb = self.master.config.services['TelegramBot']
-        tboid = yield self.master.db.state.getObjectId('testbot', 'buildbot.reporters.telegram.TelegramWebhookBot')
+        tboid = yield self.master.db.state.getObjectId(
+            'testbot', 'buildbot.reporters.telegram.TelegramWebhookBot')
 
         notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())
         missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())
@@ -232,7 +231,6 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         self.assertIn([99, ['cancelled']], notify_events)
         self.assertIn([99, [13]], missing_workers)
 
-    @flaky(issueNumber=5120)
     @defer.inlineCallbacks
     def testMissingWorker(self):
         yield self.insertTestData([fakedb.Worker(id=1, name='local1')])

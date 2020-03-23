@@ -58,7 +58,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
         stepid = yield self.getStepid(kwargs)
         if stepid is None:
-            return
+            return None
 
         dbdict = yield self.master.db.logs.getLogBySlug(stepid,
                                                         kwargs.get('log_slug'))

@@ -60,8 +60,7 @@ except ImportError:
 #    Full Name <full.name@example.net>
 #    <full.name@example.net>
 VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
-VALID_EMAIL = re.compile(r"^(?:%s|(.+\s+)?<%s>\s*)$" %
-                         ((VALID_EMAIL_ADDR,) * 2))
+VALID_EMAIL = re.compile(r"^(?:{0}|(.+\s+)?<{0}>\s*)$".format(VALID_EMAIL_ADDR))
 VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 
@@ -105,7 +104,8 @@ class MailNotifier(NotifierBase):
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,
             schedulers=schedulers, branches=branches,
-            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
+            watchedWorkers=watchedWorkers,
+            messageFormatterMissingWorker=messageFormatterMissingWorker)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -147,7 +147,8 @@ class MailNotifier(NotifierBase):
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,
             schedulers=schedulers, branches=branches,
-            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
+            watchedWorkers=watchedWorkers,
+            messageFormatterMissingWorker=messageFormatterMissingWorker)
         if extraRecipients is None:
             extraRecipients = []
         self.extraRecipients = extraRecipients
@@ -306,7 +307,7 @@ class MailNotifier(NotifierBase):
         r = parseaddr(addr)
         if not r[0]:
             return r[1]
-        return "\"%s\" <%s>" % (Header(r[0], 'utf-8').encode(), r[1])
+        return "\"{}\" <{}>".format(Header(r[0], 'utf-8').encode(), r[1])
 
     def processRecipients(self, blamelist, m):
         to_recipients = set(blamelist)

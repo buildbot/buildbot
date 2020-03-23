@@ -127,7 +127,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None,
+                  resultSpec=None):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.select()

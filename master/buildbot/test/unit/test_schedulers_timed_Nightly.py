@@ -24,7 +24,7 @@ from twisted.trial import unittest
 
 from buildbot.changes import filter
 from buildbot.schedulers import timed
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -85,7 +85,8 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def mkbs(self, **kwargs):
         # create buildset for expected_buildset in assertBuildset.
-        bs = dict(reason="The Nightly scheduler named 'test' triggered this build", external_idstring='', sourcestampsetid=100,
+        bs = dict(reason="The Nightly scheduler named 'test' triggered this build",
+                  external_idstring='', sourcestampsetid=100,
                   properties=[('scheduler', ('test', 'Scheduler'))])
         bs.update(kwargs)
         return bs
@@ -133,7 +134,8 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     def test_constructor_change_filter(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
-                                   branch=None, change_filter=filter.ChangeFilter(category_re="fo+o"))
+                                   branch=None,
+                                   change_filter=filter.ChangeFilter(category_re="fo+o"))
         assert sched.change_filter
 
     def test_constructor_month(self):
@@ -376,10 +378,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='Nightly'),
             fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
-                               value_json='{"b": {"branch": "master", "repository": "B", "revision": "1234:abc",  "lastChange": 2}}')])
+                               value_json='{"b": {"branch": "master", "repository": "B", "revision": "1234:abc",  "lastChange": 2}}')])  # noqa pylint: disable=line-too-long
 
-        yield self.do_test_iterations_onlyIfChanged_test(fII,
-                                                         (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True))
+        change = self.makeFakeChange(number=3, codebase='a', revision='2345:bcd')
+        yield self.do_test_iterations_onlyIfChanged_test(fII, (120, change, True))
 
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)

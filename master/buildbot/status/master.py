@@ -146,9 +146,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # don't use this API. this URL is not supported
         # its here waiting for getURLForThing removal or switch to deferred
         prefix = self.getBuildbotURL()
-        return prefix + "#builders/%s/builds/%d" % (
-            urlquote(builder_name, safe=''),
-            build_number)
+        return prefix + "#builders/{}/builds/{}".format(urlquote(builder_name, safe=''),
+                                                        build_number)
 
     def getURLForBuildrequest(self, buildrequestid):
         prefix = self.getBuildbotURL()
@@ -164,9 +163,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             pass
         if interfaces.IBuilderStatus.providedBy(thing):
             bldr = thing
-            return prefix + "#builders/%s" % (
-                urlquote(bldr.getName(), safe=''),
-            )
+            return prefix + "#builders/{}".format(urlquote(bldr.getName(), safe=''))
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
@@ -179,7 +176,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             step = thing
             build = step.getBuild()
             bldr = build.getBuilder()
-            return prefix + "#builders/%s/builds/%d/steps/%s" % (
+            return prefix + "#builders/{}/builds/{}/steps/{}".format(
                 urlquote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urlquote(step.getName(), safe=''))
@@ -188,16 +185,15 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # IWorkerStatus
         if interfaces.IWorkerStatus.providedBy(thing):
             worker = thing
-            return prefix + "#workers/%s" % (
-                urlquote(worker.getName(), safe=''),
-            )
+            return prefix + "#workers/{}".format(urlquote(worker.getName(), safe=''))
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
             # TODO: this is goofy, create IChange or something
             if isinstance(thing, changes.Change):
                 change = thing
-                return "%s#changes/%d" % (prefix, change.number)
+                return "{}#changes/{}".format(prefix, change.number)
+        return None
 
     def getChangeSources(self):
         return list(self.master.change_svc)

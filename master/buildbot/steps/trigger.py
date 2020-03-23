@@ -222,8 +222,9 @@ class Trigger(BuildStep):
                             builderNames[builderid] = builderDict["name"]
                         num = build['number']
                         url = self.master.status.getURLForBuild(builderid, num)
-                        yield self.addURL("%s: %s #%d" % (statusToString(build["results"]),
-                                                          builderNames[builderid], num), url)
+                        yield self.addURL("{}: {} #{}".format(statusToString(build["results"]),
+                                                              builderNames[builderid], num),
+                                          url)
 
     @defer.inlineCallbacks
     def run(self):
@@ -286,7 +287,7 @@ class Trigger(BuildStep):
                 # put the url to the brids, so that we can have the status from
                 # the beginning
                 url = self.master.status.getURLForBuildrequest(brid)
-                yield self.addURL("%s #%d" % (sch.name, brid), url)
+                yield self.addURL("{} #{}".format(sch.name, brid), url)
             dl.append(resultsDeferred)
             triggeredNames.append(sch.name)
             if self.ended:
@@ -320,4 +321,4 @@ class Trigger(BuildStep):
     def getCurrentSummary(self):
         if not self.triggeredNames:
             return {'step': 'running'}
-        return {'step': 'triggered %s' % (', '.join(self.triggeredNames))}
+        return {'step': 'triggered {}'.format(', '.join(self.triggeredNames))}

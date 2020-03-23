@@ -76,13 +76,12 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return d
 
     def getURL(self, path=""):
-        return "http://127.0.0.1:%d/%s" % (self.port, path)
+        return "http://127.0.0.1:{}/{}".format(self.port, path)
 
     def test_basic(self):
         url = self.getURL()
         self.setupStep(http.GET(url))
-        self.expectLogfile(
-            'log', "URL: %s\nStatus: 200\n ------ Content ------\nOK" % (url, ))
+        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK".format(url))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()
@@ -90,8 +89,7 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_404(self):
         url = self.getURL("404")
         self.setupStep(http.GET(url))
-        self.expectLogfile(
-            'log', "URL: %s\n ------ Content ------\n404" % (url, ))
+        self.expectLogfile('log', "URL: {}\n ------ Content ------\n404".format(url))
         self.expectLogfile('content', "404")
         self.expectOutcome(
             result=FAILURE, state_string="Status code: 404 (failure)")
@@ -107,8 +105,7 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_header(self):
         url = self.getURL("header")
         self.setupStep(http.GET(url, headers={"X-Test": "True"}))
-        self.expectLogfile(
-            'log', "URL: %s\nStatus: 200\n ------ Content ------\nTrue" % (url, ))
+        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()
 
@@ -117,8 +114,9 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(http.GET(url, params=properties.Property("x")))
         self.properties.setProperty(
             'x', {'param_1': 'param_1', 'param_2': 2}, 'here')
-        self.expectLogfile(
-            'log', "URL: %s?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK" % (url, ))
+        self.expectLogfile('log',
+            ("URL: {}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK"
+             ).format(url))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()

@@ -25,7 +25,7 @@ from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.changes import gerritchangesource
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
@@ -383,7 +383,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'gerrit', auth=auth)
         self.changesource = gerritchangesource.GerritEventLogPoller(
-            'gerrit', auth=auth, gitBaseURL="ssh://someuser@somehost:29418", pollAtLaunch=False, **kwargs)
+            'gerrit', auth=auth, gitBaseURL="ssh://someuser@somehost:29418", pollAtLaunch=False,
+            **kwargs)
 
     @defer.inlineCallbacks
     def startChangeSource(self):
@@ -398,8 +399,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_describe(self):
-        # describe is not used yet in buildbot nine, but it can still be useful in the future, so lets
-        # implement and test it
+        # describe is not used yet in buildbot nine, but it can still be useful in the future, so
+        # lets implement and test it
         yield self.newChangeSource()
         self.assertSubstring('GerritEventLogPoller',
                              self.changesource.describe())
@@ -525,4 +526,5 @@ class TestGerritChangeFilter(unittest.TestCase):
         self.assertFalse(f.filter_change(ch))
         self.assertEqual(
             repr(f),
-            '<GerritChangeFilter on prop:event.change.branch == br and prop:event.type == ref-updated>')
+            '<GerritChangeFilter on prop:event.change.branch == br and '
+            'prop:event.type == ref-updated>')

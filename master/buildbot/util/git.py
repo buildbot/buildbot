@@ -63,7 +63,7 @@ class GitMixin:
                 logname))
 
         if self.sshHostKey is not None and self.sshKnownHosts is not None:
-            config.error('{}: only one of sshPrivateKey and sshHostKey can be provided'.format(
+            config.error('{}: only one of sshKnownHosts and sshHostKey can be provided'.format(
                 logname))
 
         self.gitInstalled = False
@@ -202,7 +202,7 @@ class GitStepMixin(GitMixin):
         if self.config is not None:
             for name, value in self.config.items():
                 full_command.append('-c')
-                full_command.append('%s=%s' % (name, value))
+                full_command.append('{}={}'.format(name, value))
 
         if self._isSshPrivateKeyNeededForGitCommand(command):
             self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
@@ -215,8 +215,8 @@ class GitStepMixin(GitMixin):
 
         # If possible prefer to send a SIGTERM to git before we send a SIGKILL.
         # If we send a SIGKILL, git is prone to leaving around stale lockfiles.
-        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down gracefully
-        # before getting terminated
+        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down
+        # gracefully before getting terminated
         if not self.workerVersionIsOlderThan("shell", "2.16"):
             # git should shut-down quickly on SIGTERM.  If it doesn't don't let it
             # stick around for too long because this is on top of any timeout
@@ -246,7 +246,7 @@ class GitStepMixin(GitMixin):
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command %s" % cmd)
+            log.msg("Source step failed while running command {}".format(cmd))
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout

@@ -105,7 +105,7 @@ class DevProxy:
                     elif msg.type == aiohttp.WSMsgType.PONG:
                         await ws_to.pong()
                     else:
-                        raise ValueError('unexpected message type: %s' % msg)
+                        raise ValueError('unexpected message type: {}'.format(msg))
 
             # keep forwarding websocket data in both directions
             await asyncio.wait(

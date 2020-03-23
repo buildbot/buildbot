@@ -21,9 +21,11 @@ from sqlalchemy.ext import compiler
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
 
-# from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
-# _execution_options per http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
-#   (UpdateBase requires sqlalchemy 0.7.0)
+# from http:
+# //www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long
+# _execution_options per
+# http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
+# (UpdateBase requires sqlalchemy 0.7.0)
 
 
 class InsertFromSelect(Executable, ClauseElement):
@@ -37,10 +39,8 @@ class InsertFromSelect(Executable, ClauseElement):
 
 @compiler.compiles(InsertFromSelect)
 def _visit_insert_from_select(element, compiler, **kw):
-    return "INSERT INTO %s %s" % (
-        compiler.process(element.table, asfrom=True),
-        compiler.process(element.select)
-    )
+    return "INSERT INTO {} {}".format(compiler.process(element.table, asfrom=True),
+                                      compiler.process(element.select))
 
 
 def sa_version():

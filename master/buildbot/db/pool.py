@@ -60,20 +60,20 @@ def timed_do_fn(f):
         descr = "%s-%08x" % (name, id)
 
         start_time = time.time()
-        log.msg("%s - before ('%s' line %d)" % (descr, file, line))
+        log.msg("{} - before ('{}' line {})".format(descr, file, line))
         for name in locals:
             if name in ('self', 'thd'):
                 continue
-            log.msg("%s -   %s = %r" % (descr, name, locals[name]))
+            log.msg("{} - {} = {}".format(descr, name, repr(locals[name])))
 
         # wrap the callable to log the begin and end of the actual thread
         # function
         def callable_wrap(*args, **kargs):
-            log.msg("%s - thd start" % (descr,))
+            log.msg("{} - thd start".format(descr))
             try:
                 return callable(*args, **kwargs)
             finally:
-                log.msg("%s - thd end" % (descr,))
+                log.msg("{} - thd end".format(descr))
         d = f(callable_wrap, *args, **kwargs)
 
         @d.addBoth
@@ -120,7 +120,7 @@ class DBThreadPool:
         if engine.dialect.name == 'sqlite':
             vers = self.get_sqlite_version()
             if vers < (3, 7):
-                log_msg("Using SQLite Version %s" % (vers,))
+                log_msg("Using SQLite Version {}".format(vers))
                 log_msg("NOTE: this old version of SQLite does not support "
                         "WAL journal mode; a busy master may encounter "
                         "'Database is locked' errors.  Consider upgrading.")

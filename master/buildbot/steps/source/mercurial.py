@@ -79,14 +79,13 @@ class Mercurial(Source):
 
         errors = []
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode %s is not one of %s" %
-                          (self.mode, self._listAttrGroupMembers('mode')))
+            errors.append("mode {} is not one of {}".format(self.mode,
+                                                            self._listAttrGroupMembers('mode')))
         if self.method not in self.possible_methods:
-            errors.append("method %s is not one of %s" %
-                          (self.method, self.possible_methods))
+            errors.append("method {} is not one of {}".format(self.method, self.possible_methods))
         if self.branchType not in self.possible_branchTypes:
-            errors.append("branchType %s is not one of %s" %
-                          (self.branchType, self.possible_branchTypes))
+            errors.append("branchType {} is not one of {}".format(self.branchType,
+                                                                  self.possible_branchTypes))
 
         if repourl is None:
             errors.append("you must provide a repourl")
@@ -203,7 +202,7 @@ class Mercurial(Source):
             revision = stdout.strip()
             if len(revision) != 40:
                 raise ValueError("Incorrect revision id")
-            log.msg("Got Mercurial revision %s" % (revision, ))
+            log.msg("Got Mercurial revision {}".format(revision))
             self.updateSourceProperty('got_revision', revision)
             return 0
         return d
@@ -211,8 +210,8 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def _checkBranchChange(self, _):
         current_branch = yield self._getCurrentBranch()
-        msg = "Working dir is on in-repo branch '%s' and build needs '%s'." % \
-              (current_branch, self.update_branch)
+        msg = "Working dir is on in-repo branch '{}' and build needs '{}'.".format(current_branch,
+                self.update_branch)
         if current_branch != self.update_branch and self.clobberOnBranchChange:
             msg += ' Clobbering.'
             log.msg(msg)
@@ -256,7 +255,7 @@ class Mercurial(Source):
         @d.addCallback
         def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
+                log.msg("Source step failed while running command {}".format(cmd))
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
@@ -293,6 +292,7 @@ class Mercurial(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     def _sourcedirIsUpdatable(self):
         return self.pathExists(self.build.path_module.join(self.workdir, '.hg'))

@@ -86,9 +86,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['name'] = context
 
-        return self._http.post('/api/v4/projects/%d/statuses/%s' % (
-            project_id, sha),
-            json=payload)
+        return self._http.post('/api/v4/projects/{}/statuses/{}'.format(project_id, sha),
+                json=payload)
 
     @defer.inlineCallbacks
     def getProjectId(self, sourcestamp):
@@ -96,13 +95,12 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         url = giturlparse(sourcestamp['repository'])
         if url is None:
             return None
-        project_full_name = "%s/%s" % (url.owner, url.repo)
-
+        project_full_name = "{}/{}".format(url.owner, url.repo)
         # gitlab needs project name to be fully url quoted to get the project id
         project_full_name = urlquote_plus(project_full_name)
 
         if project_full_name not in self.project_ids:
-            response = yield self._http.get('/api/v4/projects/%s' % (project_full_name))
+            response = yield self._http.get('/api/v4/projects/{}'.format(project_full_name))
             proj = yield response.json()
             if response.code not in (200, ):
                 log.msg(

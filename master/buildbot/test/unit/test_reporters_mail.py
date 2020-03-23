@@ -76,7 +76,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         cte_lines = [l for l in m.as_string().split("\n")
                      if l.startswith('Content-Transfer-Encoding:')]
         self.assertEqual(cte_lines,
-                         ['Content-Transfer-Encoding: %s' % expEncoding],
+                         ['Content-Transfer-Encoding: {}'.format(expEncoding)],
                          repr(m.as_string()))
 
     def test_createEmail_message_content_transfer_encoding_7bit(self):
@@ -130,7 +130,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         _, builds = yield self.setupBuildResults(SUCCESS)
         builds[0]['properties']['hhh'] = ('vvv', 'fake')
         msgdict = create_msgdict()
-        mn = yield self.setupMailNotifier('from@example.org', extraHeaders=dict(hhh=properties.Property('hhh')))
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          extraHeaders=dict(hhh=properties.Property('hhh')))
         # add some Unicode to detect encoding problems
         m = yield mn.createEmail(msgdict, 'builder-n\u00E5me', 'project-n\u00E5me',
                                  SUCCESS, builds)
@@ -190,7 +191,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                                         "type": "text",
                                                                          "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
@@ -229,7 +231,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             extraRecipients = []
         _, builds = yield self.setupBuildResults(SUCCESS)
 
-        mn = yield self.setupMailNotifier('from@example.org', lookup=lookup, extraRecipients=extraRecipients,
+        mn = yield self.setupMailNotifier('from@example.org', lookup=lookup,
+                                          extraRecipients=extraRecipients,
                                           sendToInterestedUsers=sendToInterestedUsers)
 
         recipients = yield mn.findInterrestedUsersEmails(['Big Bob <bob@mayhem.net>', 'narrator'])
@@ -321,7 +324,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                                         "type": "text",
                                                                          "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
@@ -358,7 +362,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         """
         fakereactor = Mock()
         self.patch(mail, 'reactor', fakereactor)
-        mn, builds = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"), smtpPassword=Interpolate("pa$$word"))
+        mn, builds = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"),
+                                                    smtpPassword=Interpolate("pa$$word"))
 
         self.assertEqual(mn.smtpUser, "u$er")
         self.assertEqual(mn.smtpPassword, "pa$$word")
@@ -380,6 +385,6 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
 
 def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
-    unibody = 'Unicode body with non-ascii (%s).' % funny_chars
+    unibody = 'Unicode body with non-ascii ({}).'.format(funny_chars)
     msg_dict = dict(body=unibody, type='plain')
     return msg_dict

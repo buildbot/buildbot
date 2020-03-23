@@ -49,7 +49,7 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(data)
 
     def errReceived(self, data):
-        print("ERR: '%s'" % (data,))
+        print("ERR: '{}'".format(data))
 
 
 class LogWatcher(LineOnlyReceiver):
@@ -121,7 +121,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def lineReceived(self, line):
         if not self.running:
-            return
+            return None
         if b"Log opened." in line:
             self.in_reconfig = True
         if b"beginning configuration update" in line:
@@ -132,8 +132,8 @@ class LogWatcher(LineOnlyReceiver):
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
-        PROGRESS_TEXT = [b'Starting BuildMaster', b'Loading configuration from',
-                         b'added builder', b'adding scheduler', b'Loading builder', b'Starting factory']
+        PROGRESS_TEXT = [b'Starting BuildMaster', b'Loading configuration from', b'added builder',
+                         b'adding scheduler', b'Loading builder', b'Starting factory']
         for progressText in PROGRESS_TEXT:
             if progressText in line:
                 self.timer = None
@@ -151,3 +151,4 @@ class LogWatcher(LineOnlyReceiver):
             return self.finished("buildmaster")
         if b"BuildMaster startup failed" in line:
             return self.finished(Failure(BuildmasterStartupError()))
+        return None

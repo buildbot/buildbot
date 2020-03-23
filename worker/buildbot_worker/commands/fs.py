@@ -187,8 +187,8 @@ class CopyDirectory(base.Command):
                 os.makedirs(os.path.dirname(todir))
             if os.path.exists(todir):
                 # I don't think this happens, but just in case..
-                log.msg(
-                    "cp target '{0}' already exists -- cp will not do what you think!".format(todir))
+                log.msg(("cp target '{0}' already exists -- cp will not do what you think!"
+                         ).format(todir))
 
             command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
             c = runprocess.RunProcess(self.builder, command, self.builder.basedir,

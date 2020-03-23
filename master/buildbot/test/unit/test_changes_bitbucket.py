@@ -109,7 +109,7 @@ class PullRequestRest():
     "id": %(id)d
 
 }
-"""
+"""  # noqa pylint: disable=line-too-long
 
     def __init__(self, nr, title, description, display_name, source, created_on, updated_on=None):
         self.nr = nr
@@ -181,7 +181,7 @@ class PullRequestListRest():
             "merge_commit": null,
             "id": %(id)s
         }
-"""
+"""  # noqa pylint: disable=line-too-long
 
     def __init__(self, owner, slug, prs):
         self.owner = owner
@@ -192,8 +192,7 @@ class PullRequestListRest():
         self.src_by_url = {}
         for pr in prs:
             self.pr_by_id[pr.nr] = pr
-            self.src_by_url["%s/%s"
-                            % (pr.source.owner, pr.source.slug)] = pr.source
+            self.src_by_url["{}/{}".format(pr.source.owner, pr.source.slug)] = pr.source
 
     def request(self):
 
@@ -227,13 +226,13 @@ class PullRequestListRest():
     def getPage(self, url, timeout=None):
 
         list_url_re = re.compile(
-            r"https://bitbucket.org/api/2.0/repositories/%s/%s/pullrequests"
-            % (self.owner, self.slug))
+            r"https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
+                                                                                    self.slug))
         pr_url_re = re.compile(
-            r"https://bitbucket.org/!api/2.0/repositories/%s/%s/pullrequests/(?P<id>\d+)"
-            % (self.owner, self.slug))
+            r"https://bitbucket.org/!api/2.0/repositories/{}/{}/pullrequests/(?P<id>\d+)".format(
+                    self.owner, self.slug))
         source_commit_url_re = re.compile(
-            r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")
+            r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)/commit/(?P<hash>\d+)")  # noqa pylint: disable=line-too-long
         source_url_re = re.compile(
             r"https://bitbucket.org/!api/2.0/repositories/(?P<src_owner>.*)/(?P<src_slug>.*)")
 
@@ -246,13 +245,13 @@ class PullRequestListRest():
 
         m = source_commit_url_re.match(url)
         if m:
-            return self.src_by_url["%s/%s"
-                                   % (m.group("src_owner"), m.group("src_slug"))].request()
+            return self.src_by_url["{}/{}".format(m.group("src_owner"),
+                                                  m.group("src_slug"))].request()
 
         m = source_url_re.match(url)
         if m:
-            return self.src_by_url["%s/%s"
-                                   % (m.group("src_owner"), m.group("src_slug"))].repo_request()
+            return self.src_by_url["{}/{}".format(m.group("src_owner"),
+                                                  m.group("src_slug"))].repo_request()
 
         raise Error(code=404)
 
@@ -450,7 +449,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'branch': 'default',
                 'category': None,
                 'codebase': None,
-                'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'comments':
+                    'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
                 'project': '',
                 'properties': {},
@@ -466,7 +466,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'branch': 'default',
                 'category': None,
                 'codebase': None,
-                'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'comments':
+                    'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
                 'project': '',
                 'properties': {},

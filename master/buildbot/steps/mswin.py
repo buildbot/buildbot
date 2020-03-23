@@ -103,5 +103,5 @@ class Robocopy(ShellCommand):
                 if (cmd.rc & flag) == flag:
                     return result
 
-        log.msg("Unknown return code for Robocopy: %s" % cmd.rc)
+        log.msg("Unknown return code for Robocopy: {}".format(cmd.rc))
         return EXCEPTION

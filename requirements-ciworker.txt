@@ -1,15 +1,16 @@
 attrs==19.3.0
-Automat==0.8.0
+Automat==20.2.0
 constantly==15.1.0
 funcsigs==1.0.2
 future==0.18.2
 hyperlink==19.0.0
-idna==2.8
+idna==2.9
 incremental==17.5.0
-mock==3.0.5
-pbr==5.4.3
+# pin mock, because 4.x no longer supports Python 3.5
+mock==3.0.5  # pyup: ignore
+pbr==5.4.4
 PyHamcrest==1.9.0
-six==1.12.0
-Twisted==19.7.0
-zope.interface==4.6.0
+six==1.14.0
+Twisted==19.10.0
+zope.interface==4.7.1
 -e worker

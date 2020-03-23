@@ -53,8 +53,10 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell.log(
                 'stdio',
                 stdout=('Checking file1.c...\n'
-                        '[file1.c:3]: (warning) Logical disjunction always evaluates to true: t >= 0 || t < 65.\n'
-                        '(information) Cppcheck cannot find all the include files (use --check-config for details)')) +
+                        '[file1.c:3]: (warning) Logical disjunction always '
+                        'evaluates to true: t >= 0 || t < 65.\n'
+                        '(information) Cppcheck cannot find all the include files '
+                        '(use --check-config for details)')) +
             0)
         self.expectOutcome(result=WARNINGS,
                            state_string="cppcheck warning=1 information=1 (warnings)")

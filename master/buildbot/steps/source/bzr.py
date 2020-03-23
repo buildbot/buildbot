@@ -52,8 +52,8 @@ class Bzr(Source):
             raise ValueError("you must provide defaultBranch with baseURL")
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            raise ValueError("mode %s is not one of %s" %
-                             (self.mode, self._listAttrGroupMembers('mode')))
+            raise ValueError("mode {} is not one of {}".format(self.mode,
+                                                               self._listAttrGroupMembers('mode')))
 
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
@@ -213,8 +213,7 @@ class Bzr(Source):
         @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " %
-                    (self.cmd))
+            log.msg("Closing log, sending result of the command {} ".format(self.cmd))
             return results
         d.addCallback(self.finished)
         return d
@@ -240,7 +239,7 @@ class Bzr(Source):
         @d.addCallback
         def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
+                log.msg("Source step failed while running command {}".format(cmd))
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
@@ -262,6 +261,7 @@ class Bzr(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     def parseGotRevision(self, _):
         d = self._dovccmd(["version-info", "--custom", "--template='{revno}"],
@@ -276,7 +276,7 @@ class Bzr(Source):
                 log.msg("Invalid revision number")
                 raise buildstep.BuildStepFailed()
 
-            log.msg("Got Git revision %s" % (revision, ))
+            log.msg("Got Git revision {}".format(revision))
             self.updateSourceProperty('got_revision', revision)
             return 0
         return d

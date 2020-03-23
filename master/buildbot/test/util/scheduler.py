@@ -17,7 +17,7 @@
 from twisted.internet import defer
 
 from buildbot.schedulers import base
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 
@@ -91,7 +91,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                     'addBuildsetForChanges',
                     'addBuildsetForSourceStamps'):
                 actual = getattr(scheduler, method)
-                fake = getattr(self, 'fake_%s' % method)
+                fake = getattr(self, 'fake_{}'.format(method))
 
                 self.assertArgSpecMatches(actual, fake)
                 setattr(scheduler, method, fake)
@@ -126,7 +126,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 rv = yield defer.maybeDeferred(oldMethod)
 
                 self.assertTrue(self._parentMethodCalled,
-                    "'%s' did not call its parent" % meth)
+                                "'{}' did not call its parent".format(meth))
                 return rv
 
             setattr(scheduler, meth, newMethod)

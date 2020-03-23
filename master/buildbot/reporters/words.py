@@ -174,6 +174,7 @@ class Channel(service.AsyncService):
                 return self.workerMissing(msg)
             if key[2] == 'connected':
                 return self.workerConnected(msg)
+            return None
 
         for e, f in (("new", buildStarted),             # BuilderStarted
                      ("finished", buildFinished)):      # BuilderFinished
@@ -349,19 +350,22 @@ class Channel(service.AsyncService):
 
         return False
 
+    @defer.inlineCallbacks
     def workerMissing(self, worker):
         self.missing_workers.add(worker['workerid'])
         if self.notify_for('worker'):
-            self.send("Worker `{name}` is missing. It was seen last on {last_connection}.".format(**worker))
-        self.bot.saveMissingWorkers()
+            self.send(("Worker `{name}` is missing. It was seen last on "
+                       "{last_connection}.").format(**worker))
+        yield self.bot.saveMissingWorkers()
 
+    @defer.inlineCallbacks
     def workerConnected(self, worker):
         workerid = worker['workerid']
         if workerid in self.missing_workers:
             self.missing_workers.remove(workerid)
             if self.notify_for('worker'):
                 self.send("Worker `{name}` is back online.".format(**worker))
-            self.bot.saveMissingWorkers()
+            yield self.bot.saveMissingWorkers()
 
 
 class Contact:
@@ -464,24 +468,24 @@ class Contact:
         if not meth:
             if message[-1] == '!':
                 self.send("What you say!")
-                return
+                return None
             elif cmd.startswith(self.bot.commandPrefix):
                 self.send("I don't get this '{}'...".format(cmd))
                 meth = self.command_COMMANDS
             else:
                 if self.is_private_chat:
                     self.send("Say what?")
-                return
+                return None
 
         try:
             result = yield meth(args.strip(), **kwargs)
         except UsageError as e:
             self.send(str(e))
-            return
+            return None
         except Exception as e:
             self.bot.log_err(e)
             self.send("Something bad happened (see logs)")
-            return
+            return None
         return result
 
     def splitArgs(self, args):
@@ -518,7 +522,8 @@ class Contact:
             pass
 
         if not args:
-            raise UsageError("Try '" + self.bot.commandPrefix + "list [all|N] builders|workers|changes'.")
+            raise UsageError(("Try '{}list [all|N] builders|workers|changes'."
+                              ).format(self.bot.commandPrefix))
 
         if args[0] == 'builders':
             bdicts = yield self.bot.getAllBuilders()
@@ -546,12 +551,12 @@ class Contact:
                     response.append(worker['name'])
                     response.append("[offline]")
             self.send(' '.join(response))
-            return
 
         elif args[0] == 'changes':
             if all:
                 self.send("Do you really want me to list all changes? It can be thousands!\n"
-                          "If you want to be flooded, specify the maximum number of changes to show.\n"
+                          "If you want to be flooded, specify the maximum number of changes "
+                          "to show.\n"
                           "Right now, I will show up to 100 recent changes.")
                 num = 100
 
@@ -661,6 +666,7 @@ class Contact:
         def watchForCompleteEvent(key, msg):
             if key[-1] in ('finished', 'complete'):
                 return self.channel.buildFinished(msg, watched=True)
+            return None
 
         for build in builds:
             startConsuming = self.master.mq.startConsuming
@@ -769,8 +775,9 @@ class Contact:
         else:
             self.send("Force build successfully requested.")
 
-    command_FORCE.usage = ("force build [--codebase=CODEBASE] [--branch=branch] [--revision=revision]"
-                           " [--props=prop1=val1,prop2=val2...] _which_ _reason_ - Force a build")
+    command_FORCE.usage = ("force build [--codebase=CODEBASE] [--branch=branch] "
+                           "[--revision=revision] [--props=prop1=val1,prop2=val2...] "
+                           "_which_ _reason_ - Force a build")
 
     @defer.inlineCallbacks
     @dangerousCommand
@@ -1181,7 +1188,8 @@ class StatusBot(service.AsyncMultiService):
     def getBuilder(self, buildername=None, builderid=None):
         if buildername:
             bdicts = yield self.master.data.get(('builders',),
-                                                filters=[resultspec.Filter('name', 'eq', [buildername])])
+                                                filters=[resultspec.Filter('name', 'eq',
+                                                                           [buildername])])
             if bdicts:
                 # Could there be more than one? One is enough.
                 bdict = bdicts[0]

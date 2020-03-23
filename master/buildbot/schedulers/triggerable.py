@@ -38,7 +38,8 @@ class Triggerable(base.BaseScheduler):
                 parent_buildid=None, parent_relationship=None):
         """Trigger this scheduler with the optional given list of sourcestamps
         Returns two deferreds:
-            idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are available.
+            idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are
+            available.
             resultsDeferred -- yields the build result(s), when they finish."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
@@ -51,7 +52,7 @@ class Triggerable(base.BaseScheduler):
             reason = set_props.getProperty('reason')
 
         if reason is None:
-            reason = "The Triggerable scheduler named '%s' triggered this build" % self.name
+            reason = "The Triggerable scheduler named '{}' triggered this build".format(self.name)
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of

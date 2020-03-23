@@ -26,7 +26,7 @@ from buildbot.statistics import capture
 from buildbot.statistics import storage_backends
 from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
 from buildbot.test.util import logging

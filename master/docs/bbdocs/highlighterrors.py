@@ -4,7 +4,7 @@ import sys
 import textwrap
 from pkg_resources import parse_version
 
-# Monkey-patch Sphinx to treat unhiglighted code as error.
+# Monkey-patch Sphinx to treat unhighlighted code as error.
 import sphinx
 import sphinx.highlighting
 from sphinx.errors import SphinxWarning
@@ -52,16 +52,16 @@ def patched_unhighlighted(self, source):
             anonymous expression.
             """) % indented_source
         raise UnhighlightedError(msg)
-    else:
-        msg = textwrap.dedent("""\
-            Unhighlighted block:
 
-            %s
+    msg = textwrap.dedent("""\
+        Unhighlighted block:
 
-            """) % indented_source
-        sys.stderr.write(msg.encode('ascii', 'ignore'))
+        %s
 
-        return orig_unhiglighted(self, source)
+        """) % indented_source
+    sys.stderr.write(msg.encode('ascii', 'ignore'))
+
+    return orig_unhiglighted(self, source)
 
 # Compatible with PygmentsBridge.highlight_block since Sphinx'
 # 1860:19b394207746 changeset (v0.6.6 release)
@@ -88,9 +88,9 @@ def setup(app):
         sphinx.highlighting.PygmentsBridge.highlight_block = patched_highlight_block
     else:
         msg = textwrap.dedent("""\
-            WARNING: Your Sphinx version %s is too old and will not work with
+            WARNING: Your Sphinx version {} is too old and will not work with
             monkey-patch for checking unhighlighted code.  Minimal required version
-            of Sphinx is %s.  Check disabled.
-            """) % (sphinx.__version__, required_sphinx_version)
+            of Sphinx is {}.  Check disabled.
+            """).format(sphinx.__version__, required_sphinx_version)
         sys.stderr.write(msg)
     return {'parallel_read_safe': True, 'parallel_write_safe': True}

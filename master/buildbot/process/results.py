@@ -32,6 +32,7 @@ def worst_status(a, b):
     for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SUCCESS, SKIPPED):
         if s in (a, b):
             return s
+    return None
 
 
 def computeResultAndTermination(obj, result, previousResult):

@@ -73,6 +73,7 @@ class HLint(ShellCommand):
         self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
 
         super().start()
+        return None
 
     def logConsumer(self):
         while True:
@@ -95,8 +96,7 @@ class HLint(ShellCommand):
     def getText2(self, cmd, results):
         if cmd.didFail():
             return ["hlint"]
-        return ["%d hlin%s" % (self.warnings,
-                               self.warnings == 1 and 't' or 'ts')]
+        return ["{} hlin{}".format(self.warnings, self.warnings == 1 and 't' or 'ts')]
 
 
 class TrialTestCaseCounter(logobserver.LogLineObserver):
@@ -345,14 +345,14 @@ class Trial(ShellCommand):
         if self.recurse:
             command.append("--recurse")
         if self.reactor:
-            command.append("--reactor=%s" % reactor)
+            command.append("--reactor={}".format(reactor))
         if self.randomly:
             command.append("--random=0")
         command.extend(self.trialArgs)
         self.command = command
 
         if self.reactor:
-            self.description = ["testing", "(%s)" % self.reactor]
+            self.description = ["testing", "({})".format(self.reactor)]
             self.descriptionDone = ["tests"]
             # commandComplete adds (reactorname) to self.text
         else:
@@ -415,7 +415,7 @@ class Trial(ShellCommand):
         if self.testChanges:
             for f in self.build.allFiles():
                 if f.endswith(".py"):
-                    self.command.append("--testmodule=%s" % f)
+                    self.command.append("--testmodule={}".format(f))
         else:
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
@@ -438,10 +438,7 @@ class Trial(ShellCommand):
             if parsed:
                 results = SUCCESS
                 if total:
-                    text += ["%d %s" %
-                             (total,
-                              total == 1 and "test" or "tests"),
-                             "passed"]
+                    text += ["{} {}".format(total, total == 1 and "test" or "tests"), "passed"]
                 else:
                     text += ["no tests", "run"]
             else:
@@ -454,28 +451,20 @@ class Trial(ShellCommand):
             if parsed:
                 text.append("tests")
                 if failures:
-                    text.append("%d %s" %
-                                (failures,
-                                 failures == 1 and "failure" or "failures"))
+                    text.append("{} {}".format(failures, failures == 1 and "failure" or "failures"))
                 if errors:
-                    text.append("%d %s" %
-                                (errors,
-                                 errors == 1 and "error" or "errors"))
+                    text.append("{} {}".format(errors, errors == 1 and "error" or "errors"))
                 count = failures + errors
-                text2 = "%d tes%s" % (count, (count == 1 and 't' or 'ts'))
+                text2 = "{} tes{}".format(count, (count == 1 and 't' or 'ts'))
             else:
                 text += ["tests", "failed"]
                 text2 = "tests"
 
         if counts['skips']:
-            text.append("%d %s" %
-                        (counts['skips'],
-                         counts['skips'] == 1 and "skip" or "skips"))
+            text.append("{} {}".format(counts['skips'], counts['skips'] == 1 and "skip" or "skips"))
         if counts['expectedFailures']:
-            text.append("%d %s" %
-                        (counts['expectedFailures'],
-                         counts['expectedFailures'] == 1 and "todo"
-                         or "todos"))
+            text.append("{} {}".format(counts['expectedFailures'],
+                                       counts['expectedFailures'] == 1 and "todo" or "todos"))
             if 0:  # TODO  pylint: disable=using-constant-test
                 results = WARNINGS
                 if not text2:
@@ -485,7 +474,7 @@ class Trial(ShellCommand):
             # ignore unexpectedSuccesses for now, but it should really mark
             # the build WARNING
             if counts['unexpectedSuccesses']:
-                text.append("%d surprises" % counts['unexpectedSuccesses'])
+                text.append("{} surprises".format(counts['unexpectedSuccesses']))
                 results = WARNINGS
                 if not text2:
                     text2 = "tests"
@@ -493,15 +482,15 @@ class Trial(ShellCommand):
         if self.reactor:
             text.append(self.rtext('(%s)'))
             if text2:
-                text2 = "%s %s" % (text2, self.rtext('(%s)'))
+                text2 = "{} {}".format(text2, self.rtext('(%s)'))
 
         self.results = results
         self.text = text
         self.text2 = [text2]
 
-    def rtext(self, fmt='%s'):
+    def rtext(self, fmt='{}'):
         if self.reactor:
-            rtext = fmt % self.reactor
+            rtext = fmt.format(self.reactor)
             return rtext.replace("reactor", "")
         return ""
 

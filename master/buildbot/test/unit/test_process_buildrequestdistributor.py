@@ -25,7 +25,7 @@ from buildbot import config
 from buildbot.db import buildrequests
 from buildbot.process import buildrequestdistributor
 from buildbot.process import factory
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
@@ -74,6 +74,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         if self.brd.running:
             return self.brd.stopService()
+        return None
 
     def make_workers(self, worker_count):
         rows = self.base_rows[:]
@@ -418,8 +419,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10], exp_builds=[('test-worker1', [10])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[10],
+                                                     exp_builds=[('test-worker1', [10])])
 
     @defer.inlineCallbacks
     def test_sorted_by_submit_time(self):
@@ -431,8 +432,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10], exp_builds=[('test-worker1', [10])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[10],
+                                                     exp_builds=[('test-worker1', [10])])
 
     @defer.inlineCallbacks
     def test_limited_by_available_workers(self):
@@ -443,8 +444,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10], exp_builds=[('test-worker2', [10])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[10],
+                                                     exp_builds=[('test-worker2', [10])])
 
     @defer.inlineCallbacks
     def test_slow_db(self):
@@ -468,8 +469,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10], exp_builds=[('test-worker1', [10])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[10],
+                                                     exp_builds=[('test-worker1', [10])])
 
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild(self):
@@ -500,9 +501,9 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=12, buildsetid=11, builderid=77,
                                 submitted_at=140000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10, 11], exp_builds=[
-                                                         ('test-worker1', [10]), ('test-worker3', [11])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[10, 11],
+                                                     exp_builds=[('test-worker1', [10]),
+                                                                 ('test-worker3', [11])])
 
         # we expect brids in order (10-11-12),
         # with each searched in reverse order of workers (3-2-1) available (due
@@ -567,10 +568,9 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10, 11],
-                                                     exp_builds=[
-                                                         ('test-worker2', [10]), ('test-worker1', [11])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[10, 11],
+                                                     exp_builds=[('test-worker2', [10]),
+                                                     ('test-worker1', [11])])
 
     @defer.inlineCallbacks
     def test_bldr_maybeStartBuild_fails_always(self):
@@ -593,8 +593,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      # claimed again so none taken!
                                                      exp_claims=[],
-                                                     exp_builds=[
-                                                         ('test-worker2', [10]), ('test-worker1', [11])])
+                                                     exp_builds=[('test-worker2', [10]),
+                                                                 ('test-worker1', [11])])
 
     @defer.inlineCallbacks
     def test_bldr_maybeStartBuild_fails_once(self):
@@ -638,8 +638,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[11], exp_builds=[('test-worker2', [11])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[11],
+                                                     exp_builds=[('test-worker2', [11])])
 
     @defer.inlineCallbacks
     def test_nextWorker_None(self):
@@ -721,8 +721,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[11], exp_builds=[('test-worker1', [11])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[11],
+                                                     exp_builds=[('test-worker1', [11])])
 
     # nextWorker
     @defer.inlineCallbacks
@@ -822,8 +822,8 @@ class TestMaybeStartBuilds(TestBRDBase):
                 exp_builds.append(('test-worker%d' % worker, [choice]))
                 worker = worker - 1
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=sorted(exp_claims), exp_builds=exp_builds)
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=sorted(exp_claims),
+                                                     exp_builds=exp_builds)
 
     def test_nextBuild_default(self):
         "default chooses the first in the list, which should be the earliest"

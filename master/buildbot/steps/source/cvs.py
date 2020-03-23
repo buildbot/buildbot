@@ -54,8 +54,8 @@ class CVS(Source):
         self.srcdir = 'source'
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            raise ValueError("mode %s is not one of %s" %
-                             (self.mode, self._listAttrGroupMembers('mode')))
+            raise ValueError("mode {} is not one of {}".format(self.mode,
+                                                               self._listAttrGroupMembers('mode')))
         super().__init__(**kwargs)
 
     def startVC(self, branch, revision, patch):
@@ -276,7 +276,7 @@ class CVS(Source):
         @d.addCallback
         def evaluateCommand(_):
             if cmd.rc != 0 and abandonOnFailure:
-                log.msg("Source step failed while running command %s" % cmd)
+                log.msg("Source step failed while running command {}".format(cmd))
                 raise buildstep.BuildStepFailed()
             return cmd.rc
         return d
@@ -368,6 +368,7 @@ class CVS(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     def computeSourceRevision(self, changes):
         if not changes:

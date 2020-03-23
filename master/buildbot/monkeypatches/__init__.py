@@ -24,7 +24,7 @@ def onlyOnce(fn):
     'Set up FN to only run once within an interpreter instance'
     def wrap(*args, **kwargs):
         if hasattr(fn, 'called'):
-            return
+            return None
         fn.called = 1
         return fn(*args, **kwargs)
     util.mergeFunctionMetadata(fn, wrap)

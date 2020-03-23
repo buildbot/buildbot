@@ -41,18 +41,18 @@ class ConfigErrorsMixin:
 
     def assertConfigError(self, errors, substr_or_re):
         if len(errors.errors) > 1:
-            self.fail("too many errors: %s" % (errors.errors,))
+            self.fail("too many errors: {}".format(errors.errors))
         elif not errors.errors:
             self.fail("expected error did not occur")
         else:
             curr_error = errors.errors[0]
             if isinstance(substr_or_re, str):
                 if substr_or_re not in curr_error:
-                    self.fail("non-matching error: %s, "
-                              "expected: %s" % (curr_error, substr_or_re))
+                    self.fail("non-matching error: {}, expected: {}".format(curr_error,
+                                                                            substr_or_re))
             else:
                 if not substr_or_re.search(curr_error):
-                    self.fail("non-matching error: %s" % (curr_error,))
+                    self.fail("non-matching error: {}".format(curr_error))
 
     def assertRaisesConfigError(self, substr_or_re, fn=None):
         context = _AssertRaisesConfigErrorContext(substr_or_re, self)
@@ -60,6 +60,7 @@ class ConfigErrorsMixin:
             return context
         with context:
             fn()
+        return None
 
     def assertNoConfigErrors(self, errors):
         self.assertEqual(errors.errors, [])

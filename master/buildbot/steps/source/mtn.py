@@ -45,15 +45,15 @@ class Monotone(Source):
         self.method = method
         self.mode = mode
         self.branch = branch
-        self.sourcedata = "%s?%s" % (self.repourl, self.branch)
+        self.sourcedata = "{}?{}".format(self.repourl, self.branch)
         self.database = 'db.mtn'
         self.progress = progress
         super().__init__(**kwargs)
         errors = []
 
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode %s is not one of %s" %
-                          (self.mode, self._listAttrGroupMembers('mode')))
+            errors.append("mode {} is not one of {}".format(self.mode,
+                                                            self._listAttrGroupMembers('mode')))
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
 
@@ -61,7 +61,7 @@ class Monotone(Source):
             if self.method is None:
                 self.method = 'copy'
             elif self.method not in self.possible_methods:
-                errors.append("Invalid method for mode == %s" % (self.mode))
+                errors.append("Invalid method for mode == {}".format(self.mode))
 
         if repourl is None:
             errors.append("you must provide repourl")
@@ -253,6 +253,7 @@ class Monotone(Source):
                 df.addCallback(lambda _: self._retryPull())
                 reactor.callLater(delay, df.callback, None)
                 yield df
+        return None
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
@@ -262,7 +263,7 @@ class Monotone(Source):
         revision = stdout.strip()
         if len(revision) != 40:
             raise buildstep.BuildStepFailed()
-        log.msg("Got Monotone revision %s" % (revision, ))
+        log.msg("Got Monotone revision {}".format(revision))
         self.updateSourceProperty('got_revision', revision)
         return 0
 
@@ -286,7 +287,7 @@ class Monotone(Source):
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command %s" % cmd)
+            log.msg("Source step failed while running command {}".format(cmd))
             raise buildstep.BuildStepFailed()
         if collectStdout:
             return cmd.stdout
@@ -342,6 +343,5 @@ class Monotone(Source):
 
     def finish(self):
         self.setStatus(self.cmd, 0)
-        log.msg("Closing log, sending result of the command %s " %
-                (self.cmd))
+        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
         return self.finished(0)

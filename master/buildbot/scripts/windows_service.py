@@ -135,7 +135,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(msg_file):
                 servicemanager.Initialize("BuildBot", msg_file)
             else:
-                self.warning("Strange - '%s' does not exist" % (msg_file, ))
+                self.warning("Strange - '{}' does not exist".format(msg_file))
 
     def _checkConfig(self):
         # Locate our child process runner (but only when run from source)
@@ -156,7 +156,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if me.endswith(".pyc") or me.endswith(".pyo"):
                 me = me[:-1]
 
-            self.runner_prefix = '"%s" "%s"' % (python_exe, me)
+            self.runner_prefix = '"{}" "{}"'.format(python_exe, me)
         else:
             # Running from a py2exe built executable - our child process is
             # us (but with the funky cmdline args!)
@@ -194,8 +194,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(sentinal):
                 self.dirs.append(d)
             else:
-                msg = "Directory '%s' is not a buildbot dir - ignoring" \
-                      % (d, )
+                msg = "Directory '{}' is not a buildbot dir - ignoring".format(d)
                 self.warning(msg)
         if not self.dirs:
             self.error("No valid buildbot directories were specified.\n"
@@ -228,11 +227,10 @@ class BBService(win32serviceutil.ServiceFramework):
         child_infos = []
 
         for bbdir in self.dirs:
-            self.info("Starting BuildBot in directory '%s'" % (bbdir, ))
+            self.info("Starting BuildBot in directory '{}'".format(bbdir))
             hstop = self.hWaitStop
 
-            cmd = '%s --spawn %d start --nodaemon %s' % (
-                self.runner_prefix, hstop, bbdir)
+            cmd = '{} --spawn {} start --nodaemon {}'.format(self.runner_prefix, hstop, bbdir)
             # print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
@@ -258,8 +256,8 @@ class BBService(win32serviceutil.ServiceFramework):
                           "Please check the twistd.log file in the "
                           "indicated directory.")
 
-            self.warning("BuildBot for directory %r terminated with "
-                         "exit code %d.\n%s" % (bbdir, status, output))
+            self.warning(("BuildBot for directory {} terminated with "
+                          "exit code {}.\n{}").format(repr(bbdir), status, output))
 
             del child_infos[index]
 
@@ -315,7 +313,7 @@ class BBService(win32serviceutil.ServiceFramework):
             servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
                                   event,
                                   (self._svc_name_,
-                                   " (%s)" % self._svc_display_name_))
+                                   " ({})".format(self._svc_display_name_)))
         except win32api.error as details:
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
@@ -406,7 +404,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.
                 if err[0] != winerror.ERROR_BROKEN_PIPE:
-                    self.warning("Error reading output from process: %s" % err)
+                    self.warning("Error reading output from process: {}".format(err))
                 break
             captured_blocks.append(data)
             del captured_blocks[CHILDCAPTURE_MAX_BLOCKS:]

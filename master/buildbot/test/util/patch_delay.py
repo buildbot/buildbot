@@ -41,7 +41,7 @@ def _importer(target):
     thing = __import__(import_path)
 
     for comp in components:
-        import_path += ".%s" % comp
+        import_path += ".{}".format(comp)
         thing = _dot_lookup(thing, comp, import_path)
     return thing
 

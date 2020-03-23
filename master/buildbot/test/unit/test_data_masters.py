@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.data import masters
 from buildbot.process.results import RETRY
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
@@ -271,7 +271,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # mock out the _masterDeactivated methods this will call
         for rtype in 'builder', 'scheduler', 'changesource':
             rtype_obj = getattr(self.master.data.rtypes, rtype)
-            m = mock.Mock(name='%s._masterDeactivated' % rtype,
+            m = mock.Mock(name='{}._masterDeactivated'.format(rtype),
                           spec=rtype_obj._masterDeactivated)
             m.side_effect = lambda masterid: defer.succeed(None)
             rtype_obj._masterDeactivated = m

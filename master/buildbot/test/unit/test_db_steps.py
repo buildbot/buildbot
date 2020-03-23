@@ -20,12 +20,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import steps
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 TIME1 = 1304262222
@@ -34,7 +32,7 @@ TIME3 = 1304262224
 TIME4 = 1304262235
 
 
-class Tests(TestReactorMixin, interfaces.InterfaceTests):
+class Tests(interfaces.InterfaceTests):
 
     # common sample data
 
@@ -85,9 +83,6 @@ class Tests(TestReactorMixin, interfaces.InterfaceTests):
          'urls': [],
          'hidden': False},
     ]
-
-    def setUp(self):
-        self.setUpTestReactor()
 
     # signature tests
 
@@ -340,14 +335,11 @@ class RealTests(Tests):
         self.assertEqual(stepdict['name'], name)
 
 
-class TestFakeDB(Tests, unittest.TestCase):
+class TestFakeDB(Tests, unittest.TestCase, connector_component.FakeConnectorComponentMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
-        self.master = fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
+        yield self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase,

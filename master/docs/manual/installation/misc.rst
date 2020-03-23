@@ -45,7 +45,7 @@ There may be fewer environment variables specified, and the :envvar:`PATH` may b
 It is a good idea to test out this method of launching the worker by using a cron job with a time in the near future, with the same command, and then check :file:`twistd.log` to make sure the worker actually started correctly.
 Common problems here are for :file:`/usr/local` or :file:`~/bin` to not be on your :envvar:`PATH`, or for :envvar:`PYTHONPATH` to not be set correctly.
 Sometimes :envvar:`HOME` is messed up too. If using systemd to launch :command:`buildbot-worker` it may be a good idea to specify a fixed :envvar:`PATH` using the :envvar:`Environment` directive,
-see `systemd unit file example <https://github.com/buildbot/buildbot-contrib/blob/master/master/contrib/systemd/worker.service>`_
+see `systemd unit file example <https://github.com/buildbot/buildbot-contrib/blob/master/worker/contrib/systemd/buildbot-worker%40.service>`_
 
 Some distributions may include conveniences to make starting buildbot at boot time easy.
 For instance, with the default buildbot package in Debian-based distributions, you may only need to modify :file:`/etc/default/buildbot` (see also :file:`/etc/init.d/buildbot`, which reads the configuration in :file:`/etc/default/buildbot`).

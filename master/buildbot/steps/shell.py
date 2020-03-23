@@ -177,7 +177,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         if cmdsummary:
             if self.results != SUCCESS:
-                cmdsummary += ' (%s)' % Results[self.results]
+                cmdsummary += ' ({})'.format(Results[self.results])
             return {'step': cmdsummary}
 
         return super(ShellCommand, self).getResultSummary()
@@ -347,7 +347,7 @@ class SetPropertyFromCommand(ShellCommand):
 
     def createSummary(self, log):
         if self.property_changes:
-            props_set = ["%s: %r" % (k, v)
+            props_set = ["{}: {}".format(k, repr(v))
                          for k, v in sorted(self.property_changes.items())]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
@@ -355,7 +355,7 @@ class SetPropertyFromCommand(ShellCommand):
         if len(self.property_changes) > 1:
             return ["%d properties set" % len(self.property_changes)]
         elif len(self.property_changes) == 1:
-            return ["property '%s' set" % list(self.property_changes)[0]]
+            return ["property '{}' set".format(list(self.property_changes)[0])]
         # else:
         # let ShellCommand describe
         return super().describe(done)
@@ -534,7 +534,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             if file is not None and file != "" and self.directoryStack:
                 currentDirectory = '/'.join(self.directoryStack)
                 if currentDirectory is not None and currentDirectory != "":
-                    file = "%s/%s" % (currentDirectory, file)
+                    file = "{}/{}".format(currentDirectory, file)
 
             # Skip adding the warning if any suppression matches.
             for fileRe, warnRe, start, end in self.suppressions:
@@ -559,6 +559,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
+        return None
 
     def uploadDone(self, data):
         lines = data.split("\n")

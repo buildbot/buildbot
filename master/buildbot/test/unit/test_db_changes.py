@@ -21,12 +21,10 @@ from twisted.trial import unittest
 from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 20398573
@@ -650,7 +648,8 @@ class RealTests(Tests):
 
         codebase_ss = {}  # shared state between addChange and addBuild
 
-        def addChange(codebase, revision, author, committer, comments, branch='master', category='cat', project='proj', repository='repo'):
+        def addChange(codebase, revision, author, committer, comments, branch='master',
+                      category='cat', project='proj', repository='repo'):
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
             parent_changeids = codebase_ss.get(codebase, None)
@@ -749,14 +748,11 @@ class RealTests(Tests):
         yield expect(7, ['11th commit'])
 
 
-class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
+        yield self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase,

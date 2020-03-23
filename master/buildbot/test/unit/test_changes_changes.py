@@ -21,7 +21,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import changes
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -123,8 +123,8 @@ class Change(unittest.TestCase, TestReactorMixin):
         if not ok:
             def printable(c):
                 return pprint.pformat(c.__dict__)
-            self.fail("changes do not match; expected\n%s\ngot\n%s" %
-                      (printable(exp), printable(got)))
+            self.fail("changes do not match; expected\n{}\ngot\n{}".format(printable(exp),
+                                                                           printable(got)))
 
     def test_str(self):
         string = str(self.change23)

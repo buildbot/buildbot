@@ -82,6 +82,7 @@ class _TransferBuildStep(BuildStep):
         if self.cmd:
             d = self.cmd.interrupt(reason)
             return d
+        return None
 
 
 class FileUpload(_TransferBuildStep):
@@ -138,7 +139,7 @@ class FileUpload(_TransferBuildStep):
                 % (source, masterdest))
 
         if self.description is None:
-            self.description = ['uploading %s' % (os.path.basename(source))]
+            self.description = ['uploading {}'.format(os.path.basename(source))]
 
         if self.descriptionDone is None:
             self.descriptionDone = self.description
@@ -158,8 +159,8 @@ class FileUpload(_TransferBuildStep):
             masterdest, self.maxsize, self.mode)
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
-            m = ("This worker (%s) does not support preserving timestamps. "
-                 "Please upgrade the worker." % self.build.workername)
+            m = (("This worker ({}) does not support preserving timestamps. "
+                  "Please upgrade the worker.").format(self.build.workername))
             raise WorkerTooOldError(m)
 
         # default arguments
@@ -220,10 +221,10 @@ class DirectoryUpload(_TransferBuildStep):
         # properly. TODO: maybe pass the master's basedir all the way down
         # into the BuildStep so we can do this better.
         masterdest = os.path.expanduser(masterdest)
-        log.msg("DirectoryUpload started, from worker %r to master %r"
-                % (source, masterdest))
+        log.msg("DirectoryUpload started, from worker {} to master {}".format(repr(source),
+                                                                              repr(masterdest)))
 
-        self.descriptionDone = "uploading %s" % os.path.basename(source)
+        self.descriptionDone = "uploading {}".format(os.path.basename(source))
         if self.url is not None:
             urlText = self.urlText
 
@@ -374,8 +375,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         sources = self.workersrcs if isinstance(self.workersrcs, list) else [self.workersrcs]
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
-            m = ("This worker (%s) does not support preserving timestamps. "
-                 "Please upgrade the worker." % self.build.workername)
+            m = (("This worker ({}) does not support preserving timestamps. "
+                  "Please upgrade the worker.").format(self.build.workername))
             raise WorkerTooOldError(m)
 
         if not sources:
@@ -384,8 +385,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         @defer.inlineCallbacks
         def globSources(sources):
             results = yield defer.gatherResults([
-                self.runGlob(
-                    os.path.join(self.workdir, source), abandonOnFailure=False) for source in sources
+                self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
+                for source in sources
             ])
             results = [self.workerPathToMasterPath(p) for p in flatten(results)]
             return results
@@ -405,9 +406,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             log.msg("MultipleFileUpload started, from worker %r to master %r" %
                     (sources, masterdest))
             nsrcs = len(sources)
-            self.descriptionDone = 'uploading %d %s' % (nsrcs, 'file'
-                                                        if nsrcs == 1 else
-                                                        'files')
+            self.descriptionDone = 'uploading {} {}'.format(nsrcs,
+                                                            'file' if nsrcs == 1 else 'files')
             return sources
 
         if self.glob:
@@ -463,8 +463,7 @@ class FileDownload(_TransferBuildStep):
         log.msg("FileDownload started, from master %r to worker %r" %
                 (source, workerdest))
 
-        self.descriptionDone = "downloading to %s" % os.path.basename(
-            workerdest)
+        self.descriptionDone = "downloading to {}".format(os.path.basename(workerdest))
 
         # setup structures for reading the file
         try:
@@ -518,9 +517,8 @@ class StringDownload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            config.error(
-                "StringDownload step's mode must be an integer or None,"
-                " got '%s'" % mode)
+            config.error("StringDownload step's mode must be an integer or None, got '{}'".format(
+                    mode))
         self.mode = mode
 
     def start(self):
@@ -534,8 +532,7 @@ class StringDownload(_TransferBuildStep):
         log.msg("StringDownload started, from master to worker %r" %
                 workerdest)
 
-        self.descriptionDone = "downloading to %s" % os.path.basename(
-            workerdest)
+        self.descriptionDone = "downloading to {}".format(os.path.basename(workerdest))
 
         # setup structures for reading the file
         fileReader = remotetransfer.StringFileReader(self.s)

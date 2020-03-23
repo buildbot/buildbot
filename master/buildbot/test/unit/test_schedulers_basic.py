@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.schedulers import basic
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.util import scheduler
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -50,8 +50,8 @@ class CommonStuffMixin:
                 builderNames=None, properties=None, **kw):
             self.assertEqual(external_idstring, None)
             self.assertEqual(reason, sched.reason)
-            self.events.append('B%s@%d' % (repr(changeids).replace(' ', ''),
-                                           self.clock.seconds()))
+            self.events.append('B{}@{}'.format(repr(changeids).replace(' ', ''),
+                                               int(self.clock.seconds())))
             return defer.succeed(None)
         sched.addBuildsetForChanges = addBuildsetForChanges
 
@@ -416,8 +416,12 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         yield sched.activate()
 
-        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True)
-        yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True)
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A',
+                                        number=0),
+                              True)
+        yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B',
+                                        number=1),
+                              True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
             'a': dict(branch='master', repository='A', revision='1234:abc', lastChange=0),
@@ -443,7 +447,9 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         # this change is not recorded, since it's older than
         # change 20
-        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=10), True)
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A',
+                                        number=10),
+                              True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
             'a': dict(branch='master', repository='A', revision='5555:def', lastChange=20)})

@@ -213,7 +213,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                 self.headers,
                 {
                     'Authorization': 'token TOK3N',
-                    'User-Agent': 'buildbot/%s' % buildbot.version,
+                    'User-Agent': 'buildbot/{}'.format(buildbot.version),
                 })
             if ep == '/user':
                 return dict(
@@ -229,6 +229,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                     dict(login="hello"),
                     dict(login="grp"),
                 ]
+            return None
         self.githubAuth.get = fake_get
 
         res = yield self.githubAuth.verifyCode("code!")
@@ -381,8 +382,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                                   apiVersion=bad_api_version)
 
     def test_GitHubAuthRaiseErrorWithApiV3AndGetTeamMembership(self):
-        with self.assertRaisesConfigError(
-                'Retrieving team membership information using GitHubAuth is only possible using GitHub api v4.'):
+        with self.assertRaisesConfigError('Retrieving team membership information using '
+                                          'GitHubAuth is only possible using GitHub api v4.'):
             oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
 
     @defer.inlineCallbacks
@@ -463,13 +464,16 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
         rsrc.auth.getLoginURL.assert_called_once()
 
     def test_getConfig(self):
-        self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
+        self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github',
+                                                           'autologin': False,
                                                            'name': 'GitHub', 'oauth2': True})
-        self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus', 'autologin': False,
+        self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus',
+                                                           'autologin': False,
                                                            'name': 'Google', 'oauth2': True})
         self.assertEqual(self.gitlabAuth.getConfigDict(), {'fa_icon': 'fa-git', 'autologin': False,
                                                            'name': 'GitLab', 'oauth2': True})
-        self.assertEqual(self.bitbucketAuth.getConfigDict(), {'fa_icon': 'fa-bitbucket', 'autologin': False,
+        self.assertEqual(self.bitbucketAuth.getConfigDict(), {'fa_icon': 'fa-bitbucket',
+                                                              'autologin': False,
                                                               'name': 'Bitbucket', 'oauth2': True})
 
 # unit tests are not very useful to write new oauth support

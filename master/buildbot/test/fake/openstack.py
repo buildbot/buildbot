@@ -166,7 +166,8 @@ class PasswordLoader():
 
 class PasswordAuth():
 
-    def __init__(self, auth_url, password, project_name, username, user_domain_name=None, project_domain_name=None):
+    def __init__(self, auth_url, password, project_name, username, user_domain_name=None,
+                 project_domain_name=None):
         self.auth_url = auth_url
         self.password = password
         self.project_name = project_name

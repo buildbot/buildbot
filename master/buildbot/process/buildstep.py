@@ -103,8 +103,8 @@ class _BuildStepFactory(util.ComparableMixin):
         try:
             return self.factory(*self.args, **self.kwargs)
         except Exception:
-            log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
-                    % (self.factory, self.args, self.kwargs))
+            log.msg("error while creating step, factory={}, args={}, kwargs={}".format(self.factory,
+                    self.args, self.kwargs))
             raise
 
 
@@ -326,8 +326,8 @@ class BuildStep(results.ResultComputingConfigMixin,
                 setattr(self, p, kwargs.pop(p))
 
         if kwargs:
-            config.error("%s.__init__ got unexpected keyword argument(s) %s"
-                         % (self.__class__, list(kwargs)))
+            config.error("{}.__init__ got unexpected keyword argument(s) {}".format(self.__class__,
+                                                                                    list(kwargs)))
         self._pendingLogObservers = []
 
         if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
@@ -341,7 +341,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
-        if self.updateBuildSummaryPolicy is None:  # compute default value for updateBuildSummaryPolicy
+        if self.updateBuildSummaryPolicy is None:
+            # compute default value for updateBuildSummaryPolicy
             self.updateBuildSummaryPolicy = [EXCEPTION, RETRY, CANCELLED]
             if self.flunkOnFailure or self.haltOnFailure or self.warnOnFailure:
                 self.updateBuildSummaryPolicy.append(FAILURE)
@@ -450,14 +451,15 @@ class BuildStep(results.ResultComputingConfigMixin,
             stepsumm = 'finished'
 
         if self.results != SUCCESS:
-            stepsumm += ' (%s)' % Results[self.results]
+            stepsumm += ' ({})'.format(Results[self.results])
 
         return {'step': stepsumm}
 
     @defer.inlineCallbacks
     def getBuildResultSummary(self):
         summary = yield self.getResultSummary()
-        if self.results in self.updateBuildSummaryPolicy and 'build' not in summary and 'step' in summary:
+        if self.results in self.updateBuildSummaryPolicy and \
+                'build' not in summary and 'step' in summary:
             summary['build'] = summary['step']
         return summary
 
@@ -466,8 +468,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     def updateSummary(self):
         def methodInfo(m):
             lines = inspect.getsourcelines(m)
-            return "\nat %s:%s:\n %s" % (
-                inspect.getsourcefile(m), lines[1], "\n".join(lines[0]))
+            return "\nat {}:{}:\n {}".format(inspect.getsourcefile(m), lines[1],
+                                             "\n".join(lines[0]))
         if not self._running:
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
@@ -526,8 +528,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         for l, la in self.locks:
             if l in self.build.locks:
-                log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
-                        " parent Build (%s)" % (l, self, self.build))
+                log.msg(("Hey, lock {} is claimed by both a Step ({}) and the"
+                         " parent Build ({})").format(l, self, self.build))
                 raise RuntimeError("lock claimed by both Step and Build")
 
         try:
@@ -641,7 +643,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             return defer.succeed(None)
         if self.stopped:
             return defer.succeed(None)
-        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
+        log.msg("acquireLocks(step {}, locks {})".format(self, self.locks))
         for lock, access in self.locks:
             for waited_lock, _, _ in self._acquiringLocks:
                 if lock is waited_lock:
@@ -649,7 +651,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
             if not lock.isAvailable(self, access):
                 self._waitingForLocks = True
-                log.msg("step %s waiting for lock %s" % (self, lock))
+                log.msg("step {} waiting for lock {}".format(self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 self._acquiringLocks.append((lock, access, d))
                 d.addCallback(self.acquireLocks)
@@ -764,7 +766,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             d.addErrback(log.err, 'while cancelling command')
 
     def releaseLocks(self):
-        log.msg("releaseLocks(%s): %s" % (self, self.locks))
+        log.msg("releaseLocks({}): {}".format(self, self.locks))
         for lock, access in self.locks:
             if lock.isOwner(self, access):
                 lock.release(self, access)
@@ -787,7 +789,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def checkWorkerHasCommand(self, command):
         if not self.workerVersion(command):
-            message = "worker is too old, does not know about %s" % command
+            message = "worker is too old, does not know about {}".format(command)
             raise WorkerTooOldError(message)
 
     def getWorkerName(self):
@@ -978,7 +980,7 @@ class LoggingBuildStep(BuildStep):
     def startCommand(self, cmd, errorMessages=None):
         if errorMessages is None:
             errorMessages = []
-        log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
+        log.msg("ShellCommand.startCommand(cmd={})".format(cmd))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
 
@@ -1169,8 +1171,7 @@ class ShellMixin:
             prohibitArgs = []
 
         def bad(arg):
-            config.error("invalid %s argument %s" %
-                         (self.__class__.__name__, arg))
+            config.error("invalid {} argument {}".format(self.__class__.__name__, arg))
         for arg in self._shellMixinArgs:
             if arg not in constructorArgs:
                 continue
@@ -1285,7 +1286,7 @@ def regex_log_evaluator(cmd, _, regexes):
         # so we don't even need to check the log if that's the case
         if worst_status(worst, possible_status) == possible_status:
             if isinstance(err, str):
-                err = re.compile(".*%s.*" % err, re.DOTALL)
+                err = re.compile(".*{}.*".format(err), re.DOTALL)
             for l in cmd.logs.values():
                 if err.search(l.getText()):
                     worst = possible_status

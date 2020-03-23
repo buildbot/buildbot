@@ -128,10 +128,11 @@ In other cases, ``parent_buildid`` from buildset can be used:
             master.data.get(('buildsets', req1['buildsetid'])),
             master.data.get(('buildsets', req2['buildsetid']))
         ])
-        if canBeCollapsed and selfBuildset['parent_buildid'] != None and otherBuildset['parent_buildid'] != None:
-           return True
+        if canBeCollapsed and selfBuildset['parent_buildid'] != None and \
+                otherBuildset['parent_buildid'] != None:
+            return True
         else:
-           return False
+            return False
     c['collapseRequests'] = collapseRequests
 
 
@@ -199,7 +200,8 @@ the following approach might be helpful:
         def isBuilding(b):
             return bool(b.building) or bool(b.old_building)
 
-        builders.sort(key = lambda b: (isBuilding(b), b.getNewestCompleteTime(), b.getOldestRequestTime()))
+        builders.sort(key = lambda b: (isBuilding(b), b.getNewestCompleteTime(),
+                                       b.getOldestRequestTime()))
         return builders
 
     c['prioritizeBuilders'] = prioritizeBuilders
@@ -1252,14 +1254,14 @@ Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``.
 This template is a standard Jinja_ template which is the default templating engine of Flask_.
 
 .. literalinclude:: mydashboard.html
-   :language: guess
+   :language: html+django
 
 
 .. _Flask: http://flask.pocoo.org/
 .. _Bottle: https://bottlepy.org/docs/dev/
 .. _Bootstrap: http://getbootstrap.com/css/
 .. _Jinja: http://jinja.pocoo.org/
-.. _python-requests: http://docs.python-requests.org/en/master/
+.. _python-requests: https://requests.readthedocs.io/en/master/
 
 
 A Somewhat Whimsical Example (or "It's now customized, how do I deploy it?")

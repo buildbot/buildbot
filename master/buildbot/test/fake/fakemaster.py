@@ -26,9 +26,9 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot.status import build
+from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedata
-from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
@@ -88,7 +88,7 @@ class FakeStatus(service.BuildbotService):
         pass
 
     def getURLForBuild(self, builder_name, build_number):
-        return "URLForBuild/%s/%d" % (builder_name, build_number)
+        return "URLForBuild/{}/{}".format(builder_name, build_number)
 
     def getURLForBuildrequest(self, buildrequestid):
         return "URLForBuildrequest/%d" % (buildrequestid,)

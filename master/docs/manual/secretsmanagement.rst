@@ -65,11 +65,15 @@ The following example shows a basic usage of secrets in Buildbot.
     # then in a buildfactory:
 
     # use a secret on a shell command via Interpolate
-    f1.addStep(ShellCommand(util.Interpolate("wget -u user -p '%(secret:userpassword)s' '%(prop:urltofetch)s'")))
+    f1.addStep(ShellCommand(
+        util.Interpolate("wget -u user -p '%(secret:userpassword)s' '%(prop:urltofetch)s'")))
     # .. or non shell form:
-    f1.addStep(ShellCommand(["wget", "-u", "user", "-p", util.Secret("userpassword"), util.Interpolate("%(prop:urltofetch)s")]))
+    f1.addStep(ShellCommand(["wget", "-u", "user", "-p",
+                             util.Secret("userpassword"),
+                             util.Interpolate("%(prop:urltofetch)s")]))
 
-Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
+Secrets are also interpolated in the build like properties are.
+Their values will be used in a command line for example.
 
 As argument to services
 ```````````````````````

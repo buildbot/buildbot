@@ -166,7 +166,9 @@ A simple example:
 .. code-block:: none
 
     POST http://build.example.org/api/v2/scheduler/4
-    --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
+    --> {"jsonrpc": "2.0", "method": "force",
+         "params": {"revision": "abcd", "branch": "dev"},
+         "id": 843}
     <-- {"jsonrpc": "2.0", "result": {"buildsetid": 44}, "id": 843}
 
 Authentication

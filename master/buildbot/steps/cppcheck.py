@@ -51,7 +51,7 @@ class Cppcheck(ShellCommand):
         command = [self.binary]
         command.extend(self.source)
         if self.enable:
-            command.append('--enable=%s' % ','.join(self.enable))
+            command.append('--enable={}'.format(','.join(self.enable)))
         if self.inconclusive:
             command.append('--inconclusive')
         command.extend(self.extra_args)
@@ -65,7 +65,7 @@ class Cppcheck(ShellCommand):
 
     def logConsumer(self):
         line_re = re.compile(
-            r'(?:\[.+\]: )?\((?P<severity>%s)\) .+' % '|'.join(self.MESSAGES))
+                r'(?:\[.+\]: )?\((?P<severity>{})\) .+'.format('|'.join(self.MESSAGES)))
 
         while True:
             stream, line = yield
@@ -78,10 +78,10 @@ class Cppcheck(ShellCommand):
     def createSummary(self, log):
         self.descriptionDone = self.descriptionDone[:]
         for msg in self.MESSAGES:
-            self.setProperty('cppcheck-%s' % msg, self.counts[msg], 'Cppcheck')
+            self.setProperty('cppcheck-{}'.format(msg), self.counts[msg], 'Cppcheck')
             if not self.counts[msg]:
                 continue
-            self.descriptionDone.append("%s=%d" % (msg, self.counts[msg]))
+            self.descriptionDone.append("{}={}".format(msg, self.counts[msg]))
             self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
         self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
 

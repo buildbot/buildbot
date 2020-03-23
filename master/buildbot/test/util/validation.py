@@ -98,7 +98,8 @@ class IdentifierValidator(Validator):
     name = 'identifier'
     hasArgs = True
 
-    ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
+    ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$',
+                          flags=re.UNICODE)
 
     def __init__(self, len):
         self.len = len

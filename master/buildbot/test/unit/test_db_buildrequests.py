@@ -19,12 +19,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import buildrequests
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
@@ -628,7 +626,7 @@ class Tests(interfaces.InterfaceTests):
             [45, 47, 48])
 
 
-class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
     # Compatibility with some checks in the "real" tests.
 
     class db_engine:
@@ -636,13 +634,10 @@ class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
         class dialect:
             name = 'buildbot_fake'
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
-        return self.setUpTests()
+        yield self.setUpConnectorComponent()
+        yield self.setUpTests()
 
 
 class TestRealDB(unittest.TestCase,

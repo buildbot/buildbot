@@ -148,7 +148,7 @@ class DebPbuilder(WarningCountingShellCommand):
             if self.extrapackages:
                 command += ['--extrapackages', " ".join(self.extrapackages)]
             if self.keyring:
-                command += ['--debootstrapopts', "--keyring=%s" % self.keyring]
+                command += ['--debootstrapopts', "--keyring={}".format(self.keyring)]
             if self.components:
                 command += ['--components', self.components]
 
@@ -164,7 +164,7 @@ class DebPbuilder(WarningCountingShellCommand):
         # basetgz will be a file when running in pbuilder
         # and a directory in case of cowbuilder
         if stat.S_ISREG(s[stat.ST_MODE]) or stat.S_ISDIR(s[stat.ST_MODE]):
-            log.msg("%s found." % self.basetgz)
+            log.msg("{} found.".format(self.basetgz))
             age = time.time() - s[stat.ST_MTIME]
             if age >= self.maxAge:
                 log.msg("basetgz outdated, updating")
@@ -179,15 +179,17 @@ class DebPbuilder(WarningCountingShellCommand):
                 return d
             return self.startBuild(cmd)
         else:
-            log.msg("%s is not a file or a directory." % self.basetgz)
+            log.msg("{} is not a file or a directory.".format(self.basetgz))
             self.finished(FAILURE)
+        return None
 
     def startBuild(self, cmd):
         if cmd.rc != 0:
-            log.msg("Failure when running %s." % cmd)
+            log.msg("Failure when running {}.".format(cmd))
             self.finished(FAILURE)
         else:
             return super().start()
+        return None
 
     def logConsumer(self):
         r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")

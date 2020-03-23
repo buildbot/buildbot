@@ -64,3 +64,16 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
         del self.db.pool
         del self.db.model
         del self.db
+
+
+class FakeConnectorComponentMixin(TestReactorMixin):
+    # Just like ConnectorComponentMixin, but for working with fake database
+
+    def setUpConnectorComponent(self):
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
+        self.db.checkForeignKeys = True
+        self.insertTestData = self.db.insertTestData
+
+        return defer.succeed(None)

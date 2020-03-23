@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 
 
 class ReporterTestMixin:
@@ -63,8 +63,8 @@ class ReporterTestMixin:
             self.db.insertTestData([
                 fakedb.BuildRequest(
                     id=11 + i, buildsetid=98, builderid=79 + i),
-                fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i, workerid=13,
-                             masterid=92, results=results, state_string="buildText"),
+                fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i,
+                             workerid=13, masterid=92, results=results, state_string="buildText"),
                 fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
                 fakedb.Log(id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s',
                            num_lines=7),

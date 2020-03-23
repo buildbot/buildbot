@@ -38,14 +38,14 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     def produce(self, routingKey, data):
         if self.debug:
-            log.msg("MSG: %s\n%s" % (routingKey, pprint.pformat(data)))
+            log.msg("MSG: {}\n{}".format(routingKey, pprint.pformat(data)))
         for qref in self.qrefs:
             if tuplematch.matchTuple(routingKey, qref.filter):
                 self.invokeQref(qref, routingKey, data)
 
     def startConsuming(self, callback, filter, persistent_name=None):
         if any(not isinstance(k, str) and k is not None for k in filter):
-            raise AssertionError("%s is not a filter" % (filter,))
+            raise AssertionError("{} is not a filter".format(filter))
         if persistent_name:
             if persistent_name in self.persistent_qrefs:
                 qref = self.persistent_qrefs[persistent_name]

@@ -247,8 +247,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 try:
                     stamp = int(git_output)
                 except Exception as e:
-                    log.msg(
-                        'gitpoller: caught exception converting output \'{}\' to timestamp'.format(git_output))
+                    log.msg(('gitpoller: caught exception converting output \'{}\' to timestamp'
+                             ).format(git_output))
                     raise e
                 return stamp
             return None
@@ -439,6 +439,6 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             if code == 128:
                 raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
                                full_args, path, self.repourl, code, stderr))
-            raise EnvironmentError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                   full_args, path, self.repourl, code, stderr))
+            raise EnvironmentError(('command {} in {} on repourl {} failed with exit code {}: {}'
+                                    ).format(full_args, path, self.repourl, code, stderr))
         return stdout.strip()

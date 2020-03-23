@@ -57,11 +57,10 @@ class SVN(Source):
         super().__init__(**kwargs)
         errors = []
         if not self._hasAttrGroupMember('mode', self.mode):
-            errors.append("mode %s is not one of %s" %
-                          (self.mode, self._listAttrGroupMembers('mode')))
+            errors.append("mode {} is not one of {}".format(self.mode,
+                                                            self._listAttrGroupMembers('mode')))
         if self.method not in self.possible_methods:
-            errors.append("method %s is not one of %s" %
-                          (self.method, self.possible_methods))
+            errors.append("method {} is not one of {}".format(self.method, self.possible_methods))
 
         if repourl is None:
             errors.append("you must provide repourl")
@@ -240,7 +239,7 @@ class SVN(Source):
         @d.addCallback
         def evaluateCommand(_):
             if cmd.didFail() and abandonOnFailure:
-                log.msg("Source step failed while running command %s" % cmd)
+                log.msg("Source step failed while running command {}".format(cmd))
                 raise buildstep.BuildStepFailed()
             if collectStdout and collectStderr:
                 return (cmd.stdout, cmd.stderr)
@@ -258,6 +257,7 @@ class SVN(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+        return None
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
@@ -329,7 +329,7 @@ class SVN(Source):
                 log.msg(msg)
                 raise buildstep.BuildStepFailed()
 
-        msg = "Got SVN revision %s" % (revision, )
+        msg = "Got SVN revision {}".format(revision)
         self.stdio_log.addHeader(msg)
         self.updateSourceProperty('got_revision', revision)
 
@@ -438,9 +438,9 @@ class SVN(Source):
                 host = host[:-1]
             authority = host.lower()
             if userinfo:
-                authority = "%s@%s" % (userinfo, authority)
+                authority = "{}@{}".format(userinfo, authority)
             if port and port != default_port.get(scheme, None):
-                authority = "%s:%s" % (authority, port)
+                authority = "{}:{}".format(authority, port)
 
         if scheme in relative_schemes:
             last_path = path

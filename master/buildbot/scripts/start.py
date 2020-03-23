@@ -134,13 +134,17 @@ def py2Warning(config):
         -----------------------------------------------------
 
         Python 2 is going unmaintained as soon as 2020: https://pythonclock.org/
-        To prepare for that transition, we recommend upgrading your buildmaster to run on Python 3.6 now!
-        Buildbot open source project is as well deprecating running buildmaster on Python 2 for better maintainability.
+
+        To prepare for that transition, we recommend upgrading your buildmaster to run on
+        Python 3.6 now! Buildbot open source project is as well deprecating running buildmaster
+        on Python 2 for better maintainability.
 
         Buildbot 2.0 going to be released in February 2019 will remove support for Python < 3.5
         https://github.com/buildbot/buildbot/issues/4439
 
-        On most installations, switching to Python 3 can be accomplished by running the 2to3 tool over the master.cfg file.
+        On most installations, switching to Python 3 can be accomplished by running the 2to3 tool
+        over the master.cfg file.
+
         https://docs.python.org/3.7/library/2to3.html
 
         Note that the above applies only for the buildmaster.

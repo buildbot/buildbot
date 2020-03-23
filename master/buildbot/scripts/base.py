@@ -35,6 +35,7 @@ def captureErrors(errors, msg):
         print(msg)
         print(e)
         return 1
+    return None
 
 
 class BusyError(RuntimeError):
@@ -104,7 +105,7 @@ def checkBasedir(config):
 
 def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
-        print("checking %s" % configFileName)
+        print("checking {}".format(configFileName))
 
     try:
         master_cfg = config_module.FileLoader(
@@ -114,30 +115,29 @@ def loadConfig(config, configFileName='master.cfg'):
 
         for msg in e.errors:
             print("  " + msg)
-        return
+        return None
     except Exception:
         print("Errors loading configuration:")
         traceback.print_exc(file=sys.stdout)
-        return
+        return None
 
     return master_cfg
 
 
 def isBuildmasterDir(dir):
     def print_error(error_message):
-        print("%s\ninvalid buildmaster directory '%s'" % (error_message, dir))
+        print("{}\ninvalid buildmaster directory '{}'".format(error_message, dir))
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
         with open(buildbot_tac) as f:
             contents = f.read()
     except IOError as exception:
-        print_error("error reading '%s': %s" %
-                    (buildbot_tac, exception.strerror))
+        print_error("error reading '{}': {}".format(buildbot_tac, exception.strerror))
         return False
 
     if "Application('buildmaster')" not in contents:
-        print_error("unexpected content in '%s'" % buildbot_tac)
+        print_error("unexpected content in '{}'".format(buildbot_tac))
         return False
 
     return True
@@ -245,7 +245,7 @@ class SubcommandOptions(usage.Options):
             if os.path.isdir(d):
                 if runtime.platformType != 'win32':
                     if os.stat(d)[stat.ST_UID] != os.getuid():
-                        print("skipping %s because you don't own it" % d)
+                        print("skipping {} because you don't own it".format(d))
                         continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
@@ -254,7 +254,7 @@ class SubcommandOptions(usage.Options):
                             options = f.read()
                         exec(options, localDict)
                     except Exception:
-                        print("error while reading %s" % optfile)
+                        print("error while reading {}".format(optfile))
                         raise
                     break
 

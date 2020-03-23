@@ -50,11 +50,11 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         self.category = category
         self.repository = repository
         if prefix and not prefix.endswith("/"):
-            log.msg("%s: you probably want your prefix=('%s') to end with "
-                    "a slash")
+            log.msg(("MaildirSource: you probably want your prefix=('{}') to end with a slash"
+                     ).format(prefix))
 
     def describe(self):
-        return "%s watching maildir '%s'" % (self.__class__.__name__, self.basedir)
+        return "{} watching maildir '{}'".format(self.__class__.__name__, self.basedir)
 
     def messageReceived(self, filename):
         d = defer.succeed(None)
@@ -74,7 +74,8 @@ class MaildirSource(MaildirService, util.ComparableMixin):
                 return self.master.data.updates.addChange(src=str(src),
                                                           **chdict)
             else:
-                log.msg("no change found in maildir file '%s'" % filename)
+                log.msg("no change found in maildir file '{}'".format(filename))
+            return None
 
         return d
 
@@ -224,21 +225,20 @@ class CVSMaildirSource(MaildirSource):
             else:
                 log.msg(
                     'CVSMaildirSource can\'t get path from file list. Ignoring mail')
-                return
+                return None
             fileList = fileList[len(path):].strip()
             singleFileRE = re.compile(
-                r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+                r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
         elif cvsmode == '1.12':
             singleFileRE = re.compile(
-                r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+                r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')  # noqa pylint: disable=line-too-long
             if path is None:
                 raise ValueError(
                     'CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
         else:
-            raise ValueError(
-                'Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
+            raise ValueError('Expected cvsmode 1.11 or 1.12. got: {}'.format(cvsmode))
 
-        log.msg("CVSMaildirSource processing filelist: %s" % fileList)
+        log.msg("CVSMaildirSource processing filelist: {}".format(fileList))
         while(fileList):
             m = singleFileRE.match(fileList)
             if m:
@@ -373,8 +373,8 @@ class SVNCommitEmailMaildirSource(MaildirSource):
                     if f.startswith(prefix):
                         f = f[len(prefix):]
                     else:
-                        log.msg("ignored file from svn commit: prefix '%s' "
-                                "does not match filename '%s'" % (prefix, f))
+                        log.msg(("ignored file from svn commit: prefix '{}' "
+                                 "does not match filename '{}'").format(prefix, f))
                         continue
 
                 # TODO: figure out how new directories are described, set
@@ -450,21 +450,20 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             d['comments'] += s + "\n"
 
         def gobble_removed(s):
-            d['files'].append('%s REMOVED' % s)
+            d['files'].append('{} REMOVED'.format(s))
 
         def gobble_added(s):
-            d['files'].append('%s ADDED' % s)
+            d['files'].append('{} ADDED'.format(s))
 
         def gobble_modified(s):
-            d['files'].append('%s MODIFIED' % s)
+            d['files'].append('{} MODIFIED'.format(s))
 
         def gobble_renamed(s):
             match = re.search(r"^(.+) => (.+)$", s)
             if match:
-                d['files'].append('%s RENAMED %s' %
-                                  (match.group(1), match.group(2)))
+                d['files'].append('{} RENAMED {}'.format(match.group(1), match.group(2)))
             else:
-                d['files'].append('%s RENAMED' % s)
+                d['files'].append('{} RENAMED'.format(s))
 
         lines = list(body_line_iterator(m, True))
         rev = None
@@ -485,7 +484,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             # datetime.strptime() is supposed to support %z for time zone, but
             # it does not seem to work. So handle the time zone manually.
             match = re.search(
-                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)
+                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)  # noqa pylint: disable=line-too-long
             if match:
                 datestr = match.group(1)
                 tz_sign = match.group(2)

@@ -213,11 +213,11 @@ class MercurialExtractor(SourceStampExtractor):
     def getBaseRevision(self):
         upstream = ""
         if self.repository:
-            upstream = "r'%s'" % self.repository
+            upstream = "r'{}'".format(self.repository)
         output = ''
         try:
             output = yield self.dovc(["log", "--template", "{node}\\n", "-r",
-                                      "max(::. - outgoing(%s))" % upstream])
+                                      "max(::. - outgoing({}))".format(upstream)])
         except RuntimeError:
             # outgoing() will abort if no default-push/default path is
             # configured
@@ -271,8 +271,8 @@ class PerforceExtractor(SourceStampExtractor):
             m = re.search('==== //depot/' + self.branch
                           + r'/([\w/\.\d\-_]+)#(\d+) -', line)
             if m:
-                mpatch += "--- %s#%s\n" % (m.group(1), m.group(2))
-                mpatch += "+++ %s\n" % (m.group(1))
+                mpatch += "--- {}#{}\n".format(m.group(1), m.group(2))
+                mpatch += "+++ {}\n".format(m.group(1))
                 found = True
             else:
                 mpatch += line
@@ -330,6 +330,7 @@ class GitExtractor(SourceStampExtractor):
             d = self.dovc(["remote"])
             d.addCallback(self.fixBranch)
             return d
+        return None
 
     # strip remote prefix from self.branch
     def fixBranch(self, remotes):
@@ -718,6 +719,7 @@ class Try(pb.Referenceable):
             assert self.buildsetStatus
             self._getStatus_1()
             return self.running
+        return None
 
     def _getStatus_1(self, res=None):
         if res:
@@ -810,6 +812,7 @@ class Try(pb.Referenceable):
         if not self.outstanding:
             # all done
             return self.statusDone()
+        return None
 
     def printStatus(self):
         try:

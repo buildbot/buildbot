@@ -58,7 +58,7 @@ prefix_output_2 = b"""\
 """
 
 # this is the svn info output for a local repository, svn info --xml
-# file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository
+# file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository  # noqa pylint: disable=line-too-long
 prefix_output_3 = b"""\
 <?xml version="1.0"?>
 <info>
@@ -80,7 +80,7 @@ prefix_output_3 = b"""\
 </info>
 """
 
-# % svn info --xml file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk
+# % svn info --xml file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk  # noqa pylint: disable=line-too-long
 
 prefix_output_4 = b"""\
 <?xml version="1.0"?>
@@ -101,7 +101,7 @@ prefix_output_4 = b"""\
 </commit>
 </entry>
 </info>
-"""
+"""  # noqa pylint: disable=line-too-long
 
 
 # output from svn log on .../SVN-Repository/sample
@@ -488,7 +488,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             'project': '',
             'properties': {},
             'repository':
-                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',  # noqa pylint: disable=line-too-long
             'revision': '2',
             'revlink': '',
             'src': 'svn',
@@ -511,7 +511,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             'project': '',
             'properties': {},
             'repository':
-                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',  # noqa pylint: disable=line-too-long
             'revision': '3',
             'revlink': '',
             'src': 'svn',
@@ -527,7 +527,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             'project': '',
             'properties': {},
             'repository':
-                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',  # noqa pylint: disable=line-too-long
             'revision': '4',
             'revlink': '',
             'src': 'svn',

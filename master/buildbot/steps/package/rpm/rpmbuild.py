@@ -80,11 +80,11 @@ class RpmBuild(ShellCommand):
         self.dist = dist
 
         self.base_rpmbuild = (
-            'rpmbuild --define "_topdir %s" --define "_builddir %s"'
-            ' --define "_rpmdir %s" --define "_sourcedir %s"'
-            ' --define "_specdir %s" --define "_srcrpmdir %s"'
-            % (topdir, builddir, rpmdir, sourcedir, specdir,
-               srcrpmdir))
+            ('rpmbuild --define "_topdir {}" --define "_builddir {}"'
+             ' --define "_rpmdir {}" --define "_sourcedir {}"'
+             ' --define "_specdir {}" --define "_srcrpmdir {}"').format(topdir, builddir, rpmdir,
+                                                                        sourcedir, specdir,
+                                                                        srcrpmdir))
 
         if define is None:
             define = {}
@@ -107,8 +107,7 @@ class RpmBuild(ShellCommand):
         rpm_extras_dict['dist'] = self.dist
 
         if self.autoRelease:
-            relfile = '%s.release' % (
-                os.path.basename(self.specfile).split('.')[0])
+            relfile = '{}.release'.format(os.path.basename(self.specfile).split('.')[0])
             try:
                 with open(relfile, 'r') as rfile:
                     rel = int(rfile.readline().strip())

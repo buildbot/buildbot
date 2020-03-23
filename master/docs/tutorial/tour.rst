@@ -58,20 +58,20 @@ You will see a handful of lines of output from the master log, much like this:
 
 .. code-block:: none
 
-    2011-12-04 10:11:09-0600 [-] loading configuration from /home/dustin/tmp/buildbot/master/master.cfg
+    2011-12-04 10:11:09-0600 [-] loading configuration from /path/to/buildbot/master.cfg
     2011-12-04 10:11:09-0600 [-] configuration update started
     2011-12-04 10:11:09-0600 [-] builder runtests is unchanged
-    2011-12-04 10:11:09-0600 [-] removing IStatusReceiver <WebStatus on port tcp:8010 at 0x2aee368>
+    2011-12-04 10:11:09-0600 [-] removing IStatusReceiver <...>
     2011-12-04 10:11:09-0600 [-] (TCP Port 8010 Closed)
-    2011-12-04 10:11:09-0600 [-] Stopping factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36638>
-    2011-12-04 10:11:09-0600 [-] adding IStatusReceiver <WebStatus on port tcp:8010 at 0x2c2d950>
+    2011-12-04 10:11:09-0600 [-] Stopping factory <...>
+    2011-12-04 10:11:09-0600 [-] adding IStatusReceiver <...>
     2011-12-04 10:11:09-0600 [-] RotateLogSite starting on 8010
-    2011-12-04 10:11:09-0600 [-] Starting factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36e18>
+    2011-12-04 10:11:09-0600 [-] Starting factory <...>
     2011-12-04 10:11:09-0600 [-] Setting up http.log rotating 10 files of 10000000 bytes each
-    2011-12-04 10:11:09-0600 [-] WebStatus using (/home/dustin/tmp/buildbot/master/public_html)
+    2011-12-04 10:11:09-0600 [-] WebStatus using (/path/to/buildbot/public_html)
     2011-12-04 10:11:09-0600 [-] removing 0 old schedulers, updating 0, and adding 0
     2011-12-04 10:11:09-0600 [-] adding 1 new changesources, removing 1
-    2011-12-04 10:11:09-0600 [-] gitpoller: using workdir '/home/dustin/tmp/buildbot/master/gitpoller-workdir'
+    2011-12-04 10:11:09-0600 [-] gitpoller: using workdir '/path/to/buildbot/gitpoller-workdir'
     2011-12-04 10:11:09-0600 [-] GitPoller repository already exists
     2011-12-04 10:11:09-0600 [-] configuration update complete
 
@@ -184,8 +184,8 @@ The log output should contain a line like this:
 
 .. code-block:: none
 
-  2016-11-13 15:53:06+0100 [-] Starting factory <buildbot.reporters.irc.IrcStatusFactory instance at 0x7ff2b4b72710>
-  2016-11-13 15:53:19+0100 [IrcStatusBot,client] <buildbot.reporters.irc.IrcStatusBot object at 0x7ff2b5075750>: I have joined #buildbot-test
+  2016-11-13 15:53:06+0100 [-] Starting factory <...>
+  2016-11-13 15:53:19+0100 [IrcStatusBot,client] <...>: I have joined #buildbot-test
 
 You should see the bot now joining in your IRC client.
 In your IRC channel, type:
@@ -276,7 +276,9 @@ Insert the following to enable debugging mode with manhole::
 
   ####### DEBUGGING
   from buildbot import manhole
-  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd", ssh_hostkey_dir="/data/ssh_host_keys/")
+  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1",
+                                         "admin", "passwd",
+                                         ssh_hostkey_dir="/data/ssh_host_keys/")
 
 After restarting the master, you can ssh into the master and get an interactive Python shell:
 
@@ -338,9 +340,10 @@ Then run buildbot's ``try`` command as follows:
 
 .. code-block:: bash
 
-  cd ~/tmp/bb-master
-  source sandbox/bin/activate
-  buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
+    cd ~/tmp/bb-master
+    source sandbox/bin/activate
+    buildbot try --connect=pb --master=127.0.0.1:5555 \
+        --username=sampleuser --passwd=samplepass --vc=git
 
 This will do ``git diff`` for you and send the resulting patch to the server for build and test against the latest sources from Git.
 

@@ -60,7 +60,8 @@ class HTTPClientService(service.SharedService):
     """
     quiet = False
 
-    def __init__(self, base_url, auth=None, headers=None, debug=None, verify=None, skipEncoding=None):
+    def __init__(self, base_url, auth=None, headers=None, debug=None, verify=None,
+                 skipEncoding=None):
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
         self._base_url = base_url
@@ -105,6 +106,7 @@ class HTTPClientService(service.SharedService):
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
             content=content, files=files))
+        return None
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),

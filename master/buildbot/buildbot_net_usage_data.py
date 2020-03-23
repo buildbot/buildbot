@@ -15,7 +15,8 @@
 
 """
 This files implement buildbotNetUsageData options
-It uses urllib instead of requests in order to avoid requiring another dependency for statistics feature.
+It uses urllib instead of requests in order to avoid requiring another dependency for statistics
+feature.
 urllib supports http_proxy already. urllib is blocking and thus everything is done from a thread.
 """
 
@@ -115,7 +116,8 @@ def basicData(master):
 
     # we hash the master's name + various other master dependent variables
     # to get as much as possible an unique id
-    # we hash it to not leak private information about the installation such as hostnames and domain names
+    # we hash it to not leak private information about the installation such as hostnames and domain
+    # names
     hashInput = (
         master.name +  # master name contains hostname + master basepath
         socket.getfqdn()  # we add the fqdn to account for people
@@ -133,7 +135,8 @@ def basicData(master):
             'machine': platform.machine(),
             'processor': platform.processor(),
             'python_implementation': platform.python_implementation(),
-            # xBSD including osx will disclose too much information after [4] like where it was built
+            # xBSD including osx will disclose too much information after [4] like where it
+            # was built
             'version': " ".join(platform.version().split(' ')[:4]),
             'distro': get_distro()
         },
@@ -147,7 +150,8 @@ def basicData(master):
 def fullData(master):
     """
         Send the actual configuration of the builders, how the steps are agenced.
-        Note that full data will never send actual detail of what command is run, name of servers, etc.
+        Note that full data will never send actual detail of what command is run, name of servers,
+        etc.
     """
 
     builders = []
@@ -161,7 +165,7 @@ def fullData(master):
 
 def computeUsageData(master):
     if master.config.buildbotNetUsageData is None:
-        return
+        return None
     data = basicData(master)
 
     if master.config.buildbotNetUsageData != "basic":

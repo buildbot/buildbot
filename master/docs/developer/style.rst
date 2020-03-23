@@ -203,7 +203,8 @@ The previous :py:func:`getRevInfo` example implementation should rather be writt
         results = {}
         res = yield utils.getProcessOutput(git, [ 'rev-parse', revname ])
         results['rev'] = res.strip()
-        res = yield utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
+        res = yield utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b',
+                                                 results['rev'] ])
         results['comments'] = res.strip()
         return results
 

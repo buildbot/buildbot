@@ -139,8 +139,8 @@ class AbstractWorker(service.BuildbotService):
         self.conn = None
 
         # during disconnection self.conn will be set to None before all disconnection notifications
-        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to a
-        # notifier and allows interested users to wait until all disconnection notifications are
+        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to
+        # a notifier and allows interested users to wait until all disconnection notifications are
         # delivered.
         self._pending_disconnection_delivery_notifier = None
 
@@ -148,7 +148,7 @@ class AbstractWorker(service.BuildbotService):
         self._configured_builderid_list = None
 
     def __repr__(self):
-        return "<%s %r>" % (self.__class__.__name__, self.name)
+        return "<{} {}>".format(self.__class__.__name__, repr(self.name))
 
     @property
     def workername(self):
@@ -196,9 +196,9 @@ class AbstractWorker(service.BuildbotService):
         my caller should give up the build and try to get another worker
         to look at it.
         """
-        log.msg("acquireLocks(worker %s, locks %s)" % (self, self.locks))
+        log.msg("acquireLocks(worker {}, locks {})".format(self, self.locks))
         if not self.locksAvailable():
-            log.msg("worker %s can't lock, giving up" % (self, ))
+            log.msg("worker {} can't lock, giving up".format(self))
             return False
         # all locks are available, claim them all
         for lock, access in self.locks:
@@ -209,7 +209,7 @@ class AbstractWorker(service.BuildbotService):
         """
         I am called to release any locks after a build has finished
         """
-        log.msg("releaseLocks(%s): %s" % (self, self.locks))
+        log.msg("releaseLocks({}): {}".format(self, self.locks))
         for lock, access in self.locks:
             lock.release(self, access)
 
@@ -335,7 +335,8 @@ class AbstractWorker(service.BuildbotService):
 
     @defer.inlineCallbacks
     def reconfigServiceWithSibling(self, sibling):
-        # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
+        # reconfigServiceWithSibling will only reconfigure the worker when it is configured
+        # differently.
         # However, the worker configuration depends on which builder it is configured
         yield super().reconfigServiceWithSibling(sibling)
 
@@ -346,7 +347,8 @@ class AbstractWorker(service.BuildbotService):
             b.getBuilderId() for b in self.botmaster.getBuildersForWorker(self.name)]
         bids = yield defer.gatherResults(bids, consumeErrors=True)
         if self._configured_builderid_list != bids:
-            yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
+            yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid,
+                                                            bids)
             yield self.updateWorker()
             self._configured_builderid_list = bids
 
@@ -504,7 +506,7 @@ class AbstractWorker(service.BuildbotService):
         self.conn = None
         self._old_builder_list = []
         self.worker_status.setConnected(False)
-        log.msg("Worker.detached(%s)" % (self.name,))
+        log.msg("Worker.detached({})".format(self.name))
         self.releaseLocks()
         yield self.master.data.updates.workerDisconnected(
             workerid=self.workerid,
@@ -528,7 +530,7 @@ class AbstractWorker(service.BuildbotService):
         """
         if self.conn is None:
             return defer.succeed(None)
-        log.msg("disconnecting old worker %s now" % (self.name,))
+        log.msg("disconnecting old worker {} now".format(self.name))
         # When this Deferred fires, we'll be ready to accept the new worker
         return self._disconnect(self.conn)
 
@@ -598,6 +600,7 @@ class AbstractWorker(service.BuildbotService):
             self.unpause()
         if key[-1] == "kill":
             self.shutdown()
+        return None
 
     def shutdownRequested(self):
         self._graceful = True
@@ -726,7 +729,7 @@ class Worker(AbstractWorker):
         try:
             yield super().attached(bot)
         except Exception as e:
-            log.err(e, "worker %s cannot attach" % (self.name,))
+            log.err(e, "worker {} cannot attach".format(self.name))
             return
 
     def buildFinished(self, wfb):

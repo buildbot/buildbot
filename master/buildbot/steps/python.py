@@ -144,9 +144,9 @@ class PyFlakes(ShellCommand):
         else:
             for m in self._MESSAGES:
                 if counts[m]:
-                    self.descriptionDone.append("%s=%d" % (m, counts[m]))
+                    self.descriptionDone.append("{}={}".format(m, counts[m]))
                     self.addCompleteLog(m, "\n".join(summaries[m]))
-                self.setProperty("pyflakes-%s" % m, counts[m], "pyflakes")
+                self.setProperty("pyflakes-{}".format(m), counts[m], "pyflakes")
             self.setProperty("pyflakes-total", sum(counts.values()),
                              "pyflakes")
 
@@ -154,7 +154,7 @@ class PyFlakes(ShellCommand):
         if cmd.didFail() or self._hasSyntaxError:
             return FAILURE
         for m in self._flunkingIssues:
-            if self.getProperty("pyflakes-%s" % m):
+            if self.getProperty("pyflakes-{}".format(m)):
                 return FAILURE
         if self.getProperty("pyflakes-total"):
             return WARNINGS
@@ -245,16 +245,16 @@ class PyLint(ShellCommand):
         self.descriptionDone = self.descriptionDone[:]
         for msg, fullmsg in sorted(self._MESSAGES.items()):
             if counts[msg]:
-                self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
+                self.descriptionDone.append("{}={}".format(fullmsg, counts[msg]))
                 self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))
-            self.setProperty("pylint-%s" % fullmsg, counts[msg], 'Pylint')
+            self.setProperty("pylint-{}".format(fullmsg), counts[msg], 'Pylint')
         self.setProperty("pylint-total", sum(counts.values()), 'Pylint')
 
     def evaluateCommand(self, cmd):
         if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):
             return FAILURE
         for msg in self._flunkingIssues:
-            if self.getProperty("pylint-%s" % self._MESSAGES[msg]):
+            if self.getProperty("pylint-{}".format(self._MESSAGES[msg])):
                 return FAILURE
         if self.getProperty("pylint-total"):
             return WARNINGS
@@ -305,9 +305,9 @@ class Sphinx(ShellCommand):
                 command.extend(['-D', key])
             elif isinstance(defines[key], bool):
                 command.extend(['-D',
-                                '%s=%d' % (key, defines[key] and 1 or 0)])
+                                '{}={}'.format(key, defines[key] and 1 or 0)])
             else:
-                command.extend(['-D', '%s=%s' % (key, defines[key])])
+                command.extend(['-D', '{}={}'.format(key, defines[key])])
 
         if mode == 'full':
             command.extend(['-E'])  # Don't use a saved environment

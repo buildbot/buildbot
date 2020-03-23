@@ -22,7 +22,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import message
 from buildbot.reporters import utils
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -99,7 +99,8 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
         self.message = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
         res = yield self.doOneTest(SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
-        self.assertEqual(res['body'], "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+        self.assertEqual(res['body'],
+                         "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
 
     @defer.inlineCallbacks
     def test_inline_subject(self):

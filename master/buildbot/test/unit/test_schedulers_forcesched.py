@@ -122,7 +122,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         self.assertNotEqual(
             ForceScheduler(name="testched", builderNames=[]),
             ForceScheduler(name="testched", builderNames=[],
-                           username=FixedParameter("username", "The Fisher King <avallach@atlantis.al>")))
+                           username=FixedParameter("username",
+                                                   "The Fisher King <avallach@atlantis.al>")))
 
     def test_compare_properties(self):
         self.assertNotEqual(
@@ -142,9 +143,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
     def test_basicForce(self):
         sched = self.makeScheduler()
 
-        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because', revision='c',
-                                repository='d', project='p'
-                                )
+        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because',
+                                revision='c', repository='d', project='p')
 
         # only one builder forced, so there should only be one brid
         self.assertEqual(res, (500, {1000: 100}))
@@ -169,9 +169,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         sched = self.makeScheduler(
             reasonString='%(owner)s wants it %(reason)s')
 
-        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because', revision='c',
-                                repository='d', project='p'
-                                )
+        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because',
+                                revision='c', repository='d', project='p')
         bsid, brids = res
 
         # only one builder forced, so there should only be one brid
@@ -286,8 +285,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
     def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
         res = yield sched.force('user', builderNames=['a'], reason='because',
-                                foo_branch='a', foo_revision='c', foo_repository='d', foo_project='p',
-                                bar_branch='a2', bar_revision='c2', bar_repository='d2', bar_project='p2'
+                                foo_branch='a', foo_revision='c', foo_repository='d',
+                                foo_project='p',
+                                bar_branch='a2', bar_revision='c2', bar_repository='d2',
+                                bar_project='p2'
                                 )
 
         bsid, brids = res
@@ -311,11 +312,13 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def test_codebase_with_patch(self):
-        sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar', patch=PatchParameter())])
+        sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar',
+                                                                       patch=PatchParameter())])
         res = yield sched.force('user', builderNames=['a'], reason='because',
-                                foo_branch='a', foo_revision='c', foo_repository='d', foo_project='p',
-                                bar_branch='a2', bar_revision='c2', bar_repository='d2', bar_project='p2', bar_patch_body="xxx"
-                                )
+                                foo_branch='a', foo_revision='c', foo_repository='d',
+                                foo_project='p',
+                                bar_branch='a2', bar_revision='c2', bar_repository='d2',
+                                bar_project='p2', bar_patch_body="xxx")
 
         bsid, brids = res
         expProperties = {
@@ -436,6 +439,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                      'revision': '', 'codebase': ''},
                 ])),
         ])
+        return None
 
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",
@@ -469,6 +473,30 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                               '"maxsize": 10485760, "autopopulate": null}')
 
     def test_PatchParameter(self):
+        expect_json = (
+            '{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
+            '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
+            '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+            '"layout": "vertical", "columns": 1, "fields": [{"name": "body", '
+            '"fullName": "p1_body", "label": "body", "tablabel": "body", "autopopulate": null, '
+            '"type": "file", "default": "", "required": false, "multiple": false, '
+            '"regex": null, "hide": false, "maxsize": 10485760}, {"name": "level", '
+            '"fullName": "p1_level", "label": "level", "tablabel": "level", '
+            '"type": "int", "default": 1, "required": false, "multiple": false, '
+            '"regex": null, "hide": false, "maxsize": null, "size": 10, "autopopulate": null}, '
+            '{"name": "author", "fullName": "p1_author", "label": "author", '
+            '"tablabel": "author", "type": "text", "default": "", "autopopulate": null, '
+            '"required": false, "multiple": false, "regex": null, "hide": false, '
+            '"maxsize": null, "size": 10}, {"name": "comment", "autopopulate": null, '
+            '"fullName": "p1_comment", "label": "comment", "tablabel": "comment", '
+            '"type": "text", "default": "", "required": false, "multiple": false, '
+            '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
+            '{"name": "subdir", "fullName": "p1_subdir", "label": "subdir", '
+            '"tablabel": "subdir", "type": "text", "default": ".", "autopopulate": null, '
+            '"required": false, "multiple": false, "regex": null, "hide": false, '
+            '"maxsize": null, "size": 10}]}'
+        )
+
         self.do_ParameterTest(req=dict(p1_author='me', reason="because"), expect={
                                    'author': 'me',
                                    'body': '',
@@ -476,27 +504,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                                    'level': 1,
                                    'subdir': '.'},
                               klass=PatchParameter,
-                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
-                              '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
-                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-                              '"layout": "vertical", "columns": 1, "fields": [{"name": "body", '
-                              '"fullName": "p1_body", "label": "body", "tablabel": "body", "autopopulate": null, '
-                              '"type": "file", "default": "", "required": false, "multiple": false, '
-                              '"regex": null, "hide": false, "maxsize": 10485760}, {"name": "level", '
-                              '"fullName": "p1_level", "label": "level", "tablabel": "level", '
-                              '"type": "int", "default": 1, "required": false, "multiple": false, '
-                              '"regex": null, "hide": false, "maxsize": null, "size": 10, "autopopulate": null}, '
-                              '{"name": "author", "fullName": "p1_author", "label": "author", '
-                              '"tablabel": "author", "type": "text", "default": "", "autopopulate": null, '
-                              '"required": false, "multiple": false, "regex": null, "hide": false, '
-                              '"maxsize": null, "size": 10}, {"name": "comment", "autopopulate": null, '
-                              '"fullName": "p1_comment", "label": "comment", "tablabel": "comment", '
-                              '"type": "text", "default": "", "required": false, "multiple": false, '
-                              '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
-                              '{"name": "subdir", "fullName": "p1_subdir", "label": "subdir", '
-                              '"tablabel": "subdir", "type": "text", "default": ".", "autopopulate": null, '
-                              '"required": false, "multiple": false, "regex": null, "hide": false, '
-                              '"maxsize": null, "size": 10}]}')
+                              expectJson=expect_json)
 
     def test_IntParameter(self):
         self.do_ParameterTest(value="123", expect=123, klass=IntParameter,
@@ -529,36 +537,45 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
 
     def test_UserNameParameter(self):
         email = "test <test@buildbot.net>"
+        expect_json = (
+            '{"name": "username", "fullName": "username", '
+            '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
+            '"default": "", "required": false, "multiple": false, "regex": null, '
+            '"hide": false, "maxsize": null, "size": 30, '
+            '"need_email": true, "autopopulate": null}'
+        )
         self.do_ParameterTest(value=email, expect=email,
                               klass=UserNameParameter(),
                               name="username", label="Your name:",
-                              expectJson='{"name": "username", "fullName": "username", '
-                              '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
-                              '"default": "", "required": false, "multiple": false, "regex": null, '
-                              '"hide": false, "maxsize": null, "size": 30, '
-                              '"need_email": true, "autopopulate": null}')
+                              expectJson=expect_json)
 
     def test_UserNameParameterIsValidMail(self):
         email = "test@buildbot.net"
+        expect_json = (
+            '{"name": "username", "fullName": "username", '
+            '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
+            '"default": "", "required": false, "multiple": false, "regex": null, '
+            '"hide": false, "maxsize": null, "size": 30, '
+            '"need_email": true, "autopopulate": null}'
+        )
         self.do_ParameterTest(value=email, expect=email,
                               klass=UserNameParameter(),
                               name="username", label="Your name:",
-                              expectJson='{"name": "username", "fullName": "username", '
-                              '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
-                              '"default": "", "required": false, "multiple": false, "regex": null, '
-                              '"hide": false, "maxsize": null, "size": 30, '
-                              '"need_email": true, "autopopulate": null}')
+                              expectJson=expect_json)
 
     def test_UserNameParameterIsValidMailBis(self):
         email = "<test@buildbot.net>"
+        expect_json = (
+            '{"name": "username", "fullName": "username", '
+            '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
+            '"default": "", "required": false, "multiple": false, "regex": null, '
+            '"hide": false, "maxsize": null, "size": 30, '
+            '"need_email": true, "autopopulate": null}'
+        )
         self.do_ParameterTest(value=email, expect=email,
                               klass=UserNameParameter(),
                               name="username", label="Your name:",
-                              expectJson='{"name": "username", "fullName": "username", '
-                              '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
-                              '"default": "", "required": false, "multiple": false, "regex": null, '
-                              '"hide": false, "maxsize": null, "size": 30, '
-                              '"need_email": true, "autopopulate": null}')
+                              expectJson=expect_json)
 
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',
@@ -602,16 +619,19 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
         fields = [
             IntParameter(name="foo")
         ]
+        expect_json = (
+            '{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
+            '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
+            '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+            '"layout": "vertical", "columns": 1, "fields": [{"name": "foo", '
+            '"fullName": "p1_foo", "label": "foo", "tablabel": "foo", "autopopulate": null, '
+            '"type": "int", "default": 0, "required": false, "multiple": false, '
+            '"regex": null, "hide": false, "maxsize": null, "size": 10}]}'
+        )
         self.do_ParameterTest(req=dict(p1_foo='123', reason="because"),
                               expect=dict(foo=123),
                               klass=NestedParameter, fields=fields,
-                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
-                              '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
-                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-                              '"layout": "vertical", "columns": 1, "fields": [{"name": "foo", '
-                              '"fullName": "p1_foo", "label": "foo", "tablabel": "foo", "autopopulate": null, '
-                              '"type": "int", "default": 0, "required": false, "multiple": false, '
-                              '"regex": null, "hide": false, "maxsize": null, "size": 10}]}')
+                              expectJson=expect_json)
 
     def test_NestedNestedParameter(self):
         fields = [

@@ -23,7 +23,7 @@ from twisted.trial import unittest
 
 from buildbot.data import buildrequests
 from buildbot.data import resultspec
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
@@ -274,11 +274,10 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
             except expectedException:
                 pass
             except Exception as e:
-                self.fail('%s exception should be raised, but got %r' %
-                          (expectedException, e))
+                self.fail('{} exception should be raised, but got {}'.format(expectedException,
+                                                                             repr(e)))
             else:
-                self.fail('%s exception should be raised' %
-                          (expectedException,))
+                self.fail('{} exception should be raised'.format(expectedException))
         else:
             res = yield method(*methodargs, **methodkwargs)
             self.assertEqual(res, expectedRes)
@@ -533,9 +532,9 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin,
         self.assertEqual(list(brid_dict.keys()), [77])
         buildrequest = yield self.master.data.get(('buildrequests', brid_dict[77]))
         # submitted_at is the time of the test, so better not depend on it
-        self.assertEqual(buildrequest, {'buildrequestid': 1001, 'complete': False, 'waited_for': False,
-                                        'claimed_at': None, 'results': -1, 'claimed': False,
-                                        'buildsetid': 200, 'complete_at': None,
+        self.assertEqual(buildrequest, {'buildrequestid': 1001, 'complete': False,
+                                        'waited_for': False, 'claimed_at': None, 'results': -1,
+                                        'claimed': False, 'buildsetid': 200, 'complete_at': None,
                                         'submitted_at': epoch2datetime(0),
                                         'builderid': 77, 'claimed_by_masterid': None, 'priority': 0,
                                         'properties': None})

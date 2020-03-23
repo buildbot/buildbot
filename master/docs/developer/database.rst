@@ -1807,7 +1807,7 @@ Next, modify :src:`master/buildbot/db/model.py` to represent the updated schema.
 Buildbot's automated tests perform a rudimentary comparison of an upgraded database with the model, but it is important to check the details - key length, nullability, and so on can sometimes be missed by the checks.
 If the schema and the upgrade scripts get out of sync, bizarre behavior can result.
 
-Also, adjust the fake database table definitions in :src:`master/buildbot/test/fake/fakedb.py` according to your changes.
+Also, adjust the fake database table definitions in :src:`master/buildbot/test/fakedb` according to your changes.
 
 Your upgrade script should have unit tests.  The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
 Unit test scripts should be named e.g., :file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
@@ -1920,7 +1920,7 @@ When you hit this problem, you will get error like the following:
 .. code-block:: none
 
     sqlalchemy.exc.OperationalError: (OperationalError) too many SQL variables
-    u'DELETE FROM scheduler_changes WHERE scheduler_changes.changeid IN (?, ?, ?, ......tons of ?? and IDs .... 9363, 9362, 9361)
+    u'DELETE FROM scheduler_changes WHERE scheduler_changes.changeid IN (?, ?, ?, ..., ?)
 
 You can use the method :py:meth:`doBatch` in order to write batching code in a consistent manner.
 

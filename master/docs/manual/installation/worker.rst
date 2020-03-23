@@ -96,7 +96,8 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
 .. code-block:: bash
 
-    buildbot-worker create-worker --umask=0o22 ~/worker buildmaster.example.org:42012 {myworkername} {mypasswd}
+    buildbot-worker create-worker --umask=0o22 ~/worker buildmaster.example.org:42012 \
+        {myworkername} {mypasswd}
 
 .. program:: buildbot-worker create-worker
 

@@ -33,8 +33,8 @@ class FakePBManager(service.AsyncMultiService):
             self._registrations.append((portstr, username, password))
             return defer.succeed(reg)
         else:
-            raise KeyError("username '%s' is already registered on port %s"
-                           % (username, portstr))
+            raise KeyError("username '{}' is already registered on port {}".format(username,
+                                                                                   portstr))
 
     def _unregister(self, portstr, username):
         self._unregistrations.append((portstr, username))

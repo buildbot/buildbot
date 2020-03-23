@@ -42,7 +42,7 @@ class Poller:
         try:
             yield defer.maybeDeferred(self.fn, self.instance)
         except Exception as e:
-            log.err(e, 'while running %s' % (self.fn,))
+            log.err(e, 'while running {}'.format(self.fn))
 
         self.running = False
         # loop if there's another pending call

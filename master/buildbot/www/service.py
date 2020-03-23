@@ -44,7 +44,8 @@ from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
 
-# as per: http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
+# as per:
+# http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
 # we need 128 bit key for HS256
 SESSION_SECRET_LENGTH = 128
 SESSION_SECRET_ALGORITHM = "HS256"
@@ -264,8 +265,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
-                raise RuntimeError(
-                    "could not find plugin %s; is it installed?" % (key,))
+                raise RuntimeError("could not find plugin {}; is it installed?".format(key))
             app = self.apps.get(key)
             app.setMaster(self.master)
             app.setConfiguration(plugin)
@@ -364,7 +364,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # we encode that in hex for db storage convenience
             return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
-        session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
+        session_secret = yield state.atomicCreateState(objectid, "session_secret",
+                                                       create_session_secret)
         self.site.setSessionSecret(session_secret)
 
     def setupProtectedResource(self, resource_obj, checkers):

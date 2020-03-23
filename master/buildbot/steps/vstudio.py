@@ -65,20 +65,20 @@ class MSLogLineObserver(LogLineObserver):
     def outLineReceived(self, line):
         if self._re_delimiter.search(line):
             self.nbProjects += 1
-            self.logwarnings.addStdout("%s\n" % line)
-            self.logerrors.addStdout("%s\n" % line)
+            self.logwarnings.addStdout("{}\n".format(line))
+            self.logerrors.addStdout("{}\n".format(line))
             self.step.setProgress('projects', self.nbProjects)
         elif self._re_file.search(line):
             self.nbFiles += 1
             self.step.setProgress('files', self.nbFiles)
         elif self._re_warning.search(line):
             self.nbWarnings += 1
-            self.logwarnings.addStdout("%s\n" % line)
+            self.logwarnings.addStdout("{}\n".format(line))
             self.step.setProgress('warnings', self.nbWarnings)
-        elif self._re_error.search("%s\n" % line):
+        elif self._re_error.search("{}\n".format(line)):
             # error has no progress indication
             self.nbErrors += 1
-            self.logerrors.addStderr("%s\n" % line)
+            self.logerrors.addStderr("{}\n".format(line))
 
 
 class VisualStudio(ShellCommand):
@@ -453,10 +453,10 @@ class MsBuild4(VisualStudio):
         else:
             rv.append("building")
         if self.project is not None:
-            rv.append("%s for" % (self.project))
+            rv.append("{} for".format(self.project))
         else:
             rv.append("solution for")
-        rv.append("%s|%s" % (self.config, self.platform))
+        rv.append("{}|{}".format(self.config, self.platform))
         return rv
 
     def start(self):
@@ -464,11 +464,11 @@ class MsBuild4(VisualStudio):
             config.error(
                 'platform is mandatory. Please specify a string such as "Win32"')
 
-        command = ('"%%VCENV_BAT%%" x86 && msbuild "%s" /p:Configuration="%s" /p:Platform="%s" /maxcpucount'
-                   % (self.projectfile, self.config, self.platform))
+        command = (('"%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" /p:Platform="{}" '
+                    '/maxcpucount').format(self.projectfile, self.config, self.platform))
 
         if self.project is not None:
-            command += ' /t:"%s"' % (self.project)
+            command += ' /t:"{}"'.format(self.project)
         elif self.mode == "build":
             command += ' /t:Build'
         elif self.mode == "clean":
@@ -504,7 +504,8 @@ class MsBuild141(VisualStudio):
     def setupEnvironment(self, cmd):
         super().setupEnvironment(cmd)
         cmd.args['env']['VCENV_BAT'] = self.vcenv_bat
-        addEnvPath(cmd.args['env'], "PATH", 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
+        addEnvPath(cmd.args['env'], "PATH",
+                   'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
         addEnvPath(cmd.args['env'], "PATH", r'${PATH}')
 
     def describe(self, done=False):
@@ -514,10 +515,10 @@ class MsBuild141(VisualStudio):
         else:
             rv.append("building")
         if self.project is not None:
-            rv.append("%s for" % (self.project))
+            rv.append("{} for".format(self.project))
         else:
             rv.append("solution for")
-        rv.append("%s|%s" % (self.config, self.platform))
+        rv.append("{}|{}".format(self.config, self.platform))
         return rv
 
     def start(self):
@@ -525,11 +526,13 @@ class MsBuild141(VisualStudio):
             config.error(
                 'platform is mandatory. Please specify a string such as "Win32"')
 
-        command = ('FOR /F "tokens=*" %%%%I in (\'vswhere.exe -property  installationPath\') do "%%%%I\\%%VCENV_BAT%%" x86 '
-                  '&& msbuild "%s" /p:Configuration="%s" /p:Platform="%s" /maxcpucount' % (self.projectfile, self.config, self.platform))
+        command = (('FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')" '
+                    ' do "%%I\\%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" '
+                    '/p:Platform="{}" /maxcpucount').format(self.projectfile, self.config,
+                                                            self.platform))
 
         if self.project is not None:
-            command += ' /t:"%s"' % (self.project)
+            command += ' /t:"{}"'.format(self.project)
         elif self.mode == "build":
             command += ' /t:Build'
         elif self.mode == "clean":

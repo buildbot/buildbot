@@ -66,7 +66,7 @@ class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
         ('no_private_key_known_hosts', None, None, 'hosts',
          'sshPrivateKey must be provided in order use sshKnownHosts'),
         ('both_host_key_known_hosts', 'key', 'host', 'hosts',
-         'only one of sshPrivateKey and sshHostKey can be provided'),
+         'only one of sshKnownHosts and sshHostKey can be provided'),
     ])
     def test_config(self, name, private_key, host_key, known_hosts, config_error):
         self.sshPrivateKey = private_key

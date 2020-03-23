@@ -49,7 +49,7 @@ def checkconfig(config):
         except Exception:
             if not quiet:
                 # the exception is already printed in base.py
-                print("Unable to load 'buildbot.tac' from '%s':" % basedir)
+                print("Unable to load 'buildbot.tac' from '{}':".format(basedir))
             return 1
     else:
         basedir = os.getcwd()

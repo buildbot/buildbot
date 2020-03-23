@@ -47,7 +47,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
-        yield self.publish("org.buildbot.%s.connected" % (self.master.masterid))
+        yield self.publish("org.buildbot.{}.connected".format(self.master.masterid))
         self.parent.service = self
         self.parent.serviceDeferred.callback(self)
 
@@ -114,7 +114,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             ret = yield service.publish(topic, data, options=options)
         except TransportLost:
             log.err(failure.Failure(), "while publishing event " + topic)
-            return
+            return None
         return ret
 
     @defer.inlineCallbacks

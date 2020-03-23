@@ -80,10 +80,12 @@ warnings.filterwarnings('ignore', ".*`formatargspec` is deprecated.*", Deprecati
 
 # Python 3.7 adds a deprecation importing ABCs from collection.
 # Such imports are made in dependencies (e.g moto, werzeug, pyparsing)
-warnings.filterwarnings('ignore', ".*Using or importing the ABCs from 'collections'.*", DeprecationWarning)
+warnings.filterwarnings('ignore', ".*Using or importing the ABCs from 'collections'.*",
+                        DeprecationWarning)
 
 # more 3.7 warning from moto
-warnings.filterwarnings('ignore', r".*Use 'list\(elem\)' or iteration over elem instead.*", DeprecationWarning)
+warnings.filterwarnings('ignore', r".*Use 'list\(elem\)' or iteration over elem instead.*",
+                        DeprecationWarning)
 
 # ignore ResourceWarnings for unclosed sockets for the pg8000 driver on Python 3+ (tech debt: #4508)
 if sys.version_info[0] >= 3 and "pg8000" in os.getenv("BUILDBOT_TEST_DB_URL", ""):

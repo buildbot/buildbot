@@ -256,7 +256,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
         self.expectCommands(
-            gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(b'Perforce client error:\n...'))
+            gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...')
+               .stdout(b'Perforce client error:\n...'))
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
@@ -410,7 +411,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             'branch': 'branch_c',
             'category': None,
             'codebase': None,
-            'comments': 'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+            'comments': 'This is a multiline comment with tabs and spaces\n\nA list:\n  '
+                        'Item 1\n\tItem 2',
             'files': ['branch_c_file'],
             'project': '',
             'properties': {},
@@ -425,7 +427,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             'branch': 'branch_b',
             'category': None,
             'codebase': None,
-            'comments': 'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+            'comments': 'This is a multiline comment with tabs and spaces\n\nA list:\n  '
+                        'Item 1\n\tItem 2',
             'files': ['branch_b_file'],
             'project': '',
             'properties': {},

@@ -81,9 +81,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 else:
                     unk = set(attrs) - known_keys
                     if unk:
-                        config.error(
-                            "Unknown codebase keys %s for codebase %s"
-                            % (', '.join(unk), codebase))
+                        config.error("Unknown codebase keys {} for codebase {}".format(
+                            ', '.join(unk), codebase))
 
         self.codebases = codebases
 
@@ -116,6 +115,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         if not self._enable_consumer:
             yield self.startConsumingEnableEvents()
+        return None
 
     def _enabledCallback(self, key, msg):
         if msg['enabled']:
@@ -133,8 +133,9 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def deactivate(self):
         if not self.enabled:
-            return
+            return None
         yield defer.maybeDeferred(self._stopConsumingChanges)
+        return None
 
     # service handling
 
@@ -207,8 +208,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 if not important and onlyImportant:
                     return
             except Exception:
-                log.err(failure.Failure(),
-                        'in fileIsImportant check for %s' % change)
+                log.err(failure.Failure(), 'in fileIsImportant check for {}'.format(change))
                 return
         else:
             important = True

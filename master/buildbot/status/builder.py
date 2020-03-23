@@ -240,7 +240,8 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
+    def eventGenerator(self, branches=None, categories=None, committers=None, projects=None,
+                       minTime=0):
         """ Not implemented """
 
     def subscribe(self, receiver):

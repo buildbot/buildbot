@@ -546,9 +546,12 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
         self.maxDiff = None
         yield self.render_resource(self.rsrc, b'/test/0')
         self.assertRequest(
-            contentJson={'error': "not found while getting from endpoint for /test/n:testid with arguments"
-                                  " ResultSpec(**{'filters': [], 'fields': None, 'properties': [], "
-                                  "'order': None, 'limit': None, 'offset': None}) and {'testid': 0}"},
+            contentJson={'error': "not found while getting from endpoint for "
+                                  "/test/n:testid with arguments"
+                                  " ResultSpec(**{'filters': [], 'fields': None, "
+                                  "'properties': [], "
+                                  "'order': None, 'limit': None, 'offset': None}) "
+                                  "and {'testid': 0}"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=404)
 
@@ -683,7 +686,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
             if message.match(got['error']):
                 exp['error'] = got['error']
             else:
-                exp['error'] = "MATCHING: %s" % (message.pattern,)
+                exp['error'] = "MATCHING: {}".format(message.pattern)
 
         self.assertEqual(got, exp)
 
@@ -724,7 +727,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
             if message.match(got['error']['message']):
                 exp['error']['message'] = got['error']['message']
             else:
-                exp['error']['message'] = "MATCHING: %s" % (message.pattern,)
+                exp['error']['message'] = "MATCHING: {}".format(message.pattern)
 
         self.assertEqual(got, exp)
 

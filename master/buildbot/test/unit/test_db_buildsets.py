@@ -23,13 +23,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import buildsets
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
@@ -482,15 +480,12 @@ class RealTests(Tests):
         yield self.db.pool.do(thd)
 
 
-class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
-        return self.setUpTests()
+        yield self.setUpConnectorComponent()
+        yield self.setUpTests()
 
     @defer.inlineCallbacks
     def test_addBuildset_bad_waited_for(self):

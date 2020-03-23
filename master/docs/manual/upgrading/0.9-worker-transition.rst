@@ -49,265 +49,203 @@ Note that some of these symbols are not included in Buildbot's public API.
 Compatibility is provided as a convenience to those using the private symbols
 anyway.
 
-.. list-table::
-   :header-rows: 1
+- :py:class:`buildbot.interfaces.IBuildSlave` was renamed to
+  :py:class:`~buildbot.interfaces.IWorker`
 
-   * - Old name
-     - New name
+- :py:class:`buildbot.interfaces.NoSlaveError` (private) left as is, but deprecated (it shouldn't be used at all)
 
-   * - :py:class:`buildbot.interfaces.IBuildSlave`
-     - :py:class:`~buildbot.interfaces.IWorker`
+- :py:class:`buildbot.interfaces.BuildSlaveTooOldError` was renamed to
+  :py:class:`~buildbot.interfaces.WorkerTooOldError`
 
+- :py:class:`buildbot.interfaces.LatentBuildSlaveFailedToSubstantiate` (private) was renamed to
+  :py:class:`~buildbot.interfaces.LatentWorkerFailedToSubstantiate`
 
-   * - :py:class:`buildbot.interfaces.NoSlaveError` (private)
-     - left as is, but deprecated (it shouldn't be used at all)
+- :py:class:`buildbot.interfaces.ILatentBuildSlave` was renamed to
+  :py:class:`~buildbot.interfaces.ILatentWorker`
 
+- :py:class:`buildbot.interfaces.ISlaveStatus` (will be removed in 0.9.x) was renamed to
+  :py:class:`~buildbot.interfaces.IWorkerStatus`
 
-   * - :py:class:`buildbot.interfaces.BuildSlaveTooOldError`
-     - :py:class:`~buildbot.interfaces.WorkerTooOldError`
+- :py:mod:`buildbot.buildslave` module with all contents was renamed to
+  :py:mod:`buildbot.worker`
 
+- :py:class:`buildbot.buildslave.AbstractBuildSlave` was renamed to
+  :py:class:`buildbot.worker.AbstractWorker`
 
-   * - :py:class:`buildbot.interfaces.LatentBuildSlaveFailedToSubstantiate`
-       (private)
-     - :py:class:`~buildbot.interfaces.LatentWorkerFailedToSubstantiate`
+- :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename` (private) was renamed to
+  :py:attr:`buildbot.worker.AbstractWorker.workername`
 
+- :py:class:`buildbot.buildslave.AbstractLatentBuildSlave` was renamed to
+  :py:class:`buildbot.worker.AbstractLatentWorker`
 
-   * - :py:class:`buildbot.interfaces.ILatentBuildSlave`
-     - :py:class:`~buildbot.interfaces.ILatentWorker`
+- :py:class:`buildbot.buildslave.BuildSlave` was renamed to
+  :py:class:`buildbot.worker.Worker`
 
+- :py:mod:`buildbot.buildslave.ec2` was renamed to
+  :py:mod:`buildbot.worker.ec2`
 
-   * - :py:class:`buildbot.interfaces.ISlaveStatus` (will be removed in 0.9.x)
-     - :py:class:`~buildbot.interfaces.IWorkerStatus`
+- :py:class:`buildbot.buildslave.ec2.EC2LatentBuildSlave` was renamed to
+  :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 
+- :py:mod:`buildbot.buildslave.libvirt` was renamed to
+  :py:mod:`buildbot.worker.libvirt`
 
-   * - :py:mod:`buildbot.buildslave` module with all contents
-     - :py:mod:`buildbot.worker`
+- :py:class:`buildbot.buildslave.libvirt.LibVirtSlave` was renamed to
+  :py:class:`buildbot.worker.libvirt.LibVirtWorker`
 
+- :py:mod:`buildbot.buildslave.openstack` was renamed to
+  :py:mod:`buildbot.worker.openstack`
 
-   * - :py:class:`buildbot.buildslave.AbstractBuildSlave`
-     - :py:class:`buildbot.worker.AbstractWorker`
+- :py:class:`buildbot.buildslave.openstack.OpenStackLatentBuildSlave` was renamed to
+  :py:class:`buildbot.worker.openstack.OpenStackLatentWorker`
 
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename` (private)
-     - :py:attr:`buildbot.worker.AbstractWorker.workername`
+- :py:attr:`buildbot.config.MasterConfig.slaves` was renamed to
+  :py:attr:`~buildbot.config.MasterConfig.workers`
 
+- :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+  ``slavename`` was renamed to ``workername``
 
-   * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
-     - :py:class:`buildbot.worker.AbstractLatentWorker`
+- :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+  ``slavenames`` was renamed to ``workernames``
 
+- :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+  ``slavebuilddir`` was renamed to ``workerbuilddir``
 
-   * - :py:class:`buildbot.buildslave.BuildSlave`
-     - :py:class:`buildbot.worker.Worker`
+- :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+  ``nextSlave`` was renamed to ``nextWorker``
 
+- :py:attr:`buildbot.config.BuilderConfig.slavenames` was renamed to
+  :py:attr:`~buildbot.config.BuilderConfig.workernames`
 
-   * - :py:mod:`buildbot.buildslave.ec2`
-     - :py:mod:`buildbot.worker.ec2`
+- :py:attr:`buildbot.config.BuilderConfig.slavebuilddir` was renamed to
+  :py:attr:`~buildbot.config.BuilderConfig.workerbuilddir`
 
-   * - :py:class:`buildbot.buildslave.ec2.EC2LatentBuildSlave`
-     - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
+- :py:attr:`buildbot.config.BuilderConfig.nextSlave` was renamed  to
+  :py:attr:`~buildbot.config.BuilderConfig.nextWorker`
 
+- :py:mod:`buildbot.process.slavebuilder` was renamed  to
+  :py:mod:`buildbot.process.workerforbuilder`
 
-   * - :py:mod:`buildbot.buildslave.libvirt`
-     - :py:mod:`buildbot.worker.libvirt`
+- :py:class:`buildbot.process.slavebuilder.AbstractSlaveBuilder` was renamed to
+  :py:class:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder`
 
-   * - :py:class:`buildbot.buildslave.libvirt.LibVirtSlave`
-     - :py:class:`buildbot.worker.libvirt.LibVirtWorker`
+- :py:attr:`buildbot.process.slavebuilder.AbstractSlaveBuilder.slave` was renamed to
+  :py:attr:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.worker`
 
+- :py:class:`buildbot.process.slavebuilder.SlaveBuilder` was renamed to
+  :py:class:`buildbot.process.workerforbuilder.WorkerForBuilder`
 
-   * - :py:mod:`buildbot.buildslave.openstack`
-     - :py:mod:`buildbot.worker.openstack`
+- :py:class:`buildbot.process.slavebuilder.LatentSlaveBuilder` was renamed to
+  :py:class:`buildbot.process.workerforbuilder.LatentWorkerForBuilder`
 
-   * - :py:class:`buildbot.buildslave.openstack.OpenStackLatentBuildSlave`
-     - :py:class:`buildbot.worker.openstack.OpenStackLatentWorker`
+- :py:meth:`buildbot.process.build.Build.getSlaveName` was renamed to
+  :py:meth:`~buildbot.process.build.Build.getWorkerName`
 
+- :py:meth:`buildbot.process.build.Build.slavename` was renamed to
+  :py:meth:`~buildbot.process.build.Build.workername`
 
-   * - :py:attr:`buildbot.config.MasterConfig.slaves`
-     - :py:attr:`~buildbot.config.MasterConfig.workers`
+- :py:func:`buildbot.process.builder.enforceChosenSlave` was renamed to
+  :py:func:`~buildbot.process.builder.enforceChosenWorker`
 
+- :py:meth:`buildbot.process.builder.Builder.canStartWithSlavebuilder` was renamed to
+  :py:meth:`~buildbot.process.builder.Builder.canStartWithWorkerForBuilder`
 
-   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
-       ``slavename`` was renamed to
+- :py:attr:`buildbot.process.builder.Builder.attaching_slaves` was renamed to
+  :py:attr:`~buildbot.process.builder.Builder.attaching_workers`
 
-     - ``workername``
+- :py:attr:`buildbot.process.builder.Builder.slaves` was renamed to
+  :py:attr:`~buildbot.process.builder.Builder.workers`
 
-   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
-       ``slavenames`` was renamed to
+- :py:meth:`buildbot.process.builder.Builder.addLatentSlave` was renamed to
+  :py:meth:`~buildbot.process.builder.Builder.addLatentWorker`
 
-     - ``workernames``
+- :py:meth:`buildbot.process.builder.Builder.getAvailableSlaves` was renamed to
+  :py:meth:`~buildbot.process.builder.Builder.getAvailableWorkers`
 
-   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
-       ``slavebuilddir`` was renamed to
+- :py:class:`buildbot.schedulers.forcesched.BuildslaveChoiceParameter` was renamed to
+  :py:class:`~buildbot.schedulers.forcesched.WorkerChoiceParameter`
 
-     - ``workerbuilddir``
+- :py:attr:`buildbot.process.buildstep.BuildStep.buildslave` was renamed to
+  :py:attr:`buildbot.process.buildstep.BuildStep.worker`
+  (also it was moved from class static attribute to instance attribute)
 
-   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
-       ``nextSlave`` was renamed to
+- :py:meth:`buildbot.process.buildstep.BuildStep.setBuildSlave` was renamed to
+  :py:meth:`buildbot.process.buildstep.BuildStep.setWorker`
 
-     - ``nextWorker``
+- :py:meth:`buildbot.process.buildstep.BuildStep.slaveVersion` was renamed to
+  :py:meth:`buildbot.process.buildstep.BuildStep.workerVersion`
 
-   * - :py:attr:`buildbot.config.BuilderConfig.slavenames`
-     - :py:attr:`~buildbot.config.BuilderConfig.workernames`
+- :py:meth:`buildbot.process.buildstep.BuildStep.slaveVersionIsOlderThan` was renamed to
+  :py:meth:`buildbot.process.buildstep.BuildStep.workerVersionIsOlderThan`
 
-   * - :py:attr:`buildbot.config.BuilderConfig.slavebuilddir`
-     - :py:attr:`~buildbot.config.BuilderConfig.workerbuilddir`
+- :py:meth:`buildbot.process.buildstep.BuildStep.checkSlaveHasCommand` was renamed to
+  :py:meth:`buildbot.process.buildstep.BuildStep.checkWorkerHasCommand`
 
-   * - :py:attr:`buildbot.config.BuilderConfig.nextSlave`
-     - :py:attr:`~buildbot.config.BuilderConfig.nextWorker`
+- :py:meth:`buildbot.process.buildstep.BuildStep.getSlaveName` was renamed to
+  :py:meth:`buildbot.process.buildstep.BuildStep.getWorkerName`
 
+- :py:class:`buildbot.locks.SlaveLock` was renamed to
+  :py:class:`buildbot.locks.WorkerLock`
 
-   * - :py:mod:`buildbot.process.slavebuilder`
-     - :py:mod:`buildbot.process.workerforbuilder`
+- :py:attr:`buildbot.locks.SlaveLock.maxCountForSlave` was renamed to
+  :py:attr:`buildbot.locks.WorkerLock.maxCountForWorker`
 
+- :py:class:`buildbot.locks.SlaveLock` constructor argument ``maxCountForSlave`` was renamed to
+  ``maxCountForWorker``
 
-   * - :py:class:`buildbot.process.slavebuilder.AbstractSlaveBuilder`
-     - :py:class:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder`
+- :py:mod:`buildbot.steps.slave` was renamed to
+  :py:mod:`buildbot.steps.worker`
 
-   * - :py:attr:`buildbot.process.slavebuilder.AbstractSlaveBuilder.slave`
-     - :py:attr:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.worker`
+- :py:class:`buildbot.steps.slave.SlaveBuildStep` was renamed to
+  :py:class:`buildbot.steps.worker.WorkerBuildStep`
 
+- :py:class:`buildbot.steps.slave.CompositeStepMixin.getFileContentFromSlave` was renamed to
+  :py:class:`buildbot.steps.worker.CompositeStepMixin.getFileContentFromWorker`
 
-   * - :py:class:`buildbot.process.slavebuilder.SlaveBuilder`
-     - :py:class:`buildbot.process.workerforbuilder.WorkerForBuilder`
+- :py:attr:`buildbot.steps.transfer.FileUpload.slavesrc` was renamed
+  :py:attr:`~buildbot.steps.transfer.FileUpload.workersrc`
 
-   * - :py:class:`buildbot.process.slavebuilder.LatentSlaveBuilder`
-     - :py:class:`buildbot.process.workerforbuilder.LatentWorkerForBuilder`
+- :py:class:`buildbot.steps.transfer.FileUpload` constructor argument ``slavesrc`` was renamed to
+  ``workersrc``
 
+- :py:attr:`buildbot.steps.transfer.DirectoryUpload.slavesrc` was renamed to
+  :py:attr:`~buildbot.steps.transfer.DirectoryUpload.workersrc`
 
-   * - :py:meth:`buildbot.process.build.Build.getSlaveName`
-     - :py:meth:`~buildbot.process.build.Build.getWorkerName`
+- :py:class:`buildbot.steps.transfer.DirectoryUpload` constructor argument ``slavesrc`` was
+  renamed to ``workersrc``
 
-   * - :py:meth:`buildbot.process.build.Build.slavename`
-     - :py:meth:`~buildbot.process.build.Build.workername`
+- :py:attr:`buildbot.steps.transfer.MultipleFileUpload.slavesrcs` was renamed to
+  :py:attr:`~buildbot.steps.transfer.MultipleFileUpload.workersrcs`
 
+- :py:class:`buildbot.steps.transfer.MultipleFileUpload` constructor argument
+  ``slavesrcs`` was renamed to ``workersrcs``
 
-   * - :py:func:`buildbot.process.builder.enforceChosenSlave`
-     - :py:func:`~buildbot.process.builder.enforceChosenWorker`
+- :py:attr:`buildbot.steps.transfer.FileDownload.slavedest` was renamed to
+  :py:attr:`~buildbot.steps.transfer.FileDownload.workerdest`
 
+- :py:class:`buildbot.steps.transfer.FileDownload` constructor argument ``slavedest``
+  was renamed to ``workerdest``
 
-   * - :py:meth:`buildbot.process.builder.Builder.canStartWithSlavebuilder`
-     - :py:meth:`~buildbot.process.builder.Builder.canStartWithWorkerForBuilder`
+- :py:attr:`buildbot.steps.transfer.StringDownload.slavedest` was renamed to
+  :py:attr:`~buildbot.steps.transfer.StringDownload.workerdest`
 
-   * - :py:attr:`buildbot.process.builder.Builder.attaching_slaves`
-     - :py:attr:`~buildbot.process.builder.Builder.attaching_workers`
+- :py:class:`buildbot.steps.transfer.StringDownload` constructor argument ``slavedest``
+  was renamed to ``workerdest``
 
-   * - :py:attr:`buildbot.process.builder.Builder.slaves`
-     - :py:attr:`~buildbot.process.builder.Builder.workers`
+- :py:attr:`buildbot.steps.transfer.JSONStringDownload.slavedest` was renamed to
+  :py:attr:`~buildbot.steps.transfer.JSONStringDownload.workerdest`
 
-   * - :py:meth:`buildbot.process.builder.Builder.addLatentSlave`
-     - :py:meth:`~buildbot.process.builder.Builder.addLatentWorker`
+- :py:class:`buildbot.steps.transfer.JSONStringDownload` constructor argument ``slavedest``
+  was renamed to ``workerdest``
 
-   * - :py:meth:`buildbot.process.builder.Builder.getAvailableSlaves`
-     - :py:meth:`~buildbot.process.builder.Builder.getAvailableWorkers`
+- :py:attr:`buildbot.steps.transfer.JSONPropertiesDownload.slavedest` was renamed to
+  :py:attr:`~buildbot.steps.transfer.JSONPropertiesDownload.workerdest`
 
+- :py:class:`buildbot.steps.transfer.JSONPropertiesDownload` was renamed to
+  constructor argument ``slavedest`` was renamed to ``workerdest``
 
-   * - :py:class:`buildbot.schedulers.forcesched.BuildslaveChoiceParameter`
-     - :py:class:`~buildbot.schedulers.forcesched.WorkerChoiceParameter`
-
-
-   * - :py:attr:`buildbot.process.buildstep.BuildStep.buildslave`
-     - :py:attr:`buildbot.process.buildstep.BuildStep.worker`
-       (also it was moved from class static attribute to instance attribute)
-
-   * - :py:meth:`buildbot.process.buildstep.BuildStep.setBuildSlave`
-     - :py:meth:`buildbot.process.buildstep.BuildStep.setWorker`
-
-   * - :py:meth:`buildbot.process.buildstep.BuildStep.slaveVersion`
-     - :py:meth:`buildbot.process.buildstep.BuildStep.workerVersion`
-
-   * - :py:meth:`buildbot.process.buildstep.BuildStep.slaveVersionIsOlderThan`
-     - :py:meth:`buildbot.process.buildstep.BuildStep.workerVersionIsOlderThan`
-
-   * - :py:meth:`buildbot.process.buildstep.BuildStep.checkSlaveHasCommand`
-     - :py:meth:`buildbot.process.buildstep.BuildStep.checkWorkerHasCommand`
-
-   * - :py:meth:`buildbot.process.buildstep.BuildStep.getSlaveName`
-     - :py:meth:`buildbot.process.buildstep.BuildStep.getWorkerName`
-
-
-   * - :py:class:`buildbot.locks.SlaveLock`
-     - :py:class:`buildbot.locks.WorkerLock`
-
-   * - :py:attr:`buildbot.locks.SlaveLock.maxCountForSlave`
-     - :py:attr:`buildbot.locks.WorkerLock.maxCountForWorker`
-
-   * - :py:class:`buildbot.locks.SlaveLock` constructor argument
-       ``maxCountForSlave`` was renamed
-     - ``maxCountForWorker``
-
-
-   * - :py:mod:`buildbot.steps.slave`
-     - :py:mod:`buildbot.steps.worker`
-
-   * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
-     - :py:class:`buildbot.steps.worker.WorkerBuildStep`
-
-   * - :py:class:`buildbot.steps.slave.CompositeStepMixin.getFileContentFromSlave`
-     - :py:class:`buildbot.steps.worker.CompositeStepMixin.getFileContentFromWorker`
-
-
-   * - :py:attr:`buildbot.steps.transfer.FileUpload.slavesrc`
-     - :py:attr:`~buildbot.steps.transfer.FileUpload.workersrc`
-
-   * - :py:class:`buildbot.steps.transfer.FileUpload`
-       constructor argument ``slavesrc`` was renamed to
-
-     - ``workersrc``
-
-
-   * - :py:attr:`buildbot.steps.transfer.DirectoryUpload.slavesrc`
-     - :py:attr:`~buildbot.steps.transfer.DirectoryUpload.workersrc`
-
-   * - :py:class:`buildbot.steps.transfer.DirectoryUpload`
-       constructor argument ``slavesrc`` was renamed to
-
-     - ``workersrc``
-
-
-   * - :py:attr:`buildbot.steps.transfer.MultipleFileUpload.slavesrcs`
-     - :py:attr:`~buildbot.steps.transfer.MultipleFileUpload.workersrcs`
-
-   * - :py:class:`buildbot.steps.transfer.MultipleFileUpload`
-       constructor argument ``slavesrcs`` was renamed to
-
-     - ``workersrcs``
-
-
-   * - :py:attr:`buildbot.steps.transfer.FileDownload.slavedest`
-     - :py:attr:`~buildbot.steps.transfer.FileDownload.workerdest`
-
-   * - :py:class:`buildbot.steps.transfer.FileDownload`
-       constructor argument ``slavedest`` was renamed to
-
-     - ``workerdest``
-
-
-   * - :py:attr:`buildbot.steps.transfer.StringDownload.slavedest`
-     - :py:attr:`~buildbot.steps.transfer.StringDownload.workerdest`
-
-   * - :py:class:`buildbot.steps.transfer.StringDownload`
-       constructor argument ``slavedest`` was renamed to
-
-     - ``workerdest``
-
-
-   * - :py:attr:`buildbot.steps.transfer.JSONStringDownload.slavedest`
-     - :py:attr:`~buildbot.steps.transfer.JSONStringDownload.workerdest`
-
-   * - :py:class:`buildbot.steps.transfer.JSONStringDownload`
-       constructor argument ``slavedest`` was renamed to
-
-     - ``workerdest``
-
-
-   * - :py:attr:`buildbot.steps.transfer.JSONPropertiesDownload.slavedest`
-     - :py:attr:`~buildbot.steps.transfer.JSONPropertiesDownload.workerdest`
-
-   * - :py:class:`buildbot.steps.transfer.JSONPropertiesDownload`
-       constructor argument ``slavedest`` was renamed to
-
-     - ``workerdest``
-
-   * - :py:attr:`buildbot.process.remotecommand.RemoteCommand.buildslave`
-     - :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
+- :py:attr:`buildbot.process.remotecommand.RemoteCommand.buildslave` was renamed to
+  :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
 
 
 Plugins
@@ -506,26 +444,18 @@ Schema changes:
 
 List of database-related changes in API (fallback for old API is provided):
 
-.. list-table::
-   :header-rows: 1
+- :py:mod:`buildbot.db.buildslaves` was renamed to
+  :py:mod:`~buildbot.db.workers`
 
-   * - Old name
-     - New name
+- :py:class:`buildbot.db.buildslaves.BuildslavesConnectorComponent` was renamed to
+  :py:class:`buildbot.db.workers.WorkersConnectorComponent`
 
-   * - :py:mod:`buildbot.db.buildslaves`
-     - :py:mod:`~buildbot.db.workers`
+- :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslaves`
+  (rewritten in nine)  was renamed to
+  :py:meth:`buildbot.db.workers.WorkersConnectorComponent.getWorkers`
 
-
-   * - :py:class:`buildbot.db.buildslaves.BuildslavesConnectorComponent`
-     - :py:class:`buildbot.db.workers.WorkersConnectorComponent`
-
-   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslaves`
-       (rewritten in nine)
-     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.getWorkers`
-
-
-   * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
-     - :py:attr:`buildbot.db.connector.DBConnector.workers`
+- :py:attr:`buildbot.db.connector.DBConnector.buildslaves`  was renamed to
+  :py:attr:`buildbot.db.connector.DBConnector.workers`
 
 ``usePTY`` changes
 ------------------

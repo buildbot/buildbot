@@ -54,8 +54,8 @@ class EndpointMatcherBase:
         args = []
         for k, v in self.__dict__.items():
             if isinstance(v, str):
-                args.append("%s='%s'" % (k, v))
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
+                args.append("{}='{}'".format(k, v))
+        return "{}({})".format(self.__class__.__name__, ", ".join(args))
 
 
 class Match:
@@ -83,7 +83,8 @@ class Match:
 
     @defer.inlineCallbacks
     def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
-        props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'], "properties"))
+        props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'],
+                                            "properties"))
         if 'owner' in props:
             return props['owner'][0]
         return None

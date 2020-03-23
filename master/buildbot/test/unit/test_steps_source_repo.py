@@ -50,8 +50,9 @@ class RepoURL(unittest.TestCase):
                      "test/bla 564/12", "test/bla 564/2"])
 
     def test_parse3(self):
-        self.oneTest({'a': "repo download test/bla 564/12 repo download test/bla 564/2 test/foo 5/1"}, [
-                     "test/bla 564/12", "test/bla 564/2", "test/foo 5/1"])
+        self.oneTest({'a': "repo download test/bla 564/12 repo download "
+                           "test/bla 564/2 test/foo 5/1"},
+                     ["test/bla 564/12", "test/bla 564/2", "test/foo 5/1"])
         self.oneTest(
             {'a': "repo download test/bla 564/12"}, ["test/bla 564/12"])
 
@@ -82,8 +83,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
 
     def mySetupStep(self, **kwargs):
         if "repoDownloads" not in kwargs:
-            kwargs.update(
-                dict(repoDownloads=repo.RepoDownloadsFromProperties(["repo_download", "repo_download2"])))
+            kwargs.update(dict(repoDownloads=repo.RepoDownloadsFromProperties(["repo_download",
+                                                                              "repo_download2"])))
         self.setupStep(
             repo.Repo(manifestURL='git://myrepo.com/manifest.git',
                       manifestBranch="mb",

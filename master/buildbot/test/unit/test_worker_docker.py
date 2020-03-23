@@ -116,7 +116,8 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         bs = yield self.setupWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img',
                                     ['/bin/sh'],
                                     dockerfile="FROM ubuntu", version='1.9', tls=True,
-                                    hostconfig={'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']},
+                                    hostconfig={'network_mode': 'fake',
+                                                'dns': ['1.1.1.1', '1.2.3.4']},
                                     custom_context=False, buildargs=None,
                                     encoding='gzip')
         self.assertEqual(bs.workername, 'bot')
@@ -147,8 +148,8 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_volume_no_suffix(self):
-        bs = yield self.setupWorker(
-            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
+        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+                                    volumes=['/src/webapp:/opt/webapp'])
         yield bs.start_instance(self.build)
         client = docker.Client.latest
         self.assertEqual(len(client.call_args_create_container), 1)
@@ -330,12 +331,14 @@ class testDockerPyStreamLogs(unittest.TestCase):
 
     def testMultipleLines(self):
         self.compare(["Fetched 8298 kB in 3s (2096 kB/s)", "Reading package lists..."],
-                     '{"stream":"Fetched 8298 kB in 3s (2096 kB/s)\\nReading package lists..."}\r\n')
+                     '{"stream": "Fetched 8298 kB in 3s (2096 kB/s)\\nReading '
+                     'package lists..."}\r\n')
 
     def testError(self):
         self.compare(["ERROR: The command [/bin/sh -c apt-get update && apt-get install -y"
                       "    python-dev    python-pip] returned a non-zero code: 127"],
                      '{"errorDetail": {"message": "The command [/bin/sh -c apt-get update && '
-                     'apt-get install -y    python-dev    python-pip] returned a non-zero code: 127"},'
+                     'apt-get install -y    python-dev    python-pip] returned a '
+                     'non-zero code: 127"},'
                      ' "error": "The command [/bin/sh -c apt-get update && apt-get install -y'
                      '    python-dev    python-pip] returned a non-zero code: 127"}\r\n')

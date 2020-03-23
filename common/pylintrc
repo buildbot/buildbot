@@ -89,7 +89,6 @@ disable=
   maybe-no-member,
   locally-disabled,
   bad-classmethod-argument,
-  line-too-long,
   method-hidden,
   no-name-in-module,
   no-member,
@@ -133,7 +132,6 @@ disable=
   bad-continuation,
   keyword-arg-before-vararg,
   unsubscriptable-object,
-  inconsistent-return-statements,
   useless-object-inheritance,
   deprecated-method,
   useless-return,
@@ -147,6 +145,7 @@ disable=
   redefined-variable-type,
   deprecated-lambda,
   bad-string-format-type, # https://github.com/PyCQA/pylint/issues/2631
+  duplicate-string-formatting-argument,
   cyclic-import,  # only happens when pylint is ran in non-parallel mode
 
 
@@ -230,7 +229,7 @@ ignore-imports=no
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=80
+max-line-length=100
 
 # Maximum number of lines in a module
 max-module-lines=1000

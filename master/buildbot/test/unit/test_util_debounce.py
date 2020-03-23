@@ -84,7 +84,7 @@ class DebounceTest(unittest.TestCase):
                 self.assertTrue(db.stopDeferreds[-1].called)
                 db.stopDeferreds.pop()
             else:
-                self.fail("unknown scenario event %s" % e)
+                self.fail("unknown scenario event {}".format(e))
             for db in dbs.values():
                 self.assertEqual(db.calls, db.expCalls)
 

@@ -67,7 +67,7 @@ class FakeUpdates(service.AsyncService):
             try:
                 json.dumps(propval)
             except (TypeError, ValueError):
-                self.testcase.fail("value for %s is not JSON-able" % (k,))
+                self.testcase.fail("value for {} is not JSON-able".format(k))
 
     # update methods
 
@@ -149,8 +149,7 @@ class FakeUpdates(service.AsyncService):
         self.testcase.assertIsInstance(sourcestamps, list)
         for ss in sourcestamps:
             if not isinstance(ss, int) and not isinstance(ss, dict):
-                self.testcase.fail("%s (%s) is not an integer or a dictionary"
-                                   % (ss, type(ss)))
+                self.testcase.fail("{} ({}) is not an integer or a dictionary".format(ss, type(ss)))
             del ss  # since we use locals(), below
         self.testcase.assertIsInstance(reason, str)
         self.assertProperties(sourced=True, properties=properties)
@@ -303,7 +302,7 @@ class FakeUpdates(service.AsyncService):
         try:
             json.dumps(value)
         except (TypeError, ValueError):
-            self.testcase.fail("Value for %s is not JSON-able" % name)
+            self.testcase.fail("Value for {} is not JSON-able".format(name))
         validation.verifyType(self.testcase, 'source', source,
                               validation.StringValidator())
         return defer.succeed(None)

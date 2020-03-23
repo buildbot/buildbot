@@ -22,7 +22,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import logging
 from buildbot.test.util.misc import TestReactorMixin
@@ -117,7 +117,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_getDetailsForBuildsetWithLogs(self):
         self.setupDb()
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
-                                                wantSteps=True, wantPreviousBuild=True, wantLogs=True)
+                                                wantSteps=True, wantPreviousBuild=True,
+                                                wantLogs=True)
 
         build1 = res['builds'][0]
         self.assertEqual(

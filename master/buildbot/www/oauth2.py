@@ -119,7 +119,7 @@ class OAuth2Auth(auth.AuthBase):
             oauth_params['state'] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
         sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
-        return "%s?%s" % (self.authUri, urlencode(sorted_oauth_params))
+        return "{}?{}".format(self.authUri, urlencode(sorted_oauth_params))
 
     def createSessionFromToken(self, token):
         s = requests.Session()
@@ -289,7 +289,7 @@ class GitHubAuth(OAuth2Auth):
         s = requests.Session()
         s.headers = {
             'Authorization': 'token ' + token['access_token'],
-            'User-Agent': 'buildbot/%s' % buildbot.version,
+            'User-Agent': 'buildbot/{}'.format(buildbot.version),
         }
         s.verify = self.sslVerify
         return s
@@ -347,8 +347,8 @@ class GitHubAuth(OAuth2Auth):
                         # identical with the inclusion of the organization
                         # since different organizations might share a common
                         # team name
-                        teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['name']))
-                        teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['slug']))
+                        teams.add('{}/{}'.format(orgs_name_slug_mapping[org], node['node']['name']))
+                        teams.add('{}/{}'.format(orgs_name_slug_mapping[org], node['node']['slug']))
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
             log.info('{klass} User Details: {user_info}',
@@ -363,9 +363,9 @@ class GitLabAuth(OAuth2Auth):
 
     def __init__(self, instanceUri, clientId, clientSecret, **kwargs):
         uri = instanceUri.rstrip("/")
-        self.authUri = "%s/oauth/authorize" % uri
-        self.tokenUri = "%s/oauth/token" % uri
-        self.resourceEndpoint = "%s/api/v4" % uri
+        self.authUri = "{}/oauth/authorize".format(uri)
+        self.tokenUri = "{}/oauth/token".format(uri)
+        self.resourceEndpoint = "{}/api/v4".format(uri)
         super(GitLabAuth, self).__init__(clientId, clientSecret, **kwargs)
 
     def getUserInfoFromOAuthClient(self, c):

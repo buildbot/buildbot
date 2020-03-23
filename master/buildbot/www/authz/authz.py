@@ -95,7 +95,6 @@ class Authz:
                 if not rule.defaultDeny:
                     continue   # check next suitable rule if not denied
 
-                error_msg = unicode2bytes(
-                    "you need to have role '%s'" % rule.role)
+                error_msg = unicode2bytes("you need to have role '{}'".format(rule.role))
                 raise Forbidden(error_msg)
         return None

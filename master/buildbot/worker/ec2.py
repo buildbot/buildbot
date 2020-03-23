@@ -131,7 +131,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.product_description = product_description
 
         if None not in [placement, region]:
-            self.placement = '%s%s' % (region, placement)
+            self.placement = '{}{}'.format(region, placement)
         else:
             self.placement = None
         if identifier is None:
@@ -232,8 +232,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                     # connect to the buildbot
                     # ip = urllib.urlopen(
                     #     'http://checkip.amazonaws.com').read().strip()
-                    # self.security_group.authorize('tcp', 22, 22, '%s/32' % ip)
-                    # self.security_group.authorize('tcp', 80, 80, '%s/32' % ip)
+                    # self.security_group.authorize('tcp', 22, 22, '{}/32'.format(ip))
+                    # self.security_group.authorize('tcp', 80, 80, '{}/32'.format(ip))
                 else:
                     raise
 
@@ -346,10 +346,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             options = [(image.image_location, image.id, image) for image
                        in images]
         options.sort()
-        log.msg('sorted images (last is chosen): %s' %
-                (', '.join(
-                    ['%s (%s)' % (candidate[-1].id, candidate[-1].image_location)
-                     for candidate in options])))
+        images = ['{} ({})'.format(candidate[-1].id, candidate[-1].image_location)
+        for candidate in options]
+        log.msg('sorted images (last is chosen): {}'.format(', '.join(images)))
         if not options:
             raise ValueError('no available images match constraints')
         return options[-1][-1]
@@ -399,6 +398,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             return [instance_id, image.id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
+        return None
 
     def stop_instance(self, fast=False):
 
@@ -417,8 +417,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             vol = self.ec2.Volume(volume_id)
             vol.attach_to_instance(
                 InstanceId=self.instance.id, Device=device_node)
-            log.msg('Attaching EBS volume %s to %s.' %
-                    (volume_id, device_node))
+            log.msg('Attaching EBS volume {} to {}.'.format(volume_id, device_node))
 
     def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
@@ -426,8 +425,8 @@ class EC2LatentWorker(AbstractLatentWorker):
         instance.reload()
         if instance.state['Name'] not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
-            log.msg('%s %s terminating instance %s' %
-                    (self.__class__.__name__, self.workername, instance.id))
+            log.msg('{} {} terminating instance {}'.format(self.__class__.__name__, self.workername,
+                                                           instance.id))
         duration = 0
         interval = self._poll_resolution
         if fast:
@@ -439,15 +438,12 @@ class EC2LatentWorker(AbstractLatentWorker):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
-                log.msg(
-                    '%s %s has waited %d minutes for instance %s to end' %
-                    (self.__class__.__name__, self.workername, duration // 60,
-                     instance.id))
+                log.msg('{} {} has waited {} minutes for instance {} to end'.format(
+                        self.__class__.__name__, self.workername, duration // 60, instance.id))
             instance.reload()
-        log.msg('%s %s instance %s %s '
-                'after about %d minutes %d seconds' %
-                (self.__class__.__name__, self.workername,
-                 instance.id, goal, duration // 60, duration % 60))
+        log.msg('{} {} instance {} {} after about {} minutes {} seconds'.format(
+                self.__class__.__name__, self.workername, instance.id, goal, duration // 60,
+                duration % 60))
 
     def _bid_price_from_spot_price_history(self):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
@@ -509,17 +505,16 @@ class EC2LatentWorker(AbstractLatentWorker):
         return instance_id, image.id, start_time
 
     def _wait_for_instance(self):
-        log.msg('%s %s waiting for instance %s to start' %
-                (self.__class__.__name__, self.workername, self.instance.id))
+        log.msg('{} {} waiting for instance {} to start'.format(self.__class__.__name__,
+                                                                self.workername, self.instance.id))
         duration = 0
         interval = self._poll_resolution
         while self.instance.state['Name'] == PENDING:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
-                log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.workername, duration // 60,
-                         self.instance.id))
+                log.msg('{} {} has waited {} minutes for instance {}'.format(
+                        self.__class__.__name__, self.workername, duration // 60, self.instance.id))
             self.instance.reload()
 
         if self.instance.state['Name'] == RUNNING:
@@ -527,11 +522,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             self.output = self.instance.console_output().get('Output')
             minutes = duration // 60
             seconds = duration % 60
-            log.msg('%s %s instance %s started on %s '
-                    'in about %d minutes %d seconds (%s)' %
-                    (self.__class__.__name__, self.workername,
-                     self.instance.id, self.dns, minutes, seconds,
-                     self.output))
+            log.msg('{} {} instance {} started on {} in about {} minutes {} seconds ({})'.format(
+                    self.__class__.__name__, self.workername, self.instance.id, self.dns, minutes,
+                    seconds, self.output))
             if self.elastic_ip is not None:
                 self.elastic_ip.associate(InstanceId=self.instance.id)
             start_time = '%02d:%02d:%02d' % (
@@ -556,9 +549,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
-                log.msg('%s %s has waited %d minutes for spot request %s' %
-                        (self.__class__.__name__, self.workername, duration // 60,
-                         request['SpotInstanceRequestId']))
+                log.msg('{} {} has waited {} minutes for spot request {}'.format(
+                        self.__class__.__name__, self.workername, duration // 60,
+                        request['SpotInstanceRequestId']))
             requests = self.ec2.meta.client.describe_spot_instance_requests(
                 SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']])
             request = requests['SpotInstanceRequests'][0]
@@ -566,22 +559,21 @@ class EC2LatentWorker(AbstractLatentWorker):
         if request_status == FULFILLED:
             minutes = duration // 60
             seconds = duration % 60
-            log.msg('%s %s spot request %s fulfilled '
-                    'in about %d minutes %d seconds' %
-                    (self.__class__.__name__, self.workername,
-                     request['SpotInstanceRequestId'], minutes, seconds))
+            log.msg('{} {} spot request {} fulfilled in about {} minutes {} seconds'.format(
+                    self.__class__.__name__, self.workername, request['SpotInstanceRequestId'],
+                    minutes, seconds))
             return request, True
         elif request_status == PRICE_TOO_LOW:
             self.ec2.meta.client.cancel_spot_instance_requests(
                 SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
-            log.msg('%s %s spot request rejected, spot price too low' %
-                    (self.__class__.__name__, self.workername))
+            log.msg('{} {} spot request rejected, spot price too low'.format(
+                    self.__class__.__name__, self.workername))
             raise LatentWorkerFailedToSubstantiate(
                 request['SpotInstanceRequestId'], request_status)
         else:
-            log.msg('%s %s failed to fulfill spot request %s with status %s' %
-                    (self.__class__.__name__, self.workername,
-                     request['SpotInstanceRequestId'], request_status))
+            log.msg('{} {} failed to fulfill spot request {} with status {}'.format(
+                    self.__class__.__name__, self.workername, request['SpotInstanceRequestId'],
+                    request_status))
             # try to cancel, just for good measure
             self.ec2.meta.client.cancel_spot_instance_requests(
                 SpotInstanceRequestIds=[request['SpotInstanceRequestId']])

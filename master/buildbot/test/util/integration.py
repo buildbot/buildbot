@@ -158,7 +158,8 @@ class RunMasterBase(unittest.TestCase):
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
-            config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"), missing_timeout=0)]
+            config_dict['workers'] = [workerclass("local1", password=Interpolate("localpw"),
+                                                  missing_timeout=0)]
             config_dict['protocols'] = proto
 
         m = yield getMaster(self, reactor, config_dict)
@@ -275,26 +276,26 @@ class RunMasterBase(unittest.TestCase):
                     step['logs'] = yield self.master.data.get(("steps", step['stepid'], "logs"))
                     step["logs"] = list(step['logs'])
                     for log in step["logs"]:
-                        log['contents'] = yield self.master.data.get(("logs", log['logid'], "contents"))
+                        log['contents'] = yield self.master.data.get(("logs", log['logid'],
+                                                                      "contents"))
 
         if wantProperties:
-            build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
+            build["properties"] = yield self.master.data.get(("builds", build['buildid'],
+                                                              "properties"))
 
     @defer.inlineCallbacks
     def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print(u"*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
-                                                 statusToString(build['results'])), file=out)
+        print(u"*** BUILD {} *** ==> {} ({})".format(build['buildid'], build['state_string'],
+                statusToString(build['results'])), file=out)
         for step in build['steps']:
-            print(u"    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
-                                                        statusToString(step['results'])), file=out)
+            print(u"    *** STEP {} *** ==> {} ({})".format(step['name'], step['state_string'],
+                    statusToString(step['results'])), file=out)
             for url in step['urls']:
-                print(u"       url:%s (%s)" %
-                      (url['name'], url['url']), file=out)
+                print(u"       url:{} ({})".format(url['name'], url['url']), file=out)
             for log in step['logs']:
-                print(u"        log:%s (%d)" %
-                      (log['name'], log['num_lines']), file=out)
+                print(u"        log:{} ({})".format(log['name'], log['num_lines']), file=out)
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
@@ -315,8 +316,7 @@ class RunMasterBase(unittest.TestCase):
         return False
 
     def printLog(self, log, out):
-        print(u" " * 8 + "*********** LOG: %s *********" %
-              (log['name'],), file=out)
+        print(u" " * 8 + "*********** LOG: {} *********".format(log['name']), file=out)
         if log['type'] == 's':
             for line in log['contents']['content'].splitlines():
                 linetype = line[0]

@@ -34,11 +34,11 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
     def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None,
                     apiVersion=1):
         if not isinstance(vaultServer, str):
-            config.error("vaultServer must be a string while it is %s" % (type(vaultServer,)))
+            config.error("vaultServer must be a string while it is {}".format(type(vaultServer)))
         if not isinstance(vaultToken, str):
-            config.error("vaultToken must be a string while it is %s" % (type(vaultToken,)))
+            config.error("vaultToken must be a string while it is {}".format(type(vaultToken)))
         if apiVersion not in [1, 2]:
-            config.error("apiVersion %s is not supported" % apiVersion)
+            config.error("apiVersion {} is not supported".format(apiVersion))
 
     @defer.inlineCallbacks
     def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None,
@@ -72,8 +72,8 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         proj = yield self._http.get('/v1/{0}'.format(path))
         code = yield proj.code
         if code != 200:
-            raise KeyError("The key %s does not exist in Vault provider: request"
-                           " return code:%d." % (entry, code))
+            raise KeyError(("The key {} does not exist in Vault provider: request"
+                           " return code:{}.").format(entry, code))
         json = yield proj.json()
         if self.apiVersion == 1:
             ret = json.get('data', {}).get('value')

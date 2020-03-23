@@ -17,12 +17,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import masters
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
+from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1348971992
@@ -203,15 +201,12 @@ class RealTests(Tests):
         yield self.db.pool.do(thd)
 
 
-class TestFakeDB(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpTestReactor()
+        yield self.setUpConnectorComponent()
         self.reactor.advance(SOMETIME)
-        self.master = fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insertTestData = self.db.insertTestData
 
 
 class TestRealDB(unittest.TestCase,

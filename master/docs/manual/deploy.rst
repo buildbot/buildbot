@@ -38,59 +38,9 @@ First, let's install the server with ``apt-get``:
 .. code-block:: console
 
    $ sudo apt-get update
-   Hit:1 http://fr.archive.ubuntu.com/ubuntu bionic InRelease
-   Hit:2 http://fr.archive.ubuntu.com/ubuntu bionic-security InRelease
-   Hit:3 http://fr.archive.ubuntu.com/ubuntu bionic-updates InRelease
-   Reading package lists... Done
+     <...>
    $ sudo apt-get install postgresql
-   Reading package lists... Done
-   Building dependency tree
-   Reading state information... Done
-   The following additional packages will be installed:
-     libpq5 postgresql-10 postgresql-client-10 postgresql-client-common postgresql-common ssl-cert
-   Suggested packages:
-     postgresql-doc locales-all postgresql-doc-10 libjson-perl openssl-blacklist
-   Recommended packages:
-     sysstat
-   The following NEW packages will be installed:
-     libpq5 postgresql postgresql-10 postgresql-client-10 postgresql-client-common postgresql-common ssl-cert
-   0 upgraded, 7 newly installed, 0 to remove and 132 not upgraded.
-   Need to get 5,010 kB of archives.
-   After this operation, 19.7 MB of additional disk space will be used.
-   Get:1 http://fr.archive.ubuntu.com/ubuntu bionic-security/main amd64 libpq5 amd64 10.8-0ubuntu0.18.04.1 [107 kB]
-   Get:2 http://fr.archive.ubuntu.com/ubuntu bionic/main amd64 postgresql-client-common all 190 [29.5 kB]
-   ...
-   Setting up postgresql-10 (10.8-0ubuntu0.18.04.1) ...
-   Creating new PostgreSQL cluster 10/main ...
-   /usr/lib/postgresql/10/bin/initdb -D /var/lib/postgresql/10/main --auth-local peer --auth-host md5
-   The files belonging to this database system will be owned by user "postgres".
-   This user must also own the server process.
-
-   The database cluster will be initialized with locale "en_US.UTF-8".
-   The default database encoding has accordingly been set to "UTF8".
-   The default text search configuration will be set to "english".
-
-   Data page checksums are disabled.
-
-   fixing permissions on existing directory /var/lib/postgresql/10/main ... ok
-   creating subdirectories ... ok
-   selecting default max_connections ... 100
-   selecting default shared_buffers ... 128MB
-   selecting dynamic shared memory implementation ... posix
-   creating configuration files ... ok
-   running bootstrap script ... ok
-   performing post-bootstrap initialization ... ok
-   syncing data to disk ... ok
-
-   Success. You can now start the database server using:
-
-       /usr/lib/postgresql/10/bin/pg_ctl -D /var/lib/postgresql/10/main -l logfile start
-
-   Ver Cluster Port Status Owner    Data directory              Log file
-   10  main    5432 down   postgres /var/lib/postgresql/10/main /var/log/postgresql/postgresql-10-main.log
-   update-alternatives: using /usr/share/postgresql/10/man/man1/postmaster.1.gz to provide /usr/share/man/man1/postmaster.1.gz (postmaster.1.gz) in auto mode
-   Setting up postgresql (10+190) ...
-   Processing triggers for systemd (237-3ubuntu10.13) ...
+     <...>
    $ sudo systemctl status postgresql@10-main.service
    ● postgresql@10-main.service - PostgreSQL Cluster 10-main
       Loaded: loaded (/lib/systemd/system/postgresql@.service; indirect; vendor preset: enabled)
@@ -98,7 +48,8 @@ First, let's install the server with ``apt-get``:
     Main PID: 24749 (postgres)
        Tasks: 7 (limit: 4915)
       CGroup: /system.slice/system-postgresql.slice/postgresql@10-main.service
-              ├─24749 /usr/lib/postgresql/10/bin/postgres -D /var/lib/postgresql/10/main -c config_file=/etc/postgresql/10/main/postgresql.conf
+              ├─24749 /usr/lib/postgresql/10/bin/postgres -D /var/lib/postgresql/10/main
+              |       -c config_file=/etc/postgresql/10/main/postgresql.conf
               ├─24751 postgres: 10/main: checkpointer process
               ├─24752 postgres: 10/main: writer process
               ├─24753 postgres: 10/main: wal writer process

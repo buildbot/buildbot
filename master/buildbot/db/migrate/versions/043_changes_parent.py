@@ -25,5 +25,6 @@ def upgrade(migrate_engine):
 
     changes_table = sautils.Table('changes', metadata, autoload=True)
 
-    parent_changeids = sa.Column('parent_changeids', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=True)
+    parent_changeids = sa.Column('parent_changeids', sa.Integer, sa.ForeignKey('changes.changeid'),
+                                 nullable=True)
     parent_changeids.create(changes_table)

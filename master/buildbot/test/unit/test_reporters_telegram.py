@@ -27,7 +27,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import telegram
 from buildbot.reporters import words
 from buildbot.schedulers import forcesched
-from buildbot.test.fake import fakedb
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
@@ -119,7 +119,8 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         ContactMixin.setUp(self)
-        self.contact1 = self.contactClass(user=self.USER, channel=self.channelClass(self.bot, self.PRIVATE))
+        self.contact1 = self.contactClass(user=self.USER, channel=self.channelClass(self.bot,
+                                                                                    self.PRIVATE))
         yield self.contact1.channel.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -128,7 +129,8 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         channel = telegram.TelegramChannel(self.bot, self.CHANNEL)
         channel.notify_events = {'success'}
         yield channel.list_notified_events()
-        self.assertEquals(self.sent[0][1], "The following events are being notified:\n🔔 **success**")
+        self.assertEquals(self.sent[0][1],
+                          "The following events are being notified:\n🔔 **success**")
 
     @defer.inlineCallbacks
     def test_list_notified_events_empty(self):
@@ -253,7 +255,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', 'all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
-            self.assertIn('`%s` ❌' % builder, self.sent[0][1])
+            self.assertIn('`{}` ❌'.format(builder), self.sent[0][1])
 
     @defer.inlineCallbacks
     def test_command_list_workers(self):
@@ -265,7 +267,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
-            self.assertIn('`%s` ❌' % worker, self.sent[0][1])
+            self.assertIn('`{}` ❌'.format(worker), self.sent[0][1])
 
     @defer.inlineCallbacks
     def test_command_list_workers_online(self):

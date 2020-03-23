@@ -56,7 +56,7 @@ class PBManager(service.AsyncMultiService):
         """
         # do some basic normalization of portstrs
         if isinstance(portstr, type(0)) or ':' not in portstr:
-            portstr = "tcp:%s" % portstr
+            portstr = "tcp:{}".format(portstr)
 
         reg = Registration(self, portstr, username)
 
@@ -92,8 +92,7 @@ class Registration:
         self.pbmanager = pbmanager
 
     def __repr__(self):
-        return "<pbmanager.Registration for %s on %s>" % \
-            (self.username, self.portstr)
+        return "<pbmanager.Registration for {} on {}>".format(self.username, self.portstr)
 
     def unregister(self):
         """
@@ -130,8 +129,8 @@ class Dispatcher(service.AsyncService):
         self.port = None
 
     def __repr__(self):
-        return "<pbmanager.Dispatcher for %s on %s>" % \
-            (", ".join(list(self.users)), self.portstr)
+        return "<pbmanager.Dispatcher for {} on {}>".format(", ".join(list(self.users)),
+                                                            self.portstr)
 
     def startService(self):
         assert not self.port
@@ -148,17 +147,16 @@ class Dispatcher(service.AsyncService):
 
     def register(self, username, password, pfactory):
         if debug:
-            log.msg("registering username '%s' on pb port %s: %s"
-                    % (username, self.portstr, pfactory))
+            log.msg("registering username '{}' on pb port {}: {}".format(username, self.portstr,
+                                                                         pfactory))
         if username in self.users:
-            raise KeyError("username '%s' is already registered on PB port %s"
-                           % (username, self.portstr))
+            raise KeyError("username '{}' is already registered on PB port {}".format(username,
+                                                                                      self.portstr))
         self.users[username] = (password, pfactory)
 
     def unregister(self, username):
         if debug:
-            log.msg("unregistering username '%s' on pb port %s"
-                    % (username, self.portstr))
+            log.msg("unregistering username '{}' on pb port {}".format(username, self.portstr))
         del self.users[username]
 
     # IRealm
@@ -176,7 +174,7 @@ class Dispatcher(service.AsyncService):
         @d.addCallback
         def check(persp):
             if not persp:
-                raise ValueError("no perspective for '%s'" % username)
+                raise ValueError("no perspective for '{}'".format(username))
             return persp
 
         # call the perspective's attached(mind)

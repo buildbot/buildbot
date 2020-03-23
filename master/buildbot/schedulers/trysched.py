@@ -47,9 +47,8 @@ class TryBase(base.BaseScheduler):
         if builderNames:
             for b in builderNames:
                 if b not in self.builderNames:
-                    log.msg("%s got with builder %s" % (self, b))
-                    log.msg(" but that wasn't in our list: %s"
-                            % (self.builderNames,))
+                    log.msg("{} got with builder {}".format(self, b))
+                    log.msg(" but that wasn't in our list: {}".format(self.builderNames))
                     return []
         else:
             builderNames = self.builderNames
@@ -150,8 +149,8 @@ class Try_Jobdir(TryBase):
         p = netstrings.NetstringParser()
         f.seek(0, 2)
         if f.tell() > basic.NetstringReceiver.MAX_LENGTH:
-            raise BadJobfile(
-                "The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
+            raise BadJobfile("The patch size is greater that NetStringReceiver.MAX_LENGTH. "
+                             "Please Set this higher in the master.cfg")
         f.seek(0, 0)
         try:
             p.feed(f.read())
@@ -197,7 +196,7 @@ class Try_Jobdir(TryBase):
                 raise BadJobfile("unable to parse JSON")
             postprocess_parsed_job()
         else:
-            raise BadJobfile("unknown version '%s'" % ver)
+            raise BadJobfile("unknown version '{}'".format(ver))
         return parsed_job
 
     def handleJobFile(self, filename, f):
@@ -205,7 +204,7 @@ class Try_Jobdir(TryBase):
             parsed_job = self.parseJob(f)
             builderNames = parsed_job['builderNames']
         except BadJobfile:
-            log.msg("%s reports a bad jobfile in %s" % (self, filename))
+            log.msg("{} reports a bad jobfile in {}".format(self, filename))
             log.err()
             return defer.succeed(None)
 
@@ -287,9 +286,9 @@ class RemoteBuildRequest(pb.Referenceable):
         # subscribe to any new builds..
         def gotBuild(key, msg):
             if msg['buildrequestid'] != self.brid or key[-1] != 'new':
-                return
+                return None
             if msg['buildid'] in reportedBuilds:
-                return
+                return None
             reportedBuilds.add(msg['buildid'])
             return subscriber.callRemote('newbuild',
                                          RemoteBuild(
@@ -334,8 +333,9 @@ class RemoteBuild(pb.Referenceable):
                 return subscriber.callRemote('stepStarted',
                                              self.builderName, self, msg['name'], None)
             elif key[-1] == 'finished':
-                return subscriber.callRemote('stepFinished',
-                                             self.builderName, self, msg['name'], None, msg['results'])
+                return subscriber.callRemote('stepFinished', self.builderName, self, msg['name'],
+                                             None, msg['results'])
+            return None
         self.consumer = yield self.master.mq.startConsuming(
             stepChanged,
             ('builds', str(self.builddict['buildid']), 'steps', None, None))
@@ -385,14 +385,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     @defer.inlineCallbacks
     def perspective_try(self, branch, revision, patch, repository, project,
                         builderNames, who="", comment="", properties=None):
-        log.msg("user %s requesting build on builders %s" % (self.username,
-                                                             builderNames))
+        log.msg("user {} requesting build on builders {}".format(self.username, builderNames))
         if properties is None:
             properties = {}
         # build the intersection of the request and our configured list
         builderNames = self.scheduler.filterBuilderList(builderNames)
         if not builderNames:
-            return
+            return None
 
         reason = "'try' job"
 

@@ -101,7 +101,8 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_renderable_dist(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s')))
+        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
+                                         dist=Interpolate('%(prop:renderable_dist)s')))
         self.properties.setProperty('renderable_dist', '.el7', 'test')
         self.expectCommands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
