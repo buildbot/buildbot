@@ -22,7 +22,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot import config
-from buildbot.data import resultspec
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -39,6 +38,7 @@ from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.util import Notifier
 from buildbot.util import asyncSleep
 from buildbot.util import bytes2unicode
+from buildbot.util import epoch2datetime
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
@@ -248,7 +248,7 @@ class TelegramContact(Contact):
             wait_message = yield self.send("⏳ Getting your changes...")
 
             if all:
-                changes = yield self.master.db.changes.getChanges()
+                changes = yield self.master.data.get(('changes',))
                 self.bot.delete_message(self.channel.id, wait_message['message_id'])
                 num = len(changes)
                 if num > 50:
@@ -263,15 +263,14 @@ class TelegramContact(Contact):
                     return
 
             else:
-                rs = resultspec.ResultSpec(order=['-changeid'], limit=num)
-                changes = yield self.master.db.changes.getChanges(resultSpec=rs)
+                changes = yield self.master.data.get(('changes',), order=['-changeid'], limit=num)
                 self.bot.delete_message(self.channel.id, wait_message['message_id'])
 
             response = ["I found the following recent **changes**:\n"]
 
             for change in reversed(changes):
                 change['comment'] = change['comments'].split('\n')[0]
-                change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
+                change['date'] = epoch2datetime(change['when_timestamp']).strftime('%Y-%m-%d %H:%M')
                 response.append(
                     "[{comment}]({revlink})\n"
                     "_Author_: {author}\n"
