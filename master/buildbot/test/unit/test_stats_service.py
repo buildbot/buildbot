@@ -64,33 +64,37 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
 
 class TestStatsServicesConfiguration(TestStatsServicesBase):
 
+    @defer.inlineCallbacks
     def test_reconfig_with_no_storage_backends(self):
         new_storage_backends = []
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
         self.checkEqual(new_storage_backends)
 
+    @defer.inlineCallbacks
     def test_reconfig_with_fake_storage_backend(self):
         new_storage_backends = [
             fakestats.FakeStatsStorageService(name='One'),
             fakestats.FakeStatsStorageService(name='Two')
         ]
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
         self.checkEqual(new_storage_backends)
 
+    @defer.inlineCallbacks
     def test_reconfig_with_consumers(self):
         backend = fakestats.FakeStatsStorageService(name='One')
         backend.captures = [capture.CaptureProperty('test_builder', 'test')]
         new_storage_backends = [backend]
 
-        self.stats_service.reconfigService(new_storage_backends)
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
         self.assertEqual(len(self.master.mq.qrefs), 1)
 
+    @defer.inlineCallbacks
     def test_bad_configuration(self):
         # Reconfigure with a bad configuration.
         new_storage_backends = [mock.Mock()]
         with self.assertRaises(TypeError):
-            self.stats_service.reconfigService(new_storage_backends)
+            yield self.stats_service.reconfigService(new_storage_backends)
 
     def checkEqual(self, new_storage_backends):
         # Check whether the new_storage_backends was set in reconfigService
@@ -108,6 +112,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
     # just disable this unit test if the influxdb module is not installed,
     # using SkipTest
 
+    @defer.inlineCallbacks
     def test_influxdb_not_installed(self):
         captures = [capture.CaptureProperty('test_builder', 'test')]
         try:
@@ -127,8 +132,9 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
                 InfluxStorageService("fake_url", "fake_port", "fake_user", "fake_password",
                                      "fake_db", captures)
             ]
-            self.stats_service.reconfigService(new_storage_backends)
+            yield self.stats_service.reconfigService(new_storage_backends)
 
+    @defer.inlineCallbacks
     def test_influx_storage_service_fake_install(self):
         # use a fake InfluxDBClient to test InfluxStorageService in systems which
         # don't have influxdb installed. Primarily useful for test coverage.
@@ -138,7 +144,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         new_storage_backends = [InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
         )]
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
 
     def test_influx_storage_service_post_value(self):
         # test the thd_postStatsValue method of InfluxStorageService
@@ -195,10 +201,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
                          buildrequestid=1, number=1),
         ])
 
+    @defer.inlineCallbacks
     def setupFakeStorage(self, captures):
         self.fake_storage_service = fakestats.FakeStatsStorageService()
         self.fake_storage_service.captures = captures
-        self.stats_service.reconfigService([self.fake_storage_service])
+        yield self.stats_service.reconfigService([self.fake_storage_service])
 
     def get_dict(self, build):
         return dict(
