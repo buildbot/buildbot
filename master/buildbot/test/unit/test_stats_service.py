@@ -23,6 +23,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.errors import CaptureCallbackError
 from buildbot.statistics import capture
+from buildbot.statistics import stats_service
 from buildbot.statistics import storage_backends
 from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
@@ -49,8 +50,7 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
             self.master.db.builders.addTestBuilder(
                 builderid=builderid, name=name)
 
-        self.stats_service = fakestats.FakeStatsService(master=self.master,
-                                                        storage_backends=[
+        self.stats_service = stats_service.StatsService(storage_backends=[
                                                             fakestats.FakeStatsStorageService()
                                                         ],
                                                         name="FakeStatsService")
