@@ -17,7 +17,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import threads
 from twisted.trial import unittest
 
 from buildbot import config
@@ -192,7 +191,6 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.routingKey = (
             "builders", self.BUILDER_IDS[0], "builds", 1, "finished")
         self.master.mq.verifyMessages = False
-        self.patch(threads, 'deferToThread', self.identity)
 
     def setupBuild(self):
         self.master.db.insertTestData([
@@ -227,10 +225,6 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
         self.master.mq.callConsumer(self.routingKey, self.get_dict(build))
-
-    @staticmethod
-    def identity(f, *args, **kwargs):
-        return f(*args, **kwargs)
 
     @defer.inlineCallbacks
     def test_property_capturing(self):
