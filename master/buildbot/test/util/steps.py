@@ -105,6 +105,9 @@ class BuildStepMixin:
     """
 
     def setUpBuildStep(self):
+        if not hasattr(self, 'reactor'):
+            raise Exception('Reactor has not yet been setup for step')
+
         # make an (admittedly global) reference to this test case so that
         # the fakes can call back to us
         remotecommand.FakeRemoteCommand.testcase = self
