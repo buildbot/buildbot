@@ -45,6 +45,9 @@ class DeferWaiter:
             d.cancel()
         self._waited.clear()
 
+    def has_waited(self):
+        return bool(self._waited)
+
     @defer.inlineCallbacks
     def wait(self):
         if not self._waited:
