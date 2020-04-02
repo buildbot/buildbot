@@ -39,6 +39,7 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [1, 2]
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
@@ -53,11 +54,12 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
                                                             fakestats.FakeStatsStorageService()
                                                         ],
                                                         name="FakeStatsService")
+        yield self.stats_service.setServiceParent(self.master)
+        yield self.master.startService()
 
-        self.stats_service.startService()
-
+    @defer.inlineCallbacks
     def tearDown(self):
-        self.stats_service.stopService()
+        yield self.master.stopService()
 
 
 class DummyStatsStorageBase(StatsStorageBase):
@@ -195,8 +197,9 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
     Test the stats service from a fake step
     """
 
+    @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
+        yield super().setUp()
         self.routingKey = (
             "builders", self.BUILDER_IDS[0], "builds", 1, "finished")
         self.master.mq.verifyMessages = False
