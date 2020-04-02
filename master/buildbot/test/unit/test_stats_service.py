@@ -69,7 +69,7 @@ class DummyStatsStorageBase(StatsStorageBase):
     """
 
     def thd_postStatsValue(self, *args, **kwargs):
-        return defer.succeed(None)
+        pass
 
 
 class TestStatsServicesConfiguration(TestStatsServicesBase):

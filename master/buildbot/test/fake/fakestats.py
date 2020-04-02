@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.process import buildstep
 from buildbot.process.results import SUCCESS
 from buildbot.statistics import capture
@@ -38,12 +36,10 @@ class FakeStatsStorageService(StatsStorageBase):
         self.name = name
         self.captures = []
 
-    @defer.inlineCallbacks
     def thd_postStatsValue(self, post_data, series_name, context=None):
         if not context:
             context = {}
         self.stored_data.append((post_data, series_name, context))
-        yield defer.succeed(None)
 
 
 class FakeBuildStep(buildstep.BuildStep):
