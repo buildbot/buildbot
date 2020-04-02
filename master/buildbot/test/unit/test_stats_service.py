@@ -62,16 +62,6 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
         yield self.master.stopService()
 
 
-class DummyStatsStorageBase(StatsStorageBase):
-
-    """
-    A dummy class to test initialization of StatsStorageBase.
-    """
-
-    def thd_postStatsValue(self, *args, **kwargs):
-        pass
-
-
 class TestStatsServicesConfiguration(TestStatsServicesBase):
 
     def test_reconfig_with_no_storage_backends(self):
@@ -182,13 +172,6 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         svc._inited = False
         svc.thd_postStatsValue("test", "test", "test")
         self.assertLogged("Service.*not initialized")
-
-    def test_storage_backend_base_failure_on_init(self):
-        svc = DummyStatsStorageBase()
-
-        r = svc.thd_postStatsValue("test", "test", "test")
-        assert isinstance(r, defer.Deferred)
-        assert r.result is None
 
 
 class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
