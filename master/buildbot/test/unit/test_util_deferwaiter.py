@@ -33,12 +33,16 @@ class WaiterTests(unittest.TestCase):
     def test_add_deferred_called(self):
         w = DeferWaiter()
         w.add(defer.succeed(None))
+        self.assertFalse(w.has_waited())
+
         d = w.wait()
         self.assertTrue(d.called)
 
     def test_add_non_deferred(self):
         w = DeferWaiter()
         w.add(2)
+        self.assertFalse(w.has_waited())
+
         d = w.wait()
         self.assertTrue(d.called)
 
@@ -47,11 +51,13 @@ class WaiterTests(unittest.TestCase):
 
         d1 = defer.Deferred()
         w.add(d1)
+        self.assertTrue(w.has_waited())
 
         d = w.wait()
         self.assertFalse(d.called)
 
         d1.callback(None)
+        self.assertFalse(w.has_waited())
         self.assertTrue(d.called)
 
     @defer.inlineCallbacks
@@ -74,8 +80,11 @@ class WaiterTests(unittest.TestCase):
 
         d1 = defer.Deferred()
         w.add(d1)
+        self.assertTrue(w.has_waited())
 
         w.cancel()
+        self.assertFalse(w.has_waited())
+
         d = w.wait()
         self.assertTrue(d.called)
         with self.assertRaises(defer.CancelledError):
