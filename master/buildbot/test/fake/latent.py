@@ -182,10 +182,9 @@ class ControllableLatentWorker(AbstractLatentWorker):
             **kwargs)
 
     def reconfigService(self, name, _, **kwargs):
-        AbstractLatentWorker.reconfigService(
-            self, name, None,
-            build_wait_timeout=self._controller.build_wait_timeout,
-            **kwargs)
+        return super().reconfigService(name, None,
+                                       build_wait_timeout=self._controller.build_wait_timeout,
+                                       **kwargs)
 
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build_props):

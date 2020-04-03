@@ -40,7 +40,7 @@ class LocalWorker(Worker):
     @defer.inlineCallbacks
     def reconfigService(self, name, workdir=None, **kwargs):
         kwargs['password'] = None
-        super().reconfigService(name, **kwargs)
+        yield super().reconfigService(name, **kwargs)
         if workdir is None:
             workdir = name
         workdir = os.path.abspath(

@@ -42,8 +42,9 @@ class GenericLatentMachine(AbstractLatentMachine):
                       "interface".format(arg_name, self.name)
                 raise Exception(msg)
 
+    @defer.inlineCallbacks
     def reconfigService(self, name, start_action, stop_action, **kwargs):
-        super().reconfigService(name, **kwargs)
+        yield super().reconfigService(name, **kwargs)
         self.start_action = start_action
         self.stop_action = stop_action
 
