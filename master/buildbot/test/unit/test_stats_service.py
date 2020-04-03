@@ -17,12 +17,12 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import threads
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.errors import CaptureCallbackError
 from buildbot.statistics import capture
+from buildbot.statistics import stats_service
 from buildbot.statistics import storage_backends
 from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
@@ -39,6 +39,7 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [1, 2]
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
@@ -48,57 +49,51 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
             self.master.db.builders.addTestBuilder(
                 builderid=builderid, name=name)
 
-        self.stats_service = fakestats.FakeStatsService(master=self.master,
-                                                        storage_backends=[
+        self.stats_service = stats_service.StatsService(storage_backends=[
                                                             fakestats.FakeStatsStorageService()
                                                         ],
                                                         name="FakeStatsService")
+        yield self.stats_service.setServiceParent(self.master)
+        yield self.master.startService()
 
-        self.stats_service.startService()
-
+    @defer.inlineCallbacks
     def tearDown(self):
-        self.stats_service.stopService()
-
-
-class DummyStatsStorageBase(StatsStorageBase):
-
-    """
-    A dummy class to test initialization of StatsStorageBase.
-    """
-
-    def thd_postStatsValue(self, *args, **kwargs):
-        return defer.succeed(None)
+        yield self.master.stopService()
 
 
 class TestStatsServicesConfiguration(TestStatsServicesBase):
 
+    @defer.inlineCallbacks
     def test_reconfig_with_no_storage_backends(self):
         new_storage_backends = []
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
         self.checkEqual(new_storage_backends)
 
+    @defer.inlineCallbacks
     def test_reconfig_with_fake_storage_backend(self):
         new_storage_backends = [
             fakestats.FakeStatsStorageService(name='One'),
             fakestats.FakeStatsStorageService(name='Two')
         ]
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
         self.checkEqual(new_storage_backends)
 
+    @defer.inlineCallbacks
     def test_reconfig_with_consumers(self):
         backend = fakestats.FakeStatsStorageService(name='One')
         backend.captures = [capture.CaptureProperty('test_builder', 'test')]
         new_storage_backends = [backend]
 
-        self.stats_service.reconfigService(new_storage_backends)
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
         self.assertEqual(len(self.master.mq.qrefs), 1)
 
+    @defer.inlineCallbacks
     def test_bad_configuration(self):
         # Reconfigure with a bad configuration.
         new_storage_backends = [mock.Mock()]
         with self.assertRaises(TypeError):
-            self.stats_service.reconfigService(new_storage_backends)
+            yield self.stats_service.reconfigService(new_storage_backends)
 
     def checkEqual(self, new_storage_backends):
         # Check whether the new_storage_backends was set in reconfigService
@@ -116,6 +111,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
     # just disable this unit test if the influxdb module is not installed,
     # using SkipTest
 
+    @defer.inlineCallbacks
     def test_influxdb_not_installed(self):
         captures = [capture.CaptureProperty('test_builder', 'test')]
         try:
@@ -135,8 +131,9 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
                 InfluxStorageService("fake_url", "fake_port", "fake_user", "fake_password",
                                      "fake_db", captures)
             ]
-            self.stats_service.reconfigService(new_storage_backends)
+            yield self.stats_service.reconfigService(new_storage_backends)
 
+    @defer.inlineCallbacks
     def test_influx_storage_service_fake_install(self):
         # use a fake InfluxDBClient to test InfluxStorageService in systems which
         # don't have influxdb installed. Primarily useful for test coverage.
@@ -146,7 +143,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         new_storage_backends = [InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
         )]
-        self.stats_service.reconfigService(new_storage_backends)
+        yield self.stats_service.reconfigService(new_storage_backends)
 
     def test_influx_storage_service_post_value(self):
         # test the thd_postStatsValue method of InfluxStorageService
@@ -181,13 +178,6 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         svc.thd_postStatsValue("test", "test", "test")
         self.assertLogged("Service.*not initialized")
 
-    def test_storage_backend_base_failure_on_init(self):
-        svc = DummyStatsStorageBase()
-
-        r = svc.thd_postStatsValue("test", "test", "test")
-        assert isinstance(r, defer.Deferred)
-        assert r.result is None
-
 
 class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
 
@@ -195,12 +185,12 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
     Test the stats service from a fake step
     """
 
+    @defer.inlineCallbacks
     def setUp(self):
-        super().setUp()
+        yield super().setUp()
         self.routingKey = (
             "builders", self.BUILDER_IDS[0], "builds", 1, "finished")
         self.master.mq.verifyMessages = False
-        self.patch(threads, 'deferToThread', self.identity)
 
     def setupBuild(self):
         self.master.db.insertTestData([
@@ -209,10 +199,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
                          buildrequestid=1, number=1),
         ])
 
+    @defer.inlineCallbacks
     def setupFakeStorage(self, captures):
         self.fake_storage_service = fakestats.FakeStatsStorageService()
         self.fake_storage_service.captures = captures
-        self.stats_service.reconfigService([self.fake_storage_service])
+        yield self.stats_service.reconfigService([self.fake_storage_service])
 
     def get_dict(self, build):
         return dict(
@@ -234,10 +225,6 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
         self.master.mq.callConsumer(self.routingKey, self.get_dict(build))
-
-    @staticmethod
-    def identity(f, *args, **kwargs):
-        return f(*args, **kwargs)
 
     @defer.inlineCallbacks
     def test_property_capturing(self):

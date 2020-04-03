@@ -37,6 +37,7 @@ class StatsService(service.BuildbotService):
                                 "Should be of type StatsStorageBase, "
                                 "is: {0!r}".format(type(StatsStorageBase)))
 
+    @defer.inlineCallbacks
     def reconfigService(self, storage_backends):
         log.msg(
             "Reconfiguring StatsService with config: {0!r}".format(storage_backends))
@@ -47,8 +48,8 @@ class StatsService(service.BuildbotService):
         for svc in storage_backends:
             self.registeredStorageServices.append(svc)
 
-        self.removeConsumers()
-        self.registerConsumers()
+        yield self.removeConsumers()
+        yield self.registerConsumers()
 
     @defer.inlineCallbacks
     def registerConsumers(self):
@@ -64,7 +65,7 @@ class StatsService(service.BuildbotService):
     @defer.inlineCallbacks
     def stopService(self):
         yield super().stopService()
-        self.removeConsumers()
+        yield self.removeConsumers()
 
     @defer.inlineCallbacks
     def removeConsumers(self):
