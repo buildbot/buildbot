@@ -16,7 +16,6 @@
 import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.python import log
 from twisted.python.reflect import namedModule
 
@@ -104,7 +103,21 @@ class BuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setUpBuildStep(self):
+    def setUpBuildStep(self, wantData=True, wantDb=False, wantMq=False):
+        """
+        @param wantData(bool): Set to True to add data API connector to master.
+            Default value: True.
+
+        @param wantDb(bool): Set to True to add database connector to master.
+            Default value: False.
+
+        @param wantMq(bool): Set to True to add mq connector to master.
+            Default value: False.
+        """
+
+        if not hasattr(self, 'reactor'):
+            raise Exception('Reactor has not yet been setup for step')
+
         # make an (admittedly global) reference to this test case so that
         # the fakes can call back to us
         remotecommand.FakeRemoteCommand.testcase = self
@@ -114,6 +127,8 @@ class BuildStepMixin:
             self.patch(module, 'RemoteShellCommand',
                        remotecommand.FakeRemoteShellCommand)
         self.expected_remote_commands = []
+
+        self.master = fakemaster.make_master(self, wantData=wantData, wantDb=wantDb, wantMq=wantMq)
 
     def tearDownBuildStep(self):
         # delete the reference added in setUp
@@ -129,8 +144,7 @@ class BuildStepMixin:
         return getWorkerCommandVersion
 
     def setupStep(self, step, worker_version=None, worker_env=None,
-                  buildFiles=None, wantDefaultWorkdir=True, wantData=True,
-                  wantDb=False, wantMq=False):
+                  buildFiles=None, wantDefaultWorkdir=True):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the factory
@@ -145,15 +159,6 @@ class BuildStepMixin:
             commands.
 
         @param worker_env: environment from the worker at worker startup
-
-        @param wantData(bool): Set to True to add data API connector to master.
-            Default value: True.
-
-        @param wantDb(bool): Set to True to add database connector to master.
-            Default value: False.
-
-        @param wantMq(bool): Set to True to add mq connector to master.
-            Default value: False.
         """
         if worker_version is None:
             worker_version = {
@@ -169,12 +174,6 @@ class BuildStepMixin:
         factory = interfaces.IBuildStepFactory(step)
 
         step = self.step = factory.buildStep()
-        self.master = fakemaster.make_master(self, wantData=wantData,
-                                             wantDb=wantDb, wantMq=wantMq)
-
-        # mock out the reactor for updateSummary's debouncing
-        self.debounceClock = task.Clock()
-        self.master.reactor = self.debounceClock
 
         # set defaults
         if wantDefaultWorkdir:
@@ -319,7 +318,7 @@ class BuildStepMixin:
         result = yield self.step.startStep(self.conn)
 
         # finish up the debounced updateSummary before checking
-        self.debounceClock.advance(1)
+        self.reactor.advance(1)
         if self.expected_remote_commands:
             log.msg("un-executed remote commands:")
             for rc in self.expected_remote_commands:

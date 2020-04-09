@@ -880,6 +880,7 @@ class TestFakeItfc(unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setUpBuildStep()
         self.setupStep(buildstep.BuildStep())
 
 

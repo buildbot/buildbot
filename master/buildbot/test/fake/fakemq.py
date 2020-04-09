@@ -18,6 +18,7 @@ from twisted.internet import defer
 
 from buildbot.mq import base
 from buildbot.test.util import validation
+from buildbot.util import deferwaiter
 from buildbot.util import service
 from buildbot.util import tuplematch
 
@@ -37,6 +38,12 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.setup_called = False
         self.productions = []
         self.qrefs = []
+        self._deferwaiter = deferwaiter.DeferWaiter()
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield self._deferwaiter.wait()
+        yield super().stopService()
 
     def setup(self):
         self.setup_called = True
@@ -63,7 +70,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         for q in self.qrefs:
             if tuplematch.matchTuple(routingKey, q.filter):
                 matched = True
-                q.callback(routingKey, msg)
+                self._deferwaiter.add(q.callback(routingKey, msg))
         if not matched:
             raise AssertionError("no consumer found")
 
