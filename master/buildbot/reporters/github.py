@@ -152,7 +152,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             issue = None
             branch = props.getProperty('branch')
             if branch:
-                m = re.search(r"refs/pull/([0-9]*)/merge", branch)
+                m = re.search(r"refs/pull/([0-9]*)/(head|merge)", branch)
                 if m:
                     issue = m.group(1)
 

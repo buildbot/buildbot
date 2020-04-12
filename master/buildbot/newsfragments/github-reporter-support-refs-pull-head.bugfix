@@ -1,0 +1,1 @@
+Bugfix: Support `refs/pull/###/head` ref for fetching the issue ID in the GitHub reporter instead of always expecting `refs/pull/###/merge`.
