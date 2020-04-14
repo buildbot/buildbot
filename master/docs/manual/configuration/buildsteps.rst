@@ -2658,7 +2658,7 @@ It is usually called with the ``value`` argument being specified as a :ref:`Inte
 :class:`SetProperties` step
 +++++++++++++++++++++++++++
 
-.. py:class:: buildbot.steps.master.SetProperty
+.. py:class:: buildbot.steps.master.SetProperties
 
 :bb:step:`SetProperties` takes a dictionary to be turned into build properties.
 
