@@ -55,16 +55,26 @@ class ChangeSource(service.ClusteredBuildbotService):
 class ReconfigurablePollingChangeSource(ChangeSource):
     pollInterval = None
     pollAtLaunch = None
+    pollRandomDelay = None
 
-    def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
+    def checkConfig(
+        self, name=None, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
+    ):
         super().checkConfig(name=name)
         if pollInterval < 0:
             config.error("interval must be >= 0: {}".format(pollInterval))
+        if pollRandomDelay < 0:
+            config.error("random delay must be >= 0: {}".format(pollRandomDelay))
+        if pollRandomDelay >= pollInterval:
+            config.error("random delay must be < {}: {}".format(pollInterval, pollRandomDelay))
 
     @defer.inlineCallbacks
-    def reconfigService(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
+    def reconfigService(
+        self, name=None, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
+    ):
         self.pollInterval, prevPollInterval = pollInterval, self.pollInterval
         self.pollAtLaunch = pollAtLaunch
+        self.pollRandomDelay = pollRandomDelay
         yield super().reconfigService(name=name)
 
         # pollInterval change is the only value which makes sense to reconfigure check.
@@ -72,7 +82,11 @@ class ReconfigurablePollingChangeSource(ChangeSource):
             yield self.doPoll.stop()
             # As a implementation detail, poller will 'pollAtReconfigure' if poll interval changes
             # and pollAtLaunch=True
-            yield self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch)
+            yield self.doPoll.start(
+                interval=self.pollInterval,
+                now=self.pollAtLaunch,
+                random_delay=self.pollRandomDelay,
+            )
 
     def poll(self):
         pass
@@ -87,7 +101,11 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         self.doPoll()
 
     def activate(self):
-        self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch)
+        self.doPoll.start(
+            interval=self.pollInterval,
+            now=self.pollAtLaunch,
+            random_delay=self.pollRandomDelay,
+        )
 
     def deactivate(self):
         return self.doPoll.stop()
@@ -98,10 +116,20 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
     # because the unit tests keep doing shortcuts for the Service life cycle (i.e by no calling
     # startService) instead of porting everything at once, we make a class to support legacy
 
-    def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False, **kwargs):
-        super().checkConfig(name=name, pollInterval=60 * 10, pollAtLaunch=False)
+    def checkConfig(
+        self,
+        name=None,
+        pollInterval=60 * 10,
+        pollAtLaunch=False,
+        pollRandomDelay=0,
+        **kwargs,
+    ):
+        super().checkConfig(
+            name=name, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
+        )
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
+        self.pollRandomDelay = pollRandomDelay
 
     def reconfigService(self, *args, **kwargs):
         # BuildbotServiceManager will detect such exception and swap old service with new service,

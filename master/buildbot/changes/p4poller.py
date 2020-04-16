@@ -96,9 +96,17 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
-    compare_attrs = ("p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollInterval", "pollAtLaunch",
-                     "server_tz")
+    compare_attrs = (
+        "p4port",
+        "p4user",
+        "p4passwd",
+        "p4base",
+        "p4bin",
+        "pollInterval",
+        "pollAtLaunch",
+        "server_tz",
+        "pollRandomDelay",
+    )
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
                 "P4CHARSET", "P4CONFIG", "P4TICKETS", "PATH", "HOME"]
@@ -114,14 +122,28 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     last_change = None
     loop = None
 
-    def __init__(self, p4port=None, p4user=None, p4passwd=None,
-                 p4base='//', p4bin='p4',
-                 split_file=lambda branchfile: (None, branchfile),
-                 pollInterval=60 * 10, histmax=None, pollinterval=-2,
-                 encoding='utf8', project=None, name=None,
-                 use_tickets=False, ticket_login_interval=60 * 60 * 24,
-                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (''),
-                 resolvewho=lambda who: (who)):
+    def __init__(
+        self,
+        p4port=None,
+        p4user=None,
+        p4passwd=None,
+        p4base="//",
+        p4bin="p4",
+        split_file=lambda branchfile: (None, branchfile),
+        pollInterval=60 * 10,
+        histmax=None,
+        pollinterval=-2,
+        encoding="utf8",
+        project=None,
+        name=None,
+        use_tickets=False,
+        ticket_login_interval=60 * 60 * 24,
+        server_tz=None,
+        pollAtLaunch=False,
+        revlink=lambda branch, revision: (""),
+        resolvewho=lambda who: (who),
+        pollRandomDelay=0,
+    ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -130,9 +152,12 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = "P4Source:{}:{}".format(p4port, p4base)
 
-        super().__init__(name=name,
-                         pollInterval=pollInterval,
-                         pollAtLaunch=pollAtLaunch)
+        super().__init__(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            pollRandomDelay=pollRandomDelay,
+        )
 
         if project is None:
             project = ''

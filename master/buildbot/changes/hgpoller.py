@@ -32,19 +32,42 @@ class HgPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ("repourl", "branch", "branches", "bookmarks", "workdir",
-                     "pollInterval", "hgpoller", "usetimestamps",
-                     "category", "project", "pollAtLaunch")
+    compare_attrs = (
+        "repourl",
+        "branch",
+        "branches",
+        "bookmarks",
+        "workdir",
+        "pollInterval",
+        "hgpoller",
+        "usetimestamps",
+        "category",
+        "project",
+        "pollAtLaunch",
+        "pollRandomDelay",
+    )
 
     db_class_name = 'HgPoller'
 
-    def __init__(self, repourl, branch=None, branches=None, bookmarks=None,
-                 workdir=None, pollInterval=10 * 60,
-                 hgbin='hg', usetimestamps=True,
-                 category=None, project='', pollinterval=-2,
-                 encoding='utf-8', name=None, pollAtLaunch=False,
-                 revlink=lambda branch, revision: ('')
-                 ):
+    def __init__(
+        self,
+        repourl,
+        branch=None,
+        branches=None,
+        bookmarks=None,
+        workdir=None,
+        pollInterval=10 * 60,
+        hgbin="hg",
+        usetimestamps=True,
+        category=None,
+        project="",
+        pollinterval=-2,
+        encoding="utf-8",
+        name=None,
+        pollAtLaunch=False,
+        revlink=lambda branch, revision: (""),
+        pollRandomDelay=0,
+    ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -75,7 +98,12 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             config.error(
                 "You need to provide a valid callable for revlink")
 
-        super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+        super().__init__(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            pollRandomDelay=pollRandomDelay,
+        )
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()

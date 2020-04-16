@@ -73,21 +73,44 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = ("repourl", "split_file",
-                     "svnuser", "svnpasswd", "project",
-                     "pollInterval", "histmax",
-                     "svnbin", "category", "cachepath", "pollAtLaunch")
+    compare_attrs = (
+        "repourl",
+        "split_file",
+        "svnuser",
+        "svnpasswd",
+        "project",
+        "pollInterval",
+        "histmax",
+        "svnbin",
+        "category",
+        "cachepath",
+        "pollAtLaunch",
+        "pollRandomDelay",
+    )
     secrets = ("svnuser", "svnpasswd")
     parent = None  # filled in when we're added
     last_change = None
     loop = None
 
-    def __init__(self, repourl, split_file=None,
-                 svnuser=None, svnpasswd=None,
-                 pollInterval=10 * 60, histmax=100,
-                 svnbin='svn', revlinktmpl='', category=None,
-                 project='', cachepath=None, pollinterval=-2,
-                 extra_args=None, name=None, pollAtLaunch=False):
+    def __init__(
+        self,
+        repourl,
+        split_file=None,
+        svnuser=None,
+        svnpasswd=None,
+        pollInterval=10 * 60,
+        histmax=100,
+        svnbin="svn",
+        revlinktmpl="",
+        category=None,
+        project="",
+        cachepath=None,
+        pollinterval=-2,
+        extra_args=None,
+        name=None,
+        pollAtLaunch=False,
+        pollRandomDelay=0,
+    ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -96,10 +119,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = repourl
 
-        super().__init__(name=name,
-                         pollInterval=pollInterval,
-                         pollAtLaunch=pollAtLaunch,
-                         svnuser=svnuser, svnpasswd=svnpasswd)
+        super().__init__(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            svnuser=svnuser,
+            svnpasswd=svnpasswd,
+            pollRandomDelay=pollRandomDelay,
+        )
 
         if repourl.endswith("/"):
             repourl = repourl[:-1]  # strip the trailing slash

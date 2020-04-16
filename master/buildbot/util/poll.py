@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from random import randint
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
@@ -37,8 +39,10 @@ class Poller:
         self._reactor = reactor
 
     @defer.inlineCallbacks
-    def _run(self):
+    def _run(self, random_delay=0):
         self.running = True
+        if random_delay:
+            yield task.deferLater(self._reactor, randint(0, random_delay), lambda: None)
         try:
             yield defer.maybeDeferred(self.fn, self.instance)
         except Exception as e:
@@ -48,7 +52,7 @@ class Poller:
         # loop if there's another pending call
         if self.pending:
             self.pending = False
-            yield self._run()
+            yield self._run(random_delay)
 
     def __call__(self):
         if self.started:
@@ -61,10 +65,10 @@ class Poller:
                 self.loop.reset()
                 self.loop.interval = old_interval
 
-    def start(self, interval, now=False):
+    def start(self, interval, now=False, random_delay=0):
         assert not self.started
         if not self.loop:
-            self.loop = task.LoopingCall(self._run)
+            self.loop = task.LoopingCall(self._run, random_delay)
             self.loop.clock = self._reactor
         stopDeferred = self.loop.start(interval, now=now)
 
@@ -86,7 +90,6 @@ class Poller:
 
 
 class _Descriptor:
-
     def __init__(self, fn, attrName):
         self.fn = fn
         self.attrName = attrName
