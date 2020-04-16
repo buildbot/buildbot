@@ -122,7 +122,7 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
         pollInterval=60 * 10,
         pollAtLaunch=False,
         pollRandomDelay=0,
-        **kwargs,
+        **kwargs
     ):
         super().checkConfig(
             name=name, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
