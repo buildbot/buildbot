@@ -1,0 +1,1 @@
+Added argument `pollRandomDelay` to `HgPoller`, `GitPoller`, `P4Poller`, `SvnPoller` to spread the polling load
