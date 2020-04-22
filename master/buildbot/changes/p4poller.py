@@ -105,7 +105,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         "pollInterval",
         "pollAtLaunch",
         "server_tz",
-        "pollRandomDelay",
+        "pollRandomDelayMin",
+        "pollRandomDelayMax",
     )
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
@@ -142,7 +143,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         pollAtLaunch=False,
         revlink=lambda branch, revision: (""),
         resolvewho=lambda who: (who),
-        pollRandomDelay=0,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
     ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
@@ -156,7 +158,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
-            pollRandomDelay=pollRandomDelay,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
         )
 
         if project is None:

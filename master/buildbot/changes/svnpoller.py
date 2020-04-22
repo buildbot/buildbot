@@ -85,7 +85,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         "category",
         "cachepath",
         "pollAtLaunch",
-        "pollRandomDelay",
+        "pollRandomDelayMin",
+        "pollRandomDelayMax",
     )
     secrets = ("svnuser", "svnpasswd")
     parent = None  # filled in when we're added
@@ -109,7 +110,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         extra_args=None,
         name=None,
         pollAtLaunch=False,
-        pollRandomDelay=0,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
     ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
@@ -125,7 +127,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             pollAtLaunch=pollAtLaunch,
             svnuser=svnuser,
             svnpasswd=svnpasswd,
-            pollRandomDelay=pollRandomDelay,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
         )
 
         if repourl.endswith("/"):

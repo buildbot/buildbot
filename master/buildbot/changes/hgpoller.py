@@ -44,7 +44,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         "category",
         "project",
         "pollAtLaunch",
-        "pollRandomDelay",
+        "pollRandomDelayMin",
+        "pollRandomDelayMax",
     )
 
     db_class_name = 'HgPoller'
@@ -66,7 +67,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         name=None,
         pollAtLaunch=False,
         revlink=lambda branch, revision: (""),
-        pollRandomDelay=0,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
     ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
@@ -102,7 +104,8 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
-            pollRandomDelay=pollRandomDelay,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
         )
         self.encoding = encoding
         self.lastChange = time.time()

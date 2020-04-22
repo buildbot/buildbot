@@ -39,10 +39,14 @@ class Poller:
         self._reactor = reactor
 
     @defer.inlineCallbacks
-    def _run(self, random_delay=0):
+    def _run(self, random_delay_min=0, random_delay_max=0):
         self.running = True
-        if random_delay:
-            yield task.deferLater(self._reactor, randint(0, random_delay), lambda: None)
+        if random_delay_max:
+            yield task.deferLater(
+                self._reactor,
+                randint(random_delay_min, random_delay_max),
+                lambda: None
+            )
         try:
             yield defer.maybeDeferred(self.fn, self.instance)
         except Exception as e:
@@ -52,7 +56,7 @@ class Poller:
         # loop if there's another pending call
         if self.pending:
             self.pending = False
-            yield self._run(random_delay)
+            yield self._run(random_delay_min, random_delay_max)
 
     def __call__(self):
         if self.started:
@@ -65,10 +69,10 @@ class Poller:
                 self.loop.reset()
                 self.loop.interval = old_interval
 
-    def start(self, interval, now=False, random_delay=0):
+    def start(self, interval, now=False, random_delay_min=0, random_delay_max=0):
         assert not self.started
         if not self.loop:
-            self.loop = task.LoopingCall(self._run, random_delay)
+            self.loop = task.LoopingCall(self._run, random_delay_min, random_delay_max)
             self.loop.clock = self._reactor
         stopDeferred = self.loop.start(interval, now=now)
 

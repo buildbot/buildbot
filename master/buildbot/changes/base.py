@@ -55,26 +55,46 @@ class ChangeSource(service.ClusteredBuildbotService):
 class ReconfigurablePollingChangeSource(ChangeSource):
     pollInterval = None
     pollAtLaunch = None
-    pollRandomDelay = None
+    pollRandomDelayMin = None
+    pollRandomDelayMax = None
 
     def checkConfig(
-        self, name=None, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
+        self,
+        name=None,
+        pollInterval=60 * 10,
+        pollAtLaunch=False,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0
     ):
         super().checkConfig(name=name)
         if pollInterval < 0:
             config.error("interval must be >= 0: {}".format(pollInterval))
-        if pollRandomDelay < 0:
-            config.error("random delay must be >= 0: {}".format(pollRandomDelay))
-        if pollRandomDelay >= pollInterval:
-            config.error("random delay must be < {}: {}".format(pollInterval, pollRandomDelay))
+        if pollRandomDelayMin < 0:
+            config.error("min random delay must be >= 0: {}".format(pollRandomDelayMin))
+        if pollRandomDelayMax < 0:
+            config.error("max random delay must be >= 0: {}".format(pollRandomDelayMax))
+        if pollRandomDelayMin > pollRandomDelayMax:
+            config.error(
+                "min random delay must be <= {}: {}".format(pollRandomDelayMax, pollRandomDelayMin)
+            )
+        if pollRandomDelayMax >= pollInterval:
+            config.error(
+                "max random delay must be < {}: {}".format(pollInterval, pollRandomDelayMax)
+            )
 
     @defer.inlineCallbacks
     def reconfigService(
-        self, name=None, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
+        self,
+        name=None,
+        pollInterval=60 * 10,
+        pollAtLaunch=False,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0
     ):
         self.pollInterval, prevPollInterval = pollInterval, self.pollInterval
         self.pollAtLaunch = pollAtLaunch
-        self.pollRandomDelay = pollRandomDelay
+        self.pollRandomDelayMin = pollRandomDelayMin
+        self.pollRandomDelayMax = pollRandomDelayMax
         yield super().reconfigService(name=name)
 
         # pollInterval change is the only value which makes sense to reconfigure check.
@@ -85,7 +105,8 @@ class ReconfigurablePollingChangeSource(ChangeSource):
             yield self.doPoll.start(
                 interval=self.pollInterval,
                 now=self.pollAtLaunch,
-                random_delay=self.pollRandomDelay,
+                random_delay_min=self.pollRandomDelayMin,
+                random_delay_max=self.pollRandomDelayMax,
             )
 
     def poll(self):
@@ -104,7 +125,8 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         self.doPoll.start(
             interval=self.pollInterval,
             now=self.pollAtLaunch,
-            random_delay=self.pollRandomDelay,
+            random_delay_min=self.pollRandomDelayMin,
+            random_delay_max=self.pollRandomDelayMax,
         )
 
     def deactivate(self):
@@ -121,15 +143,21 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
         name=None,
         pollInterval=60 * 10,
         pollAtLaunch=False,
-        pollRandomDelay=0,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
         **kwargs
     ):
         super().checkConfig(
-            name=name, pollInterval=60 * 10, pollAtLaunch=False, pollRandomDelay=0
+            name=name,
+            pollInterval=60 * 10,
+            pollAtLaunch=False,
+            pollRandomDelayMin=0,
+            pollRandomDelayMax=0
         )
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
-        self.pollRandomDelay = pollRandomDelay
+        self.pollRandomDelayMin = pollRandomDelayMin
+        self.pollRandomDelayMax = pollRandomDelayMax
 
     def reconfigService(self, *args, **kwargs):
         # BuildbotServiceManager will detect such exception and swap old service with new service,

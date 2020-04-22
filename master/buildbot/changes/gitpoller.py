@@ -56,7 +56,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         "sshPrivateKey",
         "sshHostKey",
         "sshKnownHosts",
-        "pollRandomDelay",
+        "pollRandomDelayMin",
+        "pollRandomDelayMax",
     )
 
     secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
@@ -82,7 +83,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         sshPrivateKey=None,
         sshHostKey=None,
         sshKnownHosts=None,
-        pollRandomDelay=0,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
     ):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
@@ -96,7 +98,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
-            pollRandomDelay=pollRandomDelay,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
             sshPrivateKey=sshPrivateKey,
             sshHostKey=sshHostKey,
             sshKnownHosts=sshKnownHosts,

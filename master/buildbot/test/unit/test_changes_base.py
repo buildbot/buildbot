@@ -214,16 +214,43 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
             self.assertEqual("interval must be >= 0: -1", e.errors[0])
 
     @defer.inlineCallbacks
-    def test_config_negative_random_delay(self):
+    def test_config_negative_random_delay_min(self):
         try:
             yield self.changesource.reconfigServiceWithSibling(self.Subclass(
                 name="NegativePollInterval",
                 pollInterval=1,
                 pollAtLaunch=False,
-                pollRandomDelay=-1
+                pollRandomDelayMin=-1,
+                pollRandomDelayMax=1
             ))
         except ConfigErrors as e:
-            self.assertEqual("random delay must be >= 0: -1", e.errors[0])
+            self.assertEqual("min random delay must be >= 0: -1", e.errors[0])
+
+    @defer.inlineCallbacks
+    def test_config_negative_random_delay_max(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+                name="NegativePollInterval",
+                pollInterval=1,
+                pollAtLaunch=False,
+                pollRandomDelayMin=1,
+                pollRandomDelayMax=-1
+            ))
+        except ConfigErrors as e:
+            self.assertEqual("max random delay must be >= 0: -1", e.errors[0])
+
+    @defer.inlineCallbacks
+    def test_config_random_delay_min_gt_random_delay_max(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+                name="NegativePollInterval",
+                pollInterval=1,
+                pollAtLaunch=False,
+                pollRandomDelayMin=2,
+                pollRandomDelayMax=1
+            ))
+        except ConfigErrors as e:
+            self.assertEqual("min random delay must be <= 1: 2", e.errors[0])
 
     @defer.inlineCallbacks
     def test_config_random_delay_gte_interval(self):
@@ -232,10 +259,10 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
                 name="NegativePollInterval",
                 pollInterval=1,
                 pollAtLaunch=False,
-                pollRandomDelay=1
+                pollRandomDelayMax=1
             ))
         except ConfigErrors as e:
-            self.assertEqual("random delay must be < 1: 1", e.errors[0])
+            self.assertEqual("max random delay must be < 1: 1", e.errors[0])
 
     @defer.inlineCallbacks
     def test_loop_loops(self):
