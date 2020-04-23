@@ -113,6 +113,19 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
         return self.poll.stop()
 
+    def test_run_random_delay(self):
+        """Add a 5s delay before polling"""
+        random_delay_max = 5
+        with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
+            self.poll.start(interval=10, now=True, random_delay_max=random_delay_max)
+            i = 0
+            while i < random_delay_max:
+                self.assertEqual(self.calls, 0)
+                self.reactor.advance(1)
+                i += 1
+            self.assertEqual(self.calls, 1)
+        return self.poll.stop()
+
 
 class TestPollerAsync(TestReactorMixin, unittest.TestCase):
 
@@ -298,3 +311,20 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
                 self.reactor.advance(1)
             self.assertEqual(self.running, running)
             self.assertEqual(self.calls, calls)
+
+    def test_run_random_delay(self):
+        """Add a 1s delay before polling"""
+        random_delay_max = 5
+        with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
+            self.poll.start(interval=10, now=True, random_delay_max=random_delay_max)
+            i = 0
+            while i < random_delay_max:
+                self.assertEqual(self.calls, 0)
+                self.assertFalse(self.running)
+                self.reactor.advance(1)
+                i += 1
+            self.assertEqual(self.calls, 0)
+            self.assertTrue(self.running)
+            self.reactor.advance(self.duration)
+            self.assertEqual(self.calls, 1)
+            self.assertFalse(self.running)
