@@ -42,11 +42,8 @@ class Poller:
     def _run(self, random_delay_min=0, random_delay_max=0):
         self.running = True
         if random_delay_max:
-            yield task.deferLater(
-                self._reactor,
-                randint(random_delay_min, random_delay_max),
-                lambda: None
-            )
+            yield task.deferLater(self._reactor, randint(random_delay_min, random_delay_max),
+                                  lambda: None)
         try:
             yield defer.maybeDeferred(self.fn, self.instance)
         except Exception as e:

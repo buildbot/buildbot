@@ -58,14 +58,8 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     pollRandomDelayMin = None
     pollRandomDelayMax = None
 
-    def checkConfig(
-        self,
-        name=None,
-        pollInterval=60 * 10,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0
-    ):
+    def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False,
+                    pollRandomDelayMin=0, pollRandomDelayMax=0):
         super().checkConfig(name=name)
         if pollInterval < 0:
             config.error("interval must be >= 0: {}".format(pollInterval))
@@ -74,23 +68,15 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         if pollRandomDelayMax < 0:
             config.error("max random delay must be >= 0: {}".format(pollRandomDelayMax))
         if pollRandomDelayMin > pollRandomDelayMax:
-            config.error(
-                "min random delay must be <= {}: {}".format(pollRandomDelayMax, pollRandomDelayMin)
-            )
+            config.error("min random delay must be <= {}: {}".format(pollRandomDelayMax,
+                                                                     pollRandomDelayMin))
         if pollRandomDelayMax >= pollInterval:
-            config.error(
-                "max random delay must be < {}: {}".format(pollInterval, pollRandomDelayMax)
-            )
+            config.error("max random delay must be < {}: {}".format(pollInterval,
+                                                                    pollRandomDelayMax))
 
     @defer.inlineCallbacks
-    def reconfigService(
-        self,
-        name=None,
-        pollInterval=60 * 10,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0
-    ):
+    def reconfigService(self, name=None, pollInterval=60 * 10, pollAtLaunch=False,
+                        pollRandomDelayMin=0, pollRandomDelayMax=0):
         self.pollInterval, prevPollInterval = pollInterval, self.pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.pollRandomDelayMin = pollRandomDelayMin
@@ -102,12 +88,9 @@ class ReconfigurablePollingChangeSource(ChangeSource):
             yield self.doPoll.stop()
             # As a implementation detail, poller will 'pollAtReconfigure' if poll interval changes
             # and pollAtLaunch=True
-            yield self.doPoll.start(
-                interval=self.pollInterval,
-                now=self.pollAtLaunch,
-                random_delay_min=self.pollRandomDelayMin,
-                random_delay_max=self.pollRandomDelayMax,
-            )
+            yield self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch,
+                                    random_delay_min=self.pollRandomDelayMin,
+                                    random_delay_max=self.pollRandomDelayMax)
 
     def poll(self):
         pass
@@ -122,12 +105,9 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         self.doPoll()
 
     def activate(self):
-        self.doPoll.start(
-            interval=self.pollInterval,
-            now=self.pollAtLaunch,
-            random_delay_min=self.pollRandomDelayMin,
-            random_delay_max=self.pollRandomDelayMax,
-        )
+        self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch,
+                          random_delay_min=self.pollRandomDelayMin,
+                          random_delay_max=self.pollRandomDelayMax)
 
     def deactivate(self):
         return self.doPoll.stop()
@@ -138,22 +118,10 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
     # because the unit tests keep doing shortcuts for the Service life cycle (i.e by no calling
     # startService) instead of porting everything at once, we make a class to support legacy
 
-    def checkConfig(
-        self,
-        name=None,
-        pollInterval=60 * 10,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-        **kwargs
-    ):
-        super().checkConfig(
-            name=name,
-            pollInterval=60 * 10,
-            pollAtLaunch=False,
-            pollRandomDelayMin=0,
-            pollRandomDelayMax=0
-        )
+    def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False,
+                    pollRandomDelayMin=0, pollRandomDelayMax=0, **kwargs):
+        super().checkConfig(name=name, pollInterval=60 * 10, pollAtLaunch=False,
+                            pollRandomDelayMin=0, pollRandomDelayMax=0)
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.pollRandomDelayMin = pollRandomDelayMin

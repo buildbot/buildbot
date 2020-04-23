@@ -600,7 +600,7 @@ It accepts the following arguments:
     Defaults to 600 (10 minutes).
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0
+    minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -608,7 +608,7 @@ It accepts the following arguments:
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0
+    maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -733,7 +733,7 @@ It can watch a single branch or multiple branches.
     Please be considerate of public SVN repositories by using a large interval when polling them.
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0
+    minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -741,7 +741,7 @@ It can watch a single branch or multiple branches.
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0
+    maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -890,7 +890,7 @@ It accepts the following arguments:
     interval in seconds between polls, default is 10 minutes
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0
+    minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -898,7 +898,7 @@ It accepts the following arguments:
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0
+    maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -1024,7 +1024,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     interval in seconds between polls, default is 10 minutes
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0
+    minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -1032,7 +1032,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0
+    maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.

@@ -42,50 +42,18 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
 
-    compare_attrs = (
-        "repourl",
-        "branches",
-        "workdir",
-        "pollInterval",
-        "gitbin",
-        "usetimestamps",
-        "category",
-        "project",
-        "pollAtLaunch",
-        "buildPushesWithNoCommits",
-        "sshPrivateKey",
-        "sshHostKey",
-        "sshKnownHosts",
-        "pollRandomDelayMin",
-        "pollRandomDelayMax",
-    )
+    compare_attrs = ("repourl", "branches", "workdir", "pollInterval", "gitbin", "usetimestamps",
+                     "category", "project", "pollAtLaunch", "buildPushesWithNoCommits",
+                     "sshPrivateKey", "sshHostKey", "sshKnownHosts", "pollRandomDelayMin",
+                     "pollRandomDelayMax")
 
     secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
 
-    def __init__(
-        self,
-        repourl,
-        branches=None,
-        branch=None,
-        workdir=None,
-        pollInterval=10 * 60,
-        gitbin="git",
-        usetimestamps=True,
-        category=None,
-        project=None,
-        pollinterval=-2,
-        fetch_refspec=None,
-        encoding="utf-8",
-        name=None,
-        pollAtLaunch=False,
-        buildPushesWithNoCommits=False,
-        only_tags=False,
-        sshPrivateKey=None,
-        sshHostKey=None,
-        sshKnownHosts=None,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-    ):
+    def __init__(self, repourl, branches=None, branch=None, workdir=None, pollInterval=10 * 60,
+                 gitbin="git", usetimestamps=True, category=None, project=None, pollinterval=-2,
+                 fetch_refspec=None, encoding="utf-8", name=None, pollAtLaunch=False,
+                 buildPushesWithNoCommits=False, only_tags=False, sshPrivateKey=None,
+                 sshHostKey=None, sshKnownHosts=None, pollRandomDelayMin=0, pollRandomDelayMax=0):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -94,16 +62,10 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if name is None:
             name = repourl
 
-        super().__init__(
-            name=name,
-            pollInterval=pollInterval,
-            pollAtLaunch=pollAtLaunch,
-            pollRandomDelayMin=pollRandomDelayMin,
-            pollRandomDelayMax=pollRandomDelayMax,
-            sshPrivateKey=sshPrivateKey,
-            sshHostKey=sshHostKey,
-            sshKnownHosts=sshKnownHosts,
-        )
+        super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
+                         pollRandomDelayMin=pollRandomDelayMin,
+                         pollRandomDelayMax=pollRandomDelayMax, sshPrivateKey=sshPrivateKey,
+                         sshHostKey=sshHostKey, sshKnownHosts=sshKnownHosts)
 
         if project is None:
             project = ''
