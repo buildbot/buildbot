@@ -636,7 +636,7 @@ pyflakes
 Pyflakes
 pyjade
 pypi
-PyPy
+pypugjs
 pysqlite
 pythonic
 Pythonic

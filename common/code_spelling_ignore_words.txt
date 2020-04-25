@@ -1084,6 +1084,7 @@ pyjade
 pylint
 pylint's
 pyparsing
+pypugjs
 pythonpath
 qa
 qmail

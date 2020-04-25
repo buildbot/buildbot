@@ -108,11 +108,11 @@ This server is configured with the ``www`` configuration key, which specifies a 
     You can use this to slightly customize buildbot look for your project, but to add any logic, you will need to create a full-blown plugin.
     if the directory string is relative, it will be joined to the master's basedir.
     Buildbot uses the jade file format natively (which has been renamed to 'pug' in the nodejs ecosystem), but you can also use html format if you prefer.
-    
+
     Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override templates with the same name in the UI.
     On the regular nodejs UI build system, we use nodejs's pug module to compile jade into html.
-    For custom_templates, we use the pyjade interpreter to parse the jade templates, before sending them to the UI.
-    ``pip install pyjade`` is be required to use jade templates.
+    For custom_templates, we use the pypugjs interpreter to parse the jade templates, before sending them to the UI.
+    ``pip install pypugjs`` is be required to use jade templates.
     You can also override plugin's directives, but they have to be in another directory, corresponding to the plugin's name in its ``package.json``.
     For example:
 
@@ -130,6 +130,8 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
         * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
           This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
+
+        * pypugjs may have some differences.  But is is a maintained fork of pyjade. https://github.com/kakulukia/pypugjs
 
 ``change_hook_dialects``
     See :ref:`Change-Hooks`.
@@ -285,7 +287,7 @@ The default templates are very much configurable via the following options.
 .. code-block:: python
 
     {
-        "left_pad"  : 5,  
+        "left_pad"  : 5,
         "left_text": "Build Status",  # text on the left part of the image
         "left_color": "#555",  # color of the left part of the image
         "right_pad" : 5,
