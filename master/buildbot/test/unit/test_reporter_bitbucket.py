@@ -153,6 +153,73 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
         self.assertLogged('This commit is unknown to us')
         self.assertLogged('invalid_commit')
 
+    @defer.inlineCallbacks
+    def test_custom_owner_and_repo(self):
+        build = yield self.setupBuildResults(SUCCESS)
+
+        self.bsp.owner = 'custom_owner'
+        self.bsp.repo_name = 'custom_repo_name'
+
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
+                              content_json={'access_token': 'foo'})
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/custom_owner/custom_repo_name/commit/d34db33fd43db33f/statuses/build',
+            json={
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'state': 'INPROGRESS',
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=201)
+
+        build['complete'] = False
+        self.bsp.buildStarted(('build', 20, 'started'), build)
+
+    @defer.inlineCallbacks
+    def test_custom_owner_only(self):
+        build = yield self.setupBuildResults(SUCCESS)
+
+        self.bsp.owner = 'custom_owner'
+
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
+                              content_json={'access_token': 'foo'})
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
+            json={
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'state': 'INPROGRESS',
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=201)
+
+        build['complete'] = False
+        self.bsp.buildStarted(('build', 20, 'started'), build)
+
+    @defer.inlineCallbacks
+    def test_custom_repo_only(self):
+        build = yield self.setupBuildResults(SUCCESS)
+
+        self.bsp.repo_name = 'custom_repo_name'
+
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
+                              content_json={'access_token': 'foo'})
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
+            json={
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'state': 'INPROGRESS',
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=201)
+
+        build['complete'] = False
+        self.bsp.buildStarted(('build', 20, 'started'), build)
+
 
 class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
 

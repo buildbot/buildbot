@@ -43,7 +43,13 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
     def reconfigService(self, oauth_key, oauth_secret,
                         base_url=_BASE_URL,
                         oauth_url=_OAUTH_URL,
+                        owner=None,
+                        repo_name=None,
                         **kwargs):
+
+        self.owner = owner
+        self.repo_name = repo_name
+
         oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
         yield super().reconfigService(**kwargs)
 
@@ -86,7 +92,11 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                 'url': build['url']
             }
 
-            owner, repo = self.get_owner_and_repo(sourcestamp['repository'])
+            if self.owner and self.repo_name:
+                owner = self.owner
+                repo = self.repo_name
+            else:
+                owner, repo = self.get_owner_and_repo(sourcestamp['repository'])
 
             self._http.updateHeaders({'Authorization': 'Bearer ' + token})
 
@@ -128,3 +138,4 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
         assert len(parts) == 2, 'OWNER/REPONAME is expected'
 
         return parts
+
