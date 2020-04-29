@@ -13,6 +13,8 @@ class Duration {
 class Durationformat {
     constructor(MOMENT) {
         return function(time) {
+            if (time < 0)
+                return ""
             const d = MOMENT.duration(time * 1000);
             const m = MOMENT.utc(d.asMilliseconds());
             const days = Math.floor(d.asDays());
