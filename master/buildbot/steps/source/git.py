@@ -84,6 +84,7 @@ class Git(Source, GitStepMixin):
         self.reference = reference
         self.retryFetch = retryFetch
         self.submodules = submodules
+        self.remoteSubmodules = remoteSubmodules
         self.shallow = shallow
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
@@ -433,9 +434,10 @@ class Git(Source, GitStepMixin):
         # init and update submodules, recursively. If there's not recursion
         # it will not do it.
         if self.submodules:
-            res = yield self._dovccmd(['submodule', 'update',
-                                       '--init', '--recursive'],
-                                      shallowClone)
+            cmdArgs = ["submodule", "update", "--init", "--recursive"]
+            if self.remoteSubmodules:
+                cmdArgs.append("--remote")
+            res = yield self._dovccmd(cmdArgs, shallowClone)
 
         return res
 
@@ -480,7 +482,10 @@ class Git(Source, GitStepMixin):
             if self.supportsSubmoduleForce:
                 vccmd.extend(['--force'])
             if self.supportsSubmoduleCheckout:
-                vccmd.extend(['--checkout'])
+                vccmd.extend(["--checkout"])
+            if self.remoteSubmodules:
+                vccmd.extend(["--remote"])
+
             rc = yield self._dovccmd(vccmd)
         return rc
 
