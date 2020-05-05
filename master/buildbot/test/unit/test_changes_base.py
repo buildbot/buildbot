@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import base
+from buildbot.config import ConfigErrors
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -203,6 +204,50 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
     @defer.inlineCallbacks
     def runClockFor(self, secs):
         yield self.reactor.pump([1.0] * secs)
+
+    @defer.inlineCallbacks
+    def test_config_negative_interval(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+                name="NegativePollInterval", pollInterval=-1, pollAtLaunch=False))
+        except ConfigErrors as e:
+            self.assertEqual("interval must be >= 0: -1", e.errors[0])
+
+    @defer.inlineCallbacks
+    def test_config_negative_random_delay_min(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(
+                self.Subclass(name="NegativePollRandomDelayMin", pollInterval=1,
+                              pollAtLaunch=False, pollRandomDelayMin=-1, pollRandomDelayMax=1))
+        except ConfigErrors as e:
+            self.assertEqual("min random delay must be >= 0: -1", e.errors[0])
+
+    @defer.inlineCallbacks
+    def test_config_negative_random_delay_max(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(
+                self.Subclass(name="NegativePollRandomDelayMax", pollInterval=1,
+                              pollAtLaunch=False, pollRandomDelayMin=1, pollRandomDelayMax=-1))
+        except ConfigErrors as e:
+            self.assertEqual("max random delay must be >= 0: -1", e.errors[0])
+
+    @defer.inlineCallbacks
+    def test_config_random_delay_min_gt_random_delay_max(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(
+                self.Subclass(name="PollRandomDelayMinGtPollRandomDelayMax", pollInterval=1,
+                              pollAtLaunch=False, pollRandomDelayMin=2, pollRandomDelayMax=1))
+        except ConfigErrors as e:
+            self.assertEqual("min random delay must be <= 1: 2", e.errors[0])
+
+    @defer.inlineCallbacks
+    def test_config_random_delay_max_gte_interval(self):
+        try:
+            yield self.changesource.reconfigServiceWithSibling(
+                self.Subclass(name="PollRandomDelayMaxGtePollInterval", pollInterval=1,
+                              pollAtLaunch=False, pollRandomDelayMax=1))
+        except ConfigErrors as e:
+            self.assertEqual("max random delay must be < 1: 1", e.errors[0])
 
     @defer.inlineCallbacks
     def test_loop_loops(self):
