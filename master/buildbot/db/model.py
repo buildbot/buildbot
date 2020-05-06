@@ -609,6 +609,118 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
     )
 
+    # Tables related to test results
+    # ------------------------------
+
+    # Represents a single test result set. A step can any number of test result sets,
+    # each of which may contain any number of test results.
+    test_result_sets = sautils.Table(
+        'test_result_sets', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # In the future we will want to rearrange the underlying data in the database according
+        # to (builderid, buildid) tuple, so that huge number of entries in the table does not
+        # reduce the efficiency of retrieval of data for a particular build.
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('buildid', sa.Integer,
+                  sa.ForeignKey('builds.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('stepid', sa.Integer,
+                  sa.ForeignKey('steps.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        # The free-form description of the source of the test data that represent the test result
+        # set.
+        sa.Column('description', sa.Text, nullable=True),
+
+        sa.Column('category', sa.Text, nullable=False),
+
+        sa.Column('value_unit', sa.Text, nullable=False),
+
+        # The number of passed tests in cases when the pass or fail criteria depends only on how
+        # that single test runs.
+        sa.Column('tests_passed', sa.Integer, nullable=True),
+
+        # The number of failed tests in cases when the pass or fail criteria depends only on how
+        # that single test runs.
+        sa.Column('tests_failed', sa.Integer, nullable=True),
+
+        # true when all test results associated with test result set have been generated.
+        sa.Column('complete', sa.SmallInteger, nullable=False),
+    )
+
+    # Represents a test result. A single test result set will represent thousands of test results
+    # in any significant codebase that's tested.
+    #
+    # A common table is used for all tests results regardless of what data they carry. Most serious
+    # database engines will be able to optimize nullable fields out, so extra columns are almost
+    # free when not used in such cases.
+    test_results = sautils.Table(
+        'test_results', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # The builder ID of the test result set that the test result belongs to.
+        # This is included for future partitioning support.
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('test_result_setid', sa.Integer,
+                  sa.ForeignKey('test_result_sets.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('test_nameid', sa.Integer,
+                  sa.ForeignKey('test_names.id', ondelete='CASCADE'),
+                  nullable=True),
+
+        sa.Column('test_code_pathid', sa.Integer,
+                  sa.ForeignKey('test_code_paths.id', ondelete='CASCADE'),
+                  nullable=True),
+
+        # The code line that the test originated from
+        sa.Column('line', sa.Integer, nullable=True),
+
+        # The result of the test converted to a string.
+        sa.Column('value', sa.Text, nullable=False),
+    )
+
+    # Represents the test names of test results.
+    test_names = sautils.Table(
+        'test_names', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # The builder ID of the test result set that the test result belongs to.
+        # This is included for future partitioning support and also for querying all test names
+        # for a builder.
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('name', sa.Text, nullable=False),
+    )
+
+    # Represents the file paths of test results.
+    test_code_paths = sautils.Table(
+        'test_code_paths', metadata,
+
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # The builder ID of the test result set that the test result belongs to.
+        # This is included for future partitioning support
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
+
+        sa.Column('path', sa.Text, nullable=False),
+    )
+
     # Tables related to objects
     # -------------------------
 
