@@ -930,6 +930,41 @@ class Model(base.DBConnectorComponent):
         ('changes',
             dict(unique=False, column_names=['parent_changeids'],
                  name='parent_changeids')),
+        ('test_result_sets', {
+            'name': 'builderid',
+            'column_names': ['builderid'],
+            'unique': False,
+        }),
+        ('test_result_sets', {
+            'name': 'buildid',
+            'column_names': ['buildid'],
+            'unique': False,
+        }),
+        ('test_result_sets', {
+            'name': 'stepid',
+            'column_names': ['stepid'],
+            'unique': False,
+        }),
+        ('test_results', {
+            'name': 'test_result_setid',
+            'column_names': ['test_result_setid'],
+            'unique': False,
+        }),
+        ('test_results', {
+            'name': 'test_code_pathid',
+            'column_names': ['test_code_pathid'],
+            'unique': False,
+        }),
+        ('test_results', {
+            'name': 'builderid',
+            'column_names': ['builderid'],
+            'unique': False,
+        }),
+        ('test_results', {
+            'name': 'test_nameid',
+            'column_names': ['test_nameid'],
+            'unique': False,
+        }),
     ]
 
     # Migration support
