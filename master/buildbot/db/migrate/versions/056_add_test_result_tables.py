@@ -127,4 +127,11 @@ def upgrade(migrate_engine):
     test_code_paths.create()
     test_results.create()
 
-    # TODO FIXME indexes
+    # create indexes
+    idx = sa.Index('test_names_name', test_names.c.builderid, test_names.c.name,
+                   mysql_length={'name': 255})
+    idx.create()
+
+    idx = sa.Index('test_code_paths_path', test_code_paths.c.builderid, test_code_paths.c.path,
+                   mysql_length={'path': 255})
+    idx.create()

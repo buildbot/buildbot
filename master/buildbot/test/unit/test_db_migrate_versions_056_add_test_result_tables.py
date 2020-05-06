@@ -99,4 +99,14 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             ])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
+            insp = sa.inspect(conn)
+
+            indexes = insp.get_indexes('test_names')
+            index_names = [item['name'] for item in indexes]
+            self.assertTrue('test_names_name' in index_names)
+
+            indexes = insp.get_indexes('test_code_paths')
+            index_names = [item['name'] for item in indexes]
+            self.assertTrue('test_code_paths_path' in index_names)
+
         return self.do_test_migration(55, 56, setup_thd, verify_thd)

@@ -897,6 +897,10 @@ class Model(base.DBConnectorComponent):
     sa.Index('logs_slug', logs.c.stepid, logs.c.slug, unique=True)
     sa.Index('logchunks_firstline', logchunks.c.logid, logchunks.c.first_line)
     sa.Index('logchunks_lastline', logchunks.c.logid, logchunks.c.last_line)
+    sa.Index('test_names_name', test_names.c.builderid, test_names.c.name,
+             mysql_length={'name': 255})
+    sa.Index('test_code_paths_path', test_code_paths.c.builderid, test_code_paths.c.path,
+             mysql_length={'path': 255})
 
     # MySQL creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
