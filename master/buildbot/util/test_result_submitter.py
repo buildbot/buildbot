@@ -117,7 +117,8 @@ class TestResultSubmitter:
         except Exception as e:
             log.err(e, 'When parsing test result success status')
 
-    def add_test_result(self, value, test_name=None, test_code_path=None, line=None):
+    def add_test_result(self, value, test_name=None, test_code_path=None, line=None,
+                        duration_ns=None):
         if not isinstance(value, str):
             raise TypeError('value must be a string')
         result = {'value': value}
@@ -136,6 +137,11 @@ class TestResultSubmitter:
             if not isinstance(line, int):
                 raise TypeError('line must be an integer')
             result['line'] = line
+
+        if duration_ns is not None:
+            if not isinstance(duration_ns, int):
+                raise TypeError('duration_ns must be an integer')
+            result['duration_ns'] = duration_ns
 
         if self._add_pass_fail_result is not None:
             self._add_pass_fail_result(value)

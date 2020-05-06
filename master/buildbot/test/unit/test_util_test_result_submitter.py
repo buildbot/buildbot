@@ -111,12 +111,29 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             'test_result_setid': setid,
             'test_name': 'name1',
             'test_code_path': None,
+            'duration_ns': None,
             'line': None,
             'value': '1'
         }])
 
     def filter_results_value_name(self, results):
         return [{'test_name': r['test_name'], 'value': r['value']} for r in results]
+
+    @defer.inlineCallbacks
+    def test_submit_result_wrong_argument_types(self):
+        sub = TestResultSubmitter()
+        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
+
+        with self.assertRaises(TypeError):
+            sub.add_test_result(1, 'name1')
+        with self.assertRaises(TypeError):
+            sub.add_test_result('1', test_name=123)
+        with self.assertRaises(TypeError):
+            sub.add_test_result('1', 'name1', test_code_path=123)
+        with self.assertRaises(TypeError):
+            sub.add_test_result('1', 'name1', line='123')
+        with self.assertRaises(TypeError):
+            sub.add_test_result('1', 'name1', duration_ns='123')
 
     @defer.inlineCallbacks
     def test_batchs_last_batch_full(self):

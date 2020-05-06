@@ -30,6 +30,7 @@ class Db2DataMixin:
             'test_name': dbdict['test_name'],
             'test_code_path': dbdict['test_code_path'],
             'line': dbdict['line'],
+            'duration_ns': dbdict['duration_ns'],
             'value': dbdict['value'],
         }
         return defer.succeed(data)
@@ -78,6 +79,7 @@ class TestResult(base.ResourceType):
         test_name = types.NoneOk(types.String())
         test_code_path = types.NoneOk(types.String())
         line = types.NoneOk(types.Integer())
+        duration_ns = types.NoneOk(types.Integer())
         value = types.String()
     entityType = EntityType(name)
 

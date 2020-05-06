@@ -79,6 +79,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 test_results.c.test_nameid,
                 test_results.c.test_code_pathid,
                 test_results.c.line,
+                test_results.c.duration_ns,
                 test_results.c.value,
             ])
             self.assertEqual(conn.execute(q).fetchall(), [])

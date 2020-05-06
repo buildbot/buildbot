@@ -33,6 +33,9 @@ description: |
              - ``line`` (optional): An integer containing the line within the source file
                 corresponding to the test.
 
+             - ``duration_ns`` (optional): An integer defining the duration of the test in
+                nanoseconds.
+
             At least one of ``test_name``, ``test_code_path`` must be specified.
 
             The function returns nothing.
@@ -56,6 +59,9 @@ properties:
     line?:
         description: the number of the line in the code path that produced this result, if any
         type: integer
+    duration_ns?:
+        description: the number of nanoseconds it took to perform the test, if available.
+        type: integer
     value:
         description: the value of the test.
         type: string
@@ -67,5 +73,6 @@ example:
     test_result_setid: 412
     test_name: 'test.perf.buildbot.api.123'
     test_code_path: 'master/buildbot/spec/types/test_result.raml'
+    duration_ns: 120410
     line: 123
     value: '31.1382'

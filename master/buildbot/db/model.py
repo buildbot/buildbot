@@ -686,6 +686,9 @@ class Model(base.DBConnectorComponent):
         # The code line that the test originated from
         sa.Column('line', sa.Integer, nullable=True),
 
+        # The duration of the test execution itself
+        sa.Column('duration_ns', sa.Integer, nullable=True),
+
         # The result of the test converted to a string.
         sa.Column('value', sa.Text, nullable=False),
     )

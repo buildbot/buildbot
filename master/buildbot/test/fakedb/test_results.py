@@ -57,6 +57,7 @@ class TestResult(Row):
         'test_nameid': None,
         'test_code_pathid': None,
         'line': None,
+        'duration_ns': None,
         'value': None
     }
 
@@ -165,6 +166,7 @@ class FakeTestResultsComponent(FakeDBComponent):
                 'test_result_setid': test_result_setid,
                 'test_nameid': None,
                 'test_code_pathid': None,
+                'duration_ns': None,
                 'line': None,
             }
 
@@ -174,6 +176,8 @@ class FakeTestResultsComponent(FakeDBComponent):
                 insert_value['test_code_pathid'] = code_path_to_id[result_value['test_code_path']]
             if 'line' in result_value:
                 insert_value['line'] = result_value['line']
+            if 'duration_ns' in result_value:
+                insert_value['duration_ns'] = result_value['duration_ns']
 
             self.results[Row.nextId()] = insert_value
 

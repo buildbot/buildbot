@@ -194,6 +194,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 'test_nameid': None,
                 'test_code_pathid': None,
                 'line': None,
+                'duration_ns': None,
             }
 
             if 'test_name' in result_value:
@@ -202,6 +203,8 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 insert_value['test_code_pathid'] = code_path_to_id[result_value['test_code_path']]
             if 'line' in result_value:
                 insert_value['line'] = result_value['line']
+            if 'duration_ns' in result_value:
+                insert_value['duration_ns'] = result_value['duration_ns']
 
             insert_values.append(insert_value)
 
@@ -270,4 +273,5 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                               test_name=row.name,
                               test_code_path=row.path,
                               line=row.line,
+                              duration_ns=row.duration_ns,
                               value=row.value)

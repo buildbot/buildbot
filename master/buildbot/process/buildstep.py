@@ -658,10 +658,11 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._test_result_submitters[setid] = sub
         return setid
 
-    def addTestResult(self, setid, value, test_name=None, test_code_path=None, line=None):
+    def addTestResult(self, setid, value, test_name=None, test_code_path=None, line=None,
+                      duration_ns=None):
         self._test_result_submitters[setid].add_test_result(value, test_name=test_name,
                                                             test_code_path=test_code_path,
-                                                            line=line)
+                                                            line=line, duration_ns=duration_ns)
 
     def acquireLocks(self, res=None):
         if not self.locks:

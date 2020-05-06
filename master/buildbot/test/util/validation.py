@@ -685,6 +685,7 @@ _test_results_msgdict = DictValidator(
     test_name=NoneOk(StringValidator()),
     test_code_path=NoneOk(StringValidator()),
     line=NoneOk(IntValidator()),
+    duration_ns=NoneOk(IntValidator()),
     value=StringValidator(),
 )
 
@@ -700,6 +701,7 @@ dbdict['test_resultdict'] = DictValidator(
     test_name=NoneOk(StringValidator()),
     test_code_path=NoneOk(StringValidator()),
     line=NoneOk(IntValidator()),
+    duration_ns=NoneOk(IntValidator()),
     value=StringValidator(),
 )
 

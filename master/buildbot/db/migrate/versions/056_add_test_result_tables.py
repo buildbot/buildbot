@@ -94,6 +94,8 @@ def upgrade(migrate_engine):
 
         sa.Column('line', sa.Integer, nullable=True),
 
+        sa.Column('duration_ns', sa.Integer, nullable=True),
+
         sa.Column('value', sa.Text, nullable=False),
     )
 

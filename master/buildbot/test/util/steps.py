@@ -256,8 +256,10 @@ class BuildStepMixin:
 
         self._got_test_results = []
 
-        def add_test_result(setid, value, test_name=None, test_code_path=None, line=None):
-            self._got_test_results.append((setid, value, test_name, test_code_path, line))
+        def add_test_result(setid, value, test_name=None, test_code_path=None, line=None,
+                            duration_ns=None):
+            self._got_test_results.append((setid, value, test_name, test_code_path, line,
+                                           duration_ns))
         step.addTestResult = add_test_result
 
         # expectations

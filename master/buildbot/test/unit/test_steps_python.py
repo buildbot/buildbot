@@ -342,8 +342,8 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         if store_results:
             self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([
-                (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9),
-                (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3),
+                (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),
+                (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),
             ])
         return self.runStep()
 

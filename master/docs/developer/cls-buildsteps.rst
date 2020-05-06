@@ -314,13 +314,15 @@ BuildStep
 
         There are standard values of the ``category`` and ``value_unit`` parameters, see TODO.
 
-    .. py:method:: addTestResult(setid, value, test_name=None, test_code_path=None, line=None)
+    .. py:method:: addTestResult(setid, value, test_name=None, test_code_path=None, line=None,
+                                 duration_ns=None)
 
         :param setid: The ID of a test result set returned by ``addTestResultSet``.
         :param value: The value of the result as a string
         :param test_name: The name of the test.
         :param test_code_path: The path to the code file that resulted in this test result.
         :param line: The line within ``test_code_path`` file that resulted in this test result.
+        :param duration_ns: The duration of the test itself, in nanoseconds.
 
         Creates a test result.
         Either ``test_name`` or ``test_code_path`` must be specified.

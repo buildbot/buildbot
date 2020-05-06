@@ -69,10 +69,11 @@ class Tests(interfaces.InterfaceTests):
 
         result_values = [
             {'test_name': 'name1', 'value': '1'},
-            {'test_name': 'name2', 'test_code_path': 'path2', 'value': '2'},
-            {'test_name': 'name3', 'test_code_path': 'path3', 'value': '3'},
-            {'test_name': 'name4', 'test_code_path': 'path4', 'line': 4, 'value': '4'},
-            {'test_code_path': 'path5', 'line': 5, 'value': '5'},
+            {'test_name': 'name1', 'duration_ns': 1000, 'value': '2'},
+            {'test_name': 'name2', 'test_code_path': 'path2', 'value': '3'},
+            {'test_name': 'name3', 'test_code_path': 'path3', 'value': '4'},
+            {'test_name': 'name4', 'test_code_path': 'path4', 'line': 4, 'value': '5'},
+            {'test_code_path': 'path5', 'line': 5, 'value': '6'},
         ]
 
         yield self.db.test_results.addTestResults(builderid=88, test_result_setid=13,
@@ -85,21 +86,26 @@ class Tests(interfaces.InterfaceTests):
         resultid = result_dicts[0]['id']
         self.assertEqual(result_dicts, [
             {'id': resultid, 'builderid': 88, 'test_result_setid': 13,
-             'test_name': 'name1', 'test_code_path': None, 'line': None, 'value': '1'},
-            {'id': resultid + 1, 'builderid': 88, 'test_result_setid': 13, 'test_name': 'name2',
-             'test_code_path': 'path2', 'line': None, 'value': '2'},
-            {'id': resultid + 2, 'builderid': 88, 'test_result_setid': 13, 'test_name': 'name3',
-             'test_code_path': 'path3', 'line': None, 'value': '3'},
-            {'id': resultid + 3, 'builderid': 88, 'test_result_setid': 13, 'test_name': 'name4',
-             'test_code_path': 'path4', 'line': 4, 'value': '4'},
-            {'id': resultid + 4, 'builderid': 88, 'test_result_setid': 13, 'test_name': None,
-             'test_code_path': 'path5', 'line': 5, 'value': '5'},
+             'test_name': 'name1', 'test_code_path': None, 'line': None,
+             'duration_ns': None, 'value': '1'},
+            {'id': resultid + 1, 'builderid': 88, 'test_result_setid': 13,
+             'test_name': 'name1', 'test_code_path': None, 'line': None,
+             'duration_ns': 1000, 'value': '2'},
+            {'id': resultid + 2, 'builderid': 88, 'test_result_setid': 13, 'test_name': 'name2',
+             'test_code_path': 'path2', 'line': None, 'duration_ns': None, 'value': '3'},
+            {'id': resultid + 3, 'builderid': 88, 'test_result_setid': 13, 'test_name': 'name3',
+             'test_code_path': 'path3', 'line': None, 'duration_ns': None, 'value': '4'},
+            {'id': resultid + 4, 'builderid': 88, 'test_result_setid': 13, 'test_name': 'name4',
+             'test_code_path': 'path4', 'line': 4, 'duration_ns': None, 'value': '5'},
+            {'id': resultid + 5, 'builderid': 88, 'test_result_setid': 13, 'test_name': None,
+             'test_code_path': 'path5', 'line': 5, 'duration_ns': None, 'value': '6'},
         ])
 
         result_dict = yield self.db.test_results.getTestResult(test_resultid=resultid)
         self.assertEqual(result_dict, {
             'id': resultid, 'builderid': 88, 'test_result_setid': 13,
-            'test_name': 'name1', 'test_code_path': None, 'line': None, 'value': '1'
+            'test_name': 'name1', 'test_code_path': None, 'line': None, 'duration_ns': None,
+            'value': '1'
         })
 
     @defer.inlineCallbacks
