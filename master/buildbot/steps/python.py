@@ -200,13 +200,10 @@ class PyLint(ShellCommand):
 
     _flunkingIssues = ("F", "E")  # msg categories that cause FAILURE
 
-    _re_groupname = 'errtype'
-    _msgtypes_re_str = '(?P<%s>[%s])' % (
-        _re_groupname, ''.join(list(_MESSAGES)))
-    _default_line_re = re.compile(
-        r'^%s(\d{4})?: *\d+(, *\d+)?:.+' % _msgtypes_re_str)
-    _parseable_line_re = re.compile(
-        r'[^:]+:\d+: \[%s(\d{4})?(\([a-z-]+\))?[,\]] .+' % _msgtypes_re_str)
+    _msgtypes_re_str = '(?P<errtype>[{}])'.format(''.join(list(_MESSAGES)))
+    _default_line_re = re.compile(r'^{}(\d+)?: *\d+(, *\d+)?:.+'.format(_msgtypes_re_str))
+    _parseable_line_re = re.compile(r'[^:]+:\d+: \[{}(\d+)?(\([a-z-]+\))?[,\]] .+'.format(
+            _msgtypes_re_str))
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -235,7 +232,7 @@ class PyLint(ShellCommand):
                     continue
             mo = line_re.match(line)
             if mo:
-                msgtype = mo.group(self._re_groupname)
+                msgtype = mo.group('errtype')
                 assert msgtype in self._MESSAGES
                 self.summaries[msgtype].append(line)
                 self.counts[msgtype] += 1
