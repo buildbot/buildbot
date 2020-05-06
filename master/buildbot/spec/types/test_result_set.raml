@@ -1,0 +1,73 @@
+#%RAML 1.0 DataType
+displayName: Test result set
+description: |
+    This resource represents a test result set.
+    A test result set consists of a number of related test results.
+    These test results need to be related in that they represent the same type of data and are produced by a single step.
+    In reasonably tested codebases the number of test results in a test result set will approach several or even tens of thousands.
+
+    There may be a long delay between the creation of the test result set and full creation of the corresponding test results.
+    This is tracked by the ``complete`` property.
+    If it's ``true``, then the full set of test results have been committed to the database.
+
+    The ``test_result_unparsed_set`` object tracks test result sets that have not been parsed yet.
+
+    Update Methods
+    --------------
+
+    TODO
+    TODO: maybe describe that builderid and buildid are extraneous data
+
+properties:
+    test_result_setid:
+        description: the unique ID of this test result set.
+        type: integer
+    builderid:
+        description: id of the builder for this test result set.
+        type: integer
+    buildid:
+        description: id of the build for this test result set.
+        type: integer
+    stepid:
+        description: id of the step for this test result set.
+        type: integer
+    description:
+        description: |
+            Free-form description of the source of the test data
+        type: string
+    category:
+        description: |
+            The category of the test result set.
+            This describes what data the test results contain.
+        type: string
+    value_unit:
+        description: Describes the unit of the values stored within the test results.
+        type: string
+    tests_passed?:
+        description: |
+            The number of passed tests in cases when the pass or fail criteria depends only on how
+            that single test runs. For example, performance tests that track regressions across
+            multiple tests do not have the number of passed tests defined.
+        type: integer
+    tests_failed?:
+        description: |
+            The number of failed tests in cases when the pass or fail criteria depends only on how
+            that single test runs. For example, performance tests that track regressions across
+            multiple tests do not have the number of failed tests defined.
+        type: integer
+    complete:
+        description: |
+            ``true`` if all test results associated with test result set have been generated.
+            Once set to ``true`` this property will never be set back to ``false``
+        type: boolean
+
+type: object
+example:
+    test_result_setid: 412
+    builderid: 14
+    buildid: 31
+    stepid: 3
+    description: "Performance test via BenchmarkDotNet"
+    category: "performance"
+    value_unit: "ms"
+    complete: True

@@ -27,4 +27,6 @@ This section documents the available REST APIs according to the RAML specificati
     spec
     step
     worker
+    test_result
+    test_result_set
     raw-endpoints
