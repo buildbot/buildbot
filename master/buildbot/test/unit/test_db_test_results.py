@@ -83,6 +83,7 @@ class Tests(interfaces.InterfaceTests):
         for d in result_dicts:
             validation.verifyDbDict(self, 'test_resultdict', d)
 
+        result_dicts = sorted(result_dicts, key=lambda x: x['id'])
         resultid = result_dicts[0]['id']
         self.assertEqual(result_dicts, [
             {'id': resultid, 'builderid': 88, 'test_result_setid': 13,
