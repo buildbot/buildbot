@@ -304,6 +304,13 @@ class BuildStepMixin:
         self.exp_exception = exception_class
         self.expectOutcome(EXCEPTION)
 
+    def _dump_logs(self):
+        for l in self.step.logs.values():
+            if l.stdout:
+                log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
+            if l.stderr:
+                log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+
     @defer.inlineCallbacks
     def runStep(self):
         """
@@ -329,11 +336,7 @@ class BuildStepMixin:
         # debugging failing tests
         if result != self.exp_result:
             log.msg("unexpected result from step; dumping logs")
-            for l in self.step.logs.values():
-                if l.stdout:
-                    log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
-                if l.stderr:
-                    log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+            self._dump_logs()
             raise AssertionError("unexpected result; see logs")
 
         if self.exp_state_string:
