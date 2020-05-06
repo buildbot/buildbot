@@ -424,6 +424,41 @@ class FakeUpdates(service.AsyncService):
             paused=paused,
             graceful=graceful)
 
+    # methods from TestResultSet resource
+    @defer.inlineCallbacks
+    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+        validation.verifyType(self.testcase, 'builderid', builderid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'description', description,
+                              validation.StringValidator())
+        validation.verifyType(self.testcase, 'category', category, validation.StringValidator())
+        validation.verifyType(self.testcase, 'value_unit', value_unit, validation.StringValidator())
+
+        test_result_setid = \
+            yield self.master.db.test_result_sets.addTestResultSet(builderid, buildid, stepid,
+                                                                   description, category,
+                                                                   value_unit)
+        return test_result_setid
+
+    @defer.inlineCallbacks
+    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
+        validation.verifyType(self.testcase, 'test_result_setid', test_result_setid,
+                              validation.IntValidator())
+        validation.verifyType(self.testcase, 'tests_passed', tests_passed,
+                              validation.NoneOk(validation.IntValidator()))
+        validation.verifyType(self.testcase, 'tests_failed', tests_failed,
+                              validation.NoneOk(validation.IntValidator()))
+
+        yield self.master.db.test_result_sets.completeTestResultSet(test_result_setid,
+                                                                    tests_passed, tests_failed)
+
+    # methods from TestResult resource
+    @defer.inlineCallbacks
+    def addTestResults(self, builderid, test_result_setid, result_values):
+        yield self.master.db.test_results.addTestResults(builderid, test_result_setid,
+                                                         result_values)
+
 
 class FakeDataConnector(service.AsyncMultiService):
     # FakeDataConnector delegates to the real DataConnector so it can get all
