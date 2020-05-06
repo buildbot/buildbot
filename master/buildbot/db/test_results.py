@@ -38,7 +38,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             paths_to_ids = {}
             paths_table = self.db.model.test_code_paths
 
-            for path_batch in self.doBatch(paths):
+            for path_batch in self.doBatch(paths, batch_n=3000):
 
                 path_batch = set(path_batch)
 
@@ -104,7 +104,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             names_to_ids = {}
             names_table = self.db.model.test_names
 
-            for name_batch in self.doBatch(names):
+            for name_batch in self.doBatch(names, batch_n=3000):
 
                 name_batch = set(name_batch)
                 while name_batch:

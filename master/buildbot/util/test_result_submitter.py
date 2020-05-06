@@ -21,7 +21,7 @@ from buildbot.util import deferwaiter
 
 class TestResultSubmitter:
 
-    def __init__(self, batch_n=500):
+    def __init__(self, batch_n=3000):
         self._batch_n = batch_n
         self._curr_batch = []
         self._pending_batches = []
