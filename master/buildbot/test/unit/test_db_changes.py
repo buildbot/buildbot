@@ -18,6 +18,7 @@ import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.data import resultspec
 from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
@@ -257,14 +258,9 @@ class Tests(interfaces.InterfaceTests):
 
         self.assertEqual(sorted(res), [1, 2])
 
-    def test_signature_getRecentChanges(self):
-        @self.assertArgSpecMatches(self.db.changes.getRecentChanges)
-        def getRecentChanges(self, count):
-            pass
-
     def test_signature_getChanges(self):
         @self.assertArgSpecMatches(self.db.changes.getChanges)
-        def getChanges(self):
+        def getChanges(self, resultSpec=None):
             pass
 
     def insert7Changes(self):
@@ -278,10 +274,11 @@ class Tests(interfaces.InterfaceTests):
         ] + self.change13_rows + self.change14_rows)
 
     @defer.inlineCallbacks
-    def test_getRecentChanges_subset(self):
+    def test_getChanges_subset(self):
         yield self.insert7Changes()
-        changes = yield self.db.changes.getRecentChanges(5)
-
+        rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
+        rs.fieldMapping = {'changeid': 'changes.changeid'}
+        changes = yield self.db.changes.getChanges(resultSpec=rs)
         changeids = [c['changeid'] for c in changes]
         self.assertEqual(changeids, [10, 11, 12, 13, 14])
 
@@ -303,8 +300,9 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(n, 100)
 
     @defer.inlineCallbacks
-    def test_getRecentChanges_empty(self):
-        changes = yield self.db.changes.getRecentChanges(5)
+    def test_getChanges_empty(self):
+        rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
+        changes = yield self.db.changes.getChanges(resultSpec=rs)
 
         changeids = [c['changeid'] for c in changes]
         self.assertEqual(changeids, [])
@@ -314,7 +312,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(changeids, [])
 
     @defer.inlineCallbacks
-    def test_getRecentChanges_missing(self):
+    def test_getChanges_missing(self):
         yield self.insertTestData(self.change13_rows + self.change14_rows)
 
         def check(changes):
@@ -329,7 +327,8 @@ class Tests(interfaces.InterfaceTests):
             self.assertEqual(changes[0]['properties'],
                              {'notest': ('no', 'Change')})
 
-        changes = yield self.db.changes.getRecentChanges(5)
+        rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
+        changes = yield self.db.changes.getChanges(resultSpec=rs)
         check(changes)
 
         changes = yield self.db.changes.getChanges()

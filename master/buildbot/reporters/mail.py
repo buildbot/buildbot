@@ -15,6 +15,7 @@
 
 import re
 from email import charset
+from email import encoders
 from email.header import Header
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
@@ -170,6 +171,9 @@ class MailNotifier(NotifierBase):
     def patch_to_attachment(self, patch, index):
         # patches are specifically converted to unicode before entering the db
         a = MIMEText(patch['body'].encode(ENCODING), _charset=ENCODING)
+        # convert to base64 to conform with RFC 5322 2.1.1
+        del a['Content-Transfer-Encoding']
+        encoders.encode_base64(a)
         a.add_header('Content-Disposition', "attachment",
                      filename="source patch " + str(index))
         return a
@@ -227,6 +231,9 @@ class MailNotifier(NotifierBase):
                     text = log['content']['content']
                     a = MIMEText(text.encode(ENCODING),
                                  _charset=ENCODING)
+                    # convert to base64 to conform with RFC 5322 2.1.1
+                    del a['Content-Transfer-Encoding']
+                    encoders.encode_base64(a)
                     a.add_header('Content-Disposition', "attachment",
                                  filename=filename)
                     m.attach(a)

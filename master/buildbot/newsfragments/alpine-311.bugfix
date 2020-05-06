@@ -1,0 +1,3 @@
+Updated the `Docker` container `buildbot-master` to `Alpine 3.11` to fix
+segmentation faults caused by an old version of `musl`
+

@@ -869,27 +869,15 @@ changes
 
         Get the userids associated with the given changeid.
 
-    .. py:method:: getRecentChanges(count)
+    .. py:method:: getChanges(resultSpec=None)
 
-        :param count: maximum number of instances to return
-        :returns: list of dictionaries via Deferred, ordered by changeid
-
-        Get a list of the ``count`` most recent changes, represented as
-        dictionaries; returns fewer if that many do not exist.
-
-        .. note::
-            For this function, "recent" is determined by the order of the
-            changeids, not by ``when_timestamp``.  This is most apparent in
-            DVCS's, where the timestamp of a change may be significantly
-            earlier than the time at which it is merged into a repository
-            monitored by Buildbot.
-
-    .. py:method:: getChanges()
-
+        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+            If possible, the db layer can optimize the SQL query using this information.
         :returns: list of dictionaries via Deferred
 
-        Get a list of the changes, represented as
-        dictionaries; changes are sorted, and paged using generic data query options
+        Get a list of the changes, represented as dictionaries, matching the given
+        criteria. if ``resultSpec`` is not provided, changes are sorted, and paged
+        using generic data query options;
 
     .. py:method:: getChangesCount()
 

@@ -829,6 +829,9 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 ``use_tickets``
     Set to ``True`` to use ticket-based authentication, instead of passwords (but you still need to specify ``p4passwd``).
 
+``stream``
+    Set to ``True`` to use a stream-associated workspace, in which case ``p4base`` and ``p4branch`` are used to determine the stream path.
+
 .. index:: double: Gerrit integration; Repo Build Step
 
 .. bb:step:: Repo

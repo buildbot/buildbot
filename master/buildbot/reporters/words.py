@@ -40,6 +40,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
+from buildbot.util import epoch2datetime
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 
@@ -559,13 +560,12 @@ class Contact:
                           "to show.\n"
                           "Right now, I will show up to 100 recent changes.")
                 num = 100
-
-            changes = yield self.master.db.changes.getRecentChanges(num)
+            changes = yield self.master.data.get(('changes',), order=['-changeid'], limit=num)
 
             response = ["I found the following recent changes:"]
             for change in reversed(changes):
                 change['comment'] = change['comments'].split('\n')[0]
-                change['date'] = change['when_timestamp'].strftime('%Y-%m-%d %H:%M')
+                change['date'] = epoch2datetime(change['when_timestamp']).strftime('%Y-%m-%d %H:%M')
                 response.append(
                     "{comment})\n"
                     "Author: {author}\n"

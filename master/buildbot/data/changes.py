@@ -40,6 +40,9 @@ class FixerMixin:
             change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
         return change
+    fieldMapping = {
+        'changeid': 'changes.id',
+    }
 
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
@@ -78,13 +81,9 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
             else:
                 changes = []
         else:
-            # this special case is useful and implemented by the dbapi
-            # so give it a boost
-            if (resultSpec.order == ('-changeid',) and resultSpec.limit and
-                    resultSpec.offset is None):
-                changes = yield self.master.db.changes.getRecentChanges(resultSpec.limit)
-            else:
-                changes = yield self.master.db.changes.getChanges()
+            if resultSpec is not None:
+                resultSpec.fieldMapping = self.fieldMapping
+                changes = yield self.master.db.changes.getChanges(resultSpec=resultSpec)
         results = []
         for ch in changes:
             results.append((yield self._fixChange(ch)))
