@@ -62,6 +62,12 @@ from .steps import FakeStepsComponent
 from .steps import Step
 from .tags import FakeTagsComponent
 from .tags import Tag
+from .test_result_sets import FakeTestResultSetsComponent
+from .test_result_sets import TestResultSet
+from .test_results import FakeTestResultsComponent
+from .test_results import TestCodePath
+from .test_results import TestName
+from .test_results import TestResult
 from .users import FakeUsersComponent
 from .users import User
 from .users import UserInfo
@@ -104,6 +110,8 @@ __all__ = [
     'FakeStateComponent',
     'FakeStepsComponent',
     'FakeTagsComponent',
+    'FakeTestResultSetsComponent',
+    'FakeTestResultsComponent',
     'FakeUsersComponent',
     'FakeWorkersComponent',
     'Log',
@@ -118,6 +126,10 @@ __all__ = [
     'SourceStamp',
     'Step',
     'Tag',
+    'TestCodePath',
+    'TestName',
+    'TestResultSet',
+    'TestResult',
     'User',
     'UserInfo',
     'Worker',

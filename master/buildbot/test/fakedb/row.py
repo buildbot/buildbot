@@ -26,7 +26,7 @@ class Row:
     Parent class for row classes, which are used to specify test data for
     database-related tests.
 
-    @cvar defaults: default values for columns
+    @cvar defaults: the column names and their default values
     @type defaults: dictionary
 
     @cvar table: the table name
@@ -128,7 +128,8 @@ class Row:
     def __repr__(self):
         return '{}(**{})'.format(self.__class__.__name__, repr(self.values))
 
-    def nextId(self):
+    @staticmethod
+    def nextId():
         id = Row._next_id if Row._next_id is not None else 1
         Row._next_id = id + 1
         return id
@@ -157,6 +158,7 @@ class Row:
             sourcestampid=db.sourcestamps.getSourceStamp,
             schedulerid=db.schedulers.getScheduler,
             brid=db.buildrequests.getBuildRequest,
+            stepid=db.steps.getStep,
             masterid=db.masters.getMaster)
         for foreign_key in self.foreignKeys:
             if foreign_key in accessors:

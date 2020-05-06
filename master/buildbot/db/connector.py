@@ -38,6 +38,8 @@ from buildbot.db import sourcestamps
 from buildbot.db import state
 from buildbot.db import steps
 from buildbot.db import tags
+from buildbot.db import test_result_sets
+from buildbot.db import test_results
 from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
@@ -101,6 +103,8 @@ class DBConnector(service.ReconfigurableServiceMixin,
         self.steps = steps.StepsConnectorComponent(self)
         self.tags = tags.TagsConnectorComponent(self)
         self.logs = logs.LogsConnectorComponent(self)
+        self.test_results = test_results.TestResultsConnectorComponent(self)
+        self.test_result_sets = test_result_sets.TestResultSetsConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                                                    self._doCleanup)
