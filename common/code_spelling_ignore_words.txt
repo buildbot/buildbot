@@ -1631,6 +1631,7 @@ workersrc
 workersrcs
 workerversion
 workerworker
+workspaces
 worststatus
 writesourcedata
 writestdin
