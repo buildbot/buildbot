@@ -8,7 +8,34 @@ description: |
     Update Methods
     --------------
 
-    TODO
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.test_result_sets.TestResult
+
+        .. py:method:: addTestResults(builderid, test_result_setid, result_values)
+
+            :param integer builderid: The ID of the builder corresponding to the test result set.
+            :param integer test_result_setid: The ID of the test result set for which to add results.
+            :param integer result_values: A list of dictionaries that define the test results.
+
+            Creates one or more new test results.
+            This is a batch-based method as large number of test results are usually associated to a
+            single test result set.
+
+            The dictionaries in ``result_value`` may have the following keys:
+
+             - ``value`` (required): A string containing the value of the test result.
+
+             - ``test_name`` (optional): A string containing the name of the test that.
+
+             - ``test_code_path`` (optional): A string containing the path of the test.
+
+             - ``line`` (optional): An integer containing the line within the source file
+                corresponding to the test.
+
+            At least one of ``test_name``, ``test_code_path`` must be specified.
+
+            The function returns nothing.
 
 properties:
     test_resultid:
