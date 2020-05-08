@@ -224,7 +224,11 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Not possible with older versions:
         # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
         archive = tarfile.open(mode=mode, fileobj=self.fp)
-        archive.add(self.path, '')
+        try:
+            archive.add(self.path, '')
+        except OSError:
+            print("Error:{} is not a valid directory".format(self.path))
+            raise IsADirectoryError
         archive.close()
 
         # Transfer it
