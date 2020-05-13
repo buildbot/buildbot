@@ -130,8 +130,8 @@ class DirectoryWriter(FileWriter):
         archive = tarfile.open(name=self.tarname, mode=mode)
         try:
             archive.extractall(path=self.destroot)
-        except OSError:
-            print("Error:{}is not a valid directory".format(self.destroot))
+        except OSError as e:
+            self.step.addLogWithException("not a valid directory", e)
             raise FileNotFoundError
         archive.close()
         os.remove(self.tarname)

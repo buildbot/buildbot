@@ -227,7 +227,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         try:
             archive.add(self.path, '')
         except OSError:
-            print("Error:{} is not a valid directory".format(self.path))
+            self.sendStatus({'header': "Error:{} is not a valid directory".format(self.path)})
             raise IsADirectoryError
         archive.close()
 
