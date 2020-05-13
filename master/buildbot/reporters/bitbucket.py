@@ -94,7 +94,7 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                 '/'.join([owner, repo, 'commit', sha, 'statuses', 'build'])
 
             response = yield self._http.post(bitbucket_uri, json=body)
-            if response.code != 201:
+            if response.code != 200 and response.code != 201:
                 content = yield response.content()
                 log.error("{code}: unable to upload Bitbucket status {content}",
                           code=response.code, content=content)

@@ -242,33 +242,20 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             return row_uids
         return self.db.pool.do(thd)
 
-    def getRecentChanges(self, count):
-        def thd(conn):
-            # get the changeids from the 'changes' table
-            changes_tbl = self.db.model.changes
-            q = sa.select([changes_tbl.c.changeid],
-                          order_by=[sa.desc(changes_tbl.c.changeid)],
-                          limit=count)
-            rp = conn.execute(q)
-            changeids = [row.changeid for row in rp]
-            rp.close()
-            return list(reversed(changeids))
-        d = self.db.pool.do(thd)
+    def _getDataFromRow(self, row):
+        return row.changeid
 
-        # then turn those into changes, using the cache
-        @d.addCallback
-        def get_changes(changeids):
-            return defer.gatherResults([self.getChange(changeid)
-                                        for changeid in changeids])
-        return d
-
-    def getChanges(self):
+    def getChanges(self, resultSpec=None):
         def thd(conn):
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
             q = sa.select([changes_tbl.c.changeid])
+
+            if resultSpec is not None:
+                return reversed(resultSpec.thd_execute(conn, q, self._getDataFromRow))
+
             rp = conn.execute(q)
-            changeids = [row.changeid for row in rp]
+            changeids = [self._getDataFromRow(row) for row in rp]
             rp.close()
             return list(changeids)
         d = self.db.pool.do(thd)

@@ -173,15 +173,15 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
                                              wantData=True)
         self.rtype = steps.Step(self.master)
 
-    def test_signature_newStep(self):
+    def test_signature_addStep(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addStep,  # fake
             self.rtype.addStep)  # real
-        def newStep(self, buildid, name):
+        def addStep(self, buildid, name):
             pass
 
     @defer.inlineCallbacks
-    def test_newStep(self):
+    def test_addStep(self):
         stepid, number, name = yield self.rtype.addStep(buildid=10,
                                                         name='name')
         msgBody = {
@@ -216,7 +216,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         })
 
     @defer.inlineCallbacks
-    def test_fake_newStep(self):
+    def test_fake_addStep(self):
         self.assertEqual(
             len((yield self.master.data.updates.addStep(buildid=10,
                                                         name='ten'))),
@@ -226,7 +226,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.startStep,  # fake
             self.rtype.startStep)  # real
-        def newStep(self, stepid):
+        def addStep(self, stepid):
             pass
 
     @defer.inlineCallbacks

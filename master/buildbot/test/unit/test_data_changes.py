@@ -92,7 +92,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(changes[1]['changeid'], 14)
 
     @defer.inlineCallbacks
-    def test_getRecentChanges(self):
+    def test_getChanges_recent(self):
         resultSpec = resultspec.ResultSpec(limit=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
@@ -105,8 +105,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         resultSpec = resultspec.ResultSpec(limit=1, order=('-when_time_stamp',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
-        # limit not implemented for other order
-        self.assertEqual(len(changes), 2)
+        self.assertEqual(len(changes), 1)
 
     @defer.inlineCallbacks
     def test_getChangesOtherOffset(self):
@@ -114,8 +113,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             limit=1, offset=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
-        # limit not implemented for other offset
-        self.assertEqual(len(changes), 2)
+        self.assertEqual(len(changes), 1)
 
 
 class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):

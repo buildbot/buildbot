@@ -205,15 +205,15 @@ class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.assertIdentical(res, rv)
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
-    def test_signature_newLog(self):
+    def test_signature_addLog(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addLog,  # fake
             self.rtype.addLog)  # real
-        def newLog(self, stepid, name, type):
+        def addLog(self, stepid, name, type):
             pass
 
     @defer.inlineCallbacks
-    def test_newLog_uniquify(self):
+    def test_addLog_uniquify(self):
         tries = []
 
         @self.assertArgSpecMatches(self.master.db.logs.addLog)

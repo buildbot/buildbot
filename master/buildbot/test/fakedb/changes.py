@@ -189,12 +189,11 @@ class FakeChangesComponent(FakeDBComponent):
             ch_uids = []
         return defer.succeed(ch_uids)
 
-    def getRecentChanges(self, count):
-        ids = sorted(self.changes.keys())
-        chdicts = [self._chdict(self.changes[id]) for id in ids[-count:]]
-        return defer.succeed(chdicts)
-
-    def getChanges(self):
+    def getChanges(self, resultSpec=None):
+        if resultSpec is not None and resultSpec.limit is not None:
+            ids = sorted(self.changes.keys())
+            chdicts = [self._chdict(self.changes[id]) for id in ids[-resultSpec.limit:]]
+            return defer.succeed(chdicts)
         chdicts = [self._chdict(v) for v in self.changes.values()]
         return defer.succeed(chdicts)
 

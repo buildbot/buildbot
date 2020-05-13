@@ -59,6 +59,7 @@ class P4(Source):
                  p4extra_args=None,
                  p4bin='p4',
                  use_tickets=False,
+                 stream=False,
                  **kwargs):
         self.method = method
         self.mode = mode
@@ -76,6 +77,7 @@ class P4(Source):
         self.p4client_spec_options = p4client_spec_options
         self.p4extra_args = p4extra_args
         self.use_tickets = use_tickets
+        self.stream = stream
 
         super().__init__(**kwargs)
 
@@ -95,6 +97,9 @@ class P4(Source):
             config.error(
                 "p4viewspec must not be a string, and should be a sequence of 2 element sequences")
 
+        if not interfaces.IRenderable.providedBy(p4base) and p4base and not p4base.startswith('/'):
+            config.error('p4base should start with // [p4base = {}]'.format(p4base))
+
         if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
             config.error('p4base should not end with a trailing / [p4base = {}]'.format(p4base))
 
@@ -105,6 +110,14 @@ class P4(Source):
         if (p4branch or p4extra_views) and not p4base:
             config.error(
                 'If you specify either p4branch or p4extra_views you must also specify p4base')
+
+        if stream:
+            if (p4extra_views or p4viewspec):
+                config.error('You can\'t use p4extra_views not p4viewspec with stream')
+            if not p4base or not p4branch:
+                config.error('You must specify both p4base and p4branch when using stream')
+            if " " in p4base or " " in p4branch:
+                config.error('p4base and p4branch must not contain any whitespace')
 
         if self.p4client_spec_options is None:
             self.p4client_spec_options = ''
@@ -299,47 +312,51 @@ class P4(Source):
         else:
             client_spec += "LineEnd:\tlocal\n\n"
 
-        # Setup a view
-        client_spec += "View:\n"
-
-        def has_whitespace(*args):
-            return any([re.search(r'\s', i) for i in args if i is not None])
-
-        if self.p4viewspec:
-            # uses only p4viewspec array of tuples to build view
-            # If the user specifies a viewspec via an array of tuples then
-            # Ignore any specified p4base,p4branch, and/or p4extra_views
-            suffix = self.p4viewspec_suffix or ''
-            for k, v in self.p4viewspec:
-                if debug_logging:
-                    log.msg('P4:_createClientSpec():key:{} value:{}'.format(k, v))
-
-                qa = '"' if has_whitespace(k, suffix) else ''
-                qb = '"' if has_whitespace(self.p4client, v, suffix) else ''
-                client_spec += '\t{}{}{}{} {}//{}/{}{}{}\n'.format(qa, k, suffix, qa, qb,
-                                                                   self.p4client, v, suffix, qb)
+        # Perforce generates the view for stream-associated workspaces
+        if self.stream:
+            client_spec += "Stream:\t{}/{}\n".format(self.p4base, self.p4branch)
         else:
-            # Uses p4base, p4branch, p4extra_views
+            # Setup a view
+            client_spec += "View:\n"
 
-            qa = '"' if has_whitespace(self.p4base, self.p4branch) else ''
+            def has_whitespace(*args):
+                return any([re.search(r'\s', i) for i in args if i is not None])
 
-            client_spec += "\t{}{}".format(qa, self.p4base)
+            if self.p4viewspec:
+                # uses only p4viewspec array of tuples to build view
+                # If the user specifies a viewspec via an array of tuples then
+                # Ignore any specified p4base,p4branch, and/or p4extra_views
+                suffix = self.p4viewspec_suffix or ''
+                for k, v in self.p4viewspec:
+                    if debug_logging:
+                        log.msg('P4:_createClientSpec():key:{} value:{}'.format(k, v))
 
-            if self.p4branch:
-                client_spec += "/{}".format(self.p4branch)
+                    qa = '"' if has_whitespace(k, suffix) else ''
+                    qb = '"' if has_whitespace(self.p4client, v, suffix) else ''
+                    client_spec += '\t{}{}{}{} {}//{}/{}{}{}\n'.format(qa, k, suffix, qa, qb,
+                                                                       self.p4client, v, suffix, qb)
+            else:
+                # Uses p4base, p4branch, p4extra_views
 
-            client_spec += "/...{} ".format(qa)
+                qa = '"' if has_whitespace(self.p4base, self.p4branch) else ''
 
-            qb = '"' if has_whitespace(self.p4client) else ''
-            client_spec += "{}//{}/...{}\n".format(qb, self.p4client, qb)
+                client_spec += "\t{}{}".format(qa, self.p4base)
 
-            if self.p4extra_views:
-                for k, v in self.p4extra_views:
-                    qa = '"' if has_whitespace(k) else ''
-                    qb = '"' if has_whitespace(k, self.p4client, v) else ''
+                if self.p4branch:
+                    client_spec += "/{}".format(self.p4branch)
 
-                    client_spec += "\t{}{}/...{} {}//{}/{}/...{}\n".format(qa, k, qa, qb,
-                                                                           self.p4client, v, qb)
+                client_spec += "/...{} ".format(qa)
+
+                qb = '"' if has_whitespace(self.p4client) else ''
+                client_spec += "{}//{}/...{}\n".format(qb, self.p4client, qb)
+
+                if self.p4extra_views:
+                    for k, v in self.p4extra_views:
+                        qa = '"' if has_whitespace(k) else ''
+                        qb = '"' if has_whitespace(k, self.p4client, v) else ''
+
+                        client_spec += "\t{}{}/...{} {}//{}/{}/...{}\n".format(qa, k, qa, qb,
+                                                                               self.p4client, v, qb)
 
         if debug_logging:
             log.msg(client_spec)
