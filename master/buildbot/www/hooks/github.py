@@ -251,7 +251,7 @@ class GitHubEventHandler(PullRequestMixin):
         Get Files that belong to the Pull Request
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
-        :param numer: the pullrequest number.
+        :param number: the pull request number.
         """
         headers = {"User-Agent": "Buildbot"}
         if self._token:
