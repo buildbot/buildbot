@@ -1,0 +1,1 @@
+When cancelling a buildrequest, the reason field is now correctly transmitted all the way to the cancelled step.
