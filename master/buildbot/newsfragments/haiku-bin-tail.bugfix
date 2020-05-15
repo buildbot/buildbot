@@ -1,0 +1,1 @@
+Log watcher looks for the "tail" utility in the right location on Haiku OS.
