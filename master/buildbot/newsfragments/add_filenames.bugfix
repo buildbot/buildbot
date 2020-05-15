@@ -1,0 +1,1 @@
+Fix :py:class:`GitHubEventHandler` to include files in `Change` that comes from a github PR (:issue:`5294`)
