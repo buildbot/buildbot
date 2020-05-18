@@ -35,6 +35,12 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         os_password='pass',
         os_tenant_name='tenant',
         os_auth_url='auth')
+
+    os_auth_custom = dict(
+        token='openstack-token',
+        auth_type='token',
+        auth_url='auth')
+
     bs_image_args = dict(
         flavor=1,
         image='image-uuid',
@@ -93,6 +99,19 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertIsInstance(bs.novaclient, novaclient.Client)
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'test_oud')
         self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'test_opd')
+
+    @defer.inlineCallbacks
+    def test_constructor_token_keystone_v3(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', os_auth_args=self.os_auth_custom, **self.bs_image_args)
+        self.assertEqual(bs.workername, 'bot')
+        self.assertEqual(bs.password, 'pass')
+        self.assertEqual(bs.flavor, 1)
+        self.assertEqual(bs.image, 'image-uuid')
+        self.assertEqual(bs.block_devices, None)
+        self.assertIsInstance(bs.novaclient, novaclient.Client)
+        self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'token')
+        self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'token')
 
     @defer.inlineCallbacks
     def test_constructor_region(self):
