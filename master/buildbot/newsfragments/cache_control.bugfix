@@ -1,0 +1,1 @@
+Fix Cache-control header to be compliant with RFC 7234 (:issue:`5220`) 
