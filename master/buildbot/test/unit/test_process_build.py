@@ -831,7 +831,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
-        expected_names = ["a", "b", "c_1", "c_2", "c"]
+        expected_names = ["a", "b", "c", "c_1", "c_2"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
 

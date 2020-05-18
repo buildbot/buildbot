@@ -470,7 +470,6 @@ class Build(properties.PropertiesMixin):
             step = factory.buildStep()
             step.setBuild(self)
             step.setWorker(self.workerforbuilder.worker)
-            self.setUniqueStepName(step)
             steps.append(step)
 
             if self.useProgress:

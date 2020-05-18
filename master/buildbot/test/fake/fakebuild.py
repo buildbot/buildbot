@@ -128,6 +128,9 @@ class FakeBuild(properties.PropertiesMixin):
     def getWorkerInfo(self):
         return self.workerforbuilder.worker.worker_status.info
 
+    def setUniqueStepName(self, step):
+        pass
+
 
 components.registerAdapter(
     lambda build: build.build_status.properties,
