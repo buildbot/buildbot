@@ -340,7 +340,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^fa3ae8ed68e664d4db24798611b352e3c6509930',
@@ -410,7 +410,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -485,7 +485,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
@@ -499,7 +499,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work')
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
                        '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -615,7 +615,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -657,7 +657,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -737,7 +737,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
@@ -819,7 +819,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
@@ -899,7 +899,7 @@ class TestGitPoller(TestGitPollerBase):
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
-                'git', 'log', '--format=%H',
+                'git', 'log', '--ignore-missing', '--format=%H',
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 '--')
@@ -984,7 +984,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -1024,7 +1024,7 @@ class TestGitPoller(TestGitPollerBase):
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
-                'git', 'log', '--format=%H',
+                'git', 'log', '--ignore-missing', '--format=%H',
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
                 '^fa3ae8ed68e664d4db24798611b352e3c6509930',
@@ -1038,7 +1038,7 @@ class TestGitPoller(TestGitPollerBase):
             .path('gitpoller-work')
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
-                'git', 'log', '--format=%H',
+                'git', 'log', '--ignore-missing', '--format=%H',
                 '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
                 '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
@@ -1130,7 +1130,7 @@ class TestGitPoller(TestGitPollerBase):
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
-                'git', 'log', '--format=%H',
+                'git', 'log', '--ignore-missing', '--format=%H',
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
                 '^fa3ae8ed68e664d4db24798611b352e3c6509930',
@@ -1228,7 +1228,7 @@ class TestGitPoller(TestGitPollerBase):
             .path('gitpoller-work')
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
-                'git', 'log', '--format=%H',
+                'git', 'log', '--ignore-missing', '--format=%H',
                 '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
                 '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
                 '^fa3ae8ed68e664d4db24798611b352e3c6509930',
@@ -1314,7 +1314,7 @@ class TestGitPoller(TestGitPollerBase):
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
-            gpo.Expect('git', 'log',
+            gpo.Expect('git', 'log', '--ignore-missing',
                        '--format=%H',
                        '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '^fa3ae8ed68e664d4db24798611b352e3c6509930',
@@ -1414,7 +1414,7 @@ class TestGitPoller(TestGitPollerBase):
             .path('gitpoller-work')
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
-                'git', 'log', '--format=%H',
+                'git', 'log', '--ignore-missing', '--format=%H',
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 '--')

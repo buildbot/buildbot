@@ -302,7 +302,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             return
 
         # get the change list
-        revListArgs = (['--format=%H', '{}'.format(newRev)] +
+        revListArgs = (['--ignore-missing'] +
+                       ['--format=%H', '{}'.format(newRev)] +
                        ['^' + rev
                         for rev in sorted(self.lastRev.values())] +
                        ['--'])
