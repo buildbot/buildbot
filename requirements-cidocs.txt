@@ -2,7 +2,7 @@ Sphinx==3.0.3
 sphinx-jinja==1.1.0
 sphinx-rtd-theme==0.4.3
 sphinxcontrib-blockdiag==2.0.0
-sphinxcontrib-spelling==4.3.0
+sphinxcontrib-spelling==5.0.0
 sphinxcontrib-websupport==1.1.2
 Pygments==2.6.1
 towncrier==19.2.0
