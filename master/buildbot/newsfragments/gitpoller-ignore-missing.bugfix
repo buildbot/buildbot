@@ -1,0 +1,1 @@
+Git poller: add `--ignore-missing` argument to `git log` call to avoid `fatal: bad object` errors
