@@ -107,6 +107,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
         self.flavor = flavor
         self.client_version = client_version
         if client:
+            os_username, os_password = yield self.renderSecrets(os_username, os_password)
             self.novaclient = self._constructClient(
                 client_version, os_username, os_user_domain, os_password, os_tenant_name, os_project_domain,
                 os_auth_url)
