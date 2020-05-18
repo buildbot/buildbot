@@ -80,7 +80,7 @@ toml==0.10.1
 towncrier==19.2.0
 treq==20.4.1
 Twisted==20.3.0
-txaio==20.1.1
+txaio==20.4.1
 txrequests==0.9.6
 typing==3.7.4.1
 webcolors==1.11.1
