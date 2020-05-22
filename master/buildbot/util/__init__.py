@@ -184,6 +184,17 @@ class ComparableMixin:
             return False
         return self_list == them_list
 
+    @staticmethod
+    def isEquivalent(us, them):
+        if isinstance(them, ComparableMixin):
+            them, us = us, them
+        if isinstance(us, ComparableMixin):
+            (isComparable, us_list, them_list) = us._cmp_common(them)
+            if not isComparable:
+                return False
+            return all(ComparableMixin.isEquivalent(v, them_list[i]) for i, v in enumerate(us_list))
+        return us == them
+
     def __ne__(self, them):
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:

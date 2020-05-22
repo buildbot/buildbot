@@ -1262,7 +1262,9 @@ class TestProperty(unittest.TestCase):
     @defer.inlineCallbacks
     def testCompLt(self):
         self.props.setProperty("do-tests", 1, "scheduler")
-        result = yield self.build.render(Property("do-tests") < 2)
+        x = Property("do-tests") < 2
+        self.assertEqual(repr(x), 'Property(do-tests) < 2')
+        result = yield self.build.render(x)
         self.assertEqual(result, True)
 
     @defer.inlineCallbacks
@@ -1302,6 +1304,57 @@ class TestProperty(unittest.TestCase):
         self.props.setProperty("do-tests", 1, "scheduler")
         result = yield self.build.render(Property("do-tests") >= Property("do-tests"))
         self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testPropAdd(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        result = yield self.build.render(Property("do-tests") + Property("do-tests"))
+        self.assertEqual(result, 2)
+
+    @defer.inlineCallbacks
+    def testPropSub(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        result = yield self.build.render(Property("do-tests") - Property("do-tests"))
+        self.assertEqual(result, 0)
+
+    @defer.inlineCallbacks
+    def testPropDiv(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        self.props.setProperty("do-tests2", 3, "scheduler")
+        result = yield self.build.render(Property("do-tests") / Property("do-tests2"))
+        self.assertEqual(result, 1 / 3)
+
+    @defer.inlineCallbacks
+    def testPropFDiv(self):
+        self.props.setProperty("do-tests", 5, "scheduler")
+        self.props.setProperty("do-tests2", 2, "scheduler")
+        result = yield self.build.render(Property("do-tests") // Property("do-tests2"))
+        self.assertEqual(result, 2)
+
+    @defer.inlineCallbacks
+    def testPropMod(self):
+        self.props.setProperty("do-tests", 5, "scheduler")
+        self.props.setProperty("do-tests2", 3, "scheduler")
+        result = yield self.build.render(Property("do-tests") % Property("do-tests2"))
+        self.assertEqual(result, 2)
+
+    @defer.inlineCallbacks
+    def testPropMult(self):
+        self.props.setProperty("do-tests", 2, "scheduler")
+        result = yield self.build.render(Property("do-tests") * Interpolate("%(prop:do-tests)s"))
+        self.assertEqual(result, '22')
+
+    @defer.inlineCallbacks
+    def testPropIn(self):
+        self.props.setProperty("do-tests", 2, "scheduler")
+        result = yield self.build.render(Property("do-tests").in_([1, 2]))
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testPropIn2(self):
+        self.props.setProperty("do-tests", 2, "scheduler")
+        result = yield self.build.render(Property("do-tests").in_([1, 3]))
+        self.assertEqual(result, False)
 
 
 class TestRenderableAdapters(unittest.TestCase):

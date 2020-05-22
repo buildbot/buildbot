@@ -534,3 +534,30 @@ For this you can use a special custom renderer as following:
     from buildbot.plugins import *
 
     ShellCommand(command=['make', util.Interpolate('BUILDURL=%(kw:url)s', url=util.URLForBuild)])
+
+
+.. _RenderableComparison:
+
+Renderable Comparison
++++++++++++++++++++++
+
+Its common to need to make basic comparison or calculation with properties.
+The :class:`Property` and :class:`Interpolate` objects contain necessary operator overload to make this possible
+
+.. code-block:: python
+
+    from buildbot.plugins import *
+
+    ShellCommand(command=['make'], doStepIf=Interpolate("worker:os_id")  == 'ubuntu')
+
+In previous code, the value of the comparison can only be computed at runtime, so the result of the comparison is actually a renderable which will be computed at the start of the step.
+
+.. code-block:: python
+
+    from buildbot.plugins import *
+
+    ShellCommand(command=['make'], doStepIf=Interpolate("worker:os_id").in_(['debian', 'ubuntu']))
+
+'in' operator cannot be overloaded, so we add a simple ``in_`` method to :class:`Property` and :class:`Interpolate`.
+
+Currently supported operators are ``, ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``+``, ``-``, ``*``, ``/``, ``//``, ``%``.
