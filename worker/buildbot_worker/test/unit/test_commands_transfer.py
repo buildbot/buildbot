@@ -361,6 +361,25 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             {'rc': 1}
         ])
 
+    @defer.inlineCallbacks
+    def test_not_a_directory(self):
+        self.fakemaster.keep_data = True
+        self.fakemaster.unpack_fail = True
+        # Make sure we do not use an existing directory
+        self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
+            workdir='FakeBuildbotDirectory',
+            workersrc='data',
+            writer=FakeRemote(self.fakemaster),
+            maxsize=None,
+            blocksize=512,
+            compress=None,
+        ))
+
+        yield self.assertFailure(self.run_command(), OSError)
+        # Catch the not existing directory
+        self.assertUpdates([
+            {'header': "Error:{} is not a valid directory".format(os.path.join(self.basedir, 'FakeBuildbotDirectory/data'))},
+        ])
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
