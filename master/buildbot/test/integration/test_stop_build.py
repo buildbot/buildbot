@@ -41,7 +41,7 @@ class ShellMaster(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True, wantProperties=True)
         self.assertEqual(build['buildid'], 1)
 
-        # make sure the cancel reason is transfered all the way to the step log
+        # make sure the cancel reason is transferred all the way to the step log
         cancel_log = build['steps'][1]['logs'][-1]
         self.assertEqual(cancel_log['name'], 'cancelled')
         self.assertIn('cancelled by test', cancel_log['contents']['content'])
