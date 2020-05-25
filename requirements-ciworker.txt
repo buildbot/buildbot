@@ -10,7 +10,7 @@ incremental==17.5.0
 mock==3.0.5  # pyup: ignore
 pbr==5.4.5
 PyHamcrest==1.9.0
-six==1.14.0
+six==1.15.0
 Twisted==19.10.0
 zope.interface==4.7.1
 -e worker
