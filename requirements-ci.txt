@@ -48,7 +48,7 @@ pathlib2==2.3.5
 pbr==5.4.5
 pep8==1.7.1
 Pillow==7.1.2
-pyaml==19.12.0
+pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycodestyle==2.5.0
