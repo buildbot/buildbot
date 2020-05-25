@@ -35,7 +35,7 @@ jmespath==0.10.0
 jsonref==0.2
 lazy-object-proxy==1.4.3
 lz4==2.2.1
-markdown2==2.3.8
+markdown2==2.3.9
 MarkupSafe==1.1.1
 mccabe==0.6.1
 # pin mock, because 4.x no longer supports Python 3.5
