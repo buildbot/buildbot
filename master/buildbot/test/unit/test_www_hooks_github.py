@@ -449,6 +449,12 @@ gitJsonPayloadCommit = {
     "files": []
 }
 
+gitJsonPayloadFiles = [
+    {
+        "filename": "README.md"
+    }
+]
+
 gitPRproperties = {
     'github.head.sha': '05c588ba8cd510ecbe112d020f215facb17817a7',
     'github.state': 'open',
@@ -857,19 +863,24 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                          "Update the README with new information\n"
                          "This is a pretty simple change that we need to pull into master.")
         self.assertEqual(change["branch"], "refs/pull/50/merge")
+        self.assertEqual(change['files'], ['README.md'])
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
         self.assertEqual(change['properties']['basename'], "master")
         self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
-        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
         self._check_git_with_pull([gitJsonPayloadPullRequest])
 
     def test_git_with_pull_json(self):
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
-        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
         self._check_git_with_pull(gitJsonPayloadPullRequest)
 
     @defer.inlineCallbacks
@@ -932,8 +943,12 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
     @defer.inlineCallbacks
     def test_git_pull_request_with_custom_ref(self):
         commit = deepcopy([gitJsonPayloadPullRequest])
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
-        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
+
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
+
         self.request = _prepare_request('pull_request', commit)
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
@@ -1014,11 +1029,14 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase,
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
 
     def test_pull_request_no_skip(self):
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
+
         commit = deepcopy(gitJsonPayloadCommit)
         commit['commit']['message'] = 'black magic [skip bb]'  # pattern not matched
 
-        self._http.expect('get', api_endpoint, content_json=commit)
         self._check_pull_request_no_skip(gitJsonPayloadPullRequest)
 
 
@@ -1050,9 +1068,11 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
 
     def test_pull_request(self):
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
 
-        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_pull_request(gitJsonPayloadPullRequest)
 
 
@@ -1082,9 +1102,11 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase,
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
 
     def test_pull_request(self):
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
 
-        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_pull_request(gitJsonPayloadPullRequest)
 
 
@@ -1118,9 +1140,11 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase,
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
 
     def test_pull_request(self):
-        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
 
-        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_pull_request(gitJsonPayloadPullRequest)
 
 
