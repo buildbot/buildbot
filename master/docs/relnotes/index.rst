@@ -10,6 +10,43 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.8.0`` ( ``2020-05-27`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix :py:class:`GitHubEventHandler` to include files in `Change` that comes from a github PR (:issue:`5294`)
+- Updated the `Docker` container `buildbot-master` to `Alpine 3.11` to fix
+  segmentation faults caused by an old version of `musl`
+- Base64 encoding logs and attachments sent via email so emails conform to RFC 5322 2.1.1
+- Handling the case where the BitbucketStatusPush return code is not 200
+- When cancelling a buildrequest, the reason field is now correctly transmitted all the way to the cancelled step.
+- Fix Cache-control header to be compliant with RFC 7234 (:issue:`5220`)
+- Fix :py:class:`GerritEventLogPoller` class to be declared as entry_point (can be used in master.cfg file)
+- Git poller: add `--ignore-missing` argument to `git log` call to avoid `fatal: bad object` errors
+- Log watcher looks for the "tail" utility in the right location on Haiku OS.
+- Add limit and filtering support for the changes data API as described in :issue:`5207`
+
+Improved Documentation
+----------------------
+
+- Make docs build with the latest sphinx and improve rendering of the example HTML file for custom dashboard
+- Make docs build with Sphinx 3 and fix some typos and incorrect Python module declarations
+
+Features
+--------
+
+- :class:`Property` and :class:`Interpolate` objects can now be compared. This will generate a renderable that will be evaluated at runtime. see :ref:`RenderableComparison`.
+- Added argument `count` to lock access to allow a lock to consume a variable amount of units
+- Added arguments `pollRandomDelayMin` and `pollRandomDelayMax` to `HgPoller`, `GitPoller`, `P4Poller`, `SvnPoller` to spread the polling load
+
+Deprecations and Removals
+-------------------------
+
+- Removed `_skipChecks` from `LockAccess` as it's obsolete
+
+
 Buildbot ``2.7.0`` ( ``2020-02-27`` )
 =====================================
 
