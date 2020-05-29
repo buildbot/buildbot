@@ -13,7 +13,8 @@ boto3==1.13.16
 botocore==1.16.16
 cffi==1.14.0
 click==7.1.2
-configparser==4.0.2
+# pin configparser, because 5.x no longer supports Python 3.5
+configparser==4.0.2  # pyup: ignore
 constantly==15.1.0
 cookies==2.2.1
 cryptography==2.9.2
