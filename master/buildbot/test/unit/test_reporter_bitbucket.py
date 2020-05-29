@@ -186,7 +186,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
             code=404,
             content_json={
                 "error_description": "This commit is unknown to us",
-                "error": "invalid_commit"}),
+                "error": "invalid_commit"})
         self.setUpLogging()
         self.bsp.buildStarted(('build', 20, 'started'), build)
         self.assertLogged('404: unable to upload Bitbucket status')
