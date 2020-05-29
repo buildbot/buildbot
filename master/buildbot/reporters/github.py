@@ -136,15 +136,15 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 if m:
                     issue = m.group(1)
 
-            repoOwner = None
-            repoName = None
+            repo_owner = None
+            repo_name = None
             if "/" in project:
-                repoOwner, repoName = project.split('/')
+                repo_owner, repo_name = project.split('/')
             else:
                 giturl = giturlparse(sourcestamp['repository'])
                 if giturl:
-                    repoOwner = giturl.owner
-                    repoName = giturl.repo
+                    repo_owner = giturl.owner
+                    repo_name = giturl.repo
 
             sha = sourcestamp['revision']
             response = None
@@ -160,17 +160,14 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
             try:
                 if self.verbose:
-                    log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
-                        repoOwner=repoOwner, repoName=repoName))
+                    log.msg("Updating github status: repo_owner={}, repo_name={}".format(
+                            repo_owner, repo_name))
 
-                repo_user = repoOwner
-                repo_name = repoName
-                target_url = build['url']
-                response = yield self.createStatus(repo_user=repo_user,
+                response = yield self.createStatus(repo_user=repo_owner,
                                                    repo_name=repo_name,
                                                    sha=sha,
                                                    state=state,
-                                                   target_url=target_url,
+                                                   target_url=build['url'],
                                                    context=context,
                                                    issue=issue,
                                                    description=description)
@@ -184,9 +181,9 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
                 if self.verbose:
                     log.msg(
-                        'Updated status with "{state}" for {repoOwner}/{repoName} '
+                        'Updated status with "{state}" for {repo_owner}/{repo_name} '
                         'at {sha}, context "{context}", issue {issue}.'.format(
-                            state=state, repoOwner=repoOwner, repoName=repoName,
+                            state=state, repo_owner=repo_owner, repo_name=repo_name,
                             sha=sha, issue=issue, context=context))
             except Exception as e:
                 if response:
@@ -196,10 +193,10 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     content = code = "n/a"
                 log.err(
                     e,
-                    'Failed to update "{state}" for {repoOwner}/{repoName} '
+                    'Failed to update "{state}" for {repo_owner}/{repo_name} '
                     'at {sha}, context "{context}", issue {issue}. '
                     'http {code}, {content}'.format(
-                        state=state, repoOwner=repoOwner, repoName=repoName,
+                        state=state, repo_owner=repo_owner, repo_name=repo_name,
                         sha=sha, issue=issue, context=context,
                         code=code, content=content))
 
