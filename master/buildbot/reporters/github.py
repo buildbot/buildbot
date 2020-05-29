@@ -175,6 +175,10 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                                                    issue=issue,
                                                    description=description)
 
+                if not response:
+                    # the implementation of createStatus refused to post update due to missing data
+                    continue
+
                 if not self.isStatus2XX(response.code):
                     raise Exception()
 
@@ -209,6 +213,7 @@ class GitHubCommentPush(GitHubStatusPush):
         self.startDescription = startDescription
         self.endDescription = endDescription or 'Build done.'
 
+    @defer.inlineCallbacks
     def createStatus(self,
                      repo_user, repo_name, sha, state, target_url=None,
                      context=None, issue=None, description=None):
@@ -227,6 +232,11 @@ class GitHubCommentPush(GitHubStatusPush):
         """
         payload = {'body': description}
 
-        return self._http.post(
-            '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments']),
-            json=payload)
+        if issue is None:
+            log.msg('Skipped status update for repo {} sha {} as issue is not specified'.format(
+                repo_name, sha))
+            return None
+
+        url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])
+        ret = yield self._http.post(url, json=payload)
+        return ret
