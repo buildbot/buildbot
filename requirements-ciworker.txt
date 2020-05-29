@@ -9,7 +9,8 @@ incremental==17.5.0
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5  # pyup: ignore
 pbr==5.4.5
-PyHamcrest==1.9.0
+# pin PyHamcrest, because 2.x no longer supports Python 2.7
+PyHamcrest==1.9.0  # pyup: ignore
 six==1.15.0
 Twisted==20.3.0
 zope.interface==5.1.0
