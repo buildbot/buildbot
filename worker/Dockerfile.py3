@@ -5,10 +5,10 @@
 # please follow docker best practices
 # https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/
 
-# Provides a base Ubuntu (16.04) image with latest buildbot worker installed
+# Provides a base Ubuntu (20.04) image with latest buildbot worker installed
 # the worker image is not optimized for size, but rather uses ubuntu for wider package availability
 
-FROM        ubuntu:18.04
+FROM        ubuntu:20.04
 MAINTAINER  Buildbot maintainers
 
 
