@@ -25,6 +25,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.github import HOSTED_BASE_URL
 from buildbot.reporters.github import GitHubCommentPush
 from buildbot.reporters.github import GitHubStatusPush
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.misc import TestReactorMixin
@@ -113,6 +114,82 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_multiple_source_stamps_no_props(self):
+        repository = 'http://test_repo'
+        project = 'test_user/test_project'
+        codebase1 = 'test_codebase1'
+        codebase2 = 'test_codebase2'
+        codebase3 = 'test_codebase3'
+
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/statuses/rev1',
+            json={'state': 'pending',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build started.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/statuses/rev3',
+            json={'state': 'pending',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build started.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/statuses/rev1',
+            json={'state': 'success',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/statuses/rev3',
+            json={'state': 'success',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/statuses/rev1',
+            json={'state': 'success',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/statuses/rev3',
+            json={'state': 'success',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
+
+        # note that the first sourcestamp only has revision, second only branch and only the third
+        # has both
+        self.master.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Builder(id=79, name='Builder0'),
+            fakedb.Buildset(id=98, results=SUCCESS, reason="test_reason1"),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=235),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=236),
+            fakedb.SourceStamp(id=234, project=project, branch=None, revision='rev1',
+                               repository=repository, codebase=codebase1),
+            fakedb.SourceStamp(id=235, project=project, branch='branch2', revision=None,
+                               repository=repository, codebase=codebase2),
+            fakedb.SourceStamp(id=236, project=project, branch='branch3', revision='rev3',
+                               repository=repository, codebase=codebase3),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79),
+            fakedb.Build(id=20, number=0, builderid=79, buildrequestid=11,
+                         workerid=13, masterid=92, results=SUCCESS, state_string="build_text"),
+            fakedb.BuildProperty(buildid=20, name="buildername", value="Builder0"),
+        ])
+
+        build = yield self.master.data.get(("builds", 20))
+
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = SUCCESS
         self.sp.buildFinished(("build", 20, "finished"), build)
 
 
@@ -253,4 +330,63 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_multiple_source_stamps_no_props(self):
+        repository = 'http://test_repo'
+        project = 'test_user/test_project'
+        codebase1 = 'test_codebase1'
+        codebase2 = 'test_codebase2'
+        codebase3 = 'test_codebase3'
+        branch2 = 'refs/pull/4192/merge'
+        branch3 = 'refs/pull/4193/merge'
+
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/test_user/test_project/issues/4192/comments',
+            json={'body': 'Build done.'})
+
+        # note that the first sourcestamp only has revision, second only branch and only the third
+        # has both
+        self.master.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Builder(id=79, name='Builder0'),
+            fakedb.Buildset(id=98, results=SUCCESS, reason="test_reason1"),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=235),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=236),
+            fakedb.SourceStamp(id=234, project=project, branch=None, revision='rev1',
+                               repository=repository, codebase=codebase1),
+            fakedb.SourceStamp(id=235, project=project, branch=branch2, revision=None,
+                               repository=repository, codebase=codebase2),
+            fakedb.SourceStamp(id=236, project=project, branch=branch3, revision='rev3',
+                               repository=repository, codebase=codebase3),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79),
+            fakedb.Build(id=20, number=0, builderid=79, buildrequestid=11,
+                         workerid=13, masterid=92, results=SUCCESS, state_string="build_text"),
+            fakedb.BuildProperty(buildid=20, name="buildername", value="Builder0"),
+            fakedb.BuildProperty(buildid=20, name="branch", value=branch2),
+        ])
+
+        build = yield self.master.data.get(("builds", 20))
+
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = SUCCESS
         self.sp.buildFinished(("build", 20, "finished"), build)
