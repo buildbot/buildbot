@@ -107,10 +107,10 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_parseCustomTemplateDir(self):
         exp = {'views/builds.html': '<div>\n</div>'}
         try:
-            # we make the test work if pyjade is present or note
-            # It is better than just skip if pyjade is not there
-            import pyjade  # pylint: disable=import-outside-toplevel
-            [pyjade]
+            # we make the test work if pypugjs is present or note
+            # It is better than just skip if pypugjs is not there
+            import pypugjs  # pylint: disable=import-outside-toplevel
+            [pypugjs]
             exp.update({'plugin/views/plugin.html':
                         '<div class="myclass"><pre>this is customized</pre></div>'})
         except ImportError:

@@ -490,8 +490,8 @@ test_deps = [
     # http client libraries
     'treq',
     'txrequests',
-    # pyjade required for custom templates tests
-    'pyjade',
+    # pypugjs required for custom templates tests
+    'pypugjs',
     # boto3 and moto required for running EC2 tests
     'boto3',
     'moto',
