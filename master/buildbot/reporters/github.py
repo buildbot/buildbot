@@ -129,7 +129,6 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         for sourcestamp in sourcestamps:
             project = sourcestamp['project']
 
-            # If branch is None, so is issue
             issue = None
             if 'branch' in props:
                 m = re.search(r"refs/pull/([0-9]*)/merge", props['branch'])
