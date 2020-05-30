@@ -645,6 +645,66 @@ dbdict['logdict'] = DictValidator(
     num_lines=IntValidator(),
     type=IdentifierValidator(1))
 
+# test results sets
+
+_test_result_set_msgdict = DictValidator(
+    builderid=IntValidator(),
+    buildid=IntValidator(),
+    stepid=IntValidator(),
+    description=NoneOk(StringValidator()),
+    category=StringValidator(),
+    value_unit=StringValidator(),
+    tests_passed=NoneOk(IntValidator()),
+    tests_failed=NoneOk(IntValidator()),
+    complete=BooleanValidator()
+)
+
+message['test_result_sets'] = Selector()
+message['test_result_sets'].add(None,
+                                MessageValidator(events=[b'new', b'completed'],
+                                                 messageValidator=_test_result_set_msgdict))
+
+dbdict['test_result_setdict'] = DictValidator(
+    id=IntValidator(),
+    builderid=IntValidator(),
+    buildid=IntValidator(),
+    stepid=IntValidator(),
+    description=NoneOk(StringValidator()),
+    category=StringValidator(),
+    value_unit=StringValidator(),
+    tests_passed=NoneOk(IntValidator()),
+    tests_failed=NoneOk(IntValidator()),
+    complete=BooleanValidator()
+)
+
+# test results
+
+_test_results_msgdict = DictValidator(
+    builderid=IntValidator(),
+    test_result_setid=IntValidator(),
+    test_name=NoneOk(StringValidator()),
+    test_code_path=NoneOk(StringValidator()),
+    line=NoneOk(IntValidator()),
+    duration_ns=NoneOk(IntValidator()),
+    value=StringValidator(),
+)
+
+message['test_results'] = Selector()
+message['test_results'].add(None,
+                            MessageValidator(events=[b'new'],
+                                             messageValidator=_test_results_msgdict))
+
+dbdict['test_resultdict'] = DictValidator(
+    id=IntValidator(),
+    builderid=IntValidator(),
+    test_result_setid=IntValidator(),
+    test_name=NoneOk(StringValidator()),
+    test_code_path=NoneOk(StringValidator()),
+    line=NoneOk(IntValidator()),
+    duration_ns=NoneOk(IntValidator()),
+    value=StringValidator(),
+)
+
 
 # external functions
 

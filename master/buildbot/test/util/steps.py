@@ -242,6 +242,26 @@ class BuildStepMixin:
         for n, o in step._pendingLogObservers:
             addLogObserver(n, o)
 
+        self._got_test_result_sets = []
+        self._next_test_result_set_id = 1000
+
+        def add_test_result_set(description, category, value_unit):
+            self._got_test_result_sets.append((description, category, value_unit))
+
+            setid = self._next_test_result_set_id
+            self._next_test_result_set_id += 1
+            return defer.succeed(setid)
+
+        step.addTestResultSet = add_test_result_set
+
+        self._got_test_results = []
+
+        def add_test_result(setid, value, test_name=None, test_code_path=None, line=None,
+                            duration_ns=None):
+            self._got_test_results.append((setid, value, test_name, test_code_path, line,
+                                           duration_ns))
+        step.addTestResult = add_test_result
+
         # expectations
 
         self.exp_result = None
@@ -251,6 +271,8 @@ class BuildStepMixin:
         self.exp_logfiles = {}
         self.exp_hidden = False
         self.exp_exception = None
+        self._exp_test_result_sets = []
+        self._exp_test_results = []
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
@@ -304,6 +326,19 @@ class BuildStepMixin:
         self.exp_exception = exception_class
         self.expectOutcome(EXCEPTION)
 
+    def expectTestResultSets(self, sets):
+        self._exp_test_result_sets = sets
+
+    def expectTestResults(self, results):
+        self._exp_test_results = results
+
+    def _dump_logs(self):
+        for l in self.step.logs.values():
+            if l.stdout:
+                log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
+            if l.stderr:
+                log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+
     @defer.inlineCallbacks
     def runStep(self):
         """
@@ -329,11 +364,7 @@ class BuildStepMixin:
         # debugging failing tests
         if result != self.exp_result:
             log.msg("unexpected result from step; dumping logs")
-            for l in self.step.logs.values():
-                if l.stdout:
-                    log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
-                if l.stderr:
-                    log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+            self._dump_logs()
             raise AssertionError("unexpected result; see logs")
 
         if self.exp_state_string:
@@ -364,6 +395,9 @@ class BuildStepMixin:
         if self.exp_exception:
             self.assertEqual(
                 len(self.flushLoggedErrors(self.exp_exception)), 1)
+
+        self.assertEqual(self._exp_test_result_sets, self._got_test_result_sets)
+        self.assertEqual(self._exp_test_results, self._got_test_results)
 
         # XXX TODO: hidden
         # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)

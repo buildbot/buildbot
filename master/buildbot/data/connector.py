@@ -54,6 +54,8 @@ class DataConnector(service.AsyncService):
         'buildbot.data.forceschedulers',
         'buildbot.data.root',
         'buildbot.data.properties',
+        'buildbot.data.test_results',
+        'buildbot.data.test_result_sets',
     ]
     name = "data"
 

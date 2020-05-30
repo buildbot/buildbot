@@ -1,0 +1,78 @@
+#%RAML 1.0 DataType
+displayName: Test result
+description: |
+    This resource represents a test result.
+    Test results that are produced by a single test run are grouped by a relation to a test result set.
+    Single test result set may represent thousands of test results.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.test_result_sets.TestResult
+
+        .. py:method:: addTestResults(builderid, test_result_setid, result_values)
+
+            :param integer builderid: The ID of the builder corresponding to the test result set.
+            :param integer test_result_setid: The ID of the test result set for which to add results.
+            :param integer result_values: A list of dictionaries that define the test results.
+
+            Creates one or more new test results.
+            This is a batch-based method as large number of test results are usually associated to a
+            single test result set.
+
+            The dictionaries in ``result_value`` may have the following keys:
+
+             - ``value`` (required): A string containing the value of the test result.
+
+             - ``test_name`` (optional): A string containing the name of the test that.
+
+             - ``test_code_path`` (optional): A string containing the path of the test.
+
+             - ``line`` (optional): An integer containing the line within the source file
+                corresponding to the test.
+
+             - ``duration_ns`` (optional): An integer defining the duration of the test in
+                nanoseconds.
+
+            At least one of ``test_name``, ``test_code_path`` must be specified.
+
+            The function returns nothing.
+
+properties:
+    test_resultid:
+        description: the unique ID of this test result.
+        type: integer
+    builderid:
+        description: id of the builder for this test result.
+        type: integer
+    test_result_setid:
+        description: id of the test result set that the test result belongs to.
+        type: integer
+    test_name?:
+        description: id of the test name
+        type: integer
+    test_code_path?:
+        description: the code path associated to test, if any
+        type: integer
+    line?:
+        description: the number of the line in the code path that produced this result, if any
+        type: integer
+    duration_ns?:
+        description: the number of nanoseconds it took to perform the test, if available.
+        type: integer
+    value:
+        description: the value of the test.
+        type: string
+
+type: object
+example:
+    test_resultid: 1042
+    builderid: 14
+    test_result_setid: 412
+    test_name: 'test.perf.buildbot.api.123'
+    test_code_path: 'master/buildbot/spec/types/test_result.raml'
+    duration_ns: 120410
+    line: 123
+    value: '31.1382'

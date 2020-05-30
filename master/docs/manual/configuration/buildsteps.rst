@@ -2266,6 +2266,12 @@ There is no default.
 
     f.addStep(steps.PyLint(command=["pylint", "src"]))
 
+This step takes the following arguments:
+
+``store_results``
+   (optional) Boolean, ``true`` if the test results should be stored in the test database.
+   The default value is ``true``.
+
 .. bb:step:: Trial
 
 .. _Step-Trial:

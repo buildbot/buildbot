@@ -1,0 +1,145 @@
+#%RAML 1.0 DataType
+displayName: Test result set
+description: |
+    This resource represents a test result set.
+    A test result set consists of a number of related test results.
+    These test results need to be related in that they represent the same type of data and are produced by a single step.
+    In reasonably tested codebases the number of test results in a test result set will approach several or even tens of thousands.
+
+    There may be a long delay between the creation of the test result set and full creation of the corresponding test results.
+    This is tracked by the ``complete`` property.
+    If it's ``true``, then the full set of test results have been committed to the database.
+
+    The ``test_result_unparsed_set`` object tracks test result sets that have not been parsed yet.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.test_result_sets.TestResultSet
+
+        .. py:method:: addTestResultSet(builderid, buildid, stepid, description, category, value_unit)
+
+            :param integer builderid: The ID of the builder for which the test result set is to be created.
+            :param integer buildid: The ID of the build for which the test result set is to be created.
+            :param integer stepid: The ID of the step for which the test result set is to be created.
+            :param description: Description of the test result set.
+            :param category: The category of the test result set.
+            :param value_unit: Defines the unit of the values stored in the test results.
+
+            Creates a new test result set.
+            Returns the ID of the new test result set.
+
+        .. py:method:: completeTestResultSet(test_result_setid, tests_passed=None, tests_failed=None):
+
+            :param integer test_result_setid: The ID of the test result set to complete.
+            :param integer tests_passed: The number of passed tests, if known
+            :param integer tests_failed: The number of failed tests, if known
+
+            Marks a test result set as complete.
+            The total number of passed and failed tests may be passed to have this information
+            cached as part of a test result set so that expensive re-computations don't need to
+            be performed.
+
+properties:
+    test_result_setid:
+        description: the unique ID of this test result set.
+        type: integer
+    builderid:
+        description: id of the builder for this test result set.
+        type: integer
+    buildid:
+        description: id of the build for this test result set.
+        type: integer
+    stepid:
+        description: id of the step for this test result set.
+        type: integer
+    description:
+        description: |
+            Free-form description of the source of the test data
+        type: string
+    category:
+        description: |
+            The category of the test result set.
+            This describes what data the test results contain.
+
+            Any value is allowed. The following standard categories are defined:
+
+            - ``pass_fail``: The test result set contains results that can indicate success or
+              failure of specific test. The values of test results contain success or failure
+              values.
+
+            - ``pass_only``: The test result set contains results that can only indicate success
+              of specific test. This is used in cases when failed tests are not reported.
+
+            - ``fail_only``: The test result set contains results that can only indicate failure
+              of specific test. This is used in tests when passed tests are not reported.
+
+            - ``code_issue``: The test result set contains issues within the code reported by
+              various tooling. This is effectively a subset of ``fail_only``.
+
+            - ``performance``: The test result set contains performance results.
+              The values of test results contain some kind of performance metric such as time per
+              operation or the number of operations completed in a time period.
+
+            - ``binary_size``: The test result set contains evaluation of binary size.
+              The values of test results contain a binary size metric.
+
+            - ``memory_use``: The test result set contains evaluation of dynamic memory use.
+              The values of test results contain a memory use metric.
+        type: string
+    value_unit:
+        description: |
+            Describes the unit of the values stored within the test results.
+
+            Any value is allowed. The following standard units are defined:
+
+            - ``ps``: Picoseconds
+            - ``ns``: Nanoseconds
+            - ``us``: Microseconds
+            - ``ms``: Milliseconds
+            - ``s``: Seconds
+            - ``boolean``: A boolean value (0 or 1)
+            - ``B``: Bytes
+            - ``KB``: Kilobytes (1000-based)
+            - ``KiB``: Kibibytes (1024-based)
+            - ``MB``: Megabytes (1000-based)
+            - ``MiB``: Mebibytes (1024-based)
+            - ``GB``: Gigabytes (1000-based)
+            - ``GiB``: Gibibytes (1024-based)
+            - ``TB``: Gigabytes (1000-based)
+            - ``TiB``: Gibibytes (1024-based)
+            - ``message``: Arbitrary string message
+
+            Note that the value of the test result is always stored as string.
+
+        type: string
+    tests_passed?:
+        description: |
+            The number of passed tests in cases when the pass or fail criteria depends only on how
+            that single test runs. For example, performance tests that track regressions across
+            multiple tests do not have the number of passed tests defined.
+        type: integer
+    tests_failed?:
+        description: |
+            The number of failed tests in cases when the pass or fail criteria depends only on how
+            that single test runs. For example, performance tests that track regressions across
+            multiple tests do not have the number of failed tests defined.
+        type: integer
+    complete:
+        description: |
+            ``true`` if all test results associated with test result set have been generated.
+            Once set to ``true`` this property will never be set back to ``false``
+        type: boolean
+
+type: object
+example:
+    test_result_setid: 412
+    builderid: 14
+    buildid: 31
+    stepid: 3
+    description: "Performance test via BenchmarkDotNet"
+    category: "performance"
+    value_unit: "ms"
+    complete: True
