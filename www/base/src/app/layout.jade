@@ -1,3 +1,5 @@
+- var timestamp = process.env.SOURCE_DATE_EPOCH ? (parseInt(process.env.SOURCE_DATE_EPOCH) * 1000) : new Date().getTime();
+
 doctype html
 html.no-js(ng-app="app", xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     head
@@ -18,10 +20,10 @@ html.no-js(ng-app="app", xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     script(src="browser-warning-list.js")
     script
       | window.T =  {{ custom_templates | tojson }};
-    script(src="scripts.js?_" + (new Date()).getTime())
+    script(src="scripts.js?_" + timestamp)
     | {% for app in config.plugins -%}
-    script(src="{{app}}/scripts.js?_" + (new Date()).getTime())
-    link(href='{{app}}/styles.css?_' + (new Date()).getTime(), rel='stylesheet')
+    script(src="{{app}}/scripts.js?_" + timestamp)
+    link(href='{{app}}/styles.css?_' + timestamp, rel='stylesheet')
     script
       | angular.module('app').requires.push('{{app}}')
     | {% endfor %}
