@@ -17,6 +17,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
+from buildbot.interfaces import IRenderable
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.buildstep import CANCELLED
 from buildbot.process.buildstep import EXCEPTION
@@ -65,10 +66,18 @@ class Trigger(BuildStep):
             config.error(
                 "You can't specify both alwaysUseLatest and updateSourceStamp"
             )
-        if not set(schedulerNames).issuperset(set(unimportantSchedulerNames)):
-            config.error(
-                "unimportantSchedulerNames must be a subset of schedulerNames"
-            )
+
+        def hasRenderable(l):
+            for s in l:
+                if IRenderable.providedBy(s):
+                    return True
+            return False
+
+        if not hasRenderable(schedulerNames) and not hasRenderable(unimportantSchedulerNames):
+            if not set(schedulerNames).issuperset(set(unimportantSchedulerNames)):
+                config.error(
+                    "unimportantSchedulerNames must be a subset of schedulerNames"
+                )
 
         self.schedulerNames = schedulerNames
         self.unimportantSchedulerNames = unimportantSchedulerNames

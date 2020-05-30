@@ -1,0 +1,2 @@
+fix crash in trigger step when renderables are used for scheduler names (:issue:`5312`)
+
