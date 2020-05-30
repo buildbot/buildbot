@@ -17,26 +17,28 @@ Symbol Names
 ------------
 
 Buildbot follows `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ regarding the formatting of symbol names.
-Because Buildbot uses Twisted so heavily, and Twisted uses interCaps, this is not very consistently applied throughout the codebase.
 
-The single exception to PEP8 is in naming of functions and methods.
-That is, you should spell methods and functions with the first character in lower-case, and the first letter of subsequent words capitalized, e.g., ``compareToOther`` or ``getChangesGreaterThan``.
+Due to historical reasons, most of the public API uses interCaps naming style
+To preserve backwards compatibility, the public API should continue using interCaps naming style.
+That is, you should spell public API methods and functions with the first character in lower-case, and the first letter of subsequent words capitalized, e.g., ``compareToOther`` or ``getChangesGreaterThan``.
+The public API refers to the documented API that external developers can rely on.
+See section on the definition of the public API in :ref:`Public-API`.
 
-Symbols used as parameters to functions used in configuration files should use underscores.
+Everything else should use the style recommended by PEP8.
 
-In summary, then:
+In summary:
 
-====================== ============
-Symbol Type            Format
-====================== ============
-Methods                interCaps
-Functions              interCaps
-Function Arguments     under_scores
-API method Arguments   interCaps
-Classes                InitialCaps
-Variables              under_scores
-Constants              ALL_CAPS
-====================== ============
+=========================================== ============
+Symbol Type                                 Format
+=========================================== ============
+Methods and functions                       under_scores
+Method and function arguments               under_scores
+Public API methods and functions            interCaps
+Public API method and function arguments    interCaps
+Classes                                     InitialCaps
+Variables                                   under_scores
+Constants                                   ALL_CAPS
+=========================================== ============
 
 Twisted Idioms
 --------------
