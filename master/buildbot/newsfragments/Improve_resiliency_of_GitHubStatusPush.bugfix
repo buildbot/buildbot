@@ -1,0 +1,1 @@
+Fixed a bug in GitHubStatusPush that would cause silent failures for builders that specified multiple codebases.
