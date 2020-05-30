@@ -181,7 +181,7 @@ class SequenceValidator(Validator):
         self.elementValidator = elementValidator
 
     def validate(self, name, object):
-        if not isinstance(object, self.type):
+        if not isinstance(object, self.type):  # noqa pylint: disable=isinstance-second-argument-not-valid-type
             yield "{} ({!r}) is not a {}".format(name, object, self.name)
             return
 
