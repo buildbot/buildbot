@@ -35,7 +35,7 @@ from buildbot.util.giturlparse import giturlparse
 HOSTED_BASE_URL = 'https://api.github.com'
 
 
-class GitHubStatusPush(http.HttpStatusPushBase):
+class GitHubStatusPush(http. HttpStatusPushBase):
     name = "GitHubStatusPush"
     neededDetails = dict(wantProperties=True)
 

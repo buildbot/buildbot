@@ -32,6 +32,7 @@ def getPreviousBuild(master, build):
     n = build['number'] - 1
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
+
         if prev and prev['results'] != RETRY:
             return prev
         n -= 1
@@ -197,3 +198,23 @@ def getURLForBuild(master, builderid, build_number):
 def URLForBuild(props):
     build = props.getBuild()
     return build.getUrl()
+
+
+def merge_reports_prop(reports, prop):
+    result = None
+    for report in reports:
+        if prop in report and report[prop] is not None:
+            if result is None:
+                result = report[prop]
+            else:
+                result += report[prop]
+
+    return result
+
+
+def merge_reports_prop_take_first(reports, prop):
+    for report in reports:
+        if prop in report and report[prop] is not None:
+            return report[prop]
+
+    return None
