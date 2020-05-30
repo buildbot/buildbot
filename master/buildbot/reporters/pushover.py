@@ -82,11 +82,11 @@ class PushoverNotifier(NotifierBase):
         if messageFormatterMissingWorker is None:
             messageFormatterMissingWorker = MessageFormatterMissingWorker(
                 template_filename='missing_notification.txt')
-        super(PushoverNotifier, self).reconfigService(mode, tags, builders,
-                                                      buildSetSummary, messageFormatter,
-                                                      subject, False, False,
-                                                      schedulers, branches,
-                                                      watchedWorkers, messageFormatterMissingWorker)
+        yield super().reconfigService(mode, tags, builders,
+                                      buildSetSummary, messageFormatter,
+                                      subject, False, False,
+                                      schedulers, branches,
+                                      watchedWorkers, messageFormatterMissingWorker)
         self.user_key = user_key
         self.api_token = api_token
         if priorities is None:

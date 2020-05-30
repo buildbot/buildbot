@@ -130,6 +130,7 @@ class MailNotifier(NotifierBase):
         if useSmtps:
             ssl.ensureHasSSL(self.__class__.__name__)
 
+    @defer.inlineCallbacks
     def reconfigService(self, fromaddr, mode=("failing", "passing", "warnings"),
                         tags=None, builders=None, addLogs=False,
                         relayhost="localhost", buildSetSummary=False,
@@ -142,8 +143,7 @@ class MailNotifier(NotifierBase):
                         schedulers=None, branches=None,
                         watchedWorkers='all', messageFormatterMissingWorker=None,
                         dumpMailsToLog=False):
-
-        super(MailNotifier, self).reconfigService(
+        yield super().reconfigService(
             mode=mode, tags=tags, builders=builders,
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,

@@ -73,11 +73,11 @@ class PushjetNotifier(NotifierBase):
         if messageFormatterMissingWorker is None:
             messageFormatterMissingWorker = MessageFormatterMissingWorker(
                 template_filename='missing_notification.txt')
-        super(PushjetNotifier, self).reconfigService(mode, tags, builders,
-                                                     buildSetSummary, messageFormatter,
-                                                     subject, False, False,
-                                                     schedulers, branches,
-                                                     watchedWorkers, messageFormatterMissingWorker)
+        yield super().reconfigService(mode, tags, builders,
+                                      buildSetSummary, messageFormatter,
+                                      subject, False, False,
+                                      schedulers, branches,
+                                      watchedWorkers, messageFormatterMissingWorker)
         self.secret = secret
         if levels is None:
             self.levels = {}
