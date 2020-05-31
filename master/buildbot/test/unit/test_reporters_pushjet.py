@@ -56,7 +56,13 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
                      data={'secret': "1234", 'level': 2,
                            'message': "Test", 'title': "Tee"},
                      content_json={'status': 'ok'})
-        n = yield pn.sendMessage(body="Test", subject="Tee", results=SUCCESS)
+
+        n = yield pn.sendMessage([{
+            "body": "Test",
+            "subject": "Tee",
+            "results": SUCCESS
+        }])
+
         j = yield n.json()
         self.assertEqual(j['status'], 'ok')
 

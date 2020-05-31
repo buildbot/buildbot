@@ -30,6 +30,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import mail
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
+from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
@@ -188,12 +189,16 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         _, builds = yield self.setupBuildResults(SUCCESS)
 
-        mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
+        formatter = Mock(spec=MessageFormatter)
+        formatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                               "type": "text",
+                                                               "subject": "subject"}
+        formatter.wantProperties = False
+        formatter.wantSteps = False
+        formatter.wantLogs = False
 
-        mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                                         "type": "text",
-                                                                         "subject": "subject"}
+        mn = yield self.setupMailNotifier('from@example.org', messageFormatter=formatter,
+                                          **mnKwargs)
 
         mn.findInterrestedUsersEmails = Mock(
             spec=mn.findInterrestedUsersEmails)
@@ -205,16 +210,16 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn.createEmail = Mock(spec=mn.createEmail)
         mn.createEmail.return_value = "<email>"
         mn.sendMail = Mock(spec=mn.sendMail)
-        yield mn.buildMessage("mybldr", builds, SUCCESS)
-        return (mn, builds)
+        yield mn.buildComplete("", builds[0])
+        return (mn, builds, formatter)
 
     @defer.inlineCallbacks
     def test_buildMessage(self):
-        mn, builds = yield self.setupBuildMessage(mode=("change",))
+        mn, builds, formatter = yield self.setupBuildMessage(mode=("passing",))
 
         build = builds[0]
-        mn.messageFormatter.formatMessageForBuildResults.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master,
+        formatter.formatMessageForBuildResults.assert_called_with(
+            ('passing',), 'Builder1', build['buildset'], build, self.master,
             None, ['me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with(['me@foo'])
@@ -321,12 +326,17 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
 
         _, builds = yield self.setupBuildResults(SUCCESS)
-        mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
-        mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                                         "type": "text",
-                                                                         "subject": "subject"}
+        formatter = Mock(spec=MessageFormatter)
+        formatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                               "type": "text",
+                                                               "subject": "subject"}
+        formatter.wantProperties = False
+        formatter.wantSteps = False
+        formatter.wantLogs = False
+
+        mn = yield self.setupMailNotifier('from@example.org', messageFormatter=formatter,
+                                          **mnKwargs)
 
         mn.findInterrestedUsersEmails = Mock(
             spec=mn.findInterrestedUsersEmails)
@@ -338,7 +348,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn.createEmail = Mock(spec=mn.createEmail)
         mn.createEmail.return_value.as_string = Mock(return_value="<email>")
 
-        yield mn.buildMessage("mybldr", builds, SUCCESS)
+        yield mn.buildComplete("", builds[0])
         return (mn, builds)
 
     @defer.inlineCallbacks
@@ -386,5 +396,9 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
 def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
     unibody = 'Unicode body with non-ascii ({}).'.format(funny_chars)
-    msg_dict = dict(body=unibody, type='plain')
+    msg_dict = {
+        "body": unibody,
+        "subject": "testsubject",
+        "type": 'plain'
+    }
     return msg_dict

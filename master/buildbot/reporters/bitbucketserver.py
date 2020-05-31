@@ -27,6 +27,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 
+from .utils import merge_reports_prop
+
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
 SUCCESSFUL = 'SUCCESSFUL'
@@ -166,14 +168,18 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
             path=bytes2unicode(path)), json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, body, subject=None, type=None, builderName=None,
-                    results=None, builds=None, users=None, patches=None,
-                    logs=None, worker=None):
+    def sendMessage(self, reports):
+        body = merge_reports_prop(reports, 'body')
+        builds = merge_reports_prop(reports, 'builds')
+
         pr_urls = set()
         for build in builds:
             props = Properties.fromDict(build['properties'])
             pr_urls.add(props.getProperty("pullrequesturl"))
+
         for pr_url in pr_urls:
+            if pr_url is None:
+                continue
             try:
                 res = yield self.sendComment(
                     pr_url=pr_url,

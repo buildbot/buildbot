@@ -26,6 +26,7 @@ from buildbot.reporters.bitbucketserver import HTTP_CREATED
 from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
+from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
@@ -197,12 +198,19 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None,
             verify=None)
+
+        formatter = Mock(spec=MessageFormatter)
+        formatter.formatMessageForBuildResults.return_value = {"body": UNICODE_BODY,
+                                                               "type": "text",
+                                                               "subject": "subject"}
+        formatter.wantProperties = True
+        formatter.wantSteps = False
+        formatter.wantLogs = False
+
         self.cp = BitbucketServerPRCommentPush(
-            "serv", Interpolate("username"), Interpolate("passwd"), verbose=verbose, **kwargs)
+            "serv", Interpolate("username"), Interpolate("passwd"), verbose=verbose,
+            messageFormatter=formatter, **kwargs)
         yield self.cp.setServiceParent(self.master)
-        self.cp.messageFormatter = Mock(spec=self.cp.messageFormatter)
-        self.cp.messageFormatter.formatMessageForBuildResults.return_value = \
-            {"body": UNICODE_BODY, "type": "text"}
 
     @defer.inlineCallbacks
     def tearDown(self):

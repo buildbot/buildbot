@@ -173,6 +173,7 @@ setup_args = {
         "buildbot.process",
         "buildbot.process.users",
         "buildbot.reporters",
+        "buildbot.reporters.generators",
         "buildbot.schedulers",
         "buildbot.scripts",
         "buildbot.secrets",
