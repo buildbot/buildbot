@@ -1,0 +1,1 @@
+BuildBot now requires SQLAlchemy 1.2.0 or newer.

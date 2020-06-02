@@ -43,9 +43,13 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 path_batch = set(path_batch)
 
                 while path_batch:
-                    q = paths_table.select().where((paths_table.c.path.in_(paths)) &
-                                                   (paths_table.c.builderid == builderid))
-                    res = conn.execute(q)
+                    # Use expanding bindparam, because performance of sqlalchemy is very slow
+                    # when filtering large sets otherwise.
+                    q = paths_table.select().where(
+                        (paths_table.c.path.in_(sa.bindparam('paths', expanding=True))) &
+                        (paths_table.c.builderid == builderid))
+
+                    res = conn.execute(q, {'paths': list(path_batch)})
                     for row in res.fetchall():
                         paths_to_ids[row.path] = row.id
                         path_batch.remove(row.path)
@@ -105,12 +109,15 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             names_table = self.db.model.test_names
 
             for name_batch in self.doBatch(names, batch_n=3000):
-
                 name_batch = set(name_batch)
                 while name_batch:
-                    q = names_table.select().where((names_table.c.name.in_(name_batch)) &
-                                                   (names_table.c.builderid == builderid))
-                    res = conn.execute(q)
+                    # Use expanding bindparam, because performance of sqlalchemy is very slow
+                    # when filtering large sets otherwise.
+                    q = names_table.select().where(
+                        (names_table.c.name.in_(sa.bindparam('names', expanding=True))) &
+                        (names_table.c.builderid == builderid))
+
+                    res = conn.execute(q, {'names': list(name_batch)})
                     for row in res.fetchall():
                         names_to_ids[row.name] = row.id
                         name_batch.remove(row.name)
