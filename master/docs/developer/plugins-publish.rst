@@ -32,7 +32,7 @@ Buildbot supports several kinds of pluggable components:
 * ``changes``
 * ``schedulers``
 * ``steps``
-* ``status``
+* ``reporters``
 * ``util``
 
 (these are described in :doc:`../manual/plugins`), and
@@ -49,7 +49,7 @@ Once you have your component packaged, it's quite straightforward: you just need
         ...
         entry_points = {
             ...,
-            'buildbot.kind': [
+            'buildbot.{kind}': [
                 'PluginName = PluginModule:PluginClass'
             ]
         },
@@ -72,9 +72,9 @@ After that the plugin should be available for Buildbot and you can use it in you
 
 .. code-block:: python
 
-    from buildbot.kind import PluginName
+    from buildbot.plugins import {kind}
 
-    ... PluginName ...
+    ... {kind}.PluginName ...
 
 Publish the package
 ===================

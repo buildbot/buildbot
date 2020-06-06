@@ -72,6 +72,14 @@ These are the same details set in either environment variables or passed as opti
     The OpenStack authentication needed to create and delete instances.
     These are the same as the environment variables with uppercase names of the arguments.
 
+``os_auth_args``
+    Arguments passed directly to keystone.
+    If this is specified, other authentication parameters (see above) are ignored.
+    You can use ``auth_type`` to specify auth plugin to load.
+    See `OpenStack documentation <https://docs.openstack.org/python-keystoneclient/>` for more information.
+    Usually this should contain ``auth_url``, ``username``, ``password``, ``project_domain_name``
+    and ``user_domain_name``.
+
 ``block_devices``
     A list of dictionaries.
     Each dictionary specifies a block device to set up during instance creation.
