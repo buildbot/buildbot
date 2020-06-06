@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.8.1`` ( ``2020-06-06`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix source distribution missing required buildbot.test.fakedb module for unit tests.
+- Fix crash in trigger step when renderables are used for scheduler names (:issue:`5312`)
+
+
 Buildbot ``2.8.0`` ( ``2020-05-27`` )
 =====================================
 
