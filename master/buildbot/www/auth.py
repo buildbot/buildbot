@@ -17,12 +17,17 @@
 import re
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import Optional
+from urllib.parse import urlparse
+
+import ldap3
 
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.cred.credentials import IUsernamePassword
 from twisted.cred.error import UnauthorizedLogin
+from twisted.cred.error import LDAPAuthenticationError
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -129,6 +134,36 @@ class RemoteUserAuth(AuthBase):
         if session.user_info != user_info:
             session.user_info = user_info
             yield self.updateUserInfo(request)
+
+
+class LDAPAuth(AuthBase):
+    """
+    Authenticate user against LDAP
+    """
+    def __init__(self, server_uri: str, binddn: Optional[str] = None, bindpw: Optional[str] = None, **kwargs):
+        """
+        :param server_uri: Server connection string (example: "ldaps://ldap.company.com:636")
+        :param binddn: The user permitted to search the LDAP directory
+        :param bindpw: Password for binddn user
+        """
+        super().__init__(**kwargs)
+        self.server_uri = server_uri
+        self.binddn = binddn
+        self.bindpw = bindpw
+
+    def requestAvatarId(self, cred):
+        server = urlparse(self.server_uri)
+        s = ldap3.Server(server.hostname, port=server.port, use_ssl=server.scheme == 'ldaps', get_info=ldap3.ALL)
+        with ldap3.Connection(s, auto_bind=True, client_strategy=ldap3.SYNC,
+                              user=self.binddn, password=self.bindpw, authentication=ldap3.SIMPLE) as c:
+            # Make sure we can connect to the server with the bind credentials
+            if c.bind():
+                # Check if the credentials can authenticate
+                if c.rebind(user=cred.username, password=cred.password):
+                    return defer.succeed(cred.username)
+            else:
+                return defer.fail(LDAPAuthenticationError())
+        return defer.fail(UnauthorizedLogin())
 
 
 @implementer(IRealm)
