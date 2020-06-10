@@ -399,6 +399,22 @@ The available classes are described here:
             'auth': util.UserPasswordAuth({"homer": "doh!"}),
         }
 
+.. py:class:: buildbot.www.auth.LDAPAuth(server_uri, binddn, bindpw)
+
+    :param server_uri: URI of the LDAP server (example: ``ldaps://ldap.company.com``)
+    :param binddn: Optional, username of LDAP user used to authenticate actual users
+    :param bindpw: Optional, password for binddn user
+
+    This authentication class checks username and password credentials against the specified LDAP server.
+
+    .. code-block:: python
+
+        from buildbot.plugins import util
+        c['www'] = {
+            # ...
+            'auth': util.LDAPAuth('ldaps://ldap.company.com', 'service-user', 'service-password'),
+        }
+
 .. py:class:: buildbot.www.auth.CustomAuth()
 
     This authentication class means to be overridden with a custom ``check_credentials`` method that gets username and password
