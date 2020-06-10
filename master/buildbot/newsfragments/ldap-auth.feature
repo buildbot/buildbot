@@ -1,0 +1,1 @@
+Add LDAPAuth plugin to authenticate users against an LDAP server
