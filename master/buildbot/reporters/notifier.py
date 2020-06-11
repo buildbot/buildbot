@@ -33,17 +33,6 @@ class NotifierBase(service.BuildbotService):
 
     compare_attrs = ['generators']
 
-    def computeShortcutModes(self, mode):
-        if isinstance(mode, str):
-            if mode == "all":
-                mode = ("failing", "passing", "warnings",
-                        "exception", "cancelled")
-            elif mode == "warnings":
-                mode = ("failing", "warnings")
-            else:
-                mode = (mode,)
-        return mode
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.generators = None
@@ -204,6 +193,3 @@ class NotifierBase(service.BuildbotService):
     @abc.abstractmethod
     def sendMessage(self, reports):
         pass
-
-    def isWorkerMessageNeeded(self, worker):
-        return self.watchedWorkers == 'all' or worker['name'] in self.watchedWorkers
