@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from mock import Mock
+import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -29,7 +29,7 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 
 
-class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
+class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
                        unittest.TestCase, NotifierTestMixin):
 
     def setUp(self):
@@ -40,7 +40,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setupNotifier(self, *args, **kwargs):
         mn = NotifierBase(*args, **kwargs)
-        mn.sendMessage = Mock(spec=mn.sendMessage)
+        mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
         yield mn.startService()
@@ -51,7 +51,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         _, builds = yield self.setupBuildResults(FAILURE)
 
-        formatter = Mock(spec=MessageFormatter)
+        formatter = mock.Mock(spec=MessageFormatter)
         formatter.formatMessageForBuildResults.return_value = {"body": "body",
                                                                "type": "text",
                                                                "subject": "subject"}
