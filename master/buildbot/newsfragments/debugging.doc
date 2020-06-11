@@ -1,0 +1,2 @@
+Documentation how log to stdout instead of twistd.log and
+how to use pdb in a buildbot application was added.

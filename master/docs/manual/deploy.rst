@@ -172,6 +172,32 @@ When the buildmaster is restarted, all workers will be disconnected, and will at
 The reconnect time will depend upon how long the buildmaster is offline (i.e. how far up the exponential backoff curve the workers have travelled).
 Again, :samp:`buildbot-worker restart {BASEDIR}` will speed up the process.
 
+.. _Logging-to-stdout:
+
+Logging to stdout
+~~~~~~~~~~~~~~~~~
+
+It can be useful to let buildbot output it's log to stdout instead of a logfile.
+For example when running via docker, supervisor or when buildbot is started with --no-daemon.
+This can be accomplished by editing :file:`buildbot.tac`. It's already enabled in the docker :file:`buildbot.tac`
+Change the line: `application.setComponent(ILogObserver, FileLogObserver(logfile).emit)`
+to: `application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)`
+
+.. _Debugging-with-the-python-debugger:
+
+Debugging with the python debugger
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes it's necessary to see what is happening inside a program.
+To enable this, start buildbot with:
+
+.. code-block:: none
+
+      twistd --no_save -n -b --logfile=- -y buildbot.tac
+
+This will load the debugger on every exception and breakpoints in the program.
+More information on the python debugger can be found here: https://docs.python.org/3/library/pdb.html
+
 .. _Contrib-Scripts:
 
 Contrib Scripts
