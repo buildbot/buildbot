@@ -230,7 +230,7 @@ class BBService(win32serviceutil.ServiceFramework):
             self.info("Starting BuildBot in directory '{}'".format(bbdir))
             hstop = self.hWaitStop
 
-            cmd = '{} --spawn {} start --nodaemon {}'.format(self.runner_prefix, hstop, bbdir)
+            cmd = '{} --spawn {} start --nodaemon {}'.format(self.runner_prefix, int(hstop), bbdir)
             # print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
