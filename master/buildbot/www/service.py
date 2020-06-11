@@ -219,7 +219,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if www['port'] != self.port:
             if self.port_service:
-                yield defer.maybeDeferred(self.port_service.disownServiceParent)
+                yield self.port_service.disownServiceParent()
                 self.port_service = None
 
             self.port = www['port']

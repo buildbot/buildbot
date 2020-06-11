@@ -432,7 +432,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # run it
         try:
-            builders = yield defer.maybeDeferred(sorter, self.master, builders)
+            builders = yield sorter(self.master, builders)
         except Exception:
             log.err(Failure(), "prioritizing builders; order unspecified")
 

@@ -48,7 +48,7 @@ class ChangeSourceMixin:
         if not self.started:
             return
         if self.changesource.running:
-            yield defer.maybeDeferred(self.changesource.stopService)
+            yield self.changesource.stopService()
         yield self.changesource.disownServiceParent()
         return
 

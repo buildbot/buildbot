@@ -87,7 +87,7 @@ class GitHubEventHandler(PullRequestMixin):
         if handler is None:
             raise ValueError('Unknown event: {}'.format(event_type))
 
-        result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
+        result = yield handler(payload, event_type)
         return result
 
     @defer.inlineCallbacks
