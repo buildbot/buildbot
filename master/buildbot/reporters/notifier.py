@@ -131,6 +131,7 @@ class NotifierBase(service.BuildbotService):
 
         return generators
 
+    @defer.inlineCallbacks
     def stopService(self):
         for consumer in self._event_consumers:
             yield consumer.stopConsuming()
