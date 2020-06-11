@@ -1,0 +1,1 @@
+Fix crash in Buildbot Windows service startup code (:issue:`5344`)
