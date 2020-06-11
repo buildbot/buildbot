@@ -26,6 +26,10 @@ class WorkerMissingGenerator(util.ComparableMixin):
 
     compare_attrs = ['workers', 'formatter']
 
+    wanted_event_keys = [
+        ('workers', None, 'missing'),
+    ]
+
     def __init__(self, workers=None, message_formatter=None):
         self.workers = workers
         self.formatter = message_formatter

@@ -61,7 +61,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         mn = yield self.setupNotifier(messageFormatter=formatter, **mnKwargs)
 
-        yield mn.buildComplete('', builds[0])
+        yield mn._got_event(('builds', 97, 'finished'), builds[0])
         return (mn, builds, formatter)
 
     @defer.inlineCallbacks
@@ -98,6 +98,6 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             'workerinfo': {"admin": "myadmin"},
             'last_connection': "yesterday"
         }
-        yield mn.workerMissing('worker.98.complete', worker_dict)
+        yield mn._got_event(('workers', 98, 'missing'), worker_dict)
 
         self.assertEqual(mn.sendMessage.call_count, 1)

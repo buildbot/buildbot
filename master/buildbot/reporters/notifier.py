@@ -18,6 +18,7 @@ import abc
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot import util
 from buildbot.reporters import utils
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
@@ -36,9 +37,7 @@ class NotifierBase(service.BuildbotService):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.generators = None
-        self._buildsetCompleteConsumer = None
-        self._buildCompleteConsumer = None
-        self._workerMissingConsumer = None
+        self._event_consumers = []
 
     def checkConfig(self, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None,
@@ -86,6 +85,10 @@ class NotifierBase(service.BuildbotService):
                         watchedWorkers=None, messageFormatterMissingWorker=None,
                         generators=None):
 
+        for consumer in self._event_consumers:
+            yield consumer.stopConsuming()
+        self._event_consumers = []
+
         if generators is None:
             generators = self.create_generators_from_old_args(mode, tags, builders, buildSetSummary,
                                                               messageFormatter, subject, addLogs,
@@ -95,35 +98,13 @@ class NotifierBase(service.BuildbotService):
 
         self.generators = generators
 
-        startConsuming = self.master.mq.startConsuming
+        wanted_event_keys = set()
+        for g in self.generators:
+            wanted_event_keys.update(g.wanted_event_keys)
 
-        needs_buildsets_complete = any(isinstance(g, BuildSetStatusGenerator) for g in generators)
-        needs_build_finished = any(isinstance(g, BuildStatusGenerator) for g in generators)
-        needs_worker_missing = any(isinstance(g, WorkerMissingGenerator) for g in generators)
-
-        if not needs_buildsets_complete and self._buildsetCompleteConsumer is not None:
-            yield self._buildsetCompleteConsumer.stopConsuming()
-            self._buildsetCompleteConsumer = None
-
-        if needs_buildsets_complete and self._buildsetCompleteConsumer is None:
-            self._buildsetCompleteConsumer = yield startConsuming(self.buildsetComplete,
-                                                                  ('buildsets', None, 'complete'))
-
-        if not needs_build_finished and self._buildCompleteConsumer is not None:
-            yield self._buildCompleteConsumer.stopConsuming()
-            self._buildCompleteConsumer = None
-
-        if needs_build_finished and self._buildCompleteConsumer is None:
-            self._buildCompleteConsumer = yield startConsuming(self.buildComplete,
-                                                               ('builds', None, 'finished'))
-
-        if not needs_worker_missing and self._workerMissingConsumer is not None:
-            yield self._workerMissingConsumer.stopConsuming()
-            self._workerMissingConsumer = None
-
-        if needs_worker_missing and self._workerMissingConsumer is None:
-            self._workerMissingConsumer = yield startConsuming(self.workerMissing,
-                                                               ('workers', None, 'missing'))
+        for key in sorted(list(wanted_event_keys)):
+            consumer = yield self.master.mq.startConsuming(self._got_event, key)
+            self._event_consumers.append(consumer)
 
     def create_generators_from_old_args(self, mode, tags, builders, build_set_summary,
                                         message_formatter, subject, add_logs, add_patch, schedulers,
@@ -151,40 +132,28 @@ class NotifierBase(service.BuildbotService):
         return generators
 
     def stopService(self):
+        for consumer in self._event_consumers:
+            yield consumer.stopConsuming()
+        self._event_consumers = []
         yield super().stopService()
-        if self._buildsetCompleteConsumer is not None:
-            yield self._buildsetCompleteConsumer.stopConsuming()
-            self._buildsetCompleteConsumer = None
-        if self._buildCompleteConsumer is not None:
-            yield self._buildCompleteConsumer.stopConsuming()
-            self._buildCompleteConsumer = None
-        if self._workerMissingConsumer is not None:
-            yield self._workerMissingConsumer.stopConsuming()
-            self._workerMissingConsumer = None
+
+    def _does_generator_want_key(self, generator, key):
+        for filter in generator.wanted_event_keys:
+            if util.tuplematch.matchTuple(key, filter):
+                return True
+        return False
 
     @defer.inlineCallbacks
-    def _send_reports_for_type(self, type, key, msg):
+    def _got_event(self, key, msg):
         reports = []
         for g in self.generators:
-            if isinstance(g, type):
+            if self._does_generator_want_key(g, key):
                 report = yield g.generate(self.master, self, key, msg)
                 if report is not None:
                     reports.append(report)
 
         if reports:
             yield self.sendMessage(reports)
-
-    @defer.inlineCallbacks
-    def buildsetComplete(self, key, msg):
-        yield self._send_reports_for_type(BuildSetStatusGenerator, key, msg)
-
-    @defer.inlineCallbacks
-    def buildComplete(self, key, msg):
-        yield self._send_reports_for_type(BuildStatusGenerator, key, msg)
-
-    @defer.inlineCallbacks
-    def workerMissing(self, key, msg):
-        yield self._send_reports_for_type(WorkerMissingGenerator, key, msg)
 
     def getResponsibleUsersForBuild(self, master, buildid):
         # Use library method but subclassers may want to override that
