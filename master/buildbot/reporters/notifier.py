@@ -31,6 +31,8 @@ class NotifierBase(service.BuildbotService):
     name = None
     __meta__ = abc.ABCMeta
 
+    compare_attrs = ['generators']
+
     def computeShortcutModes(self, mode):
         if isinstance(mode, str):
             if mode == "all":
@@ -44,6 +46,7 @@ class NotifierBase(service.BuildbotService):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.generators = None
         self._buildsetCompleteConsumer = None
         self._buildCompleteConsumer = None
         self._workerMissingConsumer = None

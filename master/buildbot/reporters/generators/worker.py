@@ -16,12 +16,15 @@
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot import util
 from buildbot.reporters.message import MessageFormatterMissingWorker
 
 ENCODING = 'utf-8'
 
 
-class WorkerMissingGenerator:
+class WorkerMissingGenerator(util.ComparableMixin):
+
+    compare_attrs = ['workers', 'formatter']
 
     def __init__(self, workers=None, message_formatter=None):
         self.workers = workers
