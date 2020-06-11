@@ -326,7 +326,7 @@ class Build(properties.PropertiesMixin):
 
         # make sure properties are available to people listening on 'new'
         # events
-        yield self._flushProperties(None)
+        yield self.master.data.updates.setBuildProperties(self.buildid, self)
         self.build_status.buildStarted(self)
         yield self.master.data.updates.setBuildStateString(self.buildid, 'starting')
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
@@ -339,8 +339,7 @@ class Build(properties.PropertiesMixin):
             return
 
         # flush properties in the beginning of the build
-        yield self._flushProperties(None)
-
+        yield self.master.data.updates.setBuildProperties(self.buildid, self)
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'preparing worker')
         try:
@@ -530,28 +529,38 @@ class Build(properties.PropertiesMixin):
             return self.allStepsDone()
         self.executedSteps.append(s)
         self.currentStep = s
-        d = defer.maybeDeferred(s.startStep, self.conn)
-        d.addBoth(self._flushProperties)
-        d.addCallback(self._stepDone, s)
-        d.addErrback(self.buildException)
-        return None
+
+        # the following function returns a deferred, but we don't wait for it
+        self._start_next_step_impl(s)
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def _flushProperties(self, results):
-        # `results` is just passed on to the next callback
-        yield self.master.data.updates.setBuildProperties(self.buildid, self)
+    def _start_next_step_impl(self, step):
+        try:
+            results = yield step.startStep(self.conn)
+            yield self.master.data.updates.setBuildProperties(self.buildid, self)
 
-        return results
+            self.currentStep = None
+            if self.finished:
+                return  # build was interrupted, don't keep building
 
-    @defer.inlineCallbacks
-    def _stepDone(self, results, step):
-        self.currentStep = None
-        if self.finished:
-            return  # build was interrupted, don't keep building
-        terminate = yield self.stepDone(results, step)  # interpret/merge results
-        if terminate:
-            self.terminate = True
-        yield self.startNextStep()
+            terminate = yield self.stepDone(results, step)  # interpret/merge results
+            if terminate:
+                self.terminate = True
+            yield self.startNextStep()
+
+        except Exception as e:
+            log.msg("{} build got exception when running step {}".format(self, step))
+            log.err(e)
+
+            yield self.master.data.updates.setBuildProperties(self.buildid, self)
+
+            # try to finish the build, but since we've already faced an exception,
+            # this may not work well.
+            try:
+                yield self.buildFinished(["build", "exception"], EXCEPTION)
+            except Exception:
+                log.err(Failure(), 'while finishing a build with an exception')
 
     @defer.inlineCallbacks
     def stepDone(self, results, step):
@@ -639,16 +648,6 @@ class Build(properties.PropertiesMixin):
             text = ["build", "successful"]
         text.extend(self.text)
         return self.buildFinished(text, self.results)
-
-    def buildException(self, why):
-        log.msg("{}.buildException".format(self))
-        log.err(why)
-        # try to finish the build, but since we've already faced an exception,
-        # this may not work well.
-        try:
-            self.buildFinished(["build", "exception"], EXCEPTION)
-        except Exception:
-            log.err(Failure(), 'while finishing a build with an exception')
 
     @defer.inlineCallbacks
     def buildFinished(self, text, results):
