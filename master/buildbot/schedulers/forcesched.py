@@ -46,7 +46,7 @@ class ValidationErrorCollector:
     def collectValidationErrors(self, name, fn, *args, **kwargs):
         res = None
         try:
-            res = yield defer.maybeDeferred(fn, *args, **kwargs)
+            res = yield fn(*args, **kwargs)
         except CollectedValidationError as e:
             for error_name, e in e.errors.items():
                 self.errors[error_name] = e

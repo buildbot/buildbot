@@ -495,7 +495,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                     objectid = yield self.master.db.state.getObjectId(
                         child.name, class_name)
                     child.objectid = objectid
-                yield defer.maybeDeferred(child.setServiceParent, self)
+                yield child.setServiceParent(self)
 
         # As the services that were just added got
         # reconfigServiceWithSibling called by

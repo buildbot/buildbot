@@ -134,7 +134,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     def deactivate(self):
         if not self.enabled:
             return None
-        yield defer.maybeDeferred(self._stopConsumingChanges)
+        yield self._stopConsumingChanges()
         return None
 
     # service handling
