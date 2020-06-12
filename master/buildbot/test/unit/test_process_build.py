@@ -317,6 +317,25 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertTrue(step2Started[0])
 
     @defer.inlineCallbacks
+    def test_start_step_throws_exception(self):
+        b = self.build
+
+        step1 = FakeBuildStep()
+        b.setStepFactories([
+            FakeStepFactory(step1),
+        ])
+
+        def startStep(*args, **kw):
+            raise TestException()
+
+        step1.startStep = startStep
+
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+
+        self.assertEqual(b.results, EXCEPTION)
+        self.flushLoggedErrors(TestException)
+
+    @defer.inlineCallbacks
     def testBuild_canAcquireLocks(self):
         b = self.build
 
