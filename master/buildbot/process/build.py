@@ -555,12 +555,8 @@ class Build(properties.PropertiesMixin):
 
             yield self.master.data.updates.setBuildProperties(self.buildid, self)
 
-            # try to finish the build, but since we've already faced an exception,
-            # this may not work well.
-            try:
-                yield self.buildFinished(["build", "exception"], EXCEPTION)
-            except Exception:
-                log.err(Failure(), 'while finishing a build with an exception')
+            # Note that buildFinished can't throw exception
+            yield self.buildFinished(["build", "exception"], EXCEPTION)
 
     @defer.inlineCallbacks
     def stepDone(self, results, step):
@@ -660,7 +656,9 @@ class Build(properties.PropertiesMixin):
 
         If 'results' is SUCCESS or WARNINGS, we will permit any dependent
         builds to start. If it is 'FAILURE', those builds will be
-        abandoned."""
+        abandoned.
+
+        This method never throws."""
         try:
             self.stopBuildConsumer.stopConsuming()
             self.finished = True
