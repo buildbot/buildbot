@@ -335,7 +335,7 @@ class Build(properties.PropertiesMixin):
             self.setupBuild()  # create .steps
         except Exception:
             yield self.buildPreparationFailure(Failure(), "setupBuild")
-            self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
+            yield self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
 
         # flush properties in the beginning of the build
@@ -352,12 +352,12 @@ class Build(properties.PropertiesMixin):
         if ready_or_failure is not True:
             yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
             if self.stopped:
-                self.buildFinished(["worker", "cancelled"], self.results)
+                yield self.buildFinished(["worker", "cancelled"], self.results)
             elif isinstance(ready_or_failure, Failure) and \
                     ready_or_failure.check(interfaces.LatentWorkerCannotSubstantiate):
-                self.buildFinished(["worker", "cannot", "substantiate"], EXCEPTION)
+                yield self.buildFinished(["worker", "cannot", "substantiate"], EXCEPTION)
             else:
-                self.buildFinished(["worker", "not", "available"], RETRY)
+                yield self.buildFinished(["worker", "not", "available"], RETRY)
             return
 
         # ping the worker to make sure they're still there. If they've
@@ -378,7 +378,7 @@ class Build(properties.PropertiesMixin):
 
         if ping_success_or_failure is not True:
             yield self.buildPreparationFailure(ping_success_or_failure, "worker_ping")
-            self.buildFinished(["worker", "not", "pinged"], RETRY)
+            yield self.buildFinished(["worker", "not", "pinged"], RETRY)
             return
 
         self.conn = workerforbuilder.worker.conn
@@ -396,7 +396,7 @@ class Build(properties.PropertiesMixin):
             yield self.conn.remoteStartBuild(self.builder.name)
         except Exception:
             yield self.buildPreparationFailure(Failure(), "start_build")
-            self.buildFinished(["worker", "not", "building"], RETRY)
+            yield self.buildFinished(["worker", "not", "building"], RETRY)
             return
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
