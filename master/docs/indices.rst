@@ -1,7 +1,7 @@
 API Indices
 ===========
 
-* :ref:`genindex`
+* :ref:`apiindex`
 * :bb:index:`cfg`
 * :bb:index:`sched`
 * :bb:index:`chsrc`
@@ -13,4 +13,4 @@ API Indices
 * :bb:index:`rtype`
 * :bb:index:`rpath`
 * :bb:index:`raction`
-* :ref:`apiindex`
+* :ref:`genindex`
