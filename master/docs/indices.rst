@@ -1,5 +1,5 @@
-Indices and Tables
-==================
+API Indices
+===========
 
 * :ref:`genindex`
 * :bb:index:`cfg`
