@@ -466,7 +466,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(title='hi'), title='hi')
 
     def test_load_global_title_too_long(self):
-        with assertProducesWarning(config.ConfigWarning,
+        with assertProducesWarning(config.DeprecatedConfigWarning,
                                    message_pattern=r"Title is too long"):
             self.do_test_load_global(dict(title="Very very very very very long title"))
 
@@ -486,23 +486,21 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
     def test_load_global_eventHorizon(self):
-        with assertProducesWarning(
-                config.ConfigWarning,
-                message_pattern=r"`eventHorizon` is deprecated and ignored"):
+        with assertProducesWarning(config.DeprecatedConfigWarning,
+                                   message_pattern=r"`eventHorizon` is deprecated and ignored"):
             self.do_test_load_global(
                 dict(eventHorizon=10))
 
     def test_load_global_status(self):
-        with assertProducesWarning(
-                config.ConfigWarning,
-                message_pattern=r"`status` targets are deprecated and ignored"):
+        with assertProducesWarning(config.DeprecatedConfigWarning,
+                                   message_pattern=r"`status` targets are deprecated and ignored"):
             self.do_test_load_global(
                 dict(status=[]))
 
     def test_load_global_buildbotNetUsageData(self):
         self.patch(config, "_in_unit_tests", False)
         with assertProducesWarning(
-                config.ConfigWarning,
+                config.DeprecatedConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
             self.do_test_load_global(
                 dict())
@@ -635,7 +633,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_db_poll_interval(self):
         # value is ignored, but no error
         with assertProducesWarning(
-                config.ConfigWarning,
+                config.DeprecatedConfigWarning,
                 message_pattern=r"db_poll_interval is deprecated and will be ignored"):
             self.cfg.load_db(self.filename, dict(db_poll_interval=2))
         self.assertResults(
@@ -644,7 +642,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_dict(self):
         # db_poll_interval value is ignored, but no error
         with assertProducesWarning(
-                config.ConfigWarning,
+                config.DeprecatedConfigWarning,
                 message_pattern=r"db_poll_interval is deprecated and will be ignored"):
             self.cfg.load_db(self.filename,
                              dict(db=dict(db_url='abcd', db_poll_interval=10)))
@@ -652,7 +650,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_db_unk_keys(self):
         with assertProducesWarning(
-                config.ConfigWarning,
+                config.DeprecatedConfigWarning,
                 message_pattern=r"db_poll_interval is deprecated and will be ignored"):
             self.cfg.load_db(self.filename,
                              dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
@@ -1351,7 +1349,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_bogus_category(self):
         with assertProducesWarning(
-                config.ConfigWarning,
+                config.DeprecatedConfigWarning,
                 message_pattern=r"builder categories are deprecated and should be replaced with"):
             with self.assertRaisesConfigError("category must be a string"):
                 config.BuilderConfig(category=13,

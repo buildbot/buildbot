@@ -78,7 +78,7 @@ def error(error, always_raise=False):
         raise ConfigErrors([error])
 
 
-class ConfigWarning(Warning):
+class DeprecatedConfigWarning(Warning):
     """
     Warning for deprecated configuration options.
     """
@@ -87,7 +87,7 @@ class ConfigWarning(Warning):
 def warnDeprecated(version, msg):
     warnings.warn(
         "[{} and later] {}".format(version, msg),
-        category=ConfigWarning,
+        category=DeprecatedConfigWarning,
     )
 
 
@@ -389,7 +389,7 @@ class MasterConfig(util.ComparableMixin):
             # would hide the title.
             warnings.warn('WARNING: Title is too long to be displayed. ' +
                           '"Buildbot" will be used instead.',
-                          category=ConfigWarning)
+                          category=DeprecatedConfigWarning)
 
         copy_str_param('titleURL', alt_key='projectURL')
         copy_str_param('buildbotURL')
@@ -656,7 +656,7 @@ class MasterConfig(util.ComparableMixin):
                 warnings.warn(
                     ("Absolute path '{}' for builder may cause mayhem. Perhaps you meant to "
                      "specify workerbuilddir instead.").format(builder.builddir),
-                    category=ConfigWarning,
+                    category=DeprecatedConfigWarning,
                 )
 
         self.builders = builders
