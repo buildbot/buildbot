@@ -44,7 +44,9 @@ A full list of reporters is available in the :bb:index:`reporter`.
 MailNotifier
 ~~~~~~~~~~~~
 
-.. py:class:: buildbot.reporters.mail.MailNotifier
+.. py:currentmodule:: buildbot.reporters.mail
+
+.. py:class:: MailNotifier
 
 The Buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
@@ -460,6 +462,8 @@ The default ``ctx`` for the missing worker email is made of:
 Pushover Notifications
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. py:currentmodule:: buildbot.reporters.pushover
+
 .. py:class:: buildbot.reporters.pushover.PushoverNotifier
 
 Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used by administrators to receive an instant message to an iPhone or an Android device if a build fails. The :class:`PushoverNotifier` reporter is used to accomplish this. Its configuration is very similar to the mail notifications, however—due to the notification size constrains—the logs and patches cannot be attached.
@@ -533,6 +537,10 @@ The Pushjet specific parameters are:
 
 IRC Bot
 ~~~~~~~
+
+.. py:currentmodule:: buildbot.reporters.irc
+
+.. py:class:: IRC
 
 The :bb:reporter:`IRC` reporter creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
@@ -1018,7 +1026,7 @@ Revisions that are stored as hashes are shortened to 7 characters in length, as 
 GerritStatusPush
 ~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.status.status_gerrit.GerritStatusPush
+.. py:currentmodule:: buildbot.status.status_gerrit
 
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
@@ -1125,8 +1133,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 HttpStatusPush
 ~~~~~~~~~~~~~~
 
-.. @cindex HttpStatusPush
-.. @stindex buildbot.reporters.HttpStatusPush
+.. py:currentmodule:: buildbot.reporters
 
 .. code-block:: python
 
@@ -1190,9 +1197,7 @@ The ``build`` parameter given to that function is of type :bb:rtype:`build`, opt
 GitHubStatusPush
 ~~~~~~~~~~~~~~~~
 
-
-.. @cindex GitHubStatusPush
-.. py:class:: buildbot.reporters.github.GitHubStatusPush
+.. py:currentmodule:: buildbot.reporters.github
 
 .. code-block:: python
 
@@ -1236,9 +1241,7 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
 GitHubCommentPush
 ~~~~~~~~~~~~~~~~~
 
-
-.. @cindex GitHubCommentPush
-.. py:class:: buildbot.reporters.github.GitHubCommentPush
+.. py:currentmodule:: buildbot.reporters.github
 
 .. code-block:: python
 
@@ -1313,9 +1316,6 @@ Here's a complete example of posting build results as a github comment:
 BitbucketServerStatusPush
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. @cindex BitbucketServerStatusPush
-.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerStatusPush
-
 .. code-block:: python
 
     from buildbot.plugins import reporters
@@ -1358,8 +1358,7 @@ As a result, we recommend you use https in your base_url rather than http.
 BitbucketServerPRCommentPush
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. @cindex BitbucketServerPRCommentPush
-.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerPRCommentPush
+.. py:currentmodule:: buildbot.reporters.bitbucketserver
 
 .. code-block:: python
 
@@ -1413,7 +1412,7 @@ BitbucketServerPRCommentPush
 BitbucketStatusPush
 ~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.reporters.bitbucket.BitbucketStatusPush
+.. py:currentmodule:: buildbot.reporters.bitbucket
 
 .. code-block:: python
 
@@ -1449,8 +1448,7 @@ After creating the consumer, you will then be able to see the OAuth key and secr
 GitLabStatusPush
 ~~~~~~~~~~~~~~~~
 
-.. @cindex GitLabStatusPush
-.. py:class:: buildbot.reporters.gitlab.GitLabStatusPush
+.. py:currentmodule:: buildbot.reporters.gitlab
 
 .. code-block:: python
 
@@ -1485,8 +1483,9 @@ It uses private token auth, and the token owner is required to have at least dev
 HipchatStatusPush
 ~~~~~~~~~~~~~~~~~
 
-.. @cindex HipchatStatusPush
-.. py:class:: buildbot.reporters.hipchat.HipchatStatusPush
+.. py:currentmodule:: buildbot.reporters.hipchat
+
+.. py:class:: HipchatStatusPush
 
 .. code-block:: python
 
@@ -1608,7 +1607,9 @@ Here's a complete example:
 GerritVerifyStatusPush
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.status.status_gerrit_verify_status.GerritVerifyStatusPush
+.. py:currentmodule:: buildbot.reporters.status_gerrit_verify_status
+
+.. py:class:: GerritVerifyStatusPush
 
 :class:`GerritVerifyStatusPush` sends a verify status to Gerrit using the verify-status_ Gerrit plugin.
 
@@ -1653,8 +1654,7 @@ This property must be a list of dictionaries, containing ``change_id`` and ``rev
 ZulipStatusPush
 ~~~~~~~~~~~~~~~~~
 
-.. @cindex ZulipStatusPush
-.. py:class:: buildbot.reporters.zulip.ZulipStatusPush
+.. py:currentmodule:: buildbot.reporters.zulip
 
 .. code-block:: python
 
