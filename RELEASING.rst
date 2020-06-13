@@ -15,7 +15,7 @@ This collects the release notes using the `towncrier` tool and then commits the 
 This step is done as a PR so that CI can check for spelling errors and similar issues.
 Local checks are insufficient as spelling check in particular depends on what dictionaries are installed.
 
-It's best to run `make docs` afterwards and check `master/docs/_build/html/relnotes/index.html` file for obvious rendering errors.
+It's best to run `make docs-release` afterwards and check `master/docs/_build/html/relnotes/index.html` file for obvious rendering errors.
 This will have much faster turnaround compared to if the error is noticed after the CI runs.
 If any errors are found, just amend the commit created by `make release_notes`.
 
