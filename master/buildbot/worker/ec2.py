@@ -274,7 +274,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                     ebs.setdefault('DeleteOnTermination', True)
             return mapping_definitions
 
-        config.warnDeprecated('0.9.0',
+        config.warnDeprecated(
+            '0.9.0',
             "Use of dict value to 'block_device_map' of EC2LatentWorker "
             "constructor is deprecated. Please use a list matching the AWS API "
             "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html"
