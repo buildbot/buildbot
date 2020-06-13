@@ -1,5 +1,7 @@
 all: docs.tgz
 
+dev: clean html
+
 .PHONY: tutorial manual
 
 VERSION := $(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print(version)'; fi)
