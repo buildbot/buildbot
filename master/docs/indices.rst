@@ -13,5 +13,6 @@ Indices and Tables
 * :bb:index:`rtype`
 * :bb:index:`rpath`
 * :bb:index:`raction`
+* :ref:`apiindex`
 * :ref:`modindex`
 * :ref:`search`

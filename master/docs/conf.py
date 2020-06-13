@@ -56,6 +56,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.extlinks',
     'bbdocs.ext',
+    'bbdocs.api_index',
     'sphinxcontrib.blockdiag',
     'sphinxcontrib.jinja',
     'sphinx_rtd_theme',
