@@ -14,5 +14,4 @@ Indices and Tables
 * :bb:index:`rpath`
 * :bb:index:`raction`
 * :ref:`apiindex`
-* :ref:`modindex`
 * :ref:`search`
