@@ -14,4 +14,3 @@ API Indices
 * :bb:index:`rpath`
 * :bb:index:`raction`
 * :ref:`apiindex`
-* :ref:`search`
