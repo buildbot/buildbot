@@ -46,6 +46,19 @@ class BBRefTargetDirective(Directive):
     final_argument_whitespace = True
     option_spec = {}
     domain = 'bb'
+    doc_field_types = []
+
+    def get_field_type_map(self):
+        # This is the same as DocFieldTransformer.preprocess_fieldtype which got removed in
+        # Sphinx 4.0
+        typemap = {}
+        for fieldtype in self.doc_field_types:
+            for name in fieldtype.names:
+                typemap[name] = fieldtype, False
+            if fieldtype.is_typed:
+                for name in fieldtype.typenames:
+                    typemap[name] = fieldtype, True
+        return typemap
 
     def run(self):
         self.env = env = self.state.document.settings.env
