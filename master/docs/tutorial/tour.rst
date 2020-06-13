@@ -171,8 +171,8 @@ In this example we will use ``#buildbot-test``, so go join that channel.
 Edit :file:`master.cfg` and look for the *BUILDBOT SERVICES* section.
 At the end of that section add the lines::
 
-  c['services'].append(reporters.IRC(host="irc.freenode.net", nick="bbtest",
-                                     channels=["#buildbot-test"]))
+  c['services'].append(reporters.irc.IRC(host="irc.freenode.net", nick="bbtest",
+                                         channels=["#buildbot-test"]))
 
 Reconfigure the build master then do:
 

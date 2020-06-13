@@ -23,10 +23,10 @@ To add reporter targets, you just append more objects to this list:
                                sendToInterestedUsers=False)
     c['services'].append(m)
 
-    c['services'].append(reporters.IRC(host="irc.example.com", nick="bb",
-                                      channels=[{"channel": "#example1"},
-                                                {"channel": "#example2",
-                                                 "password": "somesecretpassword"}]))
+    c['services'].append(reporters.irc.IRC(host="irc.example.com", nick="bb",
+                                           channels=[{"channel": "#example1"},
+                                                     {"channel": "#example2",
+                                                      "password": "somesecretpassword"}]))
 
 Most reporter objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
 
