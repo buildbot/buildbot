@@ -22,12 +22,23 @@ ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 docs:
 	$(MAKE) -C master/docs
 
-# check rst documentation
+docs-towncrier:
+	if command -v towncrier >/dev/null 2>&1 ;\
+	then \
+	towncrier --draft | grep  'No significant changes.' || yes n | towncrier ;\
+	fi
+
 docs-spelling:
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
 docs-linkcheck:
 	$(MAKE) -C master/docs SPHINXOPTS=-q linkcheck
+
+docs-release: docs-towncrier
+	$(MAKE) -C master/docs
+
+docs-release-spelling: docs-towncrier
+	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
 # pylint the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 pylint:
@@ -138,7 +149,7 @@ release: virtualenv
 	test -d "../bbdocs/.git"  #  make release should be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
 	git push buildbot "v$(VERSION)"  # tarballs are made by circleci.yml, and create a github release
-	export VERSION=$(VERSION) ; . .venv/bin/activate && make docs
+	export VERSION=$(VERSION) ; . .venv/bin/activate && make docs-release
 	rm -rf ../bbdocs/docs/$(VERSION)  # in case of re-run
 	cp -r master/docs/_build/html ../bbdocs/docs/$(VERSION)
 	cd ../bbdocs && git pull

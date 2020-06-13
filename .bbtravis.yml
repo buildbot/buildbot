@@ -175,12 +175,12 @@ script:
   # Build documentation
   - title: docs
     condition: TESTS == "docs"
-    cmd: make docs
+    cmd: make docs-release
 
   # Run spell checker on documentation
   - title: spelling
     condition: TESTS == "docs"
-    cmd: make -C master/docs SPHINXOPTS=-W spelling
+    cmd: make docs-release-spelling
 
   - title: maketarballs
     condition: TESTS == "smokes"
