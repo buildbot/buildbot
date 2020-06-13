@@ -182,11 +182,6 @@ script:
     condition: TESTS == "docs"
     cmd: make -C master/docs SPHINXOPTS=-W spelling
 
-  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
-  - title: linkcheck
-    condition: TESTS == "docs" and not TRAVIS_PULL_REQUEST
-    cmd: make -C master/docs SPHINXOPTS=-q linkcheck
-
   - title: maketarballs
     condition: TESTS == "smokes"
     cmd: make tarballs
