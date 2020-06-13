@@ -29,6 +29,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
+from buildbot.warnings import warn_deprecated
 
 
 class MessageFormatterBase(util.ComparableMixin):
@@ -98,7 +99,7 @@ class MessageFormatter(MessageFormatterBase):
                  wantProperties=True, wantSteps=False, wantLogs=False):
 
         if template_name is not None:
-            config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
+            warn_deprecated('0.9.1', "template_name is deprecated, use template_filename")
             template_filename = template_name
         super().__init__(template_dir=template_dir,
                          template_filename=template_filename,

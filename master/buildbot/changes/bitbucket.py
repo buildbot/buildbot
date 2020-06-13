@@ -22,12 +22,12 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.web import client
 
-from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
+from buildbot.warnings import warn_deprecated
 
 _UNSPECIFIED = object()
 
@@ -57,7 +57,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval,
                          pollAtLaunch=pollAtLaunch)
         if encoding != _UNSPECIFIED:
-            config.warnDeprecated('2.6.0', 'encoding of BitbucketPullrequestPoller is deprecated.')
+            warn_deprecated('2.6.0', 'encoding of BitbucketPullrequestPoller is deprecated.')
 
         if hasattr(pullrequest_filter, '__call__'):
             self.pullrequest_filter = pullrequest_filter

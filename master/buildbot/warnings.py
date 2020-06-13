@@ -14,12 +14,26 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
-from buildbot.warnings import warn_deprecated
+import warnings
 
 
-def StashStatusPush(*args, **kwargs):
-    warn_deprecated('0.9.8',
-                    "The 'StashStatusPush' class was renamed to "
-                    "'BitbucketServer.BitbucketServerStatusPush'")
-    return BitbucketServerStatusPush(*args, **kwargs)
+class ConfigWarning(Warning):
+    """
+    Warning for issues in the configuration. Use DeprecatedApiWarning for deprecated APIs
+    """
+
+
+# DeprecationWarning or PendingDeprecationWarning may be used as
+# the base class, but by default deprecation warnings are disabled in Python,
+# so by default old-API usage warnings will be ignored - this is not what
+# we want.
+class DeprecatedApiWarning(Warning):
+    """
+    Warning for deprecated configuration options.
+    """
+
+
+def warn_deprecated(version, msg, stacklevel=2):
+    warnings.warn("[{} and later] {}".format(version, msg),
+                  category=DeprecatedApiWarning,
+                  stacklevel=stacklevel)

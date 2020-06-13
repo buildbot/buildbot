@@ -31,6 +31,7 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
+from buildbot.warnings import DeprecatedApiWarning
 
 
 def nth_worker(n):
@@ -735,7 +736,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                                         factory=factory.BuildFactory(),
                                         nextWorker=nextWorker)
         if exp_warning:
-            with assertProducesWarning(config.DeprecatedConfigWarning,
+            with assertProducesWarning(DeprecatedApiWarning,
                                        message_pattern=r"nextWorker now takes a 3rd argument"):
                 builder_config = makeBuilderConfig()
         else:
