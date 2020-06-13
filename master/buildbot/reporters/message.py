@@ -21,6 +21,7 @@ import jinja2
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot import util
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -30,9 +31,11 @@ from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 
 
-class MessageFormatterBase:
+class MessageFormatterBase(util.ComparableMixin):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
+
+    compare_attrs = ['body_template', 'subject_teblate', 'template_type']
 
     def __init__(self, template_dir=None,
                  template_filename=None, template=None,
@@ -85,6 +88,8 @@ class MessageFormatterBase:
 class MessageFormatter(MessageFormatterBase):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
+
+    compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
 
     def __init__(self, template_dir=None,
                  template_filename=None, template=None, template_name=None,

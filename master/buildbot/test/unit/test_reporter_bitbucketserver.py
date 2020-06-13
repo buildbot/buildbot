@@ -236,7 +236,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        yield self.cp.buildComplete(("build", 20, "finished"), build)
+        yield self.cp._got_event(("builds", 20, "finished"), build)
         self.assertLogged('Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
@@ -251,7 +251,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        yield self.cp.buildComplete(("build", 20, "finished"), build)
+        yield self.cp._got_event(("builds", 20, "finished"), build)
 
         self.assertNotLogged('Comment sent to {}'.format(PR_URL))
 
@@ -262,7 +262,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         build = builds[0]
         build["complete"] = True
         # we don't expect any request
-        yield self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp._got_event(("builds", 20, "finished"), build)
 
     @defer.inlineCallbacks
     def test_missing_worker_does_nothing(self):
@@ -278,7 +278,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             EXPECTED_API,
             json={"text": UNICODE_BODY},
             code=HTTP_CREATED)
-        yield self.cp.buildsetComplete(("buildsets", 20, "complete"), buildset)
+        yield self.cp._got_event(("buildsets", 20, "complete"), buildset)
 
     @defer.inlineCallbacks
     def test_reporter_logs_error_code_and_content_on_invalid_return_code(self):
@@ -298,7 +298,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             content_json=error_body)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp._got_event(("builds", 20, "finished"), build)
 
         self.assertLogged(
             "^{}: Unable to send a comment: ".format(http_error_code))
@@ -317,7 +317,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=http_error_code)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp._got_event(("builds", 20, "finished"), build)
         self.assertLogged("^{}: Unable to send a comment: ".format(
             http_error_code))
 
@@ -335,5 +335,5 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=http_code)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp._got_event(("builds", 20, "finished"), build)
         self.assertNotLogged("^{}:".format(http_code))

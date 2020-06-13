@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from mock import Mock
+import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -29,7 +29,7 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 
 
-class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
+class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
                        unittest.TestCase, NotifierTestMixin):
 
     def setUp(self):
@@ -40,7 +40,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setupNotifier(self, *args, **kwargs):
         mn = NotifierBase(*args, **kwargs)
-        mn.sendMessage = Mock(spec=mn.sendMessage)
+        mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
         yield mn.startService()
@@ -51,7 +51,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         _, builds = yield self.setupBuildResults(FAILURE)
 
-        formatter = Mock(spec=MessageFormatter)
+        formatter = mock.Mock(spec=MessageFormatter)
         formatter.formatMessageForBuildResults.return_value = {"body": "body",
                                                                "type": "text",
                                                                "subject": "subject"}
@@ -61,8 +61,14 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         mn = yield self.setupNotifier(messageFormatter=formatter, **mnKwargs)
 
-        yield mn.buildComplete('', builds[0])
+        yield mn._got_event(('builds', 97, 'finished'), builds[0])
         return (mn, builds, formatter)
+
+    def setup_mock_generator(self, events_filter):
+        gen = mock.Mock()
+        gen.wanted_event_keys = events_filter
+        gen.generate_name = lambda: '<name>'
+        return gen
 
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self):
@@ -98,6 +104,54 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             'workerinfo': {"admin": "myadmin"},
             'last_connection': "yesterday"
         }
-        yield mn.workerMissing('worker.98.complete', worker_dict)
+        yield mn._got_event(('workers', 98, 'missing'), worker_dict)
 
         self.assertEqual(mn.sendMessage.call_count, 1)
+
+    @defer.inlineCallbacks
+    def test_generators_subscribes_events(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+
+        yield self.setupNotifier(generators=[gen1])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+
+    @defer.inlineCallbacks
+    def test_generators_subscribes_equal_events_once(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen2 = self.setup_mock_generator([('fake1', None, None)])
+
+        yield self.setupNotifier(generators=[gen1, gen2])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+
+    @defer.inlineCallbacks
+    def test_generators_subscribes_equal_different_events_once(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen2 = self.setup_mock_generator([('fake2', None, None)])
+
+        yield self.setupNotifier(generators=[gen1, gen2])
+        self.assertEqual(len(self.master.mq.qrefs), 2)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+        self.assertEqual(self.master.mq.qrefs[1].filter, ('fake2', None, None))
+
+    @defer.inlineCallbacks
+    def test_generators_unsubscribes_on_stop_service(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen1])
+        yield notifier.stopService()
+        self.assertEqual(len(self.master.mq.qrefs), 0)
+
+    @defer.inlineCallbacks
+    def test_generators_resubscribes_on_reconfig(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen2 = self.setup_mock_generator([('fake2', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen1])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+
+        yield notifier.reconfigService(generators=[gen2])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake2', None, None))

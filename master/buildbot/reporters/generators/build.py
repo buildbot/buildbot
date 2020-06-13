@@ -22,6 +22,10 @@ from .utils import BuildStatusGeneratorMixin
 
 class BuildStatusGenerator(BuildStatusGeneratorMixin):
 
+    wanted_event_keys = [
+        ('builds', None, 'finished'),
+    ]
+
     def __init__(self, mode=("failing", "passing", "warnings"),
                  tags=None, builders=None, schedulers=None, branches=None,
                  subject="Buildbot %(result)s in %(title)s on %(builder)s",
