@@ -23,7 +23,6 @@ from buildbot import config
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 
 
 class RealConfigs(dirs.DirsMixin, unittest.TestCase):
@@ -38,13 +37,13 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
 
     def test_sample_config(self):
         filename = util.sibpath(runner.__file__, 'sample.cfg')
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             config.FileLoader(self.basedir, filename).loadConfig()
 
     def test_0_9_0b5_api_renamed_config(self):
         with open(self.filename, "w") as f:
             f.write(sample_0_9_0b5_api_renamed)
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             config.FileLoader(self.basedir, self.filename).loadConfig()
 
 

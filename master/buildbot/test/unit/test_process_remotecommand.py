@@ -17,12 +17,12 @@ import mock
 
 from twisted.trial import unittest
 
+from buildbot import config
 from buildbot.process import remotecommand
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 
 
 class TestRemoteShellCommand(unittest.TestCase):
@@ -183,19 +183,19 @@ class TestFakeRunCommand(unittest.TestCase, Tests):
 class TestWorkerTransition(unittest.TestCase):
 
     def test_RemoteShellCommand_usePTY(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cmd = remotecommand.RemoteShellCommand(
                 'workdir', 'command')
 
         self.assertTrue(cmd.args['usePTY'] is None)
 
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cmd = remotecommand.RemoteShellCommand(
                 'workdir', 'command', usePTY=True)
 
         self.assertTrue(cmd.args['usePTY'])
 
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cmd = remotecommand.RemoteShellCommand(
                 'workdir', 'command', usePTY=False)
 

@@ -735,7 +735,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                                         factory=factory.BuildFactory(),
                                         nextWorker=nextWorker)
         if exp_warning:
-            with assertProducesWarning(config.ConfigWarning,
+            with assertProducesWarning(config.DeprecatedConfigWarning,
                                        message_pattern=r"nextWorker now takes a 3rd argument"):
                 builder_config = makeBuilderConfig()
         else:
