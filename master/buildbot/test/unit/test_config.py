@@ -44,7 +44,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 
 try:
     # Python 2
@@ -1290,7 +1289,7 @@ class MasterConfig_old_worker_api(unittest.TestCase):
         self.cfg = config.MasterConfig()
 
     def test_workers_new_api(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             self.assertEqual(self.cfg.workers, [])
 
 
@@ -1494,7 +1493,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(cfg.workernames, ['a'])
 
     def test_init_workername_positional(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cfg = config.BuilderConfig(
                 'a b c', 'a', factory=self.factory)
 
@@ -1507,7 +1506,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(cfg.workernames, ['a'])
 
     def test_init_workernames_positional(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cfg = config.BuilderConfig(
                 'a b c', None, ['a'], factory=self.factory)
 
@@ -1521,7 +1520,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
     def test_init_workerbuilddir_positional(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cfg = config.BuilderConfig(
                 'a b c', 'a', None, None, 'dir', factory=self.factory)
 
@@ -1537,7 +1536,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_init_next_worker_positional(self):
         f = lambda: None
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+        with assertNotProducesWarnings(config.DeprecatedConfigWarning):
             cfg = config.BuilderConfig(
                 'a b c', 'a', None, None, None, self.factory, None, None, f)
 
