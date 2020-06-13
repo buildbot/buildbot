@@ -114,7 +114,7 @@ trial: virtualenv
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
-	git commit -m "relnotes for $(VERSION)"
+	git commit -m "Release notes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
 	. $(VENV_NAME)/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
