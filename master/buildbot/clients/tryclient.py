@@ -33,7 +33,8 @@ from twisted.python import runtime
 from twisted.python.procutils import which
 from twisted.spread import pb
 
-from buildbot.status import builder
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import Results
 from buildbot.util import bytes2unicode
 from buildbot.util import now
 from buildbot.util import unicode2bytes
@@ -821,7 +822,7 @@ class Try(pb.Referenceable):
                 if n not in self.outstanding:
                     # the build is finished, and we have results
                     code, text = self.results[n]
-                    t = builder.Results[code]
+                    t = Results[code]
                     if text:
                         t += " ({})".format(" ".join(text))
                 elif self.builds[n]:
@@ -845,11 +846,11 @@ class Try(pb.Referenceable):
         happy = True
         for n in names:
             code, text = self.results[n]
-            t = "{}: {}".format(n, builder.Results[code])
+            t = "{}: {}".format(n, Results[code])
             if text:
                 t += " ({})".format(" ".join(text))
             output(t)
-            if code != builder.SUCCESS:
+            if code != SUCCESS:
                 happy = False
 
         if happy:
