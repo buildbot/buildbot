@@ -38,7 +38,6 @@ from buildbot.changes import base as changes_base
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.schedulers import base as schedulers_base
-from buildbot.status import base as status_base
 from buildbot.test.util import dirs
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertNotProducesWarnings
@@ -79,10 +78,6 @@ class FakeChangeSource(changes_base.ChangeSource):
 
     def __init__(self):
         super().__init__(name='FakeChangeSource')
-
-
-class FakeStatusReceiver(status_base.StatusReceiver):
-    pass
 
 
 @implementer(interfaces.IScheduler)
