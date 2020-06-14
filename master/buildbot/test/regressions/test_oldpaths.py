@@ -98,28 +98,12 @@ class OldImportPaths(unittest.TestCase):
     def test_status_builder_results(self):
         # these symbols are now in buildbot.process.results, but lots of user
         # code references them here:
-        from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
-        from buildbot.status.builder import EXCEPTION, RETRY, Results
-        from buildbot.status.builder import worst_status
+        from buildbot.process.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
+        from buildbot.process.results import EXCEPTION, RETRY, Results
+        from buildbot.process.results import worst_status
         # reference the symbols to avoid failure from pyflakes
         (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, Results,
          worst_status)
-
-    def test_status_builder_BuildSetStatus(self):
-        from buildbot.status.builder import BuildSetStatus
-        assert BuildSetStatus
-
-    def test_status_builder_Status(self):
-        from buildbot.status.builder import Status
-        assert Status
-
-    def test_status_builder_Event(self):
-        from buildbot.status.builder import Event
-        assert Event
-
-    def test_status_builder_BuildStatus(self):
-        from buildbot.status.builder import BuildStatus
-        assert BuildStatus
 
     def test_steps_source_Source(self):
         from buildbot.steps.source import Source

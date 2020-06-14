@@ -12,13 +12,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 
 
-class FakeBuildWithMaster(FakeBuild):
-
-    def __init__(self, master):
-        super(FakeBuildWithMaster, self).__init__()
-        self.master = master
-
-
 class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase,
                              ConfigErrorsMixin):
 
@@ -32,7 +25,7 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase,
         self.secretsrv = SecretManager()
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)
-        self.build = FakeBuildWithMaster(self.master)
+        self.build = FakeBuild(master=self.master)
 
     @defer.inlineCallbacks
     def test_secret(self):
@@ -55,7 +48,7 @@ class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase,
     def setUp(self):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
-        self.build = FakeBuildWithMaster(self.master)
+        self.build = FakeBuild(master=self.master)
 
     @defer.inlineCallbacks
     def test_secret(self):
@@ -78,11 +71,11 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
         self.secretsrv = SecretManager()
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)
-        self.build = FakeBuildWithMaster(self.master)
+        self.build = FakeBuild(master=self.master)
 
     @defer.inlineCallbacks
     def test_secret(self):
         command = Interpolate("echo %(secret:foo)s")
         rendered = yield self.build.render(command)
-        cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+        cleantext = self.build.getProperties().cleanupTextFromSecrets(rendered)
         self.assertEqual(cleantext, "echo <foo>")

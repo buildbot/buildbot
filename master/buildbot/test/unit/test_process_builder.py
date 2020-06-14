@@ -578,11 +578,6 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         mastercfg = config.MasterConfig()
         mastercfg.builders = [new_builder_config]
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
-        self.assertEqual(
-            dict(description=self.bldr.builder_status.getDescription(),
-                 tags=self.bldr.builder_status.getTags()),
-            dict(description="New",
-                 tags=["NewTag"]))
         self.assertIdentical(self.bldr.config, new_builder_config)
 
         # check that the reconfig grabbed a buliderid

@@ -180,7 +180,6 @@ setup_args = {
         "buildbot.secrets.providers",
         "buildbot.statistics",
         "buildbot.statistics.storage_backends",
-        "buildbot.status",
         "buildbot.steps",
         "buildbot.steps.package",
         "buildbot.steps.package.deb",

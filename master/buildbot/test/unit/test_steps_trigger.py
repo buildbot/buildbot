@@ -28,7 +28,6 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.status import master
 from buildbot.steps import trigger
 from buildbot.test import fakedb
 from buildbot.test.util import steps
@@ -106,7 +105,6 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    @defer.inlineCallbacks
     def setupStep(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):
         sourcestamps = sourcestampsInBuild or []
         got_revisions = gotRevisionsInBuild or {}
@@ -121,8 +119,6 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         m.db.checkForeignKeys = True
         self.build.builder.botmaster = m.botmaster
         self.build.conn = object()
-        m.status = master.Status()
-        yield m.status.setServiceParent(m)
         m.config.buildbotURL = "baseurl/"
         m.scheduler_manager = FakeSchedulerManager()
 

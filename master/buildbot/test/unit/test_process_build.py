@@ -39,7 +39,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
-from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.util.misc import TestReactorMixin
 
 
@@ -214,7 +213,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
 
@@ -230,7 +229,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return defer.Deferred()
         step.startStep = startStep
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, CANCELLED)
 
@@ -243,7 +242,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.setStepFactories([FakeStepFactory(step)])
 
         self.workerforbuilder.prepare = lambda _: False
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, RETRY)
         self.assertWorkerPreparationFailure('error while worker_prepare')
 
@@ -255,7 +254,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         d = defer.Deferred()
         self.workerforbuilder.prepare = lambda _: d
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         b.stopBuild('Cancel Build', CANCELLED)
         d.callback(False)
         self.assertEqual(b.results, CANCELLED)
@@ -269,7 +268,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         d = defer.Deferred()
         self.workerforbuilder.prepare = lambda _: d
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
         self.assertEqual(b.results, RETRY)
@@ -310,7 +309,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step2.startStep = startStep2
         step1.stepDone = lambda: False
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, CANCELLED)
         self.assertIn('stop it', step1.interrupted)
@@ -330,7 +329,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         step1.startStep = startStep
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, EXCEPTION)
         self.flushLoggedErrors(TestException)
@@ -392,7 +391,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         b = self.build
 
-        b.build_status = Mock()
         b.builder.config.workerbuilddir = 'test'
         self.workerforbuilder.worker.worker_basedir = "/srv/buildbot/worker"
         self.workerforbuilder.worker.path_module = posixpath
@@ -429,7 +427,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
         self.assertEqual(claimCount[0], 1)
@@ -474,8 +472,8 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         eBuild.setStepFactories([FakeStepFactory(step)])
         cBuild.setStepFactories([FakeStepFactory(step)])
 
-        e = eBuild.startBuild(FakeBuildStatus(), eWorker)
-        c = cBuild.startBuild(FakeBuildStatus(), cWorker)
+        e = eBuild.startBuild(eWorker)
+        c = cBuild.startBuild(cWorker)
         d = defer.DeferredList([e, c])
 
         realLock.release(fakeBuild, fakeBuildAccess)
@@ -509,7 +507,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         real_lock.claim(Mock(), lock.access('counting'))
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(claimCount[0], 1)
         self.assertTrue(b.currentStep is None)
@@ -540,7 +538,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return retval
         b.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
@@ -570,13 +568,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return retval
         b.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, RETRY)
-        self.build.build_status.setText.assert_called_with(
-            ["retry", "lost", "connection"])
-        self.build.build_status.setResults.assert_called_with(RETRY)
 
     @defer.inlineCallbacks
     def testStopBuildWaitingForStepLocks(self):
@@ -604,7 +599,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return retval
         step.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(gotLocks, [True])
         self.assertEqual(b.results, CANCELLED)
@@ -765,7 +760,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
 
         # remove duplicates, note that set() can't be used as properties contain complex
@@ -800,7 +795,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "d", "e", "c"]
         executed_names = [s.name for s in b.executedSteps]
@@ -820,7 +815,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "d", "e"]
         executed_names = [s.name for s in b.executedSteps]
@@ -833,7 +828,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps = self.create_fake_steps(["clone", "command", "clean"])
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["clone", "command", "clean"]
         executed_names = [s.name for s in b.executedSteps]
@@ -845,7 +840,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps = self.create_fake_steps(["stage", "stage", "stage"])
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["stage", "stage_1", "stage_2"]
         executed_names = [s.name for s in b.executedSteps]
@@ -864,7 +859,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "c_1", "c_2"]
         executed_names = [s.name for s in b.executedSteps]
@@ -904,7 +899,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return observer.asDict()['counters'].get('active_builds', 0)
         self.assertEqual(get_active_builds(), 0)
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(get_active_builds(), 1)
 
@@ -929,7 +924,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return observer.asDict()['counters'].get('active_builds', 0)
         self.assertEqual(get_active_builds(), 0)
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.flushLoggedErrors(TestException)
 
@@ -1049,7 +1044,6 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
-        self.build.build_status = FakeBuildStatus()
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
 
@@ -1091,7 +1085,6 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
-        self.build.build_status = FakeBuildStatus()
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
 
@@ -1145,8 +1138,6 @@ class TestBuildProperties(TestReactorMixin, unittest.TestCase):
         FakeProperties.render = Mock(side_effect=lambda x: x)
         FakeProperties.asList = Mock(side_effect=lambda: [])
 
-        class FakeBuildStatus(Mock):
-            pass
         r = FakeRequest()
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
@@ -1161,8 +1152,7 @@ class TestBuildProperties(TestReactorMixin, unittest.TestCase):
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
         self.properties = self.build.properties = FakeProperties()
-        self.build_status = FakeBuildStatus()
-        self.build.startBuild(self.build_status, self.workerforbuilder)
+        self.build.startBuild(self.workerforbuilder)
 
     def test_getProperty(self):
         self.build.getProperty('x')

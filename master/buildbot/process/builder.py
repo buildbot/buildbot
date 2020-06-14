@@ -90,14 +90,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 break
         assert found_config, "no config found for builder '{}'".format(self.name)
 
-        # set up a builder status object on the first reconfig
-        if not self.builder_status:
-            self.builder_status = self.master.status.builderAdded(
-                name=builder_config.name,
-                basedir=builder_config.builddir,
-                tags=builder_config.tags,
-                description=builder_config.description)
-
         self.config = builder_config
         self.config_version = self.master.config_version
 
@@ -109,11 +101,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.master.data.updates.updateBuilderInfo(builderid,
                                                    builder_config.description,
                                                    builder_config.tags)
-
-        self.builder_status.setDescription(builder_config.description)
-        self.builder_status.setTags(builder_config.tags)
-        self.builder_status.setWorkernames(self.config.workernames)
-        self.builder_status.setCacheSize(new_config.caches['Builds'])
 
         # if we have any workers attached which are no longer configured,
         # drop them.
@@ -176,15 +163,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
             return completed[0]['complete_at']
         else:
             return None
-
-    def getBuild(self, number):
-        for b in self.building:
-            if b.build_status and b.build_status.number == number:
-                return b
-        for b in self.old_building:
-            if b.build_status and b.build_status.number == number:
-                return b
-        return None
 
     def addLatentWorker(self, worker):
         assert interfaces.ILatentWorker.providedBy(worker)
@@ -344,12 +322,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # another build request.
         workerforbuilder.buildStarted()
 
-        # create the BuildStatus object that goes with the Build
-        bs = self.builder_status.newBuild()
-
-        # let status know
-        self.master.status.build_started(buildrequests[0].id, self.name, bs)
-
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
         # (through our BuilderStatus object, which is its parent).  Finally it
@@ -359,7 +331,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # raised by startBuild are treated as deferred errbacks (see
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
-                                bs, workerforbuilder)
+                                workerforbuilder)
         # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
@@ -389,7 +361,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
-        results = build.build_status.getResults()
+        results = build.results
 
         self.building.remove(build)
         if results == RETRY:
@@ -498,7 +470,7 @@ class BuilderControl:
             return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
         for w in self.original.workers:
-            dl.append(w.ping(self.original.builder_status))
+            dl.append(w.ping())
         d = defer.DeferredList(dl)
         d.addCallback(self._gatherPingResults)
         return d
