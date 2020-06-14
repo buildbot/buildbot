@@ -21,6 +21,7 @@ ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 # build rst documentation
 docs:
 	$(MAKE) -C master/docs dev
+	@echo "You can now open master/docs/_build/html/index.html"
 
 docs-towncrier:
 	if command -v towncrier >/dev/null 2>&1 ;\
