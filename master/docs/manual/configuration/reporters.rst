@@ -1026,7 +1026,7 @@ Revisions that are stored as hashes are shortened to 7 characters in length, as 
 GerritStatusPush
 ~~~~~~~~~~~~~~~~
 
-.. py:currentmodule:: buildbot.status.status_gerrit
+.. py:currentmodule:: buildbot.reporters.status_gerrit
 
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
