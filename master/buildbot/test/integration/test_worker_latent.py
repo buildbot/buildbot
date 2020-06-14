@@ -1045,6 +1045,22 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.reactor.advance(1)
         yield self.assertBuildResults(2, SUCCESS)
 
+    def stop_first_build(self, results):
+        stopped_deferred = defer.Deferred()
+
+        @defer.inlineCallbacks
+        def newCallback(_, data):
+            # Stop the build
+            buildid = data['buildid']
+            yield self.master.data.control('stop', {'results': results}, ('builds', buildid))
+            stopped_deferred.callback(None)
+
+        consumed_d = self.master.mq.startConsuming(
+            newCallback,
+            ('builds', None, 'new'))
+
+        return consumed_d, stopped_deferred
+
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
@@ -1054,21 +1070,21 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, master, builder_id = \
             yield self.create_single_worker_config()
 
-        builder = master.botmaster.builders['testy']
-
+        # will Stop the build
+        consumed_d, stopped_deferred = self.stop_first_build(CANCELLED)
+        yield consumed_d
         # Trigger a buildrequest
         yield self.createBuildrequest(master, [builder_id])
 
-        # Stop the build
-        build = builder.getBuild(0)
-        build.stopBuild('no reason', results=CANCELLED)
+        yield stopped_deferred
 
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
+        yield controller.auto_stop(True)
+
         yield self.assertBuildResults(1, CANCELLED)
 
-        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -1079,8 +1095,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller, master, builder_id = \
             yield self.create_single_worker_config()
 
-        builder = master.botmaster.builders['testy']
-
+        # Stop the build
+        consumed_d, stopped_deferred = self.stop_first_build(RETRY)
+        yield consumed_d
         # Trigger a buildrequest
         _, brids = yield self.createBuildrequest(master, [builder_id])
 
@@ -1089,19 +1106,17 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             lambda key, request: unclaimed_build_requests.append(request),
             ('buildrequests', None, 'unclaimed'))
 
-        # Stop the build
-        build = builder.getBuild(0)
-        build.stopBuild('no reason', results=RETRY)
+        yield stopped_deferred
 
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
+        yield controller.auto_stop(True)
         yield self.assertBuildResults(1, RETRY)
         self.assertEqual(
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
