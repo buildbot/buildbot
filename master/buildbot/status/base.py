@@ -20,6 +20,12 @@ from buildbot import pbutil
 from buildbot import util
 from buildbot.interfaces import IStatusReceiver
 from buildbot.util import service
+from buildbot.warnings import warn_deprecated
+
+warn_deprecated(
+    '0.9.0',
+    'buildbot.status.base has been deprecated, consume the buildbot.data APIs'
+)
 
 
 @implementer(IStatusReceiver)

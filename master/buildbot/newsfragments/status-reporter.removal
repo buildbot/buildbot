@@ -1,0 +1,1 @@
+Deprecation warnings have been added to the `buildbot.status` module. It has been deprecated in documentation v0.9.0.

@@ -30,6 +30,12 @@ from buildbot.util import bbcollections
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
+from buildbot.warnings import warn_deprecated
+
+warn_deprecated(
+    '0.9.0',
+    'buildbot.status.master has been deprecated, consume the buildbot.data APIs'
+)
 
 
 @implementer(interfaces.IStatus)
