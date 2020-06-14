@@ -1,7 +1,7 @@
-Indices and Tables
-==================
+API Indices
+===========
 
-* :ref:`genindex`
+* :ref:`apiindex`
 * :bb:index:`cfg`
 * :bb:index:`sched`
 * :bb:index:`chsrc`
@@ -13,5 +13,4 @@ Indices and Tables
 * :bb:index:`rtype`
 * :bb:index:`rpath`
 * :bb:index:`raction`
-* :ref:`modindex`
-* :ref:`search`
+* :ref:`genindex`

@@ -1,0 +1,1 @@
+Buildbot now uses pypugjs library instead of pyjade to render pug templates.

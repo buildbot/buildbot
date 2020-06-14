@@ -117,6 +117,46 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
         self.bsp.buildFinished(('build', 20, 'finished'), build)
 
     @defer.inlineCallbacks
+    def test_success_return_codes(self):
+        build = yield self.setupBuildResults(SUCCESS)
+
+        # make sure a 201 return code does not trigger an error
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
+                              content_json={'access_token': 'foo'})
+        self._http.expect(
+            'post',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
+            json={
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'state': 'SUCCESSFUL',
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=201)
+
+        build['complete'] = True
+        self.setUpLogging()
+        self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.assertNotLogged('201: unable to upload Bitbucket status')
+
+        # make sure a 200 return code does not trigger an error
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
+                              content_json={'access_token': 'foo'})
+        self._http.expect(
+            'post',
+            '/user/repo/commit/d34db33fd43db33f/statuses/build',
+            json={
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'state': 'SUCCESSFUL',
+                'key': 'Builder0',
+                'name': 'Builder0'},
+            code=200)
+
+        build['complete'] = True
+        self.setUpLogging()
+        self.bsp.buildStarted(('build', 20, 'finished'), build)
+        self.assertNotLogged('200: unable to upload Bitbucket status')
+
+    @defer.inlineCallbacks
     def test_unable_to_authenticate(self):
         build = yield self.setupBuildResults(SUCCESS)
 
@@ -146,7 +186,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
             code=404,
             content_json={
                 "error_description": "This commit is unknown to us",
-                "error": "invalid_commit"}),
+                "error": "invalid_commit"})
         self.setUpLogging()
         self.bsp.buildStarted(('build', 20, 'started'), build)
         self.assertLogged('404: unable to upload Bitbucket status')

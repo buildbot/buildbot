@@ -38,6 +38,8 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.warnings import ConfigWarning
+from buildbot.warnings import warn_deprecated
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -76,19 +78,6 @@ def error(error, always_raise=False):
         _errors.addError(error)
     else:
         raise ConfigErrors([error])
-
-
-class ConfigWarning(Warning):
-    """
-    Warning for deprecated configuration options.
-    """
-
-
-def warnDeprecated(version, msg):
-    warnings.warn(
-        "[{} and later] {}".format(version, msg),
-        category=ConfigWarning,
-    )
 
 
 _in_unit_tests = False
@@ -403,27 +392,26 @@ class MasterConfig(util.ComparableMixin):
             if _in_unit_tests:
                 self.buildbotNetUsageData = None
             else:
-                warnDeprecated(
-                    '0.9.0',
+                warnings.warn(
                     '`buildbotNetUsageData` is not configured and defaults to basic.\n'
                     'This parameter helps the buildbot development team to understand'
                     ' the installation base.\n'
                     'No personal information is collected.\n'
                     'Only installation software version info and plugin usage is sent.\n'
                     'You can `opt-out` by setting this variable to None.\n'
-                    'Or `opt-in` for more information by setting it to "full".\n'
-                )
+                    'Or `opt-in` for more information by setting it to "full".\n',
+                    category=ConfigWarning)
         copy_str_or_callable_param('buildbotNetUsageData')
 
         for horizon in ('logHorizon', 'buildHorizon', 'eventHorizon'):
             if horizon in config_dict:
-                warnDeprecated(
+                warn_deprecated(
                     '0.9.0',
                     "NOTE: `{}` is deprecated and ignored "
                     "They are replaced by util.JanitorConfigurator".format(horizon))
 
         if 'status' in config_dict:
-            warnDeprecated(
+            warn_deprecated(
                 '0.9.0',
                 "NOTE: `status` targets are deprecated and ignored "
                 "They are replaced by reporters")
@@ -533,7 +521,7 @@ class MasterConfig(util.ComparableMixin):
             config_dict = db
 
         if 'db_poll_interval' in config_dict and throwErrors:
-            warnDeprecated(
+            warn_deprecated(
                 "0.8.7", "db_poll_interval is deprecated and will be ignored")
 
         # we don't attempt to parse db URLs here - the engine strategy will do
@@ -989,9 +977,9 @@ class BuilderConfig(util_config.ConfiguredMixin):
             error(("builder '{}': builder categories are deprecated and "
                    "replaced by tags; you should only specify tags").format(name))
         if category:
-            warnDeprecated("0.9", ("builder '{}': builder categories are "
-                                   "deprecated and should be replaced with "
-                                   "'tags=[cat]'").format(name))
+            warn_deprecated("0.9", ("builder '{}': builder categories are "
+                                    "deprecated and should be replaced with "
+                                    "'tags=[cat]'").format(name))
             if not isinstance(category, str):
                 error("builder '{}': category must be a string".format(name))
             tags = [category]
@@ -1020,7 +1008,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
             argCount = self._countFuncArgs(nextWorker)
             if (argCount == 2 or (isinstance(nextWorker, MethodType) and
                                   argCount == 3)):
-                warnDeprecated(
+                warn_deprecated(
                     "0.9", "nextWorker now takes a "
                     "3rd argument (build request)")
                 self.nextWorker = lambda x, y, z: nextWorker(

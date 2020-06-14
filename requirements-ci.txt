@@ -1,27 +1,28 @@
 alabaster==0.7.12
-appdirs==1.4.3
+appdirs==1.4.4
 asn1crypto==1.3.0
-astroid==2.3.3; python_version >= "3.4"
+astroid==2.4.2; python_version >= "3.4"
 attrs==19.3.0
-autobahn==20.3.1
+autobahn==20.4.3
 Automat==20.2.0
 Babel==2.8.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.12.16
-botocore==1.15.16
+boto3==1.13.24
+botocore==1.16.24
 cffi==1.14.0
-click==7.0
-configparser==4.0.2
+click==7.1.2
+# pin configparser, because 5.x no longer supports Python 3.5
+configparser==4.0.2  # pyup: ignore
 constantly==15.1.0
 cookies==2.2.1
-cryptography==2.8
+cryptography==2.9.2
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
-enum34==1.1.9
-flake8==3.7.9
+enum34==1.1.10
+flake8==3.8.2
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.2
@@ -30,68 +31,68 @@ imagesize==1.2.0
 incremental==17.5.0
 ipaddress==1.0.23
 isort==4.3.21
-Jinja2==2.11.1
-jmespath==0.9.5
+Jinja2==2.11.2
+jmespath==0.10.0
 jsonref==0.2
-lazy-object-proxy==1.4.3
+lazy-object-proxy==1.5.0
 lz4==2.2.1
-markdown2==2.3.8
+markdown2==2.3.9
 MarkupSafe==1.1.1
 mccabe==0.6.1
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5   # pyup: ignore
 moto==1.3.14
 olefile==0.46
-packaging==20.3
-parameterized==0.7.0
+packaging==20.4
+parameterized==0.7.4
 pathlib2==2.3.5
-pbr==5.4.4
+pbr==5.4.5
 pep8==1.7.1
-Pillow==7.0.0
-pyaml==19.12.0
+Pillow==7.1.2
+pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycodestyle==2.5.0
+pycodestyle==2.6.0
 pycparser==2.20
-pyenchant==3.0.1
-pyflakes==2.1.1
-pyjade==4.0.0
+pyenchant==3.1.1
+pyflakes==2.2.0
+pypugjs==5.9.4
 PyJWT==1.7.1
-pylint==2.4.4; python_version >= "3.4"
+pylint==2.5.3; python_version >= "3.4"
 pyOpenSSL==19.1.0
-pyparsing==2.4.6
+pyparsing==2.4.7
 python-dateutil==2.8.1
-pytz==2019.3
-PyYAML==5.3
+pytz==2020.1
+PyYAML==5.3.1
 requests==2.23.0
 s3transfer==0.3.3
 scandir==1.10.0
 service-identity==18.1.0
 setuptools-trial==0.6.0
 singledispatch==3.4.0.3
-six==1.14.0
+six==1.15.0
 snowballstemmer==2.0.0
-SQLAlchemy==1.3.13
+SQLAlchemy==1.3.17
 sqlalchemy-migrate==0.13.0
 sqlparse==0.3.1
 Tempita==0.5.2
 termcolor==1.1.0
-toml==0.10.0
+toml==0.10.1
 towncrier==19.2.0
-treq==18.6.0
-Twisted==19.10.0
-txaio==20.1.1
+treq==20.4.1
+Twisted==20.3.0
+txaio==20.4.1
 txrequests==0.9.6
 typing==3.7.4.1
 webcolors==1.11.1
-Werkzeug==1.0.0
+Werkzeug==1.0.1
 wrapt==1.12.1
 xmltodict==0.12.0
-zope.interface==4.7.1
-coverage==5.0.3
-codecov==2.0.16
+zope.interface==5.1.0
+coverage==5.1
+codecov==2.1.4
 -e master
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==2.7.0
+buildbot-www==2.8.1

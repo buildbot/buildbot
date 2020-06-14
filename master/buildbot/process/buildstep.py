@@ -56,6 +56,7 @@ from buildbot.process.results import worst_status
 from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
+from buildbot.util.test_result_submitter import TestResultSubmitter
 
 
 class BuildStepFailed(Exception):
@@ -365,6 +366,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.stepid = None
         self.results = None
         self._start_unhandled_deferreds = None
+        self._test_result_submitters = {}
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
@@ -504,6 +506,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
         self.name = yield self.build.render(self.name)
+        self.build.setUniqueStepName(self)
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.bytes2unicode(self.name))
@@ -564,6 +567,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
             # run -- or skip -- the step
             if doStep:
+                yield self.addTestResultSets()
                 try:
                     self._running = True
                     self.results = yield self.run()
@@ -621,6 +625,11 @@ class BuildStep(results.ResultComputingConfigMixin,
         all_finished = yield self.finishUnfinishedLogs()
         if not all_finished:
             self.results = EXCEPTION
+
+        # finish unfinished test result submitters
+        for sub in self._test_result_submitters.values():
+            yield sub.finish()
+
         self.releaseLocks()
 
         return self.results
@@ -637,6 +646,23 @@ class BuildStep(results.ResultComputingConfigMixin,
                 log.err(res, "when trying to finish a log")
                 ok = False
         return ok
+
+    def addTestResultSets(self):
+        return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def addTestResultSet(self, description, category, value_unit):
+        sub = TestResultSubmitter()
+        yield sub.setup(self, description, category, value_unit)
+        setid = sub.get_test_result_set_id()
+        self._test_result_submitters[setid] = sub
+        return setid
+
+    def addTestResult(self, setid, value, test_name=None, test_code_path=None, line=None,
+                      duration_ns=None):
+        self._test_result_submitters[setid].add_test_result(value, test_name=test_name,
+                                                            test_code_path=test_code_path,
+                                                            line=line, duration_ns=duration_ns)
 
     def acquireLocks(self, res=None):
         if not self.locks:

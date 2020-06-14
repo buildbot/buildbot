@@ -197,7 +197,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         # only reconfigure if sibling is configured differently.
         # sibling == self is using ComparableMixin's implementation
         # only compare compare_attrs
-        if self.configured and sibling == self:
+        if self.configured and util.ComparableMixin.isEquivalent(sibling, self):
             return None
         self.configured = True
         # render renderables in parallel
@@ -467,7 +467,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 added_names.add(n)
             # compare using ComparableMixin if they don't support reconfig
             elif not hasattr(old, 'reconfigServiceWithBuildbotConfig'):
-                if old != new:
+                if not util.ComparableMixin.isEquivalent(old, new):
                     removed_names.add(n)
                     added_names.add(n)
 
@@ -495,7 +495,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                     objectid = yield self.master.db.state.getObjectId(
                         child.name, class_name)
                     child.objectid = objectid
-                yield defer.maybeDeferred(child.setServiceParent, self)
+                yield child.setServiceParent(self)
 
         # As the services that were just added got
         # reconfigServiceWithSibling called by

@@ -444,6 +444,33 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         ''' % root_dir)
         self._incremental(client_stdin=client_spec, timeout=60 * 60)
 
+    def test_mode_incremental_stream(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          stream=True))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        Stream:\t//depot/trunk
+        ''' % root_dir)
+        self._incremental(client_stdin=client_spec)
+
     def _full(self, client_stdin='', p4client='p4_client1', p4user='user',
               workdir='wkdir', extra_args=None, obfuscated_pass=True):
         if extra_args is None:
@@ -842,6 +869,33 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
         self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
+
+    def test_mode_full_stream(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          stream=True))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        Stream:\t//depot/trunk
+        ''' % root_dir)
+        self._full(client_stdin=client_spec)
 
     def test_worker_connection_lost(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',

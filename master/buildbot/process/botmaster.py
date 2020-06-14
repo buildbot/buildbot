@@ -268,7 +268,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 builder.master = None
                 builder.botmaster = None
 
-                yield defer.maybeDeferred(builder.disownServiceParent)
+                yield builder.disownServiceParent()
 
             for n in added_names:
                 builder = Builder(n)

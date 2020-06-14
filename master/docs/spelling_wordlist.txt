@@ -337,6 +337,7 @@ getRecipients
 getter
 getters
 GiB
+gibibytes
 github
 GitHub
 GitLab
@@ -500,6 +501,7 @@ metabuildbot
 metacharacters
 metadata
 MiB
+mebibytes
 minified
 minifies
 minimalistic
@@ -636,7 +638,7 @@ pyflakes
 Pyflakes
 pyjade
 pypi
-PyPy
+pypugjs
 pysqlite
 pythonic
 Pythonic

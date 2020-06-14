@@ -61,11 +61,11 @@ class IndexResource(resource.Resource):
         res = {}
         allowed_ext = [".html"]
         try:
-            import pyjade   # pylint: disable=import-outside-toplevel
+            import pypugjs  # pylint: disable=import-outside-toplevel
             allowed_ext.append(".jade")
         except ImportError:  # pragma: no cover
-            log.msg("pyjade not installed. Ignoring .jade files from {}".format(template_dir))
-            pyjade = None
+            log.msg("pypugjs not installed. Ignoring .jade files from {}".format(template_dir))
+            pypugjs = None
         for root, dirs, files in os.walk(template_dir):
             if root == template_dir:
                 template_name = posixpath.join("views", "%s.html")
@@ -85,9 +85,9 @@ class IndexResource(resource.Resource):
                 elif ext == ".jade":
                     with open(fn) as f:
                         jade = f.read()
-                        parser = pyjade.parser.Parser(jade)
+                        parser = pypugjs.parser.Parser(jade)
                         block = parser.parse()
-                        compiler = pyjade.ext.html.Compiler(
+                        compiler = pypugjs.ext.html.Compiler(
                             block, pretty=False)
                         html = compiler.compile()
                 res[template_name % (basename,)] = html
@@ -117,7 +117,7 @@ class IndexResource(resource.Resource):
     def renderIndex(self, request):
         config = {}
         request.setHeader(b"content-type", b'text/html')
-        request.setHeader(b"Cache-Control", b"public;max-age=0")
+        request.setHeader(b"Cache-Control", b"public,max-age=0")
 
         try:
             yield self.config['auth'].maybeAutoLogin(request)

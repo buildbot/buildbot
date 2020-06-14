@@ -29,8 +29,8 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.warnings import warn_deprecated
 from buildbot.worker import AbstractLatentWorker
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 try:
     import boto3
@@ -275,7 +275,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                     ebs.setdefault('DeleteOnTermination', True)
             return mapping_definitions
 
-        reportDeprecatedWorkerNameUsage(
+        warn_deprecated(
+            '0.9.0',
             "Use of dict value to 'block_device_map' of EC2LatentWorker "
             "constructor is deprecated. Please use a list matching the AWS API "
             "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html"

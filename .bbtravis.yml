@@ -52,7 +52,7 @@ env:
   #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
   # Test different versions of SQLAlchemy
-  - TWISTED=17.9.0 SQLALCHEMY=1.1.0 TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=1.2.0 TESTS=trial
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
@@ -175,17 +175,12 @@ script:
   # Build documentation
   - title: docs
     condition: TESTS == "docs"
-    cmd: make docs
+    cmd: make docs-release
 
   # Run spell checker on documentation
   - title: spelling
     condition: TESTS == "docs"
-    cmd: make -C master/docs SPHINXOPTS=-W spelling
-
-  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
-  - title: linkcheck
-    condition: TESTS == "docs" and not TRAVIS_PULL_REQUEST
-    cmd: make -C master/docs SPHINXOPTS=-q linkcheck
+    cmd: make docs-release-spelling
 
   - title: maketarballs
     condition: TESTS == "smokes"

@@ -290,21 +290,21 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         yield method(*args, **kwargs)
         self.master.mq.assertProductions(exp_events)
 
-    def test_signature_newBuild(self):
+    def test_signature_addBuild(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuild,  # fake
             self.rtype.addBuild)  # real
-        def newBuild(self, builderid, buildrequestid, workerid):
+        def addBuild(self, builderid, buildrequestid, workerid):
             pass
 
-    def test_newBuild(self):
+    def test_addBuild(self):
         return self.do_test_callthrough('addBuild', self.rtype.addBuild,
                                         builderid=10, buildrequestid=13, workerid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
                                                         workerid=20, masterid=self.master.masterid,
                                                         state_string='created'))
 
-    def test_newBuildEvent(self):
+    def test_addBuildEvent(self):
 
         @defer.inlineCallbacks
         def addBuild(*args, **kwargs):

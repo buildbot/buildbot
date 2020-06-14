@@ -14,32 +14,22 @@
 # Copyright Buildbot Team Members
 
 
-import copy
-import sys
-
-from mock import Mock
+import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
+from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
-from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 
-py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
-                                    and sys.version_info[1] >= 7)
 
-
-class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
+class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
                        unittest.TestCase, NotifierTestMixin):
 
     def setUp(self):
@@ -50,300 +40,118 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setupNotifier(self, *args, **kwargs):
         mn = NotifierBase(*args, **kwargs)
-        mn.sendMessage = Mock(spec=mn.sendMessage)
+        mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
         yield mn.startService()
         return mn
 
-    def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
-        with self.assertRaises(config.ConfigErrors):
-            NotifierBase(tags=['fast', 'slow'], builders=['a', 'b'])
-
-    def test_init_warns_notifier_mode_all_in_iter(self):
-        with self.assertRaisesConfigError(
-               "mode 'all' is not valid in an iterator and must be passed in as a separate string"):
-            NotifierBase(mode=['all'])
-
-    @defer.inlineCallbacks
-    def test_buildsetComplete_sends_message(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-        mn = yield self.setupNotifier(buildSetSummary=True,
-                                      mode=("failing", "passing", "warnings"),
-                                      builders=["Builder1", "Builder2"])
-
-        mn.buildMessage = Mock()
-        yield mn.buildsetComplete('buildset.98.complete',
-                                  dict(bsid=98))
-
-        mn.buildMessage.assert_called_with(
-            "whole buildset",
-            builds, SUCCESS)
-        self.assertEqual(mn.buildMessage.call_count, 1)
-
-    @defer.inlineCallbacks
-    def test_buildsetComplete_doesnt_send_message(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-        # disable passing...
-        mn = yield self.setupNotifier(buildSetSummary=True,
-                                      mode=("failing", "warnings"),
-                                      builders=["Builder1", "Builder2"])
-
-        mn.buildMessage = Mock()
-        yield mn.buildsetComplete('buildset.98.complete',
-                                  dict(bsid=98))
-
-        self.assertFalse(mn.buildMessage.called)
-
-    @defer.inlineCallbacks
-    def test_isMessageNeeded_ignores_unspecified_tags(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        build['builder']['tags'] = ['slow']
-        mn = yield self.setupNotifier(tags=["fast"])
-        self.assertFalse(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMessageNeeded_tags(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        build['builder']['tags'] = ['fast']
-        mn = yield self.setupNotifier(tags=["fast"])
-        self.assertTrue(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMessageNeeded_schedulers_sends_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupNotifier(schedulers=['checkin'])
-        self.assertTrue(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMessageNeeded_schedulers_doesnt_send_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupNotifier(schedulers=['some-random-scheduler'])
-        self.assertFalse(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMessageNeeded_branches_sends_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupNotifier(branches=['master'])
-        self.assertTrue(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMessageNeeded_branches_doesnt_send_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupNotifier(branches=['some-random-branch'])
-        self.assertFalse(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def run_simple_test_sends_message_for_mode(self, mode, result, shouldSend=True):
-        _, builds = yield self.setupBuildResults(result)
-
-        mn = yield self.setupNotifier(mode=mode)
-
-        self.assertEqual(mn.isMessageNeeded(builds[0]), shouldSend)
-
-    def run_simple_test_ignores_message_for_mode(self, mode, result):
-        return self.run_simple_test_sends_message_for_mode(mode, result, False)
-
-    def test_isMessageNeeded_mode_all_for_success(self):
-        return self.run_simple_test_sends_message_for_mode("all", SUCCESS)
-
-    def test_isMessageNeeded_mode_all_for_failure(self):
-        return self.run_simple_test_sends_message_for_mode("all", FAILURE)
-
-    def test_isMessageNeeded_mode_all_for_warnings(self):
-        return self.run_simple_test_sends_message_for_mode("all", WARNINGS)
-
-    def test_isMessageNeeded_mode_all_for_exception(self):
-        return self.run_simple_test_sends_message_for_mode("all", EXCEPTION)
-
-    def test_isMessageNeeded_mode_all_for_cancelled(self):
-        return self.run_simple_test_sends_message_for_mode("all", CANCELLED)
-
-    def test_isMessageNeeded_mode_failing_for_success(self):
-        return self.run_simple_test_ignores_message_for_mode("failing", SUCCESS)
-
-    def test_isMessageNeeded_mode_failing_for_failure(self):
-        return self.run_simple_test_sends_message_for_mode("failing", FAILURE)
-
-    def test_isMessageNeeded_mode_failing_for_warnings(self):
-        return self.run_simple_test_ignores_message_for_mode("failing", WARNINGS)
-
-    def test_isMessageNeeded_mode_failing_for_exception(self):
-        return self.run_simple_test_ignores_message_for_mode("failing", EXCEPTION)
-
-    def test_isMessageNeeded_mode_exception_for_success(self):
-        return self.run_simple_test_ignores_message_for_mode("exception", SUCCESS)
-
-    def test_isMessageNeeded_mode_exception_for_failure(self):
-        return self.run_simple_test_ignores_message_for_mode("exception", FAILURE)
-
-    def test_isMessageNeeded_mode_exception_for_warnings(self):
-        return self.run_simple_test_ignores_message_for_mode("exception", WARNINGS)
-
-    def test_isMessageNeeded_mode_exception_for_exception(self):
-        return self.run_simple_test_sends_message_for_mode("exception", EXCEPTION)
-
-    def test_isMessageNeeded_mode_warnings_for_success(self):
-        return self.run_simple_test_ignores_message_for_mode("warnings", SUCCESS)
-
-    def test_isMessageNeeded_mode_warnings_for_failure(self):
-        return self.run_simple_test_sends_message_for_mode("warnings", FAILURE)
-
-    def test_isMessageNeeded_mode_warnings_for_warnings(self):
-        return self.run_simple_test_sends_message_for_mode("warnings", WARNINGS)
-
-    def test_isMessageNeeded_mode_warnings_for_exception(self):
-        return self.run_simple_test_ignores_message_for_mode("warnings", EXCEPTION)
-
-    def test_isMessageNeeded_mode_passing_for_success(self):
-        return self.run_simple_test_sends_message_for_mode("passing", SUCCESS)
-
-    def test_isMessageNeeded_mode_passing_for_failure(self):
-        return self.run_simple_test_ignores_message_for_mode("passing", FAILURE)
-
-    def test_isMessageNeeded_mode_passing_for_warnings(self):
-        return self.run_simple_test_ignores_message_for_mode("passing", WARNINGS)
-
-    def test_isMessageNeeded_mode_passing_for_exception(self):
-        return self.run_simple_test_ignores_message_for_mode("passing", EXCEPTION)
-
-    @defer.inlineCallbacks
-    def run_sends_message_for_problems(self, mode, results1, results2, shouldSend=True):
-        _, builds = yield self.setupBuildResults(results2)
-
-        mn = yield self.setupNotifier(mode=mode)
-
-        build = builds[0]
-        if results1 is not None:
-            build['prev_build'] = copy.deepcopy(builds[0])
-            build['prev_build']['results'] = results1
-        else:
-            build['prev_build'] = None
-        self.assertEqual(mn.isMessageNeeded(builds[0]), shouldSend)
-
-    def test_isMessageNeeded_mode_problem_sends_on_problem(self):
-        return self.run_sends_message_for_problems("problem", SUCCESS, FAILURE, True)
-
-    def test_isMessageNeeded_mode_problem_ignores_successful_build(self):
-        return self.run_sends_message_for_problems("problem", SUCCESS, SUCCESS, False)
-
-    def test_isMessageNeeded_mode_problem_ignores_two_failed_builds_in_sequence(self):
-        return self.run_sends_message_for_problems("problem", FAILURE, FAILURE, False)
-
-    def test_isMessageNeeded_mode_change_sends_on_change(self):
-        return self.run_sends_message_for_problems("change", FAILURE, SUCCESS, True)
-
-    def test_isMessageNeeded_mode_change_sends_on_failure(self):
-        return self.run_sends_message_for_problems("change", SUCCESS, FAILURE, True)
-
-    def test_isMessageNeeded_mode_change_ignores_first_build(self):
-        return self.run_sends_message_for_problems("change", None, FAILURE, False)
-
-    def test_isMessageNeeded_mode_change_ignores_first_build2(self):
-        return self.run_sends_message_for_problems("change", None, SUCCESS, False)
-
-    def test_isMessageNeeded_mode_change_ignores_same_result_in_sequence(self):
-        return self.run_sends_message_for_problems("change", SUCCESS, SUCCESS, False)
-
-    def test_isMessageNeeded_mode_change_ignores_same_result_in_sequence2(self):
-        return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
-
     @defer.inlineCallbacks
     def setupBuildMessage(self, **mnKwargs):
 
-        _, builds = yield self.setupBuildResults(SUCCESS)
+        _, builds = yield self.setupBuildResults(FAILURE)
 
-        mn = yield self.setupNotifier(**mnKwargs)
+        formatter = mock.Mock(spec=MessageFormatter)
+        formatter.formatMessageForBuildResults.return_value = {"body": "body",
+                                                               "type": "text",
+                                                               "subject": "subject"}
+        formatter.wantProperties = False
+        formatter.wantSteps = False
+        formatter.wantLogs = False
 
-        mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                                         "type": "text",
-                                                                         "subject": "subject"}
-        yield mn.buildMessage("mybldr", builds, SUCCESS)
-        return (mn, builds)
+        mn = yield self.setupNotifier(messageFormatter=formatter, **mnKwargs)
+
+        yield mn._got_event(('builds', 97, 'finished'), builds[0])
+        return (mn, builds, formatter)
+
+    def setup_mock_generator(self, events_filter):
+        gen = mock.Mock()
+        gen.wanted_event_keys = events_filter
+        gen.generate_name = lambda: '<name>'
+        return gen
 
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self):
-        mn, builds = yield self.setupBuildMessage(mode=("change",))
+        mn, builds, formatter = yield self.setupBuildMessage(mode=("change",))
 
         build = builds[0]
-        mn.messageFormatter.formatMessageForBuildResults.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master,
-            None, ['me@foo'])
+        formatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'Builder1', build['buildset'], build, self.master, SUCCESS, ['me@foo'])
+
+        report = {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'Builder1',
+            'results': FAILURE,
+            'builds': builds,
+            'users': ['me@foo'],
+            'patches': [],
+            'logs': []
+        }
 
         self.assertEqual(mn.sendMessage.call_count, 1)
-        mn.sendMessage.assert_called_with('body', 'subject', 'text', 'mybldr', SUCCESS, builds,
-                                          ['me@foo'], [], [])
+        mn.sendMessage.assert_called_with([report])
 
     @defer.inlineCallbacks
-    def test_buildMessage_addLogs(self):
-        mn, builds = yield self.setupBuildMessage(mode=("change",), addLogs=True)
-        self.assertEqual(mn.sendMessage.call_count, 1)
-        # make sure the logs are send
-        self.assertEqual(mn.sendMessage.call_args[0][8][0]['logid'], 60)
-        # make sure the log has content
-        self.assertIn(
-            "log with", mn.sendMessage.call_args[0][8][0]['content']['content'])
-
-    @defer.inlineCallbacks
-    def test_buildMessage_addPatch(self):
-        mn, builds = yield self.setupBuildMessage(mode=("change",), addPatch=True)
-        self.assertEqual(mn.sendMessage.call_count, 1)
-        # make sure the patch are sent
-        self.assertEqual(mn.sendMessage.call_args[0][7],
-                         [{'author': 'him@foo',
-                           'body': b'hello, world',
-                           'comment': 'foo',
-                           'level': 3,
-                           'patchid': 99,
-                           'subdir': '/foo'}])
-
-    @defer.inlineCallbacks
-    def test_buildMessage_addPatchNoPatch(self):
-        SourceStamp = fakedb.SourceStamp
-
-        class NoPatchSourcestamp(SourceStamp):
-
-            def __init__(self, id, patchid):
-                super().__init__(id=id)
-        self.patch(fakedb, 'SourceStamp', NoPatchSourcestamp)
-        mn, builds = yield self.setupBuildMessage(mode=("change",), addPatch=True)
-        self.assertEqual(mn.sendMessage.call_count, 1)
-        # make sure no patches are sent
-        self.assertEqual(mn.sendMessage.call_args[0][7], [])
-
-    @defer.inlineCallbacks
-    def test_workerMissingSendMessage(self):
+    def test_worker_missing_sends_message(self):
 
         mn = yield self.setupNotifier(watchedWorkers=['myworker'])
 
-        yield mn.workerMissing('worker.98.complete',
-                               dict(name='myworker',
-                                    notify=["workeradmin@example.org"],
-                                    workerinfo=dict(admin="myadmin"),
-                                    last_connection="yesterday"))
+        worker_dict = {
+            'name': 'myworker',
+            'notify': ["workeradmin@example.org"],
+            'workerinfo': {"admin": "myadmin"},
+            'last_connection': "yesterday"
+        }
+        yield mn._got_event(('workers', 98, 'missing'), worker_dict)
 
         self.assertEqual(mn.sendMessage.call_count, 1)
-        text = mn.sendMessage.call_args[0][0]
-        recipients = mn.sendMessage.call_args[1]['users']
-        self.assertEqual(recipients, ['workeradmin@example.org'])
-        self.assertIn(
-            b"has noticed that the worker named myworker went away", text)
+
+    @defer.inlineCallbacks
+    def test_generators_subscribes_events(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+
+        yield self.setupNotifier(generators=[gen1])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+
+    @defer.inlineCallbacks
+    def test_generators_subscribes_equal_events_once(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen2 = self.setup_mock_generator([('fake1', None, None)])
+
+        yield self.setupNotifier(generators=[gen1, gen2])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+
+    @defer.inlineCallbacks
+    def test_generators_subscribes_equal_different_events_once(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen2 = self.setup_mock_generator([('fake2', None, None)])
+
+        yield self.setupNotifier(generators=[gen1, gen2])
+        self.assertEqual(len(self.master.mq.qrefs), 2)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+        self.assertEqual(self.master.mq.qrefs[1].filter, ('fake2', None, None))
+
+    @defer.inlineCallbacks
+    def test_generators_unsubscribes_on_stop_service(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen1])
+        yield notifier.stopService()
+        self.assertEqual(len(self.master.mq.qrefs), 0)
+
+    @defer.inlineCallbacks
+    def test_generators_resubscribes_on_reconfig(self):
+        gen1 = self.setup_mock_generator([('fake1', None, None)])
+        gen2 = self.setup_mock_generator([('fake2', None, None)])
+
+        notifier = yield self.setupNotifier(generators=[gen1])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
+
+        yield notifier.reconfigService(generators=[gen2])
+        self.assertEqual(len(self.master.mq.qrefs), 1)
+        self.assertEqual(self.master.mq.qrefs[0].filter, ('fake2', None, None))

@@ -25,6 +25,6 @@
         "buildbot-data-js": "link:../data_module",
         "d3": "^3.5.17",
         "guanlecoja-ui": "link:../guanlecoja-ui",
-        "jquery": "^3.4.0"
+        "jquery": "^3.5.0"
     }
 }

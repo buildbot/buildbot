@@ -15,6 +15,8 @@
 
 import re
 
+from twisted.internet import defer
+
 from buildbot import config
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
@@ -200,45 +202,58 @@ class PyLint(ShellCommand):
 
     _flunkingIssues = ("F", "E")  # msg categories that cause FAILURE
 
-    _re_groupname = 'errtype'
-    _msgtypes_re_str = '(?P<%s>[%s])' % (
-        _re_groupname, ''.join(list(_MESSAGES)))
-    _default_line_re = re.compile(
-        r'^%s(\d{4})?: *\d+(, *\d+)?:.+' % _msgtypes_re_str)
+    _msgtypes_re_str = '(?P<errtype>[{}])'.format(''.join(list(_MESSAGES)))
+    _default_line_re = re.compile(r'^{}(\d+)?: *\d+(, *\d+)?:.+'.format(_msgtypes_re_str))
     _parseable_line_re = re.compile(
-        r'[^:]+:\d+: \[%s(\d{4})?(\([a-z-]+\))?[,\]] .+' % _msgtypes_re_str)
+        r'(?P<path>[^:]+):(?P<line>\d+): \[{}(\d+)?(\([a-z-]+\))?[,\]] .+'.format(_msgtypes_re_str))
 
-    def __init__(self, **kwargs):
+    def __init__(self, store_results=True, **kwargs):
         super().__init__(**kwargs)
+        self._store_results = store_results
         self.counts = {}
         self.summaries = {}
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
+    # returns (message type, path, line) tuple if line has been matched, or None otherwise
+    def _match_line(self, line):
+        m = self._parseable_line_re.match(line)
+        if m:
+            try:
+                line_int = int(m.group('line'))
+            except ValueError:
+                line_int = None
+            return (m.group('errtype'), m.group('path'), line_int)
+
+        m = self._default_line_re.match(line)
+        if m:
+            return (m.group('errtype'), None, None)
+
+        return None
 
     def logConsumer(self):
         for m in self._MESSAGES:
             self.counts[m] = 0
             self.summaries[m] = []
 
-        line_re = None  # decide after first match
         while True:
             stream, line = yield
             if stream == 'h':
                 continue
-            if not line_re:
-                # need to test both and then decide on one
-                if self._parseable_line_re.match(line):
-                    line_re = self._parseable_line_re
-                elif self._default_line_re.match(line):
-                    line_re = self._default_line_re
-                else:  # no match yet
-                    continue
-            mo = line_re.match(line)
-            if mo:
-                msgtype = mo.group(self._re_groupname)
-                assert msgtype in self._MESSAGES
-                self.summaries[msgtype].append(line)
-                self.counts[msgtype] += 1
+
+            ret = self._match_line(line)
+            if not ret:
+                continue
+
+            msgtype, path, line_number = ret
+
+            assert msgtype in self._MESSAGES
+            self.summaries[msgtype].append(line)
+            self.counts[msgtype] += 1
+
+            if self._store_results and path is not None:
+                self.addTestResult(self._result_setid, line, test_name=None, test_code_path=path,
+                                   line=line_number)
 
     def createSummary(self, log):
         counts, summaries = self.counts, self.summaries
@@ -259,6 +274,12 @@ class PyLint(ShellCommand):
         if self.getProperty("pylint-total"):
             return WARNINGS
         return SUCCESS
+
+    @defer.inlineCallbacks
+    def addTestResultSets(self):
+        if not self._store_results:
+            return
+        self._result_setid = yield self.addTestResultSet('Pylint warnings', 'code_issue', 'message')
 
 
 class Sphinx(ShellCommand):

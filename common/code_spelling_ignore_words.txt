@@ -123,6 +123,7 @@ benchmarking
 benjamin
 bennetts
 berlin
+bindparam
 bitbucket
 blahblah
 blamelist
@@ -882,6 +883,7 @@ microsoft
 middleware
 miguel
 milner
+mimic
 mingw
 minidom
 minidom's
@@ -1084,6 +1086,7 @@ pyjade
 pylint
 pylint's
 pyparsing
+pypugjs
 pythonpath
 qa
 qmail
@@ -1374,6 +1377,7 @@ subdirectory
 subfields
 sublicense
 submittedat
+submitters
 submodule
 submodules
 suboption
@@ -1631,6 +1635,7 @@ workersrc
 workersrcs
 workerversion
 workerworker
+workspaces
 worststatus
 writesourcedata
 writestdin

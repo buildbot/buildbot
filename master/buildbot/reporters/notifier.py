@@ -18,14 +18,11 @@ import abc
 from twisted.internet import defer
 
 from buildbot import config
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
+from buildbot import util
 from buildbot.reporters import utils
-from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
-from buildbot.reporters.message import MessageFormatterMissingWorker
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
+from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.util import service
 
 ENCODING = 'utf-8'
@@ -35,19 +32,12 @@ class NotifierBase(service.BuildbotService):
     name = None
     __meta__ = abc.ABCMeta
 
-    possible_modes = ("change", "failing", "passing", "problem", "warnings",
-                      "exception", "cancelled")
+    compare_attrs = ['generators']
 
-    def computeShortcutModes(self, mode):
-        if isinstance(mode, str):
-            if mode == "all":
-                mode = ("failing", "passing", "warnings",
-                        "exception", "cancelled")
-            elif mode == "warnings":
-                mode = ("failing", "warnings")
-            else:
-                mode = (mode,)
-        return mode
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.generators = None
+        self._event_consumers = []
 
     def checkConfig(self, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None,
@@ -55,251 +45,121 @@ class NotifierBase(service.BuildbotService):
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     addLogs=False, addPatch=False,
                     schedulers=None, branches=None,
-                    watchedWorkers=None, messageFormatterMissingWorker=None):
+                    watchedWorkers=None, messageFormatterMissingWorker=None,
+                    generators=None
+                    ):
 
-        for m in self.computeShortcutModes(mode):
-            if m not in self.possible_modes:
-                if m == "all":
-                    config.error("mode 'all' is not valid in an iterator and must be "
-                                 "passed in as a separate string")
-                else:
-                    config.error("mode {} is not a valid mode".format(m))
+        # FIXME: TODO: maybe throw deprecation messages for non generator arguments
+        has_old_arg = tags is not None or builders is not None or buildSetSummary or \
+                      messageFormatter is not None or \
+                      subject != "Buildbot %(result)s in %(title)s on %(builder)s" or \
+                      addLogs or addPatch or schedulers is not None or \
+                      branches is not None or watchedWorkers is not None or \
+                      messageFormatterMissingWorker is not None
+        if has_old_arg and generators is not None:
+            config.error("can't specify generators and deprecated notifier arguments at the "
+                         "same time")
+
+        if generators is None:
+            generators = self.create_generators_from_old_args(mode, tags, builders, buildSetSummary,
+                                                              messageFormatter, subject, addLogs,
+                                                              addPatch, schedulers,
+                                                              branches, watchedWorkers,
+                                                              messageFormatterMissingWorker)
+
+        for g in generators:
+            g.check()
+
         if self.name is None:
             self.name = self.__class__.__name__
-            if tags is not None:
-                self.name += "_tags_" + "+".join(tags)
-            if builders is not None:
-                self.name += "_builders_" + "+".join(builders)
-            if schedulers is not None:
-                self.name += "_schedulers_" + "+".join(schedulers)
-            if branches is not None:
-                self.name += "_branches_" + "+".join(branches)
-            self.name += "_".join(mode)
+            for g in generators:
+                self.name += "_" + g.generate_name()
 
-        if '\n' in subject:
-            config.error(
-                'Newlines are not allowed in message subjects')
-
-        # you should either limit on builders or tags, not both
-        if builders is not None and tags is not None:
-            config.error(
-                "Please specify only builders or tags to include - " +
-                "not both.")
-
-        if not(watchedWorkers == 'all' or watchedWorkers is None or
-                isinstance(watchedWorkers, (list, tuple, set))):
-            config.error("watchedWorkers must be 'all', None, or list of worker names")
-
+    @defer.inlineCallbacks
     def reconfigService(self, mode=("failing", "passing", "warnings"),
                         tags=None, builders=None,
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         addLogs=False, addPatch=False,
                         schedulers=None, branches=None,
-                        watchedWorkers=None, messageFormatterMissingWorker=None):
+                        watchedWorkers=None, messageFormatterMissingWorker=None,
+                        generators=None):
 
-        self.mode = self.computeShortcutModes(mode)
-        self.tags = tags
-        self.builders = builders
-        self.schedulers = schedulers
-        self.branches = branches
-        self.subject = subject
-        self.addLogs = addLogs
-        self.addPatch = addPatch
-        if messageFormatter is None:
-            messageFormatter = DefaultMessageFormatter()
-        self.messageFormatter = messageFormatter
-        if messageFormatterMissingWorker is None:
-            messageFormatterMissingWorker = MessageFormatterMissingWorker()
-        self.messageFormatterMissingWorker = messageFormatterMissingWorker
-        self.buildSetSummary = buildSetSummary
-        self._buildset_complete_consumer = None
-        if watchedWorkers is None:
-            self.watchedWorkers = ()
+        for consumer in self._event_consumers:
+            yield consumer.stopConsuming()
+        self._event_consumers = []
+
+        if generators is None:
+            generators = self.create_generators_from_old_args(mode, tags, builders, buildSetSummary,
+                                                              messageFormatter, subject, addLogs,
+                                                              addPatch, schedulers,
+                                                              branches, watchedWorkers,
+                                                              messageFormatterMissingWorker)
+
+        self.generators = generators
+
+        wanted_event_keys = set()
+        for g in self.generators:
+            wanted_event_keys.update(g.wanted_event_keys)
+
+        for key in sorted(list(wanted_event_keys)):
+            consumer = yield self.master.mq.startConsuming(self._got_event, key)
+            self._event_consumers.append(consumer)
+
+    def create_generators_from_old_args(self, mode, tags, builders, build_set_summary,
+                                        message_formatter, subject, add_logs, add_patch, schedulers,
+                                        branches, watched_workers,
+                                        message_formatter_missing_worker):
+        generators = []
+        if build_set_summary:
+            generators.append(BuildSetStatusGenerator(mode=mode, tags=tags, builders=builders,
+                                                      schedulers=schedulers, branches=branches,
+                                                      subject=subject, add_logs=add_logs,
+                                                      add_patch=add_patch,
+                                                      message_formatter=message_formatter))
         else:
-            self.watchedWorkers = watchedWorkers
+            generators.append(BuildStatusGenerator(mode=mode, tags=tags, builders=builders,
+                                                   schedulers=schedulers, branches=branches,
+                                                   subject=subject, add_logs=add_logs,
+                                                   add_patch=add_patch,
+                                                   message_formatter=message_formatter))
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
-        startConsuming = self.master.mq.startConsuming
-        self._buildsetCompleteConsumer = yield startConsuming(
-            self.buildsetComplete,
-            ('buildsets', None, 'complete'))
-        self._buildCompleteConsumer = yield startConsuming(
-            self.buildComplete,
-            ('builds', None, 'finished'))
-        self._workerMissingConsumer = yield startConsuming(
-            self.workerMissing,
-            ('workers', None, 'missing'))
+        if watched_workers is not None and len(watched_workers) > 0:
+            generators.append(
+                WorkerMissingGenerator(workers=watched_workers,
+                                       message_formatter=message_formatter_missing_worker))
+
+        return generators
 
     @defer.inlineCallbacks
     def stopService(self):
+        for consumer in self._event_consumers:
+            yield consumer.stopConsuming()
+        self._event_consumers = []
         yield super().stopService()
-        if self._buildsetCompleteConsumer is not None:
-            yield self._buildsetCompleteConsumer.stopConsuming()
-            self._buildsetCompleteConsumer = None
-        if self._buildCompleteConsumer is not None:
-            yield self._buildCompleteConsumer.stopConsuming()
-            self._buildCompleteConsumer = None
-        if self._workerMissingConsumer is not None:
-            yield self._workerMissingConsumer.stopConsuming()
-            self._workerMissingConsumer = None
 
-    def wantPreviousBuild(self):
-        return "change" in self.mode or "problem" in self.mode
-
-    @defer.inlineCallbacks
-    def buildsetComplete(self, key, msg):
-        if not self.buildSetSummary:
-            return
-        bsid = msg['bsid']
-        res = yield utils.getDetailsForBuildset(
-            self.master, bsid,
-            wantProperties=self.messageFormatter.wantProperties,
-            wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild(),
-            wantLogs=self.messageFormatter.wantLogs)
-
-        builds = res['builds']
-        buildset = res['buildset']
-
-        # only include builds for which isMessageNeeded returns true
-        builds = [build for build in builds if self.isMessageNeeded(build)]
-        if builds:
-            self.buildMessage("whole buildset", builds, buildset['results'])
-
-    @defer.inlineCallbacks
-    def buildComplete(self, key, build):
-        if self.buildSetSummary:
-            return
-        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
-        buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(
-            self.master, buildset, [build],
-            wantProperties=self.messageFormatter.wantProperties,
-            wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild(),
-            wantLogs=self.messageFormatter.wantLogs)
-        # only include builds for which isMessageNeeded returns true
-        if self.isMessageNeeded(build):
-            self.buildMessage(
-                build['builder']['name'], [build], build['results'])
-
-    def matchesAnyTag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
-
-    def isMessageNeeded(self, build):
-        # here is where we actually do something.
-        builder = build['builder']
-        scheduler = build['properties'].get('scheduler', [None])[0]
-        branch = build['properties'].get('branch', [None])[0]
-        results = build['results']
-        if self.builders is not None and builder['name'] not in self.builders:
-            return False  # ignore this build
-        if self.schedulers is not None and scheduler not in self.schedulers:
-            return False  # ignore this build
-        if self.branches is not None and branch not in self.branches:
-            return False  # ignore this build
-        if self.tags is not None and \
-                not self.matchesAnyTag(builder['tags']):
-            return False  # ignore this build
-
-        if "change" in self.mode:
-            prev = build['prev_build']
-            if prev and prev['results'] != results:
+    def _does_generator_want_key(self, generator, key):
+        for filter in generator.wanted_event_keys:
+            if util.tuplematch.matchTuple(key, filter):
                 return True
-        if "failing" in self.mode and results == FAILURE:
-            return True
-        if "passing" in self.mode and results == SUCCESS:
-            return True
-        if "problem" in self.mode and results == FAILURE:
-            prev = build['prev_build']
-            if prev and prev['results'] != FAILURE:
-                return True
-        if "warnings" in self.mode and results == WARNINGS:
-            return True
-        if "exception" in self.mode and results == EXCEPTION:
-            return True
-        if "cancelled" in self.mode and results == CANCELLED:
-            return True
-
         return False
 
     @defer.inlineCallbacks
-    def getLogsForBuild(self, build):
-        all_logs = []
-        steps = yield self.master.data.get(('builds', build['buildid'], "steps"))
-        for step in steps:
-            logs = yield self.master.data.get(("steps", step['stepid'], 'logs'))
-            for l in logs:
-                l['stepname'] = step['name']
-                l['content'] = yield self.master.data.get(("logs", l['logid'], 'contents'))
-                all_logs.append(l)
-        return all_logs
+    def _got_event(self, key, msg):
+        reports = []
+        for g in self.generators:
+            if self._does_generator_want_key(g, key):
+                report = yield g.generate(self.master, self, key, msg)
+                if report is not None:
+                    reports.append(report)
+
+        if reports:
+            yield self.sendMessage(reports)
 
     def getResponsibleUsersForBuild(self, master, buildid):
         # Use library method but subclassers may want to override that
         return utils.getResponsibleUsersForBuild(master, buildid)
 
-    @defer.inlineCallbacks
-    def buildMessage(self, name, builds, results):
-        patches = []
-        logs = []
-        body = ""
-        subject = None
-        msgtype = None
-        users = set()
-        for build in builds:
-            if self.addPatch:
-                ss_list = build['buildset']['sourcestamps']
-
-                for ss in ss_list:
-                    if 'patch' in ss and ss['patch'] is not None:
-                        patches.append(ss['patch'])
-            if self.addLogs:
-                build_logs = yield self.getLogsForBuild(build)
-                logs.extend(build_logs)
-
-            if 'prev_build' in build and build['prev_build'] is not None:
-                previous_results = build['prev_build']['results']
-            else:
-                previous_results = None
-            blamelist = yield self.getResponsibleUsersForBuild(self.master, build['buildid'])
-            buildmsg = yield self.messageFormatter.formatMessageForBuildResults(
-                self.mode, name, build['buildset'], build, self.master,
-                previous_results, blamelist)
-            users.update(set(blamelist))
-            msgtype = buildmsg['type']
-            body += buildmsg['body']
-            if 'subject' in buildmsg:
-                subject = buildmsg['subject']
-
-        yield self.sendMessage(body, subject, msgtype, name, results, builds,
-                               list(users), patches, logs)
-
     @abc.abstractmethod
-    def sendMessage(self, body, subject=None, type=None, builderName=None,
-                    results=None, builds=None, users=None, patches=None,
-                    logs=None, worker=None):
+    def sendMessage(self, reports):
         pass
-
-    def isWorkerMessageNeeded(self, worker):
-        return self.watchedWorkers == 'all' or worker['name'] in self.watchedWorkers
-
-    @defer.inlineCallbacks
-    def workerMissing(self, key, worker):
-        if not self.isWorkerMessageNeeded(worker):
-            return
-        msg = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master,
-                                                                                     worker)
-        text = msg['body'].encode(ENCODING)
-        if 'subject' in msg:
-            subject = msg['subject']
-        else:
-            subject = "Buildbot worker {name} missing".format(**worker)
-        assert msg['type'] in ('plain', 'html'), \
-            "'{}' message type must be 'plain' or 'html'.".format(msg['type'])
-
-        yield self.sendMessage(text, subject, msg['type'], users=worker['notify'],
-                               worker=worker['name'])

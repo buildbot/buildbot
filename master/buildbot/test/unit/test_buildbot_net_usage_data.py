@@ -28,13 +28,13 @@ from buildbot.buildbot_net_usage_data import _sendBuildbotNetUsageData
 from buildbot.buildbot_net_usage_data import computeUsageData
 from buildbot.buildbot_net_usage_data import linux_distribution
 from buildbot.config import BuilderConfig
-from buildbot.config import ConfigWarning
 from buildbot.master import BuildMaster
 from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.util.integration import DictLoader
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import ConfigWarning
 from buildbot.worker.base import Worker
 
 
@@ -151,5 +151,5 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(distro), 2)
         self.assertNotIn("unknown", distro[0])
         # Rolling distributions like Arch Linux (arch) does not have VERSION_ID
-        if distro[0] != "arch":
+        if distro[0] not in ["arch", "gentoo"]:
             self.assertNotIn("unknown", distro[1])

@@ -57,7 +57,13 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
                      params={'user': "1234", 'token': "abcd",
                              'message': "Test", 'title': "Tee", 'priority': 2},
                      content_json={'status': 1, 'request': '98765'})
-        n = yield pn.sendMessage(body="Test", subject="Tee", results=SUCCESS)
+
+        n = yield pn.sendMessage([{
+            "body": "Test",
+            "subject": "Tee",
+            "results": SUCCESS
+        }])
+
         j = yield n.json()
         self.assertEqual(j['status'], 1)
         self.assertEqual(j['request'], '98765')

@@ -270,7 +270,12 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_unimportantSchedulerNames_not_in_schedulerNames(self):
         with self.assertRaises(config.ConfigErrors):
             trigger.Trigger(schedulerNames=['a'],
-                            unimportantsShedulerNames=['b'])
+                            unimportantSchedulerNames=['b'])
+
+    def test_unimportantSchedulerNames_not_in_schedulerNames_but_rendered(self):
+        # should not raise
+        trigger.Trigger(schedulerNames=[properties.Interpolate('a')],
+                        unimportantSchedulerNames=['b'])
 
     def test_sourceStamp_and_updateSourceStamp(self):
         with self.assertRaises(config.ConfigErrors):
@@ -654,7 +659,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_unimportantsShedulerNames(self):
+    def test_unimportantSchedulerNames(self):
         yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
                                              unimportantSchedulerNames=['b']))
         self.scheduler_a.result = SUCCESS
@@ -664,7 +669,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_unimportantsShedulerNames_with_more_brids_for_bsid(self):
+    def test_unimportantSchedulerNames_with_more_brids_for_bsid(self):
         yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'c'],
                                              unimportantSchedulerNames=['c']))
         self.scheduler_a.result = SUCCESS

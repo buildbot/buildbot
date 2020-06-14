@@ -296,6 +296,43 @@ BuildStep
             This method is not called for new-style steps.
             Instead, override :py:meth:`getCurrentSummary` and :py:meth:`getResultSummary`.
 
+
+    .. py:method:: addTestResultSets()
+
+        The steps may override this to add any test result sets for this step via ``self.addTestResultSet()``.
+        This function is called just before the step execution is started.
+        The function is not called if the step is skipped or otherwise not run.
+
+    .. py:method:: addTestResultSet(description, category, value_unit)
+
+        :param description: Description of the test result set
+        :param category: Category of the test result set
+        :param value_unit: The value unit of the test result set
+        :returns: The ID of the created test result set via a Deferred.
+
+        Creates a new test result set to which test results can be associated.
+
+        There are standard values of the ``category`` and ``value_unit`` parameters, see TODO.
+
+    .. py:method:: addTestResult(setid, value, test_name=None, test_code_path=None, line=None,
+                                 duration_ns=None)
+
+        :param setid: The ID of a test result set returned by ``addTestResultSet``.
+        :param value: The value of the result as a string
+        :param test_name: The name of the test.
+        :param test_code_path: The path to the code file that resulted in this test result.
+        :param line: The line within ``test_code_path`` file that resulted in this test result.
+        :param duration_ns: The duration of the test itself, in nanoseconds.
+
+        Creates a test result.
+        Either ``test_name`` or ``test_code_path`` must be specified.
+        The function queues the test results and will submit them to the database when enough test
+        results are added so that performance impact is minimized.
+
+    .. py:method:: finishTestResultSets()
+
+        The steps may override this to finish submission of any test results for the step.
+
     Build steps have statistics, a simple key/value store of data which can later be aggregated over all steps in a build.
     Note that statistics are not preserved after a build is complete.
 

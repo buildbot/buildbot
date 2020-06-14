@@ -233,11 +233,11 @@ class BBService(win32serviceutil.ServiceFramework):
 
         for bbdir in self.dirs:
             self.info("Starting BuildBot in directory '{0}'".format(bbdir))
-            hstop = self.hWaitStop
+            # hWaitStop is the Handle and the command needs the int associated
+            # to that Handle
+            hstop = int(self.hWaitStop)
+            cmd = '{} --spawn {} start --nodaemon {}'.format(self.runner_prefix, hstop, bbdir)
 
-            cmd = '{0} --spawn {1} start --nodaemon {2}'.format(
-                self.runner_prefix, int(hstop), bbdir)
-            # print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
 

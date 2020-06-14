@@ -37,7 +37,7 @@ class NotifierMaster(RunMasterBase):
                 "see: https://twistedmatrix.com/trac/ticket/8770")
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def create_master_config(self, build_set_summary=False):
         self.mailDeferred = defer.Deferred()
 
         # patch MailNotifier.sendmail to know when the mail has been sent
@@ -51,7 +51,7 @@ class NotifierMaster(RunMasterBase):
             self.notification.callback(params)
         self.patch(PushoverNotifier, "sendNotification", sendNotification)
 
-        yield self.setupConfig(masterConfig())
+        yield self.setupConfig(masterConfig(build_set_summary=build_set_summary))
 
     @defer.inlineCallbacks
     def doTest(self, what):
@@ -86,19 +86,17 @@ class NotifierMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_notifiy_for_build(self):
+        yield self.create_master_config(build_set_summary=False)
         yield self.doTest('testy')
 
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
-        self.master.config.services = [
-            MailNotifier("bot@foo.com", mode="all", buildSetSummary=True),
-            PushoverNotifier('1234', 'abcd', mode="all", buildSetSummary=True,
-                messageFormatter=MessageFormatter(template='This is a message.'))]
-        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+        yield self.create_master_config(build_set_summary=True)
         yield self.doTest('whole buildset')
 
     @defer.inlineCallbacks
     def test_missing_worker(self):
+        yield self.create_master_config(build_set_summary=False)
         yield self.master.data.updates.workerMissing(
             workerid='local1',
             masterid=self.master.masterid,
@@ -117,7 +115,7 @@ class NotifierMaster(RunMasterBase):
 
 
 # master configuration
-def masterConfig():
+def masterConfig(build_set_summary):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -135,12 +133,12 @@ def masterConfig():
                       factory=f)
     ]
     notifier = reporters.PushoverNotifier(
-        '1234', 'abcd', mode="all", watchedWorkers=['local1'],
+        '1234', 'abcd', mode="all", watchedWorkers=['local1'], buildSetSummary=build_set_summary,
         messageFormatter=MessageFormatter(template='This is a message.'),
         messageFormatterMissingWorker=MessageFormatterMissingWorker(
         template='No worker.'))
     c['services'] = [
-        reporters.MailNotifier("bot@foo.com", mode="all"),
+        reporters.MailNotifier("bot@foo.com", mode="all", buildSetSummary=build_set_summary),
         notifier
     ]
     return c

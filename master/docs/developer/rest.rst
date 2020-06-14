@@ -174,11 +174,14 @@ A simple example:
 Authentication
 ~~~~~~~~~~~~~~
 
-Authentication to the REST API is performed in the same manner as authentication to the main web interface.  Once credentials have been established, a cookie will be set, which must be sent to the buildbot REST API with every request thereafter.  For those buildbot instances using OAuth2 authentication providers, access tokens can be used for automated access.  For example, GitHub's personal access tokens can be used to access the buildbot as a github user without needing to store the username and password of the user.  To use an OAuth2 access token, send a `GET` request to the `/auth/login` with the `token` URL parameter set to the access token that the OAuth2 provider has given you.  A `python` example using `requests` is shown below, where we first authenticate with our OAuth2 access token, and then are able to request otherwise shielded endpoints:
+Authentication to the REST API is performed in the same manner as authentication to the main web interface.
+Once credentials have been established, a cookie will be set, which must be sent to the buildbot REST API with every request thereafter.
 
 .. code-block:: python
 
     import requests
     s = requests.Session()
-    s.get("https://<buildbot_url>/auth/login", params={"token": OAUTH_TOKEN})
+    s.get("https://<buildbot_url>/auth/login", auth=('user', 'passwd'))
     builders = s.get("https://<buildbot_url>/api/v2/builders").json()
+
+For those buildbot instances using OAuth2 authentication providers, it is at the moment not possible to access the authenticated API .

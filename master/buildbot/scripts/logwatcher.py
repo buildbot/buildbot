@@ -79,6 +79,8 @@ class LogWatcher(LineOnlyReceiver):
         # an IOError.
         if platform.system().lower() == 'sunos' and os.path.exists('/usr/xpg4/bin/tail'):
             tailBin = "/usr/xpg4/bin/tail"
+        elif platform.system().lower() == 'haiku' and os.path.exists('/bin/tail'):
+            tailBin = "/bin/tail"
         else:
             tailBin = "/usr/bin/tail"
 

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -153,18 +155,29 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def test_success(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+    @parameterized.expand([
+        ('no_results', True),
+        ('with_results', False)
+    ])
+    def test_success(self, name, store_results):
+        self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
             + python.PyLint.RC_OK)
         self.expectOutcome(result=SUCCESS, state_string='pylint')
+        if store_results:
+            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expectTestResults([])
         return self.runStep()
 
-    def test_error(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+    @parameterized.expand([
+        ('no_results', True),
+        ('with_results', False)
+    ])
+    def test_error(self, name, store_results):
+        self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -176,10 +189,13 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pylint error=1 warning=1 (failure)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-error', 1)
+        if store_results:
+            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            # note that no results are submitted for tests where we don't know the location
         return self.runStep()
 
     def test_header_output(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -190,7 +206,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_failure(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -207,7 +223,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_failure_zero_returncode(self):
         # Make sure that errors result in a failed step when pylint's
         # return code is 0, e.g. when run through a wrapper script.
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -222,7 +238,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_regex_text(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -239,7 +255,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_regex_text_0_24(self):
         # pylint >= 0.24.0 prints out column offsets when using text format
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -257,7 +273,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_regex_text_131(self):
         # at least pylint 1.3.1 prints out space padded column offsets when
         # using text format
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -273,7 +289,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_regex_text_ids(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -290,7 +306,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_regex_text_ids_0_24(self):
         # pylint >= 0.24.0 prints out column offsets when using text format
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -305,8 +321,12 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
-    def test_regex_parseable_ids(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+    @parameterized.expand([
+        ('no_results', True),
+        ('with_results', False)
+    ])
+    def test_regex_parseable_ids(self, name, store_results):
+        self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -319,10 +339,16 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
+        if store_results:
+            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expectTestResults([
+                (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),
+                (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),
+            ])
         return self.runStep()
 
     def test_regex_parseable(self):
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log(
@@ -342,7 +368,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         that, this is also the new recommended format string:
             --msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
         """
-        self.setupStep(python.PyLint(command=['pylint']))
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
             + ExpectShell.log('stdio',

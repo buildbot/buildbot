@@ -828,6 +828,9 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 ``use_tickets``
     Set to ``True`` to use ticket-based authentication, instead of passwords (but you still need to specify ``p4passwd``).
 
+``stream``
+    Set to ``True`` to use a stream-associated workspace, in which case ``p4base`` and ``p4branch`` are used to determine the stream path.
+
 .. index:: double: Gerrit integration; Repo Build Step
 
 .. bb:step:: Repo
@@ -2263,6 +2266,12 @@ There is no default.
 
     f.addStep(steps.PyLint(command=["pylint", "src"]))
 
+This step takes the following arguments:
+
+``store_results``
+   (optional) Boolean, ``true`` if the test results should be stored in the test database.
+   The default value is ``true``.
+
 .. bb:step:: Trial
 
 .. _Step-Trial:
@@ -2658,7 +2667,7 @@ It is usually called with the ``value`` argument being specified as a :ref:`Inte
 :class:`SetProperties` step
 +++++++++++++++++++++++++++
 
-.. py:class:: buildbot.steps.master.SetProperty
+.. py:class:: buildbot.steps.master.SetProperties
 
 :bb:step:`SetProperties` takes a dictionary to be turned into build properties.
 

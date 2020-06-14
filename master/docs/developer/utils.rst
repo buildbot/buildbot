@@ -789,7 +789,7 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
 
         Get a named state value from the object's state.
 
-    .. py:method:: getState(name, value)
+    .. py:method:: setState(name, value)
 
         :param name: the name of the value to change
         :param value: the value to set - must be a JSONable object
@@ -1143,6 +1143,8 @@ For example, a particular daily scheduler could be configured on multiple master
 :py:mod:`buildbot.util.httpclientservice`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. py:module:: buildbot.util.httpclientservice
+
 .. py:class:: HTTPClientService
 
     This class implements a SharedService for doing http client access.
@@ -1257,6 +1259,8 @@ For example, a particular daily scheduler could be configured on multiple master
 :py:mod:`buildbot.test.fake.httpclientservice`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. py:module:: buildbot.test.fake.httpclientservice
+
 .. py:class:: HTTPClientService
 
     This class implements a fake version of the :class:`buildbot.util.httpclientservice.HTTPClientService` that needs to be used for testing services which needs http client access.
@@ -1352,6 +1356,8 @@ For example, a particular daily scheduler could be configured on multiple master
 
 :py:mod:`buildbot.util.ssl`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.ssl
 
 This module is a copy of :py:mod:`twisted.internet.ssl` except it won't crash with :py:class:`ImportError` if :py:mod:`pyopenssl` is not installed.
 If you need to use :py:mod:`twisted.internet.ssl`, please instead use :py:mod:`buildbot.util.ssl`, and call :py:func:`ssl.ensureHasSSL` in :py:meth:`checkConfig` to provide helpful message to the user, only if he enabled SSL for your plugin.

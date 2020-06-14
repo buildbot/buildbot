@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 try:
     from moto import mock_ec2
@@ -245,7 +245,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         amis = list(r.images.all())
         with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
+                DeprecatedApiWarning,
                 messages_patterns=[
                     r"Use of dict value to 'block_device_map' of EC2LatentWorker "
                     r"constructor is deprecated. Please use a list matching the AWS API"
@@ -572,7 +572,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
     def test_use_non_default_keypair_security(self):
         c, r = self.botoSetup()
         amis = list(r.images.all())
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedApiWarning):
             bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',

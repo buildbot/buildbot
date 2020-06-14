@@ -173,6 +173,7 @@ setup_args = {
         "buildbot.process",
         "buildbot.process.users",
         "buildbot.reporters",
+        "buildbot.reporters.generators",
         "buildbot.schedulers",
         "buildbot.scripts",
         "buildbot.secrets",
@@ -194,6 +195,7 @@ setup_args = {
         "buildbot.test",
         "buildbot.test.util",
         "buildbot.test.fake",
+        "buildbot.test.fakedb",
         "buildbot.test.fuzz",
         "buildbot.test.integration",
         "buildbot.test.integration.interop",
@@ -476,7 +478,7 @@ setup_args['install_requires'] = [
     'Jinja2 >= 2.1',
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
-    'sqlalchemy>=1.1.0',
+    'sqlalchemy>=1.2.0',
     'sqlalchemy-migrate>=0.9',
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,
@@ -490,8 +492,8 @@ test_deps = [
     # http client libraries
     'treq',
     'txrequests',
-    # pyjade required for custom templates tests
-    'pyjade',
+    # pypugjs required for custom templates tests
+    'pypugjs',
     # boto3 and moto required for running EC2 tests
     'boto3',
     'moto',

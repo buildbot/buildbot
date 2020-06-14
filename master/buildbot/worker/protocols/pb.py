@@ -20,6 +20,7 @@ from twisted.python import log
 from twisted.spread import pb
 
 from buildbot.pbutil import decode
+from buildbot.util import ComparableMixin
 from buildbot.util import deferwaiter
 from buildbot.worker.protocols import base
 
@@ -43,16 +44,20 @@ class Listener(base.Listener):
         else:
             currentPassword, currentPortStr, currentReg = None, None, None
 
-        if currentPassword != password or currentPortStr != portStr:
-            if currentReg:
-                yield currentReg.unregister()
-                del self._registrations[username]
-            if portStr and password:
-                reg = yield self.master.pbmanager.register(portStr, username, password,
-                                                           self._getPerspective)
-                self._registrations[username] = (password, portStr, reg)
-                return reg
-        return None
+        iseq = (ComparableMixin.isEquivalent(currentPassword, password) and
+                ComparableMixin.isEquivalent(currentPortStr, portStr))
+        if iseq:
+            return currentReg
+
+        if currentReg:
+            yield currentReg.unregister()
+            del self._registrations[username]
+        if portStr and password:
+            reg = yield self.master.pbmanager.register(portStr, username, password,
+                                                       self._getPerspective)
+            self._registrations[username] = (password, portStr, reg)
+            return reg
+        return currentReg
 
     @defer.inlineCallbacks
     def _getPerspective(self, mind, workerName):

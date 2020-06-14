@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 
+from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.test import fakedb
 
@@ -30,10 +31,14 @@ class NotifierTestMixin:
         self.db.insertTestData([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
+            fakedb.Buildset(id=97, results=SUCCESS, reason="testReason0"),
             fakedb.Buildset(id=98, results=results, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
+            fakedb.BuildRequest(id=10, buildsetid=97, builderid=80),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
-            fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, workerid=13,
+            fakedb.Build(id=19, number=0, builderid=80, buildrequestid=10, workerid=13,
+                         masterid=92, results=SUCCESS),
+            fakedb.Build(id=20, number=1, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=results),
             fakedb.Step(id=50, buildid=20, number=5, name='make'),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),

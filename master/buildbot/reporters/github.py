@@ -35,7 +35,7 @@ from buildbot.util.giturlparse import giturlparse
 HOSTED_BASE_URL = 'https://api.github.com'
 
 
-class GitHubStatusPush(http.HttpStatusPushBase):
+class GitHubStatusPush(http. HttpStatusPushBase):
     name = "GitHubStatusPush"
     neededDetails = dict(wantProperties=True)
 
@@ -123,56 +123,65 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         context = yield props.render(self.context)
 
         sourcestamps = build['buildset'].get('sourcestamps')
-
-        if not sourcestamps or not sourcestamps[0]:
+        if not sourcestamps:
             return
 
-        project = sourcestamps[0]['project']
-
-        branch = props['branch']
-        m = re.search(r"refs/pull/([0-9]*)/(head|merge)", branch)
-        if m:
-            issue = m.group(1)
-        else:
-            issue = None
-
-        if "/" in project:
-            repoOwner, repoName = project.split('/')
-        else:
-            giturl = giturlparse(sourcestamps[0]['repository'])
-            repoOwner = giturl.owner
-            repoName = giturl.repo
-
-        if self.verbose:
-            log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
-                repoOwner=repoOwner, repoName=repoName))
-
         for sourcestamp in sourcestamps:
+            project = sourcestamp['project']
+            issue = None
+            if 'branch' in props:
+                m = re.search(r"refs/pull/([0-9]*)/(head|merge)", props['branch'])
+                if m:
+                    issue = m.group(1)
+
+            repo_owner = None
+            repo_name = None
+            if "/" in project:
+                repo_owner, repo_name = project.split('/')
+            else:
+                giturl = giturlparse(sourcestamp['repository'])
+                if giturl:
+                    repo_owner = giturl.owner
+                    repo_name = giturl.repo
+
             sha = sourcestamp['revision']
             response = None
+
+            # If the scheduler specifies multiple codebases, don't bother updating
+            # the ones for which there is no revision
+            if not sha:
+                log.msg(
+                    'Skipped status update for codebase {codebase}, '
+                    'context "{context}", issue {issue}.'.format(
+                        codebase=sourcestamp['codebase'], issue=issue, context=context))
+                continue
+
             try:
-                repo_user = repoOwner
-                repo_name = repoName
-                target_url = build['url']
-                response = yield self.createStatus(
-                    repo_user=repo_user,
-                    repo_name=repo_name,
-                    sha=sha,
-                    state=state,
-                    target_url=target_url,
-                    context=context,
-                    issue=issue,
-                    description=description
-                )
+                if self.verbose:
+                    log.msg("Updating github status: repo_owner={}, repo_name={}".format(
+                            repo_owner, repo_name))
+
+                response = yield self.createStatus(repo_user=repo_owner,
+                                                   repo_name=repo_name,
+                                                   sha=sha,
+                                                   state=state,
+                                                   target_url=build['url'],
+                                                   context=context,
+                                                   issue=issue,
+                                                   description=description)
+
+                if not response:
+                    # the implementation of createStatus refused to post update due to missing data
+                    continue
 
                 if not self.isStatus2XX(response.code):
                     raise Exception()
 
                 if self.verbose:
                     log.msg(
-                        'Updated status with "{state}" for {repoOwner}/{repoName} '
+                        'Updated status with "{state}" for {repo_owner}/{repo_name} '
                         'at {sha}, context "{context}", issue {issue}.'.format(
-                            state=state, repoOwner=repoOwner, repoName=repoName,
+                            state=state, repo_owner=repo_owner, repo_name=repo_name,
                             sha=sha, issue=issue, context=context))
             except Exception as e:
                 if response:
@@ -182,10 +191,10 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     content = code = "n/a"
                 log.err(
                     e,
-                    'Failed to update "{state}" for {repoOwner}/{repoName} '
+                    'Failed to update "{state}" for {repo_owner}/{repo_name} '
                     'at {sha}, context "{context}", issue {issue}. '
                     'http {code}, {content}'.format(
-                        state=state, repoOwner=repoOwner, repoName=repoName,
+                        state=state, repo_owner=repo_owner, repo_name=repo_name,
                         sha=sha, issue=issue, context=context,
                         code=code, content=content))
 
@@ -199,6 +208,7 @@ class GitHubCommentPush(GitHubStatusPush):
         self.startDescription = startDescription
         self.endDescription = endDescription or 'Build done.'
 
+    @defer.inlineCallbacks
     def createStatus(self,
                      repo_user, repo_name, sha, state, target_url=None,
                      context=None, issue=None, description=None):
@@ -217,6 +227,11 @@ class GitHubCommentPush(GitHubStatusPush):
         """
         payload = {'body': description}
 
-        return self._http.post(
-            '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments']),
-            json=payload)
+        if issue is None:
+            log.msg('Skipped status update for repo {} sha {} as issue is not specified'.format(
+                repo_name, sha))
+            return None
+
+        url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])
+        ret = yield self._http.post(url, json=payload)
+        return ret
