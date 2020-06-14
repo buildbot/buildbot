@@ -10,6 +10,15 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.8.2`` ( ``2020-06-14`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix crash in Buildbot Windows service startup code (:issue:`5344`)
+
+
 Buildbot ``2.8.1`` ( ``2020-06-06`` )
 =====================================
 
