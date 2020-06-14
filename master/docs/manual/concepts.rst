@@ -309,7 +309,7 @@ This means the User-to-address mapping only has to be set up once, in your :clas
 IRC Nicknames
 ~~~~~~~~~~~~~
 
-Like :class:`MailNotifier`, the :class:`buildbot.status.words.IRC` class provides a status target which can announce the results of each build.
+Like :class:`MailNotifier`, the :class:`buildbot.reporters.irc.IRC` class provides a status target which can announce the results of each build.
 It also provides an interactive interface by responding to online queries posted in the channel or sent as private messages.
 
 In the future, the buildbot can be configured to map User names to IRC nicknames, to watch for the recent presence of these nicknames, and to deliver build status messages to the interested parties.

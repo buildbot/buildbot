@@ -20,6 +20,12 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot.warnings import warn_deprecated
+
+warn_deprecated(
+    '0.9.0',
+    'buildbot.status.buildset has been deprecated, consume the buildbot.data APIs'
+)
 
 
 @implementer(interfaces.IBuildSetStatus)

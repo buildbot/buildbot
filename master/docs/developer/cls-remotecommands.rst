@@ -107,7 +107,7 @@ RemoteCommand
 
     .. py:attribute:: logs
 
-        A dictionary of :class:`~buildbot.status.logfile.LogFile` instances representing active logs.
+        A dictionary of :class:`~buildbot.process.log.Log` instances representing active logs.
         Do not modify this directly -- use :meth:`useLog` instead.
 
     .. py:attribute:: rc
@@ -124,8 +124,8 @@ RemoteCommand
 
     .. py:method:: useLog(log, closeWhenFinished=False, logfileName=None)
 
-        :param log: the :class:`~buildbot.status.logfile.LogFile` instance to add to.
-        :param closeWhenFinished: if true, call :meth:`~buildbot.status.logfile.LogFile.finish` when the command is finished.
+        :param log: the :class:`~buildbot.process.log.Log` instance to add to.
+        :param closeWhenFinished: if true, call :meth:`~buildbot.process.log.Log.finish` when the command is finished.
         :param logfileName: the name of the logfile, as given to the worker.
                             This is ``stdio`` for standard streams.
 
@@ -138,7 +138,7 @@ RemoteCommand
         :param logfileName: the name of the logfile, as given to the worker.
                             This is ``stdio`` for standard streams.
         :param activateCallback: callback for when the log is added; see below
-        :param closeWhenFinished: if true, call :meth:`~buildbot.status.logfile.LogFile.finish` when the command is finished.
+        :param closeWhenFinished: if true, call :meth:`~buildbot.process.log.Log.finish` when the command is finished.
 
         Similar to :meth:`useLog`, but the logfile is only actually added when an update arrives for it.
         The callback, ``activateCallback``, will be called with the :class:`~buildbot.process.remotecommand.RemoteCommand` instance when the first update for the log is delivered.

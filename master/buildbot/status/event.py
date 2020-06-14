@@ -18,6 +18,12 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
+from buildbot.warnings import warn_deprecated
+
+warn_deprecated(
+    '0.9.0',
+    'buildbot.status.event has been deprecated, consume the buildbot.data APIs'
+)
 
 
 @implementer(interfaces.IStatusEvent)

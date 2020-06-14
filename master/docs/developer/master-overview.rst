@@ -71,7 +71,7 @@ The master has a number of useful attributes:
     A :py:class:`buildbot.process.debug.DebugServices` instance that manages
     debugging-related access -- the manhole, in particular.
 
-``master.status``
+``master.status`` (deprecated)
     A :py:class:`buildbot.status.master.Status` instance that provides access
     to all status data.  This instance is also the service parent for all
     status listeners.

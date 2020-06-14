@@ -23,7 +23,7 @@ The basic behavior for a :class:`BuildStep` is to:
 * run for a while, then stop
 * possibly invoke some RemoteCommands on the attached worker
 * possibly produce a set of log files
-* finish with a status described by one of four values defined in :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
+* finish with a status described by one of four values defined in :mod:`buildbot.process.results`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
 * provide a list of short strings to describe the step
 
 The rest of this section describes all the standard :class:`BuildStep` objects available for use in a :class:`Build`, and the parameters which can be used to control each.
