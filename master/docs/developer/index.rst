@@ -24,5 +24,6 @@ If you would like in to be officially exposed, open a bug report on the `Buildbo
     raml/index
     data
     database
+    database/index
     mq
     classes
