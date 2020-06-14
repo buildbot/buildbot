@@ -745,14 +745,7 @@ class Build(properties.PropertiesMixin):
             lambda: self.finished)
 
     def getWorkerInfo(self):
-        return self.workerforbuilder.worker.worker_status.info
-
-    # IBuildControl
-
-    def getStatus(self):
-        return self.build_status
-
-    # stopBuild is defined earlier
+        return self.workerforbuilder.worker.info
 
 
 components.registerAdapter(

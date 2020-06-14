@@ -40,6 +40,7 @@ class FakeWorker:
         self.properties = properties.Properties()
         self.defaultProperties = properties.Properties()
         self.workerid = 383
+        self.info = {'test': 'test'}
 
     def acquireLocks(self):
         pass

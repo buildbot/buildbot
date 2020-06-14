@@ -342,18 +342,17 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
     def test_worker_info(self):
         yield self.addWorker()
         worker = yield self.connectWorker()
-        props = self.buildworker.worker_status.info
+        props = self.buildworker.info
         # check worker info passing
-        self.assertEqual(props.getProperty("info"),
+        self.assertEqual(props["info"],
                          "here")
         # check worker info passing with UTF-8
-        self.assertEqual(props.getProperty("os_release"),
+        self.assertEqual(props["os_release"],
                          b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode())
-        self.assertEqual(props.getProperty(b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82'
-                                           b'\xb9\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode()),
+        self.assertEqual(props[b'\xe3\x83\xaa\xe3\x83\xaa\xe3\x83\xbc\xe3\x82'
+                               b'\xb9\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode()],
                          b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode())
-        self.assertEqual(props.getProperty("none"), None)
-        self.assertEqual(props.getProperty("numcpus"), 1)
+        self.assertEqual(props["numcpus"], 1)
 
         self.workerSideDisconnect(worker)
         yield worker.waitForDetach()

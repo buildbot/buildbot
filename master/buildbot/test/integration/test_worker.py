@@ -236,7 +236,7 @@ class Tests(RunFakeMasterTestCase):
         }
         yield self.getMaster(config_dict)
 
-        props = worker.worker_status.info
+        props = worker.info
 
         from buildbot_worker.base import BotBase
 
@@ -246,7 +246,7 @@ class Tests(RunFakeMasterTestCase):
         for key, value in expected_props_dict.items():
             self.assertTrue(isinstance(key, str))
             self.assertTrue(isinstance(value, str))
-            self.assertEqual(props.getProperty(key), value)
+            self.assertEqual(props.get(key), value)
 
     if RemoteWorker is None:
         skip = "buildbot-worker package is not installed"

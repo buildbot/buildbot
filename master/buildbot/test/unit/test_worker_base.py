@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import copy
+
 from parameterized import parameterized
 
 import mock
@@ -475,11 +477,6 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         worker = yield self.createWorker()
         yield worker.startService()
 
-        self.assertEqual(worker.worker_status.getAdmin(), None)
-        self.assertEqual(worker.worker_status.getHost(), None)
-        self.assertEqual(worker.worker_status.getAccessURI(), None)
-        self.assertEqual(worker.worker_status.getVersion(), None)
-
         # check that a new worker row was added for this worker
         bs = yield self.master.db.workers.getWorker(name='bot')
         self.assertEqual(bs['name'], 'bot')
@@ -499,10 +496,12 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield worker.startService()
 
         self.assertEqual(worker.workerid, 9292)
-        self.assertEqual(worker.worker_status.getAdmin(), 'TheAdmin')
-        self.assertEqual(worker.worker_status.getHost(), 'TheHost')
-        self.assertEqual(worker.worker_status.getAccessURI(), 'TheURI')
-        self.assertEqual(worker.worker_status.getVersion(), 'TheVersion')
+        self.assertEqual(worker.info, {
+                'admin': 'TheAdmin',
+                'host': 'TheHost',
+                'access_uri': 'TheURI',
+                'version': 'TheVersion'
+                })
 
     @defer.inlineCallbacks
     def test_attached_remoteGetWorkerInfo(self):
@@ -526,9 +525,6 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield worker.attached(conn)
 
         # check the values get set right
-        self.assertEqual(worker.worker_status.getAdmin(), "TheAdmin")
-        self.assertEqual(worker.worker_status.getHost(), "TheHost")
-        self.assertEqual(worker.worker_status.getAccessURI(), "TheURI")
         self.assertEqual(worker.worker_environ, ENVIRON)
         self.assertEqual(worker.worker_basedir, 'TheBaseDir')
         self.assertEqual(worker.worker_system, 'TheWorkerSystem')
@@ -561,18 +557,16 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield worker.startService()
 
         conn = fakeprotocol.FakeConnection(worker.master, worker)
-        conn.info = {
+        info = {
             'admin': 'TheAdmin',
             'host': 'TheHost',
             'access_uri': 'TheURI',
             'version': 'TheVersion',
         }
+        conn.info = copy.copy(info)
         yield worker.attached(conn)
 
-        self.assertEqual(worker.worker_status.getAdmin(), 'TheAdmin')
-        self.assertEqual(worker.worker_status.getHost(), 'TheHost')
-        self.assertEqual(worker.worker_status.getAccessURI(), 'TheURI')
-        self.assertEqual(worker.worker_status.getVersion(), 'TheVersion')
+        self.assertEqual(worker.info, info)
 
         # and the db is updated too:
         db_worker = yield self.master.db.workers.getWorker(name="bot")
