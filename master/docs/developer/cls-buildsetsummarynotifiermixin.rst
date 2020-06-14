@@ -12,6 +12,7 @@ BuildSetSummaryNotifierMixin
 
 .. py:class:: buildbot.status.buildset.BuildSetSummaryNotifierMixin::
 
+    (deprecated)
     This class provides some helper methods for implementing a status notification that provides notifications for all build results for a buildset at once.
 
     This class provides the following methods:
