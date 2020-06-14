@@ -103,7 +103,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_action_stop(self):
         yield self.callControl("stop", {}, ('builders', 77, 'builds', 5))
         self.master.mq.assertProductions(
-            [(('control', 'builds', '15', 'stop'), {'reason': 'no reason'})])
+            [(('control', 'builds', '15', 'stop'), {})])
 
     @defer.inlineCallbacks
     def test_action_stop_reason(self):
