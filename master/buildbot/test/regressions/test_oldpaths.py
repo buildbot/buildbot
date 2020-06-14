@@ -16,6 +16,8 @@
 
 from twisted.trial import unittest
 
+from buildbot.warnings import DeprecatedApiWarning
+
 
 def deprecatedImport(fn):
     def wrapper(self):
@@ -25,7 +27,7 @@ def deprecatedImport(fn):
         if len(warnings) == 2 and warnings[0] == warnings[1]:
             del warnings[1]
         self.assertEqual(len(warnings), 1, "got: %r" % (warnings,))
-        self.assertEqual(warnings[0]['category'], DeprecationWarning)
+        self.assertEqual(warnings[0]['category'], DeprecatedApiWarning)
     return wrapper
 
 

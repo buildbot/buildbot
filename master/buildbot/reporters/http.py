@@ -23,6 +23,7 @@ from buildbot import config
 from buildbot.reporters import utils
 from buildbot.util import httpclientservice
 from buildbot.util import service
+from buildbot.warnings import warn_deprecated
 
 
 class HttpStatusPushBase(service.BuildbotService):
@@ -95,8 +96,7 @@ class HttpStatusPush(HttpStatusPushBase):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
         if user is not None:
-            config.warnDeprecated("0.9.1",
-                                  "user/password is deprecated, use 'auth=(user, password)'")
+            warn_deprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
         if (format_fn is not None) and not callable(format_fn):
             config.error("format_fn must be a function")
         super().checkConfig(**kwargs)
