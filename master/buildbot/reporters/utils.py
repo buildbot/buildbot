@@ -189,9 +189,12 @@ def getResponsibleUsersForBuild(master, buildid):
 
 def getURLForBuild(master, builderid, build_number):
     prefix = master.config.buildbotURL
-    return prefix + "#builders/%d/builds/%d" % (
-        builderid,
-        build_number)
+    return prefix + "#builders/{:d}/builds/{:d}".format(builderid, build_number)
+
+
+def getURLForBuildrequest(master, buildrequestid):
+    prefix = master.config.buildbotURL
+    return prefix + "#buildrequests/{:d}".format(buildrequestid)
 
 
 @renderer
