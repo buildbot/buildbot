@@ -1,4 +1,3 @@
-For information on ugprading Buildbot, see the section "Upgrading an Existing
-Buildmaster" in the buildbot documentation.
+For information on ugprading Buildbot, see the section "Upgrading" in the buildbot documentation.
 
-This may be found locally in docs/manual/installation.rst.
+This may be found locally in docs/manual/upgrading/index.rst.
