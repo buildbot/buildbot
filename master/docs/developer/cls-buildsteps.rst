@@ -5,7 +5,7 @@ BuildSteps
 
 There are a few parent classes that are used as base classes for real buildsteps.
 This section describes the base classes.
-The "leaf" classes are described in :doc:`../manual/configuration/buildsteps`.
+The "leaf" classes are described in :doc:`../manual/configuration/steps/index`.
 
 See :ref:`Writing-New-BuildSteps` for a guide to implementing new steps.
 

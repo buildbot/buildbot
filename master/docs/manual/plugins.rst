@@ -30,7 +30,7 @@ Available ``kind``\s are:
     schedulers, described in :doc:`configuration/schedulers`
 
 ``steps``
-    build steps, described in :doc:`configuration/buildsteps`
+    build steps, described in :doc:`configuration/steps/index`
 
 ``reporters``
     reporters (or reporter targets), described in :doc:`configuration/reporters`
