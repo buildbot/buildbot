@@ -6,6 +6,9 @@ dev: clean html
 
 VERSION := $(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print(version)'; fi)
 
+# sphinx is fastest on Buildbot docs when using around 8 cores. Anything more does not improve the build speed
+JOBS := $(shell python -c 'import multiprocessing; print(min(8, multiprocessing.cpu_count()))')
+
 TAR_VERSION := $(shell tar --version)
 TAR_TRANSFORM := $(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--transform s/^html/$(VERSION)/)
 
@@ -16,7 +19,7 @@ docs.tgz: clean html singlehtml
 # -- Makefile for Sphinx documentation --
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -q -W
+SPHINXOPTS    = -q -W -j $(JOBS)
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
