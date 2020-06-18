@@ -18,7 +18,7 @@
     },
     "dependencies": {
         "ace-builds": "^1.4.4",
-        "angular": "^1.7.9",
+        "angular": "^1.8.0",
         "angular-ui-ace": "^0.2.3",
         "angular-ui-bootstrap": "^2.5.6",
         "jquery": "^3.5.0"
