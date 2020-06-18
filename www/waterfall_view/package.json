@@ -20,7 +20,7 @@
     },
     "dependencies": {
         "@uirouter/angularjs": "^1.0.15",
-        "angular": "^1.7.9",
+        "angular": "^1.8.0",
         "angular-animate": "^1.7.9",
         "buildbot-data-js": "link:../data_module",
         "d3": "^3.5.17",
