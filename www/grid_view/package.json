@@ -18,7 +18,7 @@
         "rimraf": "^2.6.3"
     },
     "dependencies": {
-        "angular": "^1.7.9",
+        "angular": "^1.8.0",
         "angular-animate": "^1.7.9",
         "angular-ui-bootstrap": "^2.5.6",
         "buildbot-data-js": "link:../data_module",
