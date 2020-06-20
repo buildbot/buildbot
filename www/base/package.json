@@ -22,7 +22,7 @@
     },
     "dependencies": {
         "@uirouter/angularjs": "^1.0.22",
-        "angular": "^1.7.9",
+        "angular": "^1.8.0",
         "angular-animate": "^1.7.9",
         "angular-bootstrap-multiselect": "^1.1.11",
         "angular-recursion": "^1.0.5",
