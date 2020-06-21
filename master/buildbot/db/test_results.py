@@ -72,7 +72,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                         else:
                             conn.execute(q)
 
-                    except sa.exc.IntegrityError:
+                    except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # There was a competing addCodePaths() call that added a path for the same
                         # builder. Depending on the DB driver, none or some rows were inserted, but
                         # we will re-check what's got inserted in the next iteration of the loop
@@ -140,7 +140,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                         else:
                             conn.execute(q)
 
-                    except sa.exc.IntegrityError:
+                    except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # There was a competing addNames() call that added a name for the same
                         # builder. Depending on the DB driver, none or some rows were inserted, but
                         # we will re-check what's got inserted in the next iteration of the loop
