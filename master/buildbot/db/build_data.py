@@ -17,6 +17,7 @@ import sqlalchemy as sa
 
 from twisted.internet import defer
 
+from buildbot.db import NULL
 from buildbot.db import base
 
 
@@ -114,6 +115,43 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
             return [self._row2dict_novalue(conn, row)
                     for row in conn.execute(q).fetchall()]
+        res = yield self.db.pool.do(thd)
+        return res
+
+    @defer.inlineCallbacks
+    def deleteOldBuildData(self, older_than_timestamp):
+        build_data = self.db.model.build_data
+        builds = self.db.model.builds
+
+        def count_build_datum(conn):
+            res = conn.execute(sa.select([sa.func.count(build_data.c.id)]))
+            count = res.fetchone()[0]
+            res.close()
+            return count
+
+        def thd(conn):
+            count_before = count_build_datum(conn)
+
+            if self.db._engine.dialect.name == 'sqlite':
+                # sqlite does not support delete with a join, so for this case we use a subquery,
+                # which is much slower
+
+                q = sa.select([builds.c.id])
+                q = q.where((builds.c.complete_at >= older_than_timestamp) |
+                            (builds.c.complete_at == NULL))
+
+                q = build_data.delete().where(build_data.c.buildid.notin_(q))
+            else:
+                q = build_data.delete()
+                q = q.where(builds.c.id == build_data.c.buildid)
+                q = q.where((builds.c.complete_at >= older_than_timestamp) |
+                            (builds.c.complete_at == NULL))
+            res = conn.execute(q)
+            res.close()
+
+            count_after = count_build_datum(conn)
+            return count_before - count_after
+
         res = yield self.db.pool.do(thd)
         return res
 

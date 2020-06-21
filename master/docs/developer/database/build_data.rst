@@ -60,3 +60,12 @@ Build data connector
         Returns all data for a specific build.
         The values are not loaded.
         The returned values can be filtered by name
+
+    .. py:method:: deleteOldBuildData(older_than_timestamp)
+
+        :param integer older_than_timestamp: the build data whose build's ``complete_at`` is older than ``older_than_timestamp`` will be deleted.
+        :returns: Deferred
+
+        Delete old build data (helper for the ``build_data_horizon`` policy).
+        Old logs have their build data deleted from the database as they are only useful while build is running and shortly afterwards.
+

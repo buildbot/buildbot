@@ -93,6 +93,28 @@ class FakeBuildDataComponent(FakeDBComponent):
 
         return defer.succeed(ret)
 
+    # returns a Deferred
+    def deleteOldBuildData(self, older_than_timestamp):
+        buildids_to_keep = []
+        for build_dict in self.db.builds.builds.values():
+            if build_dict['complete_at'] is None or \
+                    build_dict['complete_at'] >= older_than_timestamp:
+                buildids_to_keep.append(build_dict['id'])
+
+        count_before = len(self.build_data)
+
+        build_dataids_to_remove = []
+        for build_datadict in self.build_data.values():
+            if build_datadict['buildid'] not in buildids_to_keep:
+                build_dataids_to_remove.append(build_datadict['id'])
+
+        for id in build_dataids_to_remove:
+            self.build_data.pop(id)
+
+        count_after = len(self.build_data)
+
+        return defer.succeed(count_before - count_after)
+
     def _row2dict(self, row):
         ret = row.copy()
         del ret['id']
