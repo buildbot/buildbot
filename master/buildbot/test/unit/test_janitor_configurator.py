@@ -17,6 +17,8 @@
 import datetime
 from datetime import timedelta
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -24,6 +26,7 @@ from twisted.trial import unittest
 
 from buildbot.configurators import janitor
 from buildbot.configurators.janitor import JANITOR_NAME
+from buildbot.configurators.janitor import BuildDataJanitor
 from buildbot.configurators.janitor import JanitorConfigurator
 from buildbot.configurators.janitor import LogChunksJanitor
 from buildbot.process.results import SUCCESS
@@ -45,12 +48,19 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.assertEqual(self.config_dict, {
         })
 
-    def test_basic(self):
-        self.setupConfigurator(logHorizon=timedelta(weeks=1))
+    @parameterized.expand([
+        ('logs', {'logHorizon': timedelta(weeks=1)}, [LogChunksJanitor]),
+        ('build_data', {'build_data_horizon': timedelta(weeks=1)}, [BuildDataJanitor]),
+        ('logs_build_data', {'build_data_horizon': timedelta(weeks=1),
+                             'logHorizon': timedelta(weeks=1)},
+         [LogChunksJanitor, BuildDataJanitor]),
+    ])
+    def test_steps(self, name, configuration, exp_steps):
+        self.setupConfigurator(**configuration)
         self.expectWorker(JANITOR_NAME, LocalWorker)
         self.expectScheduler(JANITOR_NAME, Nightly)
         self.expectScheduler(JANITOR_NAME + "_force", ForceScheduler)
-        self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
+        self.expectBuilderHasSteps(JANITOR_NAME, exp_steps)
         self.expectNoConfigError()
 
 
@@ -78,3 +88,12 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
         yield self.runStep()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp)
+
+    @defer.inlineCallbacks
+    def test_build_data(self):
+        self.setupStep(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
+        self.master.db.build_data.deleteOldBuildData = mock.Mock(return_value=4)
+        self.expectOutcome(result=SUCCESS, state_string="deleted 4 build data key-value pairs")
+        yield self.runStep()
+        expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
+        self.master.db.build_data.deleteOldBuildData.assert_called_with(expected_timestamp)
