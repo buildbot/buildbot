@@ -1033,9 +1033,14 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, identity_file, builders, notify...)
 
-   :param string server: Gerrit SSH server's address to use for push event notifications.
-   :param string username: Gerrit SSH server's username.
+   :param string server: Gerrit server address to use for push event notifications.
+                         This can either be a Hostname (for SSH), or HTTP(s) URL.
+                         Note that HTTP(s) URLs need to be specified including ``/a``.
+
+   :param string username: Gerrit SSH server's username. Can be omitted if HTTP is used.
    :param identity_file: (optional) Gerrit SSH identity file.
+   :param auth: (optional) a requests authentication configuration, similar to the one in :bb:chsrc:`GerritChangeSource`
+
    :param int port: (optional) Gerrit SSH server's port (default: 29418)
    :param reviewCB: (optional) Called each time a build finishes. Build properties are available. Can be a deferred.
    :param reviewArg: (optional) argument passed to the review callback.
