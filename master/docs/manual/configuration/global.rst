@@ -1018,7 +1018,7 @@ Revision Links
 The :bb:cfg:`revlink` parameter is used to create links from revision IDs in the web status to a web-view of your source control system.
 The parameter's value must be a callable.
 
-By default, Buildbot is configured to generate revlinks for a number of open source hosting platforms.
+By default, Buildbot is configured to generate revlinks for a number of open source hosting platforms (https://github.com, https://sourceforge.net and https://bitbucket.org).
 
 The callable takes the revision id and repository argument, and should return an URL to the revision.
 Note that the revision id may not always be in the form you expect, so code defensively.
