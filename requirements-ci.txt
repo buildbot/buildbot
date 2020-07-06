@@ -48,7 +48,7 @@ parameterized==0.7.4
 pathlib2==2.3.5
 pbr==5.4.5
 pep8==1.7.1
-Pillow==7.1.2
+Pillow==7.2.0
 pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
