@@ -1,0 +1,1 @@
+Fix :issue:3032, allowing deactivation of timeout on CopyDirectory step.
