@@ -324,7 +324,7 @@ class GitHubAuth(OAuth2Auth):
                                  data['viewer']['organizations']['edges']])
         if self.getTeamsMembership:
             orgs_name_slug_mapping = {
-                self._orgname_slug_sub_re.sub('_', n): n
+                '_' + self._orgname_slug_sub_re.sub('_', n): n
                 for n in user_info['groups']}
             graphql_query = self.getUserTeamsGraphqlTplC.render(
                 {'user_info': user_info,
