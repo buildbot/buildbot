@@ -112,7 +112,7 @@ if conchc:
                     if len(l2) < 2:
                         continue
                     try:
-                        if base64.decodestring(l2[1]) == credentials.blob:
+                        if base64.decodebytes(l2[1]) == credentials.blob:
                             return 1
                     except binascii.Error:
                         continue
