@@ -301,7 +301,7 @@ class BBService(win32serviceutil.ServiceFramework):
             for i in range(5):
                 t.join(1)
                 self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-                if not t.isAlive():
+                if not t.is_alive():
                     break
             else:
                 self.warning("Redirect thread did not stop!")
