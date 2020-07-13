@@ -4,7 +4,7 @@ constantly==15.1.0
 funcsigs==1.0.2
 future==0.18.2
 hyperlink==19.0.0
-idna==2.9
+idna==2.10
 incremental==17.5.0
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5  # pyup: ignore
