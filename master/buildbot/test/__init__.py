@@ -18,6 +18,8 @@ import sys
 import warnings
 from pkg_resources import parse_version
 
+import setuptools  # force import setuptools before any other distutils imports
+
 from buildbot import monkeypatches
 from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: disable=wrong-import-position
 from buildbot.test.util.warnings import assertProducesWarnings  # noqa pylint: disable=wrong-import-position
@@ -41,6 +43,7 @@ if parse_version(mock.__version__) < parse_version("0.8"):
     raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
                       "higher; try 'pip install -U mock'")
 
+[setuptools]  # force use for pylint
 
 # This is where we load deprecated module-level APIs to ignore warning produced by importing them.
 # After the deprecated API has been removed, leave at least one instance of the import in a

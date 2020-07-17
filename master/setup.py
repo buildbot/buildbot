@@ -18,6 +18,7 @@
 """
 Standard setup script.
 """
+from setuptools import setup  # isort:skip
 
 
 import glob
@@ -28,8 +29,6 @@ import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from pkg_resources import parse_version
-
-from setuptools import setup
 
 from buildbot import version
 
