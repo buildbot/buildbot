@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 from twisted import __version__ as twistedVersion
 from twisted.internet import defer
@@ -44,7 +44,7 @@ class ShellMaster(RunMasterBase):
         # unicode arguments were encoded.  This warning was removed in Twisted here:
         #
         # https://github.com/twisted/twisted/commit/23fa3cc05549251ea4118e4e03354d58df87eaaa
-        if LooseVersion(twistedVersion) < LooseVersion("17.1.0"):
+        if parse_version(twistedVersion) < parse_version("17.1.0"):
             self.flushWarnings()
 
     @skipUnlessPlatformIs('posix')

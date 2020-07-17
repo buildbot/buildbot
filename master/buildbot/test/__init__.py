@@ -16,7 +16,7 @@
 import os
 import sys
 import warnings
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 from buildbot import monkeypatches
 from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: disable=wrong-import-position
@@ -37,7 +37,7 @@ monkeypatches.patch_all(for_tests=True)
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
 
-if LooseVersion(mock.__version__) < LooseVersion("0.8"):
+if parse_version(mock.__version__) < parse_version("0.8"):
     raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
                       "higher; try 'pip install -U mock'")
 

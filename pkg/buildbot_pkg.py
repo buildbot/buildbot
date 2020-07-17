@@ -21,7 +21,7 @@ import os
 import re
 import subprocess
 import sys
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
