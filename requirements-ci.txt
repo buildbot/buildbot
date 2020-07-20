@@ -83,7 +83,7 @@ treq==20.4.1
 Twisted==20.3.0
 txaio==20.4.1
 txrequests==0.9.6
-typing==3.7.4.1
+typing==3.7.4.3
 webcolors==1.11.1
 Werkzeug==1.0.1
 wrapt==1.12.1
