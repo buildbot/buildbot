@@ -527,7 +527,8 @@ The available classes are described here:
   with the above example, any user belonging to those teams would be granted the roles matching those
   team names.
 
-.. _GitHub: http://developer.github.com/v3/oauth_authorizations/
+.. _GitHub: https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/#web-application-flow
+
 
 .. py:class:: buildbot.www.oauth2.GitLabAuth(instanceUri, clientId, clientSecret)
 
