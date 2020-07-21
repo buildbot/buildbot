@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 import re
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 from twisted.internet import defer
 from twisted.python import log
@@ -85,17 +85,17 @@ class GitMixin:
             return
 
         self.gitInstalled = True
-        if LooseVersion(version) >= LooseVersion("1.6.5"):
+        if parse_version(version) >= parse_version("1.6.5"):
             self.supportsBranch = True
-        if LooseVersion(version) >= LooseVersion("1.7.2"):
+        if parse_version(version) >= parse_version("1.7.2"):
             self.supportsProgress = True
-        if LooseVersion(version) >= LooseVersion("1.7.6"):
+        if parse_version(version) >= parse_version("1.7.6"):
             self.supportsSubmoduleForce = True
-        if LooseVersion(version) >= LooseVersion("1.7.8"):
+        if parse_version(version) >= parse_version("1.7.8"):
             self.supportsSubmoduleCheckout = True
-        if LooseVersion(version) >= LooseVersion("2.3.0"):
+        if parse_version(version) >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
-        if LooseVersion(version) >= LooseVersion("2.10.0"):
+        if parse_version(version) >= parse_version("2.10.0"):
             self.supportsSshPrivateKeyAsConfigOption = True
 
     def adjustCommandParamsForSshPrivateKey(self, command, env,

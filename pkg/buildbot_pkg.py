@@ -16,12 +16,11 @@
 # Method to add build step taken from here
 # https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
 import datetime
-import distutils.cmd
 import os
 import re
 import subprocess
 import sys
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
@@ -29,6 +28,8 @@ from subprocess import Popen
 import setuptools.command.build_py
 import setuptools.command.egg_info
 from setuptools import setup
+
+import distutils.cmd  # isort:skip
 
 old_listdir = os.listdir
 
