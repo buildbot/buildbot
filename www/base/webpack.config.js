@@ -29,7 +29,7 @@ module.exports = function() {
             test: /\.(ttf|eot|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
             use: 'file-loader'
         }, {
-            test: /\.(jp?eg|png|svg|ico)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            test: /\.(jpe?g|png|svg|ico)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
             use: [{
                 loader: 'file-loader',
                 options: {
