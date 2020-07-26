@@ -7,7 +7,7 @@ SVN
 
 .. py:class:: buildbot.steps.source.svn.SVN
 
-The :bb:step:`SVN` build step performs a `Subversion <http://subversion.tigris.org>`_ checkout or update.
+The :bb:step:`SVN` build step performs a `Subversion <https://subversion.apache.org>`_ checkout or update.
 There are two basic ways of setting up the checkout step, depending upon whether you are using multiple branches or not.
 
 The :bb:step:`SVN` step should be created with the ``repourl`` argument:
