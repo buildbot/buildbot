@@ -53,7 +53,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_custom(self):
         class CustomAvatar(avatar.AvatarBase):
 
-            def getUserAvatar(self, email, size, defaultAvatarUrl):
+            def getUserAvatar(self, email, username, size, defaultAvatarUrl):
                 return defer.succeed((b"image/png", email +
                                       str(size).encode('utf-8') +
                                       defaultAvatarUrl))
@@ -71,7 +71,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         # use gravatar if the custom avatar fail to return a response
         class CustomAvatar(avatar.AvatarBase):
 
-            def getUserAvatar(self, email, size, defaultAvatarUrl):
+            def getUserAvatar(self, email, username, size, defaultAvatarUrl):
                 return defer.succeed(None)
 
         master = self.make_master(url=b'http://a/b/', auth=auth.NoAuth(),
