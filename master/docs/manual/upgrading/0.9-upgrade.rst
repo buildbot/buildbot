@@ -58,7 +58,7 @@ Web Status
 
 The most prominent change is that the existing ``WebStatus`` class is now gone, replaced by the new ``www`` functionality.
 
-Thus an ``html.WebStatus`` entry in ``c['status']`` should be removed and replaced with configuration in ``c['www']```.
+Thus an ``html.WebStatus`` entry in ``c['status']`` should be removed and replaced with configuration in ``c['www']``.
 For example, replace:
 
 .. code-block:: python
@@ -168,7 +168,7 @@ The following fields are identifiers:
 Serving static files
 --------------------
 
-Since version 0.9.0 Buildbot doesn't use and don't serve master's ``public_html`` directory.
+Since version 0.9.0 Buildbot doesn't use and doesn't serve master's ``public_html`` directory.
 You need to use third-party HTTP server for serving static files.
 
 Transition to "worker" terminology

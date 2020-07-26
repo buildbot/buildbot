@@ -345,7 +345,7 @@ class GitHubEventHandler(PullRequestMixin):
 
     def _has_skip(self, msg):
         '''
-        The message contains the skipping keyword no not.
+        The message contains the skipping keyword or not.
 
         :return type: Bool
         '''
