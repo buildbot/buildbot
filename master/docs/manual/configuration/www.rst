@@ -131,7 +131,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
         * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
           This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
 
-        * pypugjs may have some differences.  But is is a maintained fork of pyjade. https://github.com/kakulukia/pypugjs
+        * pypugjs may have some differences but it is a maintained fork of pyjade. https://github.com/kakulukia/pypugjs
 
 ``change_hook_dialects``
     See :ref:`Change-Hooks`.
@@ -468,7 +468,7 @@ The available classes are described here:
     :param serverURL: The server URL if this is a GitHub Enterprise server.
     :param apiVersion: The GitHub API version to use. One of ``3`` or ``4``
                        (V3/REST or V4/GraphQL). Default=3.
-    :param getTeamsMembership: When ``True`` fetch all team memberships for each or the
+    :param getTeamsMembership: When ``True`` fetch all team memberships for each of the
                                organizations the user belongs to. The teams will be included in the
                                user's groups as ``org-name/team-name``.
     :param debug: When ``True`` and using ``apiVersion=4`` show some additional log calls with the
@@ -919,7 +919,7 @@ In this case, you can look at the source code for detailed examples on how to wr
     :param role: The role which grants access to any control endpoint.
 
     AnyControlEndpointMatcher grants control rights to people with given role (usually "admins")
-    This endpoint matcher is matches current and future control endpoints.
+    This endpoint matcher matches current and future control endpoints.
     You need to add this in the end of your configuration to make sure it is future proof.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.ForceBuildEndpointMatcher(builder, role)
