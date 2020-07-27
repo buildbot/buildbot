@@ -11,7 +11,7 @@ blockdiag==2.0.1
 boto==2.49.0
 boto3==1.14.28
 botocore==1.17.28
-cffi==1.14.0
+cffi==1.14.1
 click==7.1.2
 # pin configparser, because 5.x no longer supports Python 3.5
 configparser==4.0.2  # pyup: ignore
