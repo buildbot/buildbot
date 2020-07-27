@@ -17,7 +17,7 @@ click==7.1.2
 configparser==4.0.2  # pyup: ignore
 constantly==15.1.0
 cookies==2.2.1
-cryptography==2.9.2
+cryptography==3.0
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
