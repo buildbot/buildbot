@@ -28,6 +28,7 @@ include =
 
 omit =
     # omit all of our tests
+    common/*
     */test/*
     # templates cause coverage errors
     */templates/*
