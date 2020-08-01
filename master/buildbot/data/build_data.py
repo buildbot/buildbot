@@ -87,6 +87,6 @@ class BuildData(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
     def setBuildData(self, buildid, name, value, source):
-        yield self.master.db.build_data.setBuildData(buildid, name, value, source)
+        # forward deferred directly
+        return self.master.db.build_data.setBuildData(buildid, name, value, source)
