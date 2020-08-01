@@ -202,7 +202,6 @@ class BuildbotEngineStrategy(strategies.PlainEngineStrategy):
         use its value for pool_recycle.  Also, force use_unicode and
         charset to be True and 'utf8', failing if they were set to
         anything else."""
-
         kwargs['pool_recycle'] = int(u.query.pop('max_idle', 3600))
 
         # default to the MyISAM storage engine
@@ -216,7 +215,7 @@ class BuildbotEngineStrategy(strategies.PlainEngineStrategy):
                 raise TypeError("Buildbot requires use_unicode=True " +
                                 "(and adds it automatically)")
         else:
-            u.query['use_unicode'] = True
+            u.query['use_unicode'] = "True"
 
         if 'charset' in u.query:
             if u.query['charset'] != "utf8":
