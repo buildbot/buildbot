@@ -12,6 +12,7 @@ This section documents the available REST APIs according to the RAML specificati
     buildrequest
     build
     buildset
+    build_data
     change
     changesource
     forcescheduler
