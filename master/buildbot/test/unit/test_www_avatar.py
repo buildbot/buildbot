@@ -50,6 +50,16 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                                    b'def654fccc4a4d8?d=retro&s=32'))
 
     @defer.inlineCallbacks
+    def test_github(self):
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGitHub()])
+        rsrc = avatar.AvatarResource(master)
+        rsrc.reconfigResource(master.config)
+
+        res = yield self.render_resource(rsrc, b'/?username=warner')
+        self.assertEqual(res, dict(redirected=b'https://avatars.githubusercontent.com/warner'))
+
+    @defer.inlineCallbacks
     def test_custom(self):
         class CustomAvatar(avatar.AvatarBase):
 
