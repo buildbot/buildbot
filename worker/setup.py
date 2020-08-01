@@ -18,10 +18,14 @@
 """
 Standard setup script.
 """
-# isort:skip
 
 from __future__ import absolute_import
 from __future__ import print_function
+
+import os
+import sys
+
+from buildbot_worker import version
 
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
@@ -33,11 +37,6 @@ except ImportError:
     setuptools = None
     from distutils.command.sdist import sdist
     from distutils.core import setup
-
-import os
-import sys
-
-from buildbot_worker import version
 
 
 class our_sdist(sdist):
@@ -121,7 +120,6 @@ if sys.platform == "win32":
 twisted_ver = ">= 17.9.0"
 
 if setuptools is not None:
-    setup = setuptools.setup
     setup_args['install_requires'] = [
         'twisted ' + twisted_ver,
         'future',
