@@ -9,7 +9,7 @@ Babel==2.8.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.14.28
+boto3==1.14.33
 botocore==1.17.28
 cffi==1.14.1
 click==7.1.2
