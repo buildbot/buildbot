@@ -27,8 +27,18 @@ from buildbot.www import resource
 class AvatarBase(config.ConfiguredMixin):
     name = "noavatar"
 
-    def getUserAvatar(self, email, size, defaultAvatarUrl):
+    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
         raise NotImplementedError()
+
+
+class AvatarGitHub(AvatarBase):
+    name = "github"
+
+    AVATAR_URL = 'https://avatars.githubusercontent.com/'
+
+    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+        github_url = self.AVATAR_URL + username.decode("utf-8")
+        raise resource.Redirect(github_url)
 
 
 class AvatarGravatar(AvatarBase):
@@ -37,7 +47,7 @@ class AvatarGravatar(AvatarBase):
     # just use same default as github (retro)
     default = "retro"
 
-    def getUserAvatar(self, email, size, defaultAvatarUrl):
+    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
         # construct the url
         emailBytes = unicode2bytes(email.lower())
         emailHash = hashlib.md5(emailBytes)
@@ -72,12 +82,13 @@ class AvatarResource(resource.Resource):
     def renderAvatar(self, request):
         email = request.args.get(b"email", [b""])[0]
         size = request.args.get(b"size", 32)
+        username = request.args.get(b"username", [None])[0]
         r = None
         if self.cache.get(email):
             r = self.cache[email]
         for method in self.avatarMethods:
             try:
-                res = yield method.getUserAvatar(email, size, self.defaultAvatarFullUrl)
+                res = yield method.getUserAvatar(email, username, size, self.defaultAvatarFullUrl)
             except resource.Redirect:
                 if r is not None:
                     self.cache[email] = r

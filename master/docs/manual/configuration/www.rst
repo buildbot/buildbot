@@ -69,6 +69,14 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'avatar_methods': []
         }
 
+    You could also use the GitHub user avatar if GitHub authentication is enabled:
+
+    .. code-block:: python
+
+        c['www'] = {
+            'avatar_methods': [util.AvatarGitHub()]
+        }
+
     For use of corporate pictures, you can use LdapUserInfo, which can also acts as an avatar provider.
     See :ref:`Web-Authentication`.
 

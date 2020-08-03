@@ -20,6 +20,8 @@ the real connector components.
 """
 
 from .base import FakeDBComponent
+from .build_data import BuildData
+from .build_data import FakeBuildDataComponent
 from .builders import Builder
 from .builders import BuilderMaster
 from .builders import BuildersTags
@@ -78,6 +80,7 @@ from .workers import Worker
 
 __all__ = [
     'Build',
+    'BuildData',
     'BuildProperty',
     'BuildRequest',
     'BuildRequestClaim',
@@ -99,6 +102,7 @@ __all__ = [
     'FakeBuildersComponent',
     'FakeBuildsComponent',
     'FakeBuildsetsComponent',
+    'FakeBuildDataComponent',
     'FakeChangeSourcesComponent',
     'FakeChangesComponent',
     'FakeDBComponent',

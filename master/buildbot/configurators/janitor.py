@@ -54,17 +54,40 @@ class LogChunksJanitor(BuildStep):
         return SUCCESS
 
 
+class BuildDataJanitor(BuildStep):
+    name = 'BuildDataJanitor'
+    renderables = ["build_data_horizon"]
+
+    def __init__(self, build_data_horizon):
+        super().__init__()
+        self.build_data_horizon = build_data_horizon
+
+    @defer.inlineCallbacks
+    def run(self):
+        older_than_timestamp = datetime2epoch(now() - self.build_data_horizon)
+        deleted = yield self.master.db.build_data.deleteOldBuildData(older_than_timestamp)
+        self.descriptionDone = ["deleted", str(deleted), "build data key-value pairs"]
+        return SUCCESS
+
+
 class JanitorConfigurator(ConfiguratorBase):
-    def __init__(self, logHorizon=None, hour=0, **kwargs):
+    def __init__(self, logHorizon=None, hour=0, build_data_horizon=None, **kwargs):
         super().__init__()
         self.logHorizon = logHorizon
+        self.build_data_horizon = build_data_horizon
         self.hour = hour
         self.kwargs = kwargs
 
     def configure(self, config_dict):
-        if self.logHorizon is None:
+        steps = []
+        if self.logHorizon is not None:
+            steps.append(LogChunksJanitor(logHorizon=self.logHorizon))
+        if self.build_data_horizon is not None:
+            steps.append(BuildDataJanitor(build_data_horizon=self.build_data_horizon))
+
+        if not steps:
             return
-        logHorizon = self.logHorizon
+
         hour = self.hour
         kwargs = self.kwargs
 
@@ -84,9 +107,7 @@ class JanitorConfigurator(ConfiguratorBase):
             builderNames=[JANITOR_NAME]))
 
         self.builders.append(BuilderConfig(
-            name=JANITOR_NAME, workername=JANITOR_NAME, factory=BuildFactory(steps=[
-                LogChunksJanitor(logHorizon=logHorizon)
-            ])
+            name=JANITOR_NAME, workername=JANITOR_NAME, factory=BuildFactory(steps=steps)
         ))
         self.protocols.setdefault('null', {})
         self.workers.append(LocalWorker(JANITOR_NAME))

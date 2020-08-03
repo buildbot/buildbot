@@ -585,6 +585,27 @@ dbdict['dbbuilddict'] = buildbase = DictValidator(
 dbdict['builddict'] = DictValidator(
     properties=NoneOk(SourcedPropertiesValidator()), **buildbase.keys)
 
+# build data
+
+_build_data_msgdict = DictValidator(
+    buildid=IntValidator(),
+    name=StringValidator(),
+    value=NoneOk(BinaryValidator()),
+    source=StringValidator(),
+)
+
+message['build_data'] = Selector()
+message['build_data'].add(None,
+                          MessageValidator(events=[],
+                                           messageValidator=_build_data_msgdict))
+
+dbdict['build_datadict'] = DictValidator(
+    buildid=IntValidator(),
+    name=StringValidator(),
+    value=NoneOk(BinaryValidator()),
+    source=StringValidator(),
+)
+
 # steps
 
 _step = dict(

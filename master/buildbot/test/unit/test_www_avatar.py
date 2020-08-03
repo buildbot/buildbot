@@ -50,10 +50,20 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                                    b'def654fccc4a4d8?d=retro&s=32'))
 
     @defer.inlineCallbacks
+    def test_github(self):
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGitHub()])
+        rsrc = avatar.AvatarResource(master)
+        rsrc.reconfigResource(master.config)
+
+        res = yield self.render_resource(rsrc, b'/?username=warner')
+        self.assertEqual(res, dict(redirected=b'https://avatars.githubusercontent.com/warner'))
+
+    @defer.inlineCallbacks
     def test_custom(self):
         class CustomAvatar(avatar.AvatarBase):
 
-            def getUserAvatar(self, email, size, defaultAvatarUrl):
+            def getUserAvatar(self, email, username, size, defaultAvatarUrl):
                 return defer.succeed((b"image/png", email +
                                       str(size).encode('utf-8') +
                                       defaultAvatarUrl))
@@ -71,7 +81,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         # use gravatar if the custom avatar fail to return a response
         class CustomAvatar(avatar.AvatarBase):
 
-            def getUserAvatar(self, email, size, defaultAvatarUrl):
+            def getUserAvatar(self, email, username, size, defaultAvatarUrl):
                 return defer.succeed(None)
 
         master = self.make_master(url=b'http://a/b/', auth=auth.NoAuth(),

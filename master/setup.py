@@ -397,7 +397,7 @@ setup_args = {
             ('buildbot.util.kubeclientservice', [
                 'KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader'
             ]),
-            ('buildbot.www.avatar', ['AvatarGravatar']),
+            ('buildbot.www.avatar', ['AvatarGravatar', 'AvatarGitHub']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
             ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
