@@ -143,7 +143,7 @@ On Python 2:
 
 .. code-block:: bash
 
-  virtualenv --no-site-packages sandbox
+  virtualenv sandbox
   source sandbox/bin/activate
 
 On Python 3:

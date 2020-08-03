@@ -93,7 +93,7 @@ docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
 
 $(VENV_NAME):
-	virtualenv -p $(VENV_PY_VERSION) --no-site-packages $(VENV_NAME)
+	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
 	$(PIP) install -U pip setuptools
 
 # helper for virtualenv creation
