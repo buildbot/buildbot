@@ -468,7 +468,7 @@ Pushover Notifications
 
 Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used by administrators to receive an instant message to an iPhone or an Android device if a build fails. The :class:`PushoverNotifier` reporter is used to accomplish this. Its configuration is very similar to the mail notifications, however—due to the notification size constrains—the logs and patches cannot be attached.
 
-To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and the API token.
+To use this reporter, you need to generate an application on the Pushover website https://pushover.net/apps/ and provide your user key and the API token.
 
 The following simple example will send a Pushover notification upon the completion of each build.
 The notification contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaced with proper ones obtained from the Pushover website for your application.
@@ -1222,7 +1222,7 @@ It requires `txrequests`_ package to allow interaction with GitHub REST API.
 
 It is configured with at least a GitHub API token.
 
-You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
+You can create a token from your own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
 
 .. py:class:: GitHubStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False, builders=None)
 
@@ -1264,7 +1264,7 @@ It requires `txrequests`_ package to allow interaction with GitHub REST API.
 
 It is configured with at least a GitHub API token. By default, it will only comment at the end of a build unless a ``startDescription`` is provided.
 
-You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
+You can create a token from your own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
 
 .. py:class:: GitHubCommentPush(token, startDescription=None, endDescription=None, baseURL=None, verbose=False, builders=None)
 

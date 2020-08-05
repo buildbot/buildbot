@@ -176,11 +176,11 @@ The :bb:step:`ShellCommand` arguments are:
     If None, ``interruptSignal`` will be fired immediately on interrupt.
 
 ``initialStdin``
-    If the command expects input on stdin, that can be supplied a a string with this parameter.
+    If the command expects input on stdin, that can be supplied as a string with this parameter.
     This value should not be excessively large, as it is handled as a single string throughout Buildbot -- for example, do not pass the contents of a tarball with this parameter.
 
 ``decodeRC``
     This is a dictionary that decodes exit codes into results value.
-    For example, ``{0:SUCCESS,1:FAILURE,2:WARNINGS}``, will treat the exit code ``2`` as WARNINGS.
-    The default is to treat just 0 as successful.
-    (``{0:SUCCESS}``) any exit code not present in the dictionary will be treated as ``FAILURE``
+    For example, ``{0:SUCCESS,1:FAILURE,2:WARNINGS}`` will treat the exit code ``2`` as ``WARNINGS``.
+    The default (``{0:SUCCESS}``) is to treat just 0 as successful.
+    Any exit code not present in the dictionary will be treated as ``FAILURE``.

@@ -19,7 +19,7 @@ It is usually used like this:
 This runs ``uname -a`` and captures its stdout, stripped of leading and trailing whitespace, in the property ``uname``.
 To avoid stripping, add ``strip=False``.
 
-The ``property`` argument can be specified as a  :ref:`Interpolate` object, allowing the property name to be built from other property values.
+The ``property`` argument can be specified as an :ref:`Interpolate` object, allowing the property name to be built from other property values.
 
 Passing ``includeStdout=False`` (default ``True``) stops capture from stdout.
 
