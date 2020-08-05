@@ -120,7 +120,7 @@ For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
 
 If all goes well, the master will start up and begin running in the background.
 During ``make frontend`` the www frontend was built using production mode, so everything is minified and hard to debug.
-However, the frontend was installed as a editable python package, so all changes in the artifacts (e.g. ``www/base/buildbot_www/static``) in the source directories will be observed in the browser.
+However, the frontend was installed as an editable python package, so all changes in the artifacts (e.g. ``www/base/buildbot_www/static``) in the source directories will be observed in the browser.
 Thus we can rebuild the JavaScript resources manually using development settings, so they are not minified and easier to debug.
 
 This can be done by running the following in e.g. ``www/base`` directory:
@@ -129,8 +129,8 @@ This can be done by running the following in e.g. ``www/base`` directory:
 
     yarn run build-dev
 
-The above rebuilds the resources only once, after each change you need to refresh the built resources.
-The actual commands that are ran are stored in the ``package.json`` file under the ``scripts`` key.
+The above rebuilds the resources only once. After each change you need to refresh the built resources.
+The actual commands that are run are stored in the ``package.json`` file under the ``scripts`` key.
 
 To avoid the need to type the above command after each change, you can use the following:
 
