@@ -872,6 +872,20 @@ It allows or denies access to the REST APIs according to rules.
 
 - Role matchers associate authenticated users to roles.
 
+Restricting Read Access
++++++++++++++++++++++++
+
+Please note that you can use this framework to deny read access to the REST API, but there is no access control in websocket or SSE APIs.
+Practically this means user will still see live updates from running builds in the UI, as those will come from websocket.
+
+The only resources that are only available for read in REST API are the log data (a.k.a `logchunks`).
+
+From a strict security point of view you cannot really use Buildbot Authz framework to securely deny read access to your bot.
+The access control is rather designed to restrict control APIs which are only accessible through REST API.
+In order to reduce attack surface, we recommend to place Buildbot behind an access controlled reverse proxy like OAuth2Proxy_.
+
+.. _OAuth2Proxy: https://github.com/oauth2-proxy/oauth2-proxy
+
 Authz Configuration
 +++++++++++++++++++
 
