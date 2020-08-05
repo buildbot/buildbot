@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+import re
 from urllib.parse import urlparse
 
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot import config
+from buildbot.plugins import util
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
@@ -34,6 +37,7 @@ INPROGRESS = 'INPROGRESS'
 SUCCESSFUL = 'SUCCESSFUL'
 FAILED = 'FAILED'
 STATUS_API_URL = '/rest/build-status/1.0/commits/{sha}'
+STATUS_CORE_API_URL = '/rest/api/1.0/projects/{proj_key}/repos/{repo_slug}/commits/{sha}/builds'
 COMMENT_API_URL = '/rest/api/1.0{path}/comments'
 HTTP_PROCESSED = 204
 HTTP_CREATED = 201
@@ -122,6 +126,203 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                     '{repo} at {sha}'.format(
                         state=state,
                         repo=sourcestamp['repository'], sha=sha
+                    ))
+
+
+class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
+    name = "BitbucketServerCoreAPIStatusPush"
+    secrets = ["token", "auth"]
+
+    def checkConfig(self, base_url, token=None, auth=None, **kwargs):
+        if not base_url:
+            config.error("Parameter base_url has to be given")
+        if token is not None and auth is not None:
+            config.error("Only one authentication method can be given "
+                         "(token or auth)")
+        super().checkConfig(**kwargs)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, base_url, token=None, auth=None,
+                        statusName=None, statusSuffix=None, startDescription=None,
+                        endDescription=None, key=None, parentName=None,
+                        buildNumber=None, ref=None, duration=None,
+                        testResults=None, verbose=False, debug=None,
+                        verify=None, **kwargs):
+        yield super().reconfigService(wantProperties=True, **kwargs)
+        self.status_name = statusName
+        self.status_suffix = statusSuffix
+        self.start_description = startDescription or 'Build started.'
+        self.end_description = endDescription or 'Build done.'
+        self.key = key or Interpolate('%(prop:buildername)s')
+        self.parent_name = parentName
+        self.build_number = buildNumber or Interpolate('%(prop:buildnumber)s')
+        self.ref = ref
+        self.duration = duration
+
+        if testResults:
+            self.test_results = testResults
+        else:
+            @util.renderer
+            def r_testresults(props):
+                failed = props.getProperty("tests_failed", 0)
+                skipped = props.getProperty("tests_skipped", 0)
+                successful = props.getProperty("tests_successful", 0)
+                if any([failed, skipped, successful]):
+                    return {
+                        "failed": failed,
+                        "skipped": skipped,
+                        "successful": successful
+                    }
+                return None
+            self.test_results = r_testresults
+
+        self.verbose = verbose
+        headers = {}
+        if token:
+            headers["Authorization"] = "Bearer {}".format(token)
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, base_url, auth=auth, headers=headers, debug=debug,
+            verify=verify)
+
+    def createStatus(self, proj_key, repo_slug, sha, state, url, key, parent,
+                     build_number, ref, description, name, duration,
+                     test_results):
+        payload = {
+            'state': state,
+            'url': url,
+            'key': key,
+            'parent': parent,
+            'ref': ref,
+            'buildNumber': build_number,
+            'description': description,
+            'name': name,
+            'duration': duration,
+            'testResults': test_results
+        }
+
+        if self.verbose:
+            log.msg("Sending payload: '{}' for {}/{} {}.".format(
+                payload, proj_key, repo_slug, sha
+            ))
+
+        _url = STATUS_CORE_API_URL.format(proj_key=proj_key, repo_slug=repo_slug,
+                                          sha=sha)
+        return self._http.post(_url, json=payload)
+
+    @defer.inlineCallbacks
+    def send(self, build):
+        props = Properties.fromDict(build['properties'])
+        props.master = self.master
+
+        duration = None
+        test_results = None
+        if build['complete']:
+            state = SUCCESSFUL if build['results'] == SUCCESS else FAILED
+            description = yield props.render(self.end_description)
+            if self.duration:
+                duration = yield props.render(self.duration)
+            else:
+                td = build['complete_at'] - build['started_at']
+                duration = int(td.seconds * 1000)
+            if self.test_results:
+                test_results = yield props.render(self.test_results)
+        else:
+            state = INPROGRESS
+            description = yield props.render(self.start_description)
+            duration = None
+
+        parent_name = (build['parentbuilder'] or {}).get('name')
+        if self.parent_name:
+            parent = yield props.render(self.parent_name)
+        elif parent_name:
+            parent = parent_name
+        else:
+            parent = build['builder']['name']
+
+        if self.status_name:
+            status_name = yield props.render(self.status_name)
+        else:
+            status_name = "{} #{}".format(props.getProperty("buildername"),
+                                   props.getProperty("buildnumber"))
+            if parent_name:
+                status_name = "{} #{} \u00BB {}".format(
+                    parent_name, build['parentbuild']['number'], status_name
+                )
+        if self.status_suffix:
+            status_name = status_name + (yield props.render(self.status_suffix))
+
+        key = yield props.render(self.key)
+        build_number = yield props.render(self.build_number)
+        url = build['url']
+
+        sourcestamps = build['buildset']['sourcestamps']
+
+        for sourcestamp in sourcestamps:
+            try:
+                ssid = sourcestamp.get('ssid')
+                sha = sourcestamp.get('revision')
+                branch = sourcestamp.get('branch')
+                repo = sourcestamp.get('repository')
+
+                if not sha:
+                    log.msg("Unable to get the commit hash for SSID: "
+                            "{}".format(ssid))
+                    continue
+
+                ref = None
+                if self.ref is None:
+                    if branch is not None:
+                        if branch.startswith("refs/"):
+                            ref = branch
+                        else:
+                            ref = "refs/heads/{}".format(branch)
+                else:
+                    ref = yield props.render(self.ref)
+
+                if not ref:
+                    log.msg("WARNING: Unable to resolve ref for SSID: {}. "
+                            "Build status will not be visible on Builds or "
+                            "PullRequest pages only for commits".format(ssid))
+
+                r = re.search(r"^.*?/([^/]+)/([^/]+?)(?:\.git)?$", repo or "")
+                if r:
+                    proj_key = r.group(1)
+                    repo_slug = r.group(2)
+                else:
+                    log.msg("Unable to parse repository info from '{}' for "
+                            "SSID: {}".format(repo, ssid))
+                    continue
+
+                res = yield self.createStatus(
+                    proj_key=proj_key,
+                    repo_slug=repo_slug,
+                    sha=sha,
+                    state=state,
+                    url=url,
+                    key=key,
+                    parent=parent,
+                    build_number=build_number,
+                    ref=ref,
+                    description=description,
+                    name=status_name,
+                    duration=duration,
+                    test_results=test_results
+                )
+
+                if res.code not in (HTTP_PROCESSED,):
+                    content = yield res.content()
+                    log.msg("{}: Unable to send Bitbucket Server status for "
+                            "{}/{} {}: {}".format(res.code, proj_key, repo_slug,
+                                                  sha, content))
+                elif self.verbose:
+                    log.msg('Status "{}" sent for {}/{} {}'.format(
+                        state, proj_key, repo_slug, sha
+                    ))
+            except Exception as e:
+                log.err(
+                    e,
+                    'Failed to send status "{}" for {}/{} {}'.format(
+                        state, proj_key, repo_slug, sha
                     ))
 
 
