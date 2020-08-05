@@ -45,11 +45,14 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason2", parent_buildid=21),
             fakedb.Builder(id=80, name='Builder1'),
+            fakedb.Builder(id=81, name='Builder2'),
             fakedb.BuildRequest(id=9, buildsetid=97, builderid=80),
             fakedb.BuildRequest(id=10, buildsetid=97, builderid=80),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
             fakedb.BuildRequest(id=12, buildsetid=98, builderid=80),
+            fakedb.BuildRequest(id=13, buildsetid=99, builderid=81),
             fakedb.Build(id=18, number=0, builderid=80, buildrequestid=9, workerid=13,
                          masterid=92, results=FAILURE),
             fakedb.Build(id=19, number=1, builderid=80, buildrequestid=10, workerid=13,
@@ -57,6 +60,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             fakedb.Build(id=20, number=2, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=SUCCESS),
             fakedb.Build(id=21, number=3, builderid=80, buildrequestid=12, workerid=13,
+                         masterid=92, results=SUCCESS),
+            fakedb.Build(id=22, number=1, builderid=81, buildrequestid=13, workerid=13,
                          masterid=92, results=SUCCESS),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(id=234),
@@ -112,6 +117,28 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         # make sure prev_build was computed
         self.assertEqual(build1['prev_build']['buildid'], 18)
         self.assertEqual(build2['prev_build']['buildid'], 20)
+
+    @defer.inlineCallbacks
+    def test_getDetailsForBuild(self):
+        self.setupDb()
+        build = yield self.master.data.get(("builds", 21))
+        yield utils.getDetailsForBuild(self.master, build, wantProperties=False,
+                                       wantSteps=False, wantPreviousBuild=False,
+                                       wantLogs=False)
+
+        self.assertEqual(build['parentbuild'], None)
+        self.assertEqual(build['parentbuilder'], None)
+
+    @defer.inlineCallbacks
+    def test_getDetailsForBuildWithParent(self):
+        self.setupDb()
+        build = yield self.master.data.get(("builds", 22))
+        yield utils.getDetailsForBuild(self.master, build, wantProperties=False,
+                                       wantSteps=False, wantPreviousBuild=False,
+                                       wantLogs=False)
+
+        self.assertEqual(build['parentbuild']['buildid'], 21)
+        self.assertEqual(build['parentbuilder']['name'], "Builder1")
 
     @defer.inlineCallbacks
     def test_getDetailsForBuildsetWithLogs(self):

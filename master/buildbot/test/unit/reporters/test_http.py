@@ -38,7 +38,9 @@ class BuildLookAlike:
         self.keys = [
             'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
             'buildset', 'complete', 'complete_at', 'masterid', 'number',
-            'properties', 'results', 'started_at', 'state_string', 'url', 'workerid']
+            'parentbuild', 'parentbuilder', 'properties', 'results',
+            'started_at', 'state_string', 'url', 'workerid'
+            ]
         if keys:
             self.keys.extend(keys)
             self.keys.sort()
