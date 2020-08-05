@@ -21,7 +21,7 @@ cryptography==3.0
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
-enum34==1.1.10
+enum34==1.1.10; python_version <= "3.4"
 flake8==3.8.3
 funcparserlib==0.3.6
 funcsigs==1.0.2
@@ -83,7 +83,7 @@ treq==20.4.1
 Twisted==20.3.0
 txaio==20.4.1
 txrequests==0.9.6
-typing==3.7.4.3
+typing==3.7.4.3; python_version < "3.5"
 webcolors==1.11.1
 Werkzeug==1.0.1
 wrapt==1.12.1
