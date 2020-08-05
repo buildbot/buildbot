@@ -21,6 +21,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import util
+from buildbot.db import build_data
 from buildbot.db import builders
 from buildbot.db import buildrequests
 from buildbot.db import builds
@@ -96,6 +97,7 @@ class DBConnector(service.ReconfigurableServiceMixin,
             self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
+        self.build_data = build_data.BuildDataConnectorComponent(self)
         self.workers = workers.WorkersConnectorComponent(self)
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)

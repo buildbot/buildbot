@@ -10,6 +10,7 @@ This section documents the available database connector classes.
     buildrequests
     builders
     builds
+    build_data
     steps
     logs
     changes

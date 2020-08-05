@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 
+from buildbot.test.fakedb.build_data import FakeBuildDataComponent
 from buildbot.test.fakedb.builders import FakeBuildersComponent
 from buildbot.test.fakedb.buildrequests import FakeBuildRequestsComponent
 from buildbot.test.fakedb.builds import FakeBuildsComponent
@@ -71,6 +72,8 @@ class FakeDBConnector(service.AsyncMultiService):
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
         self.builds = comp = FakeBuildsComponent(self, testcase)
+        self._components.append(comp)
+        self.build_data = comp = FakeBuildDataComponent(self, testcase)
         self._components.append(comp)
         self.steps = comp = FakeStepsComponent(self, testcase)
         self._components.append(comp)

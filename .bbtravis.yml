@@ -25,7 +25,7 @@ env:
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
   - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m2
-  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
+  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m3
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 

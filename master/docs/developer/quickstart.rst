@@ -3,10 +3,10 @@ Development Quick-start
 =======================
 
 Buildbot is a python based application.
-It tries very hard to follow the python best practices, and to make is easy to dive into the code.
+It tries very hard to follow the python best practices, and to make it easy to dive into the code.
 
 In order to develop Buildbot you need just a python environment and possibly some native packages in stripped-down setups.
-The most up to date list in the docker file we use to manage our CI (MetaBBotDockerFile_).
+The most up to date list is in the docker file we use to manage our CI (MetaBBotDockerFile_).
 
 If you are completely new to python, the best is to first follow the tutorials that would come when you type "python virtualenv for dummies" in your favorite search engine.
 

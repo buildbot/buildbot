@@ -16,15 +16,15 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - 3-dependencies-{{ checksum "requirements-ci.txt" }}-{{ checksum "requirements-cidocs.txt" }}
+            - 37-dependencies-{{ checksum "requirements-ci.txt" }}-{{ checksum "requirements-cidocs.txt" }}
             # fallback to using the latest cache if no exact match is found
-            - 3-dependencies-
+            - 37-dependencies-
 
       - run:
           name: install dependencies
           command: |
             env
-            python3 -m venv .venv
+            python3.7 -m venv .venv
             . .venv/bin/activate
             pip install -U pip 'setuptools<45.0.0'
             pip install -r requirements-ci.txt
