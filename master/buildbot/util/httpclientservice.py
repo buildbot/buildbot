@@ -210,3 +210,6 @@ class HTTPClientService(service.SharedService):
 
     def post(self, ep, **kwargs):
         return self._doRequest('post', ep, **kwargs)
+
+    def patch(self, ep, **kwargs):
+        return self._doRequest('patch', ep, **kwargs)

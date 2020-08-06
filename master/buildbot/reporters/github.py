@@ -236,3 +236,55 @@ class GitHubCommentPush(GitHubStatusPush):
         url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])
         ret = yield self._http.post(url, json=payload)
         return ret
+
+def gitHubSetCheck(check_id, repo_name, head_sha, github_id=None, status='queued', annotations=None, conclusion=None, summary=None, check_type='pylint'):
+    payload = {'name': 'Code Quality - {}'.format(check_type),
+               'head_sha': str(head_sha),
+               'external_id': str(check_id),
+               'status': status
+              }
+    if status == 'in_progress':
+        payload['output'] = {'title': 'Code quality check running',
+                             'summary': summary if summary else 'Check in progress'}
+        #payload['started_at'] = ISO8601Time()
+    elif status == 'completed':
+        payload['completed_at'] = ISO8601Time()
+        payload['output'] = {'title': 'Code quality check completed',
+                             'summary': summary if summary else 'Check completed'}
+        if conclusion:
+            payload['conclusion'] = conclusion
+        elif annotations:
+            payload['conclusion'] = 'failure'
+        else:
+            payload['conclusion'] = 'success'
+    if github_id:
+        if annotations:
+            chunk = []
+            for a in annotations:
+                chunk.append(a)
+                if len(chunk) == 50:
+                    payload['output']['annotations'] = chunk
+                    result = gitHubPatch('repos/{}/check-runs/{}'.format(repo_name, github_id), payload)
+                    chunk = []
+            if chunk:
+                payload['output']['annotations'] = chunk
+                result = gitHubPatch('repos/{}/check-runs/{}'.format(repo_name, github_id), payload)
+        else:
+            result = gitHubPatch('repos/{}/check-runs/{}'.format(repo_name, github_id), payload)
+    else:
+        result = gitHubPost('repos/{}/check-runs'.format(repo_name), payload)
+    return result['id']
+
+
+class GitHubApi(GitHubStatusPush):
+
+    name = "GitHubApi"
+    neededDetails = dict(wantProperties=True)
+
+    def merge(self):
+        GitHubStatusPush.createStatus(self,
+                     repo_user, repo_name, sha, state, target_url,
+                     context, issue, description)
+        gitHubSetCheck(check_id, repo_name, head_sha, github_id,
+                    status='queued', annotations, conclusion,
+                    summary, check_type='pylint')
