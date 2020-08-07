@@ -237,7 +237,8 @@ class GitHubCommentPush(GitHubStatusPush):
         ret = yield self._http.post(url, json=payload)
         return ret
 
-def gitHubSetCheck(check_id, repo_name, head_sha, github_id=None, status='queued', annotations=None, conclusion=None, summary=None, check_type='pylint'):
+def gitHubSetCheck(check_id, repo_name, head_sha, github_id=None, status='queued',
+                   annotations=None, conclusion=None, summary=None, check_type='pylint'):
     payload = {'name': 'Code Quality - {}'.format(check_type),
                'head_sha': str(head_sha),
                'external_id': str(check_id),
@@ -283,8 +284,8 @@ class GitHubApi(GitHubStatusPush):
 
     def merge(self):
         GitHubStatusPush.createStatus(self,
-                     repo_user, repo_name, sha, state, target_url,
-                     context, issue, description)
+                                      repo_user, repo_name, sha, state, target_url,
+                                      context, issue, description)
         gitHubSetCheck(check_id, repo_name, head_sha, github_id,
-                    status='queued', annotations, conclusion,
-                    summary, check_type='pylint')
+                       status='queued', annotations, conclusion,
+                       summary, check_type='pylint')
