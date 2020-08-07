@@ -41,6 +41,7 @@ if boto3 is not None:
 # https://github.com/spulec/moto/issues/1924
 os.environ['AWS_SECRET_ACCESS_KEY'] = 'foobar_secret'
 os.environ['AWS_ACCESS_KEY_ID'] = 'foobar_key'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 
 # redefine the mock_ec2 decorator to skip the test if boto3 or moto
