@@ -27,13 +27,17 @@ class BuildData(Row):
         'buildid': None,
         'name': None,
         'value': None,
+        'length': None,
         'source': None,
     }
 
     id_column = 'id'
     foreignKeys = ('buildid',)
-    required_columns = ('buildid', 'name', 'value', 'source')
+    required_columns = ('buildid', 'name', 'value', 'length', 'source')
     binary_columns = ('value',)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, length=len(kwargs['value']))
 
 
 class FakeBuildDataComponent(FakeDBComponent):
@@ -57,6 +61,7 @@ class FakeBuildDataComponent(FakeDBComponent):
         row = self._get_build_data_row(buildid, name)
         if row is not None:
             row['value'] = value
+            row['length'] = len(value)
             row['source'] = source
             return
 
@@ -66,6 +71,7 @@ class FakeBuildDataComponent(FakeDBComponent):
             'buildid': buildid,
             'name': name,
             'value': value,
+            'length': len(value),
             'source': source
         }
 

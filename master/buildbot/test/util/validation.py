@@ -591,6 +591,7 @@ _build_data_msgdict = DictValidator(
     buildid=IntValidator(),
     name=StringValidator(),
     value=NoneOk(BinaryValidator()),
+    length=IntValidator(),
     source=StringValidator(),
 )
 
@@ -603,6 +604,7 @@ dbdict['build_datadict'] = DictValidator(
     buildid=IntValidator(),
     name=StringValidator(),
     value=NoneOk(BinaryValidator()),
+    length=IntValidator(),
     source=StringValidator(),
 )
 

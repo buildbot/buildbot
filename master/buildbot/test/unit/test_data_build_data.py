@@ -56,6 +56,7 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'name': 'name1',
             'value': b'value1',
             'source': 'source1',
+            'length': 6,
         })
 
     @defer.inlineCallbacks
@@ -67,6 +68,7 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'name': 'name1',
             'value': b'value1',
             'source': 'source1',
+            'length': 6,
         })
 
     @defer.inlineCallbacks
@@ -77,6 +79,7 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'buildid': 30,
             'name': 'name1',
             'value': b'value1',
+            'length': 6,
             'source': 'source1',
         })
 
@@ -212,5 +215,6 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             'buildid': 2,
             'name': 'name1',
             'value': b'value1',
+            'length': 6,
             'source': 'source1',
         })

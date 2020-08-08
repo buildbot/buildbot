@@ -38,13 +38,15 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
             update_values = {
                 'value': value,
-                'source': source
+                'length': len(value),
+                'source': source,
             }
 
             insert_values = {
                 'buildid': buildid,
                 'name': name,
                 'value': value,
+                'length': len(value),
                 'source': source,
             }
 
@@ -92,6 +94,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
             q = sa.select([build_data_table.c.buildid,
                            build_data_table.c.name,
+                           build_data_table.c.length,
                            build_data_table.c.source])
             q = q.where((build_data_table.c.buildid == buildid) &
                         (build_data_table.c.name == name))
@@ -110,6 +113,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
             q = sa.select([build_data_table.c.buildid,
                            build_data_table.c.name,
+                           build_data_table.c.length,
                            build_data_table.c.source])
             q = q.where(build_data_table.c.buildid == buildid)
 
@@ -159,10 +163,12 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         return BuildDataDict(buildid=row.buildid,
                              name=row.name,
                              value=row.value,
+                             length=row.length,
                              source=row.source)
 
     def _row2dict_novalue(self, conn, row):
         return BuildDataDict(buildid=row.buildid,
                              name=row.name,
                              value=None,
+                             length=row.length,
                              source=row.source)

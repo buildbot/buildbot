@@ -27,6 +27,7 @@ class Db2DataMixin:
             'buildid': dbdict['buildid'],
             'name': dbdict['name'],
             'value': dbdict['value'],
+            'length': dbdict['length'],
             'source': dbdict['source'],
         }
         return defer.succeed(data)
@@ -82,6 +83,7 @@ class BuildData(base.ResourceType):
     class EntityType(types.Entity):
         buildid = types.Integer()
         name = types.String()
+        length = types.Integer()
         value = types.NoneOk(types.Binary())
         source = types.String()
     entityType = EntityType(name)
