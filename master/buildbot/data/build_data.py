@@ -54,7 +54,7 @@ class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpo
         return results
 
 
-class BuildDataEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
@@ -68,16 +68,40 @@ class BuildDataEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         buildid = yield self.getBuildid(kwargs)
         name = kwargs['name']
 
-        build_datadict = yield self.master.db.build_data.getBuildData(buildid, name)
+        build_datadict = yield self.master.db.build_data.getBuildDataNoValue(buildid, name)
 
         return (yield self.db2data(build_datadict)) if build_datadict else None
+
+
+class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
+
+    isCollection = False
+    isRaw = True
+    pathPatterns = """
+        /builders/n:builderid/builds/n:build_number/data/i:name/value
+        /builders/i:buildername/builds/n:build_number/data/i:name/value
+        /builds/n:buildid/data/i:name/value
+    """
+
+    @defer.inlineCallbacks
+    def get(self, resultSpec, kwargs):
+        buildid = yield self.getBuildid(kwargs)
+        name = kwargs['name']
+
+        dbdict = yield self.master.db.build_data.getBuildData(buildid, name)
+        if not dbdict:
+            return None
+
+        return {'raw': dbdict['value'],
+                'mime-type': 'application/octet-stream',
+                'filename': dbdict['name']}
 
 
 class BuildData(base.ResourceType):
 
     name = "build_data"
     plural = "build_data"
-    endpoints = [BuildDatasNoValueEndpoint, BuildDataEndpoint]
+    endpoints = [BuildDatasNoValueEndpoint, BuildDataNoValueEndpoint, BuildDataEndpoint]
     keyFields = []
 
     class EntityType(types.Entity):
