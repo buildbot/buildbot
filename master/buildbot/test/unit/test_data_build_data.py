@@ -26,9 +26,9 @@ from buildbot.test.util import interfaces
 from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = build_data.BuildDataEndpoint
+    endpointClass = build_data.BuildDataNoValueEndpoint
     resourceTypeClass = build_data.BuildData
 
     def setUp(self):
@@ -54,8 +54,9 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(result, {
             'buildid': 30,
             'name': 'name1',
-            'value': b'value1',
+            'value': None,
             'source': 'source1',
+            'length': 6,
         })
 
     @defer.inlineCallbacks
@@ -65,8 +66,9 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(result, {
             'buildid': 30,
             'name': 'name1',
-            'value': b'value1',
+            'value': None,
             'source': 'source1',
+            'length': 6,
         })
 
     @defer.inlineCallbacks
@@ -76,7 +78,8 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(result, {
             'buildid': 30,
             'name': 'name1',
-            'value': b'value1',
+            'value': None,
+            'length': 6,
             'source': 'source1',
         })
 
@@ -118,6 +121,105 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_missing_by_builder_id_build_number_missing_name(self):
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing'))
+        self.assertIsNone(result)
+
+
+class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+
+    endpointClass = build_data.BuildDataEndpoint
+    resourceTypeClass = build_data.BuildData
+
+    def setUp(self):
+        self.setUpEndpoint()
+        self.db.insertTestData([
+            fakedb.Worker(id=47, name='linux'),
+            fakedb.Buildset(id=20),
+            fakedb.Builder(id=88, name='b1'),
+            fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
+            fakedb.Master(id=88),
+            fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88, builderid=88,
+                         workerid=47),
+            fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
+        ])
+
+    def tearDown(self):
+        self.tearDownEndpoint()
+
+    def validateData(self, data):
+        self.assertIsInstance(data['raw'], bytes)
+        self.assertIsInstance(data['mime-type'], str)
+        self.assertIsInstance(data['filename'], str)
+
+    @defer.inlineCallbacks
+    def test_get_existing_build_data_by_build_id(self):
+        result = yield self.callGet(('builds', 30, 'data', 'name1', 'value'))
+        self.validateData(result)
+        self.assertEqual(result, {
+            'raw': b'value1',
+            'mime-type': 'application/octet-stream',
+            'filename': 'name1',
+        })
+
+    @defer.inlineCallbacks
+    def test_get_existing_build_data_by_builder_name_build_number(self):
+        result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1', 'value'))
+        self.validateData(result)
+        self.assertEqual(result, {
+            'raw': b'value1',
+            'mime-type': 'application/octet-stream',
+            'filename': 'name1',
+        })
+
+    @defer.inlineCallbacks
+    def test_get_existing_build_data_by_builder_id_build_number(self):
+        result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1', 'value'))
+        self.validateData(result)
+        self.assertEqual(result, {
+            'raw': b'value1',
+            'mime-type': 'application/octet-stream',
+            'filename': 'name1',
+        })
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_build_id_missing_build(self):
+        result = yield self.callGet(('builds', 31, 'data', 'name1', 'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_build_id_missing_name(self):
+        result = yield self.callGet(('builds', 30, 'data', 'name_missing', 'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_builder_name_build_number_missing_builder(self):
+        result = yield self.callGet(('builders', 'b_missing', 'builds', 7, 'data', 'name1',
+                                     'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_builder_name_build_number_missing_build(self):
+        result = yield self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1', 'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_builder_name_build_number_missing_name(self):
+        result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name_missing',
+                                     'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_builder_id_build_number_missing_builder(self):
+        result = yield self.callGet(('builders', 188, 'builds', 7, 'data', 'name1', 'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_builder_id_build_number_missing_build(self):
+        result = yield self.callGet(('builders', 88, 'builds', 17, 'data', 'name1', 'value'))
+        self.assertIsNone(result)
+
+    @defer.inlineCallbacks
+    def test_get_missing_by_builder_id_build_number_missing_name(self):
+        result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing', 'value'))
         self.assertIsNone(result)
 
 
@@ -212,5 +314,6 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             'buildid': 2,
             'name': 'name1',
             'value': b'value1',
+            'length': 6,
             'source': 'source1',
         })

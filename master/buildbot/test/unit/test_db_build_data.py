@@ -72,6 +72,7 @@ class Tests(interfaces.InterfaceTests):
             'buildid': 30,
             'name': 'mykey',
             'value': b'myvalue',
+            'length': 7,
             'source': 'mysource'
         })
 
@@ -95,6 +96,7 @@ class Tests(interfaces.InterfaceTests):
             'buildid': 30,
             'name': 'mykey',
             'value': b'myvalue2',
+            'length': 8,
             'source': 'mysource2'
         })
 
@@ -103,10 +105,12 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.common_data)
 
         def hook(conn):
+            value = b'myvalue_old'
             insert_values = {
                 'buildid': 30,
                 'name': 'mykey',
-                'value': b'myvalue_old',
+                'value': value,
+                'length': len(value),
                 'source': 'mysourec_old'
             }
             q = self.db.model.build_data.insert().values(insert_values)
@@ -122,6 +126,7 @@ class Tests(interfaces.InterfaceTests):
             'buildid': 30,
             'name': 'mykey',
             'value': b'myvalue',
+            'length': 7,
             'source': 'mysource'
         })
 
@@ -136,6 +141,7 @@ class Tests(interfaces.InterfaceTests):
             'buildid': 30,
             'name': 'mykey',
             'value': None,
+            'length': 7,
             'source': 'mysource'
         })
 
@@ -158,11 +164,12 @@ class Tests(interfaces.InterfaceTests):
         for d in data_dicts:
             validation.verifyDbDict(self, 'build_datadict', d)
 
-        # note that value is not in dict
+        # note that value is not in dict, but length is
         self.assertEqual(data_dicts[0], {
             'buildid': 30,
             'name': 'name1',
             'value': None,
+            'length': 6,
             'source': 'source1'
         })
 

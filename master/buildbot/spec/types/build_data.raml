@@ -6,7 +6,9 @@ description: |
     The data is intended to be used for temporary purposes, until the build and all actions associated to it (such as reporters) are finished.
 
     The value is a binary of potentially large size.
-    Certain APIs allow to retrieve the list of keys set to a build without fetching the values.
+    There are two sets of APIs.
+    One returns the properties of the key-value data pairs, such as key name and value length.
+    Another returns the actual value as binary data.
 
     Update Methods
     --------------
@@ -32,9 +34,9 @@ properties:
     name:
         description: the name of the build data.
         type: string
-    value?:
-        description: the value of the build data.
-        type: string
+    length:
+        description: the number of bytes in the build data
+        type: integer
     source:
         description: a string identifying the source of the data
         type: string
@@ -43,5 +45,4 @@ type: object
 example:
     buildid: 31
     name: "stored_data_name"
-    value: "stored data value"
     source: "Step XYZ"

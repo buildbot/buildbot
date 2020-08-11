@@ -140,6 +140,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.String(256), nullable=False),
         sa.Column('value', sa.LargeBinary().with_variant(sa.dialects.mysql.LONGBLOB, "mysql"),
                   nullable=False),
+        sa.Column('length', sa.Integer, nullable=False),
         sa.Column('source', sa.String(256), nullable=False),
     )
 

@@ -30,13 +30,15 @@ traits:
             200:
                 headers:
                     content-disposition:
-                        description: content disposition header allows browser to save log file with proper filename
+                        description: content disposition header allows browser to save data with proper filename
                         example: attachment; filename=stdio
                 body:
                     text/html:
                         description: "html data if the object is html"
                     text/plain:
                         description: "plain text data if the object is text"
+                    application/octet-stream:
+                        description: "binary data if binary is binary"
 
 types:
     build: !include types/build.raml
@@ -143,6 +145,11 @@ types:
                         get:
                             is:
                             - bbget: {bbtype: build_data}
+                        /value:
+                            description: This path returns the value of build data.
+                            get:
+                                is:
+                                - bbgetraw:
 
                 /steps:
                     description: This path selects all steps for the given build.
@@ -425,6 +432,11 @@ types:
                 get:
                     is:
                     - bbget: {bbtype: build_data}
+                /value:
+                    description: This path returns the value of build data.
+                    get:
+                        is:
+                        - bbgetraw:
 
         /steps:
             description: |
