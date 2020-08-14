@@ -22,13 +22,13 @@ import re
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot import util
 from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.steps.shell import ShellCommand
 
 
 class HLint(buildstep.ShellMixin, buildstep.BuildStep):
@@ -168,7 +168,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
 UNSPECIFIED = ()  # since None is a valid choice
 
 
-class Trial(ShellCommand):
+class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
     """
     There are some class attributes which may be usefully overridden
@@ -199,12 +199,17 @@ class Trial(ShellCommand):
     randomly = False
     tests = None  # required
 
+    description = 'testing'
+    descriptionDone = 'tests'
+
     def __init__(self, reactor=UNSPECIFIED, python=None, trial=None,
                  testpath=UNSPECIFIED,
                  tests=None, testChanges=None,
                  recurse=None, randomly=None,
                  trialMode=None, trialArgs=None, jobs=None,
                  **kwargs):
+
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
         if python:
@@ -258,6 +263,44 @@ class Trial(ShellCommand):
         if randomly is not None:
             self.randomly = randomly
 
+        if self.reactor:
+            self.description = "testing ({})".format(self.reactor)
+
+        # this counter will feed Progress along the 'test cases' metric
+        self.observer = TrialTestCaseCounter()
+        self.addLogObserver('stdio', self.observer)
+
+        # this observer consumes multiple lines in a go, so it can't be easily
+        # handled in TrialTestCaseCounter.
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.problems = []
+        self.warnings = {}
+
+        # text used before commandComplete runs
+        self.text = 'running'
+
+    def setup_python_path(self):
+        if self.testpath is None:
+            return
+
+        if self.env is None:
+            self.env = {'PYTHONPATH': self.testpath}
+            return
+
+        # this bit produces a list, which can be used by buildbot_worker.runprocess.RunProcess
+        ppath = self.env.get('PYTHONPATH', self.testpath)
+        if isinstance(ppath, str):
+            ppath = [ppath]
+        if self.testpath not in ppath:
+            ppath.insert(0, self.testpath)
+        self.env['PYTHONPATH'] = ppath
+
+    @defer.inlineCallbacks
+    def run(self):
+        # choose progressMetrics and logfiles based on whether trial is being
+        # run with multiple workers or not.
+        output_observer = logobserver.OutputProgressObserver('test.log')
+
         # build up most of the command, then stash it until start()
         command = []
         if self.python:
@@ -267,58 +310,14 @@ class Trial(ShellCommand):
         if self.recurse:
             command.append("--recurse")
         if self.reactor:
-            command.append("--reactor={}".format(reactor))
+            command.append("--reactor={}".format(self.reactor))
         if self.randomly:
             command.append("--random=0")
         command.extend(self.trialArgs)
-        self.command = command
-
-        if self.reactor:
-            self.description = ["testing", "({})".format(self.reactor)]
-            self.descriptionDone = ["tests"]
-            # commandComplete adds (reactorname) to self.text
-        else:
-            self.description = ["testing"]
-            self.descriptionDone = ["tests"]
-
-        # this counter will feed Progress along the 'test cases' metric
-        self.observer = TrialTestCaseCounter()
-        self.addLogObserver('stdio', self.observer)
-
-        # this observer consumes multiple lines in a go, so it can't be easily
-        # handled in TrialTestCaseCounter.
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
-        self.problems = []
-        self.warnings = {}
-
-        # text used before commandComplete runs
-        self.text = 'running'
-
-    def setupEnvironment(self, cmd):
-        super().setupEnvironment(cmd)
-        if self.testpath is not None:
-            e = cmd.args['env']
-            if e is None:
-                cmd.args['env'] = {'PYTHONPATH': self.testpath}
-            else:
-                # this bit produces a list, which can be used
-                # by buildbot_worker.runprocess.RunProcess
-                ppath = e.get('PYTHONPATH', self.testpath)
-                if isinstance(ppath, str):
-                    ppath = [ppath]
-                if self.testpath not in ppath:
-                    ppath.insert(0, self.testpath)
-                e['PYTHONPATH'] = ppath
-
-    def start(self):
-        # choose progressMetrics and logfiles based on whether trial is being
-        # run with multiple workers or not.
-        output_observer = logobserver.OutputProgressObserver('test.log')
 
         if self.jobs is not None:
             self.jobs = int(self.jobs)
-            self.command.append("--jobs=%d" % self.jobs)
+            command.append("--jobs=%d" % self.jobs)
 
             # using -j/--jobs flag produces more than one test log.
             self.logfiles = {}
@@ -337,78 +336,75 @@ class Trial(ShellCommand):
         if self.testChanges:
             for f in self.build.allFiles():
                 if f.endswith(".py"):
-                    self.command.append("--testmodule={}".format(f))
+                    command.append("--testmodule={}".format(f))
         else:
-            self.command.extend(self.tests)
-        log.msg("Trial.start: command is", self.command)
+            command.extend(self.tests)
 
-        super().start()
+        self.setup_python_path()
 
-    def commandComplete(self, cmd):
+        cmd = yield self.makeRemoteShellCommand(command=command)
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
-        counts = self.observer.counts
+        problems = '\n'.join(self.problems)
+        warnings = self.warnings
 
+        if problems:
+            yield self.addCompleteLog("problems", problems)
+
+        if warnings:
+            lines = sorted(warnings.keys())
+            yield self.addCompleteLog("warnings", "".join(lines))
+
+        return self.build_results(cmd)
+
+    def build_results(self, cmd):
+        counts = self.observer.counts
         total = counts['total']
-        failures, errors = counts['failures'], counts['errors']
+        failures = counts['failures']
+        errors = counts['errors']
         parsed = (total is not None)
-        text = []
-        text2 = ""
+
+        desc_parts = []
 
         if not cmd.didFail():
             if parsed:
                 results = SUCCESS
                 if total:
-                    text += ["{} {}".format(total, total == 1 and "test" or "tests"), "passed"]
+                    desc_parts += [str(total), total == 1 and "test" or "tests", "passed"]
                 else:
-                    text += ["no tests", "run"]
+                    desc_parts += ["no tests", "run"]
             else:
                 results = FAILURE
-                text += ["testlog", "unparseable"]
-                text2 = "tests"
+                desc_parts += ["testlog", "unparseable"]
         else:
             # something failed
             results = FAILURE
             if parsed:
-                text.append("tests")
+                desc_parts += ["tests"]
                 if failures:
-                    text.append("{} {}".format(failures, failures == 1 and "failure" or "failures"))
+                    desc_parts += [str(failures), failures == 1 and "failure" or "failures"]
                 if errors:
-                    text.append("{} {}".format(errors, errors == 1 and "error" or "errors"))
-                count = failures + errors
-                text2 = "{} tes{}".format(count, (count == 1 and 't' or 'ts'))
+                    desc_parts += [str(errors), errors == 1 and "error" or "errors"]
             else:
-                text += ["tests", "failed"]
-                text2 = "tests"
+                desc_parts += ["tests", "failed"]
 
         if counts['skips']:
-            text.append("{} {}".format(counts['skips'], counts['skips'] == 1 and "skip" or "skips"))
+            desc_parts += [str(counts['skips']), counts['skips'] == 1 and "skip" or "skips"]
         if counts['expectedFailures']:
-            text.append("{} {}".format(counts['expectedFailures'],
-                                       counts['expectedFailures'] == 1 and "todo" or "todos"))
-            if 0:  # TODO  pylint: disable=using-constant-test
-                results = WARNINGS
-                if not text2:
-                    text2 = "todo"
-
-        if 0:  # pylint: disable=using-constant-test
-            # ignore unexpectedSuccesses for now, but it should really mark
-            # the build WARNING
-            if counts['unexpectedSuccesses']:
-                text.append("{} surprises".format(counts['unexpectedSuccesses']))
-                results = WARNINGS
-                if not text2:
-                    text2 = "tests"
+            desc_parts += [str(counts['expectedFailures']),
+                           "todo" if counts['expectedFailures'] == 1 else "todos"]
 
         if self.reactor:
-            text.append(self.rtext('(%s)'))
-            if text2:
-                text2 = "{} {}".format(text2, self.rtext('(%s)'))
+            desc_parts.append(self.rtext('(%s)'))
 
-        self.results = results
-        self.text = text
-        self.text2 = [text2]
+        self.descriptionDone = util.join_list(desc_parts)
+        return results
 
     def rtext(self, fmt='{}'):
         if self.reactor:
@@ -437,23 +433,6 @@ class Trial(ShellCommand):
                 while True:
                     self.problems.append(line)
                     stream, line = yield
-
-    def createSummary(self, loog):
-        problems = '\n'.join(self.problems)
-        warnings = self.warnings
-
-        if problems:
-            self.addCompleteLog("problems", problems)
-
-        if warnings:
-            lines = sorted(warnings.keys())
-            self.addCompleteLog("warnings", "".join(lines))
-
-    def evaluateCommand(self, cmd):
-        return self.results
-
-    def describe(self, done=False):
-        return self.text
 
 
 class RemovePYCs(ShellCommand):
