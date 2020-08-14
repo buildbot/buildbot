@@ -502,7 +502,7 @@ class MsBuild14(MsBuild4):
 
 class MsBuild141(VisualStudio):
     platform = None
-    vcenv_bat = r"\\VC\\Auxiliary\\Build\vcvarsall.bat"
+    vcenv_bat = r"\VC\Auxiliary\Build\vcvarsall.bat"
     renderables = ['platform']
 
     def __init__(self, platform, **kwargs):
