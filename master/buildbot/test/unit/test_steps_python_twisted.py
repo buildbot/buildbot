@@ -315,3 +315,23 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectLogfile('warnings', 'colon: meaning warning')
         self.expectOutcome(result=WARNINGS, state_string='1 hlint (warnings)')
         return self.runStep()
+
+
+class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_run_ok(self):
+        self.setupStep(python_twisted.RemovePYCs())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['find', '.', '-name', '\'*.pyc\'', '-exec', 'rm', '{}', ';'])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, state_string='remove .pycs')
+        return self.runStep()

@@ -435,8 +435,18 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                     stream, line = yield
 
 
-class RemovePYCs(ShellCommand):
-    name = "remove-.pyc"
+class RemovePYCs(buildstep.ShellMixin, buildstep.BuildStep):
+    name = "remove_pyc"
     command = ['find', '.', '-name', "'*.pyc'", '-exec', 'rm', '{}', ';']
-    description = ["removing", ".pyc", "files"]
-    descriptionDone = ["remove", ".pycs"]
+    description = "removing .pyc files"
+    descriptionDone = "remove .pycs"
+
+    def __init__(self, **kwargs):
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        super().__init__(**kwargs)
+
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+        return cmd.results()
