@@ -58,12 +58,12 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
     @defer.inlineCallbacks
     def run(self):
         # create the command
-        htmlFiles = {}
+        html_files = set()
         for f in self.build.allFiles():
             if f.endswith(".xhtml") and not f.startswith("sandbox/"):
-                htmlFiles[f] = 1
+                html_files.add(f)
         # remove duplicates
-        hlintTargets = sorted(htmlFiles.keys())
+        hlintTargets = sorted(list(html_files))
         if not hlintTargets:
             return SKIPPED
         self.hlintFiles = hlintTargets
