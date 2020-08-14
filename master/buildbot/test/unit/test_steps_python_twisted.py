@@ -22,6 +22,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import python_twisted
+from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
@@ -217,6 +218,21 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
+        return self.runStep()
+
+    def test_custom_reactor(self):
+        self.setupStep(python_twisted.Trial(workdir='build', reactor='customreactor',
+                                            tests='testname', testpath=None))
+
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', '--reactor=customreactor',
+                                 'testname'],
+                        logfiles={'test.log': '_trial_temp/test.log'})
+            + Expect.log('stdio', stdout="Ran 2 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, state_string='2 tests passed (custom)')
         return self.runStep()
 
     def test_run_jobs(self):

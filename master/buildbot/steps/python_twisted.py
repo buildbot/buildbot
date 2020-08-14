@@ -397,7 +397,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                            "todo" if counts['expectedFailures'] == 1 else "todos"]
 
         if self.reactor:
-            desc_parts.append(self.rtext('(%s)'))
+            desc_parts.append(self.rtext('({})'))
 
         self.descriptionDone = util.join_list(desc_parts)
         return results
