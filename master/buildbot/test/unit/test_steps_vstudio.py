@@ -18,6 +18,8 @@ from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot import config
+from buildbot.process import results
 from buildbot.process.properties import Property
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -804,6 +806,14 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    @defer.inlineCallbacks
+    def test_no_platform(self):
+        self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj'))
+
+        self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
+
     def test_build_project(self):
         self.setupStep(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
@@ -830,6 +840,54 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built solution for cfg|x64")
+        return self.runStep()
+
+
+class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    @defer.inlineCallbacks
+    def test_no_platform(self):
+        self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj'))
+
+        self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
+
+    def test_build_project(self):
+        self.setupStep(vstudio.MsBuild141(
+            projectfile='pf', config='cfg', platform='Win32', project='pj'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')"  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="compile 0 projects 0 files")
+        return self.runStep()
+
+    def test_build_solution(self):
+        self.setupStep(
+            vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')"  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
