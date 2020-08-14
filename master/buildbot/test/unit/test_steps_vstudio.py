@@ -52,8 +52,10 @@ real_log = r"""
 class TestAddEnvPath(unittest.TestCase):
 
     def do_test(self, initial_env, name, value, expected_env):
-        vstudio.addEnvPath(initial_env, name, value)
-        self.assertEqual(initial_env, expected_env)
+        step = vstudio.VisualStudio()
+        step.env = initial_env
+        step.add_env_path(name, value)
+        self.assertEqual(step.env, expected_env)
 
     def test_new(self):
         self.do_test({}, 'PATH', r'C:\NOTHING',
@@ -192,10 +194,9 @@ class MSLogLineObserver(unittest.TestCase):
 
 class VCx(vstudio.VisualStudio):
 
-    def start(self):
-        command = ["command", "here"]
-        self.setCommand(command)
-        return super().start()
+    def run(self):
+        self.command = ["command", "here"]
+        return super().run()
 
 
 class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -240,7 +241,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.runStep()
         self.assertEqual(self.step.installdir, r'C:\I')
 
-    def test_evaluateCommand_failure(self):
+    def test_evaluate_result_failure(self):
         self.setupStep(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -251,7 +252,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files (failure)")
         return self.runStep()
 
-    def test_evaluateCommand_errors(self):
+    def test_evaluate_result_errors(self):
         self.setupStep(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -264,7 +265,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files 1 errors (failure)")
         return self.runStep()
 
-    def test_evaluateCommand_warnings(self):
+    def test_evaluate_result_warnings(self):
         self.setupStep(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
