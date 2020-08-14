@@ -299,7 +299,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             + 0
         )
         self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=SUCCESS, state_string='hlint')
+        self.expectOutcome(result=SUCCESS, state_string='0 hlints')
         return self.runStep()
 
     def test_run_warnings(self):
@@ -313,5 +313,5 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             + 0
         )
         self.expectLogfile('warnings', 'colon: meaning warning')
-        self.expectOutcome(result=WARNINGS, state_string='hlint (warnings)')
+        self.expectOutcome(result=WARNINGS, state_string='1 hlint (warnings)')
         return self.runStep()

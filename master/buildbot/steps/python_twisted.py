@@ -19,8 +19,10 @@ BuildSteps that are specific to the Twisted source tree
 
 import re
 
+from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
@@ -29,7 +31,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
 
 
-class HLint(ShellCommand):
+class HLint(buildstep.ShellMixin, buildstep.BuildStep):
 
     """I run a 'lint' checker over a set of .xhtml files. Any deviations
     from recommended style is flagged and put in the output log.
@@ -38,21 +40,23 @@ class HLint(ShellCommand):
     Lore XHTML files to check."""
 
     name = "hlint"
-    description = ["running", "hlint"]
-    descriptionDone = ["hlint"]
+    description = "running hlint"
+    descriptionDone = "hlint"
     warnOnWarnings = True
     warnOnFailure = True
     # TODO: track time, but not output
     warnings = 0
 
     def __init__(self, python=None, **kwargs):
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
         self.python = python
         self.warningLines = []
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         # create the command
         htmlFiles = {}
         for f in self.build.allFiles():
@@ -63,17 +67,30 @@ class HLint(ShellCommand):
         if not hlintTargets:
             return SKIPPED
         self.hlintFiles = hlintTargets
-        c = []
+
+        command = []
         if self.python:
-            c.append(self.python)
-        c += ["bin/lore", "-p", "--output", "lint"] + self.hlintFiles
-        self.setCommand(c)
+            command.append(self.python)
+        command += ["bin/lore", "-p", "--output", "lint"] + self.hlintFiles
 
-        # add an extra log file to show the .html files we're checking
-        self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
+        cmd = yield self.makeRemoteShellCommand(command=command)
+        yield self.runCommand(cmd)
 
-        super().start()
-        return None
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        yield self.addCompleteLog('warnings', '\n'.join(self.warningLines))
+        yield self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
+
+        # warnings are in stdout, rc is always 0, unless the tools break
+        if cmd.didFail():
+            return FAILURE
+
+        self.descriptionDone = "{} hlin{}".format(self.warnings, self.warnings == 1 and 't' or 'ts')
+
+        if self.warnings:
+            return WARNINGS
+        return SUCCESS
 
     def logConsumer(self):
         while True:
@@ -81,22 +98,6 @@ class HLint(ShellCommand):
             if ':' in line:
                 self.warnings += 1
                 self.warningLines.append(line)
-
-    def commandComplete(self, cmd):
-        self.addCompleteLog('warnings', '\n'.join(self.warningLines))
-
-    def evaluateCommand(self, cmd):
-        # warnings are in stdout, rc is always 0, unless the tools break
-        if cmd.didFail():
-            return FAILURE
-        if self.warnings:
-            return WARNINGS
-        return SUCCESS
-
-    def getText2(self, cmd, results):
-        if cmd.didFail():
-            return ["hlint"]
-        return ["{} hlin{}".format(self.warnings, self.warnings == 1 and 't' or 'ts')]
 
 
 class TrialTestCaseCounter(logobserver.LogLineObserver):
