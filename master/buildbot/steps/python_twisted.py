@@ -283,10 +283,6 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         if self.testpath is None:
             return
 
-        if self.env is None:
-            self.env = {'PYTHONPATH': self.testpath}
-            return
-
         # this bit produces a list, which can be used by buildbot_worker.runprocess.RunProcess
         ppath = self.env.get('PYTHONPATH', self.testpath)
         if isinstance(ppath, str):
