@@ -240,8 +240,8 @@ class LogRenderable(BuildStep):
         super().__init__(**kwargs)
         self.content = content
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         content = pprint.pformat(self.content)
-        self.addCompleteLog(name='Output', text=content)
-        self.step_status.setText(self.describe(done=True))
-        self.finished(SUCCESS)
+        yield self.addCompleteLog(name='Output', text=content)
+        return SUCCESS
