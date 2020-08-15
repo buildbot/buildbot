@@ -297,7 +297,7 @@ class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
 
     @defer.inlineCallbacks
     def start(self):
-        self.addLogForRemoteCommands('stdio')
+        yield self.addLogForRemoteCommands('stdio')
         try:
             res = yield self.payload(self)
             self.payloadComplete(res)

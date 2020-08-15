@@ -130,7 +130,7 @@ class P4(Source):
 
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         installed = yield self.checkP4()
         if not installed:

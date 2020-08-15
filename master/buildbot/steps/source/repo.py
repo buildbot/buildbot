@@ -241,7 +241,7 @@ class Repo(Source):
 
     @defer.inlineCallbacks
     def doStartVC(self):
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         self.filterManifestPatches()
 

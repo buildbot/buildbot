@@ -98,7 +98,7 @@ class Mercurial(Source):
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         installed = yield self.checkHg()
 

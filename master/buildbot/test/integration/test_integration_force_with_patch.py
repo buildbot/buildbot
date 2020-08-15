@@ -39,7 +39,7 @@ class MySource(Source):
 
     @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
         if patch:
             yield self.patch(patch)
         return SUCCESS

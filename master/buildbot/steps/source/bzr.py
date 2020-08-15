@@ -65,7 +65,7 @@ class Bzr(Source):
             self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         if self.repourl is None:
             self.repourl = os.path.join(self.baseURL, self.branch)

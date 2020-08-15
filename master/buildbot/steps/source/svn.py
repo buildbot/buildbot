@@ -72,7 +72,7 @@ class SVN(Source):
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         # if the version is new enough, and the password is set, then obfuscate
         # it

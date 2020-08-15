@@ -120,7 +120,7 @@ class Git(Source, GitStepMixin):
         self.revision = revision
 
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         try:
             gitInstalled = yield self.checkFeatureSupport()
