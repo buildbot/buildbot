@@ -115,7 +115,7 @@ class Git(Source, GitStepMixin):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
 

@@ -124,9 +124,9 @@ class P4(Source):
             self.p4client_spec_options = ''
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         if debug_logging:
-            log.msg('in startVC')
+            log.msg('in run_vc')
 
         self.revision = revision
         self.method = self._getMethod()

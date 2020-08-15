@@ -67,7 +67,7 @@ class Darcs(Source):
             raise ConfigErrors(errors)
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         self.revision = revision
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 

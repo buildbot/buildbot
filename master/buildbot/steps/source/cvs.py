@@ -60,7 +60,7 @@ class CVS(Source):
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         self.branch = branch
         self.revision = revision
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")

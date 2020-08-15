@@ -237,7 +237,7 @@ class Repo(Source):
     def sourcedirIsUpdateable(self):
         return self.pathExists(self.repoDir())
 
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         return self.doStartVC()
 
     @defer.inlineCallbacks

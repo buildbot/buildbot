@@ -25,12 +25,12 @@ class GitLab(Git):
     the GitLab change source
     """
 
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         # If this is a merge request:
         if self.build.hasProperty("target_branch"):
             target_repourl = self.build.getProperty("target_git_ssh_url", None)
             if self.repourl != target_repourl:
-                log.msg(("GitLab.startVC: note: GitLab step for merge requests"
+                log.msg(("GitLab.run_vc: note: GitLab step for merge requests"
                          " should probably have repourl='{}' instead of '{}'?"
                          ).format(target_repourl, self.repourl))
             # This step is (probably) configured to fetch the target
@@ -45,4 +45,4 @@ class GitLab(Git):
             # so tell Git to not check.
             revision = None
 
-        return super().startVC(branch, revision, patch)
+        return super().run_vc(branch, revision, patch)

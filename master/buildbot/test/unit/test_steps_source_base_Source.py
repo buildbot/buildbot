@@ -18,6 +18,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process import results
 from buildbot.steps.source import Source
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
@@ -34,6 +35,16 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    def setup_deferred_mock(self):
+        m = mock.Mock()
+
+        def wrapper(*args, **kwargs):
+            m(*args, **kwargs)
+            return results.SUCCESS
+
+        wrapper.mock = m
+        return wrapper
+
     def test_start_alwaysUseLatest_True(self):
         step = self.setupStep(Source(alwaysUseLatest=True),
                               {
@@ -43,11 +54,11 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
             patch='patch'
         )
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
 
     def test_start_alwaysUseLatest_False(self):
         step = self.setupStep(Source(),
@@ -58,26 +69,25 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
             patch='patch'
         )
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(
-            step.startVC.call_args, (('other-branch', 'revision', 'patch'), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (('other-branch', 'revision', 'patch'), {}))
 
     def test_start_alwaysUseLatest_False_no_branch(self):
         step = self.setupStep(Source())
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
 
     def test_start_no_codebase(self):
         step = self.setupStep(Source())
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
@@ -93,7 +103,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
     def test_start_with_codebase(self):
         step = self.setupStep(Source(codebase='codebase'))
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
@@ -112,7 +122,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = self.setupStep(Source(codebase='my-code',
                                      descriptionSuffix='suffix'))
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 

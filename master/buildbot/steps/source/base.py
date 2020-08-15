@@ -32,7 +32,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the worker.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
-    startVC(). The class as a whole builds up the self.args dictionary, then
+    run_vc(). The class as a whole builds up the self.args dictionary, then
     starts a RemoteCommand with those arguments.
     """
 
@@ -249,7 +249,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         return d
 
     @defer.inlineCallbacks
-    def start(self):
+    def run(self):
         if self.notReally:
             log.msg("faking {} checkout/update".format(self.name))
             self.descriptionDone = ["fake", self.name, "successful"]
@@ -295,7 +295,5 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             branch = self.branch
             patch = None
 
-        d = self.startVC(branch, revision, patch)
-        d.addCallback(self.finished)
-        d.addErrback(self.failed)
-        return None
+        res = yield self.run_vc(branch, revision, patch)
+        return res
