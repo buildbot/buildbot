@@ -57,31 +57,23 @@ class _TransferBuildStep(BuildStep):
         super().__init__(**buildstep_kwargs)
         self.workdir = workdir
 
+    @defer.inlineCallbacks
     def runTransferCommand(self, cmd, writer=None):
         # Run a transfer step, add a callback to extract the command status,
         # add an error handler that cancels the writer.
         self.cmd = cmd
-        d = self.runCommand(cmd)
-
-        @d.addCallback
-        def checkResult(_):
-            if writer and cmd.didFail():
-                writer.cancel()
+        try:
+            yield self.runCommand(cmd)
             return FAILURE if cmd.didFail() else SUCCESS
-
-        @d.addErrback
-        def cancel(res):
+        finally:
             if writer:
                 writer.cancel()
-            return res
 
-        return d
-
+    @defer.inlineCallbacks
     def interrupt(self, reason):
-        self.addCompleteLog('interrupt', str(reason))
+        yield self.addCompleteLog('interrupt', str(reason))
         if self.cmd:
-            d = self.cmd.interrupt(reason)
-            return d
+            yield self.cmd.interrupt(reason)
         return None
 
 
