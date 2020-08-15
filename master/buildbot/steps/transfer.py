@@ -425,9 +425,10 @@ class FileDownload(_TransferBuildStep):
                 'mode must be an integer or None')
         self.mode = mode
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand("downloadFile")
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = yield self.addLog("stdio")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -436,19 +437,16 @@ class FileDownload(_TransferBuildStep):
         log.msg("FileDownload started, from master %r to worker %r" %
                 (source, workerdest))
 
-        self.descriptionDone = "downloading to {}".format(os.path.basename(workerdest))
+        self.descriptionDone = ["downloading to", os.path.basename(workerdest)]
 
         # setup structures for reading the file
         try:
             fp = open(source, 'rb')
         except IOError:
             # if file does not exist, bail out with an error
-            self.addCompleteLog('stderr',
-                                'File %r not available at master' % source)
-            # TODO: once BuildStep.start() gets rewritten to use
-            # maybeDeferred, just re-raise the exception here.
-            eventually(BuildStep.finished, self, FAILURE)
-            return
+            yield self.addCompleteLog('stderr', 'File {!r} not available at master'.format(source))
+            raise
+
         fileReader = remotetransfer.FileReader(fp)
 
         # default arguments
@@ -466,8 +464,8 @@ class FileDownload(_TransferBuildStep):
             args['workerdest'] = workerdest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        d = self.runTransferCommand(cmd)
-        d.addCallback(self.finished).addErrback(self.failed)
+        res = yield self.runTransferCommand(cmd)
+        return res
 
 
 class StringDownload(_TransferBuildStep):
