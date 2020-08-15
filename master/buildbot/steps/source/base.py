@@ -251,7 +251,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     def start(self):
         if self.notReally:
             log.msg("faking {} checkout/update".format(self.name))
-            self.step_status.setText(["fake", self.name, "successful"])
+            self.descriptionDone = ["fake", self.name, "successful"]
             self.addCompleteLog("log",
                                 "Faked {} checkout/update 'successful'\n".format(self.name))
             return SKIPPED
@@ -282,8 +282,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                     self.addCompleteLog("patch", bytes2unicode(patch[1]))
             else:
                 log.msg("No sourcestamp found in build for codebase '{}'".format(self.codebase))
-                self.step_status.setText(
-                    ["Codebase", '{}'.format(self.codebase), "not", "in", "build"])
+                self.descriptionDone = ["Codebase", '{}'.format(self.codebase),
+                                        "not", "in", "build"]
                 self.addCompleteLog("log",
                                     "No sourcestamp found in build for codebase '{}'".format(
                                             self.codebase))

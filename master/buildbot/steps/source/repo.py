@@ -220,7 +220,8 @@ class Repo(Source):
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
         self.stdio_log.addHeader("Starting command: {}\n".format(" ".join(command)))
-        self.step_status.setText(["{}".format(" ".join(command[:2]))])
+        self.description = command[:2]
+        # FIXME: enable when new style step is switched on yield self.updateSummary()
         yield self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
@@ -311,7 +312,8 @@ class Repo(Source):
             command.append('-c')
         if self.syncQuietly:
             command.append('-q')
-        self.step_status.setText(["repo sync"])
+        self.description = ["repo", "sync"]
+        # FIXME: enable when new style step is used: yield self.updateSummary()
         self.stdio_log.addHeader("synching manifest {} from branch {} from {}\n".format(
                 self.manifestFile, self.manifestBranch, self.manifestURL))
         yield self._repoCmd(command)

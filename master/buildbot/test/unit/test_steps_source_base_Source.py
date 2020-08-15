@@ -104,7 +104,8 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
 
-        self.assertEqual(step.describe(True), ['update', 'codebase'])
+        self.assertEqual(step.describe(True), ['Codebase', 'codebase', 'not', 'in', 'build',
+                                               'codebase'])
 
     @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self):
@@ -122,7 +123,8 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))
 
-        self.assertEqual(step.describe(True), ['update', 'suffix'])
+        self.assertEqual(step.describe(True), ['Codebase', 'my-code', 'not', 'in', 'build',
+                                               'suffix'])
 
 
 class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,
