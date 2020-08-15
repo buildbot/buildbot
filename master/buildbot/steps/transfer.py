@@ -331,8 +331,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'stat', args)
         yield self.runCommand(cmd)
         if cmd.rc != 0:
-            self.addCompleteLog('stderr',
-                                'File {} not available at worker'.format(args))
+            yield self.addCompleteLog('stderr',
+                                      'File {} not available at worker'.format(args))
             return FAILURE
         s = cmd.updates['stat'][-1]
         if stat.S_ISDIR(s[stat.ST_MODE]):
@@ -340,8 +340,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         elif stat.S_ISREG(s[stat.ST_MODE]):
             result = yield self.uploadFile(source, masterdest)
         else:
-            self.addCompleteLog('stderr',
-                                '{} is neither a regular file, nor a directory'.format(source))
+            msg = '{} is neither a regular file, nor a directory'.format(source)
+            yield self.addCompleteLog('stderr', msg)
             return FAILURE
 
         yield self.uploadDone(result, source, masterdest)
@@ -350,16 +350,17 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
     def uploadDone(self, result, source, masterdest):
         pass
 
+    @defer.inlineCallbacks
     def allUploadsDone(self, result, sources, masterdest):
         if self.url is not None:
-            self.addURL(
-                os.path.basename(os.path.normpath(masterdest)), self.url)
+            yield self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand("uploadDirectory")
         self.checkWorkerHasCommand("uploadFile")
         self.checkWorkerHasCommand("stat")
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = yield self.addLog("stdio")
 
         masterdest = os.path.expanduser(self.masterdest)
         sources = self.workersrcs if isinstance(self.workersrcs, list) else [self.workersrcs]
@@ -370,52 +371,34 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             raise WorkerTooOldError(m)
 
         if not sources:
-            return self.finished(SKIPPED)
+            return SKIPPED
 
-        @defer.inlineCallbacks
-        def globSources(sources):
+        if self.glob:
             results = yield defer.gatherResults([
                 self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
                 for source in sources
             ])
-            results = [self.workerPathToMasterPath(p) for p in flatten(results)]
-            return results
+            sources = [self.workerPathToMasterPath(p) for p in flatten(results)]
 
-        @defer.inlineCallbacks
-        def uploadSources(sources):
-            if not sources:
-                return SKIPPED
-            else:
-                for source in sources:
-                    result = yield self.startUpload(source, masterdest)
-                    if result == FAILURE:
-                        return FAILURE
-                return SUCCESS
+        log.msg("MultipleFileUpload started, from worker {!r} to master {!r}".format(sources,
+                                                                                     masterdest))
 
-        def logUpload(sources):
-            log.msg("MultipleFileUpload started, from worker %r to master %r" %
-                    (sources, masterdest))
-            nsrcs = len(sources)
-            self.descriptionDone = 'uploading {} {}'.format(nsrcs,
-                                                            'file' if nsrcs == 1 else 'files')
-            return sources
+        self.descriptionDone = ['uploading', str(len(sources)),
+                                'file' if len(sources) == 1 else 'files']
 
-        if self.glob:
-            s = globSources(sources)
+        if not sources:
+            result = SKIPPED
         else:
-            s = defer.succeed(sources)
+            result = SUCCESS
+            for source in sources:
+                result_single = yield self.startUpload(source, masterdest)
+                if result_single == FAILURE:
+                    result = FAILURE
+                    break
 
-        s.addCallback(logUpload)
-        d = s.addCallback(uploadSources)
+        yield self.allUploadsDone(result, sources, masterdest)
 
-        @d.addCallback
-        def allUploadsDone(result):
-            d = defer.maybeDeferred(
-                self.allUploadsDone, result, sources, masterdest)
-            d.addCallback(lambda _: result)
-            return d
-
-        d.addCallback(self.finished).addErrback(self.failed)
+        return result
 
 
 class FileDownload(_TransferBuildStep):
