@@ -258,8 +258,7 @@ class SVN(Source):
             extractedurl = stdout_xml.getElementsByTagName(
                 'url')[0].firstChild.nodeValue
         except xml.parsers.expat.ExpatError:
-            msg = "Corrupted xml, aborting step"
-            self.stdio_log.addHeader(msg)
+            yield self.stdio_log.addHeader("Corrupted xml, aborting step")
             raise buildstep.BuildStepFailed()
         return extractedurl == self.svnUriCanonicalize(self.repourl)
 
@@ -282,8 +281,7 @@ class SVN(Source):
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
         except xml.parsers.expat.ExpatError:
-            msg = "Corrupted xml, aborting step"
-            self.stdio_log.addHeader(msg)
+            yield self.stdio_log.addHeader("Corrupted xml, aborting step")
             raise buildstep.BuildStepFailed()
 
         revision = None
@@ -307,8 +305,7 @@ class SVN(Source):
                 log.msg(msg)
                 raise buildstep.BuildStepFailed()
 
-        msg = "Got SVN revision {}".format(revision)
-        self.stdio_log.addHeader(msg)
+        yield self.stdio_log.addHeader("Got SVN revision {}".format(revision))
         self.updateSourceProperty('got_revision', revision)
 
         return cmd.rc

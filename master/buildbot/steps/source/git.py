@@ -743,7 +743,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         rc = yield self._dovccmd(cmd, abandonOnFailure=False)
 
         if rc != RC_SUCCESS:
-            self.stdio_log.addStderr("You are in detached HEAD")
+            yield self.stdio_log.addStderr("You are in detached HEAD")
             raise buildstep.BuildStepFailed
 
     @defer.inlineCallbacks

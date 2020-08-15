@@ -248,12 +248,13 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
 
+    @defer.inlineCallbacks
     def start(self):
         if self.notReally:
             log.msg("faking {} checkout/update".format(self.name))
             self.descriptionDone = ["fake", self.name, "successful"]
-            self.addCompleteLog("log",
-                                "Faked {} checkout/update 'successful'\n".format(self.name))
+            yield self.addCompleteLog("log",
+                                      "Faked {} checkout/update 'successful'\n".format(self.name))
             return SKIPPED
 
         if not self.alwaysUseLatest:
@@ -279,14 +280,14 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    self.addCompleteLog("patch", bytes2unicode(patch[1]))
+                    yield self.addCompleteLog("patch", bytes2unicode(patch[1]))
             else:
                 log.msg("No sourcestamp found in build for codebase '{}'".format(self.codebase))
                 self.descriptionDone = ["Codebase", '{}'.format(self.codebase),
                                         "not", "in", "build"]
-                self.addCompleteLog("log",
-                                    "No sourcestamp found in build for codebase '{}'".format(
-                                            self.codebase))
+                yield self.addCompleteLog("log",
+                                          "No sourcestamp found in build for codebase '{}'".format(
+                                               self.codebase))
                 return FAILURE
 
         else:
