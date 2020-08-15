@@ -110,15 +110,10 @@ class FileUpload(_TransferBuildStep):
         self.url = url
         self.urlText = urlText
 
-    def finished(self, results):
-        log.msg("File '{}' upload finished with results {}".format(
-            os.path.basename(self.workersrc), str(results)))
-        self.step_status.setText(self.descriptionDone)
-        super().finished(results)
-
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand("uploadFile")
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = yield self.addLog("stdio")
 
         source = self.workersrc
         masterdest = self.masterdest
@@ -142,9 +137,7 @@ class FileUpload(_TransferBuildStep):
             if urlText is None:
                 urlText = os.path.basename(masterdest)
 
-            self.addURL(urlText, self.url)
-
-        self.step_status.setText(self.description)
+            yield self.addURL(urlText, self.url)
 
         # we use maxsize to limit the amount of data on both sides
         fileWriter = remotetransfer.FileWriter(
@@ -170,8 +163,12 @@ class FileUpload(_TransferBuildStep):
             args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
-        d = self.runTransferCommand(cmd, fileWriter)
-        d.addCallback(self.finished).addErrback(self.failed)
+        res = yield self.runTransferCommand(cmd, fileWriter)
+
+        log.msg("File '{}' upload finished with results {}".format(
+            os.path.basename(self.workersrc), str(res)))
+
+        return res
 
 
 class DirectoryUpload(_TransferBuildStep):
