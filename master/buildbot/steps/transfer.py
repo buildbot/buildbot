@@ -31,7 +31,6 @@ from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import flatten
-from buildbot.util.eventual import eventually
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
@@ -492,10 +491,11 @@ class StringDownload(_TransferBuildStep):
                     mode))
         self.mode = mode
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         # we use 'downloadFile' remote command on the worker
         self.checkWorkerHasCommand("downloadFile")
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = yield self.addLog("stdio")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -503,7 +503,7 @@ class StringDownload(_TransferBuildStep):
         log.msg("StringDownload started, from master to worker %r" %
                 workerdest)
 
-        self.descriptionDone = "downloading to {}".format(os.path.basename(workerdest))
+        self.descriptionDone = ["downloading to", os.path.basename(workerdest)]
 
         # setup structures for reading the file
         fileReader = remotetransfer.StringFileReader(self.s)
@@ -523,8 +523,8 @@ class StringDownload(_TransferBuildStep):
             args['workerdest'] = workerdest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        d = self.runTransferCommand(cmd)
-        d.addCallback(self.finished).addErrback(self.failed)
+        res = yield self.runTransferCommand(cmd)
+        return res
 
 
 class JSONStringDownload(StringDownload):
@@ -553,12 +553,12 @@ class JSONPropertiesDownload(StringDownload):
         if workerdest is None:
             raise TypeError("__init__() takes at least 2 arguments")
 
-        self.super_class = StringDownload
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
         super().__init__(s=None, workerdest=workerdest, **buildstep_kwargs)
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         properties = self.build.getProperties()
         props = {}
         for key, value, source in properties.asList():
@@ -570,4 +570,5 @@ class JSONPropertiesDownload(StringDownload):
                           for ss in self.build.getAllSourceStamps()],
         ),
         )
-        return self.super_class.start(self)
+        res = yield super().run()
+        return res
