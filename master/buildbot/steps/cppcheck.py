@@ -16,14 +16,17 @@
 
 import re
 
+from twisted.internet import defer
+
 from buildbot.process import logobserver
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import ShellMixin
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.steps.shell import ShellCommand
 
 
-class Cppcheck(ShellCommand):
+class Cppcheck(ShellMixin, BuildStep):
     # Highly inspired from the Pylint step.
     name = "cppcheck"
     description = ["running", "cppcheck"]
@@ -44,26 +47,18 @@ class Cppcheck(ShellCommand):
                               ('extra_args', [])]:
             setattr(self, name, kwargs.pop(name, default))
 
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(*args, **kwargs)
         self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+            'stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
-        command = [self.binary]
-        command.extend(self.source)
-        if self.enable:
-            command.append('--enable={}'.format(','.join(self.enable)))
-        if self.inconclusive:
-            command.append('--inconclusive')
-        command.extend(self.extra_args)
-        self.setCommand(command)
-
-        counts = self.counts = {}
+        self.counts = {}
         summaries = self.summaries = {}
         for m in self.MESSAGES:
-            counts[m] = 0
+            self.counts[m] = 0
             summaries[m] = []
 
-    def logConsumer(self):
+    def _log_consumer(self):
         line_re = re.compile(
                 r'(?:\[.+\]: )?\((?P<severity>{})\) .+'.format('|'.join(self.MESSAGES)))
 
@@ -75,21 +70,40 @@ class Cppcheck(ShellCommand):
                 self.summaries[msgsev].append(line)
                 self.counts[msgsev] += 1
 
-    def createSummary(self, log):
+    @defer.inlineCallbacks
+    def run(self):
+        command = [self.binary]
+        command.extend(self.source)
+        if self.enable:
+            command.append('--enable={}'.format(','.join(self.enable)))
+        if self.inconclusive:
+            command.append('--inconclusive')
+        command.extend(self.extra_args)
+
+        cmd = yield self.makeRemoteShellCommand(command=command)
+
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         self.descriptionDone = self.descriptionDone[:]
         for msg in self.MESSAGES:
             self.setProperty('cppcheck-{}'.format(msg), self.counts[msg], 'Cppcheck')
             if not self.counts[msg]:
                 continue
             self.descriptionDone.append("{}={}".format(msg, self.counts[msg]))
-            self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
+            yield self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
         self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
 
-    def evaluateCommand(self, cmd):
-        """ cppcheck always return 0, unless a special parameter is given """
+        yield self.updateSummary()
+
+        if cmd.results() != SUCCESS:
+            return cmd.results()
+
         for msg in self.flunkingIssues:
             if self.counts[msg] != 0:
                 return FAILURE
-        if self.getProperty('cppcheck-total') != 0:
+        if sum(self.counts.values()) > 0:
             return WARNINGS
         return SUCCESS
