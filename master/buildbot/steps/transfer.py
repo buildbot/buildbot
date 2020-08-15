@@ -199,9 +199,10 @@ class DirectoryUpload(_TransferBuildStep):
         self.url = url
         self.urlText = urlText
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand("uploadDirectory")
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = yield self.addLog("stdio")
 
         source = self.workersrc
         masterdest = self.masterdest
@@ -220,7 +221,7 @@ class DirectoryUpload(_TransferBuildStep):
             if urlText is None:
                 urlText = os.path.basename(os.path.normpath(masterdest))
 
-            self.addURL(urlText, self.url)
+            yield self.addURL(urlText, self.url)
 
         # we use maxsize to limit the amount of data on both sides
         dirWriter = remotetransfer.DirectoryWriter(
@@ -241,8 +242,8 @@ class DirectoryUpload(_TransferBuildStep):
             args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
-        d = self.runTransferCommand(cmd, dirWriter)
-        d.addCallback(self.finished).addErrback(self.failed)
+        res = yield self.runTransferCommand(cmd, dirWriter)
+        return res
 
 
 class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
