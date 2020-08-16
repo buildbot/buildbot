@@ -136,7 +136,7 @@ class Git(Source, GitStepMixin):
             yield self._downloadSshPrivateKeyIfNeeded()
             yield self._getAttrGroupMember('mode', self.mode)()
             if patch:
-                yield self.patch(None, patch=patch)
+                yield self.patch(patch)
             yield self.parseGotRevision()
             res = yield self.parseCommitDescription()
             yield self._removeSshPrivateKeyIfNeeded()

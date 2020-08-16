@@ -94,7 +94,7 @@ class SVN(Source):
         yield self._getAttrGroupMember('mode', self.mode)()
 
         if patch:
-            yield self.patch(0, patch)
+            yield self.patch(patch)
         res = yield self.parseGotRevision()
         return res
 

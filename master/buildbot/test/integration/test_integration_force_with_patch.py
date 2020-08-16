@@ -37,12 +37,12 @@ index 0000000..8a5cf80
 class MySource(Source):
     """A source class which only applies the patch"""
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
-        d = defer.succeed(SUCCESS)
         if patch:
-            d.addCallback(self.patch, patch)
-        return d
+            yield self.patch(patch)
+        return SUCCESS
 
 
 class ShellMaster(RunMasterBase):

@@ -97,7 +97,7 @@ class Monotone(Source):
             yield fn()
 
             if patch:
-                yield self.patch(None, patch)
+                yield self.patch(patch)
             yield self.parseGotRevision()
             return SUCCESS
         finally:

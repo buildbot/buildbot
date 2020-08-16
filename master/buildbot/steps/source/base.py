@@ -216,7 +216,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             return cmd.rc
         return d
 
-    def patch(self, _, patch):
+    def patch(self, patch):
         diff = patch[1]
         root = None
         if len(patch) >= 3:

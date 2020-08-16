@@ -80,7 +80,7 @@ class CVS(Source):
         yield self._getAttrGroupMember('mode', self.mode)()
 
         if patch:
-            yield self.patch(0, patch)
+            yield self.patch(patch)
         yield self.parseGotRevision()
         return results.SUCCESS
 
