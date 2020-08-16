@@ -130,7 +130,8 @@ class CopyDirectory(WorkerBuildStep):
         self.timeout = timeout
         self.maxTime = maxTime
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('cpdir')
 
         args = {'fromdir': self.src, 'todir': self.dest}
@@ -139,28 +140,15 @@ class CopyDirectory(WorkerBuildStep):
             args['maxTime'] = self.maxTime
 
         cmd = remotecommand.RemoteCommand('cpdir', args)
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
         if cmd.didFail():
-            self.step_status.setText(["Copying", self.src, "to", self.dest, "failed."])
-            self.finished(FAILURE)
-            return
-        self.step_status.setText(self.describe(done=True))
-        self.finished(SUCCESS)
+            self.descriptionDone = ["Copying", self.src, "to", self.dest, "failed."]
+            return FAILURE
 
-    # TODO: BuildStep subclasses don't have a describe()....
-    def getResultSummary(self):
-        src = bytes2unicode(self.src, errors='replace')
-        dest = bytes2unicode(self.dest, errors='replace')
-        copy = "{} to {}".format(src, dest)
-        if self.results == SUCCESS:
-            rv = 'Copied ' + copy
-        else:
-            rv = 'Copying ' + copy + ' failed.'
-        return {'step': rv}
+        self.descriptionDone = ["Copied", self.src, "to", self.dest]
+        return SUCCESS
 
 
 class RemoveDirectory(WorkerBuildStep):

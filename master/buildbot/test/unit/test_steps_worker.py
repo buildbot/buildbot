@@ -191,7 +191,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           state_string="Copying s to d failed.")
+                           state_string="Copying s to d failed. (failure)")
         return self.runStep()
 
     def test_render(self):
