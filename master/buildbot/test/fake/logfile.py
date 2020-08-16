@@ -44,8 +44,6 @@ class FakeLogFile:
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
-                if not isinstance(lines, str):
-                    lines = lines.decode('utf-8')
                 if self.name in self.step.logobservers:
                     for obs in self.step.logobservers[self.name]:
                         getattr(obs, meth)(lines)
@@ -54,16 +52,22 @@ class FakeLogFile:
             return lbf
 
     def addHeader(self, text):
+        if not isinstance(text, str):
+            text = text.decode('utf-8')
         self.header += text
         self._getLbf('h', 'headerReceived').append(text)
         return defer.succeed(None)
 
     def addStdout(self, text):
+        if not isinstance(text, str):
+            text = text.decode('utf-8')
         self.stdout += text
         self._getLbf('o', 'outReceived').append(text)
         return defer.succeed(None)
 
     def addStderr(self, text):
+        if not isinstance(text, str):
+            text = text.decode('utf-8')
         self.stderr += text
         self._getLbf('e', 'errReceived').append(text)
         return defer.succeed(None)
