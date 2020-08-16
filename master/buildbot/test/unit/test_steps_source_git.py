@@ -3440,7 +3440,10 @@ class TestGit(sourcesteps.SourceStepMixin,
         gitStep = self.setupStep(step)
 
         gitStep._start_deferred = defer.Deferred()
-        gitStep.startVC("branch", "revision", "patch")
+        d = gitStep.startVC("branch", "revision", "patch")
+        d.addCallback(gitStep.finished)
+        d.addErrback(gitStep.failed)
+
         d = gitStep._start_deferred.addBoth(check)
         return d
 

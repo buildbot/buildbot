@@ -25,6 +25,7 @@ from buildbot.config import ConfigErrors
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
+from buildbot.process import results
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
 
@@ -65,49 +66,39 @@ class Darcs(Source):
         if errors:
             raise ConfigErrors(errors)
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        d = self.checkDarcs()
+        installed = yield self.checkDarcs()
+        if not installed:
+            raise WorkerTooOldError("Darcs is not installed on worker")
 
-        @d.addCallback
-        def checkInstall(darcsInstalled):
-            if not darcsInstalled:
-                raise WorkerTooOldError("Darcs is not installed on worker")
-            return 0
-        d.addCallback(lambda _: self.sourcedirIsPatched())
+        patched = yield self.sourcedirIsPatched()
 
-        @d.addCallback
-        def checkPatched(patched):
-            if patched:
-                return self.copy()
-            return 0
+        if patched:
+            yield self.copy()
 
-        d.addCallback(self._getAttrGroupMember('mode', self.mode))
+        yield self._getAttrGroupMember('mode', self.mode)()
 
         if patch:
-            d.addCallback(self.patch, patch)
-        d.addCallback(self.parseGotRevision)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
-        return d
+            yield self.patch(patch)
+        yield self.parseGotRevision()
+        return results.SUCCESS
 
+    @defer.inlineCallbacks
     def checkDarcs(self):
         cmd = remotecommand.RemoteShellCommand(self.workdir, ['darcs', '--version'],
                                                env=self.env,
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
-        @d.addCallback
-        def evaluate(_):
-            return cmd.rc == 0
-        return d
+        yield self.runCommand(cmd)
+        return cmd.rc == 0
 
     @defer.inlineCallbacks
-    def mode_full(self, _):
+    def mode_full(self):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -116,7 +107,7 @@ class Darcs(Source):
             return
 
     @defer.inlineCallbacks
-    def mode_incremental(self, _):
+    def mode_incremental(self):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._checkout()
@@ -124,54 +115,46 @@ class Darcs(Source):
             command = ['darcs', 'pull', '--all', '--verbose']
             yield self._dovccmd(command)
 
+    @defer.inlineCallbacks
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                     'logEnviron': self.logEnviron,
                                                     'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
         self.workdir = 'source'
-        d.addCallback(self.mode_incremental)
+        yield self.mode_incremental()
 
-        @d.addCallback
-        def copy(_):
-            cmd = remotecommand.RemoteCommand('cpdir',
-                                              {'fromdir': 'source',
-                                               'todir': 'build',
-                                               'logEnviron': self.logEnviron,
-                                               'timeout': self.timeout, })
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
+        cmd = remotecommand.RemoteCommand('cpdir',
+                                          {'fromdir': 'source',
+                                           'todir': 'build',
+                                           'logEnviron': self.logEnviron,
+                                           'timeout': self.timeout, })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def resetWorkdir(_):
-            self.workdir = 'build'
-            return 0
-        return d
+        self.workdir = 'build'
 
+    @defer.inlineCallbacks
     def clobber(self):
-        d = self.runRmdir(self.workdir)
-        d.addCallback(lambda _: self._checkout())
-        return d
+        yield self.runRmdir(self.workdir)
+        yield self._checkout()
 
+    @defer.inlineCallbacks
     def _clone(self, abandonOnFailure=False):
         command = ['darcs', 'get', '--verbose',
                    '--lazy', '--repo-name', self.workdir]
-        d = defer.succeed(0)
+
         if self.revision:
-            d.addCallback(
-                lambda _: self.downloadFileContentToWorker('.darcs-context', self.revision))
+            yield self.downloadFileContentToWorker('.darcs-context', self.revision)
             command.append('--context')
             command.append('.darcs-context')
 
         command.append(self.repourl)
-        d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure,
-                                              wkdir='.'))
+        yield self._dovccmd(command, abandonOnFailure=abandonOnFailure, wkdir='.')
 
-        return d
-
+    @defer.inlineCallbacks
     def _checkout(self):
 
         if self.retry:
@@ -179,9 +162,9 @@ class Darcs(Source):
         else:
             abandonOnFailure = True
 
-        d = self._clone(abandonOnFailure)
+        res = yield self._clone(abandonOnFailure)
 
-        def _retry(res):
+        if self.retry:
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
@@ -193,30 +176,15 @@ class Darcs(Source):
                 df.addCallback(lambda _: self.runRmdir(self.workdir))
                 df.addCallback(lambda _: self._checkout())
                 reactor.callLater(delay, df.callback, None)
-                return df
-            return res
-
-        if self.retry:
-            d.addCallback(_retry)
-        return d
-
-    def finish(self, res):
-        d = defer.succeed(res)
-
-        @d.addCallback
-        def _gotResults(results):
-            self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-            return results
-        d.addCallback(self.finished)
-        return d
+                res = yield df
+        return res
 
     @defer.inlineCallbacks
-    def parseGotRevision(self, _):
+    def parseGotRevision(self):
         revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
         self.updateSourceProperty('got_revision', revision)
-        return 0
 
+    @defer.inlineCallbacks
     def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True, wkdir=None):
         if not command:
@@ -233,17 +201,14 @@ class Darcs(Source):
                                                initialStdin=initialStdin,
                                                decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command {}".format(cmd))
-                raise buildstep.BuildStepFailed()
-            if collectStdout:
-                return cmd.stdout
-            return cmd.rc
-        return d
+        if abandonOnFailure and cmd.didFail():
+            log.msg("Source step failed while running command {}".format(cmd))
+            raise buildstep.BuildStepFailed()
+        if collectStdout:
+            return cmd.stdout
+        return cmd.rc
 
     def _sourcedirIsUpdatable(self):
         return self.pathExists(self.build.path_module.join(self.workdir, '_darcs'))

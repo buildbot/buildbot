@@ -53,10 +53,9 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         # make parseGotRevision return something consistent, patching the class
         # instead of the object since a new object is constructed by runTest.
-        def parseGotRevision(self, res):
+        def parseGotRevision(self):
             self.updateSourceProperty('got_revision',
                                       '2012-09-09 12:00:39 +0000')
-            return res
         self.patch(cvs.CVS, 'parseGotRevision', parseGotRevision)
 
     def test_parseGotRevision(self):
@@ -71,7 +70,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             props.append((prop, name))
         step.updateSourceProperty = updateSourceProperty
 
-        self.assertEqual(step.parseGotRevision(10), 10)  # passes res along
+        step.parseGotRevision()
         self.assertEqual(props,
                          [('got_revision', '2012-09-09 12:09:33 +0000')])
 

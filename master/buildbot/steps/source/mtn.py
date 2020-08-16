@@ -97,11 +97,11 @@ class Monotone(Source):
             yield fn()
 
             if patch:
-                yield self.patch(None, patch)
+                yield self.patch(patch)
             yield self.parseGotRevision()
-            self.finish()
-        except Exception as e:
-            self.failed(e)
+            return SUCCESS
+        finally:
+            pass  # FIXME: remove this try:raise block
 
     @defer.inlineCallbacks
     def mode_full(self):
@@ -340,8 +340,3 @@ class Monotone(Source):
             log.msg("Workdir does not exist, falling back to a fresh clone")
 
         return workdir_exists
-
-    def finish(self):
-        self.setStatus(self.cmd, 0)
-        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-        return self.finished(0)

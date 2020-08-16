@@ -43,4 +43,4 @@ class Gerrit(Git):
                 pass
 
         branch = gerrit_branch or branch
-        super(Gerrit, self).startVC(branch, revision, patch)
+        return super().startVC(branch, revision, patch)

@@ -136,14 +136,14 @@ class Git(Source, GitStepMixin):
             yield self._downloadSshPrivateKeyIfNeeded()
             yield self._getAttrGroupMember('mode', self.mode)()
             if patch:
-                yield self.patch(None, patch=patch)
+                yield self.patch(patch)
             yield self.parseGotRevision()
             res = yield self.parseCommitDescription()
             yield self._removeSshPrivateKeyIfNeeded()
-            yield self.finish(res)
-        except Exception as e:
+            return res
+        except Exception:
             yield self._removeSshPrivateKeyIfNeeded()
-            yield self.failed(e)
+            raise
 
     @defer.inlineCallbacks
     def mode_full(self):
@@ -256,12 +256,6 @@ class Git(Source, GitStepMixin):
             return RC_SUCCESS
         finally:
             self.workdir = old_workdir
-
-    @defer.inlineCallbacks
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-        yield self.finished(res)
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _=None):
