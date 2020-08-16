@@ -207,6 +207,7 @@ class Repo(Source):
     def _repoCmd(self, command, abandonOnFailure=True, **kwargs):
         return self._Cmd(["repo"] + command, abandonOnFailure=abandonOnFailure, **kwargs)
 
+    @defer.inlineCallbacks
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
             workdir = self.workdir
@@ -220,17 +221,14 @@ class Repo(Source):
         cmd.useLog(self.stdio_log, False)
         self.stdio_log.addHeader("Starting command: {}\n".format(" ".join(command)))
         self.step_status.setText(["{}".format(" ".join(command[:2]))])
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if abandonOnFailure and cmd.didFail():
-                self.descriptionDone = "repo failed at: {}".format(" ".join(command[:2]))
-                self.stdio_log.addStderr(("Source step failed while running command {}\n"
-                                          ).format(cmd))
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        return d
+        if abandonOnFailure and cmd.didFail():
+            self.descriptionDone = "repo failed at: {}".format(" ".join(command[:2]))
+            self.stdio_log.addStderr(("Source step failed while running command {}\n"
+                                      ).format(cmd))
+            raise buildstep.BuildStepFailed()
+        return cmd.rc
 
     def repoDir(self):
         return self.build.path_module.join(self.workdir, ".repo")
@@ -253,18 +251,15 @@ class Repo(Source):
 
         self.willRetryInCaseOfFailure = True
 
-        d = self.doRepoSync()
+        try:
+            yield self.doRepoSync()
+        except buildstep.BuildStepFailed as e:
+            if not self.willRetryInCaseOfFailure:
+                raise
+            self.stdio_log.addStderr("got issue at first try:\n" + str(e) +
+                                     "\nRetry after clobber...")
+            yield self.doRepoSync(forceClobber=True)
 
-        @d.addErrback
-        def maybeRetry(why):
-            # in case the tree was corrupted somehow because of previous build
-            # we clobber one time, and retry everything
-            if why.check(buildstep.BuildStepFailed) and self.willRetryInCaseOfFailure:
-                self.stdio_log.addStderr("got issue at first try:\n" + str(why) +
-                                         "\nRetry after clobber...")
-                return self.doRepoSync(forceClobber=True)
-            return why  # propagate to self.failed
-        yield d
         yield self.maybeUpdateTarball()
 
         # starting from here, clobbering will not help
