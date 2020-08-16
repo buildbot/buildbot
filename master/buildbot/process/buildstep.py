@@ -1291,9 +1291,11 @@ class ShellMixin:
         if self.descriptionDone is not None:
             return super().getResultSummary()
         summary = util.command_to_string(self.command)
-        if not summary:
-            return super(ShellMixin, self).getResultSummary()
-        return {'step': summary}
+        if summary:
+            if self.results != SUCCESS:
+                summary += ' ({})'.format(Results[self.results])
+            return {'step': summary}
+        return super(ShellMixin, self).getResultSummary()
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
