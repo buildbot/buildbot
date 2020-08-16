@@ -41,6 +41,12 @@ GithubRevlink = RevlinkMatch(
     revlink=r'https://github.com/\1/\2/commit/%s')
 
 
+BitbucketRevlink = RevlinkMatch(
+        repo_urls=[r'https://[^@]*@bitbucket.org/([^/]*)/([^/]*?)(?:\.git)?$',
+                   r'git@bitbucket.org:([^/]*)/([^/]*?)(?:\.git)?$'],
+        revlink=r'https://bitbucket.org/\1/\2/commits/%s')
+
+
 class GitwebMatch(RevlinkMatch):
 
     def __init__(self, repo_urls, revlink):
@@ -82,5 +88,6 @@ class RevlinkMultiplexer:
 
 
 default_revlink_matcher = RevlinkMultiplexer(GithubRevlink,
+                                             BitbucketRevlink,
                                              SourceforgeGitRevlink,
                                              SourceforgeGitRevlink_AlluraPlatform)
