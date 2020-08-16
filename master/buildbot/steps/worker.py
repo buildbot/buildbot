@@ -17,6 +17,8 @@
 import os
 import stat
 
+from twisted.internet import defer
+
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
@@ -45,7 +47,8 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         self.variables = variables
         self.source = source
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         # on Windows, environment variables are case-insensitive, but we have
         # a case-sensitive dictionary in worker_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
@@ -68,8 +71,8 @@ class SetPropertiesFromEnv(WorkerBuildStep):
                 properties.setProperty(variable, value, self.source,
                                        runtime=True)
                 log.append("{} = {}".format(variable, repr(value)))
-        self.addCompleteLog("properties", "\n".join(log))
-        self.finished(SUCCESS)
+        yield self.addCompleteLog("properties", "\n".join(log))
+        return SUCCESS
 
 
 class FileExists(WorkerBuildStep):
