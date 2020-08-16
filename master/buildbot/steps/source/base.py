@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.process import buildstep
@@ -198,6 +199,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
+    @defer.inlineCallbacks
     def applyPatch(self, patch):
         patch_command = ['patch', '-p{}'.format(patch[0]), '--remove-empty-files',
                          '--force', '--forward', '-i', '.buildbot-diff']
@@ -207,15 +209,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                                                logEnviron=self.logEnviron)
 
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
+        if cmd.didFail():
+            raise buildstep.BuildStepFailed()
+        return cmd.rc
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if cmd.didFail():
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        return d
-
+    @defer.inlineCallbacks
     def patch(self, patch):
         diff = patch[1]
         root = None
@@ -230,23 +229,19 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             if workdir_root_abspath.startswith(workdir_abspath):
                 self.workdir = workdir_root
 
-        d = self.downloadFileContentToWorker('.buildbot-diff', diff)
-        d.addCallback(
-            lambda _: self.downloadFileContentToWorker('.buildbot-patched', 'patched\n'))
-        d.addCallback(lambda _: self.applyPatch(patch))
+        yield self.downloadFileContentToWorker('.buildbot-diff', diff)
+        yield self.downloadFileContentToWorker('.buildbot-patched', 'patched\n')
+        yield self.applyPatch(patch)
         cmd = remotecommand.RemoteCommand('rmdir',
                                           {'dir': self.build.path_module.join(self.workdir,
                                                                               ".buildbot-diff"),
                                            'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
-        d.addCallback(lambda _: self.runCommand(cmd))
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if cmd.didFail():
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        return d
+        if cmd.didFail():
+            raise buildstep.BuildStepFailed()
+        return cmd.rc
 
     def sourcedirIsPatched(self):
         d = self.pathExists(
