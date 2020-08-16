@@ -363,9 +363,10 @@ class BuildStepMixin:
         # in case of unexpected result, display logs in stdout for
         # debugging failing tests
         if result != self.exp_result:
-            log.msg("unexpected result from step; dumping logs")
+            msg = "unexpected result from step; expected {}, got {}".format(self.exp_result, result)
+            log.msg("{}; dumping logs".format(msg))
             self._dump_logs()
-            raise AssertionError("unexpected result; see logs")
+            raise AssertionError("{}; see logs".format(msg))
 
         if self.exp_state_string:
             stepStateString = self.master.data.updates.stepStateString

@@ -141,47 +141,39 @@ class RemoteCommand(base.RemoteCommandImpl):
         while self.rc is None and timeout > 0:
             yield util.asyncSleep(.1)
             timeout -= 1
-        # call .remoteComplete. If it raises an exception, or returns the
-        # Failure that we gave it, our self.deferred will be errbacked. If
-        # it does not (either it ate the Failure or there the step finished
-        # normally and it didn't raise a new exception), self.deferred will
-        # be callbacked.
-        d = defer.maybeDeferred(self.remoteComplete, failure)
-        # arrange for the callback to get this RemoteCommand instance
-        # instead of just None
-        d.addCallback(lambda r: self)
-        # this fires the original deferred we returned from .run(),
-        # with self as the result, or a failure
-        d.addBoth(self.deferred.callback)
 
+        try:
+            yield self.remoteComplete(failure)
+            # this fires the original deferred we returned from .run(),
+            self.deferred.callback(self)
+        except Exception as e:
+            self.deferred.errback(e)
+
+    @defer.inlineCallbacks
     def interrupt(self, why):
         log.msg("RemoteCommand.interrupt", self, why)
         if not self.active or self.interrupted:
             log.msg(" but this RemoteCommand is already inactive")
-            return defer.succeed(None)
+            return
         if not self.conn:
             log.msg(" but our .conn went away")
-            return defer.succeed(None)
+            return
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
             log.msg("RemoteCommand.disconnect: lost worker")
             self.conn = None
             self._finished(why)
-            return defer.succeed(None)
+            return
 
         self.interrupted = True
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
-        d = self.conn.remoteInterruptCommand(self.builder_name,
-                                             self.commandID, str(why))
-        # the worker may not have remote_interruptCommand
-        d.addErrback(self._interruptFailed)
-        return d
 
-    def _interruptFailed(self, why):
-        log.msg("RemoteCommand._interruptFailed", self)
-        # TODO: forcibly stop the Command now, since we can't stop it
-        # cleanly
-        return None
+        try:
+            yield self.conn.remoteInterruptCommand(self.builder_name,
+                                                   self.commandID, str(why))
+            # the worker may not have remote_interruptCommand
+        except Exception as e:
+            log.msg("RemoteCommand.interrupt failed", self, e)
 
     def remote_update(self, updates):
         """
