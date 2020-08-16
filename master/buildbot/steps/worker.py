@@ -89,25 +89,24 @@ class FileExists(WorkerBuildStep):
         super().__init__(**kwargs)
         self.file = file
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('stat')
         cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
         if cmd.didFail():
             self.descriptionDone = ["File not found."]
-            self.finished(FAILURE)
-            return
+            return FAILURE
+
         s = cmd.updates["stat"][-1]
         if stat.S_ISREG(s[stat.ST_MODE]):
             self.descriptionDone = ["File found."]
-            self.finished(SUCCESS)
+            return SUCCESS
         else:
             self.descriptionDone = ["Not a file."]
-            self.finished(FAILURE)
+            return FAILURE
 
 
 class CopyDirectory(WorkerBuildStep):
