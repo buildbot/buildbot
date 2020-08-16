@@ -20,12 +20,26 @@ ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 
 # build rst documentation
 docs:
+	$(MAKE) -C master/docs dev
+	@echo "You can now open master/docs/_build/html/index.html"
+
+docs-towncrier:
+	if command -v towncrier >/dev/null 2>&1 ;\
+	then \
+	towncrier --draft | grep  'No significant changes.' || yes n | towncrier ;\
+	fi
+
+docs-spelling:
+	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
+
+docs-linkcheck:
+	$(MAKE) -C master/docs SPHINXOPTS=-q linkcheck
+
+docs-release: docs-towncrier
 	$(MAKE) -C master/docs
 
-# check rst documentation
-docschecks:
+docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
-	$(MAKE) -C master/docs SPHINXOPTS=-q linkcheck
 
 # pylint the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 pylint:
@@ -93,7 +107,7 @@ docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
 
 $(VENV_NAME):
-	virtualenv -p $(VENV_PY_VERSION) --no-site-packages $(VENV_NAME)
+	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
 	$(PIP) install -U pip setuptools
 
 # helper for virtualenv creation
@@ -114,7 +128,7 @@ trial: virtualenv
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
-	git commit -m "relnotes for $(VERSION)"
+	git commit -m "Release notes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
 	. $(VENV_NAME)/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
@@ -136,7 +150,7 @@ release: virtualenv
 	test -d "../bbdocs/.git"  #  make release should be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
 	git push buildbot "v$(VERSION)"  # tarballs are made by circleci.yml, and create a github release
-	export VERSION=$(VERSION) ; . .venv/bin/activate && make docs
+	export VERSION=$(VERSION) ; . .venv/bin/activate && make docs-release
 	rm -rf ../bbdocs/docs/$(VERSION)  # in case of re-run
 	cp -r master/docs/_build/html ../bbdocs/docs/$(VERSION)
 	cd ../bbdocs && git pull

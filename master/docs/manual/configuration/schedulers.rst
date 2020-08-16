@@ -816,7 +816,7 @@ See :mod:`twisted.application.strports` for details.
 Triggerable Scheduler
 :::::::::::::::::::::
 
-The :bb:sched:`Triggerable` scheduler waits to be triggered by a :bb:step:`Trigger` step (see :ref:`Triggering-Schedulers`) in another build.
+The :bb:sched:`Triggerable` scheduler waits to be triggered by a :bb:step:`Trigger` step (see :ref:`Step-Trigger`) in another build.
 That step can optionally wait for the scheduler's builds to complete.
 This provides two advantages over :bb:sched:`Dependent` schedulers.
 First, the same scheduler can be triggered from multiple builds.

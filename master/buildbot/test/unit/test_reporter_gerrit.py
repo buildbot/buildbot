@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 import warnings
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 from mock import Mock
 from mock import call
@@ -455,7 +455,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                 {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'], env=None)
-        gsp.processVersion("2.6", lambda: None)
+        gsp.processVersion(parse_version("2.6"), lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview("project", "revision",
                                 {"message": "bla", "labels": {'Verified': 1}})
@@ -465,7 +465,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
              '--project project', "--message 'bla'", '--label Verified=1', 'revision'], env=None)
 
         # <=2.5 uses other syntax
-        gsp.processVersion("2.4", lambda: None)
+        gsp.processVersion(parse_version("2.4"), lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview("project", "revision",
                                  {"message": "bla", "labels": {'Verified': 1}})
@@ -477,7 +477,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         # now test the notify argument, even though _gerrit_notify
         # is private, work around that
         gsp._gerrit_notify = 'OWNER'
-        gsp.processVersion('2.6', lambda: None)
+        gsp.processVersion(parse_version('2.6'), lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview('project', 'revision',
                                  {'message': 'bla', 'labels': {'Verified': 1}})
@@ -489,7 +489,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
             env=None)
 
         # gerrit versions <= 2.5 uses other syntax
-        gsp.processVersion('2.4', lambda: None)
+        gsp.processVersion(parse_version('2.4'), lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview('project', 'revision',
                                  {'message': 'bla', 'labels': {'Verified': 1}})
@@ -499,7 +499,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
             '--notify OWNER', "--message 'bla'", '--verified 1', 'revision'],
             env=None)
 
-        gsp.processVersion("2.13", lambda: None)
+        gsp.processVersion(parse_version("2.13"), lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview("project", "revision",
                                  {"message": "bla", "labels": {'Verified': 1}})
@@ -523,7 +523,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
         gsp.callWithVersion(lambda: self.assertEqual(
-            gsp.gerrit_version, LooseVersion('2.14')))
+            gsp.gerrit_version, parse_version('2.14')))
 
     def test_name_as_class_attribute(self):
         class FooStatusPush(GerritStatusPush):

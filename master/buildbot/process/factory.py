@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-import warnings
 from contextlib import contextmanager
 
 from twisted.python import deprecate
@@ -33,6 +32,7 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
+from buildbot.warnings import warn_deprecated
 
 
 # deprecated, use BuildFactory.addStep
@@ -73,10 +73,9 @@ class BuildFactory(util.ComparableMixin):
 
     def addStep(self, step, **kwargs):
         if kwargs or (isinstance(step, type(BuildStep)) and issubclass(step, BuildStep)):
-            warnings.warn(
-                "Passing a BuildStep subclass to factory.addStep is "
-                "deprecated. Please pass a BuildStep instance instead.",
-                DeprecationWarning, stacklevel=2)
+            warn_deprecated("0.8.8",
+                            "Passing a BuildStep subclass to factory.addStep is "
+                            "deprecated. Please pass a BuildStep instance instead.")
             step = step(**kwargs)
         self.steps.append(interfaces.IBuildStepFactory(step))
 

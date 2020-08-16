@@ -61,7 +61,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
             messagesReceived.append(filename)
             return defer.succeed(None)
         self.svc.messageReceived = messageReceived
-        yield defer.maybeDeferred(self.svc.startService)
+        yield self.svc.startService()
 
         self.assertEqual(messagesReceived, [])
 

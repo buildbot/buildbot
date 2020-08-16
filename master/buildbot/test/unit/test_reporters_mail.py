@@ -210,7 +210,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn.createEmail = Mock(spec=mn.createEmail)
         mn.createEmail.return_value = "<email>"
         mn.sendMail = Mock(spec=mn.sendMail)
-        yield mn.buildComplete("", builds[0])
+        yield mn._got_event(('builds', 10, 'finished'), builds[0])
         return (mn, builds, formatter)
 
     @defer.inlineCallbacks
@@ -348,7 +348,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn.createEmail = Mock(spec=mn.createEmail)
         mn.createEmail.return_value.as_string = Mock(return_value="<email>")
 
-        yield mn.buildComplete("", builds[0])
+        yield mn._got_event(('builds', 10, 'finished'), builds[0])
         return (mn, builds)
 
     @defer.inlineCallbacks

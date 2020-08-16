@@ -30,19 +30,22 @@ traits:
             200:
                 headers:
                     content-disposition:
-                        description: content disposition header allows browser to save log file with proper filename
+                        description: content disposition header allows browser to save data with proper filename
                         example: attachment; filename=stdio
                 body:
                     text/html:
                         description: "html data if the object is html"
                     text/plain:
                         description: "plain text data if the object is text"
+                    application/octet-stream:
+                        description: "binary data if binary is binary"
 
 types:
     build: !include types/build.raml
     builder: !include types/builder.raml
     buildrequest: !include types/buildrequest.raml
     buildset: !include types/buildset.raml
+    build_data: !include types/build_data.raml
     worker: !include types/worker.raml
     change: !include types/change.raml
     changesource: !include types/changesource.raml
@@ -128,6 +131,26 @@ types:
                         body:
                             application/json:
                                 description: no parameter are needed
+                /data:
+                    description: This path selects all build data set for the build
+                    get:
+                        is:
+                        - bbget: {bbtype: build_data}
+                    /{build_data_name}:
+                        uriParameters:
+                            build_data_name:
+                                type: string
+                                description: The name of build data
+                        description: This path selects a build data with specific name.
+                        get:
+                            is:
+                            - bbget: {bbtype: build_data}
+                        /value:
+                            description: This path returns the value of build data.
+                            get:
+                                is:
+                                - bbgetraw:
+
                 /steps:
                     description: This path selects all steps for the given build.
                     get:
@@ -394,6 +417,27 @@ types:
             get:
                 is:
                 - bbget: {bbtype: sourcedproperties}
+
+        /data:
+            description: This path selects all build data set for the build
+            get:
+                is:
+                - bbget: {bbtype: build_data}
+            /{build_data_name}:
+                uriParameters:
+                    build_data_name:
+                        type: string
+                        description: The name of build data
+                description: This path selects a build data with specific name.
+                get:
+                    is:
+                    - bbget: {bbtype: build_data}
+                /value:
+                    description: This path returns the value of build data.
+                    get:
+                        is:
+                        - bbgetraw:
+
         /steps:
             description: |
                 This path selects all steps of a build

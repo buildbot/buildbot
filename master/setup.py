@@ -18,6 +18,7 @@
 """
 Standard setup script.
 """
+from setuptools import setup  # isort:skip
 
 
 import glob
@@ -27,9 +28,7 @@ import pkg_resources
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
-from distutils.version import LooseVersion
-
-from setuptools import setup
+from pkg_resources import parse_version
 
 from buildbot import version
 
@@ -317,7 +316,8 @@ setup_args = {
             ('buildbot.steps.vstudio', [
                 'VC6', 'VC7', 'VS2003', 'VC8', 'VS2005', 'VCExpress9', 'VC9',
                 'VS2008', 'VC10', 'VS2010', 'VC11', 'VS2012', 'VC12', 'VS2013',
-                'VC14', 'VS2015', 'MsBuild4', 'MsBuild', 'MsBuild12', 'MsBuild14']),
+                'VC14', 'VS2015', 'VC141', 'VS2017', 'MsBuild4', 'MsBuild',
+                'MsBuild12', 'MsBuild14', 'MsBuild141']),
             ('buildbot.steps.worker', [
                 'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
                 'RemoveDirectory', 'MakeDirectory']),
@@ -398,7 +398,7 @@ setup_args = {
             ('buildbot.util.kubeclientservice', [
                 'KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader'
             ]),
-            ('buildbot.www.avatar', ['AvatarGravatar']),
+            ('buildbot.www.avatar', ['AvatarGravatar', 'AvatarGitHub']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
             ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
@@ -462,7 +462,7 @@ if 'a' in version or 'b' in version:
         pip_dist = None
 
     if pip_dist:
-        if LooseVersion(pip_dist.version) < LooseVersion('1.4'):
+        if parse_version(pip_dist.version) < parse_version('1.4'):
             raise RuntimeError(VERSION_MSG)
 
 twisted_ver = ">= 17.9.0"

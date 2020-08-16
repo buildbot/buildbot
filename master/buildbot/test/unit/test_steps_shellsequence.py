@@ -132,7 +132,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1') + 1,
                             ExpectShell(workdir='build', command='deploy p1') + 0)
-        self.expectOutcome(result=WARNINGS, state_string="'deploy p1'")
+        self.expectOutcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
         return self.runStep()
 
     def testSequenceStopsOnHaltOnFailure(self):
@@ -143,7 +143,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1') + 1)
-        self.expectOutcome(result=FAILURE, state_string="'make p1'")
+        self.expectOutcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.runStep()
 
     def testShellArgsAreRenderedAnewAtEachBuild(self):

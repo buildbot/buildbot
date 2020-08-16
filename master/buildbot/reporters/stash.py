@@ -14,13 +14,12 @@
 # Copyright Buildbot Team Members
 
 
-import warnings
-
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
+from buildbot.warnings import warn_deprecated
 
 
 def StashStatusPush(*args, **kwargs):
-    warnings.warn("The 'StashStatusPush' class was renamed to "
-                  "'BitbucketServer.BitbucketServerStatusPush'",
-                  DeprecationWarning)
+    warn_deprecated('0.9.8',
+                    "The 'StashStatusPush' class was renamed to "
+                    "'BitbucketServer.BitbucketServerStatusPush'")
     return BitbucketServerStatusPush(*args, **kwargs)

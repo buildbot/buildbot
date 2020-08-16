@@ -15,14 +15,14 @@
         "angular-mocks": "^1.7.9",
         "buildbot-build-common": "link:../build_common",
         "copy-webpack-plugin": "^5.0.3",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.19",
         "pug-cli": "^1.0.0-alpha6",
         "rimraf": "^2.6.3",
         "webpack-shell-plugin": "^0.5.0"
     },
     "dependencies": {
         "@uirouter/angularjs": "^1.0.22",
-        "angular": "^1.7.9",
+        "angular": "^1.8.0",
         "angular-animate": "^1.7.9",
         "angular-bootstrap-multiselect": "^1.1.11",
         "angular-recursion": "^1.0.5",

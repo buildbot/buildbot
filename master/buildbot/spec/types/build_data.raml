@@ -1,0 +1,48 @@
+#%RAML 1.0 DataType
+displayName: Build data
+description: |
+    This resource represents a key-value data pair associated to a build.
+    A build can have any number of key-value pairs.
+    The data is intended to be used for temporary purposes, until the build and all actions associated to it (such as reporters) are finished.
+
+    The value is a binary of potentially large size.
+    There are two sets of APIs.
+    One returns the properties of the key-value data pairs, such as key name and value length.
+    Another returns the actual value as binary data.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.build_data.BuildData
+
+        .. py:method:: setBuildData(buildid, name, value, source)
+
+            :param integer buildid: build id to attach data to
+            :param unicode name: the name of the data
+            :param bytestr value: the value of the data as ``bytes``.
+            :parma unicode source: a string identifying the source of the data
+            :returns: Deferred
+
+            Adds or replaces build data attached to the build.
+
+properties:
+    buildid:
+        description: id of the build the build data is attached to.
+        type: integer
+    name:
+        description: the name of the build data.
+        type: string
+    length:
+        description: the number of bytes in the build data
+        type: integer
+    source:
+        description: a string identifying the source of the data
+        type: string
+
+type: object
+example:
+    buildid: 31
+    name: "stored_data_name"
+    source: "Step XYZ"

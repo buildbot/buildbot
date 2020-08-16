@@ -789,8 +789,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
                                    port='xxx', userpass=[('a', 'b')])
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
-        buildernames = yield defer.maybeDeferred(
-                                persp.perspective_getAvailableBuilderNames)
+        buildernames = yield persp.perspective_getAvailableBuilderNames()
 
         self.assertEqual(buildernames, ['a', 'b'])
 

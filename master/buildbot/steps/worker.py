@@ -121,7 +121,7 @@ class CopyDirectory(WorkerBuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, src, dest, timeout=None, maxTime=None, **kwargs):
+    def __init__(self, src, dest, timeout=120, maxTime=None, **kwargs):
         super().__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -132,8 +132,7 @@ class CopyDirectory(WorkerBuildStep):
         self.checkWorkerHasCommand('cpdir')
 
         args = {'fromdir': self.src, 'todir': self.dest}
-        if self.timeout:
-            args['timeout'] = self.timeout
+        args['timeout'] = self.timeout
         if self.maxTime:
             args['maxTime'] = self.maxTime
 

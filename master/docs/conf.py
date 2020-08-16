@@ -56,6 +56,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.extlinks',
     'bbdocs.ext',
+    'bbdocs.api_index',
     'sphinxcontrib.blockdiag',
     'sphinxcontrib.jinja',
     'sphinx_rtd_theme',
@@ -246,7 +247,7 @@ html_sidebars = {
 # html_domain_indices = True
 
 html_use_index = True
-html_use_modindex = True
+html_use_modindex = False
 
 # If true, the index is split into individual pages for each letter.
 # html_split_index = False

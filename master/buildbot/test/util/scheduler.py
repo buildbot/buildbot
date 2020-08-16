@@ -123,7 +123,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
             @defer.inlineCallbacks
             def newMethod():
                 self._parentMethodCalled = False
-                rv = yield defer.maybeDeferred(oldMethod)
+                rv = yield oldMethod()
 
                 self.assertTrue(self._parentMethodCalled,
                                 "'{}' did not call its parent".format(meth))

@@ -16,6 +16,7 @@
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot import util
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -25,10 +26,13 @@ from buildbot.process.results import Results
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 
 
-class BuildStatusGeneratorMixin:
+class BuildStatusGeneratorMixin(util.ComparableMixin):
 
     possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception",
                       "cancelled")
+
+    compare_attrs = ['mode', 'tags', 'builders', 'schedulers', 'branches', 'subject', 'add_logs',
+                     'add_patch', 'formatter']
 
     def __init__(self, mode, tags, builders, schedulers, branches, subject, add_logs, add_patch,
                  message_formatter):

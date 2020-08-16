@@ -45,7 +45,7 @@ class Poller:
             yield task.deferLater(self._reactor, randint(random_delay_min, random_delay_max),
                                   lambda: None)
         try:
-            yield defer.maybeDeferred(self.fn, self.instance)
+            yield self.fn(self.instance)
         except Exception as e:
             log.err(e, 'while running {}'.format(self.fn))
 

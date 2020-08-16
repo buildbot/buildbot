@@ -593,6 +593,7 @@ perl
 petmail
 Phantomjs
 PhantomJS
+picoseconds
 pidfile
 pids
 plaintext

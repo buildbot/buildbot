@@ -309,7 +309,7 @@ This means the User-to-address mapping only has to be set up once, in your :clas
 IRC Nicknames
 ~~~~~~~~~~~~~
 
-Like :class:`MailNotifier`, the :class:`buildbot.status.words.IRC` class provides a status target which can announce the results of each build.
+Like :class:`MailNotifier`, the :class:`buildbot.reporters.irc.IRC` class provides a status target which can announce the results of each build.
 It also provides an interactive interface by responding to online queries posted in the channel or sent as private messages.
 
 In the future, the buildbot can be configured to map User names to IRC nicknames, to watch for the recent presence of these nicknames, and to deliver build status messages to the interested parties.
@@ -344,7 +344,7 @@ The following are several examples:
    If there are multiple different workers and the actions of the build depend on the exact worker, some users may decide that it's more convenient to vary the actions depending on the ``workername`` property instead of creating separate builders for each worker.
 
  - In most cases the build does not know the exact code revision that will be tested until it checks out the code.
-   This information is only known after a :ref:`source step <Source-Checkout>` runs.
+   This information is only known after a :ref:`source step <Build-Steps>` runs.
    To give this information to the subsequent steps, the source step records the checked out revision into the ``got_revision`` property.
 
 .. _Multiple-Codebase-Builds:
@@ -378,13 +378,13 @@ some *schedulers*
 
 multiple *source steps* - one for each codebase
 
-    A :ref:`Builder`'s build factory must include a :ref:`source step<Source-Checkout>` for each codebase.
+    A :ref:`Builder`'s build factory must include a :ref:`source step<Build-Steps>` for each codebase.
     Each of the source steps has a ``codebase`` attribute which is used to select an appropriate source stamp from the source stamp set for a build.
     This information comes from the arrived changes or from the scheduler's configured default values.
 
     .. note::
 
-        Each :ref:`source step<Source-Checkout>` has to have its own ``workdir`` set in order for the checkout to be done for each codebase in its own directory.
+        Each :ref:`source step<Build-Steps>` has to have its own ``workdir`` set in order for the checkout to be done for each codebase in its own directory.
 
     .. note::
 

@@ -142,7 +142,7 @@ class Dispatcher(service.AsyncService):
         # stop listening on the port when shut down
         assert self.port
         port, self.port = self.port, None
-        yield defer.maybeDeferred(port.stopListening)
+        yield port.stopListening()
         yield super().stopService()
 
     def register(self, username, password, pfactory):
@@ -203,8 +203,7 @@ class Dispatcher(service.AsyncService):
             if username in self.users:
                 password, _ = self.users[username]
                 password = yield p.render(password)
-                matched = yield defer.maybeDeferred(
-                    creds.checkPassword, unicode2bytes(password))
+                matched = creds.checkPassword(unicode2bytes(password))
                 if not matched:
                     log.msg("invalid login from user '{}'".format(username))
                     raise error.UnauthorizedLogin()

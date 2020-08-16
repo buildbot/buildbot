@@ -1267,4 +1267,5 @@ class TestShellMixin(steps.BuildStepMixin,
 
     def test_getResultSummary(self):
         self.setupStep(SimpleShellCommand(command=['a', ['b', 'c']]))
+        self.step.results = SUCCESS
         self.assertEqual(self.step.getResultSummary(), {'step': "'a b ...'"})

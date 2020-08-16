@@ -21,6 +21,7 @@ import jinja2
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot import util
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -28,11 +29,14 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
+from buildbot.warnings import warn_deprecated
 
 
-class MessageFormatterBase:
+class MessageFormatterBase(util.ComparableMixin):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
+
+    compare_attrs = ['body_template', 'subject_teblate', 'template_type']
 
     def __init__(self, template_dir=None,
                  template_filename=None, template=None,
@@ -86,6 +90,8 @@ class MessageFormatter(MessageFormatterBase):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
 
+    compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
+
     def __init__(self, template_dir=None,
                  template_filename=None, template=None, template_name=None,
                  subject_filename=None, subject=None,
@@ -93,7 +99,7 @@ class MessageFormatter(MessageFormatterBase):
                  wantProperties=True, wantSteps=False, wantLogs=False):
 
         if template_name is not None:
-            config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
+            warn_deprecated('0.9.1', "template_name is deprecated, use template_filename")
             template_filename = template_name
         super().__init__(template_dir=template_dir,
                          template_filename=template_filename,

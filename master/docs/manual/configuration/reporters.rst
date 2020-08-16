@@ -23,10 +23,10 @@ To add reporter targets, you just append more objects to this list:
                                sendToInterestedUsers=False)
     c['services'].append(m)
 
-    c['services'].append(reporters.IRC(host="irc.example.com", nick="bb",
-                                      channels=[{"channel": "#example1"},
-                                                {"channel": "#example2",
-                                                 "password": "somesecretpassword"}]))
+    c['services'].append(reporters.irc.IRC(host="irc.example.com", nick="bb",
+                                           channels=[{"channel": "#example1"},
+                                                     {"channel": "#example2",
+                                                      "password": "somesecretpassword"}]))
 
 Most reporter objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
 
@@ -44,7 +44,9 @@ A full list of reporters is available in the :bb:index:`reporter`.
 MailNotifier
 ~~~~~~~~~~~~
 
-.. py:class:: buildbot.reporters.mail.MailNotifier
+.. py:currentmodule:: buildbot.reporters.mail
+
+.. py:class:: MailNotifier
 
 The Buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
@@ -460,11 +462,13 @@ The default ``ctx`` for the missing worker email is made of:
 Pushover Notifications
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. py:currentmodule:: buildbot.reporters.pushover
+
 .. py:class:: buildbot.reporters.pushover.PushoverNotifier
 
 Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used by administrators to receive an instant message to an iPhone or an Android device if a build fails. The :class:`PushoverNotifier` reporter is used to accomplish this. Its configuration is very similar to the mail notifications, however—due to the notification size constrains—the logs and patches cannot be attached.
 
-To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and the API token.
+To use this reporter, you need to generate an application on the Pushover website https://pushover.net/apps/ and provide your user key and the API token.
 
 The following simple example will send a Pushover notification upon the completion of each build.
 The notification contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaced with proper ones obtained from the Pushover website for your application.
@@ -533,6 +537,10 @@ The Pushjet specific parameters are:
 
 IRC Bot
 ~~~~~~~
+
+.. py:currentmodule:: buildbot.reporters.irc
+
+.. py:class:: IRC
 
 The :bb:reporter:`IRC` reporter creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
@@ -1018,7 +1026,7 @@ Revisions that are stored as hashes are shortened to 7 characters in length, as 
 GerritStatusPush
 ~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.status.status_gerrit.GerritStatusPush
+.. py:currentmodule:: buildbot.reporters.status_gerrit
 
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
@@ -1125,8 +1133,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 HttpStatusPush
 ~~~~~~~~~~~~~~
 
-.. @cindex HttpStatusPush
-.. @stindex buildbot.reporters.HttpStatusPush
+.. py:currentmodule:: buildbot.reporters
 
 .. code-block:: python
 
@@ -1190,9 +1197,7 @@ The ``build`` parameter given to that function is of type :bb:rtype:`build`, opt
 GitHubStatusPush
 ~~~~~~~~~~~~~~~~
 
-
-.. @cindex GitHubStatusPush
-.. py:class:: buildbot.reporters.github.GitHubStatusPush
+.. py:currentmodule:: buildbot.reporters.github
 
 .. code-block:: python
 
@@ -1217,7 +1222,7 @@ It requires `txrequests`_ package to allow interaction with GitHub REST API.
 
 It is configured with at least a GitHub API token.
 
-You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
+You can create a token from your own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
 
 .. py:class:: GitHubStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False, builders=None)
 
@@ -1236,9 +1241,7 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
 GitHubCommentPush
 ~~~~~~~~~~~~~~~~~
 
-
-.. @cindex GitHubCommentPush
-.. py:class:: buildbot.reporters.github.GitHubCommentPush
+.. py:currentmodule:: buildbot.reporters.github
 
 .. code-block:: python
 
@@ -1261,7 +1264,7 @@ It requires `txrequests`_ package to allow interaction with GitHub REST API.
 
 It is configured with at least a GitHub API token. By default, it will only comment at the end of a build unless a ``startDescription`` is provided.
 
-You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
+You can create a token from your own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
 
 .. py:class:: GitHubCommentPush(token, startDescription=None, endDescription=None, baseURL=None, verbose=False, builders=None)
 
@@ -1313,9 +1316,6 @@ Here's a complete example of posting build results as a github comment:
 BitbucketServerStatusPush
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. @cindex BitbucketServerStatusPush
-.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerStatusPush
-
 .. code-block:: python
 
     from buildbot.plugins import reporters
@@ -1358,8 +1358,7 @@ As a result, we recommend you use https in your base_url rather than http.
 BitbucketServerPRCommentPush
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. @cindex BitbucketServerPRCommentPush
-.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerPRCommentPush
+.. py:currentmodule:: buildbot.reporters.bitbucketserver
 
 .. code-block:: python
 
@@ -1413,7 +1412,7 @@ BitbucketServerPRCommentPush
 BitbucketStatusPush
 ~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.reporters.bitbucket.BitbucketStatusPush
+.. py:currentmodule:: buildbot.reporters.bitbucket
 
 .. code-block:: python
 
@@ -1449,8 +1448,7 @@ After creating the consumer, you will then be able to see the OAuth key and secr
 GitLabStatusPush
 ~~~~~~~~~~~~~~~~
 
-.. @cindex GitLabStatusPush
-.. py:class:: buildbot.reporters.gitlab.GitLabStatusPush
+.. py:currentmodule:: buildbot.reporters.gitlab
 
 .. code-block:: python
 
@@ -1485,8 +1483,9 @@ It uses private token auth, and the token owner is required to have at least dev
 HipchatStatusPush
 ~~~~~~~~~~~~~~~~~
 
-.. @cindex HipchatStatusPush
-.. py:class:: buildbot.reporters.hipchat.HipchatStatusPush
+.. py:currentmodule:: buildbot.reporters.hipchat
+
+.. py:class:: HipchatStatusPush
 
 .. code-block:: python
 
@@ -1608,7 +1607,9 @@ Here's a complete example:
 GerritVerifyStatusPush
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.status.status_gerrit_verify_status.GerritVerifyStatusPush
+.. py:currentmodule:: buildbot.reporters.status_gerrit_verify_status
+
+.. py:class:: GerritVerifyStatusPush
 
 :class:`GerritVerifyStatusPush` sends a verify status to Gerrit using the verify-status_ Gerrit plugin.
 
@@ -1653,8 +1654,7 @@ This property must be a list of dictionaries, containing ``change_id`` and ``rev
 ZulipStatusPush
 ~~~~~~~~~~~~~~~~~
 
-.. @cindex ZulipStatusPush
-.. py:class:: buildbot.reporters.zulip.ZulipStatusPush
+.. py:currentmodule:: buildbot.reporters.zulip
 
 .. code-block:: python
 

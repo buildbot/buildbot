@@ -69,6 +69,14 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'avatar_methods': []
         }
 
+    You could also use the GitHub user avatar if GitHub authentication is enabled:
+
+    .. code-block:: python
+
+        c['www'] = {
+            'avatar_methods': [util.AvatarGitHub()]
+        }
+
     For use of corporate pictures, you can use LdapUserInfo, which can also acts as an avatar provider.
     See :ref:`Web-Authentication`.
 
@@ -131,7 +139,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
         * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
           This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
 
-        * pypugjs may have some differences.  But is is a maintained fork of pyjade. https://github.com/kakulukia/pypugjs
+        * pypugjs may have some differences but it is a maintained fork of pyjade. https://github.com/kakulukia/pypugjs
 
 ``change_hook_dialects``
     See :ref:`Change-Hooks`.
@@ -484,7 +492,7 @@ The available classes are described here:
     :param serverURL: The server URL if this is a GitHub Enterprise server.
     :param apiVersion: The GitHub API version to use. One of ``3`` or ``4``
                        (V3/REST or V4/GraphQL). Default=3.
-    :param getTeamsMembership: When ``True`` fetch all team memberships for each or the
+    :param getTeamsMembership: When ``True`` fetch all team memberships for each of the
                                organizations the user belongs to. The teams will be included in the
                                user's groups as ``org-name/team-name``.
     :param debug: When ``True`` and using ``apiVersion=4`` show some additional log calls with the
@@ -543,7 +551,8 @@ The available classes are described here:
   with the above example, any user belonging to those teams would be granted the roles matching those
   team names.
 
-.. _GitHub: http://developer.github.com/v3/oauth_authorizations/
+.. _GitHub: https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/#web-application-flow
+
 
 .. py:class:: buildbot.www.oauth2.GitLabAuth(instanceUri, clientId, clientSecret)
 
@@ -879,6 +888,20 @@ It allows or denies access to the REST APIs according to rules.
 
 - Role matchers associate authenticated users to roles.
 
+Restricting Read Access
++++++++++++++++++++++++
+
+Please note that you can use this framework to deny read access to the REST API, but there is no access control in websocket or SSE APIs.
+Practically this means user will still see live updates from running builds in the UI, as those will come from websocket.
+
+The only resources that are only available for read in REST API are the log data (a.k.a `logchunks`).
+
+From a strict security point of view you cannot really use Buildbot Authz framework to securely deny read access to your bot.
+The access control is rather designed to restrict control APIs which are only accessible through REST API.
+In order to reduce attack surface, we recommend to place Buildbot behind an access controlled reverse proxy like OAuth2Proxy_.
+
+.. _OAuth2Proxy: https://github.com/oauth2-proxy/oauth2-proxy
+
 Authz Configuration
 +++++++++++++++++++
 
@@ -934,7 +957,7 @@ In this case, you can look at the source code for detailed examples on how to wr
     :param role: The role which grants access to any control endpoint.
 
     AnyControlEndpointMatcher grants control rights to people with given role (usually "admins")
-    This endpoint matcher is matches current and future control endpoints.
+    This endpoint matcher matches current and future control endpoints.
     You need to add this in the end of your configuration to make sure it is future proof.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.ForceBuildEndpointMatcher(builder, role)

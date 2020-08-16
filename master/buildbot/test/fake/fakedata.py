@@ -424,6 +424,15 @@ class FakeUpdates(service.AsyncService):
             paused=paused,
             graceful=graceful)
 
+    # methods form BuildData resource
+    @defer.inlineCallbacks
+    def setBuildData(self, buildid, name, value, source):
+        validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
+        validation.verifyType(self.testcase, 'value', value, validation.BinaryValidator())
+        validation.verifyType(self.testcase, 'source', source, validation.StringValidator())
+        yield self.master.db.build_data.setBuildData(buildid, name, value, source)
+
     # methods from TestResultSet resource
     @defer.inlineCallbacks
     def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):

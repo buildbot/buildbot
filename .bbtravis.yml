@@ -25,7 +25,7 @@ env:
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
   - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m2
-  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
+  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m3
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
@@ -175,17 +175,12 @@ script:
   # Build documentation
   - title: docs
     condition: TESTS == "docs"
-    cmd: make docs
+    cmd: make docs-release
 
   # Run spell checker on documentation
   - title: spelling
     condition: TESTS == "docs"
-    cmd: make -C master/docs SPHINXOPTS=-W spelling
-
-  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
-  - title: linkcheck
-    condition: TESTS == "docs" and not TRAVIS_PULL_REQUEST
-    cmd: make -C master/docs SPHINXOPTS=-q linkcheck
+    cmd: make docs-release-spelling
 
   - title: maketarballs
     condition: TESTS == "smokes"

@@ -130,6 +130,20 @@ class Model(base.DBConnectorComponent):
         sa.Column('source', sa.String(256), nullable=False),
     )
 
+    # This table contains transient build state.
+    build_data = sautils.Table(
+        'build_data', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('buildid', sa.Integer,
+                  sa.ForeignKey('builds.id', ondelete='CASCADE'),
+                  nullable=False),
+        sa.Column('name', sa.String(256), nullable=False),
+        sa.Column('value', sa.LargeBinary().with_variant(sa.dialects.mysql.LONGBLOB, "mysql"),
+                  nullable=False),
+        sa.Column('length', sa.Integer, nullable=False),
+        sa.Column('source', sa.String(256), nullable=False),
+    )
+
     # This table contains basic information about each build.
     builds = sautils.Table(
         'builds', metadata,
@@ -817,6 +831,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequests_builderid', buildrequests.c.builderid)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
     sa.Index('build_properties_buildid', build_properties.c.buildid)
+    sa.Index('build_data_buildid_name', build_data.c.buildid, build_data.c.name, unique=True)
     sa.Index('builds_buildrequestid', builds.c.buildrequestid)
     sa.Index('buildsets_complete', buildsets.c.complete)
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)

@@ -58,7 +58,7 @@ Web Status
 
 The most prominent change is that the existing ``WebStatus`` class is now gone, replaced by the new ``www`` functionality.
 
-Thus an ``html.WebStatus`` entry in ``c['status']`` should be removed and replaced with configuration in ``c['www']```.
+Thus an ``html.WebStatus`` entry in ``c['status']`` should be removed and replaced with configuration in ``c['www']``.
 For example, replace:
 
 .. code-block:: python
@@ -168,7 +168,7 @@ The following fields are identifiers:
 Serving static files
 --------------------
 
-Since version 0.9.0 Buildbot doesn't use and don't serve master's ``public_html`` directory.
+Since version 0.9.0 Buildbot doesn't use and doesn't serve master's ``public_html`` directory.
 You need to use third-party HTTP server for serving static files.
 
 Transition to "worker" terminology
@@ -211,6 +211,55 @@ Please be careful to provision enough disk space for your database.
 The old ``c['logHorizon']`` way of configuring is not supported anymore.
 See :bb:configurator:`JanitorConfigurator` to learn how to configure.
 A new ``__Janitor`` builder will be created to help keep an eye on the cleanup activities.
+
+Upgrading worker
+----------------
+
+Upgrading worker requires updating the :file:`buildbot.tac` file to use the new APIs.
+
+The easiest solution is to simply delete the worker directory and re-run ``buildbot-worker create-worker`` to get the stock `buildbot.tac`.
+
+If the loss of the cached worker state is a problem, then the `buildbot.tac` can be updated manually:
+
+1. Replace:
+
+   .. code-block:: python
+
+       from buildslave.bot import BuildSlave
+
+   with:
+
+   .. code-block:: python
+
+       from buildbot_worker.bot import Worker
+
+2. Replace:
+
+   .. code-block:: python
+
+       application = service.Application('buildslave')
+
+   with:
+
+   .. code-block:: python
+
+       application = service.Application('buildbot-worker')
+
+3. Replace:
+
+   .. code-block:: python
+
+       s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+                      keepalive, usepty, umask=umask, maxdelay=maxdelay,
+                      numcpus=numcpus, allow_shutdown=allow_shutdown)
+
+   with:
+
+   .. code-block:: python
+
+       s = Worker(buildmaster_host, port, slavename, passwd, basedir,
+                  keepalive, umask=umask, maxdelay=maxdelay,
+                  numcpus=numcpus, allow_shutdown=allow_shutdown)
 
 More Information
 ----------------

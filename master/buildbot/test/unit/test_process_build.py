@@ -317,6 +317,25 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertTrue(step2Started[0])
 
     @defer.inlineCallbacks
+    def test_start_step_throws_exception(self):
+        b = self.build
+
+        step1 = FakeBuildStep()
+        b.setStepFactories([
+            FakeStepFactory(step1),
+        ])
+
+        def startStep(*args, **kw):
+            raise TestException()
+
+        step1.startStep = startStep
+
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+
+        self.assertEqual(b.results, EXCEPTION)
+        self.flushLoggedErrors(TestException)
+
+    @defer.inlineCallbacks
     def testBuild_canAcquireLocks(self):
         b = self.build
 
@@ -725,19 +744,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(b.getSummaryStatistic('casualties', add), 11)
         self.assertEqual(b.getSummaryStatistic('casualties', add, 10), 21)
 
-    @defer.inlineCallbacks
-    def testflushProperties(self):
-        b = self.build
-
-        b.build_status = FakeBuildStatus()
-        b.setProperty("foo", "bar", "test")
-        b.buildid = 43
-        result = 'SUCCESS'
-        res = yield b._flushProperties(result)
-        self.assertEqual(res, result)
-        self.assertEqual(self.master.data.updates.properties,
-                         [(43, 'foo', 'bar', 'test')])
-
     def create_fake_steps(self, names):
         steps = []
 
@@ -750,6 +756,35 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             step = create_fake_step(name)
             steps.append(step)
         return steps
+
+    @defer.inlineCallbacks
+    def test_start_build_sets_properties(self):
+        b = self.build
+        b.setProperty("foo", "bar", "test")
+
+        step = FakeBuildStep()
+        b.setStepFactories([FakeStepFactory(step)])
+
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        self.assertEqual(b.results, SUCCESS)
+
+        # remove duplicates, note that set() can't be used as properties contain complex
+        # data structures. Also, remove builddir which depends on the platform
+        got_properties = []
+        for prop in sorted(self.master.data.updates.properties):
+            if prop not in got_properties and prop[1] != 'builddir':
+                got_properties.append(prop)
+
+        self.assertEqual(got_properties, [
+            (10, 'branch', None, 'Build'),
+            (10, 'buildnumber', 1, 'Build'),
+            (10, 'codebase', '', 'Build'),
+            (10, 'foo', 'bar', 'test'),  # custom property
+            (10, 'owners', ['me'], 'Build'),
+            (10, 'project', '', 'Build'),
+            (10, 'repository', '', 'Build'),
+            (10, 'revision', '12345', 'Build')
+        ])
 
     @defer.inlineCallbacks
     def testAddStepsAfterCurrentStep(self):
@@ -1108,6 +1143,7 @@ class TestBuildProperties(TestReactorMixin, unittest.TestCase):
         class FakeProperties(Mock):
             pass
         FakeProperties.render = Mock(side_effect=lambda x: x)
+        FakeProperties.asList = Mock(side_effect=lambda: [])
 
         class FakeBuildStatus(Mock):
             pass
@@ -1126,7 +1162,6 @@ class TestBuildProperties(TestReactorMixin, unittest.TestCase):
         self.build.setBuilder(self.builder)
         self.properties = self.build.properties = FakeProperties()
         self.build_status = FakeBuildStatus()
-        self.build._flushProperties = Mock()
         self.build.startBuild(self.build_status, self.workerforbuilder)
 
     def test_getProperty(self):

@@ -1,8 +1,13 @@
 all: docs.tgz
 
+dev: clean html
+
 .PHONY: tutorial manual
 
 VERSION := $(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print(version)'; fi)
+
+# sphinx is fastest on Buildbot docs when using around 8 cores. Anything more does not improve the build speed
+JOBS := $(shell python -c 'import multiprocessing; print(min(8, multiprocessing.cpu_count()))')
 
 TAR_VERSION := $(shell tar --version)
 TAR_TRANSFORM := $(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--transform s/^html/$(VERSION)/)
@@ -14,7 +19,7 @@ docs.tgz: clean html singlehtml
 # -- Makefile for Sphinx documentation --
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -q -W
+SPHINXOPTS    = -q -W -j $(JOBS)
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
@@ -24,7 +29,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean towncrier html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -48,44 +53,38 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-towncrier:
-	if command -v towncrier >/dev/null 2>&1 ;\
-	then \
-	cd ../../; towncrier --draft |grep  'No significant changes.' || yes n | towncrier ;\
-	fi
-
-html: conf.py towncrier
+html: conf.py
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-dirhtml: conf.py towncrier
+dirhtml: conf.py
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
-singlehtml: conf.py towncrier
+singlehtml: conf.py
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
 
-pickle: conf.py towncrier
+pickle: conf.py
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files."
 
-json: conf.py towncrier
+json: conf.py
 	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
-htmlhelp: conf.py towncrier
+htmlhelp: conf.py
 	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-qthelp: conf.py towncrier
+qthelp: conf.py
 	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
@@ -94,7 +93,7 @@ qthelp: conf.py towncrier
 	@echo "To view the help file:"
 	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/BuildbotTutorial.qhc"
 
-devhelp: conf.py towncrier
+devhelp: conf.py
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
@@ -103,52 +102,52 @@ devhelp: conf.py towncrier
 	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/BuildbotTutorial"
 	@echo "# devhelp"
 
-epub: conf.py towncrier
+epub: conf.py
 	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
 
-latex: conf.py towncrier
+latex: conf.py
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Run \`make' in that directory to run these through (pdf)latex" \
 	      "(use \`make latexpdf' here to do that automatically)."
 
-latexpdf: conf.py towncrier
+latexpdf: conf.py
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo "Running LaTeX files through pdflatex..."
 	make -C $(BUILDDIR)/latex all-pdf
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
 
-text: conf.py towncrier
+text: conf.py
 	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
 	@echo
 	@echo "Build finished. The text files are in $(BUILDDIR)/text."
 
-man: conf.py towncrier
+man: conf.py
 	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
 	@echo
 	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
 
-changes: conf.py towncrier
+changes: conf.py
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
 	@echo
 	@echo "The overview file is in $(BUILDDIR)/changes."
 
-linkcheck: conf.py towncrier
+linkcheck: conf.py
 	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-spelling: conf.py towncrier
+spelling: conf.py
 	$(SPHINXBUILD) -b spelling $(ALLSPHINXOPTS) $(BUILDDIR)/spelling
 	@echo
 	@echo "Spelling check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/spelling/output.txt."
 
-doctest: conf.py towncrier
+doctest: conf.py
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."

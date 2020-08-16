@@ -160,7 +160,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_success(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d"))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd'})
+            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 120})
             + 0
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
@@ -178,7 +178,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_maxTime(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d", maxTime=10))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'maxTime': 10})
+            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'maxTime': 10, 'timeout': 120})
             + 0
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
@@ -187,7 +187,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_failure(self):
         self.setupStep(worker.CopyDirectory(src="s", dest="d"))
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 's', 'todir': 'd'})
+            Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 120})
             + 1
         )
         self.expectOutcome(result=FAILURE,
@@ -200,7 +200,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
         self.properties.setProperty('x', 'XXX', 'here')
         self.properties.setProperty('y', 'YYY', 'here')
         self.expectCommands(
-            Expect('cpdir', {'fromdir': 'XXX', 'todir': 'YYY'})
+            Expect('cpdir', {'fromdir': 'XXX', 'todir': 'YYY', 'timeout': 120})
             + 0
         )
         self.expectOutcome(result=SUCCESS, state_string="Copied XXX to YYY")
