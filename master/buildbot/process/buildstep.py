@@ -1288,6 +1288,8 @@ class ShellMixin:
         return cmd
 
     def getResultSummary(self):
+        if self.descriptionDone is not None:
+            return super().getResultSummary()
         summary = util.command_to_string(self.command)
         if not summary:
             return super(ShellMixin, self).getResultSummary()
