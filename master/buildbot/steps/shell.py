@@ -320,12 +320,15 @@ class TreeSize(buildstep.ShellMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class SetPropertyFromCommand(ShellCommand):
+class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
     name = "setproperty"
     renderables = ['property']
 
     def __init__(self, property=None, extract_fn=None, strip=True,
                  includeStdout=True, includeStderr=False, **kwargs):
+
+        kwargs = self.setupShellMixin(kwargs)
+
         self.property = property
         self.extract_fn = extract_fn
         self.strip = strip
@@ -346,40 +349,45 @@ class SetPropertyFromCommand(ShellCommand):
             wantStderr=self.includeStderr)
         self.addLogObserver('stdio', self.observer)
 
-        self.property_changes = {}
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        property_changes = {}
+
         if self.property:
             if cmd.didFail():
-                return
+                return FAILURE
             result = self.observer.getStdout()
             if self.strip:
                 result = result.strip()
             propname = self.property
             self.setProperty(propname, result, "SetPropertyFromCommand Step")
-            self.property_changes[propname] = result
+            property_changes[propname] = result
         else:
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
             for k, v in new_props.items():
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
-            self.property_changes = new_props
+            property_changes = new_props
 
-    def createSummary(self, log):
-        if self.property_changes:
-            props_set = ["{}: {}".format(k, repr(v))
-                         for k, v in sorted(self.property_changes.items())]
-            self.addCompleteLog('property changes', "\n".join(props_set))
+        props_set = ["{}: {}".format(k, repr(v))
+                     for k, v in sorted(property_changes.items())]
+        yield self.addCompleteLog('property changes', "\n".join(props_set))
 
-    def describe(self, done=False):
-        if len(self.property_changes) > 1:
-            return ["%d properties set" % len(self.property_changes)]
-        elif len(self.property_changes) == 1:
-            return ["property '{}' set".format(list(self.property_changes)[0])]
-        # else:
-        # let ShellCommand describe
-        return super().describe(done)
+        if len(property_changes) > 1:
+            self.descriptionDone = '{} properties set'.format(len(property_changes))
+        elif len(property_changes) == 1:
+            self.descriptionDone = 'property \'{}\' set'.format(list(property_changes)[0])
+        if cmd.didFail():
+            return FAILURE
+        return SUCCESS
 
 
 SetProperty = SetPropertyFromCommand
