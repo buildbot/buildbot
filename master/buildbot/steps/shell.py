@@ -396,14 +396,27 @@ deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
                           "buildbot.steps.shell", "SetProperty")
 
 
-class Configure(ShellCommand):
+class Configure(buildstep.ShellMixin, buildstep.BuildStep):
 
     name = "configure"
     haltOnFailure = 1
     flunkOnFailure = 1
-    description = ["configuring"]
-    descriptionDone = ["configure"]
+    description = "configuring"
+    descriptionDone = "configure"
     command = ["./configure"]
+
+    def __init__(self, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
+        super().__init__(**kwargs)
+
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        if cmd.didFail():
+            return FAILURE
+        return SUCCESS
 
 
 class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
