@@ -157,5 +157,5 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
         self._http.expect(method='delete',
                           ep='/server/438b5b08-4147-4193-bf64-a5318f51d3bd?storages=1', code=204)
         d = worker.substantiate(None, FakeBuild())
-        worker.attached(FakeBot())
+        yield worker.attached(FakeBot())
         yield d
