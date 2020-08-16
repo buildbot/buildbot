@@ -40,6 +40,7 @@ class FakeRemoteCommand:
         self.remote_command = remote_command
         self.args = args.copy()
         self.logs = {}
+        self._log_close_when_finished = {}
         self.delayedLogs = {}
         self.rc = -999
         self.collectStdout = collectStdout
@@ -52,14 +53,20 @@ class FakeRemoteCommand:
         if collectStderr:
             self.stderr = ''
 
+    @defer.inlineCallbacks
     def run(self, step, conn, builder_name):
         # delegate back to the test case
-        return self.testcase._remotecommand_run(self, step, conn, builder_name)
+        cmd = yield self.testcase._remotecommand_run(self, step, conn, builder_name)
+        for name, log_ in self.logs.items():
+            if self._log_close_when_finished[name]:
+                log_.finish()
+        return cmd
 
     def useLog(self, log_, closeWhenFinished=False, logfileName=None):
         if not logfileName:
             logfileName = log_.getName()
         self.logs[logfileName] = log_
+        self._log_close_when_finished[logfileName] = closeWhenFinished
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
@@ -78,6 +85,7 @@ class FakeRemoteCommand:
     def fakeLogData(self, step, log, header='', stdout='', stderr=''):
         # note that this should not be used in the same test as useLog(Delayed)
         self.logs[log] = fakelog = logfile.FakeLogFile(log, step)
+        self._log_close_when_finished[log] = False
         fakelog.fakeData(header=header, stdout=stdout, stderr=stderr)
 
     def __repr__(self):
