@@ -42,8 +42,6 @@ class MySource(Source):
         d = defer.succeed(SUCCESS)
         if patch:
             d.addCallback(self.patch, patch)
-        d.addCallback(self.finished)
-        d.addErrback(self.failed)
         return d
 
 

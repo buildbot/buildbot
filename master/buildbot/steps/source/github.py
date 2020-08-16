@@ -23,4 +23,4 @@ class GitHub(Git):
         # ignore the revision if the branch ends with /merge
         if branch.endswith("/merge"):
             revision = None
-        super(GitHub, self).startVC(branch, revision, patch)
+        return super().startVC(branch, revision, patch)

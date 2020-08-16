@@ -45,4 +45,4 @@ class GitLab(Git):
             # so tell Git to not check.
             revision = None
 
-        super(GitLab, self).startVC(branch, revision, patch)
+        return super().startVC(branch, revision, patch)

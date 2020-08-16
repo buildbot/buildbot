@@ -24,6 +24,7 @@ from zope.interface import implementer
 from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
+from buildbot.process import results
 from buildbot.steps.source.base import Source
 
 
@@ -238,8 +239,7 @@ class Repo(Source):
         return self.pathExists(self.repoDir())
 
     def startVC(self, branch, revision, patch):
-        d = self.doStartVC()
-        d.addErrback(self.failed)
+        return self.doStartVC()
 
     @defer.inlineCallbacks
     def doStartVC(self):
@@ -270,7 +270,7 @@ class Repo(Source):
         # starting from here, clobbering will not help
         yield self.doRepoDownloads()
         self.setStatus(self.lastCommand, 0)
-        yield self.finished(0)
+        return results.SUCCESS
 
     @defer.inlineCallbacks
     def doClobberStart(self):

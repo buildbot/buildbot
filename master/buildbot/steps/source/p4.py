@@ -153,8 +153,6 @@ class P4(Source):
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         d.addCallback(self.parseGotRevision)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
         return d
 
     @defer.inlineCallbacks

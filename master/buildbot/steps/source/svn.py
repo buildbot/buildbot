@@ -104,8 +104,6 @@ class SVN(Source):
         if patch:
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
         return d
 
     @defer.inlineCallbacks

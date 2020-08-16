@@ -99,9 +99,9 @@ class Monotone(Source):
             if patch:
                 yield self.patch(None, patch)
             yield self.parseGotRevision()
-            self.finish()
-        except Exception as e:
-            self.failed(e)
+            return SUCCESS
+        finally:
+            pass  # FIXME: remove this try:raise block
 
     @defer.inlineCallbacks
     def mode_full(self):
@@ -341,7 +341,7 @@ class Monotone(Source):
 
         return workdir_exists
 
-    def finish(self):
+    def finish(self, _):
         self.setStatus(self.cmd, 0)
         log.msg("Closing log, sending result of the command {} ".format(self.cmd))
         return self.finished(0)
