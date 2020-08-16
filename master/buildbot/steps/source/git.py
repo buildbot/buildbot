@@ -258,12 +258,6 @@ class Git(Source, GitStepMixin):
             self.workdir = old_workdir
 
     @defer.inlineCallbacks
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-        yield self.finished(res)
-
-    @defer.inlineCallbacks
     def parseGotRevision(self, _=None):
         stdout = yield self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
         revision = stdout.strip()

@@ -196,11 +196,6 @@ class SVN(Source):
             raise buildstep.BuildStepFailed()
 
     @defer.inlineCallbacks
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        yield self.finished(res)
-
-    @defer.inlineCallbacks
     def _dovccmd(self, command, collectStdout=False, collectStderr=False, abandonOnFailure=True):
         assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])

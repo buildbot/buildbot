@@ -180,11 +180,6 @@ class Mercurial(Source):
         yield self._pullUpdate()
 
     @defer.inlineCallbacks
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        yield self.finished(res)
-
-    @defer.inlineCallbacks
     def parseGotRevision(self):
         stdout = yield self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
 

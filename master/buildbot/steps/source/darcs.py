@@ -180,12 +180,6 @@ class Darcs(Source):
         return res
 
     @defer.inlineCallbacks
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-        yield self.finished(res)
-
-    @defer.inlineCallbacks
     def parseGotRevision(self):
         revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
         self.updateSourceProperty('got_revision', revision)

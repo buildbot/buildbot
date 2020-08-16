@@ -226,10 +226,6 @@ class CVS(Source):
         res = yield self._dovccmd(command)
         return res
 
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        self.finished(res)
-
     @defer.inlineCallbacks
     def checkLogin(self):
         if self.login:

@@ -194,17 +194,6 @@ class Bzr(Source):
 
         return res
 
-    def finish(self, res):
-        d = defer.succeed(res)
-
-        @d.addCallback
-        def _gotResults(results):
-            self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-            return results
-        d.addCallback(self.finished)
-        return d
-
     def _sourcedirIsUpdatable(self):
         return self.pathExists(self.build.path_module.join(self.workdir, '.bzr'))
 

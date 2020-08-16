@@ -201,11 +201,6 @@ class P4(Source):
                 "P4:incremental() command:%s revision:%s", command, self.revision)
         yield self._dovccmd(command)
 
-    @defer.inlineCallbacks
-    def finish(self, res):
-        self.setStatus(self.cmd, res)
-        yield self.finished(res)
-
     def _getP4BaseForLog(self):
         return self.p4base or '<custom viewspec>'
 

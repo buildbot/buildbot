@@ -253,9 +253,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
 
-    def finish(self, res):
-        return self.finished(res)
-
     def start(self):
         if self.notReally:
             log.msg("faking {} checkout/update".format(self.name))
@@ -303,6 +300,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             patch = None
 
         d = self.startVC(branch, revision, patch)
-        d.addCallback(self.finish)
+        d.addCallback(self.finished)
         d.addErrback(self.failed)
         return None

@@ -340,8 +340,3 @@ class Monotone(Source):
             log.msg("Workdir does not exist, falling back to a fresh clone")
 
         return workdir_exists
-
-    def finish(self, _):
-        self.setStatus(self.cmd, 0)
-        log.msg("Closing log, sending result of the command {} ".format(self.cmd))
-        return self.finished(0)
