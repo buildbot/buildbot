@@ -15,6 +15,7 @@
 
 import re
 
+from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -280,36 +281,43 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.startCommand(cmd, warnings)
 
 
-class TreeSize(ShellCommand):
+class TreeSize(buildstep.ShellMixin, buildstep.BuildStep):
     name = "treesize"
     command = ["du", "-s", "-k", "."]
-    description = "measuring tree size"
-    kib = None
+    description = ["measuring", "tree", "size"]
 
     def __init__(self, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         self.observer = logobserver.BufferLogObserver(wantStdout=True,
                                                       wantStderr=True)
         self.addLogObserver('stdio', self.observer)
 
-    def commandComplete(self, cmd):
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         out = self.observer.getStdout()
         m = re.search(r'^(\d+)', out)
-        if m:
-            self.kib = int(m.group(1))
-            self.setProperty("tree-size-KiB", self.kib, "treesize")
 
-    def evaluateCommand(self, cmd):
+        kib = None
+        if m:
+            kib = int(m.group(1))
+            self.setProperty("tree-size-KiB", kib, "treesize")
+            self.descriptionDone = "treesize {} KiB".format(kib)
+        else:
+            self.descriptionDone = "treesize unknown"
+
         if cmd.didFail():
             return FAILURE
-        if self.kib is None:
+        if kib is None:
             return WARNINGS  # not sure how 'du' could fail, but whatever
         return SUCCESS
-
-    def _describe(self, done=False):
-        if self.kib is not None:
-            return ["treesize", "%d KiB" % self.kib]
-        return ["treesize", "unknown"]
 
 
 class SetPropertyFromCommand(ShellCommand):
