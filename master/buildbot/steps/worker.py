@@ -169,19 +169,18 @@ class RemoveDirectory(WorkerBuildStep):
         super().__init__(**kwargs)
         self.dir = dir
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('rmdir')
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
         if cmd.didFail():
-            self.step_status.setText(["Delete failed."])
-            self.finished(FAILURE)
-            return
-        self.finished(SUCCESS)
+            self.descriptionDone = ["Delete failed."]
+            return FAILURE
+
+        return SUCCESS
 
 
 class MakeDirectory(WorkerBuildStep):
