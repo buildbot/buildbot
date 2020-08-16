@@ -274,7 +274,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
             Expect('mkdir', {'dir': 'd'})
             + 1
         )
-        self.expectOutcome(result=FAILURE, state_string="Created (failure)")
+        self.expectOutcome(result=FAILURE, state_string="Create failed. (failure)")
         return self.runStep()
 
     def test_render(self):

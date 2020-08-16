@@ -24,7 +24,6 @@ from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.util import bytes2unicode
 
 
 class WorkerBuildStep(buildstep.BuildStep):
@@ -201,19 +200,17 @@ class MakeDirectory(WorkerBuildStep):
         super().__init__(**kwargs)
         self.dir = dir
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('mkdir')
         cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
+        yield self.runCommand(cmd)
 
-    def commandComplete(self, cmd):
         if cmd.didFail():
-            self.step_status.setText(["Create failed."])
-            self.finished(FAILURE)
-            return
-        self.finished(SUCCESS)
+            self.descriptionDone = ["Create failed."]
+            return FAILURE
+
+        return SUCCESS
 
 
 class CompositeStepMixin():
