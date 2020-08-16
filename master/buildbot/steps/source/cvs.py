@@ -25,6 +25,7 @@ from twisted.python import log
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
+from buildbot.process import results
 from buildbot.process.remotetransfer import StringFileWriter
 from buildbot.steps.source.base import Source
 
@@ -58,36 +59,33 @@ class CVS(Source):
                                                                self._listAttrGroupMembers('mode')))
         super().__init__(**kwargs)
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.branch = branch
         self.revision = revision
         self.stdio_log = self.addLogForRemoteCommands("stdio")
         self.method = self._getMethod()
-        d = self.checkCvs()
 
-        @d.addCallback
-        def checkInstall(cvsInstalled):
-            if not cvsInstalled:
-                raise WorkerTooOldError("CVS is not installed on worker")
-            return 0
-        d.addCallback(self.checkLogin)
+        installed = yield self.checkCvs()
+        if not installed:
+            raise WorkerTooOldError("CVS is not installed on worker")
 
-        d.addCallback(lambda _: self.sourcedirIsPatched())
+        yield self.checkLogin()
 
-        @d.addCallback
-        def checkPatched(patched):
-            if patched:
-                return self.purge(False)
-            return 0
-        d.addCallback(self._getAttrGroupMember('mode', self.mode))
+        patched = yield self.sourcedirIsPatched()
+
+        if patched:
+            yield self.purge(False)
+
+        yield self._getAttrGroupMember('mode', self.mode)()
 
         if patch:
-            d.addCallback(self.patch, patch)
-        d.addCallback(self.parseGotRevision)
-        return d
+            yield self.patch(0, patch)
+        yield self.parseGotRevision()
+        return results.SUCCESS
 
     @defer.inlineCallbacks
-    def mode_incremental(self, _):
+    def mode_incremental(self):
         updatable = yield self._sourcedirIsUpdatable()
         if updatable:
             rv = yield self.doUpdate()
@@ -96,7 +94,7 @@ class CVS(Source):
         return rv
 
     @defer.inlineCallbacks
-    def mode_full(self, _):
+    def mode_full(self):
         if self.method == 'clobber':
             rv = yield self.clobber()
             return rv
@@ -117,62 +115,59 @@ class CVS(Source):
             raise ValueError("Unknown method, check your configuration")
         return rv
 
+    @defer.inlineCallbacks
     def _clobber(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                     'logEnviron': self.logEnviron,
                                                     'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def checkRemoval(res):
-            if cmd.rc:
-                raise RuntimeError("Failed to delete directory")
-            return cmd.rc
-        return d
+        if cmd.rc:
+            raise RuntimeError("Failed to delete directory")
 
+    @defer.inlineCallbacks
     def clobber(self):
-        d = self._clobber()
-        d.addCallback(lambda _: self.doCheckout(self.workdir))
-        return d
+        yield self._clobber()
+        res = yield self.doCheckout(self.workdir)
+        return res
 
+    @defer.inlineCallbacks
     def fresh(self, ):
-        d = self.purge(True)
-        d.addCallback(lambda _: self.doUpdate())
-        return d
+        yield self.purge(True)
+        res = yield self.doUpdate()
+        return res
 
+    @defer.inlineCallbacks
     def clean(self, ):
-        d = self.purge(False)
-        d.addCallback(lambda _: self.doUpdate())
-        return d
+        yield self.purge(False)
+        res = yield self.doUpdate()
+        return res
 
+    @defer.inlineCallbacks
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                     'logEnviron': self.logEnviron,
                                                     'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
         old_workdir = self.workdir
         self.workdir = self.srcdir
-        d.addCallback(self.mode_incremental)
+        yield self.mode_incremental()
 
-        @d.addCallback
-        def copy(_):
-            cmd = remotecommand.RemoteCommand('cpdir', {
-                'fromdir': self.srcdir,
-                'todir': old_workdir,
-                'logEnviron': self.logEnviron,
-                'timeout': self.timeout})
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
+        cmd = remotecommand.RemoteCommand('cpdir', {
+            'fromdir': self.srcdir,
+            'todir': old_workdir,
+            'logEnviron': self.logEnviron,
+            'timeout': self.timeout})
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def resetWorkdir(_):
-            self.workdir = old_workdir
-            return 0
-        return d
+        self.workdir = old_workdir
 
+        return results.SUCCESS
+
+    @defer.inlineCallbacks
     def purge(self, ignore_ignores):
         command = ['cvsdiscard']
         if ignore_ignores:
@@ -182,15 +177,12 @@ class CVS(Source):
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluate(cmd):
-            if cmd.didFail():
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        return d
+        if cmd.didFail():
+            raise buildstep.BuildStepFailed()
 
+    @defer.inlineCallbacks
     def doCheckout(self, dir):
         command = ['-d', self.cvsroot, '-z3', 'checkout', '-d', dir]
         command = self.global_options + command + self.extra_options
@@ -203,9 +195,9 @@ class CVS(Source):
             abandonOnFailure = (self.retry[1] <= 0)
         else:
             abandonOnFailure = True
-        d = self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)
+        res = yield self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)
 
-        def _retry(res):
+        if self.retry:
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
@@ -217,13 +209,10 @@ class CVS(Source):
                 df.addCallback(lambda _: self._clobber())
                 df.addCallback(lambda _: self.doCheckout(self.workdir))
                 reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+                res = yield df
+        return res
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
-
+    @defer.inlineCallbacks
     def doUpdate(self):
         command = ['-z3', 'update', '-dP']
         branch = self.branch
@@ -234,28 +223,20 @@ class CVS(Source):
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
-        d = self._dovccmd(command)
-        return d
+        res = yield self._dovccmd(command)
+        return res
 
     def finish(self, res):
-        d = defer.succeed(res)
+        self.setStatus(self.cmd, res)
+        self.finished(res)
 
-        @d.addCallback
-        def _gotResults(results):
-            self.setStatus(self.cmd, results)
-            return results
-        d.addCallback(self.finished)
-        return d
-
-    def checkLogin(self, _):
+    @defer.inlineCallbacks
+    def checkLogin(self):
         if self.login:
-            d = self._dovccmd(['-d', self.cvsroot, 'login'],
-                              initialStdin=self.login + "\n")
-        else:
-            d = defer.succeed(0)
+            yield self._dovccmd(['-d', self.cvsroot, 'login'],
+                                initialStdin=self.login + "\n")
 
-        return d
-
+    @defer.inlineCallbacks
     def _dovccmd(self, command, workdir=None, abandonOnFailure=True,
                  initialStdin=None):
         if workdir is None:
@@ -269,15 +250,12 @@ class CVS(Source):
                                                logEnviron=self.logEnviron,
                                                initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if cmd.rc != 0 and abandonOnFailure:
-                log.msg("Source step failed while running command {}".format(cmd))
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        return d
+        if cmd.rc != 0 and abandonOnFailure:
+            log.msg("Source step failed while running command {}".format(cmd))
+            raise buildstep.BuildStepFailed()
+        return cmd.rc
 
     def _cvsEntriesContainStickyDates(self, entries):
         for line in entries.splitlines():
@@ -346,18 +324,14 @@ class CVS(Source):
 
         return True
 
-    def parseGotRevision(self, res):
+    def parseGotRevision(self):
         revision = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
         self.updateSourceProperty('got_revision', revision)
-        return res
 
+    @defer.inlineCallbacks
     def checkCvs(self):
-        d = self._dovccmd(['--version'])
-
-        @d.addCallback
-        def check(res):
-            return res == 0
-        return d
+        res = yield self._dovccmd(['--version'])
+        return res == 0
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
