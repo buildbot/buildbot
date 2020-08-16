@@ -76,14 +76,13 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         # get templates
         result = yield self.client.get("/storage/template")
         uuid = None
-        templates = yield result.json()
-        if (result.code == 200):
+        if result.code == 200:
             templates = yield result.json()
             for template in templates["storages"]["storage"]:
                 if image == template["title"]:
                     uuid = template["uuid"]
                     break
-        defer.returnValue(uuid)
+        return uuid
 
     def getContainerName(self):
         return ('buildbot-{worker}-{hash}'.format(worker=self.workername,
@@ -151,7 +150,7 @@ class UpcloudLatentWorker(AbstractLatentWorker):
 
         # wait until server is actually up
         while (yield self._state()) not in ["started"]:
-            yield util.asyncSleep(1)
+            yield util.asyncSleep(1, reactor=self.master.reactor)
 
         result = yield self.client.get("/server/{}".format(self.instance["uuid"]))
         instance = yield result.json()
@@ -160,16 +159,16 @@ class UpcloudLatentWorker(AbstractLatentWorker):
                 self.instance["Id"], self.instance['password']))
         # include root password as worker property
         self.properties.setProperty("root_password", self.instance['password'], "Worker")
-        defer.returnValue([self.instance["Id"], image])
+        return [self.instance["Id"], image]
 
     @defer.inlineCallbacks
     def _state(self):
         result = yield self.client.get("/server/{}".format(self.instance["uuid"]))
         if result.code == 404:
-            defer.returnValue("absent")
+            return "absent"
         else:
             server = yield result.json()
-            defer.returnValue(server["server"]["state"])
+            return server["server"]["state"]
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False):
@@ -177,7 +176,6 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             # be gentle. Something may just be trying to alert us that an
             # instance never attached, and it's because, somehow, we never
             # started.
-            defer.succeed(None)
             return
         log.msg('{} {}: Stopping instance {}...'.format(
                 self.__class__.__name__, self.workername, self.instance["Id"]))
@@ -194,12 +192,10 @@ class UpcloudLatentWorker(AbstractLatentWorker):
                                                                         self.instance["Id"],
                                                                         self._state(),
                                                                         reason.decode())
-            log.msg(reason)
-            defer.fail(reason)
             self.instance = None
-            return
+            raise Exception(reason)
         while (yield self._state()) not in ["stopped", "absent"]:
-            yield util.asyncSleep(1)
+            yield util.asyncSleep(1, reactor=self.master.reactor)
 
         # destroy it
         result = yield self.client.delete("/server/{}?storages=1".format(self.instance["uuid"]))
@@ -211,6 +207,4 @@ class UpcloudLatentWorker(AbstractLatentWorker):
                                                                           self._state(),
                                                                           reason.decode())
             self.instance = None
-            defer.fail(reason)
-        else:
-            defer.succeed(None)
+            raise Exception(reason)
