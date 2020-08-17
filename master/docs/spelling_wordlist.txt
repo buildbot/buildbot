@@ -872,6 +872,7 @@ unsubscribes
 untracked
 untrusted
 unversioned
+UpCloud
 uploadDirectory
 uploader
 uploadFile
