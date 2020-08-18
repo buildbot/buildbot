@@ -1,0 +1,1 @@
+Fix Docker image building for the master which failed due to mismatching versions of Alpine (:issue:`5469`).
