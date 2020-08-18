@@ -602,11 +602,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             if self.results != CANCELLED:
                 self.results = EXCEPTION
 
-        # update the summary one last time, make sure that completes,
-        # and then don't update it any more.
-        self.realUpdateSummary()
-        yield self.realUpdateSummary.stop()
-
         # determine whether we should hide this step
         hidden = self.hideStepIf
         if callable(hidden):
@@ -625,6 +620,11 @@ class BuildStep(results.ResultComputingConfigMixin,
         success = yield self._cleanup_logs()
         if not success:
             self.results = EXCEPTION
+
+        # update the summary one last time, make sure that completes,
+        # and then don't update it any more.
+        self.realUpdateSummary()
+        yield self.realUpdateSummary.stop()
 
         for sub in self._test_result_submitters.values():
             yield sub.finish()
