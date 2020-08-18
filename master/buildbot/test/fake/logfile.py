@@ -84,6 +84,7 @@ class FakeLogFile:
         for lbf in self.lbfs.values():
             lbf.flush()
 
+    @defer.inlineCallbacks
     def finish(self):
         assert not self.finished
 
@@ -93,11 +94,11 @@ class FakeLogFile:
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
 
+        yield self.subPoint.waitForDeliveriesToFinish()
+
         # notify those waiting for finish
         for d in self._finish_waiters:
             d.callback(None)
-
-        return defer.succeed(None)
 
     def fakeData(self, header='', stdout='', stderr=''):
         if header:

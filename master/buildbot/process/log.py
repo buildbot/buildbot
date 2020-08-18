@@ -102,6 +102,8 @@ class Log:
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
 
+        yield self.subPoint.waitForDeliveriesToFinish()
+
         # notify those waiting for finish
         for d in self.finishWaiters:
             d.callback(None)
