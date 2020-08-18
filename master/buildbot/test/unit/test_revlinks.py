@@ -15,6 +15,7 @@
 
 from twisted.trial import unittest
 
+from buildbot.revlinks import BitbucketRevlink
 from buildbot.revlinks import GithubRevlink
 from buildbot.revlinks import GitwebMatch
 from buildbot.revlinks import RevlinkMatch
@@ -114,6 +115,21 @@ class TestGitwebMatch(unittest.TestCase):
                          'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')  # noqa pylint: disable=line-too-long
 
 
+class TestBitbucketRevlink(unittest.TestCase):
+    revision = '4d4284cf4fb49ce82fefb6cbac8e462073c5f106'
+    url = 'https://bitbucket.org/fakeproj/fakerepo/commits/4d4284cf4fb49ce82fefb6cbac8e462073c5f106'
+
+    def testHTTPS(self):
+        self.assertEqual(BitbucketRevlink(self.revision,
+                         'https://fakeuser@bitbucket.org/fakeproj/fakerepo.git'),
+                         self.url)
+
+    def testSSH(self):
+        self.assertEqual(BitbucketRevlink(self.revision,
+                         'git@bitbucket.org:fakeproj/fakerepo.git'),
+                         self.url)
+
+
 class TestDefaultRevlinkMultiPlexer(unittest.TestCase):
     revision = "0"
 
@@ -121,6 +137,9 @@ class TestDefaultRevlinkMultiPlexer(unittest.TestCase):
         # GithubRevlink
         self.assertTrue(default_revlink_matcher(
             self.revision, 'https://github.com/buildbot/buildbot.git'))
+        # BitbucketRevlink
+        self.assertTrue(default_revlink_matcher(
+            self.revision, 'git@bitbucket.org:fakeproj/fakerepo.git'))
         # SourceforgeGitRevlink
         self.assertTrue(default_revlink_matcher(
             self.revision, 'git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'))

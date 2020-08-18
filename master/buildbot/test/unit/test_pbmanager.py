@@ -91,6 +91,30 @@ class TestPBManager(unittest.TestCase):
         yield reg.unregister()
 
     @defer.inlineCallbacks
+    def test_register_no_user(self):
+        portstr = "tcp:0:interface=127.0.0.1"
+        reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
+
+        # make sure things look right
+        self.assertIn(portstr, self.pbm.dispatchers)
+        disp = self.pbm.dispatchers[portstr]
+        self.assertIn('boris', disp.users)
+
+        # we can't actually connect to it, as that requires finding the
+        # dynamically allocated port number which is buried out of reach;
+        # however, we can try the requestAvatar and requestAvatarId methods.
+
+        username = yield disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+
+        self.assertEqual(username, b'boris')
+        with self.assertRaises(ValueError):
+            yield disp.requestAvatar(b'notboris', mock.Mock(), pb.IPerspective)
+
+        self.assertNotIn('boris', self.connections)
+
+        yield reg.unregister()
+
+    @defer.inlineCallbacks
     def test_double_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
         reg1 = yield self.pbm.register(portstr, "boris", "pass", None)

@@ -98,6 +98,11 @@ class FakeSourceStampsComponent(FakeDBComponent):
                        patch_body=None, patch_level=None,
                        patch_author=None, patch_comment=None,
                        patch_subdir=None):
+
+        assert codebase is not None, "codebase cannot be None"
+        assert project is not None, "project cannot be None"
+        assert repository is not None, "repository cannot be None"
+
         if patch_body:
             patchid = len(self.patches) + 1
             while patchid in self.patches:

@@ -385,6 +385,7 @@ deferreds
 defertothread
 delayedcall
 denormalized
+dependabot
 deprecatedmoduleattribute
 descriptionsuffix
 desynchronization
@@ -1529,6 +1530,7 @@ unsubstantiated
 untarring
 untracked
 upcall
+upcloud
 updatable
 updatebuilderlist
 updatebuildsummarypolicy
