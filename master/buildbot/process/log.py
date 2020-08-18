@@ -35,6 +35,7 @@ class Log:
         self.subscriptions = {}
         self.finished = False
         self.finishWaiters = []
+        self._had_errors = False
         self.lock = defer.DeferredLock()
         self.decoder = decoder
 
@@ -91,6 +92,9 @@ class Log:
             self.finishWaiters.append(d)
         return d
 
+    def had_errors(self):
+        return self._had_errors
+
     @defer.inlineCallbacks
     def finish(self):
         assert not self.finished
@@ -107,6 +111,8 @@ class Log:
         # notify those waiting for finish
         for d in self.finishWaiters:
             d.callback(None)
+
+        self._had_errors = len(self.subPoint.pop_exceptions()) > 0
 
         # start a compressLog call but don't make our caller wait for
         # it to complete

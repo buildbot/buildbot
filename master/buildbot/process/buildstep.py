@@ -621,12 +621,11 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         yield self.master.data.updates.finishStep(self.stepid, self.results,
                                                   hidden)
-        # finish unfinished logs
-        all_finished = yield self.finishUnfinishedLogs()
-        if not all_finished:
+        # perform final clean ups
+        success = yield self._cleanup_logs()
+        if not success:
             self.results = EXCEPTION
 
-        # finish unfinished test result submitters
         for sub in self._test_result_submitters.values():
             yield sub.finish()
 
@@ -635,17 +634,21 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.results
 
     @defer.inlineCallbacks
-    def finishUnfinishedLogs(self):
-        ok = True
-        not_finished_logs = [v for (k, v) in self.logs.items()
-                             if not v.finished]
+    def _cleanup_logs(self):
+        all_success = True
+        not_finished_logs = [v for (k, v) in self.logs.items() if not v.finished]
         finish_logs = yield defer.DeferredList([v.finish() for v in not_finished_logs],
                                                consumeErrors=True)
         for success, res in finish_logs:
             if not success:
                 log.err(res, "when trying to finish a log")
-                ok = False
-        return ok
+                all_success = False
+
+        for log_ in self.logs.values():
+            if log_.had_errors():
+                all_success = False
+
+        return all_success
 
     def addTestResultSets(self):
         return defer.succeed(None)

@@ -1,0 +1,1 @@
+Throwing an exception out of a log observer while processing logs will now correctly fail the step in the case of new style steps.

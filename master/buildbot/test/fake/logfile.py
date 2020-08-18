@@ -29,6 +29,7 @@ class FakeLogFile:
         self.lbfs = {}
         self.finished = False
         self._finish_waiters = []
+        self._had_errors = False
         self.subPoint = util.subscription.SubscriptionPoint("%r log" % (name,))
 
     def getName(self):
@@ -84,6 +85,9 @@ class FakeLogFile:
         for lbf in self.lbfs.values():
             lbf.flush()
 
+    def had_errors(self):
+        return self._had_errors
+
     @defer.inlineCallbacks
     def finish(self):
         assert not self.finished
@@ -95,6 +99,7 @@ class FakeLogFile:
         self.subPoint.deliver(None, None)
 
         yield self.subPoint.waitForDeliveriesToFinish()
+        self._had_errors = len(self.subPoint.pop_exceptions()) > 0
 
         # notify those waiting for finish
         for d in self._finish_waiters:
