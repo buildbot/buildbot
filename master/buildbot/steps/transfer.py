@@ -341,8 +341,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'stat', args)
         yield self.runCommand(cmd)
         if cmd.rc != 0:
-            yield self.addCompleteLog('stderr',
-                                      'File {} not available at worker'.format(args))
+            msg = 'File {}/{} not available at worker'.format(self.workdir, source)
+            yield self.addCompleteLog('stderr', msg)
             return FAILURE
         s = cmd.updates['stat'][-1]
         if stat.S_ISDIR(s[stat.ST_MODE]):
