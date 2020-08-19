@@ -119,13 +119,13 @@ class PlainLog(Log):
         super(PlainLog, self).__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
-            if not isinstance(lines, str):
-                lines = self.decoder(lines)
             self.subPoint.deliver(None, lines)
             return self.addRawLines(lines)
         self.lbf = lineboundaries.LineBoundaryFinder(wholeLines)
 
     def addContent(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
         # add some text in the log's default stream
         return self.lbf.append(text)
 
@@ -164,8 +164,6 @@ class StreamLog(Log):
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
-                if not isinstance(lines, str):
-                    lines = self.decoder(lines)
                 # deliver the un-annotated version to subscribers
                 self.subPoint.deliver(stream, lines)
                 # strip the last character, as the regexp will add a
@@ -176,12 +174,18 @@ class StreamLog(Log):
             return lbf
 
     def addStdout(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
         return self._getLbf('o').append(text)
 
     def addStderr(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
         return self._getLbf('e').append(text)
 
     def addHeader(self, text):
+        if not isinstance(text, str):
+            text = self.decoder(text)
         return self._getLbf('h').append(text)
 
     @defer.inlineCallbacks

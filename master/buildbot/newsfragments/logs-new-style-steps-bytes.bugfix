@@ -1,0 +1,1 @@
+Handling of submission of non-decoded ``bytes`` logs has been fixed in new style steps.
