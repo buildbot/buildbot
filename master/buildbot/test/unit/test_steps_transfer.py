@@ -293,7 +293,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expectCommands(
-            Expect('uploadFile', {'workersrc':'srcfile', 'workdir': 'wkdir', 'blocksize': 262144,
+            Expect('uploadFile', {'workersrc': 'srcfile', 'workdir': 'wkdir', 'blocksize': 262144,
                                   'maxsize': None, 'keepstamp': False,
                                   'writer': ExpectRemoteRef(remotetransfer.FileWriter)},
                    interrupted=True)
@@ -377,6 +377,49 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         d = self.runStep()
         return d
 
+    @defer.inlineCallbacks
+    def test_url(self):
+        self.setupStep(transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir,
+                                                url="http://server/dir"))
+
+        self.step.addURL = Mock()
+
+        self.expectCommands(
+            Expect('uploadDirectory', {'workersrc': 'srcdir', 'workdir': 'wkdir',
+                                       'blocksize': 16384, 'compress': None, 'maxsize': None,
+                                       'writer': ExpectRemoteRef(remotetransfer.DirectoryWriter)})
+            + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS,
+                           state_string="uploading srcdir")
+
+        yield self.runStep()
+
+        self.step.addURL.assert_called_once_with("destdir", "http://server/dir")
+
+    @defer.inlineCallbacks
+    def test_url_text(self):
+        self.setupStep(transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir,
+                                                url="http://server/dir", urlText='url text'))
+
+        self.step.addURL = Mock()
+
+        self.expectCommands(
+            Expect('uploadDirectory', {'workersrc': 'srcdir', 'workdir': 'wkdir',
+                                       'blocksize': 16384, 'compress': None, 'maxsize': None,
+                                       'writer': ExpectRemoteRef(remotetransfer.DirectoryWriter)})
+            + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS,
+                           state_string="uploading srcdir")
+
+        yield self.runStep()
+
+        self.step.addURL.assert_called_once_with("url text", "http://server/dir")
+
+    @defer.inlineCallbacks
     def testFailure(self):
         self.setupStep(
             transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir))
@@ -390,8 +433,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=FAILURE,
                            state_string="uploading srcdir (failure)")
-        d = self.runStep()
-        return d
+        yield self.runStep()
 
     @defer.inlineCallbacks
     def testException(self):
@@ -500,6 +542,34 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.runStep()
         return d
+
+    @defer.inlineCallbacks
+    def test_not_existing_path(self):
+        self.setupStep(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('stat', {'file': "srcdir", 'workdir': 'wkdir'})
+            + 1)
+
+        self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
+        self.expectLogfile('stderr',
+                           "File wkdir/srcdir not available at worker")
+
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_special_path(self):
+        self.setupStep(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('stat', {'file': "srcdir", 'workdir': 'wkdir'})
+            + Expect.update('stat', [0, 99, 99])
+            + 0)
+
+        self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
+        self.expectLogfile('stderr', 'srcdir is neither a regular file, nor a directory')
+
+        yield self.runStep()
 
     def testMultiple(self):
         self.setupStep(
@@ -667,6 +737,54 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             result=SUCCESS, state_string="uploading 2 files")
         d = self.runStep()
         return d
+
+    @defer.inlineCallbacks
+    def test_url(self):
+        self.setupStep(transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir,
+                                                   url="http://server/dir"))
+
+        self.step.addURL = Mock()
+
+        self.expectCommands(
+            Expect('stat', {'file': "srcfile", 'workdir': 'wkdir'})
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', {'workersrc': "srcfile", 'workdir': 'wkdir',
+                                  'blocksize': 16384, 'maxsize': None, 'keepstamp': False,
+                                  'writer': ExpectRemoteRef(remotetransfer.FileWriter)})
+            + Expect.behavior(uploadString("Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS,
+                           state_string="uploading 1 file")
+
+        yield self.runStep()
+
+        self.step.addURL.assert_called_once_with("destdir", "http://server/dir")
+
+    @defer.inlineCallbacks
+    def test_url_text(self):
+        self.setupStep(transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir,
+                                                   url="http://server/dir", urlText='url text'))
+
+        self.step.addURL = Mock()
+
+        self.expectCommands(
+            Expect('stat', {'file': "srcfile", 'workdir': 'wkdir'})
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', {'workersrc': "srcfile", 'workdir': 'wkdir',
+                                  'blocksize': 16384, 'maxsize': None, 'keepstamp': False,
+                                  'writer': ExpectRemoteRef(remotetransfer.FileWriter)})
+            + Expect.behavior(uploadString("Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS,
+                           state_string="uploading 1 file")
+
+        yield self.runStep()
+
+        self.step.addURL.assert_called_once_with("url text", "http://server/dir")
 
     def testFailure(self):
         self.setupStep(
@@ -872,6 +990,21 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
             # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
             self.assertEqual(b''.join(read), contents)
+
+    @defer.inlineCallbacks
+    def test_no_file(self):
+        self.setupStep(transfer.FileDownload(mastersrc='not existing file',
+                                             workerdest=self.destfile))
+
+        self.expectCommands()
+
+        self.expectOutcome(result=EXCEPTION,
+                           state_string="downloading to {0} (exception)".format(
+                               os.path.basename(self.destfile)))
+        yield self.runStep()
+        self.expectLogfile('stderr',
+                           "File wkdir/srcdir not available at worker")
+        self.assertEqual(len(self.flushLoggedErrors(FileNotFoundError)), 1)
 
 
 class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
