@@ -411,6 +411,8 @@ class BuildStepMixin:
                 exp.raiseExpectationFailure(child_exp, e)
 
         if exp.shouldAssertCommandEqualExpectation():
+            self.assertEqual(exp.interrupted, command.interrupted)
+
             # first check any ExpectedRemoteReference instances
             exp_tup = (exp.remote_command, exp.args)
             if exp_tup != got:
