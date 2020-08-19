@@ -174,7 +174,12 @@ class DirectoryUpload(_TransferBuildStep):
 
     name = 'upload'
 
-    renderables = ['workersrc', 'masterdest', 'url']
+    renderables = [
+        'workersrc',
+        'masterdest',
+        'url',
+        'urlText'
+    ]
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
