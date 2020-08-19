@@ -411,11 +411,6 @@ class BuildStepMixin:
                 exp.raiseExpectationFailure(child_exp, e)
 
         if exp.shouldAssertCommandEqualExpectation():
-            # handle any incomparable args
-            for arg in exp.incomparable_args:
-                self.assertTrue(arg in got[1], "incomparable arg '{}' not received".format(arg))
-                del got[1][arg]
-
             # first check any ExpectedRemoteReference instances
             exp_tup = (exp.remote_command, exp.args)
             if exp_tup != got:
