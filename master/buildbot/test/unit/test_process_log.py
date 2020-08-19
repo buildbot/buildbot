@@ -287,9 +287,7 @@ class TestProcessItfc(unittest.TestCase, InterfaceTests):
 class TestFakeLogFile(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
-        step = mock.Mock(name='fake step')
-        step.logobservers = []
-        self.log = fakelogfile.FakeLogFile('stdio', step)
+        self.log = fakelogfile.FakeLogFile('stdio')
 
 
 class TestErrorRaised(unittest.TestCase):

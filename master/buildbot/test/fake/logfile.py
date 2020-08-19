@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot import util
 from buildbot.util import lineboundaries
@@ -22,21 +21,20 @@ from buildbot.util import lineboundaries
 
 class FakeLogFile:
 
-    def __init__(self, name, step):
+    def __init__(self, name):
         self.name = name
         self.header = ''
         self.stdout = ''
         self.stderr = ''
         self.lbfs = {}
         self.finished = False
-        self.step = step
+        self._finish_waiters = []
         self.subPoint = util.subscription.SubscriptionPoint("%r log" % (name,))
 
     def getName(self):
         return self.name
 
     def subscribe(self, callback):
-        log.msg("NOTE: fake logfile subscription never produces anything")
         return self.subPoint.subscribe(callback)
 
     def _getLbf(self, stream, meth):
@@ -44,9 +42,8 @@ class FakeLogFile:
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
-                if self.name in self.step.logobservers:
-                    for obs in self.step.logobservers[self.name]:
-                        getattr(obs, meth)(lines)
+                self.subPoint.deliver(stream, lines)
+                assert not self.finished
             lbf = self.lbfs[stream] = \
                 lineboundaries.LineBoundaryFinder(wholeLines)
             return lbf
@@ -76,16 +73,30 @@ class FakeLogFile:
         return self.finished
 
     def waitUntilFinished(self):
-        log.msg("NOTE: fake waitUntilFinished doesn't actually wait")
-        return defer.Deferred()
+        d = defer.Deferred()
+        if self.finished:
+            d.succeed(None)
+        else:
+            self._finish_waiters.append(d)
+        return d
 
     def flushFakeLogfile(self):
         for lbf in self.lbfs.values():
             lbf.flush()
 
     def finish(self):
+        assert not self.finished
+
         self.flushFakeLogfile()
         self.finished = True
+
+        # notify subscribers *after* finishing the log
+        self.subPoint.deliver(None, None)
+
+        # notify those waiting for finish
+        for d in self._finish_waiters:
+            d.callback(None)
+
         return defer.succeed(None)
 
     def fakeData(self, header='', stdout='', stderr=''):
