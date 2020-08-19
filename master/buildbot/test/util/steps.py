@@ -210,37 +210,26 @@ class BuildStepMixin:
         # step overrides
 
         def addLog(name, type='s', logEncoding=None):
-            _log = logfile.FakeLogFile(name, step)
+            _log = logfile.FakeLogFile(name)
             self.step.logs[name] = _log
+            self.step._connectPendingLogObservers()
             return defer.succeed(_log)
         step.addLog = addLog
         step.addLog_newStyle = addLog
 
         def addHTMLLog(name, html):
-            _log = logfile.FakeLogFile(name, step)
+            _log = logfile.FakeLogFile(name)
             html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
         step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
-            _log = logfile.FakeLogFile(name, step)
+            _log = logfile.FakeLogFile(name)
             self.step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)
         step.addCompleteLog = addCompleteLog
-
-        step.logobservers = self.logobservers = {}
-
-        def addLogObserver(logname, observer):
-            self.logobservers.setdefault(logname, []).append(observer)
-            observer.step = step
-        step.addLogObserver = addLogObserver
-
-        # add any observers defined in the constructor, before this
-        # monkey-patch
-        for n, o in step._pendingLogObservers:
-            addLogObserver(n, o)
 
         self._got_test_result_sets = []
         self._next_test_result_set_id = 1000

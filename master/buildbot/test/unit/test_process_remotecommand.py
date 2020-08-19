@@ -145,7 +145,7 @@ class TestRunCommand(unittest.TestCase, Tests):
     def test_notStdioLog(self):
         logname = 'notstdio'
         cmd = self.makeRemoteCommand(stdioLogName=logname)
-        log = logfile.FakeLogFile(logname, 'dummy')
+        log = logfile.FakeLogFile(logname)
         cmd.useLog(log)
         cmd.addStdout('some stdout')
         self.assertEqual(log.stdout, 'some stdout')

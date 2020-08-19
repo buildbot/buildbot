@@ -22,6 +22,7 @@ from twisted.python.compat import NativeStringIO
 
 from buildbot.config import BuilderConfig
 from buildbot.process import buildstep
+from buildbot.process import logobserver
 from buildbot.process import results
 from buildbot.process.factory import BuildFactory
 from buildbot.steps import shell
@@ -89,6 +90,23 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
         yield _log.addStdout(output_str)
         yield _log.finish()
         return results.SUCCESS
+
+
+class BuildStepWithFailingLogObserver(buildstep.BuildStep):
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.addLogObserver('xx', logobserver.LineConsumerLogObserver(self.log_consumer))
+
+        _log = yield self.addLog('xx')
+        yield _log.addStdout('line1\nline2\n')
+        yield _log.finish()
+
+        return results.SUCCESS
+
+    def log_consumer(self):
+        _, _ = yield
+        raise RuntimeError('fail')
 
 
 class FailingCustomStep(buildstep.LoggingBuildStep):
@@ -268,6 +286,16 @@ class RunSteps(RunFakeMasterTestCase):
         yield self.do_test_build(builder_id)
         yield self.assertBuildResults(1, results.EXCEPTION)
     test_step_raising_connectionlost_in_start.skip = "Results in infinite loop"
+
+    @defer.inlineCallbacks
+    def test_step_raising_in_log_observer(self):
+        step = BuildStepWithFailingLogObserver()
+        builder_id = yield self.create_config_for_step(step)
+
+        yield self.do_test_build(builder_id)
+        yield self.assertBuildResults(1, results.EXCEPTION)
+        yield self.assertStepStateString(2, "finished (exception)")
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     def test_Latin1ProducingCustomBuildStep(self):

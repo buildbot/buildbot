@@ -1,0 +1,1 @@
+Step summary is now updated after the last point where the step status is changed. Previously exceptions in log finish methods would be ignored.

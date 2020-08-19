@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.util import subscription
@@ -54,15 +55,61 @@ class subscriptions(unittest.TestCase):
         def cb(*args, **kwargs):
             raise RuntimeError('mah bucket!')
 
-        # subscribe
         self.subpt.subscribe(cb)
-        try:
-            self.subpt.deliver()
-        except RuntimeError:
-            self.fail("should not have seen exception here!")
+        self.subpt.deliver()  # should not raise
+
+        exceptions = self.subpt.pop_exceptions()
+        self.assertEqual(len(exceptions), 1)
+        self.assertIsInstance(exceptions[0], RuntimeError)
+
         # log.err will cause Trial to complain about this error anyway, unless
         # we clean it up
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+
+    def test_deferred_exception(self):
+
+        d = defer.Deferred()
+
+        @defer.inlineCallbacks
+        def cb_deferred(*args, **kwargs):
+            yield d
+            raise RuntimeError('msg')
+
+        self.subpt.subscribe(cb_deferred)
+        self.subpt.deliver()
+
+        d.callback(None)
+
+        exceptions = self.subpt.pop_exceptions()
+        self.assertEqual(len(exceptions), 1)
+        self.assertIsInstance(exceptions[0], failure.Failure)
+
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+
+    def test_multiple_exceptions(self):
+
+        d = defer.Deferred()
+
+        @defer.inlineCallbacks
+        def cb_deferred(*args, **kwargs):
+            yield d
+            raise RuntimeError('msg')
+
+        def cb(*args, **kwargs):
+            raise RuntimeError('msg')
+
+        self.subpt.subscribe(cb_deferred)
+        self.subpt.subscribe(cb)
+        self.subpt.deliver()
+
+        d.callback(None)
+
+        exceptions = self.subpt.pop_exceptions()
+        self.assertEqual(len(exceptions), 2)
+        self.assertIsInstance(exceptions[0], RuntimeError)
+        self.assertIsInstance(exceptions[1], failure.Failure)
+
+        self.assertEqual(2, len(self.flushLoggedErrors(RuntimeError)))
 
     def test_deliveries_finished(self):
         state = []
