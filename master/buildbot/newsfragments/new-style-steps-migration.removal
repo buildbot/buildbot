@@ -1,0 +1,13 @@
+Many steps have been migrated to new style from old style.
+These steps exposed private APIs that could have been used in user code by means of inheritance.
+The old style steps have been deprecated since Buildbot v0.9.0 released in October 2016.
+The support for old style steps will be removed entirely in near future.
+Users are advised to upgrade to new style steps as soon as possible.
+
+The list of old-style steps that have been converted to new style:
+
+ - ``CopyDirectory``
+ - ``FileExists``
+ - ``MakeDirectory``
+ - ``RemoveDirectory``
+ - ``SetPropertiesFromEnv``

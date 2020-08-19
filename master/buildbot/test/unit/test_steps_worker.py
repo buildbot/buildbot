@@ -191,7 +191,7 @@ class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           state_string="Copying s to d failed.")
+                           state_string="Copying s to d failed. (failure)")
         return self.runStep()
 
     def test_render(self):
@@ -234,7 +234,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           state_string="Deleted (failure)")
+                           state_string="Delete failed. (failure)")
         return self.runStep()
 
     def test_render(self):
@@ -274,7 +274,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
             Expect('mkdir', {'dir': 'd'})
             + 1
         )
-        self.expectOutcome(result=FAILURE, state_string="Created (failure)")
+        self.expectOutcome(result=FAILURE, state_string="Create failed. (failure)")
         return self.runStep()
 
     def test_render(self):

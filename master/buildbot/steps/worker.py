@@ -17,12 +17,13 @@
 import os
 import stat
 
+from twisted.internet import defer
+
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.util import bytes2unicode
 
 
 class WorkerBuildStep(buildstep.BuildStep):
@@ -45,7 +46,8 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         self.variables = variables
         self.source = source
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         # on Windows, environment variables are case-insensitive, but we have
         # a case-sensitive dictionary in worker_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
@@ -68,8 +70,8 @@ class SetPropertiesFromEnv(WorkerBuildStep):
                 properties.setProperty(variable, value, self.source,
                                        runtime=True)
                 log.append("{} = {}".format(variable, repr(value)))
-        self.addCompleteLog("properties", "\n".join(log))
-        self.finished(SUCCESS)
+        yield self.addCompleteLog("properties", "\n".join(log))
+        return SUCCESS
 
 
 class FileExists(WorkerBuildStep):
@@ -86,25 +88,24 @@ class FileExists(WorkerBuildStep):
         super().__init__(**kwargs)
         self.file = file
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('stat')
         cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
         if cmd.didFail():
             self.descriptionDone = ["File not found."]
-            self.finished(FAILURE)
-            return
+            return FAILURE
+
         s = cmd.updates["stat"][-1]
         if stat.S_ISREG(s[stat.ST_MODE]):
             self.descriptionDone = ["File found."]
-            self.finished(SUCCESS)
+            return SUCCESS
         else:
             self.descriptionDone = ["Not a file."]
-            self.finished(FAILURE)
+            return FAILURE
 
 
 class CopyDirectory(WorkerBuildStep):
@@ -128,7 +129,8 @@ class CopyDirectory(WorkerBuildStep):
         self.timeout = timeout
         self.maxTime = maxTime
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('cpdir')
 
         args = {'fromdir': self.src, 'todir': self.dest}
@@ -137,28 +139,15 @@ class CopyDirectory(WorkerBuildStep):
             args['maxTime'] = self.maxTime
 
         cmd = remotecommand.RemoteCommand('cpdir', args)
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
         if cmd.didFail():
-            self.step_status.setText(["Copying", self.src, "to", self.dest, "failed."])
-            self.finished(FAILURE)
-            return
-        self.step_status.setText(self.describe(done=True))
-        self.finished(SUCCESS)
+            self.descriptionDone = ["Copying", self.src, "to", self.dest, "failed."]
+            return FAILURE
 
-    # TODO: BuildStep subclasses don't have a describe()....
-    def getResultSummary(self):
-        src = bytes2unicode(self.src, errors='replace')
-        dest = bytes2unicode(self.dest, errors='replace')
-        copy = "{} to {}".format(src, dest)
-        if self.results == SUCCESS:
-            rv = 'Copied ' + copy
-        else:
-            rv = 'Copying ' + copy + ' failed.'
-        return {'step': rv}
+        self.descriptionDone = ["Copied", self.src, "to", self.dest]
+        return SUCCESS
 
 
 class RemoveDirectory(WorkerBuildStep):
@@ -179,19 +168,18 @@ class RemoveDirectory(WorkerBuildStep):
         super().__init__(**kwargs)
         self.dir = dir
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('rmdir')
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
         if cmd.didFail():
-            self.step_status.setText(["Delete failed."])
-            self.finished(FAILURE)
-            return
-        self.finished(SUCCESS)
+            self.descriptionDone = ["Delete failed."]
+            return FAILURE
+
+        return SUCCESS
 
 
 class MakeDirectory(WorkerBuildStep):
@@ -212,19 +200,17 @@ class MakeDirectory(WorkerBuildStep):
         super().__init__(**kwargs)
         self.dir = dir
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         self.checkWorkerHasCommand('mkdir')
         cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.commandComplete(cmd))
-        d.addErrback(self.failed)
+        yield self.runCommand(cmd)
 
-    def commandComplete(self, cmd):
         if cmd.didFail():
-            self.step_status.setText(["Create failed."])
-            self.finished(FAILURE)
-            return
-        self.finished(SUCCESS)
+            self.descriptionDone = ["Create failed."]
+            return FAILURE
+
+        return SUCCESS
 
 
 class CompositeStepMixin():
