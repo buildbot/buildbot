@@ -28,6 +28,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import remotetransfer
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
@@ -286,6 +287,24 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(behavior.writer.cancel.called, True)
         self.assertEqual(
             len(self.flushLoggedErrors(RuntimeError)), 1)
+
+    @defer.inlineCallbacks
+    def test_interrupt(self):
+        self.setupStep(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
+
+        self.expectCommands(
+            Expect('uploadFile', {'workersrc':'srcfile', 'workdir': 'wkdir', 'blocksize': 262144,
+                                  'maxsize': None, 'keepstamp': False,
+                                  'writer': ExpectRemoteRef(remotetransfer.FileWriter)},
+                   interrupted=True)
+            + 0)
+
+        self.interrupt_nth_remote_command(0)
+
+        self.expectOutcome(result=CANCELLED,
+                           state_string="uploading srcfile (cancelled)")
+        self.expectLogfile('interrupt', 'interrupt reason')
+        yield self.runStep()
 
     def test_init_workersrc_keyword(self):
         step = transfer.FileUpload(

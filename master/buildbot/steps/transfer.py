@@ -63,7 +63,7 @@ class _TransferBuildStep(BuildStep):
         self.cmd = cmd
         try:
             yield self.runCommand(cmd)
-            return FAILURE if cmd.didFail() else SUCCESS
+            return cmd.results()
         finally:
             if writer:
                 writer.cancel()
