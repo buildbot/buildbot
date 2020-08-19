@@ -118,14 +118,23 @@ class BuildStepMixin:
         if not hasattr(self, 'reactor'):
             raise Exception('Reactor has not yet been setup for step')
 
+        self._next_remote_command_number = 0
+        self._interrupt_remote_command_numbers = []
+
         def create_fake_remote_command(*args, **kwargs):
             cmd = remotecommand.FakeRemoteCommand(*args, **kwargs)
             cmd.testcase = self
+            if self._next_remote_command_number in self._interrupt_remote_command_numbers:
+                cmd.set_run_interrupt()
+            self._next_remote_command_number += 1
             return cmd
 
         def create_fake_remote_shell_command(*args, **kwargs):
             cmd = remotecommand.FakeRemoteShellCommand(*args, **kwargs)
             cmd.testcase = self
+            if self._next_remote_command_number in self._interrupt_remote_command_numbers:
+                cmd.set_run_interrupt()
+            self._next_remote_command_number += 1
             return cmd
 
         for module in buildstep, real_remotecommand:
@@ -462,3 +471,6 @@ class BuildStepMixin:
         else:
             self.build.path_module = namedModule('posixpath')
             self.worker.worker_basedir = '/wrk'
+
+    def interrupt_nth_remote_command(self, number):
+        self._interrupt_remote_command_numbers.append(number)
