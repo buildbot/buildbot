@@ -1085,7 +1085,16 @@ class Model(base.DBConnectorComponent):
                 old_version = r.scalar()
                 if old_version < 40:
                     raise EightUpgradeError()
-                upgrade(engine)
+                try:
+                    upgrade(engine)
+                except sa.exc.NoSuchTableError as e:  # pragma: no cover
+                    if 'migration_tmp' in str(e):
+                        log.err('A serious error has been encountered during the upgrade. The '
+                                'previous upgrade has been likely interrupted. The database has '
+                                'been damaged and automatic recovery is impossible.')
+                        log.err('If you believe this is an error, please submit a bug to the '
+                                'Buildbot project.')
+                    raise
 
             # if the version table exists, then we can version_control things
             # at that version, drop the version table, and let migrate take
