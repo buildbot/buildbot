@@ -255,11 +255,16 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
     name = 'upload'
     logEnviron = False
 
-    renderables = ['workersrcs', 'masterdest', 'url']
+    renderables = [
+        'workersrcs',
+        'masterdest',
+        'url',
+        'urlText'
+    ]
 
     def __init__(self, workersrcs=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, glob=False,
-                 mode=None, compress=None, keepstamp=False, url=None,
+                 mode=None, compress=None, keepstamp=False, url=None, urlText=None,
                  **buildstep_kwargs):
 
         # Emulate that first two arguments are positional.
@@ -283,6 +288,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         self.glob = glob
         self.keepstamp = keepstamp
         self.url = url
+        self.urlText = urlText
 
     def uploadFile(self, source, masterdest):
         fileWriter = remotetransfer.FileWriter(
@@ -357,7 +363,12 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
     @defer.inlineCallbacks
     def allUploadsDone(self, result, sources, masterdest):
         if self.url is not None:
-            yield self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
+            urlText = self.urlText
+
+            if urlText is None:
+                urlText = os.path.basename(os.path.normpath(masterdest))
+
+            yield self.addURL(urlText, self.url)
 
     @defer.inlineCallbacks
     def run(self):

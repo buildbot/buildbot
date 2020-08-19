@@ -167,6 +167,7 @@ The `uploadDone` method is called once for each uploaded file and can be used to
                 if numFiles:
                     self.addURL(self.url, '... %d more' % numFiles)
 
+For :bb:step:`MultipleFileUpload` the ``urlText=`` argument allows you to specify the url title that will be displayed in the web UI.
 
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload
