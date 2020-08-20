@@ -107,6 +107,8 @@ The ``maxsize`` and ``blocksize`` parameters are the same as for :bb:step:`FileU
 
 The optional ``compress`` argument can be given as ``'gz'`` or ``'bz2'`` to compress the datastream.
 
+For :bb:step:`DirectoryUpload` the ``urlText=`` argument allows you to specify the url title that will be displayed in the web UI.
+
 .. note::
 
    The permissions on the copied files will be the same on the master as originally on the worker, see option ``buildbot-worker create-worker --umask`` to change the default one.
@@ -165,6 +167,7 @@ The `uploadDone` method is called once for each uploaded file and can be used to
                 if numFiles:
                     self.addURL(self.url, '... %d more' % numFiles)
 
+For :bb:step:`MultipleFileUpload` the ``urlText=`` argument allows you to specify the url title that will be displayed in the web UI.
 
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload

@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import inspect
 import re
 
 from twisted.python import failure
@@ -128,9 +127,23 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        signature = inspect.signature(
-            remotecommand.RemoteShellCommand.__init__)
-        valid_rsc_args = signature.parameters.keys()
+        valid_rsc_args = [
+            'env',
+            'want_stdout',
+            'want_stderr',
+            'timeout',
+            'maxTime',
+            'sigtermTime',
+            'logfiles',
+            'usePTY',
+            'logEnviron',
+            'collectStdout',
+            'collectStderr',
+            'interruptSignal',
+            'initialStdin',
+            'decodeRC',
+            'stdioLogName',
+        ]
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)

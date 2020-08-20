@@ -63,7 +63,7 @@ class _TransferBuildStep(BuildStep):
         self.cmd = cmd
         try:
             yield self.runCommand(cmd)
-            return FAILURE if cmd.didFail() else SUCCESS
+            return cmd.results()
         finally:
             if writer:
                 writer.cancel()
@@ -174,7 +174,12 @@ class DirectoryUpload(_TransferBuildStep):
 
     name = 'upload'
 
-    renderables = ['workersrc', 'masterdest', 'url']
+    renderables = [
+        'workersrc',
+        'masterdest',
+        'url',
+        'urlText'
+    ]
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
@@ -250,11 +255,16 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
     name = 'upload'
     logEnviron = False
 
-    renderables = ['workersrcs', 'masterdest', 'url']
+    renderables = [
+        'workersrcs',
+        'masterdest',
+        'url',
+        'urlText'
+    ]
 
     def __init__(self, workersrcs=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, glob=False,
-                 mode=None, compress=None, keepstamp=False, url=None,
+                 mode=None, compress=None, keepstamp=False, url=None, urlText=None,
                  **buildstep_kwargs):
 
         # Emulate that first two arguments are positional.
@@ -278,6 +288,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         self.glob = glob
         self.keepstamp = keepstamp
         self.url = url
+        self.urlText = urlText
 
     def uploadFile(self, source, masterdest):
         fileWriter = remotetransfer.FileWriter(
@@ -330,8 +341,8 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'stat', args)
         yield self.runCommand(cmd)
         if cmd.rc != 0:
-            yield self.addCompleteLog('stderr',
-                                      'File {} not available at worker'.format(args))
+            msg = 'File {}/{} not available at worker'.format(self.workdir, source)
+            yield self.addCompleteLog('stderr', msg)
             return FAILURE
         s = cmd.updates['stat'][-1]
         if stat.S_ISDIR(s[stat.ST_MODE]):
@@ -352,7 +363,12 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
     @defer.inlineCallbacks
     def allUploadsDone(self, result, sources, masterdest):
         if self.url is not None:
-            yield self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
+            urlText = self.urlText
+
+            if urlText is None:
+                urlText = os.path.basename(os.path.normpath(masterdest))
+
+            yield self.addURL(urlText, self.url)
 
     @defer.inlineCallbacks
     def run(self):
