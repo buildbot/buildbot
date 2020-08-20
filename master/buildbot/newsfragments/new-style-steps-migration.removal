@@ -7,7 +7,14 @@ Users are advised to upgrade to new style steps as soon as possible.
 The list of old-style steps that have been converted to new style:
 
  - ``CopyDirectory``
+ - ``DirectoryUpload``
+ - ``FileDownload``
  - ``FileExists``
+ - ``FileUpload``
+ - ``JsonPropertiesDownload``
+ - ``JsonStringDownload``
  - ``MakeDirectory``
+ - ``MultipleFileUpload``
  - ``RemoveDirectory``
  - ``SetPropertiesFromEnv``
+ - ``StringDownload``
