@@ -18,10 +18,17 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process import results
 from buildbot.steps.source import Source
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
+
+
+class OldStyleSourceStep(Source):
+
+    def startVC(self):
+        self.finished(results.SUCCESS)
 
 
 class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
@@ -34,6 +41,16 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    def setup_deferred_mock(self):
+        m = mock.Mock()
+
+        def wrapper(*args, **kwargs):
+            m(*args, **kwargs)
+            return results.SUCCESS
+
+        wrapper.mock = m
+        return wrapper
+
     def test_start_alwaysUseLatest_True(self):
         step = self.setupStep(Source(alwaysUseLatest=True),
                               {
@@ -43,11 +60,11 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
             patch='patch'
         )
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
 
     def test_start_alwaysUseLatest_False(self):
         step = self.setupStep(Source(),
@@ -58,71 +75,80 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
             patch='patch'
         )
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(
-            step.startVC.call_args, (('other-branch', 'revision', 'patch'), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (('other-branch', 'revision', 'patch'), {}))
 
     def test_start_alwaysUseLatest_False_no_branch(self):
         step = self.setupStep(Source())
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+        self.assertEqual(step.run_vc.mock.call_args, (('branch', None, None), {}))
 
     def test_start_no_codebase(self):
         step = self.setupStep(Source())
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.describe(), ['updating'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
         self.assertEqual(step.name, Source.name)
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('',))
 
-        self.assertEqual(step.description, ['updating'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
 
     @defer.inlineCallbacks
     def test_start_with_codebase(self):
         step = self.setupStep(Source(codebase='codebase'))
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.describe(), ['updating', 'codebase'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating codebase'})
         step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
 
-        self.assertEqual(step.describe(True), ['update', 'codebase'])
+        self.assertEqual(step.getResultSummary(),
+                         {'step': 'Codebase codebase not in build codebase (failure)'})
 
     @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self):
         step = self.setupStep(Source(codebase='my-code',
                                      descriptionSuffix='suffix'))
         step.branch = 'branch'
-        step.startVC = mock.Mock()
+        step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.describe(), ['updating', 'suffix'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating suffix'})
         step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))
 
-        self.assertEqual(step.describe(True), ['update', 'suffix'])
+        self.assertEqual(step.getResultSummary(),
+                         {'step': 'Codebase my-code not in build suffix (failure)'})
+
+    def test_old_style_source_step_throws_exception(self):
+        step = self.setupStep(OldStyleSourceStep())
+
+        step.startStep(mock.Mock())
+
+        self.expectOutcome(result=results.EXCEPTION)
+        self.flushLoggedErrors(NotImplementedError)
 
 
 class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,

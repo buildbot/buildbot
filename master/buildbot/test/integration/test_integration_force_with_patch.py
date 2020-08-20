@@ -38,8 +38,8 @@ class MySource(Source):
     """A source class which only applies the patch"""
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+    def run_vc(self, branch, revision, patch):
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
         if patch:
             yield self.patch(patch)
         return SUCCESS

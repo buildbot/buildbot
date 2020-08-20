@@ -124,13 +124,13 @@ class P4(Source):
             self.p4client_spec_options = ''
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         if debug_logging:
-            log.msg('in startVC')
+            log.msg('in run_vc')
 
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         installed = yield self.checkP4()
         if not installed:

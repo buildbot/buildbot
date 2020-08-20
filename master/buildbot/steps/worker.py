@@ -218,12 +218,13 @@ class CompositeStepMixin():
     def workerPathToMasterPath(self, path):
         return os.path.join(*self.worker.path_module.split(path))
 
+    @defer.inlineCallbacks
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write
         to the last one.
         """
-        self.rc_log = self.addLog(logname)
+        self.rc_log = yield self.addLog(logname)
         return self.rc_log
 
     def runRemoteCommand(self, cmd, args, abandonOnFailure=True,

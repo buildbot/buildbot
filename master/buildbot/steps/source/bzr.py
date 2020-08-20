@@ -60,12 +60,12 @@ class Bzr(Source):
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
 
     @defer.inlineCallbacks
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         if branch:
             self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         if self.repourl is None:
             self.repourl = os.path.join(self.baseURL, self.branch)

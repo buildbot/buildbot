@@ -19,7 +19,7 @@ from buildbot.steps.source.git import Git
 
 class Gerrit(Git):
 
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         gerrit_branch = None
 
         changed_project = self.build.getProperty('event.change.project')
@@ -43,4 +43,4 @@ class Gerrit(Git):
                 pass
 
         branch = gerrit_branch or branch
-        return super().startVC(branch, revision, patch)
+        return super().run_vc(branch, revision, patch)
