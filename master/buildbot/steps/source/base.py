@@ -182,13 +182,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 "Sourcestep {} does not have a codebase, other sourcesteps do".format(self.name)
             super().setProperty(name, value, source)
 
-    def describe(self, done=False):
-        desc = self.descriptionDone if done else self.description
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
-
     def computeSourceRevision(self, changes):
         """Each subclass must implement this method to do something more
         precise than -rHEAD every time. For version control systems that use

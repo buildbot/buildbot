@@ -97,13 +97,13 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.describe(), ['updating'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
         self.assertEqual(step.name, Source.name)
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('',))
 
-        self.assertEqual(step.description, ['updating'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
 
     @defer.inlineCallbacks
     def test_start_with_codebase(self):
@@ -113,15 +113,15 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.describe(), ['updating', 'codebase'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating codebase'})
         step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
 
-        self.assertEqual(step.describe(True), ['Codebase', 'codebase', 'not', 'in', 'build',
-                                               'codebase'])
+        self.assertEqual(step.getResultSummary(),
+                         {'step': 'Codebase codebase not in build codebase (failure)'})
 
     @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self):
@@ -132,15 +132,15 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
         step.build.getSourceStamp = mock.Mock()
         step.build.getSourceStamp.return_value = None
 
-        self.assertEqual(step.describe(), ['updating', 'suffix'])
+        self.assertEqual(step.getCurrentSummary(), {'step': 'updating suffix'})
         step.name = yield step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))
 
-        self.assertEqual(step.describe(True), ['Codebase', 'my-code', 'not', 'in', 'build',
-                                               'suffix'])
+        self.assertEqual(step.getResultSummary(),
+                         {'step': 'Codebase my-code not in build suffix (failure)'})
 
     def test_old_style_source_step_throws_exception(self):
         step = self.setupStep(OldStyleSourceStep())
