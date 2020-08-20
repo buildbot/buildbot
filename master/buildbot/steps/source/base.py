@@ -22,7 +22,6 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
-from buildbot.status.builder import SKIPPED
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import bytes2unicode
 
@@ -46,7 +45,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
     flunkOnFailure = True
-    notReally = False
 
     branch = None  # the default branch, should be set in __init__
 
@@ -243,13 +241,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        if self.notReally:
-            log.msg("faking {} checkout/update".format(self.name))
-            self.descriptionDone = "fake {} successful".format(self.name)
-            yield self.addCompleteLog("log",
-                                      "Faked {} checkout/update 'successful'\n".format(self.name))
-            return SKIPPED
-
         if getattr(self, 'startVC', None) is not None:
             msg = 'Old-style source steps are no longer supported. Please convert your custom ' \
                   'source step to new style (replace startVC with run_vc and convert all used ' \
