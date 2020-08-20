@@ -663,13 +663,29 @@ class SetPropertyDeprecation(unittest.TestCase):
                          )
 
 
-class Configure(unittest.TestCase):
+class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpTestReactor()
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
 
     def test_class_attrs(self):
-        # nothing too exciting here, but at least make sure the class is
-        # present
         step = shell.Configure()
         self.assertEqual(step.command, ['./configure'])
+
+    def test_run(self):
+        self.setupStep(shell.Configure())
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=["./configure"])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
 
 
 class WarningCountingShellCommand(steps.BuildStepMixin,
