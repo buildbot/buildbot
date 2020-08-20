@@ -25,6 +25,12 @@ from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
 
+class OldStyleSourceStep(Source):
+
+    def startVC(self):
+        self.finished(results.SUCCESS)
+
+
 class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
                  unittest.TestCase):
 
@@ -135,6 +141,14 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.assertEqual(step.describe(True), ['Codebase', 'my-code', 'not', 'in', 'build',
                                                'suffix'])
+
+    def test_old_style_source_step_throws_exception(self):
+        step = self.setupStep(OldStyleSourceStep())
+
+        step.startStep(mock.Mock())
+
+        self.expectOutcome(result=results.EXCEPTION)
+        self.flushLoggedErrors(NotImplementedError)
 
 
 class TestSourceDescription(steps.BuildStepMixin, TestReactorMixin,

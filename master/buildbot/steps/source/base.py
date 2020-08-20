@@ -257,6 +257,13 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                                       "Faked {} checkout/update 'successful'\n".format(self.name))
             return SKIPPED
 
+        if getattr(self, 'startVC', None) is not None:
+            msg = 'Old-style source steps are no longer supported. Please convert your custom ' \
+                  'source step to new style (replace startVC with run_vc and convert all used ' \
+                  'old style APIs to new style). Please consider contributing the source step to ' \
+                  'upstream BuildBot so that such migrations can be avoided in the future.'
+            raise NotImplementedError(msg)
+
         if not self.alwaysUseLatest:
             # what source stamp would this step like to use?
             s = self.build.getSourceStamp(self.codebase)
