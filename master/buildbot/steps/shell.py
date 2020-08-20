@@ -413,10 +413,7 @@ class Configure(buildstep.ShellMixin, buildstep.BuildStep):
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
-
-        if cmd.didFail():
-            return FAILURE
-        return SUCCESS
+        return cmd.results()
 
 
 class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
