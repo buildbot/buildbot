@@ -4,6 +4,7 @@
 import { BasePage } from "./base";
 import { ForcePage } from './force';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from '../utils';
 
 export class BuilderPage extends BasePage {
     builder: string;
@@ -15,21 +16,18 @@ export class BuilderPage extends BasePage {
     }
 
     async goBuildersList() {
-        await browser.get('#/builders');
-        await browser.wait(EC.urlContains('#/builders'),
-                           10000,
-                           "URL does not contain #/builders");
+        await bbrowser.get('#/builders');
+        await bbrowser.wait(EC.urlContains('#/builders'),
+                            "URL does not contain #/builders");
     }
 
     async go() {
-        await browser.get('#/builders');
-        await browser.wait(EC.urlContains('#/builders'),
-                           10000,
-                           "URL does not contain #/builders");
+        await bbrowser.get('#/builders');
+        await bbrowser.wait(EC.urlContains('#/builders'),
+                            "URL does not contain #/builders");
         let localBuilder = element(By.linkText(this.builder));
-        await browser.wait(EC.elementToBeClickable(localBuilder),
-                           5000,
-                           "local builder not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(localBuilder),
+                            "local builder not clickable");
         await localBuilder.click();
 
         const isBuilderPage = async () =>
@@ -37,15 +35,14 @@ export class BuilderPage extends BasePage {
             let url = await browser.getCurrentUrl();
             return (new RegExp("#/builders/[0-9]+$")).test(url);
         };
-        await browser.wait(isBuilderPage, 5000, "Did not got to builder page");
+        await bbrowser.wait(isBuilderPage, "Did not got to builder page");
     }
 
     async goForce() {
         await this.go();
         var forceButton = element.all(By.buttonText(this.forceName)).first();
-        await browser.wait(EC.elementToBeClickable(forceButton),
-                           5000,
-                           "force button not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(forceButton),
+                            "force button not clickable");
         await forceButton.click();
         return new ForcePage();
     }
@@ -60,9 +57,8 @@ export class BuilderPage extends BasePage {
         var buildLink = element.all(By.css('.bb-buildid-link'))
                                .filter(matchLink)
                                .first();
-        await browser.wait(EC.elementToBeClickable(buildLink),
-                           5000,
-                           "build link not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(buildLink),
+                            "build link not clickable");
         await buildLink.click();
     }
 
@@ -120,7 +116,7 @@ export class BuilderPage extends BasePage {
             let currentBuildCount = await self.getLastFinishedBuildNumber();
             return currentBuildCount == reference;
         }
-        await browser.wait(buildCountIncrement, 20000);
+        await bbrowser.wait(buildCountIncrement, "Build count did not increment");
     }
 
     async waitGoToBuild(expected_buildnumber) {
@@ -138,7 +134,7 @@ export class BuilderPage extends BasePage {
                 }
                 return true;
             }
-        await browser.wait(isInBuild, 20000);
+        await bbrowser.wait(isInBuild, "Did not get into build");
     }
 
     getStopButton() {
