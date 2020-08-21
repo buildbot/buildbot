@@ -288,7 +288,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
 
-class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
+class CompositeUser(buildstep.BuildStep, worker.CompositeStepMixin):
 
     def __init__(self, payload):
         self.payload = payload
@@ -297,15 +297,9 @@ class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
 
     @defer.inlineCallbacks
     def start(self):
-        self.addLogForRemoteCommands('stdio')
-        try:
-            res = yield self.payload(self)
-            self.payloadComplete(res)
-        except Exception as e:
-            self.failed(e)
-
-    def payloadComplete(self, res):
-        self.finished(FAILURE if res else SUCCESS)
+        yield self.addLogForRemoteCommands('stdio')
+        res = yield self.payload(self)
+        return FAILURE if res else SUCCESS
 
 
 class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,

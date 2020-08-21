@@ -22,7 +22,6 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
-from buildbot.status.builder import SKIPPED
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import bytes2unicode
 
@@ -32,7 +31,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the worker.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
-    startVC(). The class as a whole builds up the self.args dictionary, then
+    run_vc(). The class as a whole builds up the self.args dictionary, then
     starts a RemoteCommand with those arguments.
     """
 
@@ -46,7 +45,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
     flunkOnFailure = True
-    notReally = False
 
     branch = None  # the default branch, should be set in __init__
 
@@ -182,13 +180,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 "Sourcestep {} does not have a codebase, other sourcesteps do".format(self.name)
             super().setProperty(name, value, source)
 
-    def describe(self, done=False):
-        desc = self.descriptionDone if done else self.description
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
-
     def computeSourceRevision(self, changes):
         """Each subclass must implement this method to do something more
         precise than -rHEAD every time. For version control systems that use
@@ -248,13 +239,14 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
 
-    def start(self):
-        if self.notReally:
-            log.msg("faking {} checkout/update".format(self.name))
-            self.step_status.setText(["fake", self.name, "successful"])
-            self.addCompleteLog("log",
-                                "Faked {} checkout/update 'successful'\n".format(self.name))
-            return SKIPPED
+    @defer.inlineCallbacks
+    def run(self):
+        if getattr(self, 'startVC', None) is not None:
+            msg = 'Old-style source steps are no longer supported. Please convert your custom ' \
+                  'source step to new style (replace startVC with run_vc and convert all used ' \
+                  'old style APIs to new style). Please consider contributing the source step to ' \
+                  'upstream BuildBot so that such migrations can be avoided in the future.'
+            raise NotImplementedError(msg)
 
         if not self.alwaysUseLatest:
             # what source stamp would this step like to use?
@@ -279,14 +271,13 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    self.addCompleteLog("patch", bytes2unicode(patch[1]))
+                    yield self.addCompleteLog("patch", bytes2unicode(patch[1]))
             else:
                 log.msg("No sourcestamp found in build for codebase '{}'".format(self.codebase))
-                self.step_status.setText(
-                    ["Codebase", '{}'.format(self.codebase), "not", "in", "build"])
-                self.addCompleteLog("log",
-                                    "No sourcestamp found in build for codebase '{}'".format(
-                                            self.codebase))
+                self.descriptionDone = "Codebase {} not in build".format(self.codebase)
+                yield self.addCompleteLog("log",
+                                          "No sourcestamp found in build for codebase '{}'".format(
+                                               self.codebase))
                 return FAILURE
 
         else:
@@ -294,7 +285,5 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             branch = self.branch
             patch = None
 
-        d = self.startVC(branch, revision, patch)
-        d.addCallback(self.finished)
-        d.addErrback(self.failed)
-        return None
+        res = yield self.run_vc(branch, revision, patch)
+        return res

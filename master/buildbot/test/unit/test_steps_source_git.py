@@ -3431,21 +3431,15 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def _test_WorkerTooOldError(self, _dovccmd, step, msg):
-        def check(failure):
-            self.assertIsInstance(failure.value, WorkerTooOldError)
-            self.assertEqual(str(failure.value), msg)
 
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
         gitStep = self.setupStep(step)
 
         gitStep._start_deferred = defer.Deferred()
-        d = gitStep.startVC("branch", "revision", "patch")
-        d.addCallback(gitStep.finished)
-        d.addErrback(gitStep.failed)
-
-        d = gitStep._start_deferred.addBoth(check)
-        return d
+        with self.assertRaisesRegex(WorkerTooOldError, msg):
+            yield gitStep.run_vc("branch", "revision", "patch")
 
     def test_noGitCommandInstalled(self):
         @defer.inlineCallbacks

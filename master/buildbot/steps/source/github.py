@@ -19,8 +19,8 @@ from buildbot.steps.source.git import Git
 
 class GitHub(Git):
 
-    def startVC(self, branch, revision, patch):
+    def run_vc(self, branch, revision, patch):
         # ignore the revision if the branch ends with /merge
         if branch.endswith("/merge"):
             revision = None
-        return super().startVC(branch, revision, patch)
+        return super().run_vc(branch, revision, patch)

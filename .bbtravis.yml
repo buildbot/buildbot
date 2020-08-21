@@ -20,7 +20,9 @@ env:
   - HYPER_SIZE=m1
   - CHROME_BIN=/usr/bin/chromium-browser
   matrix:
-  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
+  # include "ci" string into the name of the status that is eventually submitted to Github, so
+  # that the codecov.io service would wait until this build is finished before creating report.
+  - TWISTED=latest SQLALCHEMY=latest TESTS=ci/coverage
 
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
@@ -156,7 +158,7 @@ script:
 
   # run tests under coverage for latest only (it's slower..)
   - title: coverage tests
-    condition: TESTS == "coverage"
+    condition: TESTS == "ci/coverage"
     cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   # Run additional tests in their separate job
@@ -200,7 +202,7 @@ notifications:
 after_script:
   - |
       # codecov
-      if [ $TESTS = coverage ]; then CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" codecov; fi
+      if [ $TESTS = ci/coverage ]; then CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" codecov; fi
   # List installed packages along with their versions.
   - "pip list"
 
