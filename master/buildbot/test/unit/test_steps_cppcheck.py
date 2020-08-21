@@ -44,6 +44,16 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
         return self.runStep()
 
+    def test_command_failure(self):
+        self.setupStep(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=[
+                        'cppcheck', '.', '--enable=all', '--inconclusive']) +
+            ExpectShell.log('stdio', stdout='Checking file1.c...') +
+            1)
+        self.expectOutcome(result=FAILURE, state_string="cppcheck (failure)")
+        return self.runStep()
+
     def test_warnings(self):
         self.setupStep(
             cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
