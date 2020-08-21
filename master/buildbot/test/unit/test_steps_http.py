@@ -13,11 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+import collections
 
+import mock
+
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
+from twisted.web.util import redirectTo
 
 from buildbot.process import properties
 from buildbot.process.results import FAILURE
@@ -45,9 +50,17 @@ class TestPage(Resource):
         if request.uri == b"/404":
             request.setResponseCode(404)
             return b"404"
+        elif request.uri == b'/redirect':
+            return redirectTo(b'/redirected-path', request)
         elif request.uri == b"/header":
             return b"".join(request.requestHeaders.getRawHeaders(b"X-Test"))
         return b"OK"
+
+    def render_POST(self, request):
+        if request.uri == b"/404":
+            request.setResponseCode(404)
+            return b"404"
+        return b"OK:" + request.content.read()
 
 
 class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -69,19 +82,63 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.port = self.listener.getHost().port
         return self.setUpBuildStep()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         http.closeSession()
-        d = self.listener.stopListening()
-        d.addBoth(lambda x: self.tearDownBuildStep())
-        return d
+        try:
+            yield self.listener.stopListening()
+        finally:
+            yield self.tearDownBuildStep()
+
+    def get_connection_string(self):
+        return "http://127.0.0.1:{}".format(self.port)
 
     def getURL(self, path=""):
-        return "http://127.0.0.1:{}/{}".format(self.port, path)
+        return '{}/{}'.format(self.get_connection_string(), path)
 
-    def test_basic(self):
+    def test_get(self):
         url = self.getURL()
         self.setupStep(http.GET(url))
         self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK".format(url))
+        self.expectLogfile('content', "OK")
+        self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
+        return self.runStep()
+
+    def test_connection_error(self):
+        def throwing_request(*args, **kwargs):
+            raise requests.exceptions.ConnectionError("failed to connect")
+
+        with mock.patch.object(http.getSession(), 'request', throwing_request):
+            url = self.getURL("path")
+            self.setupStep(http.GET(url))
+            self.expectOutcome(result=FAILURE, state_string="Requested (failure)")
+            return self.runStep()
+
+    def test_redirect(self):
+        url = self.getURL("redirect")
+        self.setupStep(http.GET(url))
+
+        expected_log = '''
+Redirected 1 times:
+
+URL: {0}/redirect
+ ------ Content ------
+
+<html>
+    <head>
+        <meta http-equiv="refresh" content="0;URL=/redirected-path">
+    </head>
+    <body bgcolor="#FFFFFF" text="#000000">
+    <a href="/redirected-path">click here</a>
+    </body>
+</html>
+============================================================
+URL: {0}/redirected-path
+Status: 200
+ ------ Content ------
+OK'''.format(self.get_connection_string())
+
+        self.expectLogfile('log', expected_log)
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()
@@ -91,15 +148,46 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(http.GET(url))
         self.expectLogfile('log', "URL: {}\n ------ Content ------\n404".format(url))
         self.expectLogfile('content', "404")
-        self.expectOutcome(
-            result=FAILURE, state_string="Status code: 404 (failure)")
+        self.expectOutcome(result=FAILURE, state_string="Status code: 404 (failure)")
         return self.runStep()
 
-    def test_POST(self):
-        url = self.getURL("POST")
+    def test_method_not_allowed(self):
+        url = self.getURL("path")
+        self.setupStep(http.PUT(url))
+        self.expectOutcome(result=FAILURE, state_string="Status code: 501 (failure)")
+        return self.runStep()
+
+    def test_post(self):
+        url = self.getURL("path")
         self.setupStep(http.POST(url))
-        self.expectOutcome(
-            result=FAILURE, state_string="Status code: 405 (failure)")
+        self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
+        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK:".format(url))
+        self.expectLogfile('content', "OK:")
+        return self.runStep()
+
+    def test_post_data(self):
+        url = self.getURL("path")
+        self.setupStep(http.POST(url, data='mydata'))
+        self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
+        self.expectLogfile('log',
+                           "URL: {}\nStatus: 200\n ------ Content ------\nOK:mydata".format(url))
+        self.expectLogfile('content', "OK:mydata")
+        return self.runStep()
+
+    def test_post_data_dict(self):
+        url = self.getURL("path")
+
+        # make sure the order of keys is stable
+        data = collections.OrderedDict([('key1', 'value1'), ('key2', 'value2')])
+
+        self.setupStep(http.POST(url, data=data))
+        self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
+        self.expectLogfile('log', '''\
+URL: {}
+Status: 200
+ ------ Content ------
+OK:key1=value1&key2=value2'''.format(url))
+        self.expectLogfile('content', "OK:key1=value1&key2=value2")
         return self.runStep()
 
     def test_header(self):
