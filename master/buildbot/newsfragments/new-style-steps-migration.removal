@@ -6,6 +6,7 @@ Users are advised to upgrade to new style steps as soon as possible.
 
 The list of old-style steps that have been converted to new style:
 
+ - ``Configure``
  - ``CopyDirectory``
  - ``DirectoryUpload``
  - ``FileDownload``
@@ -19,4 +20,6 @@ The list of old-style steps that have been converted to new style:
  - ``MultipleFileUpload``
  - ``RemoveDirectory``
  - ``SetPropertiesFromEnv``
+ - ``SetPropertyFromCommand``
  - ``StringDownload``
+ - ``TreeSize``
