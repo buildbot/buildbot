@@ -32,7 +32,11 @@ if [ -f /usr/bin/protractor ]; then
 else
     yarn install --pure-lockfile
     ../common/smokedist-download-compatible-chromedriver.py \
-        ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser
+        ./node_modules/protractor/bin/webdriver-manager \
+            google-chrome \
+            chromium-browser \
+            /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+            chromium
     PROTRACTOR=./node_modules/protractor/bin/protractor
 fi
 if [ -f /usr/bin/xvfb-run ] && [[ ! -n "$SMOKES_DONT_USE_XVFB" ]] ; then
@@ -41,6 +45,10 @@ else
     # manual mode: install locally
     yarn install
     ../common/smokedist-download-compatible-chromedriver.py \
-        ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome
+        ./node_modules/protractor/bin/webdriver-manager \
+            google-chrome \
+            chromium-browser \
+            /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+            chromium
     ./node_modules/protractor/bin/protractor protractor.conf.js
 fi
