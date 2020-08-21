@@ -13,7 +13,9 @@ The list of old-style steps that have been converted to new style:
  - ``FileUpload``
  - ``JsonPropertiesDownload``
  - ``JsonStringDownload``
+ - ``LogRenderable``
  - ``MakeDirectory``
+ - ``MasterShellCommand``
  - ``MultipleFileUpload``
  - ``RemoveDirectory``
  - ``SetPropertiesFromEnv``

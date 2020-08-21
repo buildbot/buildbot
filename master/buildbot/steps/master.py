@@ -26,6 +26,7 @@ from twisted.python import runtime
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
+from buildbot.util import deferwaiter
 
 
 class MasterShellCommand(BuildStep):
@@ -53,27 +54,36 @@ class MasterShellCommand(BuildStep):
 
         self.command = command
         self.masterWorkdir = self.workdir
+        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._status_object = None
 
     class LocalPP(ProcessProtocol):
 
         def __init__(self, step):
             self.step = step
+            self._finish_d = defer.Deferred()
+            self.step._deferwaiter.add(self._finish_d)
 
         def outReceived(self, data):
-            self.step.stdio_log.addStdout(data)
+            self.step._deferwaiter.add(self.step.stdio_log.addStdout(data))
 
         def errReceived(self, data):
-            self.step.stdio_log.addStderr(data)
+            self.step._deferwaiter.add(self.step.stdio_log.addStderr(data))
 
         def processEnded(self, status_object):
             if status_object.value.exitCode is not None:
-                self.step.stdio_log.addHeader(
-                    "exit status %d\n" % status_object.value.exitCode)
-            if status_object.value.signal is not None:
-                self.step.stdio_log.addHeader("signal {}\n".format(status_object.value.signal))
-            self.step.processEnded(status_object)
+                msg = "exit status {}\n".format(status_object.value.exitCode)
+                self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
 
-    def start(self):
+            if status_object.value.signal is not None:
+                msg = "signal {}\n".format(status_object.value.signal)
+                self.step._deferwaiter.add(self.step.stdio_log.addHeader(msg))
+
+            self.step._status_object = status_object
+            self._finish_d.callback(None)
+
+    @defer.inlineCallbacks
+    def run(self):
         # render properties
         command = self.command
         # set up argv
@@ -98,16 +108,15 @@ class MasterShellCommand(BuildStep):
             else:
                 argv = command
 
-        self.stdio_log = stdio_log = self.addLog("stdio")
+        self.stdio_log = yield self.addLog("stdio")
 
         if isinstance(command, (str, bytes)):
-            stdio_log.addHeader(command.strip() + "\n\n")
+            yield self.stdio_log.addHeader(command.strip() + "\n\n")
         else:
-            stdio_log.addHeader(" ".join(command) + "\n\n")
-        stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
-        stdio_log.addHeader(" in dir {}\n".format(os.getcwd()))
-        stdio_log.addHeader(" argv: {}\n".format(argv))
-        self.step_status.setText(self.describe())
+            yield self.stdio_log.addHeader(" ".join(command) + "\n\n")
+        yield self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
+        yield self.stdio_log.addHeader(" in dir {}\n".format(os.getcwd()))
+        yield self.stdio_log.addHeader(" argv: {}\n".format(argv))
 
         if self.env is None:
             env = os.environ
@@ -138,26 +147,25 @@ class MasterShellCommand(BuildStep):
             env = newenv
 
         if self.logEnviron:
-            stdio_log.addHeader(" env: %r\n" % (env,))
+            yield self.stdio_log.addHeader(" env: %r\n" % (env,))
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
                                             path=self.masterWorkdir, usePTY=self.usePTY, env=env)
-        # (the LocalPP object will call processEnded for us)
 
-    def processEnded(self, status_object):
-        if status_object.value.signal is not None:
-            self.descriptionDone = ["killed ({})".format(status_object.value.signal)]
-            self.step_status.setText(self.describe(done=True))
-            self.finished(FAILURE)
-        elif status_object.value.exitCode != 0:
-            self.descriptionDone = [
-                "failed (%d)" % status_object.value.exitCode]
-            self.step_status.setText(self.describe(done=True))
-            self.finished(FAILURE)
+        # self._deferwaiter will yield only after LocalPP finishes
+
+        yield self._deferwaiter.wait()
+
+        status_value = self._status_object.value
+        if status_value.signal is not None:
+            self.descriptionDone = ["killed ({})".format(status_value.signal)]
+            return FAILURE
+        elif status_value.exitCode != 0:
+            self.descriptionDone = ["failed ({})".format(status_value.exitCode)]
+            return FAILURE
         else:
-            self.step_status.setText(self.describe(done=True))
-            self.finished(SUCCESS)
+            return SUCCESS
 
     def interrupt(self, reason):
         try:
@@ -232,8 +240,8 @@ class LogRenderable(BuildStep):
         super().__init__(**kwargs)
         self.content = content
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         content = pprint.pformat(self.content)
-        self.addCompleteLog(name='Output', text=content)
-        self.step_status.setText(self.describe(done=True))
-        self.finished(SUCCESS)
+        yield self.addCompleteLog(name='Output', text=content)
+        return SUCCESS
