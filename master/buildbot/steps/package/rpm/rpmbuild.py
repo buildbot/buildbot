@@ -49,32 +49,6 @@ class RpmBuild(ShellCommand):
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
-        """
-        Create the RpmBuild object.
-
-        @type specfile: str
-        @param specfile: location of the specfile to build
-        @type topdir: str
-        @param topdir: define the _topdir rpm parameter
-        @type builddir: str
-        @param builddir: define the _builddir rpm parameter
-        @type rpmdir: str
-        @param rpmdir: define the _rpmdir rpm parameter
-        @type sourcedir: str
-        @param sourcedir: define the _sourcedir rpm parameter
-        @type specdir: str
-        @param specdir: define the _specdir rpm parameter
-        @type srcrpmdir: str
-        @param srcrpmdir: define the _srcrpmdir rpm parameter
-        @type dist: str
-        @param dist: define the dist string.
-        @type define: dict
-        @param define: additional parameters to define
-        @type autoRelease: boolean
-        @param autoRelease: Use auto incrementing release numbers.
-        @type vcsRevision: boolean
-        @param vcsRevision: Use vcs version number as revision number.
-        """
         super().__init__(**kwargs)
 
         self.dist = dist
