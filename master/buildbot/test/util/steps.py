@@ -394,6 +394,7 @@ class BuildStepMixin:
             got = self.step.logs[l].stdout
             if got != exp:
                 log.msg("Unexpected log output:\n" + got)
+                log.msg("Expected log output:\n" + exp)
                 raise AssertionError("Unexpected log output; see logs")
         if self.exp_exception:
             self.assertEqual(

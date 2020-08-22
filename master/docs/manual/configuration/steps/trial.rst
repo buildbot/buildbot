@@ -8,34 +8,60 @@ Trial
 .. py:class:: buildbot.steps.python_twisted.Trial
 
 This step runs a unit test suite using :command:`trial`, a unittest-like testing framework that is a component of Twisted Python.
-Trial is used to implement Twisted's own unit tests, and is the unittest-framework of choice for many projects that use Twisted internally.
 
-Projects that use trial typically have all their test cases in a 'test' subdirectory of their top-level library directory.
-For example, for a package ``petmail``, the tests might be in :file:`petmail/test/test_*.py`.
-More complicated packages (like Twisted itself) may have multiple test directories, like :file:`twisted/test/test_*.py` for the core functionality and :file:`twisted/mail/test/test_*.py` for the email-specific tests.
+The :bb:step:`Trial` takes the following arguments:
 
-To run trial tests manually, you run the :command:`trial` executable and tell it where the test cases are located.
-The most common way of doing this is with a module name.
-For petmail, this might look like :command:`trial petmail.test`, which would locate all the :file:`test_*.py` files under :file:`petmail/test/`, running every test case it could find in them.
-Unlike the ``unittest.py`` that comes with Python, it is not necessary to run the :file:`test_foo.py` as a script; you always let trial do the importing and running.
-The step's ``tests``` parameter controls which tests trial will run: it can be a string or a list of strings.
+``python``
+  (string or list of strings, optional) Which python executable to use.
+  Will form the start of the argv array that will launch ``trial``.
+  If you use this, you should set ``trial`` to an explicit path (like /usr/bin/trial or ./bin/trial).
+  Defaults to ``None``, which leaves it out entirely (running 'trial args' instead of python ./bin/trial args').
+  Likely values are ``'python'``, ``['python3.5']``, ``['python', '-Wall']``, etc.
 
-To find the test cases, the Python search path must allow something like ``import petmail.test`` to work.
-For packages that don't use a separate top-level :file:`lib` directory, ``PYTHONPATH=.`` will work, and will use the test cases (and the code they are testing) in-place.
-``PYTHONPATH=build/lib`` or ``PYTHONPATH=build/lib.somearch`` are also useful when you do a ``python setup.py build`` step first.
-The ``testpath`` attribute of this class controls what :envvar:`PYTHONPATH` is set to before running :command:`trial`.
+``trial``
+  (string, optional) Which 'trial' executable to run
+  Defaults to ``'trial'``, which will cause ``$PATH`` to be searched and probably find ``/usr/bin/trial``.
+  If you set ``python``, this should be set to an explicit path (because ``python3.5 trial`` will not work).
 
-Trial has the ability, through the ``--testmodule`` flag, to run only the set of test cases named by special ``test-case-name`` tags in source files.
-We can get the list of changed source files from our parent Build and provide them to trial, thus running the minimal set of test cases needed to cover the Changes.
-This is useful for quick builds, especially in trees with a lot of test cases.
-The ``testChanges`` parameter controls this feature: if set, it will override ``tests``.
+``trialMode``
+  (list of strings, optional) A list of arguments to pass to trial to set the reporting mode.
+  This defaults to ``['-to']`` which means 'verbose colorless output' to the trial that comes with Twisted-2.0.x and at least -2.1.0 .
+  Newer versions of Twisted may come with a trial that prefers ``['--reporter=bwverbose']``.
 
-The trial executable itself is typically just :command:`trial`, and is typically found in the shell search path.
-It can be overridden with the ``trial`` parameter.
-This is useful for Twisted's own unittests, which want to use the copy of bin/trial that comes with the sources.
+``trialArgs``
+  (list of strings, optional) A list of arguments to pass to trial.
+  This can be used to turn on any extra flags you like.
+  Defaults to ``[]``.
 
-To influence the version of Python being used for the tests, or to add flags to the command, set the ``python`` parameter.
-This can be a string (like ``python2.2``) or a list (like ``['python2.3', '-Wall']``).
+``jobs``
+  (integer, optional) Defines the number of parallel jobs.
+
+``tests``
+  (list of strings, optional) Defines the test modules to run.
+  For example, ``['twisted.test.test_defer', 'twisted.test.test_process']``
+  If this is a string, it will be converted into a one-item list.
+
+``testChanges``
+  (boolean, optional) Selects the tests according to the changes in the Build.
+  If set, this will override the ``tests`` parameter and asks the Build for all the files that make up the Changes going into this build.
+  The filenames will be passed to ``trial`` asking to run just the tests necessary to cover the changes.
+
+``recurse``
+  (boolean, optional) Selects the ``--recurse`` option of trial.
+  This allows test cases to be found in deeper subdirectories of the modules listed in ``tests``.
+  When using ``testChanges`` this option is not necessary.
+
+``reactor``
+  (boolean, optional) Selects the reactor to use within Trial.
+  For example, options are ``gtk`` or ``java``.
+  If not provided, the Twisted's usual platform-dependent default is used.
+
+``randomly``
+  (boolean, optional) If ``True``, adds the ``--random=0`` argument, which instructs trial to run the unit tests in a random order each time.
+  This occasionally catches problems that might be  masked when one module always runs before another.
+
+``**kwargs``
+  (dict, optional) The step inherits all arguments of ``ShellMixin`` except ``command``.
 
 Trial creates and switches into a directory named :file:`_trial_temp/` before running the tests, and sends the twisted log (which includes all exceptions) to a file named :file:`test.log`.
 This file will be pulled up to the master where it can be seen as part of the status output.
@@ -45,14 +71,3 @@ This file will be pulled up to the master where it can be seen as part of the st
     from buildbot.plugins import steps
 
     f.addStep(steps.Trial(tests='petmail.test'))
-
-Trial has the ability to run tests on several workers in parallel (beginning with Twisted 12.3.0).
-Set ``jobs`` to the number of workers you want to run.
-Note that running :command:`trial` in this way will create multiple log files (named :file:`test.N.log`, :file:`err.N.log` and :file:`out.N.log` starting with ``N=0``) rather than a single :file:`test.log`.
-
-This step takes the following arguments:
-
-``jobs``
-   (optional) Number of worker-resident trial workers to use when running the tests.
-   Defaults to 1 worker.
-   Only works with Twisted>=12.3.0.
