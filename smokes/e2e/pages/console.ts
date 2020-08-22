@@ -2,7 +2,8 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
-import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from '../utils';
 
 export class ConsolePage extends BasePage {
     constructor() {
@@ -10,10 +11,9 @@ export class ConsolePage extends BasePage {
     }
 
     async go() {
-        await browser.get('#/console');
-        await browser.wait(EC.urlContains('#/console'),
-                           10000,
-                           "URL does not contain #/console");
+        await bbrowser.get('#/console');
+        await bbrowser.wait(EC.urlContains('#/console'),
+                            "URL does not contain #/console");
     }
 
     async countSuccess() {

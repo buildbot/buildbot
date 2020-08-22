@@ -1,7 +1,10 @@
 const { SpecReporter } = require('jasmine-spec-reporter');
 
 exports.config = {
-    allScriptsTimeout: 11000,
+    // when running tests on a heavily loaded maching (which is the case on e.g. CI server),
+    // Buildbot master sometimes takes a lot of time to respond to certain queries during tests.
+    // The following timeout is increased to avoid test instabilities in such cases
+    allScriptsTimeout: 30000,
 
     specs: [
         'e2e/*.scenarios.ts'

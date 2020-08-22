@@ -2,7 +2,8 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
-import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from '../utils';
 
 export class HomePage extends BasePage {
 
@@ -11,10 +12,9 @@ export class HomePage extends BasePage {
     }
 
     async go() {
-        await browser.get('#/');
-        await browser.wait(EC.urlContains('#/'),
-                           10000,
-                           "URL does not contain #/");
+        await bbrowser.get('#/');
+        await bbrowser.wait(EC.urlContains('#/'),
+                            "URL does not contain #/");
     }
 
     getPanel() {
@@ -50,6 +50,6 @@ export class HomePage extends BasePage {
             text = text.join(" ");
             return text.toLowerCase().indexOf("0 builds running") >= 0;
         }
-        await browser.wait(noRunningBuilds, 20000);
+        await bbrowser.wait(noRunningBuilds, "Builds are still running");
     }
 }

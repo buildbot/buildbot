@@ -5,6 +5,7 @@
 import { HomePage } from './pages/home';
 import { BuilderPage } from './pages/builder';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from './utils';
 
 describe('rebuilds', function() {
     let builder = null;
@@ -29,9 +30,8 @@ describe('rebuilds', function() {
         await builder.goBuild(lastbuild + 1);
         await browser.getCurrentUrl();
         let rebuildButton = builder.getRebuildButton();
-        await browser.wait(EC.elementToBeClickable(rebuildButton),
-                           5000,
-                           "rebuild button not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(rebuildButton),
+                            "rebuild button not clickable");
         await rebuildButton.click();
         await builder.waitGoToBuild(lastbuild + 2);
     });

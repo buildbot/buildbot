@@ -3,6 +3,7 @@
 import { HomePage } from './pages/home';
 import { BuilderPage } from './pages/builder';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from './utils';
 
 describe('force and cancel', function() {
     let builder = null;
@@ -30,9 +31,8 @@ describe('force and cancel', function() {
         await builder.go();
         let force = await builder.goForce();
         let cancelButton = force.getCancelButton();
-        await browser.wait(EC.elementToBeClickable(cancelButton),
-                           5000,
-                           "cancel button not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(cancelButton),
+                            "cancel button not clickable");
         await cancelButton.click();
     });
 

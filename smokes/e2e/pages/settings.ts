@@ -2,7 +2,8 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
-import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from '../utils';
 
 export class SettingsPage extends BasePage {
     builder: string;
@@ -13,10 +14,9 @@ export class SettingsPage extends BasePage {
     }
 
     async goSettings() {
-        await browser.get('#/settings');
-        await browser.wait(EC.urlContains('#/settings'),
-                           10000,
-                           "URL does not contain #/settings");
+        await bbrowser.get('#/settings');
+        await bbrowser.wait(EC.urlContains('#/settings'),
+                            "URL does not contain #/settings");
     }
 
     getItem(group, name) {

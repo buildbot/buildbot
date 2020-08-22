@@ -3,6 +3,7 @@
 
 import { BasePage } from "./base";
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from '../utils';
 
 export class PendingBuildrequestsPage extends BasePage {
 
@@ -11,10 +12,9 @@ export class PendingBuildrequestsPage extends BasePage {
     }
 
     async go() {
-        await browser.get('#/pendingbuildrequests');
-        await browser.wait(EC.urlContains('#/pendingbuildrequests'),
-                           10000,
-                           "URL does not contain #/pendingbuildrequests");
+        await bbrowser.get('#/pendingbuildrequests');
+        await bbrowser.wait(EC.urlContains('#/pendingbuildrequests'),
+                            "URL does not contain #/pendingbuildrequests");
     }
 
     getAllBuildrequestRows() {

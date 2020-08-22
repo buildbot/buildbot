@@ -5,6 +5,7 @@
 import { BuilderPage } from './pages/builder';
 import { HomePage } from './pages/home';
 import { browser, by, element, ExpectedConditions as EC } from 'protractor';
+import { bbrowser } from './utils';
 
 describe('previousnextlink', function() {
     let builder = null;
@@ -36,15 +37,13 @@ describe('previousnextlink', function() {
         await builder.goBuild(+lastbuild + 2);
         const lastBuildURL = await browser.getCurrentUrl();
         let previousButton = builder.getPreviousButton();
-        await browser.wait(EC.elementToBeClickable(previousButton),
-                           5000,
-                           "previous button not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(previousButton),
+                            "previous button not clickable");
         await previousButton.click()
         expect(await browser.getCurrentUrl()).not.toMatch(lastBuildURL);
         let nextButton = builder.getNextButton();
-        await browser.wait(EC.elementToBeClickable(nextButton),
-                           5000,
-                           "next button not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(nextButton),
+                            "next button not clickable");
         await nextButton.click();
         expect(await browser.getCurrentUrl()).toMatch(lastBuildURL);
     });
@@ -63,9 +62,8 @@ describe('forceandstop', function() {
         await force.clickStartButtonAndWaitRedirectToBuild();
         expect(await browser.getCurrentUrl()).toMatch("/builders/\[1-9]/builds/\[1-9]");
         let stopButton = builder.getStopButton();
-        await browser.wait(EC.elementToBeClickable(stopButton),
-                           5000,
-                           "stop button not clickable");
+        await bbrowser.wait(EC.elementToBeClickable(stopButton),
+                            "stop button not clickable");
         await stopButton.click();
 
         const buildStatusIsCancelled = async () =>
@@ -74,8 +72,7 @@ describe('forceandstop', function() {
             return (elements.length !== 0);
         };
 
-        await browser.wait(buildStatusIsCancelled,
-                           5000,
-                           "build could not be cancelled");
+        await bbrowser.wait(buildStatusIsCancelled,
+                            "build could not be cancelled");
     });
 });
