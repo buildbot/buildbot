@@ -17,6 +17,7 @@
 Steps and objects related to lintian
 """
 
+from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -24,7 +25,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps.package import util as pkgutil
-from buildbot.steps.shell import ShellCommand
 
 
 class MaxQObserver(buildstep.LogLineObserver):
@@ -38,31 +38,19 @@ class MaxQObserver(buildstep.LogLineObserver):
             self.failures += 1
 
 
-class DebLintian(ShellCommand):
+class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
     name = "lintian"
-    description = ["Lintian running"]
-    descriptionDone = ["Lintian"]
+    description = "Lintian running"
+    descriptionDone = "Lintian"
 
     fileloc = None
     suppressTags = []
-
-    warnCount = 0
-    errCount = 0
 
     flunkOnFailure = False
     warnOnFailure = True
 
     def __init__(self, fileloc=None, suppressTags=None, **kwargs):
-        """
-        Create the DebLintian object.
-
-        @type fileloc: str
-        @param fileloc: Location of the .deb or .changes to test.
-        @type suppressTags: list
-        @param suppressTags: List of tags to suppress.
-        @type kwargs: dict
-        @param kwargs: all other keyword arguments.
-        """
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         if fileloc:
             self.fileloc = fileloc
@@ -81,25 +69,24 @@ class DebLintian(ShellCommand):
         self.obs = pkgutil.WEObserver()
         self.addLogObserver('stdio', self.obs)
 
-    def createSummary(self, log):
-        """
-        Create nice summary logs.
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
 
-        @param log: log to create summary off of.
-        """
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         warnings = self.obs.warnings
         errors = self.obs.errors
 
         if warnings:
-            self.addCompleteLog('%d Warnings' % len(warnings), "\n".join(warnings))
-            self.warnCount = len(warnings)
+            yield self.addCompleteLog('%d Warnings' % len(warnings), "\n".join(warnings))
         if errors:
-            self.addCompleteLog('%d Errors' % len(errors), "\n".join(errors))
-            self.errCount = len(errors)
+            yield self.addCompleteLog('%d Errors' % len(errors), "\n".join(errors))
 
-    def evaluateCommand(self, cmd):
-        if (cmd.rc != 0 or self.errCount):
+        if cmd.rc != 0 or errors:
             return FAILURE
-        if self.warnCount:
+        if warnings:
             return WARNINGS
         return SUCCESS

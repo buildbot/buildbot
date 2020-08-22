@@ -13,17 +13,15 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Marius Rieder <marius.rieder@durchmesser.ch>
-"""
-Steps and objects related to mock building.
-"""
 
 
 import re
 
+from twisted.internet import defer
+
 from buildbot import config
+from buildbot.process import buildstep
 from buildbot.process import logobserver
-from buildbot.process import remotecommand
-from buildbot.steps.shell import ShellCommand
 
 
 class MockStateObserver(logobserver.LogLineObserver):
@@ -40,7 +38,7 @@ class MockStateObserver(logobserver.LogLineObserver):
             self.step.step_status.setText(self.step.describe(False))
 
 
-class Mock(ShellCommand):
+class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
 
     """Add the mock logfiles and clean them if they already exist. Add support
     for the root and resultdir parameter of mock."""
@@ -61,16 +59,7 @@ class Mock(ShellCommand):
                  root=None,
                  resultdir=None,
                  **kwargs):
-        """
-        Creates the Mock object.
-
-        @type root: str
-        @param root: the name of the mock buildroot
-        @type resultdir: str
-        @param resultdir: the path of the result dir
-        @type kwargs: dict
-        @param kwargs: All further keyword arguments.
-        """
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
         if root:
             self.root = root
@@ -84,31 +73,24 @@ class Mock(ShellCommand):
         if self.resultdir:
             self.command += ['--resultdir', self.resultdir]
 
-    def start(self):
-        """
-        Try to remove the old mock logs first.
-        """
+    @defer.inlineCallbacks
+    def run(self):
+        # Try to remove the old mock logs first.
         if self.resultdir:
             for lname in self.mock_logfiles:
-                self.logfiles[lname] = self.build.path_module.join(self.resultdir,
-                                                                   lname)
+                self.logfiles[lname] = self.build.path_module.join(self.resultdir, lname)
         else:
             for lname in self.mock_logfiles:
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir':
-                                                    [self.build.path_module.join('build',
-                                                                                 self.logfiles[l])
-                                                     for l in self.mock_logfiles]})
-        d = self.runCommand(cmd)
-        # must resolve super() outside of the callback context.
-        super_ = super()
+        yield self.runRmdir([self.build.path_module.join('build', self.logfiles[l])
+                             for l in self.mock_logfiles])
 
-        @d.addCallback
-        def removeDone(cmd):
-            super_.start()
-        d.addErrback(self.failed)
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        return cmd.results()
 
 
 class MockBuildSRPM(Mock):
