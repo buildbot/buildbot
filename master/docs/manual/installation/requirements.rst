@@ -42,6 +42,11 @@ Pywin32: http://sourceforge.net/projects/pywin32/
 
   Twisted requires PyWin32 in order to spawn processes on Windows.
 
+Build Tools for Visual Studio 2019 - Microsoft Visual C++ compiler
+
+  Twisted requires MSVC to compile some parts like tls during the installation, 
+  see https://twistedmatrix.com/trac/wiki/WindowsBuilds and https://wiki.python.org/moin/WindowsCompilers.
+
 .. _Buildmaster-Requirements:
 
 Buildmaster Requirements
@@ -84,3 +89,48 @@ Python-Dateutil: http://labix.org/python-dateutil
 Autobahn:
 
   The master requires Autobahn version 0.16.0 or higher with Python 2.7.
+
+txrequests: https://github.com/tardyp/txrequests
+or
+treq: https://github.com/twisted/treq
+
+  Both libraries are optional, but a lot of Buildbot plugins assume that one of it is installed. 
+  Otherwise plugins will complain in the twisted log file if it is not installed. Here is 
+  a little comparison table:
+
+  +----------------------------------+------------+----------+
+  |                                  | txrequests |   treq   |
+  +----------------------------------+------------+----------+
+  | International Domains and URLs   | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Keep-Alive & Connection Pooling  | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Sessions with Cookie Persistence | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Browser-style SSL Verification   | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Basic Authentication             | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Digest Authentication            | yes        | no       |
+  +----------------------------------+------------+----------+
+  | Elegant Key/Value Cookies        | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Automatic Decompression          | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Unicode Response Bodies          | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Multipart File Uploads           | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Connection Timeouts              | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | HTTP(S) Proxy Support            | yes        | no       |
+  +----------------------------------+------------+----------+
+  | .netrc support                   | yes        | no       |
+  +----------------------------------+------------+----------+
+  | Python 2.7                       | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Python 3.x                       | yes        | yes      |
+  +----------------------------------+------------+----------+
+  | Speed                            | slower     | fast     |
+  +----------------------------------+------------+----------+
+
