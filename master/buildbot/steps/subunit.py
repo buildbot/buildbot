@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+import io
 from unittest import TestResult
 
 from twisted.internet import defer
-from twisted.python.compat import NativeStringIO
 
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -46,19 +46,19 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
         self.PROGRESS_POP = PROGRESS_POP
-        self.warningio = NativeStringIO()
+        self.warningio = io.BytesIO()
         self.protocol = TestProtocolServer(self, self.warningio)
         self.skips = []
         self.seen_tags = set()  # don't yet know what tags does in subunit
 
     def outLineReceived(self, line):
-        """Process a received stdout line."""
         # Impedance mismatch: subunit wants lines, observers get lines-no\n
-        self.protocol.lineReceived(line + '\n')
+        # Note that observers get already decoded lines whereas protocol wants bytes
+        self.protocol.lineReceived(line.encode('utf-8') + b'\n')
 
     def errLineReceived(self, line):
-        """same for stderr line."""
-        self.protocol.lineReceived(line + '\n')
+        # Same note as in outLineReceived applies
+        self.protocol.lineReceived(line.encode('utf-8') + b'\n')
 
     def stopTest(self, test):
         super().stopTest(test)
