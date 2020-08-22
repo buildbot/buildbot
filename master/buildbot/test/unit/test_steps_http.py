@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import collections
-
 import mock
 
 from twisted.internet import defer
@@ -177,17 +175,14 @@ OK'''.format(self.get_connection_string())
     def test_post_data_dict(self):
         url = self.getURL("path")
 
-        # make sure the order of keys is stable
-        data = collections.OrderedDict([('key1', 'value1'), ('key2', 'value2')])
-
-        self.setupStep(http.POST(url, data=data))
+        self.setupStep(http.POST(url, data={'key1': 'value1'}))
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         self.expectLogfile('log', '''\
 URL: {}
 Status: 200
  ------ Content ------
-OK:key1=value1&key2=value2'''.format(url))
-        self.expectLogfile('content', "OK:key1=value1&key2=value2")
+OK:key1=value1'''.format(url))
+        self.expectLogfile('content', "OK:key1=value1")
         return self.runStep()
 
     def test_header(self):
