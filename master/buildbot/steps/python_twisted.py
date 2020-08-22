@@ -29,6 +29,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.steps import shell
 
 
 class HLint(buildstep.ShellMixin, buildstep.BuildStep):
@@ -431,18 +432,8 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                     stream, line = yield
 
 
-class RemovePYCs(buildstep.ShellMixin, buildstep.BuildStep):
+class RemovePYCs(shell.ShellCommandNewStyle):
     name = "remove_pyc"
     command = ['find', '.', '-name', "'*.pyc'", '-exec', 'rm', '{}', ';']
     description = "removing .pyc files"
     descriptionDone = "remove .pycs"
-
-    def __init__(self, **kwargs):
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-        super().__init__(**kwargs)
-
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
-        return cmd.results()
