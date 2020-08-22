@@ -24,11 +24,11 @@ RUN         apt-get update && \
     build-essential \
     git \
     subversion \
-    python-dev \
+    python3-dev \
     libffi-dev \
     libssl-dev \
-    python-setuptools \
-    python-pip \
+    python3-setuptools \
+    python3-pip \
     # Test runs produce a great quantity of dead grandchild processes.  In a
     # non-docker environment, these are automatically reaped by init (process 1),
     # so we need to simulate that here.  See https://github.com/Yelp/dumb-init
@@ -36,15 +36,15 @@ RUN         apt-get update && \
     curl && \
     rm -rf /var/lib/apt/lists/* && \
     # Install required python packages, and twisted
-    pip --no-cache-dir install 'twisted[tls]' && \
-    pip install virtualenv && \
+    pip3 --no-cache-dir install 'twisted[tls]' && \
+    pip3 install virtualenv && \
     mkdir /buildbot &&\
     useradd -ms /bin/bash buildbot
 
 COPY . /usr/src/buildbot-worker
 COPY docker/buildbot.tac /buildbot/buildbot.tac
 
-RUN pip install /usr/src/buildbot-worker && \
+RUN pip3 install /usr/src/buildbot-worker && \
     chown -R buildbot /buildbot
 
 USER buildbot
