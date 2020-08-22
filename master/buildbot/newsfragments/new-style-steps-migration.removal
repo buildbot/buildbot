@@ -6,6 +6,7 @@ Users are advised to upgrade to new style steps as soon as possible.
 
 The list of old-style steps that have been converted to new style:
 
+ - ``BuildEPYDoc``
  - ``Configure``
  - ``CopyDirectory``
  - ``DirectoryUpload``
@@ -21,10 +22,13 @@ The list of old-style steps that have been converted to new style:
  - ``MasterShellCommand``
  - ``MsBuild``, ``MsBuild4``, ``MsBuild12``, ``MsBuild14``, ``MsBuild141``
  - ``MultipleFileUpload``
+ - ``PyFlakes``
+ - ``PyLint``
  - ``RemoveDirectory``
  - ``RemovePYCs``
  - ``SetPropertiesFromEnv``
  - ``SetPropertyFromCommand``
+ - ``Sphinx``
  - ``StringDownload``
  - ``TreeSize``
  - ``Trial``
