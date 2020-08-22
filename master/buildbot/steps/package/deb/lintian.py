@@ -53,16 +53,6 @@ class DebLintian(ShellCommand):
     warnOnFailure = True
 
     def __init__(self, fileloc=None, suppressTags=None, **kwargs):
-        """
-        Create the DebLintian object.
-
-        @type fileloc: str
-        @param fileloc: Location of the .deb or .changes to test.
-        @type suppressTags: list
-        @param suppressTags: List of tags to suppress.
-        @type kwargs: dict
-        @param kwargs: all other keyword arguments.
-        """
         super().__init__(**kwargs)
         if fileloc:
             self.fileloc = fileloc
