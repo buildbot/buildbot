@@ -10,6 +10,15 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.8.3`` ( ``2020-08-22`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix Docker image building for the master which failed due to mismatching versions of Alpine (:issue:`5469`).
+
+
 Buildbot ``2.8.2`` ( ``2020-06-14`` )
 =====================================
 
