@@ -8,6 +8,7 @@ The list of old-style steps that have been converted to new style:
 
  - ``Configure``
  - ``CopyDirectory``
+ - ``DebLintian``
  - ``DirectoryUpload``
  - ``FileDownload``
  - ``FileExists``
