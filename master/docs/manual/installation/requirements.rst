@@ -94,7 +94,7 @@ txrequests: https://github.com/tardyp/txrequests
 or
 treq: https://github.com/twisted/treq
 
-  Both libs are optional, but a lot of Buildbot plugins assume that one of it is installed. 
+  Both libraries are optional, but a lot of Buildbot plugins assume that one of it is installed. 
   Otherwise plugins will complain in the twisted log file if it is not installed. Here is 
   a little comparison table:
 
@@ -123,7 +123,7 @@ treq: https://github.com/twisted/treq
   +----------------------------------+------------+----------+
   | Connection Timeouts              | yes        | yes      |
   +----------------------------------+------------+----------+
-  | HTTP(S) Proxy Suport             | yes        | no       |
+  | HTTP(S) Proxy Support            | yes        | no       |
   +----------------------------------+------------+----------+
   | .netrc support                   | yes        | no       |
   +----------------------------------+------------+----------+
