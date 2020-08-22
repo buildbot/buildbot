@@ -20,10 +20,13 @@ The list of old-style steps that have been converted to new style:
  - ``LogRenderable``
  - ``MakeDirectory``
  - ``MasterShellCommand``
+ - ``Mock``
+ - ``MockBuildSRPM``
  - ``MsBuild``, ``MsBuild4``, ``MsBuild12``, ``MsBuild14``, ``MsBuild141``
  - ``MultipleFileUpload``
  - ``RemoveDirectory``
  - ``RemovePYCs``
+ - ``RpmBuild``
  - ``SetPropertiesFromEnv``
  - ``SetPropertyFromCommand``
  - ``StringDownload``
