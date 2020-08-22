@@ -13,39 +13,50 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+import io
+import sys
 
-from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
-from zope.interface import implementer
 
-from buildbot import interfaces
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
+from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
+try:
+    from subunit import TestProtocolClient
+except ImportError:
+    TestProtocolClient = None
 
-@implementer(interfaces.ILogObserver)
-class StubLogObserver(mock.Mock):
-    pass
+
+class FakeTest:
+    def __init__(self, id):
+        self._id = id
+
+    def id(self):
+        return self._id
 
 
-class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
-                               unittest.TestCase):
+def create_error(name):
+    try:
+        int('_' + name)
+        return None
+    except ValueError:
+        # We don't want traceback lines with real paths in the logs
+        exctype, value, _ = sys.exc_info()
+        return (exctype, value, None)
+
+
+class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
+        if TestProtocolClient is None:
+            raise unittest.SkipTest("Need to install python-subunit to test subunit step")
+
         self.setUpTestReactor()
-        self.logobserver = StubLogObserver()
-        self.logobserver.failures = []
-        self.logobserver.errors = []
-        self.logobserver.skips = []
-        self.logobserver.testsRun = 0
-        self.logobserver.warningio = NativeStringIO()
-        self.patch(subunit, 'SubunitLogObserver',
-                   lambda: self.logobserver)
         return self.setUpBuildStep()
 
     def tearDown(self):
@@ -74,21 +85,103 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
                            state_string="shell no tests run (failure)")
         return self.runStep()
 
-    def test_warnings(self):
+    def test_success(self):
+        stream = io.BytesIO()
+        client = TestProtocolClient(stream)
+        test = FakeTest(id='test1')
+        client.startTest(test)
+        client.stopTest(test)
+
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir',
-                        command="test")
+            ExpectShell(workdir='wkdir', command="test")
+            + Expect.log('stdio', stdout=stream.getvalue())
             + 0
         )
-        self.logobserver.warnings.append('not quite up to snuff (list)')
-        self.logobserver.warningio.write('not quite up to snuff (io)\n')
-        self.logobserver.testsRun = 3
-        self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS
-                           state_string="shell 3 tests passed")
-        # note that the warnings list is ignored..
-        self.expectLogfile('warnings', 'not quite up to snuff (io)\n')
+
+        self.expectOutcome(result=SUCCESS, state_string="shell 1 test passed")
         return self.runStep()
 
-    # TODO: test text2 generation?
-    # TODO: tests are represented as objects?!
+    def test_error(self):
+        stream = io.BytesIO()
+        client = TestProtocolClient(stream)
+        test = FakeTest(id='test1')
+        client.startTest(test)
+        client.addError(test, create_error('error1'))
+        client.stopTest(test)
+
+        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command="test")
+            + Expect.log('stdio', stdout=stream.getvalue())
+            + 0
+        )
+
+        self.expectOutcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
+        self.expectLogfile('problems', '''\
+test1
+testtools.testresult.real._StringException: Traceback (most recent call last):
+ValueError: invalid literal for int() with base 10: '_error1'
+
+''')
+        return self.runStep()
+
+    def test_multiple_errors(self):
+        stream = io.BytesIO()
+        client = TestProtocolClient(stream)
+        test1 = FakeTest(id='test1')
+        test2 = FakeTest(id='test2')
+        client.startTest(test1)
+        client.addError(test1, create_error('error1'))
+        client.stopTest(test1)
+        client.startTest(test2)
+        client.addError(test2, create_error('error2'))
+        client.stopTest(test2)
+
+        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command="test")
+            + Expect.log('stdio', stdout=stream.getvalue())
+            + 0
+        )
+
+        self.expectOutcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
+        self.expectLogfile('problems', '''\
+test1
+testtools.testresult.real._StringException: Traceback (most recent call last):
+ValueError: invalid literal for int() with base 10: '_error1'
+
+test2
+testtools.testresult.real._StringException: Traceback (most recent call last):
+ValueError: invalid literal for int() with base 10: '_error2'
+
+''')
+        return self.runStep()
+
+    def test_warnings(self):
+        stream = io.BytesIO()
+        client = TestProtocolClient(stream)
+        test1 = FakeTest(id='test1')
+        test2 = FakeTest(id='test2')
+        client.startTest(test1)
+        client.stopTest(test1)
+        client.addError(test2, create_error('error2'))
+        client.stopTest(test2)
+
+        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command="test")
+            + Expect.log('stdio', stdout=stream.getvalue())
+            + 0
+        )
+
+        self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS
+                           state_string="shell 1 test passed")
+        # note that the warnings list is ignored..
+        self.expectLogfile('warnings', '''\
+error: test2 [
+Traceback (most recent call last):
+ValueError: invalid literal for int() with base 10: '_error2'
+]
+''')
+        return self.runStep()

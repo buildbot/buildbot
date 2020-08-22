@@ -14,14 +14,16 @@
 # Copyright Buildbot Team Members
 
 
+import io
 from unittest import TestResult
 
-from twisted.python.compat import NativeStringIO
+from twisted.internet import defer
 
+from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.steps.shell import ShellCommand
+from buildbot.process.results import Results
 
 
 class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
@@ -44,19 +46,19 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
         self.PROGRESS_POP = PROGRESS_POP
-        self.warningio = NativeStringIO()
+        self.warningio = io.BytesIO()
         self.protocol = TestProtocolServer(self, self.warningio)
         self.skips = []
         self.seen_tags = set()  # don't yet know what tags does in subunit
 
     def outLineReceived(self, line):
-        """Process a received stdout line."""
         # Impedance mismatch: subunit wants lines, observers get lines-no\n
-        self.protocol.lineReceived(line + '\n')
+        # Note that observers get already decoded lines whereas protocol wants bytes
+        self.protocol.lineReceived(line.encode('utf-8') + b'\n')
 
     def errLineReceived(self, line):
-        """same for stderr line."""
-        self.protocol.lineReceived(line + '\n')
+        # Same note as in outLineReceived applies
+        self.protocol.lineReceived(line.encode('utf-8') + b'\n')
 
     def stopTest(self, test):
         super().stopTest(test)
@@ -86,73 +88,82 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.seen_tags.update(new_tags)
 
 
-class SubunitShellCommand(ShellCommand):
+class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
+    name = 'shell'
 
     """A ShellCommand that sniffs subunit output.
     """
 
     def __init__(self, failureOnNoTests=False, *args, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(*args, **kwargs)
+
         self.failureOnNoTests = failureOnNoTests
 
-        self.ioObserver = SubunitLogObserver()
-        self.addLogObserver('stdio', self.ioObserver)
+        self._observer = SubunitLogObserver()
+        self.addLogObserver('stdio', self._observer)
         self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
 
-    def commandComplete(self, cmd):
-        # figure out all statistics about the run
-        ob = self.ioObserver
-        failures = len(ob.failures)
-        errors = len(ob.errors)
-        skips = len(ob.skips)
-        total = ob.testsRun
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        problems = ""
+        for test, err in self._observer.errors + self._observer.failures:
+            problems += "{}\n{}".format(test.id(), err)
+        if problems:
+            yield self.addCompleteLog("problems", problems)
+
+        warnings = self._observer.warningio.getvalue()
+        if warnings:
+            yield self.addCompleteLog("warnings", warnings)
+
+        failures = len(self._observer.failures)
+        errors = len(self._observer.errors)
+        total = self._observer.testsRun
+
+        if cmd.didFail():
+            return FAILURE
+
+        if failures + errors > 0:
+            return FAILURE
+
+        if not total and self.failureOnNoTests:
+            return FAILURE
+        return SUCCESS
+
+    def getResultSummary(self):
+        failures = len(self._observer.failures)
+        errors = len(self._observer.errors)
+        skips = len(self._observer.skips)
+        total = self._observer.testsRun
 
         count = failures + errors
 
-        text = [self.name]
-        text2 = ""
+        summary = self.name
 
         if not count:
-            results = SUCCESS
             if total:
-                text += ["{} {}".format(total, total == 1 and "test" or "tests"), "passed"]
+                summary += " {} {} passed".format(total, total == 1 and "test" or "tests")
             else:
-                if self.failureOnNoTests:
-                    results = FAILURE
-                text += ["no tests", "run"]
+                summary += " no tests run"
         else:
-            results = FAILURE
-            text.append("Total %d test(s)" % total)
+            summary += " Total {} test(s)".format(total)
             if failures:
-                text.append("{} {}".format(failures, failures == 1 and "failure" or "failures"))
+                summary += " {} {}".format(failures, failures == 1 and "failure" or "failures")
             if errors:
-                text.append("{} {}".format(errors, errors == 1 and "error" or "errors"))
-            text2 = "{} {}".format(count, (count == 1 and 'test' or 'tests'))
+                summary += " {} {}".format(errors, errors == 1 and "error" or "errors")
 
         if skips:
-            text.append("{} {}".format(skips, skips == 1 and "skip" or "skips"))
+            summary += " {} {}".format(skips, skips == 1 and "skip" or "skips")
 
         # TODO: expectedFailures/unexpectedSuccesses
 
-        self.results = results
-        self.text = text
-        self.text2 = [text2]
+        if self.results != SUCCESS:
+            summary += ' ({})'.format(Results[self.results])
 
-    def evaluateCommand(self, cmd):
-        if cmd.didFail():
-            return FAILURE
-        return self.results
-
-    def createSummary(self, loog):
-        ob = self.ioObserver
-        problems = ""
-        for test, err in ob.errors + ob.failures:
-            problems += "{}\n{}".format(test.id(), err)
-        if problems:
-            self.addCompleteLog("problems", problems)
-        warnings = ob.warningio.getvalue()
-        if warnings:
-            self.addCompleteLog("warnings", warnings)
-
-    def _describe(self, done):
-        return self.text
+        return {'step': summary}
