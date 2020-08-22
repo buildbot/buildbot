@@ -952,9 +952,9 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         # call addSuppression "manually" from a subclass
         class MyWCSC(shell.WarningCountingShellCommand):
 
-            def start(self):
+            def run(self):
                 self.addSuppression([('.*', '.*unseen.*', None, None)])
-                return super().start()
+                return super().run()
 
         def warningExtractor(step, line, match):
             return line.split(':', 2)
@@ -1091,26 +1091,29 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def test_describe_not_done(self):
         step = self.setupStep(shell.Test())
+        step.results = SUCCESS
         step.rendered = True
-        self.assertEqual(step.describe(), None)
+        self.assertEqual(step.getResultSummary(), {'step': 'test'})
 
     def test_describe_done(self):
         step = self.setupStep(shell.Test())
         step.rendered = True
+        step.results = SUCCESS
         step.statistics['tests-total'] = 93
         step.statistics['tests-failed'] = 10
         step.statistics['tests-passed'] = 20
         step.statistics['tests-warnings'] = 30
-        self.assertEqual(step.describe(done=True),
-                         ['93 tests', '20 passed', '30 warnings', '10 failed'])
+        self.assertEqual(step.getResultSummary(),
+                         {'step': '93 tests 20 passed 30 warnings 10 failed'})
 
     def test_describe_done_no_total(self):
         step = self.setupStep(shell.Test())
         step.rendered = True
+        step.results = SUCCESS
         step.statistics['tests-total'] = 0
         step.statistics['tests-failed'] = 10
         step.statistics['tests-passed'] = 20
         step.statistics['tests-warnings'] = 30
         # describe calculates 60 = 10+20+30
-        self.assertEqual(step.describe(done=True),
-                         ['60 tests', '20 passed', '30 warnings', '10 failed'])
+        self.assertEqual(step.getResultSummary(),
+                         {'step': '60 tests 20 passed 30 warnings 10 failed'})

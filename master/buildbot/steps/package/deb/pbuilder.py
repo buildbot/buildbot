@@ -22,12 +22,13 @@ import re
 import stat
 import time
 
+from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
 from buildbot.process import logobserver
 from buildbot.process import remotecommand
-from buildbot.process.buildstep import FAILURE
+from buildbot.process import results
 from buildbot.steps.shell import WarningCountingShellCommand
 
 
@@ -128,15 +129,20 @@ class DebPbuilder(WarningCountingShellCommand):
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    # Check for Basetgz
-    def start(self):
-        cmd = remotecommand.RemoteCommand('stat', {'file': self.basetgz})
-        d = self.runCommand(cmd)
-        d.addCallback(lambda res: self.checkBasetgz(cmd))
-        d.addErrback(self.failed)
-        return d
+    @defer.inlineCallbacks
+    def run(self):
+        res = yield self.checkBasetgz()
+        if res != results.SUCCESS:
+            return res
 
-    def checkBasetgz(self, cmd):
+        res = yield super().run()
+        return res
+
+    @defer.inlineCallbacks
+    def checkBasetgz(self):
+        cmd = remotecommand.RemoteCommand('stat', {'file': self.basetgz})
+        yield self.runCommand(cmd)
+
         if cmd.rc != 0:
             log.msg("basetgz not found, initializing it.")
 
@@ -154,12 +160,18 @@ class DebPbuilder(WarningCountingShellCommand):
 
             cmd = remotecommand.RemoteShellCommand(self.workdir, command)
 
-            stdio_log = stdio_log = self.addLog("pbuilder")
+            stdio_log = yield self.addLog("pbuilder")
             cmd.useLog(stdio_log, True, "stdio")
-            d = self.runCommand(cmd)
-            self.step_status.setText(["PBuilder create."])
-            d.addCallback(lambda res: self.startBuild(cmd))
-            return d
+
+            self.description = ["PBuilder", "create."]
+            yield self.updateSummary()
+
+            yield self.runCommand(cmd)
+            if cmd.rc != 0:
+                log.msg("Failure when running {}.".format(cmd))
+                return results.FAILURE
+            return results.SUCCESS
+
         s = cmd.updates["stat"][-1]
         # basetgz will be a file when running in pbuilder
         # and a directory in case of cowbuilder
@@ -172,24 +184,17 @@ class DebPbuilder(WarningCountingShellCommand):
                            self.baseOption, self.basetgz]
 
                 cmd = remotecommand.RemoteShellCommand(self.workdir, command)
-                stdio_log = stdio_log = self.addLog("pbuilder")
+                stdio_log = yield self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
-                d = self.runCommand(cmd)
-                d.addCallback(lambda res: self.startBuild(cmd))
-                return d
-            return self.startBuild(cmd)
-        else:
-            log.msg("{} is not a file or a directory.".format(self.basetgz))
-            self.finished(FAILURE)
-        return None
 
-    def startBuild(self, cmd):
-        if cmd.rc != 0:
-            log.msg("Failure when running {}.".format(cmd))
-            self.finished(FAILURE)
-        else:
-            return super().start()
-        return None
+                yield self.runCommand(cmd)
+                if cmd.rc != 0:
+                    log.msg("Failure when running {}.".format(cmd))
+                    return results.FAILURE
+            return results.SUCCESS
+
+        log.msg("{} is not a file or a directory.".format(self.basetgz))
+        return results.FAILURE
 
     def logConsumer(self):
         r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")
