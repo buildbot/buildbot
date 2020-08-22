@@ -17,13 +17,14 @@
 
 import os
 
+from twisted.internet import defer
+
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
-from buildbot.steps.shell import ShellCommand
 
 
-class RpmBuild(ShellCommand):
+class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
 
     """
     RpmBuild build step.
@@ -49,6 +50,7 @@ class RpmBuild(ShellCommand):
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
         self.dist = dist
@@ -75,7 +77,8 @@ class RpmBuild(ShellCommand):
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
 
         rpm_extras_dict = {}
         rpm_extras_dict['dist'] = self.dist
@@ -105,19 +108,20 @@ class RpmBuild(ShellCommand):
             self.rpmbuild = '{0} --define "{1} {2}"'.format(
                 self.rpmbuild, k, v)
 
-        self.rpmbuild = '{0} -ba {1}'.format(self.rpmbuild, self.specfile)
+        command = '{} -ba {}'.format(self.rpmbuild, self.specfile)
 
-        self.command = self.rpmbuild
+        cmd = yield self.makeRemoteShellCommand(command=command)
 
-        # create the actual RemoteShellCommand instance now
-        kwargs = self.remote_kwargs
-        kwargs['command'] = self.command
-        kwargs['workdir'] = self.workdir
-        cmd = buildstep.RemoteShellCommand(**kwargs)
-        self.setupEnvironment(cmd)
-        self.startCommand(cmd)
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        yield self.addCompleteLog('RPM Command Log', "\n".join(self.rpmcmdlog))
+        if self.rpmerrors:
+            yield self.addCompleteLog('RPM Errors', "\n".join(self.rpmerrors))
+
+        return cmd.results()
 
     def logConsumer(self):
         rpm_prefixes = ['Provides:', 'Requires(', 'Requires:',
@@ -137,8 +141,3 @@ class RpmBuild(ShellCommand):
                 if line.startswith(err):
                     self.rpmerrors.append(line)
                     break
-
-    def createSummary(self, log):
-        self.addCompleteLog('RPM Command Log', "\n".join(self.rpmcmdlog))
-        if self.rpmerrors:
-            self.addCompleteLog('RPM Errors', "\n".join(self.rpmerrors))
