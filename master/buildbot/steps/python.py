@@ -79,11 +79,11 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class PyFlakes(ShellCommand):
+class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
     name = "pyflakes"
     command = ["make", "pyflakes"]
-    description = ["running", "pyflakes"]
-    descriptionDone = ["pyflakes"]
+    description = "running pyflakes"
+    descriptionDone = "pyflakes"
     flunkOnFailure = False
 
     # any pyflakes lines like this cause FAILURE
@@ -96,9 +96,11 @@ class PyFlakes(ShellCommand):
         # categorize this initially as WARNINGS so that
         # evaluateCommand below can inspect the results more closely.
         kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
+
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(*args, **kwargs)
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
         counts = self.counts = {}
         summaries = self.summaries = {}
@@ -109,7 +111,7 @@ class PyFlakes(ShellCommand):
         # we need a separate variable for syntax errors
         self._hasSyntaxError = False
 
-    def logConsumer(self):
+    def _log_consumer(self):
         counts = self.counts
         summaries = self.summaries
         first = True
@@ -148,29 +150,41 @@ class PyFlakes(ShellCommand):
             summaries[m].append(line)
             counts[m] += 1
 
-    def createSummary(self, log):
-        counts, summaries = self.counts, self.summaries
-        self.descriptionDone = self.descriptionDone[:]
+    def getResultSummary(self):
+        summary = ' '.join(self.descriptionDone)
+        for m in self._MESSAGES:
+            if self.counts[m]:
+                summary += " {}={}".format(m, self.counts[m])
+
+        if self.results != SUCCESS:
+            summary += ' ({})'.format(Results[self.results])
+
+        return {'step': summary}
+
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
 
         # we log 'misc' as syntax-error
         if self._hasSyntaxError:
-            self.addCompleteLog("syntax-error", "\n".join(summaries['misc']))
+            yield self.addCompleteLog("syntax-error", "\n".join(self.summaries['misc']))
         else:
             for m in self._MESSAGES:
-                if counts[m]:
-                    self.descriptionDone.append("{}={}".format(m, counts[m]))
-                    self.addCompleteLog(m, "\n".join(summaries[m]))
-                self.setProperty("pyflakes-{}".format(m), counts[m], "pyflakes")
-            self.setProperty("pyflakes-total", sum(counts.values()),
-                             "pyflakes")
+                if self.counts[m]:
+                    yield self.addCompleteLog(m, "\n".join(self.summaries[m]))
+                self.setProperty("pyflakes-{}".format(m), self.counts[m], "pyflakes")
+            self.setProperty("pyflakes-total", sum(self.counts.values()), "pyflakes")
 
-    def evaluateCommand(self, cmd):
         if cmd.didFail() or self._hasSyntaxError:
             return FAILURE
         for m in self._flunkingIssues:
-            if self.getProperty("pyflakes-{}".format(m)):
+            if m in self.counts and self.counts[m] > 0:
                 return FAILURE
-        if self.getProperty("pyflakes-total"):
+        if sum(self.counts.values()) > 0:
             return WARNINGS
         return SUCCESS
 
