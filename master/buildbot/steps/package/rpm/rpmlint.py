@@ -65,7 +65,7 @@ class RpmLint(Test):
         self.obs = pkgutil.WEObserver()
         self.addLogObserver('stdio', self.obs)
 
-    def createSummary(self, log):
+    def createSummary(self):
         """
         Create nice summary logs.
 

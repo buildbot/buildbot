@@ -139,7 +139,7 @@ class OldBuildEPYDoc(shell.ShellCommand):
             assert line in ('some\n', 'output\n')
 
 
-class OldPerlModuleTest(shell.Test):
+class OldPerlModuleTest(shell.ShellCommand):
 
     command = ['perl']
 

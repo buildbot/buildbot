@@ -418,14 +418,14 @@ class Configure(ShellCommandNewStyle):
     command = ["./configure"]
 
 
-class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
+class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buildstep.BuildStep):
     renderables = [
-                    'suppressionFile',
-                    'suppressionList',
-                    'warningPattern',
-                    'directoryEnterPattern',
-                    'directoryLeavePattern',
-                    'maxWarnCount',
+        'suppressionFile',
+        'suppressionList',
+        'warningPattern',
+        'directoryEnterPattern',
+        'directoryLeavePattern',
+        'maxWarnCount',
     ]
 
     warnCount = 0
@@ -463,9 +463,6 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
         self.maxWarnCount = maxWarnCount
 
-        # And upcall to let the base class do its work
-        super().__init__(**kwargs)
-
         if self.__class__ is WarningCountingShellCommand and \
                 not kwargs.get('command'):
             # WarningCountingShellCommand class is directly instantiated.
@@ -473,6 +470,9 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             # later.
             config.error("WarningCountingShellCommand's `command' argument "
                          "is not specified")
+
+        kwargs = self.setupShellMixin(kwargs)
+        super().__init__(**kwargs)
 
         self.suppressions = []
         self.directoryStack = []
@@ -591,39 +591,49 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         warnings.append(line)
         self.warnCount += 1
 
-    def start(self):
+    @defer.inlineCallbacks
+    def setup_suppression(self):
         if self.suppressionList is not None:
             self.addSuppression(self.suppressionList)
-        if self.suppressionFile is None:
-            return super().start()
-        d = self.getFileContentFromWorker(
-            self.suppressionFile, abandonOnFailure=True)
-        d.addCallback(self.uploadDone)
-        d.addErrback(self.failed)
-        return None
 
-    def uploadDone(self, data):
-        lines = data.split("\n")
+        if self.suppressionFile is not None:
+            data = yield self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
+            lines = data.split("\n")
 
-        list = []
-        for line in lines:
-            if self.commentEmptyLineRe.match(line):
-                continue
-            match = self.suppressionLineRe.match(line)
-            if (match):
-                file, test, start, end = match.groups()
-                if (end is not None):
-                    end = int(end)
-                if (start is not None):
-                    start = int(start)
-                    if end is None:
-                        end = start
-                list.append((file, test, start, end))
+            list = []
+            for line in lines:
+                if self.commentEmptyLineRe.match(line):
+                    continue
+                match = self.suppressionLineRe.match(line)
+                if (match):
+                    file, test, start, end = match.groups()
+                    if (end is not None):
+                        end = int(end)
+                    if (start is not None):
+                        start = int(start)
+                        if end is None:
+                            end = start
+                    list.append((file, test, start, end))
 
-        self.addSuppression(list)
-        return super().start()
+            self.addSuppression(list)
 
-    def createSummary(self, log):
+    @defer.inlineCallbacks
+    def run(self):
+        yield self.setup_suppression()
+
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        yield self.finish_logs()
+        yield self.createSummary()
+        return self.evaluateCommand(cmd)
+
+    @defer.inlineCallbacks
+    def finish_logs(self):
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+    def createSummary(self):
         """
         Match log lines against warningPattern.
 
@@ -684,29 +694,33 @@ class Test(WarningCountingShellCommand):
         passed += self.getStatistic('tests-passed', 0)
         self.setStatistic('tests-passed', passed)
 
-    def describe(self, done=False):
-        description = super().describe(done)
-        if done:
-            if not description:
-                description = []
-            description = description[:]  # make a private copy
-            if self.hasStatistic('tests-total'):
-                total = self.getStatistic("tests-total", 0)
-                failed = self.getStatistic("tests-failed", 0)
-                passed = self.getStatistic("tests-passed", 0)
-                warnings = self.getStatistic("tests-warnings", 0)
-                if not total:
-                    total = failed + passed + warnings
+    def getResultSummary(self):
+        description = []
 
-                if total:
-                    description.append('%d tests' % total)
-                if passed:
-                    description.append('%d passed' % passed)
-                if warnings:
-                    description.append('%d warnings' % warnings)
-                if failed:
-                    description.append('%d failed' % failed)
-        return description
+        if self.hasStatistic('tests-total'):
+            total = self.getStatistic("tests-total", 0)
+            failed = self.getStatistic("tests-failed", 0)
+            passed = self.getStatistic("tests-passed", 0)
+            warnings = self.getStatistic("tests-warnings", 0)
+            if not total:
+                total = failed + passed + warnings
+
+            if total:
+                description += [str(total), 'tests']
+            if passed:
+                description += [str(passed), 'passed']
+            if warnings:
+                description += [str(warnings), 'warnings']
+            if failed:
+                description += [str(failed), 'failed']
+
+            if description:
+                summary = join_list(description)
+                if self.results != SUCCESS:
+                    summary += ' ({})'.format(Results[self.results])
+                return {'step': summary}
+
+        return super().getResultSummary()
 
 
 class PerlModuleTestObserver(logobserver.LogLineObserver):

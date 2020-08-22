@@ -8,8 +8,10 @@ The list of old-style steps that have been converted to new style:
 
  - ``BuildEPYDoc``
  - ``Configure``
+ - ``Compile``
  - ``CopyDirectory``
  - ``DebLintian``
+ - ``DebPbuilder``
  - ``DirectoryUpload``
  - ``FileDownload``
  - ``FileExists``
@@ -25,15 +27,18 @@ The list of old-style steps that have been converted to new style:
  - ``MockBuildSRPM``
  - ``MsBuild``, ``MsBuild4``, ``MsBuild12``, ``MsBuild14``, ``MsBuild141``
  - ``MultipleFileUpload``
+ - ``PerlModuleTest``
  - ``PyFlakes``
  - ``PyLint``
  - ``RemoveDirectory``
  - ``RemovePYCs``
+ - ``RpmLint``
  - ``RpmBuild``
  - ``SetPropertiesFromEnv``
  - ``SetPropertyFromCommand``
  - ``Sphinx``
  - ``StringDownload``
+ - ``Test``
  - ``TreeSize``
  - ``Trial``
  - ``VC6``, ``VC7``, ``VC8``, ``VC9``, ``VC10``, ``VC11``, ``VC12``, ``VC14``, ``VC141``
