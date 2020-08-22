@@ -672,6 +672,7 @@ refspec
 regex
 regexp
 regexps
+registerAdapter
 reimplement
 relayhost
 remappings
@@ -896,6 +897,7 @@ username
 Username
 usernames
 useTls
+usr
 utf
 UTF
 util

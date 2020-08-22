@@ -15,6 +15,7 @@
 
 import re
 
+from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -280,44 +281,54 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.startCommand(cmd, warnings)
 
 
-class TreeSize(ShellCommand):
+class TreeSize(buildstep.ShellMixin, buildstep.BuildStep):
     name = "treesize"
     command = ["du", "-s", "-k", "."]
-    description = "measuring tree size"
-    kib = None
+    description = ["measuring", "tree", "size"]
 
     def __init__(self, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         self.observer = logobserver.BufferLogObserver(wantStdout=True,
                                                       wantStderr=True)
         self.addLogObserver('stdio', self.observer)
 
-    def commandComplete(self, cmd):
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         out = self.observer.getStdout()
         m = re.search(r'^(\d+)', out)
-        if m:
-            self.kib = int(m.group(1))
-            self.setProperty("tree-size-KiB", self.kib, "treesize")
 
-    def evaluateCommand(self, cmd):
+        kib = None
+        if m:
+            kib = int(m.group(1))
+            self.setProperty("tree-size-KiB", kib, "treesize")
+            self.descriptionDone = "treesize {} KiB".format(kib)
+        else:
+            self.descriptionDone = "treesize unknown"
+
         if cmd.didFail():
             return FAILURE
-        if self.kib is None:
+        if kib is None:
             return WARNINGS  # not sure how 'du' could fail, but whatever
         return SUCCESS
 
-    def _describe(self, done=False):
-        if self.kib is not None:
-            return ["treesize", "%d KiB" % self.kib]
-        return ["treesize", "unknown"]
 
-
-class SetPropertyFromCommand(ShellCommand):
+class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
     name = "setproperty"
     renderables = ['property']
 
     def __init__(self, property=None, extract_fn=None, strip=True,
                  includeStdout=True, includeStderr=False, **kwargs):
+
+        kwargs = self.setupShellMixin(kwargs)
+
         self.property = property
         self.extract_fn = extract_fn
         self.strip = strip
@@ -338,40 +349,45 @@ class SetPropertyFromCommand(ShellCommand):
             wantStderr=self.includeStderr)
         self.addLogObserver('stdio', self.observer)
 
-        self.property_changes = {}
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
 
-    def commandComplete(self, cmd):
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        property_changes = {}
+
         if self.property:
             if cmd.didFail():
-                return
+                return FAILURE
             result = self.observer.getStdout()
             if self.strip:
                 result = result.strip()
             propname = self.property
             self.setProperty(propname, result, "SetPropertyFromCommand Step")
-            self.property_changes[propname] = result
+            property_changes[propname] = result
         else:
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
             for k, v in new_props.items():
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
-            self.property_changes = new_props
+            property_changes = new_props
 
-    def createSummary(self, log):
-        if self.property_changes:
-            props_set = ["{}: {}".format(k, repr(v))
-                         for k, v in sorted(self.property_changes.items())]
-            self.addCompleteLog('property changes', "\n".join(props_set))
+        props_set = ["{}: {}".format(k, repr(v))
+                     for k, v in sorted(property_changes.items())]
+        yield self.addCompleteLog('property changes', "\n".join(props_set))
 
-    def describe(self, done=False):
-        if len(self.property_changes) > 1:
-            return ["%d properties set" % len(self.property_changes)]
-        elif len(self.property_changes) == 1:
-            return ["property '{}' set".format(list(self.property_changes)[0])]
-        # else:
-        # let ShellCommand describe
-        return super().describe(done)
+        if len(property_changes) > 1:
+            self.descriptionDone = '{} properties set'.format(len(property_changes))
+        elif len(property_changes) == 1:
+            self.descriptionDone = 'property \'{}\' set'.format(list(property_changes)[0])
+        if cmd.didFail():
+            return FAILURE
+        return SUCCESS
 
 
 SetProperty = SetPropertyFromCommand
@@ -380,14 +396,24 @@ deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
                           "buildbot.steps.shell", "SetProperty")
 
 
-class Configure(ShellCommand):
+class Configure(buildstep.ShellMixin, buildstep.BuildStep):
 
     name = "configure"
     haltOnFailure = 1
     flunkOnFailure = 1
-    description = ["configuring"]
-    descriptionDone = ["configure"]
+    description = "configuring"
+    descriptionDone = "configure"
     command = ["./configure"]
+
+    def __init__(self, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
+        super().__init__(**kwargs)
+
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+        return cmd.results()
 
 
 class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):

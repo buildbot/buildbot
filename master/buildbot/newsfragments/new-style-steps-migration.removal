@@ -6,15 +6,27 @@ Users are advised to upgrade to new style steps as soon as possible.
 
 The list of old-style steps that have been converted to new style:
 
+ - ``Configure``
  - ``CopyDirectory``
  - ``DirectoryUpload``
  - ``FileDownload``
  - ``FileExists``
  - ``FileUpload``
+ - ``HLint``
+ - ``HTTPStep``
  - ``JsonPropertiesDownload``
  - ``JsonStringDownload``
+ - ``LogRenderable``
  - ``MakeDirectory``
+ - ``MasterShellCommand``
+ - ``MsBuild``, ``MsBuild4``, ``MsBuild12``, ``MsBuild14``, ``MsBuild141``
  - ``MultipleFileUpload``
  - ``RemoveDirectory``
+ - ``RemovePYCs``
  - ``SetPropertiesFromEnv``
+ - ``SetPropertyFromCommand``
  - ``StringDownload``
+ - ``TreeSize``
+ - ``Trial``
+ - ``VC6``, ``VC7``, ``VC8``, ``VC9``, ``VC10``, ``VC11``, ``VC12``, ``VC14``, ``VC141``
+ - ``VS2003``, ``VS2005``, ``VS2008``, ``VS2010`, ``VS2012``, ``VS2013``, ``VS2015``, ``VS2017``
