@@ -189,15 +189,15 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class PyLint(ShellCommand):
+class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
     '''A command that knows about pylint output.
     It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
     '''
     name = "pylint"
-    description = ["running", "pylint"]
-    descriptionDone = ["pylint"]
+    description = "running pylint"
+    descriptionDone = "pylint"
 
     # pylint's return codes (see pylint(1) for details)
     # 1 - 16 will be bit-ORed
@@ -234,12 +234,12 @@ class PyLint(ShellCommand):
         r'(?P<path>[^:]+):(?P<line>\d+): \[{}(\d+)?(\([a-z-]+\))?[,\]] .+'.format(_msgtypes_re_str))
 
     def __init__(self, store_results=True, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         self._store_results = store_results
         self.counts = {}
         self.summaries = {}
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
     # returns (message type, path, line) tuple if line has been matched, or None otherwise
     def _match_line(self, line):
@@ -257,7 +257,7 @@ class PyLint(ShellCommand):
 
         return None
 
-    def logConsumer(self):
+    def _log_consumer(self):
         for m in self._MESSAGES:
             self.counts[m] = 0
             self.summaries[m] = []
@@ -281,23 +281,38 @@ class PyLint(ShellCommand):
                 self.addTestResult(self._result_setid, line, test_name=None, test_code_path=path,
                                    line=line_number)
 
-    def createSummary(self, log):
-        counts, summaries = self.counts, self.summaries
-        self.descriptionDone = self.descriptionDone[:]
+    def getResultSummary(self):
+        summary = ' '.join(self.descriptionDone)
         for msg, fullmsg in sorted(self._MESSAGES.items()):
-            if counts[msg]:
-                self.descriptionDone.append("{}={}".format(fullmsg, counts[msg]))
-                self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))
-            self.setProperty("pylint-{}".format(fullmsg), counts[msg], 'Pylint')
-        self.setProperty("pylint-total", sum(counts.values()), 'Pylint')
+            if self.counts[msg]:
+                summary += " {}={}".format(fullmsg, self.counts[msg])
 
-    def evaluateCommand(self, cmd):
+        if self.results != SUCCESS:
+            summary += ' ({})'.format(Results[self.results])
+
+        return {'step': summary}
+
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        for msg, fullmsg in sorted(self._MESSAGES.items()):
+            if self.counts[msg]:
+                yield self.addCompleteLog(fullmsg, "\n".join(self.summaries[msg]))
+            self.setProperty("pylint-{}".format(fullmsg), self.counts[msg], 'Pylint')
+        self.setProperty("pylint-total", sum(self.counts.values()), 'Pylint')
+
         if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):
             return FAILURE
+
         for msg in self._flunkingIssues:
-            if self.getProperty("pylint-{}".format(self._MESSAGES[msg])):
+            if msg in self.counts and self.counts[msg] > 0:
                 return FAILURE
-        if self.getProperty("pylint-total"):
+        if sum(self.counts.values()) > 0:
             return WARNINGS
         return SUCCESS
 
