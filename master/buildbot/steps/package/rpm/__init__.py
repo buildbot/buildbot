@@ -21,6 +21,5 @@ from buildbot.steps.package.rpm.mock import MockBuildSRPM
 from buildbot.steps.package.rpm.mock import MockRebuild
 from buildbot.steps.package.rpm.rpmbuild import RpmBuild
 from buildbot.steps.package.rpm.rpmlint import RpmLint
-from buildbot.steps.package.rpm.rpmspec import RpmSpec
 
-__all__ = ['RpmBuild', 'RpmSpec', 'RpmLint', 'MockBuildSRPM', 'MockRebuild']
+__all__ = ['RpmBuild', 'RpmLint', 'MockBuildSRPM', 'MockRebuild']

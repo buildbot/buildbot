@@ -39,7 +39,6 @@ from buildbot.steps import trigger
 from buildbot.steps import vstudio
 from buildbot.steps.package.rpm import rpmbuild
 from buildbot.steps.package.rpm import rpmlint
-from buildbot.steps.package.rpm import rpmspec
 from buildbot.util import eventual
 
 modules = []  # for the benefit of pyflakes
@@ -51,5 +50,5 @@ modules.extend([checkconfig, logwatcher, reconfig, runner])
 modules.extend([client])
 modules.extend([master, maxq, python, python_twisted, subunit])
 modules.extend([trigger, vstudio])
-modules.extend([rpmbuild, rpmlint, rpmspec])
+modules.extend([rpmbuild, rpmlint])
 modules.extend([eventual])

@@ -285,7 +285,6 @@ setup_args = {
                 'Mock', 'MockBuildSRPM', 'MockRebuild']),
             ('buildbot.steps.package.rpm.rpmbuild', ['RpmBuild']),
             ('buildbot.steps.package.rpm.rpmlint', ['RpmLint']),
-            ('buildbot.steps.package.rpm.rpmspec', ['RpmSpec']),
             ('buildbot.steps.python', [
                 'BuildEPYDoc', 'PyFlakes', 'PyLint', 'Sphinx']),
             ('buildbot.steps.python_twisted', [
