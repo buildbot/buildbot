@@ -89,6 +89,3 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, TestReactorMixin,
         # note that the warnings list is ignored..
         self.expectLogfile('warnings', 'not quite up to snuff (io)\n')
         return self.runStep()
-
-    # TODO: test text2 generation?
-    # TODO: tests are represented as objects?!
