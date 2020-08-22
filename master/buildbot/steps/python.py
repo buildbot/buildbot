@@ -18,25 +18,27 @@ import re
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
 from buildbot.steps.shell import ShellCommand
 
 
-class BuildEPYDoc(ShellCommand):
+class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
     name = "epydoc"
     command = ["make", "epydocs"]
-    description = ["building", "epydocs"]
-    descriptionDone = ["epydoc"]
+    description = "building epydocs"
+    descriptionDone = "epydoc"
 
     def __init__(self, **kwargs):
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
-    def logConsumer(self):
+    def _log_consumer(self):
         self.import_errors = 0
         self.warnings = 0
         self.errors = 0
@@ -50,16 +52,26 @@ class BuildEPYDoc(ShellCommand):
             if line.find("Error: ") != -1:
                 self.errors += 1
 
-    def createSummary(self, log):
-        self.descriptionDone = self.descriptionDone[:]
+    def getResultSummary(self):
+        summary = ' '.join(self.descriptionDone)
         if self.import_errors:
-            self.descriptionDone.append("ierr=%d" % self.import_errors)
+            summary += " ierr={}".format(self.import_errors)
         if self.warnings:
-            self.descriptionDone.append("warn=%d" % self.warnings)
+            summary += " warn={}".format(self.warnings)
         if self.errors:
-            self.descriptionDone.append("err=%d" % self.errors)
+            summary += " err={}".format(self.errors)
+        if self.results != SUCCESS:
+            summary += ' ({})'.format(Results[self.results])
+        return {'step': summary}
 
-    def evaluateCommand(self, cmd):
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         if cmd.didFail():
             return FAILURE
         if self.warnings or self.errors:
