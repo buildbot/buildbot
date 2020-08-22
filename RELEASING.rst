@@ -4,7 +4,20 @@ Creating a release
 This document is documentation intended for Buildbot maintainers.
 It documents the release process of Buildbot.
 
-Step 1: Release notes PR
+Step 1: Verify that external dependants can be built
+----------------------------------------------------
+
+Verify that the following resources can be built from the latest master.
+This can be checked by looking into the dashboards (maintainer access may be needed).
+
+ - Docker Hub (https://hub.docker.com/repository/docker/buildbot/buildbot-master/general)
+
+ - Read the Docs (https://readthedocs.org/projects/buildbot/builds/)
+
+These external dependencies build only by git tag.
+Thus if a release is done with broken build process, it would be impossible to fix without releasing a new version.
+
+Step 2: Release notes PR
 ------------------------
 
 Open a new branch (e.g. `release`) and run the following:
@@ -19,10 +32,10 @@ It's best to run `make docs` afterwards and check `master/docs/_build/html/relno
 This will have much faster turnaround compared to if the error is noticed after the CI runs.
 If any errors are found, just amend the commit created by `make release_notes`.
 
-Step 2: Merge the release notes PR
+Step 3: Merge the release notes PR
 ----------------------------------
 
-Step 3: Perform actual release
+Step 4: Perform actual release
 ------------------------------
 
 This step requires the Buildbot git repository to contain `buildbot` remote that points to https://github.com/buildbot/buildbot and can be pushed to.
@@ -36,7 +49,7 @@ Then run:
 
 This will create the required tags, make documentation, copy it to bbdocs repo and push everything.
 
-Step 4: Draft a new release and wait for CircleCi to create release tarballs
+Step 5: Draft a new release and wait for CircleCi to create release tarballs
 ----------------------------------------------------------------------------
 
 The push of tags created during step 3 will activate CircleCi configuration that generates tarballs and uploads them to GitHub.
@@ -47,7 +60,7 @@ If you draft the release and publish it before CircleCi, make sure the release n
 This is a requirement for subsequent release scripts to work.
 Manual publishing is preferred, because the releases created by CircleCi don't contain release notes, thus GitHub notifications are not informative.
 
-Step 5: Upload release to pypi
+Step 6: Upload release to pypi
 ------------------------------
 
 This step requires GitHub Hub tool to be installed and authorized to GitHub (https://github.com/github/hub).
@@ -61,7 +74,7 @@ To complete the release just run the following:
 The above will download the releases from GitHub and upload them using twine.
 If you get bytes-related error after entering Pypi password, you'll need to upgrade Twine.
 
-Step 6: Announce the release
+Step 7: Announce the release
 ----------------------------
 
 This step involves announcing the release of the new Buildbot version on several channels.
