@@ -28,6 +28,7 @@ The list of old-style steps that have been converted to new style:
  - ``RemovePYCs``
  - ``SetPropertiesFromEnv``
  - ``SetPropertyFromCommand``
+ - ``Sphinx``
  - ``StringDownload``
  - ``TreeSize``
  - ``Trial``

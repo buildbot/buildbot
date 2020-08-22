@@ -24,7 +24,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
-from buildbot.steps.shell import ShellCommand
 
 
 class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
@@ -323,13 +322,13 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
         self._result_setid = yield self.addTestResultSet('Pylint warnings', 'code_issue', 'message')
 
 
-class Sphinx(ShellCommand):
+class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
     ''' A Step to build sphinx documentation '''
 
     name = "sphinx"
-    description = ["running", "sphinx"]
-    descriptionDone = ["sphinx"]
+    description = "running sphinx"
+    descriptionDone = "sphinx"
 
     haltOnFailure = True
 
@@ -352,6 +351,9 @@ class Sphinx(ShellCommand):
                          "'full' is required")
 
         self.success = False
+
+        kwargs = self.setupShellMixin(kwargs)
+
         super().__init__(**kwargs)
 
         # build the command
@@ -378,14 +380,13 @@ class Sphinx(ShellCommand):
             command.extend(['-W'])  # Convert warnings to errors
 
         command.extend([sphinx_sourcedir, sphinx_builddir])
-        self.setCommand(command)
+        self.command = command
 
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
     _msgs = ('WARNING', 'ERROR', 'SEVERE')
 
-    def logConsumer(self):
+    def _log_consumer(self):
         self.warnings = []
         next_is_warning = False
 
@@ -405,21 +406,29 @@ class Sphinx(ShellCommand):
                         if msg in line:
                             self.warnings.append(line)
 
-    def createSummary(self, log):
+    def getResultSummary(self):
+        summary = '{} {} warnings'.format(self.name, len(self.warnings))
+
+        if self.results != SUCCESS:
+            summary += ' ({})'.format(Results[self.results])
+
+        return {'step': summary}
+
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         if self.warnings:
-            self.addCompleteLog('warnings', "\n".join(self.warnings))
+            yield self.addCompleteLog('warnings', "\n".join(self.warnings))
 
-        self.step_status.setStatistic('warnings', len(self.warnings))
+        self.setStatistic('warnings', len(self.warnings))
 
-    def evaluateCommand(self, cmd):
         if self.success:
             if not self.warnings:
                 return SUCCESS
             return WARNINGS
         return FAILURE
-
-    def describe(self, done=False):
-        if not done:
-            return ["building"]
-
-        return [self.name, '%d warnings' % len(self.warnings)]
