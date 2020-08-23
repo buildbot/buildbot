@@ -589,7 +589,7 @@ class BuildbotService(unittest.TestCase):
         serv = yield self.prepareService()
         self.assertEqual(serv.getConfigDict(), {
             'args': (1,),
-            'class': 'buildbot.test.unit.test_util_service.MyService',
+            'class': 'buildbot.test.unit.util.test_service.MyService',
             'kwargs': {'a': 2},
             'name': 'basic'})
 
@@ -712,7 +712,7 @@ class BuildbotServiceManager(unittest.TestCase):
         self.assertEqual(self.manager.getConfigDict(), {
             'childs': [{
                 'args': (1,),
-                'class': 'buildbot.test.unit.test_util_service.MyService',
+                'class': 'buildbot.test.unit.util.test_service.MyService',
                 'kwargs': {'a': 2},
                 'name': 'basic'}],
             'name': 'services'})

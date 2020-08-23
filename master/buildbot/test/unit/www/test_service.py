@@ -27,7 +27,7 @@ from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 from twisted.web.server import Request
 
-from buildbot.test.unit import test_www_hooks_base
+from buildbot.test.unit.www import test_hooks_base
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.www import auth
@@ -192,7 +192,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
         path = b'/change_hook/base'
-        request = test_www_hooks_base._prepare_request({})
+        request = test_hooks_base._prepare_request({})
         self.master.data.updates.addChange = mock.Mock()
         yield self.render_resource(rsrc, path, request=request)
         self.master.data.updates.addChange.assert_called()

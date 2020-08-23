@@ -22,10 +22,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.unit.changes.test_gerritchangesource import TestGerritChangeSource
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin
-
-from .test_changes_gerritchangesource import TestGerritChangeSource
 
 
 class RepoURL(unittest.TestCase):

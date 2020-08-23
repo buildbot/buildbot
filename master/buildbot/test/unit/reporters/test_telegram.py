@@ -31,7 +31,7 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
-from buildbot.test.unit.test_reporters_words import ContactMixin
+from buildbot.test.unit.reporters.test_words import ContactMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import service
 from buildbot.util import unicode2bytes

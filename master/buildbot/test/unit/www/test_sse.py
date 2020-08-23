@@ -19,7 +19,7 @@ import json
 
 from twisted.trial import unittest
 
-from buildbot.test.unit import test_data_changes
+from buildbot.test.unit.data import test_changes
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
@@ -115,13 +115,13 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def assertReceivesChangeNewMessage(self, request):
         self.master.mq.callConsumer(
-            ("changes", "500", "new"), test_data_changes.Change.changeEvent)
+            ("changes", "500", "new"), test_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
         msg = json.loads(bytes2unicode(kw[b"data"]))
         self.assertEqual(msg["key"], ['changes', '500', 'new'])
         self.assertEqual(msg["message"], json.loads(
-            json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
+            json.dumps(test_changes.Change.changeEvent, default=self._toJson)))
 
     def _toJson(self, obj):
         if isinstance(obj, datetime.datetime):

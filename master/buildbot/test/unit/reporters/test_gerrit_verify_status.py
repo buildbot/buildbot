@@ -29,11 +29,10 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.gerrit_verify_status import GerritVerifyStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.unit.changes.test_gerritchangesource import TestGerritChangeSource
 from buildbot.test.util import logging
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-
-from .test_changes_gerritchangesource import TestGerritChangeSource
 
 
 class TestGerritVerifyStatusPush(TestReactorMixin,
