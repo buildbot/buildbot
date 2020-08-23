@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 
 import json
+import os
 
 import mock
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.test.util import www
@@ -115,7 +115,8 @@ class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                         '<div class="myclass"><pre>this is customized</pre></div>'})
         except ImportError:
             log.msg("Only testing html based template override")
-        template_dir = util.sibpath(__file__, "test_templates_dir")
+        template_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                    'test_templates_dir')
         master = self.make_master(url='h:/a/b/')
         rsrc = config.IndexResource(master, "foo")
         res = rsrc.parseCustomTemplateDir(template_dir)

@@ -28,7 +28,7 @@ from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import irc
 from buildbot.reporters import words
-from buildbot.test.unit.test_reporters_words import ContactMixin
+from buildbot.test.unit.reporters.test_words import ContactMixin
 from buildbot.test.util import config
 from buildbot.util import service
 

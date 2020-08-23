@@ -17,11 +17,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.unit import test_steps_source_git
+from buildbot.test.unit.steps import test_source_git
 
 
 # GitHub step shall behave exactly like Git, and thus is inheriting its tests
-class TestGitHub(test_steps_source_git.TestGit):
+class TestGitHub(test_source_git.TestGit):
     stepClass = github.GitHub
 
     def test_with_merge_branch(self):

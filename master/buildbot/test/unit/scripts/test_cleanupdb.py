@@ -23,12 +23,11 @@ from twisted.trial import unittest
 
 from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
+from buildbot.test.unit.db import test_logs
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.misc import TestReactorMixin
-
-from . import test_db_logs
 
 try:
     import lz4
@@ -151,7 +150,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
     @defer.inlineCallbacks
     def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
-        yield self.insertTestData(test_db_logs.Tests.backgroundData)
+        yield self.insertTestData(test_logs.Tests.backgroundData)
 
         # insert a log with lots of redundancy
         LOGDATA = "xx\n" * 2000

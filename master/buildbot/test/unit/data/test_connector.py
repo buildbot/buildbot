@@ -142,7 +142,7 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
 
     def test_scanModule(self):
         # use this module as a test
-        mod = reflect.namedModule('buildbot.test.unit.test_data_connector')
+        mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
         self.data._scanModule(mod)
 
         # check that it discovered MyResourceType and updated endpoints

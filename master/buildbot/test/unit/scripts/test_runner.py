@@ -791,7 +791,7 @@ class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 class TestRun(unittest.TestCase):
 
     class MySubCommand(usage.Options):
-        subcommandFunction = 'buildbot.test.unit.test_scripts_runner.subcommandFunction'
+        subcommandFunction = 'buildbot.test.unit.scripts.test_runner.subcommandFunction'
         optFlags = [
             ['loud', 'l', 'be noisy']
         ]
