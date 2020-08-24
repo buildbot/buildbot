@@ -156,6 +156,7 @@ checkconfig
 checkConfig
 checkin
 childs
+choco
 chroot
 chroots
 ci
@@ -557,6 +558,7 @@ noticeOnChannel
 novaclient
 npm
 nullability
+nupkg
 oauth
 oAuth
 OAuth

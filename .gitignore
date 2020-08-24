@@ -22,6 +22,7 @@ master/docs/buildbot.info-2
 .stgit-edit.txt
 .project
 .pydevproject
+.vscode
 .settings
 */build/
 master/docs/buildbot

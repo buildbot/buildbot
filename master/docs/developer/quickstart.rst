@@ -18,6 +18,9 @@ Create a Buildbot Python Environment
 ------------------------------------
 
 Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_ to run its test suite.
+Windows users also need GNU make on their machines.
+The easiest way is to install it via choco package manager ``choco install make``.
+But WSL or MSYS2 is even a better option, because of integrated bash.
 
 Following is a quick shell session to put you on the right track, including running the test suite.
 
