@@ -34,6 +34,7 @@
         "guanlecoja-ui": "link:../guanlecoja-ui",
         "moment": "^2.24.0",
         "outdated-browser-rework": "^2.8.0",
-        "popper.js": "^1.15.0"
+        "popper.js": "^1.15.0",
+        "reconnecting-websocket": "^4.4.0"
     }
 }

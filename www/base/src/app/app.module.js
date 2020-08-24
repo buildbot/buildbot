@@ -1,4 +1,6 @@
 window.$ = window.jQuery = require('jquery'); /* make jquery available as global variable for plugins */
+import ReconnectingWebSocket from 'reconnecting-websocket';
+window.ReconnectingWebSocket = ReconnectingWebSocket;
 import 'angular';
 import '@uirouter/angularjs';
 import 'angular-animate';

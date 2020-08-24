@@ -28,6 +28,7 @@ class ReconnectingListener {
 
         let reconnecting = false;
         let hasBeenConnected = false;
+        let reconnectTimeoutPromise = null;
         // first poll for an initial connected socket
         // we cannot really use events, as we are not doing this inside dataModule
         var interval = $interval(function() {
@@ -36,18 +37,28 @@ class ReconnectingListener {
                     $interval.cancel(interval);
                     interval = null;
                     hasBeenConnected = true;
+
+                    socketService.socket.onopen = function(evt) {
+                        if (reconnectTimeoutPromise) {
+                          $timeout.cancel(reconnectTimeoutPromise);
+                        }
+                    }
+
                     socketService.socket.onclose = function(evt) {
                         // ignore if we are navigating away from buildbot
                         // see https://github.com/buildbot/buildbot/issues/3306
                         if (evt.code <= 1001) {  // CLOSE_GOING_AWAY or CLOSE_NORMAL
                             return;
                         }
-                        reconnecting = true;
-                        $rootScope.$apply(() =>
-                            // send event to connectionstatus directive
-                            $rootScope.$broadcast("mq.lost_connection")
-                        );
-                        reloadWhenReady();
+
+                        reconnectTimeoutPromise = $timeout(function() {
+                            reconnecting = true;
+                            $rootScope.$apply(() =>
+                                // send event to connectionstatus directive
+                                $rootScope.$broadcast("mq.lost_connection")
+                            );
+                            reloadWhenReady();
+                        }, 35000);
                     };
                 }
             }

@@ -18,7 +18,6 @@ class WebSocket {
                 }
 
                 // use ReconnectingWebSocket if available
-                // TODO write own implementation?
                 if ($window.ReconnectingWebSocket != null) {
                     return new $window.ReconnectingWebSocket(url);
                 } else {
