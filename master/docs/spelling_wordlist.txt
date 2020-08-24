@@ -123,6 +123,7 @@ bzr
 Bzr
 bzrignore
 CaaS
+cacert
 callables
 Callables
 called
@@ -136,6 +137,7 @@ canonicalize
 canStartBuild
 canStartWithWorkerForBuilder
 catchup
+Certifi
 cd
 cfg
 changehook

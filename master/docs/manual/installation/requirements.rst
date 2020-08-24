@@ -26,8 +26,19 @@ Twisted: http://twistedmatrix.com
   In upcoming versions of Buildbot, a newer Twisted will also be required on the worker.
   As always, the most recent version is recommended.
 
+Certifi: https://github.com/certifi/python-certifi
+
+  Certifi provides collection of Root Certificates for validating the trustworthiness of SSL certificates. 
+  Unfortunately it does not support any addition of own company certificates.
+  At the moment you need to add your own .PEM content to cacert.pem manually.
+
 Of course, your project's build process will impose additional requirements on the workers.
 These hosts must have all the tools necessary to compile and test your project's source code.
+
+.. note::
+
+  If your internet connection is secured by a proxy server, please check your ``http_proxy`` and ``https_proxy`` environment variables.
+  Otherwise ``pip`` and other tools will fail to work.
 
 Windows Support
 ~~~~~~~~~~~~~~~
@@ -119,7 +130,7 @@ treq: https://github.com/twisted/treq
   +----------------------------------+------------+----------+
   | Unicode Response Bodies          | yes        | yes      |
   +----------------------------------+------------+----------+
-  | Multipart File Uploads           | yes        | yes      |
+  | Multi-part File Uploads          | yes        | yes      |
   +----------------------------------+------------+----------+
   | Connection Timeouts              | yes        | yes      |
   +----------------------------------+------------+----------+
