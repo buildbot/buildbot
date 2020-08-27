@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import resultspec
+from buildbot.data.changes import FixerMixin
 from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
@@ -277,7 +278,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getChanges_subset(self):
         yield self.insert7Changes()
         rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
-        rs.fieldMapping = {'changeid': 'changes.changeid'}
+        rs.fieldMapping = FixerMixin.fieldMapping
         changes = yield self.db.changes.getChanges(resultSpec=rs)
         changeids = [c['changeid'] for c in changes]
         self.assertEqual(changeids, [10, 11, 12, 13, 14])
