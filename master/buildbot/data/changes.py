@@ -41,7 +41,7 @@ class FixerMixin:
             del change['sourcestampid']
         return change
     fieldMapping = {
-        'changeid': 'changes.id',
+        'changeid': 'changes.changeid',
     }
 
 
