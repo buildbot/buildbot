@@ -14,12 +14,15 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from zope.interface import implementer
 
+from buildbot import interfaces
 from buildbot.reporters import utils
 
 from .utils import BuildStatusGeneratorMixin
 
 
+@implementer(interfaces.IReportGenerator)
 class BuildStatusGenerator(BuildStatusGeneratorMixin):
 
     wanted_event_keys = [

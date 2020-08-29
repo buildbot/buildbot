@@ -14,14 +14,17 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from zope.interface import implementer
 
 from buildbot import config
+from buildbot import interfaces
 from buildbot import util
 from buildbot.reporters.message import MessageFormatterMissingWorker
 
 ENCODING = 'utf-8'
 
 
+@implementer(interfaces.IReportGenerator)
 class WorkerMissingGenerator(util.ComparableMixin):
 
     compare_attrs = ['workers', 'formatter']
