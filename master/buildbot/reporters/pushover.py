@@ -54,13 +54,15 @@ class PushoverNotifier(NotifierBase):
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     schedulers=None, branches=None,
                     priorities=None, otherParams=None,
-                    watchedWorkers=None, messageFormatterMissingWorker=None):
-
+                    watchedWorkers=None, messageFormatterMissingWorker=None,
+                    generators=None):
         super(PushoverNotifier, self).checkConfig(mode, tags, builders,
                                                   buildSetSummary, messageFormatter,
                                                   subject, False, False,
                                                   schedulers,
-                                                  branches, watchedWorkers)
+                                                  branches, watchedWorkers,
+                                                  messageFormatterMissingWorker,
+                                                  generators=generators)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
@@ -76,7 +78,8 @@ class PushoverNotifier(NotifierBase):
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         schedulers=None, branches=None,
                         priorities=None, otherParams=None,
-                        watchedWorkers=None, messageFormatterMissingWorker=None):
+                        watchedWorkers=None, messageFormatterMissingWorker=None,
+                        generators=None):
         user_key, api_token = yield self.renderSecrets(user_key, api_token)
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter(template_type='html',
@@ -88,7 +91,8 @@ class PushoverNotifier(NotifierBase):
                                       buildSetSummary, messageFormatter,
                                       subject, False, False,
                                       schedulers, branches,
-                                      watchedWorkers, messageFormatterMissingWorker)
+                                      watchedWorkers, messageFormatterMissingWorker,
+                                      generators=generators)
         self.user_key = user_key
         self.api_token = api_token
         if priorities is None:
