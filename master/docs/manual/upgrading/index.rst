@@ -39,6 +39,7 @@ Finally, upgrade to the next major release.
 .. toctree::
    :maxdepth: 1
 
+   3.0-upgrade
    2.0-upgrade
    1.0-upgrade
    0.9-upgrade
