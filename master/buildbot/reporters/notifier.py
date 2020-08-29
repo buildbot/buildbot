@@ -49,16 +49,26 @@ class NotifierBase(service.BuildbotService):
                     generators=None
                     ):
 
+        old_arg_names = {
+            'tags': tags is not None,
+            'builders': builders is not None,
+            'buildSetSummary': buildSetSummary is not False,
+            'messageFormatter': messageFormatter is not None,
+            'subject': subject != "Buildbot %(result)s in %(title)s on %(builder)s",
+            'addLogs': addLogs is not False,
+            'addPatch': addPatch is not False,
+            'schedulers': schedulers is not None,
+            'branches': branches is not None,
+            'watchedWorkers': watchedWorkers is not None,
+            'messageFormatterMissingWorker': messageFormatterMissingWorker is not None,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
         # FIXME: TODO: maybe throw deprecation messages for non generator arguments
-        has_old_arg = tags is not None or builders is not None or buildSetSummary or \
-                      messageFormatter is not None or \
-                      subject != "Buildbot %(result)s in %(title)s on %(builder)s" or \
-                      addLogs or addPatch or schedulers is not None or \
-                      branches is not None or watchedWorkers is not None or \
-                      messageFormatterMissingWorker is not None
-        if has_old_arg and generators is not None:
-            config.error("can't specify generators and deprecated notifier arguments at the "
-                         "same time")
+        if passed_old_arg_names and generators is not None:
+            config.error(("can't specify generators and deprecated notifier arguments ({}) at the "
+                          "same time").format(', '.join(passed_old_arg_names)))
 
         if generators is None:
             generators = self.create_generators_from_old_args(mode, tags, builders, buildSetSummary,
