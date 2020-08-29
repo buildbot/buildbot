@@ -23,6 +23,7 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     properties
     steps/index
     interlocks
+    report_generators/index
     reporters
     www
     wwwhooks
