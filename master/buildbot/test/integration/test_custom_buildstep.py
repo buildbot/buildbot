@@ -194,9 +194,13 @@ class RunSteps(unittest.TestCase, TestReactorMixin):
         yield wfb.attached(self.worker, {})
 
         # add the buildset/request
-        self.bsid, brids = yield self.master.db.buildsets.addBuildset(
-            sourcestamps=[{}], reason='x', properties={},
-            builderids=[80], waited_for=False)
+        sourcestamps = [
+            {'repository': '', 'project': '', 'codebase': ''}
+        ]
+        self.bsid, brids = yield self.master.db.buildsets.addBuildset(sourcestamps=sourcestamps,
+                                                                      reason='x', properties={},
+                                                                      builderids=[80],
+                                                                      waited_for=False)
 
         self.brdict = \
             yield self.master.db.buildrequests.getBuildRequest(brids[80])
