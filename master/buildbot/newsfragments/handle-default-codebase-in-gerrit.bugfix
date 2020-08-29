@@ -1,0 +1,2 @@
+Work around incomplete support for codebases in GerritChangeSource (:issue:`5190`). This avoids an internal assertion when the configuration file does not specify any codebases.
+

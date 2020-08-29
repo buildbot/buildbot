@@ -171,6 +171,7 @@ class GerritChangeSourceBase(base.ChangeSource):
             "patch_comment": chdict["comments"],
             "repository": chdict["repository"],
             "project": chdict["project"],
+            "codebase": '',
         }
 
         stampid, found_existing = yield(
