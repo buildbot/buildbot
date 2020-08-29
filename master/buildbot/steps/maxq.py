@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
+
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.steps.shell import ShellCommand
 
 
 class MaxQObserver(buildstep.LogLineObserver):
@@ -32,22 +33,36 @@ class MaxQObserver(buildstep.LogLineObserver):
             self.failures += 1
 
 
-class MaxQ(ShellCommand):
+class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
     flunkOnFailure = True
     name = "maxq"
+    binary = 'run_maxq.py'
+
+    failures = 0
 
     def __init__(self, testdir=None, **kwargs):
         if not testdir:
             config.error("please pass testdir")
-        kwargs['command'] = 'run_maxq.py {}'.format(testdir)
+        self.testdir = testdir
+
+        kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         self.observer = MaxQObserver()
         self.addLogObserver('stdio', self.observer)
 
-    def commandComplete(self, cmd):
+    @defer.inlineCallbacks
+    def run(self):
+        command = [self.binary]
+        command.append(self.testdir)
+
+        cmd = yield self.makeRemoteShellCommand(command=command)
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
         self.failures = self.observer.failures
 
-    def evaluateCommand(self, cmd):
         # treat a nonzero exit status as a failure, if no other failures are
         # detected
         if not self.failures and cmd.didFail():
@@ -58,5 +73,5 @@ class MaxQ(ShellCommand):
 
     def getResultSummary(self):
         if self.failures:
-            return {'step': "%d maxq failures" % self.failures}
+            return {'step': "{} maxq failures".format(self.failures)}
         return {'step': 'success'}
