@@ -14,16 +14,18 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import ShellMixin
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.steps.shell import ShellCommand
 
 
-class Robocopy(ShellCommand):
+class Robocopy(ShellMixin, BuildStep):
 
     """ Robocopy build step.
 
@@ -69,7 +71,8 @@ class Robocopy(ShellCommand):
 
         super().__init__(**kwargs)
 
-    def start(self):
+    @defer.inlineCallbacks
+    def run(self):
         command = ['robocopy', self.source, self.destination]
         if self.files:
             command += self.files
@@ -90,10 +93,11 @@ class Robocopy(ShellCommand):
         if self.custom_opts:
             command += self.custom_opts
         command += ['/TEE', '/NP']
-        self.setCommand(command)
-        super().start()
 
-    def evaluateCommand(self, cmd):
+        cmd = yield self.makeRemoteShellCommand(command=command)
+
+        yield self.runCommand(cmd)
+
         # If we have a "clean" return code, it's good.
         # Otherwise, look for errors first, warnings second.
         if cmd.rc == 0 or cmd.rc == 1:
