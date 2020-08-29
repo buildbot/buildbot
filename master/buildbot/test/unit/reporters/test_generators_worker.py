@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -32,18 +33,38 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin,
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
-    @defer.inlineCallbacks
-    def test_report(self):
-
-        g = WorkerMissingGenerator(workers=['myworker'])
-
-        worker_dict = {
-            'name': 'myworker',
+    def _get_worker_dict(self, worker_name):
+        return {
+            'name': worker_name,
             'notify': ["workeradmin@example.org"],
             'workerinfo': {"admin": "myadmin"},
             'last_connection': "yesterday"
         }
-        report = yield g.generate(self.master, None, 'worker.98.complete', worker_dict)
+
+    @parameterized.expand([
+        (['myworker'],),
+        ('all',),
+    ])
+    @defer.inlineCallbacks
+    def test_report_matched_worker(self, worker_filter):
+        g = WorkerMissingGenerator(workers=worker_filter)
+
+        report = yield g.generate(self.master, None, 'worker.98.complete',
+                                  self._get_worker_dict('myworker'))
 
         self.assertEqual(report['users'], ['workeradmin@example.org'])
         self.assertIn(b"has noticed that the worker named myworker went away", report['body'])
+
+    @defer.inlineCallbacks
+    def test_report_not_matched_worker(self):
+        g = WorkerMissingGenerator(workers=['other'])
+
+        report = yield g.generate(self.master, None, 'worker.98.complete',
+                                  self._get_worker_dict('myworker'))
+
+        self.assertIsNone(report)
+
+    def test_unsupported_workers(self):
+        g = WorkerMissingGenerator(workers='string worker')
+        with self.assertRaisesConfigError("workers must be 'all', or list of worker names"):
+            g.check()
