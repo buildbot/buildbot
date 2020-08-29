@@ -10,6 +10,26 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.8.4`` ( ``2020-08-29`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix 100% CPU on large installations when using the changes API (:issue:`5504`)
+- Work around incomplete support for codebases in ``GerritChangeSource`` (:issue:`5190`). This avoids an internal assertion when the configuration file does not specify any codebases.
+- Add missing VS2017 entry points.
+
+
+Buildbot ``2.8.3`` ( ``2020-08-22`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix Docker image building for the master which failed due to mismatching versions of Alpine (:issue:`5469`).
+
+
 Buildbot ``2.8.2`` ( ``2020-06-14`` )
 =====================================
 

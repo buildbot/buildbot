@@ -10,7 +10,9 @@ Step 1: Verify that external dependants can be built
 Verify that the following resources can be built from the latest master.
 This can be checked by looking into the dashboards (maintainer access may be needed).
 
- - Docker Hub (https://hub.docker.com/repository/docker/buildbot/buildbot-master/general)
+ - Docker Hub (buildbot-master) (https://hub.docker.com/repository/docker/buildbot/buildbot-master/general)
+
+ - Docker Hub (buildbot-worker) (https://hub.docker.com/repository/docker/buildbot/buildbot-worker/general)
 
  - Read the Docs (https://readthedocs.org/projects/buildbot/builds/)
 
