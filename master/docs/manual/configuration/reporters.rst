@@ -182,12 +182,15 @@ MailNotifier arguments
     See :ref:`Report-Generators` for more information.
 
 ``subject``
-    (string).
+    (string, deprecated).
     A string to be used as the subject line of the message.
     ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
 
 ``mode``
-    Mode is a list of strings; however there are two strings which can be used as shortcuts instead of the full lists.
+    (list of strings or string, deprecated).
+    Defines the cases when a message should be sent.
+    There are two strings which can be used as shortcuts instead of the full lists.
+
     The possible shortcuts are:
 
     ``all``
@@ -206,8 +209,7 @@ MailNotifier arguments
                                     mode="warnings")
         c['services'].append(mn)
 
-    (list of strings).
-    A combination of:
+    If the argument is list of strings, it must be a combination of:
 
     ``cancelled``
         Send mail about builds which were cancelled.
@@ -233,47 +235,47 @@ MailNotifier arguments
     Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
-    (list of strings).
+    (list of strings, deprecated).
     A list of builder names for which mail should be sent.
     Defaults to ``None`` (send mail for all builds).
     Use either builders or tags, but not both.
 
 ``tags``
-    (list of strings).
+    (list of strings, deprecated).
     A list of tag names to serve status information for.
     Defaults to ``None`` (all tags).
     Use either builders or tags, but not both.
 
 ``schedulers``
-    (list of strings).
+    (list of strings, deprecated).
     A list of scheduler names to serve status information for.
     Defaults to ``None`` (all schedulers).
 
 ``branches``
-    (list of strings).
+    (list of strings, deprecated).
     A list of branch names to serve status information for.
     Defaults to ``None`` (all branches).
 
 ``addLogs``
-    (boolean).
+    (boolean, deprecated).
     If ``True``, include all build logs as attachments to the messages.
     These can be quite large.
     This can also be set to a list of log names, to send a subset of the logs.
     Defaults to ``False``.
 
 ``addPatch``
-    (boolean).
+    (boolean, deprecated).
     If ``True``, include the patch content if a patch was present.
     Patches are usually used on a :class:`Try` server.
     Defaults to ``True``.
 
 ``buildSetSummary``
-    (boolean).
+    (boolean, deprecated).
     If ``True``, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.
     Defaults to ``False``.
 
 ``relayhost``
-    (string).
+    (string, deprecated).
     The host to which the outbound SMTP connection should be made.
     Defaults to 'localhost'
 
@@ -319,6 +321,7 @@ MailNotifier arguments
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
 
 ``messageFormatter``
+    (optional, deprecated)
     This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom mail message.
     This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
     Templates can either be given inline (as string), or read from the filesystem.
@@ -333,6 +336,7 @@ MailNotifier arguments
     The value of ``watchedWorkers`` can also be set to *all* (default) or ``None``. You also need to specify email address to which the notification is sent in the worker configuration.
 
 ``messageFormatterMissingWorker``
+    (optional, deprecated)
     This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
     This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
     Templates can either be given inline (as string), or read from the filesystem.
@@ -506,7 +510,7 @@ The following parameters are accepted by this class:
 ``otherParams``
     Other parameters send to Pushover API. Check https://pushover.net/api/ for their list.
 
-Additionally, the following parameters are supported.
+Additionally, the following deprecated parameters are supported.
 They work in the same way as in the ``MailNotifier``, see above for their documentation.
 
  * ``subject``
@@ -551,7 +555,7 @@ The following parameters are accepted by this class:
 ``base_url``
     Base URL for custom Pushjet instances. Defaults to https://api.pushjet.io.
 
-Additionally, the following parameters are supported.
+Additionally, the following deprecated parameters are supported.
 They work in the same way as in the ``MailNotifier``, see above for their documentation.
 
  * ``subject``
@@ -1441,7 +1445,7 @@ The following parameters are accepted by this reporter:
     If ``False``, disables SSL verification for the case you use temporary self signed certificates.
     Default enables SSL verification.
 
-Additionally, the following parameters are supported.
+Additionally, the following deprecated parameters are supported.
 They work in the same way as in the ``MailNotifier``, see above for their documentation.
 
  * ``subject``
