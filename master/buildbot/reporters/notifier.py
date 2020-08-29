@@ -24,6 +24,7 @@ from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.util import service
+from buildbot.warnings import warn_deprecated
 
 ENCODING = 'utf-8'
 
@@ -46,10 +47,11 @@ class NotifierBase(service.BuildbotService):
                     addLogs=False, addPatch=False,
                     schedulers=None, branches=None,
                     watchedWorkers=None, messageFormatterMissingWorker=None,
-                    generators=None
-                    ):
+                    generators=None,
+                    _has_old_arg_names=None):
 
         old_arg_names = {
+            'mode': mode != ("failing", "passing", "warnings"),
             'tags': tags is not None,
             'builders': builders is not None,
             'buildSetSummary': buildSetSummary is not False,
@@ -62,13 +64,20 @@ class NotifierBase(service.BuildbotService):
             'watchedWorkers': watchedWorkers is not None,
             'messageFormatterMissingWorker': messageFormatterMissingWorker is not None,
         }
+        if _has_old_arg_names is not None:
+            old_arg_names.update(_has_old_arg_names)
 
         passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
 
-        # FIXME: TODO: maybe throw deprecation messages for non generator arguments
-        if passed_old_arg_names and generators is not None:
-            config.error(("can't specify generators and deprecated notifier arguments ({}) at the "
-                          "same time").format(', '.join(passed_old_arg_names)))
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error(("can't specify generators and deprecated notifier arguments ({}) "
+                              "at the same time").format(old_arg_names_msg))
+            warn_deprecated('2.9.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
 
         if generators is None:
             generators = self.create_generators_from_old_args(mode, tags, builders, buildSetSummary,
