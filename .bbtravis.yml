@@ -17,15 +17,16 @@ label_mapping:
 env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
-  - HYPER_SIZE=m1
+  - NUM_CPU=700m
+  - MEMORY_SIZE=1G
   - CHROME_BIN=/usr/bin/chromium-browser
   matrix:
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   # add js tests in separate job. Start it early because it is quite long
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js_build HYPER_SIZE=m1
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit HYPER_SIZE=m2
-  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=2G
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=2G
+  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes NUM_CPU=4 MEMORY_SIZE=4G
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
@@ -67,7 +68,7 @@ matrix:
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
     - python: "3.8"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=4G
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
