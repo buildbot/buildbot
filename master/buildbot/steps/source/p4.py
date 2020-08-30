@@ -37,8 +37,6 @@ from buildbot.steps.source import Source
 #   formatted as marshalled Python dictionary objects. This is most often used
 #   when scripting.
 
-debug_logging = False
-
 
 class P4(Source):
 
@@ -61,6 +59,7 @@ class P4(Source):
                  p4bin='p4',
                  use_tickets=False,
                  stream=False,
+                 debug=False,
                  **kwargs):
         self.method = method
         self.mode = mode
@@ -79,6 +78,7 @@ class P4(Source):
         self.p4extra_args = p4extra_args
         self.use_tickets = use_tickets
         self.stream = stream
+        self.debug = debug
 
         super().__init__(**kwargs)
 
@@ -125,7 +125,7 @@ class P4(Source):
 
     @defer.inlineCallbacks
     def run_vc(self, branch, revision, patch):
-        if debug_logging:
+        if self.debug:
             log.msg('in run_vc')
 
         self.revision = revision
@@ -154,7 +154,7 @@ class P4(Source):
 
     @defer.inlineCallbacks
     def mode_full(self):
-        if debug_logging:
+        if self.debug:
             log.msg("P4:full()..")
 
         # First we need to create the client
@@ -168,23 +168,23 @@ class P4(Source):
 
         # Then we need to sync the client
         if self.revision:
-            if debug_logging:
+            if self.debug:
                 log.msg("P4: full() sync command based on :base:%s changeset:%d",
                         self._getP4BaseForLog(), int(self.revision))
             yield self._dovccmd(['sync', '{}...@{}'.format(self._getP4BaseForCommand(),
                                                            int(self.revision))], collectStdout=True)
         else:
-            if debug_logging:
+            if self.debug:
                 log.msg("P4: full() sync command based on :base:%s no revision",
                         self._getP4BaseForLog())
             yield self._dovccmd(['sync'], collectStdout=True)
 
-        if debug_logging:
+        if self.debug:
             log.msg("P4: full() sync done.")
 
     @defer.inlineCallbacks
     def mode_incremental(self):
-        if debug_logging:
+        if self.debug:
             log.msg("P4:incremental()")
 
         # First we need to create the client
@@ -196,7 +196,7 @@ class P4(Source):
         if self.revision:
             command.extend(['{}...@{}'.format(self._getP4BaseForCommand(), int(self.revision))])
 
-        if debug_logging:
+        if self.debug:
             log.msg(
                 "P4:incremental() command:%s revision:%s", command, self.revision)
         yield self._dovccmd(command)
@@ -232,7 +232,7 @@ class P4(Source):
     def _dovccmd(self, command, collectStdout=False, initialStdin=None):
         command = self._buildVCCommand(command)
 
-        if debug_logging:
+        if self.debug:
             log.msg("P4:_dovccmd():workdir->{}".format(self.workdir))
 
         cmd = buildstep.RemoteShellCommand(self.workdir, command,
@@ -242,13 +242,13 @@ class P4(Source):
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin,)
         cmd.useLog(self.stdio_log, False)
-        if debug_logging:
+        if self.debug:
             log.msg("Starting p4 command : p4 {}".format(" ".join(command)))
 
         yield self.runCommand(cmd)
 
         if cmd.rc != 0:
-            if debug_logging:
+            if self.debug:
                 log.msg("P4:_dovccmd():Source step failed while running command {}".format(cmd))
             raise buildstep.BuildStepFailed()
         if collectStdout:
@@ -276,7 +276,7 @@ class P4(Source):
     def _createClientSpec(self):
         builddir = self.getProperty('builddir')
 
-        if debug_logging:
+        if self.debug:
             log.msg("P4:_createClientSpec() builddir:{}".format(builddir))
             log.msg("P4:_createClientSpec() SELF.workdir:{}".format(self.workdir))
 
@@ -311,7 +311,7 @@ class P4(Source):
                 # Ignore any specified p4base,p4branch, and/or p4extra_views
                 suffix = self.p4viewspec_suffix or ''
                 for k, v in self.p4viewspec:
-                    if debug_logging:
+                    if self.debug:
                         log.msg('P4:_createClientSpec():key:{} value:{}'.format(k, v))
 
                     qa = '"' if has_whitespace(k, suffix) else ''
@@ -341,7 +341,7 @@ class P4(Source):
                         client_spec += "\t{}{}/...{} {}//{}/{}/...{}\n".format(qa, k, qa, qb,
                                                                                self.p4client, v, qb)
 
-        if debug_logging:
+        if self.debug:
             log.msg(client_spec)
 
         stdout = yield self._dovccmd(['client', '-i'], collectStdout=True, initialStdin=client_spec)
@@ -350,7 +350,7 @@ class P4(Source):
 
     @defer.inlineCallbacks
     def _acquireTicket(self):
-        if debug_logging:
+        if self.debug:
             log.msg("P4:acquireTicket()")
 
         # TODO: check first if the ticket is still valid?
@@ -382,7 +382,7 @@ class P4(Source):
             log.msg(msg)
             raise buildstep.BuildStepFailed()
 
-        if debug_logging:
+        if self.debug:
             log.msg("Got p4 revision {}".format(revision))
         self.updateSourceProperty('got_revision', revision)
 
