@@ -35,7 +35,6 @@ log = Logger()
 
 class GerritVerifyStatusPush(http.HttpStatusPushBase):
     name = "GerritVerifyStatusPush"
-    neededDetails = dict(wantProperties=True)
     # overridable constants
     RESULTS_TABLE = {
         SUCCESS: 1,
@@ -59,9 +58,10 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                         category=None,
                         reporter=None,
                         verbose=False,
+                        wantProperties=True,
                         **kwargs):
         auth = yield self.renderSecrets(auth)
-        yield super().reconfigService(**kwargs)
+        yield super().reconfigService(wantProperties=wantProperties, **kwargs)
 
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]

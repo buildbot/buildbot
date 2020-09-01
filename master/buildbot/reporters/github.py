@@ -37,14 +37,13 @@ HOSTED_BASE_URL = 'https://api.github.com'
 
 class GitHubStatusPush(http.HttpStatusPushBase):
     name = "GitHubStatusPush"
-    neededDetails = dict(wantProperties=True)
 
     @defer.inlineCallbacks
     def reconfigService(self, token,
                         startDescription=None, endDescription=None,
-                        context=None, baseURL=None, verbose=False, **kwargs):
+                        context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
         token = yield self.renderSecrets(token)
-        yield super().reconfigService(**kwargs)
+        yield super().reconfigService(wantProperties=wantProperties, **kwargs)
 
         self.setDefaults(context, startDescription, endDescription)
         if baseURL is None:
@@ -207,7 +206,6 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
 class GitHubCommentPush(GitHubStatusPush):
     name = "GitHubCommentPush"
-    neededDetails = dict(wantProperties=True)
 
     def setDefaults(self, context, startDescription, endDescription):
         self.context = ''

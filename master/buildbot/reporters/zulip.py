@@ -26,7 +26,6 @@ log = Logger()
 
 class ZulipStatusPush(HttpStatusPushBase):
     name = "ZulipStatusPush"
-    neededDetails = dict(wantProperties=True)
 
     def checkConfig(self, endpoint, token, stream=None, **kwargs):
         if not isinstance(endpoint, str):
@@ -36,8 +35,8 @@ class ZulipStatusPush(HttpStatusPushBase):
         super().checkConfig(**kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(self, endpoint, token, stream=None, **kwargs):
-        super().reconfigService(**kwargs)
+    def reconfigService(self, endpoint, token, stream=None, wantProperties=True, **kwargs):
+        super().reconfigService(wantProperties=wantProperties, **kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, endpoint,
             debug=self.debug, verify=self.verify)

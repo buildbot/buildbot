@@ -36,15 +36,14 @@ HOSTED_BASE_URL = 'https://gitlab.com'
 
 class GitLabStatusPush(http.HttpStatusPushBase):
     name = "GitLabStatusPush"
-    neededDetails = dict(wantProperties=True)
 
     @defer.inlineCallbacks
     def reconfigService(self, token,
                         startDescription=None, endDescription=None,
-                        context=None, baseURL=None, verbose=False, **kwargs):
+                        context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
 
         token = yield self.renderSecrets(token)
-        yield super().reconfigService(**kwargs)
+        yield super().reconfigService(wantProperties=wantProperties, **kwargs)
 
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
         self.startDescription = startDescription or 'Build started.'
