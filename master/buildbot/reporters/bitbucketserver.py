@@ -150,6 +150,7 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
                             subject='',
                             addLogs=False,
                             addPatch=False,
+                            _has_old_arg_names={'subject': False},
                             **kwargs)
 
     def isMessageNeeded(self, build):

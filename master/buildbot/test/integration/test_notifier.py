@@ -18,6 +18,9 @@ import base64
 
 from twisted.internet import defer
 
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
+from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
@@ -132,13 +135,31 @@ def masterConfig(build_set_summary):
                       workernames=["local1"],
                       factory=f)
     ]
-    notifier = reporters.PushoverNotifier(
-        '1234', 'abcd', mode="all", watchedWorkers=['local1'], buildSetSummary=build_set_summary,
-        messageFormatter=MessageFormatter(template='This is a message.'),
-        messageFormatterMissingWorker=MessageFormatterMissingWorker(
-        template='No worker.'))
+
+    formatter = MessageFormatter(template='This is a message.')
+    formatter_worker = MessageFormatterMissingWorker(template='No worker.')
+
+    if build_set_summary:
+        generators_mail = [
+            BuildSetStatusGenerator(mode='all'),
+            WorkerMissingGenerator(workers='all'),
+        ]
+        generators_pushover = [
+            BuildSetStatusGenerator(mode='all', message_formatter=formatter),
+            WorkerMissingGenerator(workers=['local1'], message_formatter=formatter_worker),
+        ]
+    else:
+        generators_mail = [
+            BuildStatusGenerator(mode='all'),
+            WorkerMissingGenerator(workers='all'),
+        ]
+        generators_pushover = [
+            BuildStatusGenerator(mode='all', message_formatter=formatter),
+            WorkerMissingGenerator(workers=['local1'], message_formatter=formatter_worker),
+        ]
+
     c['services'] = [
-        reporters.MailNotifier("bot@foo.com", mode="all", buildSetSummary=build_set_summary),
-        notifier
+        reporters.MailNotifier("bot@foo.com", generators=generators_mail),
+        reporters.PushoverNotifier('1234', 'abcd', generators=generators_pushover)
     ]
     return c

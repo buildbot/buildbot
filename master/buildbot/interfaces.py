@@ -329,6 +329,12 @@ class IConfigured(Interface):
         pass
 
 
+class IReportGenerator(Interface):
+
+    def generate(self, master, reporter, key, build):
+        pass
+
+
 # #################### Deprecated Status Interfaces   ####################
 
 
