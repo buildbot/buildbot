@@ -1,0 +1,1 @@
+Fixes deserialisation bug #4488 that occurs in buildbot try since python3
