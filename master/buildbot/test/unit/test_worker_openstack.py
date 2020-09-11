@@ -81,6 +81,13 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertIsInstance(bs.novaclient, novaclient.Client)
 
     @defer.inlineCallbacks
+    def test_builds_may_be_incompatible(self):
+        # Minimal set of parameters
+        bs = yield self.setupWorker(
+            'bot', 'pass', **self.bs_image_args)
+        self.assertEqual(bs.builds_may_be_incompatible, True)
+
+    @defer.inlineCallbacks
     def test_constructor_minimal_keystone_v3(self):
         bs = yield self.setupWorker(
             'bot', 'pass', os_user_domain='test_oud', os_project_domain='test_opd',
