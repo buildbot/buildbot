@@ -24,10 +24,10 @@ from buildbot.worker.docker import DockerBaseWorker
 log = Logger()
 
 
-class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
+class KubeLatentWorker(CompatibleLatentWorkerMixin,
+                       DockerBaseWorker):
 
     instance = None
-    builds_may_be_incompatible = True
 
     @defer.inlineCallbacks
     def getPodSpec(self, build):
