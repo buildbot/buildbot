@@ -84,6 +84,12 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(bs.command, [])
 
     @defer.inlineCallbacks
+    def test_builds_may_be_incompatible(self):
+        # Minimal set of parameters
+        bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
+        self.assertEqual(bs.builds_may_be_incompatible, True)
+
+    @defer.inlineCallbacks
     def test_contruction_minimal_docker_py(self):
         docker.version = "1.10.6"
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')

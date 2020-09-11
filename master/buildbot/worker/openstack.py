@@ -46,30 +46,29 @@ DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
 
-class OpenStackLatentWorker(AbstractLatentWorker,
-                            CompatibleLatentWorkerMixin):
+class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
+                            AbstractLatentWorker):
 
     instance = None
     _poll_resolution = 5  # hook point for tests
 
-    def __init__(self, name, password,
-                 flavor,
-                 os_username,
-                 os_password,
-                 os_tenant_name,
-                 os_auth_url,
-                 os_user_domain=None,
-                 os_project_domain=None,
-                 block_devices=None,
-                 region=None,
-                 image=None,
-                 meta=None,
-                 # Have a nova_args parameter to allow passing things directly
-                 # to novaclient.
-                 nova_args=None,
-                 client_version='2',
-                 **kwargs):
-
+    def checkConfig(self, name, password,
+                    flavor,
+                    os_username,
+                    os_password,
+                    os_tenant_name,
+                    os_auth_url,
+                    os_user_domain=None,
+                    os_project_domain=None,
+                    block_devices=None,
+                    region=None,
+                    image=None,
+                    meta=None,
+                    # Have a nova_args parameter to allow passing things directly
+                    # to novaclient.
+                    nova_args=None,
+                    client_version='2',
+                    **kwargs):
         if not client:
             config.error("The python module 'novaclient' is needed  "
                          "to use a OpenStackLatentWorker. "
@@ -79,10 +78,31 @@ class OpenStackLatentWorker(AbstractLatentWorker,
                          "to use a OpenStackLatentWorker. "
                          "Please install the 'keystoneauth1' package.")
 
-        if not block_devices and not image:
+        if block_devices is None and image is None:
             raise ValueError('One of block_devices or image must be given')
 
-        super().__init__(name, password, **kwargs)
+        super().checkConfig(name, password, **kwargs)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, name, password,
+                        flavor,
+                        os_username,
+                        os_password,
+                        os_tenant_name,
+                        os_auth_url,
+                        os_user_domain=None,
+                        os_project_domain=None,
+                        block_devices=None,
+                        region=None,
+                        image=None,
+                        meta=None,
+                        # Have a nova_args parameter to allow passing things directly
+                        # to novaclient.
+                        nova_args=None,
+                        client_version='2',
+                        **kwargs):
+
+        yield super().reconfigService(name, password, **kwargs)
 
         self.flavor = flavor
         self.client_version = client_version
@@ -102,17 +122,16 @@ class OpenStackLatentWorker(AbstractLatentWorker,
         self.meta = meta
         self.nova_args = nova_args if nova_args is not None else {}
 
-    @staticmethod
-    def _constructClient(client_version, username, user_domain, password, project_name,
-                         project_domain, auth_url):
+    def _constructClient(self, client_version, username, user_domain, password,
+                         project_name, project_domain, auth_url):
         """Return a novaclient from the given args."""
         loader = loading.get_plugin_loader('password')
 
         # These only work with v3
         if user_domain is not None or project_domain is not None:
             auth = loader.load_from_options(auth_url=auth_url, username=username,
-                                            user_domain_name=user_domain, password=password,
-                                            project_name=project_name,
+                                            user_domain_name=user_domain,
+                                            password=password, project_name=project_name,
                                             project_domain_name=project_domain)
         else:
             auth = loader.load_from_options(auth_url=auth_url, username=username,

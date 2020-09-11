@@ -24,10 +24,12 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
+from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import openstack
 
 
-class TestOpenStackWorker(unittest.TestCase):
+class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
     os_auth = dict(
         os_username='user',
         os_password='pass',
@@ -39,23 +41,37 @@ class TestOpenStackWorker(unittest.TestCase):
         **os_auth)
 
     def setUp(self):
+        self.setUpTestReactor()
         self.patch(openstack, "client", novaclient)
         self.patch(openstack, "loading", novaclient)
         self.patch(openstack, "session", novaclient)
         self.build = Properties(image=novaclient.TEST_UUIDS['image'])
 
+    @defer.inlineCallbacks
+    def setupWorker(self, *args, **kwargs):
+        worker = openstack.OpenStackLatentWorker(*args, **kwargs)
+        master = fakemaster.make_master(self, wantData=True)
+        fakemaster.master = master
+        worker.setServiceParent(master)
+        yield master.startService()
+        self.addCleanup(master.stopService)
+        return worker
+
+    @defer.inlineCallbacks
     def test_constructor_nonova(self):
         self.patch(openstack, "client", None)
         with self.assertRaises(config.ConfigErrors):
-            openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+            yield self.setupWorker('bot', 'pass', **self.bs_image_args)
 
+    @defer.inlineCallbacks
     def test_constructor_nokeystoneauth(self):
         self.patch(openstack, "loading", None)
         with self.assertRaises(config.ConfigErrors):
-            openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+            yield self.setupWorker('bot', 'pass', **self.bs_image_args)
 
+    @defer.inlineCallbacks
     def test_constructor_minimal(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
@@ -64,8 +80,16 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual(bs.block_devices, None)
         self.assertIsInstance(bs.novaclient, novaclient.Client)
 
+    @defer.inlineCallbacks
+    def test_builds_may_be_incompatible(self):
+        # Minimal set of parameters
+        bs = yield self.setupWorker(
+            'bot', 'pass', **self.bs_image_args)
+        self.assertEqual(bs.builds_may_be_incompatible, True)
+
+    @defer.inlineCallbacks
     def test_constructor_minimal_keystone_v3(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', os_user_domain='test_oud', os_project_domain='test_opd',
             **self.bs_image_args)
         self.assertEqual(bs.workername, 'bot')
@@ -77,16 +101,18 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'test_oud')
         self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'test_opd')
 
+    @defer.inlineCallbacks
     def test_constructor_region(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', region="test-region", **self.bs_image_args)
         self.assertEqual(bs.novaclient.client.region_name, "test-region")
 
+    @defer.inlineCallbacks
     def test_constructor_block_devices_default(self):
         block_devices = [{'uuid': 'uuid', 'volume_size': 10}]
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                             block_devices=block_devices,
-                                             **self.os_auth)
+        bs = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    block_devices=block_devices,
+                                    **self.os_auth)
         self.assertEqual(bs.image, None)
         self.assertEqual(len(bs.block_devices), 1)
         self.assertEqual(bs.block_devices, [{'boot_index': 0,
@@ -113,9 +139,9 @@ class TestOpenStackWorker(unittest.TestCase):
             self.assertEqual(block_devices[2]['volume_size'], 4)
             self.assertEqual(block_devices[3]['volume_size'], 2)
 
-        lw = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                             block_devices=block_devices,
-                                             **self.os_auth)
+        lw = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    block_devices=block_devices,
+                                    **self.os_auth)
         self.assertEqual(lw.image, None)
         self.assertEqual(lw.block_devices, [{'boot_index': 0,
                                              'delete_on_termination': True,
@@ -146,23 +172,24 @@ class TestOpenStackWorker(unittest.TestCase):
             {'source_type': 'image', 'uuid': '9fb2e6e8-110d-4388-8c23-0fcbd1e2fcc1'},
         ]
 
-        lw = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                             block_devices=block_devices,
-                                             **self.os_auth)
+        lw = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    block_devices=block_devices,
+                                    **self.os_auth)
         yield self.assertFailure(lw.start_instance(self.build),
                                  novaclient.NotFound)
 
+    @defer.inlineCallbacks
     def test_constructor_no_image(self):
         """
         Must have one of image or block_devices specified.
         """
         with self.assertRaises(ValueError):
-            openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                            **self.os_auth)
+            yield self.setupWorker('bot', 'pass', flavor=1,
+                                   **self.os_auth)
 
     @defer.inlineCallbacks
     def test_getImage_string(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual('image-uuid', image_uuid)
@@ -173,8 +200,8 @@ class TestOpenStackWorker(unittest.TestCase):
             filtered = [i for i in images if i.id == 'uuid1']
             return filtered[0].id
 
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                             image=image_callable, **self.os_auth)
+        bs = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    image=image_callable, **self.os_auth)
         os_client = bs.novaclient
         os_client.images._add_items([
             novaclient.Image('uuid1', 'name1', 1),
@@ -186,22 +213,22 @@ class TestOpenStackWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getImage_renderable(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                             image=Interpolate('%(prop:image)s'),
-                                             **self.os_auth)
+        bs = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    image=Interpolate('%(prop:image)s'),
+                                    **self.os_auth)
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
     @defer.inlineCallbacks
     def test_start_instance_already_exists(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
         yield self.assertFailure(bs.start_instance(self.build), ValueError)
 
     @defer.inlineCallbacks
     def test_start_instance_first_fetch_fail(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
@@ -211,7 +238,7 @@ class TestOpenStackWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
@@ -220,7 +247,7 @@ class TestOpenStackWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_fail_to_start(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
@@ -229,7 +256,7 @@ class TestOpenStackWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_success(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
@@ -240,8 +267,8 @@ class TestOpenStackWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_start_instance_check_meta(self):
         meta_arg = {'some_key': 'some-value'}
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', meta=meta_arg,
-                                             **self.bs_image_args)
+        bs = yield self.setupWorker('bot', 'pass', meta=meta_arg,
+                                    **self.bs_image_args)
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
@@ -252,14 +279,15 @@ class TestOpenStackWorker(unittest.TestCase):
         """
         Test stopping the instance but with no instance to stop.
         """
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = None
         stopped = yield bs.stop_instance()
         self.assertEqual(stopped, None)
 
+    @defer.inlineCallbacks
     def test_stop_instance_missing(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         instance = mock.Mock()
         instance.id = 'uuid'
@@ -267,8 +295,9 @@ class TestOpenStackWorker(unittest.TestCase):
         # TODO: Check log for instance not found.
         bs.stop_instance()
 
+    @defer.inlineCallbacks
     def test_stop_instance_fast(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
@@ -278,8 +307,9 @@ class TestOpenStackWorker(unittest.TestCase):
         bs.stop_instance(fast=True)
         self.assertNotIn(inst.id, s.instances)
 
+    @defer.inlineCallbacks
     def test_stop_instance_notfast(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
@@ -289,8 +319,9 @@ class TestOpenStackWorker(unittest.TestCase):
         bs.stop_instance(fast=False)
         self.assertNotIn(inst.id, s.instances)
 
+    @defer.inlineCallbacks
     def test_stop_instance_unknown(self):
-        bs = openstack.OpenStackLatentWorker(
+        bs = yield self.setupWorker(
             'bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
