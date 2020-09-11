@@ -63,6 +63,12 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         return worker
 
     @defer.inlineCallbacks
+    def test_builds_may_be_incompatible(self):
+        worker = self.worker = yield self.makeWorker()
+        # http is lazily created on worker substantiation
+        self.assertEqual(worker.builds_may_be_incompatible, True)
+
+    @defer.inlineCallbacks
     def test_start_service(self):
         worker = self.worker = yield self.makeWorker()
         # http is lazily created on worker substantiation

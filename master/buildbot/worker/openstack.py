@@ -46,8 +46,8 @@ DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
 
-class OpenStackLatentWorker(AbstractLatentWorker,
-                            CompatibleLatentWorkerMixin):
+class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
+                            AbstractLatentWorker):
 
     instance = None
     _poll_resolution = 5  # hook point for tests
