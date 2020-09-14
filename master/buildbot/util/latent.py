@@ -40,6 +40,9 @@ class CompatibleLatentWorkerMixin:
         self._actual_build_props = copy.deepcopy(props)
         defer.returnValue(props)
 
+    def resetWorkerPropsOnStop(self):
+        self._actual_build_props = None
+
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build):
         if self._actual_build_props is None:

@@ -17,6 +17,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.process.properties import Interpolate
+from buildbot.process.properties import Properties
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
@@ -114,3 +116,22 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         with self.assertRaises(LatentWorkerFailedToSubstantiate):
             yield worker.substantiate(None, FakeBuild())
         self.assertEqual(worker.instance, None)
+
+    @defer.inlineCallbacks
+    def test_interpolate_renderables_for_new_build(self):
+        build1 = Properties(img_prop="image1")
+        build2 = Properties(img_prop="image2")
+        worker = yield self.setupWorker('worker', image=Interpolate("%(prop:img_prop)s"))
+
+        yield worker.start_instance(build1)
+        yield worker.stop_instance()
+        self.assertTrue((yield worker.isCompatibleWithBuild(build2)))
+
+    @defer.inlineCallbacks
+    def test_reject_incompatible_build_while_running(self):
+        build1 = Properties(img_prop="image1")
+        build2 = Properties(img_prop="image2")
+        worker = yield self.setupWorker('worker', image=Interpolate("%(prop:img_prop)s"))
+
+        yield worker.start_instance(build1)
+        self.assertFalse((yield worker.isCompatibleWithBuild(build2)))

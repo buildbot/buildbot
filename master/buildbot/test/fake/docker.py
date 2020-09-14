@@ -19,6 +19,7 @@ version = "1.10.6"
 
 class Client:
     latest = None
+    containerCreated = False
 
     def __init__(self, base_url):
         Client.latest = self
@@ -30,6 +31,9 @@ class Client:
         self._pullable = ['alpine:latest', 'tester:latest']
         self._pullCount = 0
         self._containers = {}
+
+        if Client.containerCreated:
+            self.create_container("some-default-image")
 
     def images(self):
         return self._images
