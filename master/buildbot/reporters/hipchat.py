@@ -51,7 +51,10 @@ class HipChatStatusPush(HttpStatusPushBase):
 
     @defer.inlineCallbacks
     def getBuildDetailsAndSendMessage(self, build, key):
-        yield utils.getDetailsForBuild(self.master, build, **self.neededDetails)
+        yield utils.getDetailsForBuild(self.master, build, wantProperties=self.wantProperties,
+                                       wantSteps=self.wantSteps,
+                                       wantPreviousBuild=self.wantPreviousBuild,
+                                       wantLogs=self.wantLogs)
         postData = yield self.getRecipientList(build, key)
         postData['message'] = yield self.getMessage(build, key)
         extra_params = yield self.getExtraParams(build, key)

@@ -42,7 +42,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(
             maxq.MaxQ(testdir='x'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', command="run_maxq.py x") +
+            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"]) +
             ExpectShell.log('stdio', stdout='no failures\n') +
             0
         )
@@ -53,7 +53,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(
             maxq.MaxQ(testdir='x'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', command="run_maxq.py x") +
+            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"]) +
             ExpectShell.log('stdio', stdout='no failures\n') +
             2
         )
@@ -65,7 +65,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(
             maxq.MaxQ(testdir='x'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', command="run_maxq.py x") +
+            ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"]) +
             ExpectShell.log('stdio', stdout='\nTEST FAILURE: foo\n' * 10) +
             2
         )

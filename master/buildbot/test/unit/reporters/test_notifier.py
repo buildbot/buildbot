@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -21,12 +23,16 @@ from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
@@ -38,8 +44,19 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
                                              wantMq=True)
 
     @defer.inlineCallbacks
-    def setupNotifier(self, *args, **kwargs):
-        mn = NotifierBase(*args, **kwargs)
+    def setupNotifier(self, old_style=False, *args, **kwargs):
+        if old_style:
+            with assertProducesWarnings(DeprecatedApiWarning,
+                                        message_pattern='have been deprecated'):
+                mn = NotifierBase(*args, **kwargs)
+        else:
+            if 'generators' not in kwargs:
+                if 'watchedWorkers' in kwargs:
+                    generator = WorkerMissingGenerator(workers=kwargs.pop('watchedWorkers'))
+                    kwargs['generators'] = [generator]
+
+            mn = NotifierBase(*args, **kwargs)
+
         mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
@@ -47,7 +64,7 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
         return mn
 
     @defer.inlineCallbacks
-    def setupBuildMessage(self, **mnKwargs):
+    def setupBuildMessage(self, old_style=False, **mnKwargs):
 
         _, builds = yield self.setupBuildResults(FAILURE)
 
@@ -59,7 +76,18 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
         formatter.wantSteps = False
         formatter.wantLogs = False
 
-        mn = yield self.setupNotifier(messageFormatter=formatter, **mnKwargs)
+        if old_style:
+            with assertProducesWarnings(DeprecatedApiWarning,
+                                        message_pattern='have been deprecated'):
+                mn = yield self.setupNotifier(old_style=True, messageFormatter=formatter,
+                                              **mnKwargs)
+        else:
+            generator_kwargs = {}
+            if 'mode' in mnKwargs:
+                generator_kwargs['mode'] = mnKwargs.pop('mode')
+            generator = BuildStatusGenerator(message_formatter=formatter, **generator_kwargs)
+
+            mn = yield self.setupNotifier(generators=[generator], **mnKwargs)
 
         yield mn._got_event(('builds', 97, 'finished'), builds[0])
         return (mn, builds, formatter)
@@ -70,9 +98,54 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
         gen.generate_name = lambda: '<name>'
         return gen
 
+    @parameterized.expand([
+        ('mode', ('failing',)),
+        ('tags', ['tag']),
+        ('builders', ['builder']),
+        ('buildSetSummary', True),
+        ('messageFormatter', mock.Mock()),
+        ('subject', 'custom subject'),
+        ('addLogs', True),
+        ('addPatch', True),
+        ('schedulers', ['scheduler']),
+        ('branches', ['branch']),
+        ('watchedWorkers', ['worker']),
+        ('messageFormatterMissingWorker', mock.Mock()),
+    ])
+    def test_check_config_raises_error_when_deprecated_and_generator(self, arg_name, arg_value):
+        notifier = NotifierBase()
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='have been deprecated'):
+            with self.assertRaisesConfigError('can\'t specify generators and deprecated notifier'):
+                kwargs = {arg_name: arg_value}
+                notifier.checkConfig(generators=[mock.Mock()], **kwargs)
+
+    @parameterized.expand([
+        ('mode', ('failing',)),
+        ('tags', ['tag']),
+        ('builders', ['builder']),
+        ('buildSetSummary', True),
+        ('messageFormatter', mock.Mock()),
+        ('subject', 'custom subject'),
+        ('addLogs', True),
+        ('addPatch', True),
+        ('schedulers', ['scheduler']),
+        ('branches', ['branch']),
+        ('watchedWorkers', ['worker']),
+        ('messageFormatterMissingWorker', mock.Mock()),
+    ])
+    def test_check_config_raises_warning_when_deprecated(self, arg_name, arg_value):
+        notifier = NotifierBase()
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='have been deprecated'):
+            kwargs = {arg_name: arg_value}
+            notifier.checkConfig(**kwargs)
+
+    @parameterized.expand([
+        ('_old_style', True),
+        ('_new_style', False),
+    ])
     @defer.inlineCallbacks
-    def test_buildMessage_nominal(self):
-        mn, builds, formatter = yield self.setupBuildMessage(mode=("change",))
+    def test_buildMessage_nominal(self, name, old_style):
+        mn, builds, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("change",))
 
         build = builds[0]
         formatter.formatMessageForBuildResults.assert_called_with(
@@ -93,10 +166,14 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
         self.assertEqual(mn.sendMessage.call_count, 1)
         mn.sendMessage.assert_called_with([report])
 
+    @parameterized.expand([
+        ('_old_style', True),
+        ('_new_style', False),
+    ])
     @defer.inlineCallbacks
-    def test_worker_missing_sends_message(self):
+    def test_worker_missing_sends_message(self, name, old_style):
 
-        mn = yield self.setupNotifier(watchedWorkers=['myworker'])
+        mn = yield self.setupNotifier(old_style=old_style, watchedWorkers=['myworker'])
 
         worker_dict = {
             'name': 'myworker',

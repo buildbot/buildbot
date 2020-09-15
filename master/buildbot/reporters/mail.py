@@ -97,7 +97,8 @@ class MailNotifier(NotifierBase):
                     smtpUser=None, smtpPassword=None, smtpPort=25,
                     schedulers=None, branches=None,
                     watchedWorkers='all', messageFormatterMissingWorker=None,
-                    dumpMailsToLog=False):
+                    dumpMailsToLog=False,
+                    generators=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
@@ -108,7 +109,10 @@ class MailNotifier(NotifierBase):
             subject=subject, addLogs=addLogs, addPatch=addPatch,
             schedulers=schedulers, branches=branches,
             watchedWorkers=watchedWorkers,
-            messageFormatterMissingWorker=messageFormatterMissingWorker)
+            messageFormatterMissingWorker=messageFormatterMissingWorker,
+            generators=generators,
+            _has_old_arg_names={'addPatch': addPatch is False,
+                                'watchedWorkers': watchedWorkers != 'all'})
 
         if extraRecipients is None:
             extraRecipients = []
@@ -144,14 +148,15 @@ class MailNotifier(NotifierBase):
                         smtpUser=None, smtpPassword=None, smtpPort=25,
                         schedulers=None, branches=None,
                         watchedWorkers='all', messageFormatterMissingWorker=None,
-                        dumpMailsToLog=False):
+                        dumpMailsToLog=False, generators=None):
         yield super().reconfigService(
             mode=mode, tags=tags, builders=builders,
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,
             schedulers=schedulers, branches=branches,
             watchedWorkers=watchedWorkers,
-            messageFormatterMissingWorker=messageFormatterMissingWorker)
+            messageFormatterMissingWorker=messageFormatterMissingWorker,
+            generators=generators)
         if extraRecipients is None:
             extraRecipients = []
         self.extraRecipients = extraRecipients

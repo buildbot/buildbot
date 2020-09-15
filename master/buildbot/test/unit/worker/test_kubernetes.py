@@ -73,6 +73,12 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         return self.setupWorker('worker')
 
     @defer.inlineCallbacks
+    def test_builds_may_be_incompatible(self):
+        yield self.setupWorker('worker')
+        # http is lazily created on worker substantiation
+        self.assertEqual(self.worker.builds_may_be_incompatible, True)
+
+    @defer.inlineCallbacks
     def test_start_service(self):
         yield self.setupWorker('worker')
         # http is lazily created on worker substantiation

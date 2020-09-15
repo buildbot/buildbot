@@ -6,6 +6,7 @@ API Indices
 * :bb:index:`sched`
 * :bb:index:`chsrc`
 * :bb:index:`step`
+* :bb:index:`reportgen`
 * :bb:index:`reporter`
 * :bb:index:`cmdline`
 * :bb:index:`msg`

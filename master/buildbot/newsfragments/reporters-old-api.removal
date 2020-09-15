@@ -1,0 +1,17 @@
+The usage of certain parameters have been deprecated in ``BitbucketServerPRCommentPush``, ``MailNotifier``, ``PushjetNotifier`` and ``PushoverNotifier`` reporters.
+They have been replaced by the ``generators`` parameter.
+The support for the deprecated parameters will be removed in Buildbot v3.0.
+The list of deprecated parameters is as follows:
+
+ - ``mode``
+ - ``tags``
+ - ``builders``
+ - ``buildSetSummary``
+ - ``messageFormatter``
+ - ``subject``
+ - ``addLogs``
+ - ``addPatch``
+ - ``schedulers``
+ - ``branches``
+ - ``watchedWorkers``
+ - ``messageFormatterMissingWorker``

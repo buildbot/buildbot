@@ -117,6 +117,40 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
         self.sp.buildFinished(("build", 20, "finished"), build)
 
     @defer.inlineCallbacks
+    def test_source_stamp_no_props_nightly_scheduler(self):
+        # no status updates are expected
+
+        self.master.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Builder(id=79, name='Builder0'),
+            fakedb.Buildset(id=98, results=SUCCESS, reason="test_reason1"),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+            fakedb.SourceStamp(id=234, project=None, branch=None, revision=None,
+                               repository=None, codebase=None),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79),
+            fakedb.Build(id=20, number=0, builderid=79, buildrequestid=11,
+                         workerid=13, masterid=92, results=SUCCESS, state_string="build_text"),
+            fakedb.BuildProperty(buildid=20, name="workername", value="wrk"),
+            fakedb.BuildProperty(buildid=20, name="reason", value="because"),
+            fakedb.BuildProperty(buildid=20, name="buildername", value="Builder0"),
+            fakedb.BuildProperty(buildid=20, name="branch", value=None),
+            fakedb.BuildProperty(buildid=20, name="codebase", value=""),
+            fakedb.BuildProperty(buildid=20, name="project", value=""),
+            fakedb.BuildProperty(buildid=20, name="repository", value=""),
+            fakedb.BuildProperty(buildid=20, name="revision", value=None),
+        ])
+
+        build = yield self.master.data.get(("builds", 20))
+
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = SUCCESS
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
     def test_multiple_source_stamps_no_props(self):
         repository = 'http://test_repo'
         project = 'test_user/test_project'

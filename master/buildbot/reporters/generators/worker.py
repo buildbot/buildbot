@@ -14,14 +14,17 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from zope.interface import implementer
 
 from buildbot import config
+from buildbot import interfaces
 from buildbot import util
 from buildbot.reporters.message import MessageFormatterMissingWorker
 
 ENCODING = 'utf-8'
 
 
+@implementer(interfaces.IReportGenerator)
 class WorkerMissingGenerator(util.ComparableMixin):
 
     compare_attrs = ['workers', 'formatter']
@@ -30,16 +33,15 @@ class WorkerMissingGenerator(util.ComparableMixin):
         ('workers', None, 'missing'),
     ]
 
-    def __init__(self, workers=None, message_formatter=None):
+    def __init__(self, workers='all', message_formatter=None):
         self.workers = workers
         self.formatter = message_formatter
         if self.formatter is None:
             self.formatter = MessageFormatterMissingWorker()
 
     def check(self):
-        if not(self.workers == 'all' or self.workers is None or
-                isinstance(self.workers, (list, tuple, set))):
-            config.error("workers must be 'all', None, or list of worker names")
+        if not (self.workers == 'all' or isinstance(self.workers, (list, tuple, set))):
+            config.error("workers must be 'all', or list of worker names")
 
     @defer.inlineCallbacks
     def generate(self, master, reporter, key, worker):

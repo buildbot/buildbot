@@ -17,6 +17,7 @@ The recommended upgrade procedure is as follows:
   - Upgrade master to Python 3.
     Note that 1.x series has some bugs in Python 3 support, so any Python-related issues
     encountered in this step are relatively harmless as they will be fixed after upgrading to 2.0.
+    You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
 
   - Upgrade to Buildbot 2.0.
 

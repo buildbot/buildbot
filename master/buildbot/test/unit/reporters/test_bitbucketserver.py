@@ -26,6 +26,8 @@ from buildbot.reporters.bitbucketserver import HTTP_CREATED
 from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
@@ -194,7 +196,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def setupReporter(self, verbose=True, **kwargs):
+    def setupReporter(self, verbose=True, generator_class=BuildStatusGenerator, **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None,
             verify=None)
@@ -207,9 +209,11 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         formatter.wantSteps = False
         formatter.wantLogs = False
 
-        self.cp = BitbucketServerPRCommentPush(
-            "serv", Interpolate("username"), Interpolate("passwd"), verbose=verbose,
-            messageFormatter=formatter, **kwargs)
+        generator = generator_class(message_formatter=formatter)
+
+        self.cp = BitbucketServerPRCommentPush("serv", Interpolate("username"),
+                                               Interpolate("passwd"), verbose=verbose,
+                                               generators=[generator], **kwargs)
         yield self.cp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -271,7 +275,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_reporter_with_buildset(self):
-        yield self.setupReporter(buildSetSummary=True)
+        yield self.setupReporter(generator_class=BuildSetStatusGenerator)
         buildset, _ = yield self.setupBuildResults(SUCCESS)
         self._http.expect(
             "post",

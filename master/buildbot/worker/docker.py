@@ -126,8 +126,8 @@ class DockerBaseWorker(AbstractLatentWorker):
             return fqdn
 
 
-class DockerLatentWorker(DockerBaseWorker,
-                         CompatibleLatentWorkerMixin):
+class DockerLatentWorker(CompatibleLatentWorkerMixin,
+                         DockerBaseWorker):
     instance = None
 
     def checkConfig(self, name, password, docker_host, image=None,

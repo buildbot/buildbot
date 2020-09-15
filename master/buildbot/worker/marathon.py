@@ -26,8 +26,8 @@ from buildbot.worker.docker import DockerBaseWorker
 log = Logger()
 
 
-class MarathonLatentWorker(DockerBaseWorker,
-                           CompatibleLatentWorkerMixin):
+class MarathonLatentWorker(CompatibleLatentWorkerMixin,
+                           DockerBaseWorker):
     """Marathon is a distributed docker container launcher for Mesos"""
     instance = None
     image = None

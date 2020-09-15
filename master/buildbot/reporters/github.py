@@ -35,16 +35,15 @@ from buildbot.util.giturlparse import giturlparse
 HOSTED_BASE_URL = 'https://api.github.com'
 
 
-class GitHubStatusPush(http. HttpStatusPushBase):
+class GitHubStatusPush(http.HttpStatusPushBase):
     name = "GitHubStatusPush"
-    neededDetails = dict(wantProperties=True)
 
     @defer.inlineCallbacks
     def reconfigService(self, token,
                         startDescription=None, endDescription=None,
-                        context=None, baseURL=None, verbose=False, **kwargs):
+                        context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
         token = yield self.renderSecrets(token)
-        yield super().reconfigService(**kwargs)
+        yield super().reconfigService(wantProperties=wantProperties, **kwargs)
 
         self.setDefaults(context, startDescription, endDescription)
         if baseURL is None:
@@ -127,23 +126,28 @@ class GitHubStatusPush(http. HttpStatusPushBase):
             return
 
         for sourcestamp in sourcestamps:
-            project = sourcestamp['project']
-
             issue = None
-            if 'branch' in props:
-                m = re.search(r"refs/pull/([0-9]*)/merge", props['branch'])
+            branch = props.getProperty('branch')
+            if branch:
+                m = re.search(r"refs/pull/([0-9]*)/merge", branch)
                 if m:
                     issue = m.group(1)
 
             repo_owner = None
             repo_name = None
-            if "/" in project:
+            project = sourcestamp['project']
+            repository = sourcestamp['repository']
+            if project and "/" in project:
                 repo_owner, repo_name = project.split('/')
-            else:
-                giturl = giturlparse(sourcestamp['repository'])
+            elif repository:
+                giturl = giturlparse(repository)
                 if giturl:
                     repo_owner = giturl.owner
                     repo_name = giturl.repo
+
+            if not repo_owner or not repo_name:
+                log.msg('Skipped status update because required repo information is missing.')
+                continue
 
             sha = sourcestamp['revision']
             response = None
@@ -202,7 +206,6 @@ class GitHubStatusPush(http. HttpStatusPushBase):
 
 class GitHubCommentPush(GitHubStatusPush):
     name = "GitHubCommentPush"
-    neededDetails = dict(wantProperties=True)
 
     def setDefaults(self, context, startDescription, endDescription):
         self.context = ''

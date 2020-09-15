@@ -28,6 +28,7 @@ from buildbot.process import properties
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import mail
+from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
@@ -165,7 +166,9 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             l['stepname'] = "fakestep"
             l['content'] = yield self.master.data.get(("logs", l['logid'], 'contents'))
 
-        mn = yield self.setupMailNotifier('from@example.org', addLogs=True)
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          generators=[BuildStatusGenerator(add_logs=True)])
+
         m = yield mn.createEmail(msgdict, 'builder-n\u00E5me',
                                  'project-n\u00E5me', SUCCESS,
                                  builds, patches, logs)
@@ -185,7 +188,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             self.fail('Failed to call as_string() on email message.')
 
     @defer.inlineCallbacks
-    def setupBuildMessage(self, **mnKwargs):
+    def setupBuildMessage(self, **generator_kwargs):
 
         _, builds = yield self.setupBuildResults(SUCCESS)
 
@@ -197,8 +200,9 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         formatter.wantSteps = False
         formatter.wantLogs = False
 
-        mn = yield self.setupMailNotifier('from@example.org', messageFormatter=formatter,
-                                          **mnKwargs)
+        generator = BuildStatusGenerator(message_formatter=formatter, **generator_kwargs)
+
+        mn = yield self.setupMailNotifier('from@example.org', generators=[generator])
 
         mn.findInterrestedUsersEmails = Mock(
             spec=mn.findInterrestedUsersEmails)
@@ -319,7 +323,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
                           ['jane.doe@domain.tld'])
 
     @defer.inlineCallbacks
-    def do_test_sendMessage(self, **mnKwargs):
+    def do_test_sendMessage(self, **mn_kwargs):
         fakeSenderFactory = Mock()
         fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
             5].callback(True)
@@ -335,8 +339,9 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         formatter.wantSteps = False
         formatter.wantLogs = False
 
-        mn = yield self.setupMailNotifier('from@example.org', messageFormatter=formatter,
-                                          **mnKwargs)
+        generator = BuildStatusGenerator(message_formatter=formatter)
+
+        mn = yield self.setupMailNotifier('from@example.org', generators=[generator], **mn_kwargs)
 
         mn.findInterrestedUsersEmails = Mock(
             spec=mn.findInterrestedUsersEmails)

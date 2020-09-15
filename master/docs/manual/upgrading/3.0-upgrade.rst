@@ -1,0 +1,111 @@
+.. _3.0_Upgrading:
+
+Upgrading to Buildbot 3.0 (not released yet)
+============================================
+
+Upgrading a Buildbot instance from 2.x to 3.0 may require some work to achieve.
+
+The recommended upgrade procedure is as follows:
+
+  - Upgrade to the last released BuildBot version in 2.x series.
+
+  - Remove usage of the deprecated APIs.
+    All usages of deprecated APIs threw a deprecation warning at the point of use.
+    If the code does not emit deprecation warnings, it's in a good shape in this regard.
+    You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
+
+  - Upgrade to Buildbot 3.0.
+
+  - (Optional) Upgrade to newest Buildbot 3.x.
+    The newest point release will contain bug fixes and functionality improvements.
+
+Reporters and report generators
+-------------------------------
+
+Buildbot 2.9 introduced report generators as the preferred way of configuring the conditions of when a message is sent by a reporter and contents of the messages.
+The old parameters have been deprecated in Buildbot 2.9 and removed in Buildbot 3.0.
+
+The following describes the procedure of upgrading reporters.
+
+In general, one or more arguments to a reporter is going to be replaced by a list of one or more report generators passed as a list to the ``generators`` parameter.
+
+The description below will explain what to do with each parameter.
+
+MailNotifier
+^^^^^^^^^^^^
+
+The ``generators`` list will contain one or two report generators.
+
+The first will be an instance of :bb:reportgen:`BuildStatusGenerator` if the value of ``buildSetSummary`` was ``True`` or :bb:reportgen:`BuildSetStatusGenerator` if the value of ``buildSetSummary`` was ``False``.
+This will be referred to as *status generator* in the description below.
+
+The second generator is optional.
+It included if the value of ``watchedWorkers`` is not ``None`` (the default is ``"all"``)
+If included, it's an instance of :bb:reportgen:`WorkerMissingGenerator`.
+This will be referred to as *missing worker generator* in the description below.
+
+The following arguments have been removed:
+
+* ``subject``. Replacement is ``subject`` parameter of the *status generator*.
+
+* ``mode``. Replacement is ``mode`` parameter of the *status generator*.
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``tags``. Replacement is ``tags`` parameter of the *status generator*.
+
+* ``schedulers``. Replacement is ``schedulers`` parameter of the *status generator*.
+
+* ``branches``. Replacement is ``branches`` parameter of the *status generator*.
+
+* ``addLogs``. Replacement is ``add_logs`` parameter of the *status generator*.
+
+* ``addPatch``. Replacement is ``add_patch`` parameter of the *status generator*.
+
+* ``buildSetSummary``. Defines whether the *status generator* will be instance of :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
+
+* ``messageFormatter``. Replacement is ``message_formatter`` parameter of the *status generator*.
+
+* ``watchedWorkers``. Replacement is ``workers`` parameter of the *missing worker generator*.
+  If the value was ``None``, then there's no *missing worker generator* and the value of ``messageFormatterMissingWorker`` is ignored.
+
+* ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
+
+PushjetNotifier, PushoverNotifier, BitbucketServerPRCommentPush
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one or two report generators.
+
+The first will be an instance of :bb:reportgen:`BuildStatusGenerator` if the value of ``buildSetSummary`` was ``True`` or :bb:reportgen:`BuildSetStatusGenerator` if the value of ``buildSetSummary`` was ``False``.
+This will be referred to as *status generator* in the description below.
+
+The second generator is optional.
+It included if the value of ``watchedWorkers`` is not ``None`` (the default is ``None``)
+If included, it's an instance of :bb:reportgen:`WorkerMissingGenerator`.
+This will be referred to as *missing worker generator* in the description below.
+
+The following arguments have been removed:
+
+* ``subject``. Replacement is ``subject`` parameter of the *status generator*.
+
+* ``mode``. Replacement is ``mode`` parameter of the *status generator*.
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``tags``. Replacement is ``tags`` parameter of the *status generator*.
+
+* ``schedulers``. Replacement is ``schedulers`` parameter of the *status generator*.
+
+* ``branches``. Replacement is ``branches`` parameter of the *status generator*.
+
+* ``buildSetSummary``. Defines whether the *status generator* will be instance of :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
+
+* ``messageFormatter``. Replacement is ``message_formatter`` parameter of the *status generator*.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``DefaultMessageFormatter(template_type='html', template_filename='default_notification.txt')``.
+
+* ``watchedWorkers``. Replacement is ``workers`` parameter of the *missing worker generator*.
+  If the value was ``None``, then there's no *missing worker generator* and the value of ``messageFormatterMissingWorker`` is ignored.
+
+* ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template_filename='missing_notification.txt')``.
+

@@ -162,7 +162,6 @@ finishrelease:
 	rm -rf dist
 	python3 ./common/download_release.py
 	rm -rf ./dist/v*
-	./common/smokedist.sh
 	twine upload --sign dist/*
 
 pyinstaller: virtualenv
