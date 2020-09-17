@@ -122,7 +122,7 @@ var WaterfallController = (function() {
                 } else {
                     this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
                 }
-                if (this.s.show_old_builders.value) {
+                if (!this.s.show_old_builders.value) {
                     const ret = [];
                     for (let builder of this.$scope.builders) {
                         if (this.hasActiveMaster(builder)) {
@@ -722,7 +722,7 @@ var WaterfallController = (function() {
             } else {
                 this.$scope.builders = (this.builders = this.dataProcessorService.filterBuilders(this.all_builders));
             }
-            if (this.s.show_old_builders.value) {
+            if (!this.s.show_old_builders.value) {
                 const ret = [];
                 for (let builder of this.$scope.builders) {
                     if (this.hasActiveMaster(builder)) {
