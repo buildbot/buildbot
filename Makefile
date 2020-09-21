@@ -1,12 +1,14 @@
 # developer utilities
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
+ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 .PHONY: docs pylint flake8 virtualenv
 
 
-VENV_NAME:=.venv$(VENV_PY_VERSION)
-PIP?=$(VENV_NAME)/bin/pip
-VENV_PY_VERSION?=python3
+VENV_NAME := .venv$(VENV_PY_VERSION)
+PIP ?= $(ROOT_DIR)/$(VENV_NAME)/bin/pip
+PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/bin/python
+VENV_PY_VERSION ?= python3
 
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
@@ -78,6 +80,11 @@ frontend_tests_headless: frontend_deps
 frontend: frontend_deps
 	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
 
+# build frontend wheels for installation elsewhere
+frontend_wheels: frontend_deps
+	for i in pkg $(WWW_PKGS); \
+		do (cd $$i; $(PYTHON) setup.py bdist_wheel || exit 1) || exit 1; done
+
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests: frontend_deps
 	trial pkg/test_buildbot_pkg.py
@@ -141,9 +148,6 @@ cleanup_for_tarballs:
 tarballs: $(ALL_PKGS_TARGETS)
 .PHONY: tarballs
 
-
-clean:
-	git clean -xdf
 # helper for release creation
 release: virtualenv
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
