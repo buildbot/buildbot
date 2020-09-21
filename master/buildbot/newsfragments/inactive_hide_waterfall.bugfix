@@ -1,0 +1,1 @@
+Make sure old builders are shown in the waterfall if the setting ``show_old_builders`` is ``True``, and not if it is ``False``.
