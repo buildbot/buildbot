@@ -57,12 +57,12 @@ class PushoverNotifier(NotifierBase):
                     watchedWorkers=None, messageFormatterMissingWorker=None,
                     generators=None):
         super().checkConfig(mode, tags, builders,
-                                                  buildSetSummary, messageFormatter,
-                                                  subject, False, False,
-                                                  schedulers,
-                                                  branches, watchedWorkers,
-                                                  messageFormatterMissingWorker,
-                                                  generators=generators)
+                            buildSetSummary, messageFormatter,
+                            subject, False, False,
+                            schedulers,
+                            branches, watchedWorkers,
+                            messageFormatterMissingWorker,
+                            generators=generators)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
