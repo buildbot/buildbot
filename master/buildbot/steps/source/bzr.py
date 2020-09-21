@@ -247,9 +247,9 @@ class Bzr(Source):
         revision = stdout.strip("'")
         try:
             int(revision)
-        except ValueError:
+        except ValueError as e:
             log.msg("Invalid revision number")
-            raise buildstep.BuildStepFailed()
+            raise buildstep.BuildStepFailed() from e
 
         log.msg("Got Git revision {}".format(revision))
         self.updateSourceProperty('got_revision', revision)

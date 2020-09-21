@@ -56,7 +56,7 @@ class PushoverNotifier(NotifierBase):
                     priorities=None, otherParams=None,
                     watchedWorkers=None, messageFormatterMissingWorker=None,
                     generators=None):
-        super(PushoverNotifier, self).checkConfig(mode, tags, builders,
+        super().checkConfig(mode, tags, builders,
                                                   buildSetSummary, messageFormatter,
                                                   subject, False, False,
                                                   schedulers,

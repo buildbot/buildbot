@@ -52,7 +52,7 @@ class PushjetNotifier(NotifierBase):
                     levels=None, base_url='https://api.pushjet.io',
                     watchedWorkers=None, messageFormatterMissingWorker=None,
                     generators=None):
-        super(PushjetNotifier, self).checkConfig(mode, tags, builders,
+        super().checkConfig(mode, tags, builders,
                                                  buildSetSummary, messageFormatter,
                                                  subject, False, False,
                                                  schedulers,

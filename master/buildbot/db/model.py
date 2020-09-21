@@ -41,7 +41,7 @@ class EightUpgradeError(Exception):
         This is not supported. Please start from a clean database
         http://docs.buildbot.net/latest/manual/installation/nine-upgrade.html"""
         # Call the base class constructor with the parameters it needs
-        super(EightUpgradeError, self).__init__(message)
+        super().__init__(message)
 
 
 class Model(base.DBConnectorComponent):

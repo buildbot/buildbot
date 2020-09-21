@@ -177,7 +177,7 @@ class GitLabHandler(BaseHookHandler):
             content = request.content.read()
             payload = json.loads(bytes2unicode(content))
         except Exception as e:
-            raise ValueError("Error loading JSON: " + str(e))
+            raise ValueError("Error loading JSON: " + str(e)) from e
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
         # newer version of gitlab have a object_kind parameter,

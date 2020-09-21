@@ -104,9 +104,9 @@ class GitHubEventHandler(PullRequestMixin):
         if self._secret and signature:
             try:
                 hash_type, hexdigest = signature.split('=')
-            except ValueError:
+            except ValueError as e:
                 raise ValueError(
-                    'Wrong signature format: {}'.format(signature))
+                    'Wrong signature format: {}'.format(signature)) from e
 
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: {}'.format(hash_type))

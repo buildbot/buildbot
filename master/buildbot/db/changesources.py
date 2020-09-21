@@ -57,9 +57,9 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 q = cs_mst_tbl.insert()
                 conn.execute(q,
                              dict(changesourceid=changesourceid, masterid=masterid))
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this changesource.
-                raise ChangeSourceAlreadyClaimedError
+                raise ChangeSourceAlreadyClaimedError from e
 
         return self.db.pool.do(thd)
 

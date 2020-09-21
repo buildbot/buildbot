@@ -179,7 +179,8 @@ class V2RootResource(resource.Resource):
         try:
             data = json.loads(bytes2unicode(request.content.read()))
         except Exception as e:
-            raise BadJsonRpc2("JSON parse error: {}".format(str(e)), JSONRPC_CODES["parse_error"])
+            raise BadJsonRpc2("JSON parse error: {}".format(
+                str(e)), JSONRPC_CODES["parse_error"]) from e
 
         if isinstance(data, list):
             raise BadJsonRpc2("JSONRPC batch requests are not supported",
@@ -273,13 +274,13 @@ class V2RootResource(resource.Resource):
             elif arg == b'limit':
                 try:
                     limit = int(reqArgs[arg][0])
-                except Exception:
-                    raise BadRequest('invalid limit')
+                except Exception as e:
+                    raise BadRequest('invalid limit') from e
             elif arg == b'offset':
                 try:
                     offset = int(reqArgs[arg][0])
-                except Exception:
-                    raise BadRequest('invalid offset')
+                except Exception as e:
+                    raise BadRequest('invalid offset') from e
             elif arg == b'property':
                 try:
                     props = []
@@ -288,17 +289,17 @@ class V2RootResource(resource.Resource):
                             raise TypeError(
                                 "Invalid type {} for {}".format(type(v), v))
                         props.append(bytes2unicode(v))
-                except Exception:
+                except Exception as e:
                     raise BadRequest(
-                        'invalid property value for {}'.format(arg))
+                        'invalid property value for {}'.format(arg)) from e
                 properties.append(resultspec.Property(arg, 'eq', props))
             elif argStr in entityType.fieldNames:
                 field = entityType.fields[argStr]
                 try:
                     values = [field.valueFromString(v) for v in reqArgs[arg]]
-                except Exception:
+                except Exception as e:
                     raise BadRequest(
-                        'invalid filter value for {}'.format(argStr))
+                        'invalid filter value for {}'.format(argStr)) from e
 
                 filters.append(resultspec.Filter(argStr, 'eq', values))
             elif '__' in argStr:
@@ -312,9 +313,9 @@ class V2RootResource(resource.Resource):
                     try:
                         values = [fieldType.valueFromString(v)
                                   for v in reqArgs[arg]]
-                    except Exception:
+                    except Exception as e:
                         raise BadRequest(
-                            'invalid filter value for {}'.format(argStr))
+                            'invalid filter value for {}'.format(argStr)) from e
                     filters.append(resultspec.Filter(field, op, values))
             else:
                 raise BadRequest(
