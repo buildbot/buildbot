@@ -10,7 +10,7 @@ backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
 boto3==1.15.1
-botocore==1.17.43
+botocore==1.18.1
 cffi==1.14.2
 click==7.1.2
 # pin configparser, because 5.x no longer supports Python 3.5
