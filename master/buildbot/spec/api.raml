@@ -150,6 +150,18 @@ types:
                             get:
                                 is:
                                 - bbgetraw:
+                /changes:
+                    description: |
+                        This path selects all changes tested by a build
+                    get:
+                        is:
+                        - bbget: {bbtype: change}
+                /properties:
+                    description: |
+                        This path selects all properties of a build
+                    get:
+                        is:
+                        - bbget: {bbtype: sourcedproperties}
 
                 /steps:
                     description: This path selects all steps for the given build.

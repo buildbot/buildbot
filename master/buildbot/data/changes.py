@@ -58,11 +58,12 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
         return d
 
 
-class ChangesEndpoint(FixerMixin, base.Endpoint):
+class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
         /changes
+        /builders/n:builderid/builds/n:build_number/changes
         /builds/n:buildid/changes
         /sourcestamps/n:ssid/changes
     """
@@ -71,6 +72,8 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         buildid = kwargs.get('buildid')
+        if 'build_number' in kwargs:
+            buildid = yield self.getBuildid(kwargs)
         ssid = kwargs.get('ssid')
         if buildid is not None:
             changes = yield self.master.db.changes.getChangesForBuild(buildid)
