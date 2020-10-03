@@ -535,6 +535,12 @@ The available classes are described here:
   with the above example, any user belonging to those teams would be granted the roles matching those
   team names.
 
+  In order to use this module, you need to install the Python ``requests`` module:
+
+  .. code-block:: bash
+
+          pip install requests
+
 .. _GitHub: https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/#web-application-flow
 
 
@@ -559,6 +565,12 @@ The available classes are described here:
             'auth': util.GitLabAuth("https://gitlab.com", "clientid", "clientsecret"),
         }
 
+    In order to use this module, you need to install the Python ``requests`` module:
+
+    .. code-block:: bash
+
+            pip install requests
+
 .. _GitLab: http://doc.gitlab.com/ce/integration/oauth_provider.html
 
 .. py:class:: buildbot.www.oauth2.BitbucketAuth(clientId, clientSecret)
@@ -580,6 +592,12 @@ The available classes are described here:
             # ...
             'auth': util.BitbucketAuth("clientid", "clientsecret"),
         }
+
+    In order to use this module, you need to install the Python ``requests`` module:
+
+    .. code-block:: bash
+
+            pip install requests
 
 .. _Bitbucket: https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html
 
