@@ -16,13 +16,13 @@
 import getpass
 import os
 import sys
+from io import StringIO
 
 import mock
 
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python import usage
-from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.scripts import base
@@ -821,7 +821,7 @@ class TestRun(unittest.TestCase):
 
     def test_run_bad(self):
         self.patch(sys, 'argv', ['buildbot', 'my', '-l'])
-        stdout = NativeStringIO()
+        stdout = StringIO()
         self.patch(sys, 'stdout', stdout)
         try:
             runner.run()

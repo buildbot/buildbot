@@ -15,8 +15,8 @@
 
 import os
 import sys
+from io import StringIO
 
-from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.scripts import tryserver
@@ -32,7 +32,7 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
 
     def test_trycmd(self):
         config = dict(jobdir='jobdir')
-        inputfile = NativeStringIO('this is my try job')
+        inputfile = StringIO('this is my try job')
         self.patch(sys, 'stdin', inputfile)
 
         rc = tryserver.tryserver(config)
