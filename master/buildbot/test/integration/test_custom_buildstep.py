@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 
 import traceback
+from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import failure
-from twisted.python.compat import NativeStringIO
 
 from buildbot.config import BuilderConfig
 from buildbot.process import buildstep
@@ -134,7 +134,7 @@ class OldBuildEPYDoc(shell.ShellCommand):
         return defer.succeed(None)
 
     def createSummary(self, log):
-        for line in NativeStringIO(log.getText()):
+        for line in StringIO(log.getText()):
             # what we do with the line isn't important to the test
             assert line in ('some\n', 'output\n')
 

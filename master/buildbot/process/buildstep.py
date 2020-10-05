@@ -16,6 +16,7 @@
 import inspect
 import re
 import sys
+from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -25,7 +26,6 @@ from twisted.python import failure
 from twisted.python import log
 from twisted.python import util as twutil
 from twisted.python import versions
-from twisted.python.compat import NativeStringIO
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -223,7 +223,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = NativeStringIO(alltext)
+        io = StringIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):
