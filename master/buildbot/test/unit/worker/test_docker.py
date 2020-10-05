@@ -141,6 +141,49 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(bs.encoding, 'gzip')
 
     @defer.inlineCallbacks
+    def test_constructor_host_config_build(self):
+        # Volumes have their own tests
+        bs = yield self.setupWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img',
+                                    ['/bin/sh'],
+                                    dockerfile="FROM ubuntu",
+                                    volumes=["/tmp:/tmp:ro"],
+                                    hostconfig={'network_mode': 'fake',
+                                                'dns': ['1.1.1.1', '1.2.3.4']},
+                                    custom_context=False, buildargs=None,
+                                    encoding='gzip')
+        id, name = yield bs.start_instance(self.build)
+        client = docker.APIClient.latest
+        self.assertEqual(client.call_args_create_host_config, [
+            {'network_mode': 'fake',
+             'dns': ['1.1.1.1', '1.2.3.4'],
+             'init': True,
+             'binds': ['/tmp:/tmp:ro'],
+             }
+        ])
+
+    @defer.inlineCallbacks
+    def test_constructor_host_config_build_set_init(self):
+        # Volumes have their own tests
+        bs = yield self.setupWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img',
+                                    ['/bin/sh'],
+                                    dockerfile="FROM ubuntu",
+                                    volumes=["/tmp:/tmp:ro"],
+                                    hostconfig={'network_mode': 'fake',
+                                                'dns': ['1.1.1.1', '1.2.3.4'], 
+                                                'init': False},
+                                    custom_context=False, buildargs=None,
+                                    encoding='gzip')
+        id, name = yield bs.start_instance(self.build)
+        client = docker.APIClient.latest
+        self.assertEqual(client.call_args_create_host_config, [
+            {'network_mode': 'fake',
+             'dns': ['1.1.1.1', '1.2.3.4'],
+             'init': False,
+             'binds': ['/tmp:/tmp:ro'],
+             }
+        ])
+
+    @defer.inlineCallbacks
     def test_start_instance_volume_renderable(self):
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
