@@ -30,10 +30,12 @@ from buildbot.steps.source import git
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.unit.steps.test_transfer import downloadString
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import unicode2bytes
 
 
 class TestGit(sourcesteps.SourceStepMixin,
@@ -246,6 +248,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_mode_full_clean_ssh_key_1_7(self):
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
@@ -254,6 +257,9 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
+
+        # A place to store what gets read
+        read = []
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -270,16 +276,17 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
+                                        workerdest=ssh_key_path,
                                         workdir='wkdir',
-                                        mode=0o700))
+                                        mode=0o400))
             + 0,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
+                                        workerdest=ssh_wrapper_path,
                                         workdir='wkdir',
-                                        mode=0o400))
+                                        mode=0o700))
+            + Expect.behavior(downloadString(read.append))
             + 0,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
@@ -309,7 +316,10 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        yield self.runStep()
+
+        expected = b'#!/bin/sh\nssh -i "%s" "$@"\n' % (unicode2bytes(ssh_key_path),)
+        self.assertEqual(b''.join(read), expected)
 
     @parameterized.expand([
         ('host_key', dict(sshHostKey='sshhostkey')),
@@ -454,6 +464,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_mode_full_clean_ssh_host_key_1_7(self):
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
@@ -464,6 +475,9 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
         ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+
+        # A place to store what gets read
+        read = []
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -480,13 +494,6 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
-                                        workdir='wkdir',
-                                        mode=0o700))
-            + 0,
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
                                         workerdest=ssh_key_path,
                                         workdir='wkdir',
                                         mode=0o400))
@@ -497,6 +504,14 @@ class TestGit(sourcesteps.SourceStepMixin,
                         workerdest=ssh_known_hosts_path,
                         workdir='wkdir',
                         mode=0o400))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_wrapper_path,
+                                        workdir='wkdir',
+                                        mode=0o700))
+            + Expect.behavior(downloadString(read.append))
             + 0,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
@@ -526,7 +541,11 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        yield self.runStep()
+
+        expected = b'#!/bin/sh\nssh -i "%s" -o "UserKnownHostsFile=%s" "$@"\n' \
+            % (unicode2bytes(ssh_key_path), unicode2bytes(ssh_known_hosts_path))
+        self.assertEqual(b''.join(read), expected)
 
     def test_mode_full_clean_ssh_host_key_1_7_progress(self):
         self.setupStep(
@@ -554,13 +573,6 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
-                                        workdir='wkdir',
-                                        mode=0o700))
-            + 0,
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
                                         workerdest=ssh_key_path,
                                         workdir='wkdir',
                                         mode=0o400))
@@ -571,6 +583,13 @@ class TestGit(sourcesteps.SourceStepMixin,
                         workerdest=ssh_known_hosts_path,
                         workdir='wkdir',
                         mode=0o400))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_wrapper_path,
+                                        workdir='wkdir',
+                                        mode=0o700))
             + 0,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
@@ -858,16 +877,16 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
+                                        workerdest=ssh_key_path,
                                         workdir='wkdir',
-                                        mode=0o700))
+                                        mode=0o400))
             + 0,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
+                                        workerdest=ssh_wrapper_path,
                                         workdir='wkdir',
-                                        mode=0o400))
+                                        mode=0o700))
             + 0,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
@@ -3658,17 +3677,17 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                    dict(blocksize=32768, maxsize=None,
                         reader=ExpectRemoteRef(
                             remotetransfer.StringFileReader),
-                        workerdest=ssh_wrapper_path,
+                        workerdest=ssh_key_path,
                         workdir='wkdir',
-                        mode=0o700))
+                        mode=0o400))
             + 0,
             Expect('downloadFile',
                    dict(blocksize=32768, maxsize=None,
                         reader=ExpectRemoteRef(
                             remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
+                        workerdest=ssh_wrapper_path,
                         workdir='wkdir',
-                        mode=0o400))
+                        mode=0o700))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch'],
@@ -3806,14 +3825,6 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                    dict(blocksize=32768, maxsize=None,
                         reader=ExpectRemoteRef(
                             remotetransfer.StringFileReader),
-                        workerdest=ssh_wrapper_path,
-                        workdir='wkdir',
-                        mode=0o700))
-            + 0,
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
                         workerdest=ssh_key_path,
                         workdir='wkdir',
                         mode=0o400))
@@ -3824,6 +3835,14 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         workerdest=ssh_known_hosts_path,
                         workdir='wkdir',
                         mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_wrapper_path,
+                        workdir='wkdir',
+                        mode=0o700))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch'],
