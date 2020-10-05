@@ -376,11 +376,11 @@ class P4(Source):
         revision = stdout.split()[1]
         try:
             int(revision)
-        except ValueError:
+        except ValueError as e:
             msg = (("p4.parseGotRevision unable to parse output "
                     "of 'p4 changes -m1 \"#have\"': '{}'").format(stdout))
             log.msg(msg)
-            raise buildstep.BuildStepFailed()
+            raise buildstep.BuildStepFailed() from e
 
         if self.debug:
             log.msg("Got p4 revision {}".format(revision))

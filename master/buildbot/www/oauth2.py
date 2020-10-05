@@ -366,7 +366,7 @@ class GitLabAuth(OAuth2Auth):
         self.authUri = "{}/oauth/authorize".format(uri)
         self.tokenUri = "{}/oauth/token".format(uri)
         self.resourceEndpoint = "{}/api/v4".format(uri)
-        super(GitLabAuth, self).__init__(clientId, clientSecret, **kwargs)
+        super().__init__(clientId, clientSecret, **kwargs)
 
     def getUserInfoFromOAuthClient(self, c):
         user = self.get(c, "/user")

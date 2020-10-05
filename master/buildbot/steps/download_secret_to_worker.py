@@ -29,7 +29,7 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
     renderables = ['secret_to_be_populated']
 
     def __init__(self, populated_secret_list, **kwargs):
-        super(DownloadSecretsToWorker, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.secret_to_be_populated = populated_secret_list
 
     @defer.inlineCallbacks
@@ -58,7 +58,7 @@ class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
         for path, secret in populated_secret_list:
             self.paths.append(path)
         self.logEnviron = logEnviron
-        super(RemoveWorkerFileSecret, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def runRemoveWorkerFileSecret(self):

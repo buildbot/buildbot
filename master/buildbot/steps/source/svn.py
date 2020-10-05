@@ -257,9 +257,9 @@ class SVN(Source):
             stdout_xml = xml.dom.minidom.parseString(stdout)
             extractedurl = stdout_xml.getElementsByTagName(
                 'url')[0].firstChild.nodeValue
-        except xml.parsers.expat.ExpatError:
+        except xml.parsers.expat.ExpatError as e:
             yield self.stdio_log.addHeader("Corrupted xml, aborting step")
-            raise buildstep.BuildStepFailed()
+            raise buildstep.BuildStepFailed() from e
         return extractedurl == self.svnUriCanonicalize(self.repourl)
 
     @defer.inlineCallbacks
@@ -280,9 +280,9 @@ class SVN(Source):
         stdout = cmd.stdout
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
-        except xml.parsers.expat.ExpatError:
+        except xml.parsers.expat.ExpatError as e:
             yield self.stdio_log.addHeader("Corrupted xml, aborting step")
-            raise buildstep.BuildStepFailed()
+            raise buildstep.BuildStepFailed() from e
 
         revision = None
         if self.preferLastChangedRev:
@@ -299,11 +299,11 @@ class SVN(Source):
             try:
                 revision = stdout_xml.getElementsByTagName(
                     'entry')[0].attributes['revision'].value
-            except (KeyError, IndexError):
+            except (KeyError, IndexError) as e:
                 msg = ("SVN.parseGotRevision unable to detect revision in"
                        " output of svn info")
                 log.msg(msg)
-                raise buildstep.BuildStepFailed()
+                raise buildstep.BuildStepFailed() from e
 
         yield self.stdio_log.addHeader("Got SVN revision {}".format(revision))
         self.updateSourceProperty('got_revision', revision)
@@ -335,9 +335,9 @@ class SVN(Source):
     def getUnversionedFiles(xmlStr, keep_on_purge):
         try:
             result_xml = xml.dom.minidom.parseString(xmlStr)
-        except xml.parsers.expat.ExpatError:
+        except xml.parsers.expat.ExpatError as e:
             log.err("Corrupted xml, aborting step")
-            raise buildstep.BuildStepFailed()
+            raise buildstep.BuildStepFailed() from e
 
         for entry in result_xml.getElementsByTagName('entry'):
             (wc_status,) = entry.getElementsByTagName('wc-status')

@@ -143,7 +143,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 q = sch_mst_tbl.insert()
                 conn.execute(q,
                              dict(schedulerid=schedulerid, masterid=masterid)).close()
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(
                     sch_mst_tbl,
@@ -157,7 +157,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 if row['masterid'] == masterid:
                     return None
                 raise SchedulerAlreadyClaimedError(
-                    "already claimed by {}".format(row['name']))
+                    "already claimed by {}".format(row['name'])) from e
             return None
 
         return self.db.pool.do(thd)

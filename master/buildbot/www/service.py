@@ -82,10 +82,10 @@ class BuildbotSession(server.Session):
             decoded = jwt.decode(token, self.site.session_secret, algorithms=[
                                  SESSION_SECRET_ALGORITHM])
         except jwt.exceptions.ExpiredSignatureError as e:
-            raise KeyError(str(e))
+            raise KeyError(str(e)) from e
         except Exception as e:
             log.err(e, "while decoding JWT session")
-            raise KeyError(str(e))
+            raise KeyError(str(e)) from e
         # might raise KeyError: will be caught by caller, which makes the token invalid
         self.user_info = decoded['user_info']
 

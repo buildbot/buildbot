@@ -270,13 +270,12 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         # instance to avoid that.
         try:
             instance = self.novaclient.servers.get(instance.id)
-        except NotFound:
+        except NotFound as e:
             log.msg('{class_name} {name} instance {instance.id} '
                     '({instance.name}) never found',
                     class_name=self.__class__.__name__, name=self.workername,
                     instance=instance)
-            raise LatentWorkerFailedToSubstantiate(
-                instance.id, BUILD)
+            raise LatentWorkerFailedToSubstantiate(instance.id, BUILD) from e
         self.instance = instance
         log.msg('{} {} starting instance {} (image {})'.format(self.__class__.__name__,
                                                                self.workername, instance.id,
@@ -292,12 +291,11 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                                   instance.id))
             try:
                 instance = self.novaclient.servers.get(instance.id)
-            except NotFound:
+            except NotFound as e:
                 log.msg('{} {} instance {} ({}) went missing'.format(self.__class__.__name__,
                                                                      self.workername,
                                                                      instance.id, instance.name))
-                raise LatentWorkerFailedToSubstantiate(
-                    instance.id, instance.status)
+                raise LatentWorkerFailedToSubstantiate(instance.id, instance.status) from e
         if instance.status == ACTIVE:
             minutes = duration // 60
             seconds = duration % 60

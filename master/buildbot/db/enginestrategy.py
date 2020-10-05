@@ -132,7 +132,7 @@ class MySQLStrategy(Strategy):
     def should_retry(self, ex):
         return any([self.is_disconnect(ex.orig.args),
                     self.is_deadlock(ex.orig.args),
-                    super(MySQLStrategy, self).should_retry(ex)])
+                    super().should_retry(ex)])
 
 
 def get_sqlalchemy_migrate_version():

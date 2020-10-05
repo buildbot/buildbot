@@ -15,7 +15,7 @@ from buildbot.test.util.misc import TestReactorMixin
 class FakeBuildWithMaster(FakeBuild):
 
     def __init__(self, master):
-        super(FakeBuildWithMaster, self).__init__()
+        super().__init__()
         self.master = master
 
 

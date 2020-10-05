@@ -20,10 +20,7 @@ class FakeServiceUsingSecrets(BuildbotService):
         self.secret = secret
 
     def returnRenderedSecrets(self, secretKey):
-        try:
-            return getattr(self, secretKey)
-        except Exception:
-            raise Exception
+        return getattr(self, secretKey)
 
 
 class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
