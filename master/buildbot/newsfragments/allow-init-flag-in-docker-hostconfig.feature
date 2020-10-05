@@ -1,0 +1,1 @@
+Allow the init flag to be set to false in the hostconfig for :py:class:`~buildbot.plugins.worker.DockerLatentWorker`
