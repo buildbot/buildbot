@@ -169,7 +169,7 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
                                     dockerfile="FROM ubuntu",
                                     volumes=["/tmp:/tmp:ro"],
                                     hostconfig={'network_mode': 'fake',
-                                                'dns': ['1.1.1.1', '1.2.3.4'], 
+                                                'dns': ['1.1.1.1', '1.2.3.4'],
                                                 'init': False},
                                     custom_context=False, buildargs=None,
                                     encoding='gzip')
