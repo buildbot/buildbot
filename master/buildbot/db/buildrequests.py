@@ -150,9 +150,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     dict(brid=id, masterid=self.db.master.masterid,
                          claimed_at=claimed_at)
                     for id in brids])
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()
-                raise AlreadyClaimedError()
+                raise AlreadyClaimedError() from e
 
             transaction.commit()
 

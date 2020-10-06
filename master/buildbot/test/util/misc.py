@@ -15,11 +15,11 @@
 
 import os
 import sys
+from io import StringIO
 
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
-from twisted.python.compat import NativeStringIO
 from twisted.trial.unittest import TestCase
 
 import buildbot
@@ -54,7 +54,7 @@ class StdoutAssertionsMixin:
     """
 
     def setUpStdoutAssertions(self):
-        self.stdout = NativeStringIO()
+        self.stdout = StringIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

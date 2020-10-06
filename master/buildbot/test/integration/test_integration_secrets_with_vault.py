@@ -34,9 +34,9 @@ class SecretsConfig(RunMasterBase):
             rv = subprocess.call(['docker', 'pull', 'vault'])
             if rv != 0:
                 raise FileNotFoundError('docker')
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             raise SkipTest(
-                "Vault integration need docker environment to be setup")
+                "Vault integration need docker environment to be setup") from e
 
         rv = subprocess.call(['docker', 'run', '-d',
                               '-e', 'SKIP_SETCAP=yes',

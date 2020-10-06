@@ -63,7 +63,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         name = kwargs.get("name")
         if not name:
             kwargs["name"] = "GitHubPullrequestPoller:" + owner + "/" + repo
-        super(GitHubPullrequestPoller, self).__init__(owner, repo, **kwargs)
+        super().__init__(owner, repo, **kwargs)
 
     def checkConfig(self,
                     owner,

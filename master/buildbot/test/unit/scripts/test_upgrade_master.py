@@ -15,11 +15,11 @@
 
 import os
 import sys
+from io import StringIO
 
 import mock
 
 from twisted.internet import defer
-from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot import config as config_module
@@ -202,7 +202,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_upgradeDatabaseFail(self):
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
-        self.patch(sys, 'stderr', NativeStringIO())
+        self.patch(sys, 'stderr', StringIO())
         upgrade = mock.Mock(
             side_effect=lambda **kwargs: defer.fail(Exception("o noz")))
         self.patch(model.Model, 'upgrade', upgrade)

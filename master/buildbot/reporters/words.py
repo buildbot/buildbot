@@ -495,7 +495,7 @@ class Contact:
         try:
             return shlex.split(args)
         except ValueError as e:
-            raise UsageError(e)
+            raise UsageError(e) from e
 
     def command_HELLO(self, args, **kwargs):
         """say hello"""

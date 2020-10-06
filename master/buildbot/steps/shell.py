@@ -184,7 +184,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         cmdsummary = self._getLegacySummary(False)
         if cmdsummary:
             return {'step': cmdsummary}
-        return super(ShellCommand, self).getCurrentSummary()
+        return super().getCurrentSummary()
 
     def getResultSummary(self):
         cmdsummary = self._getLegacySummary(True)
@@ -194,7 +194,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 cmdsummary += ' ({})'.format(Results[self.results])
             return {'step': cmdsummary}
 
-        return super(ShellCommand, self).getResultSummary()
+        return super().getResultSummary()
 
     def _getLegacySummary(self, done):
         # defer to the describe method, if set

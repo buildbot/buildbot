@@ -467,8 +467,8 @@ class TelegramContact(Contact):
         if task == 'ask':
             try:
                 what = argv.pop(0)
-            except IndexError:
-                raise UsageError("Try '/force' and follow the instructions")
+            except IndexError as e:
+                raise UsageError("Try '/force' and follow the instructions") from e
         else:
             what = None  # silence PyCharm warnings
 
@@ -480,8 +480,8 @@ class TelegramContact(Contact):
 
         try:
             params = dict(arg.split('=', 1) for arg in argv)
-        except ValueError as err:
-            raise UsageError("Try '/force' and follow the instructions ({})".format(err))
+        except ValueError as e:
+            raise UsageError("Try '/force' and follow the instructions ({})".format(e)) from e
 
         all_fields = list(collect_fields(scheduler['all_fields']))
         required_params = [f['fullName'] for f in all_fields
@@ -512,14 +512,14 @@ class TelegramContact(Contact):
                         yield scheduler.force(builderid=builder['builderid'],
                                               owner=self.describeUser(),
                                               **params)
-                    except CollectedValidationError as err:
-                        raise ValueError(err.errors)
+                    except CollectedValidationError as e:
+                        raise ValueError(e.errors) from e
                     else:
                         self.send("Force build successfully requested.")
                     return
 
-            except (IndexError, ValueError) as err:
-                raise UsageError("Try '/force' and follow the instructions ({})".format(err))
+            except (IndexError, ValueError) as e:
+                raise UsageError("Try '/force' and follow the instructions ({})".format(e)) from e
 
         if task == 'config':
 

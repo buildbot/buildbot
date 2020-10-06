@@ -96,11 +96,11 @@ class CapturePropertyBase(Capture):
             for pn in filtered_prop_names:
                 try:
                     ret_val = self._callback(properties, pn)
-                except KeyError:
+                except KeyError as e:
                     raise CaptureCallbackError(("CaptureProperty failed."
                                                 " The property {} not found for build number {} on"
                                                 " builder {}.").format(pn, msg['number'],
-                                                                       builder_info['name']))
+                                                                       builder_info['name'])) from e
                 context = self._defaultContext(msg, builder_info['name'])
                 series_name = "{}-{}".format(builder_info['name'], pn)
                 post_data = {
@@ -170,7 +170,7 @@ class CaptureBuildTimes(Capture):
                 # it
                 raise CaptureCallbackError("{} Exception raised: {} with message: {}".format(
                                                     self._err_msg(msg, builder_info['name']),
-                                                    type(e).__name__, str(e)))
+                                                    type(e).__name__, str(e))) from e
 
             context = self._defaultContext(msg, builder_info['name'])
             post_data = {
@@ -351,7 +351,7 @@ class CaptureDataBase(Capture):
                 raise CaptureCallbackError(("CaptureData failed for build {} of builder {}."
                                             " Exception generated: {} with message {}"
                                             ).format(build_data['number'], builder_info['name'],
-                                              type(e).__name__, str(e)))
+                                              type(e).__name__, str(e))) from e
             post_data = ret_val
             series_name = '{}-{}'.format(builder_info['name'], self._data_name)
             context = self._defaultContext(build_data, builder_info['name'])

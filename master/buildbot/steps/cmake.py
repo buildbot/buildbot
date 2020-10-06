@@ -56,7 +56,7 @@ class CMake(ShellMixin, BuildStep):
 
         self.cmake = cmake
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-        super(CMake, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def run(self):

@@ -70,10 +70,10 @@ class TestHumanReadableDelta(unittest.TestCase):
         """
         try:
             datetime.datetime.fromtimestamp(1)
-        except OSError:
+        except OSError as e:
             raise unittest.SkipTest(
                 "Python 3.6 bug on Windows: "
-                "https://bugs.python.org/issue29097")
+                "https://bugs.python.org/issue29097") from e
         result = util.human_readable_delta(1, 1)
         self.assertEqual('super fast', result)
 

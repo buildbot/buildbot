@@ -29,9 +29,9 @@ from buildbot.warnings import DeprecatedApiWarning  # noqa pylint: disable=wrong
 try:
     import mock
     [mock]
-except ImportError:
+except ImportError as e:
     raise ImportError("\nBuildbot tests require the 'mock' module; "
-                      "try 'pip install mock'")
+                      "try 'pip install mock'") from e
 
 # apply the same patches the buildmaster does when it starts
 monkeypatches.patch_all(for_tests=True)

@@ -67,9 +67,9 @@ def patch_mysqlclient_warnings():
 
     def patched_init(self, *args):
         if isinstance(args[0], int):
-            super(Warning, self).__init__("{} {}".format(args[0], args[1]))
+            super().__init__("{} {}".format(args[0], args[1]))
         else:
-            super(Warning, self).__init__(*args)
+            super().__init__(*args)
     Warning.__init__ = patched_init
 
 

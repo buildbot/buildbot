@@ -65,7 +65,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     ec2_connection = None
 
     def setUp(self):
-        super(TestEC2LatentWorker, self).setUp()
+        super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
 
@@ -83,9 +83,9 @@ class TestEC2LatentWorker(unittest.TestCase):
         r = boto3.resource('ec2', **kw)
         try:
             r.create_key_pair(KeyName=name)
-        except NotImplementedError:
+        except NotImplementedError as e:
             raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
-                                    " in this version of moto, please update.")
+                                    " in this version of moto, please update.") from e
         r.create_security_group(GroupName=name, Description='the security group')
         instance = r.create_instances(ImageId=anyImageId(c), MinCount=1, MaxCount=1)[0]
         c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
@@ -535,7 +535,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
     ec2_connection = None
 
     def setUp(self):
-        super(TestEC2LatentWorkerDefaultKeyairSecurityGroup, self).setUp()
+        super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
 
@@ -545,9 +545,9 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         try:
             r.create_key_pair(KeyName='latent_buildbot_slave')
             r.create_key_pair(KeyName='test_keypair')
-        except NotImplementedError:
+        except NotImplementedError as e:
             raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
-                                    " in this version of moto, please update.")
+                                    " in this version of moto, please update.") from e
         r.create_security_group(GroupName='latent_buildbot_slave', Description='the security group')
         r.create_security_group(GroupName='test_security_group', Description='other security group')
         instance = r.create_instances(ImageId=anyImageId(c), MinCount=1, MaxCount=1)[0]
