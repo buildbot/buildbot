@@ -9,20 +9,20 @@ Babel==2.8.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.15.1
-botocore==1.18.1
+boto3==1.15.11
+botocore==1.18.11
 cffi==1.14.3
 click==7.1.2
 # pin configparser, because 5.x no longer supports Python 3.5
 configparser==4.0.2  # pyup: ignore
 constantly==15.1.0
 cookies==2.2.1
-cryptography==3.1
+cryptography==3.1.1
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
 enum34==1.1.10; python_version <= "3.4"
-flake8==3.8.3
+flake8==3.8.4
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.2
@@ -34,7 +34,7 @@ isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 
 Jinja2==2.11.2
 jmespath==0.10.0
 jsonref==0.2
-lazy-object-proxy==1.4.3
+lazy-object-proxy==1.5.1
 lz4==3.1.0
 markdown2==2.3.9
 MarkupSafe==1.1.1
@@ -80,7 +80,7 @@ Tempita==0.5.2
 termcolor==1.1.0
 toml==0.10.1
 towncrier==19.2.0
-treq==20.4.1
+treq==20.9.0
 Twisted==20.3.0
 txaio==20.4.1
 txrequests==0.9.6
@@ -89,7 +89,7 @@ webcolors==1.11.1
 Werkzeug==1.0.1
 wrapt==1.12.1
 xmltodict==0.12.0
-zope.interface==5.1.0
+zope.interface==5.1.2
 coverage==5.3
 codecov==2.1.9
 -e master
