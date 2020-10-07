@@ -291,7 +291,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         volumes, binds = self._thd_parse_volumes(volumes)
         host_conf = self.hostconfig.copy()
         host_conf['binds'] = binds
-        if docker_py_version >= 2.2:
+        if docker_py_version >= 2.2 and 'init' not in host_conf:
             host_conf['init'] = True
         host_conf = docker_client.create_host_config(**host_conf)
 
