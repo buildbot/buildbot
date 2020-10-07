@@ -78,12 +78,16 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
             "ghclientID", "clientSECRET", apiVersion=4, getTeamsMembership=True)
         self.githubAuthEnt = oauth2.GitHubAuth(
             "ghclientID", "clientSECRET", serverURL="https://git.corp.fakecorp.com")
+        self.githubAuthEnt_v4 = oauth2.GitHubAuth(
+            "ghclientID", "clientSECRET", apiVersion=4, getTeamsMembership=True,
+            serverURL="https://git.corp.fakecorp.com")
         self.gitlabAuth = oauth2.GitLabAuth(
             "https://gitlab.test/", "glclientID", "clientSECRET")
         self.bitbucketAuth = oauth2.BitbucketAuth("bbclientID", "clientSECRET")
 
         for auth in [self.googleAuth, self.githubAuth, self.githubAuth_v4, self.githubAuth_v4_teams,
-                     self.githubAuthEnt, self.gitlabAuth, self.bitbucketAuth]:
+                     self.githubAuthEnt, self.gitlabAuth, self.bitbucketAuth,
+                     self.githubAuthEnt_v4]:
             self._master = master = self.make_master(url='h:/a/b/', auth=auth)
             auth.reconfigAuth(master, master.config)
 
@@ -152,6 +156,20 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin,
                "state=redirect%3Dhttp%253A%252F%252Fredir")
         self.assertEqual(res, exp)
         res = yield self.githubAuthEnt.getLoginURL(None)
+        exp = ("https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user%3Aemail+read%3Aorg")
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_getGithubLoginURL_v4(self):
+        res = yield self.githubAuthEnt_v4.getLoginURL('http://redir')
+        exp = ("https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user%3Aemail+read%3Aorg&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
+        self.assertEqual(res, exp)
+        res = yield self.githubAuthEnt_v4.getLoginURL(None)
         exp = ("https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
                "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
                "scope=user%3Aemail+read%3Aorg")
