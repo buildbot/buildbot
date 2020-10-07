@@ -80,7 +80,7 @@ class HTTPStep(BuildStep):
         self.method = method
         self.url = url
 
-        for param in HTTPStep.requestsParams:
+        for param in self.requestsParams:
             setattr(self, param, kwargs.pop(param, None))
 
         super().__init__(**kwargs)
