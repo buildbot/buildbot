@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import subprocess
 from unittest.case import SkipTest
 
@@ -63,23 +64,29 @@ class SecretsConfig(RunMasterBase):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
 
     @defer.inlineCallbacks
-    def test_secret(self):
-        yield self.setupConfig(masterConfig())
+    def do_secret_test(self, secret_specifier, expected_obfuscation, expected_value):
+        yield self.setupConfig(masterConfig(secret_specifier=secret_specifier))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo <key/value>")
+
+        patterns = [
+            "echo -n {}".format(expected_obfuscation),
+            base64.b64encode(expected_value.encode('utf-8')).decode('utf-8'),
+        ]
+
+        res = yield self.checkBuildStepLogExist(build, patterns)
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def test_any_secret(self):
-        yield self.setupConfig(masterConfig(use_AnyKey=True))
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
-        self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo <anykey/anyvalue>")
-        self.assertTrue(res)
+    def test_key_value(self):
+        yield self.do_secret_test('%(secret:key/value)s', '<key/value>', 'word')
+
+    @defer.inlineCallbacks
+    def test_any_key(self):
+        yield self.do_secret_test('%(secret:anykey/anyvalue)s', '<anykey/anyvalue>', 'anyword')
 
 
-def masterConfig(use_AnyKey=False):
+def masterConfig(secret_specifier):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -99,10 +106,7 @@ def masterConfig(use_AnyKey=False):
     )]
 
     f = BuildFactory()
-    if use_AnyKey:
-        f.addStep(ShellCommand(command=[Interpolate('echo %(secret:anykey/anyvalue)s')]))
-    else:
-        f.addStep(ShellCommand(command=[Interpolate('echo %(secret:key/value)s')]))
+    f.addStep(ShellCommand(command=Interpolate('echo -n {} | base64'.format(secret_specifier))))
 
     c['builders'] = [
         BuilderConfig(name="testy",
