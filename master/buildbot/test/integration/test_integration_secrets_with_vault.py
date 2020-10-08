@@ -53,6 +53,12 @@ class SecretsConfig(RunMasterBase):
                               'vault', 'kv', 'put', 'secret/key', 'value=word'])
         self.assertEqual(rv, 0)
 
+        rv = subprocess.call(['docker', 'exec',
+                              '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
+                              'vault_for_buildbot',
+                              'vault', 'kv', 'put', 'secret/anykey', 'anyvalue=anyword'])
+        self.assertEqual(rv, 0)
+
     def remove_container(self):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
 
@@ -61,11 +67,19 @@ class SecretsConfig(RunMasterBase):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo <key>")
+        res = yield self.checkBuildStepLogExist(build, "echo <key/value>")
+        self.assertTrue(res)
+
+    @defer.inlineCallbacks
+    def test_any_secret(self):
+        yield self.setupConfig(masterConfig(use_AnyKey=True))
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['buildid'], 1)
+        res = yield self.checkBuildStepLogExist(build, "echo <anykey/anyvalue>")
         self.assertTrue(res)
 
 
-def masterConfig():
+def masterConfig(use_AnyKey=False):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -85,7 +99,10 @@ def masterConfig():
     )]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=[Interpolate('echo %(secret:key)s')]))
+    if use_AnyKey:
+        f.addStep(ShellCommand(command=[Interpolate('echo %(secret:anykey/anyvalue)s')]))
+    else:
+        f.addStep(ShellCommand(command=[Interpolate('echo %(secret:key/value)s')]))
 
     c['builders'] = [
         BuilderConfig(name="testy",

@@ -82,10 +82,9 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         if self.apiVersion == 1:
             secrets = json.get('data', {})
         else:
-            ret = json.get('data', {}).get('data', {})
-            try:
-                return secrets[key]
-            except KeyError as e:
-                raise KeyError(
-                    "The secret {} does not exist in Vault provider: {}".format(entry, e))
-        return ret
+            secrets = json.get('data', {}).get('data', {})
+        try:
+            return secrets[key]
+        except KeyError as e:
+            raise KeyError(
+                "The secret {} does not exist in Vault provider: {}".format(entry, e)) from e
