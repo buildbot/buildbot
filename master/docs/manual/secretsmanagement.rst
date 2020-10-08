@@ -154,7 +154,7 @@ Vault stores secrets in form of key value pairs.
 
 .. image:: _images/vault_simple_key.png
 
-The key value with key name ‘keyname’ can be read like:
+The key value with key name ``keyname`` can be read like:
 
 .. code-block:: python
 
