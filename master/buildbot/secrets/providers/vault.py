@@ -60,10 +60,14 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         """
         get the value from vault secret backend
         """
+        name, _, key = entry.rpartition('/')
+        if not key:
+            key = 'value'
+
         if self.apiVersion == 1:
-            path = self.secretsmount + '/' + entry
+            path = self.secretsmount + '/' + name
         else:
-            path = self.secretsmount + '/data/' + entry
+            path = self.secretsmount + '/data/' + name
 
         # note that the HTTP path contains v1 for both versions of the key-value
         # secret engine. Different versions of the key-value engine are
@@ -72,11 +76,16 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         proj = yield self._http.get('/v1/{0}'.format(path))
         code = yield proj.code
         if code != 200:
-            raise KeyError(("The key {} does not exist in Vault provider: request"
-                           " return code:{}.").format(entry, code))
+            raise KeyError(("The secret {} does not exist in Vault provider: request"
+                           " return code: {}.").format(entry, code))
         json = yield proj.json()
         if self.apiVersion == 1:
-            ret = json.get('data', {}).get('value')
+            secrets = json.get('data', {})
         else:
-            ret = json.get('data', {}).get('data', {}).get('value')
+            ret = json.get('data', {}).get('data', {})
+            try:
+                return secrets[key]
+            except KeyError as e:
+                raise KeyError(
+                    "The secret {} does not exist in Vault provider: {}".format(entry, e))
         return ret
