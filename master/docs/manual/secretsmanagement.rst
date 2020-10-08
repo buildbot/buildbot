@@ -148,6 +148,31 @@ formats:
 
  - ``key/attr``: The provider will fetch the secret with name ``key`` and return the value of ``attr`` attribute stored therein.
 
+Vault stores secrets in form of key value pairs.
+
+- Simple keys
+
+.. image:: _images/vault_simple_key.png
+
+The key value with key name ‘keyname’ can be read like:
+
+.. code-block:: python
+
+    text = Interpolate("your key equals %(secret:folder1/folder2/secretname/keyname)s")
+
+- Multipart keys
+
+.. image:: _images/vault_multipart_key.png
+
+Each part of a multipart value can be read like
+
+.. code-block:: python
+
+    url = Interpolate("site url is %(secret: folder1/folde2/folde3/secretname/url)s")
+    pass = Interpolate("your password is %(secret: folder1/folde2/folde3/secretname/pass)s")
+    cert = Interpolate("your cert is %(secret: folder1/folde2/folde3/secretname/ssh-cert)s")
+
+
 .. _SecretInPass:
 
 SecretInPass
