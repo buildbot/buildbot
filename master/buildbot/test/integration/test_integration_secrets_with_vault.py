@@ -78,6 +78,10 @@ class SecretsConfig(RunMasterBase):
         self.assertTrue(res)
 
     @defer.inlineCallbacks
+    def test_key(self):
+        yield self.do_secret_test('%(secret:key)s', '<key>', 'word')
+
+    @defer.inlineCallbacks
     def test_key_value(self):
         yield self.do_secret_test('%(secret:key/value)s', '<key/value>', 'word')
 
