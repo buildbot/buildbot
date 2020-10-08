@@ -50,7 +50,7 @@ class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testGetValue(self):
-        self._http.expect(method='get', ep='/v1/secret/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/value', params=None,
                           data=None, json=None, code=200,
                           content_json={"data": {"value": "value1"}})
         value = yield self.srvcVault.get("value")
@@ -58,7 +58,7 @@ class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testGetAnyKey(self):
-        self._http.expect(method='get', ep='/v1/secret/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/any_key', params=None,
                           data=None, json=None, code=200,
                           content_json={"data": {"any_key": "value1"}})
         value = yield self.srvcVault.get("any_key")
@@ -66,14 +66,14 @@ class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testGetValueNotFound(self):
-        self._http.expect(method='get', ep='/v1/secret/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/value', params=None,
                           data=None, json=None, code=200,
                           content_json={"data": {"valueNotFound": "value1"}})
         yield self.assertFailure(self.srvcVault.get("value"), KeyError)
 
     @defer.inlineCallbacks
     def testGetError(self):
-        self._http.expect(method='get', ep='/v1/secret/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/valueNotFound', params=None,
                           data=None, json=None, code=404,
                           content_json={"data": {"valueNotFound": "value1"}})
         yield self.assertFailure(self.srvcVault.get("valueNotFound"), KeyError)
@@ -117,7 +117,7 @@ class TestSecretInVaultV2(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testGetValue(self):
-        self._http.expect(method='get', ep='/v1/secret/data/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/data/value', params=None,
                           data=None, json=None, code=200,
                           content_json={"data": {"data": {"value": "value1"}}})
         value = yield self.srvcVault.get("value")
@@ -125,7 +125,7 @@ class TestSecretInVaultV2(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testGetAnyKey(self):
-        self._http.expect(method='get', ep='/v1/secret/data/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/data/any_key', params=None,
                           data=None, json=None, code=200,
                           content_json={"data": {"data": {"any_key": "value1"}}})
         value = yield self.srvcVault.get("any_key")
@@ -133,14 +133,14 @@ class TestSecretInVaultV2(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testGetValueNotFound(self):
-        self._http.expect(method='get', ep='/v1/secret/data/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/data/value', params=None,
                           data=None, json=None, code=200,
                           content_json={"data": {"data": {"valueNotFound": "value1"}}})
         yield self.assertFailure(self.srvcVault.get("value"), KeyError)
 
     @defer.inlineCallbacks
     def testGetError(self):
-        self._http.expect(method='get', ep='/v1/secret/data/', params=None,
+        self._http.expect(method='get', ep='/v1/secret/data/valueNotFound', params=None,
                           data=None, json=None, code=404,
                           content_json={"data": {"data": {"valueNotFound": "value1"}}})
         yield self.assertFailure(self.srvcVault.get("valueNotFound"), KeyError)

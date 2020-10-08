@@ -60,8 +60,11 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         """
         get the value from vault secret backend
         """
-        name, _, key = entry.rpartition('/')
-        if not key:
+        parts = entry.split('/', maxsplit=1)
+        name = parts[0]
+        if len(parts) > 1:
+            key = parts[1]
+        else:
             key = 'value'
 
         if self.apiVersion == 1:
