@@ -115,10 +115,10 @@ Arguments:
 ``strip``
   (optional) if ``True`` (the default), trailing newlines are removed from the file contents.
 
-.. _SecretInAVault:
+.. _HashiCorpVaultSecretProvider:
 
-SecretInVault
-`````````````
+HashiCorpVaultSecretProvider
+````````````````````````````
 
 .. code-block:: python
 
@@ -140,6 +140,13 @@ Vault policies, and subsequent tokens assigned to them, provide for a more restr
 In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
+
+The secret identifiers that need to be passed to e.g. :ref:`Interpolate` accept one of the following
+formats:
+
+ - ``key``: The provider will fetch the secret with name ``key`` and return the value of ``value`` attribute stored therein.
+
+ - ``key/attr``: The provider will fetch the secret with name ``key`` and return the value of ``attr`` attribute stored therein.
 
 .. _SecretInPass:
 
