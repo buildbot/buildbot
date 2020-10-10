@@ -44,8 +44,9 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
                                        wantPreviousBuild=self._want_previous_build(),
                                        wantLogs=self.formatter.wantLogs)
 
-        # only include builds for which isMessageNeeded returns true
-        if not self.is_message_needed(build):
+        if not self.is_message_needed_by_props(build):
+            return None
+        if not self.is_message_needed_by_results(build):
             return None
 
         report = yield self.build_message(master, reporter, build['builder']['name'], [build],

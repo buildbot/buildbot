@@ -50,7 +50,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         # force tags
         build['builder']['tags'] = ['slow']
         g = BuildStatusGenerator(tags=["fast"])
-        self.assertFalse(g.is_message_needed(build))
+        self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_tags(self):
@@ -60,7 +60,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         # force tags
         build['builder']['tags'] = ['fast']
         g = BuildStatusGenerator(tags=["fast"])
-        self.assertTrue(g.is_message_needed(build))
+        self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_schedulers_sends_mail(self):
@@ -68,7 +68,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(schedulers=['checkin'])
-        self.assertTrue(g.is_message_needed(build))
+        self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_schedulers_doesnt_send_mail(self):
@@ -76,7 +76,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(schedulers=['some-random-scheduler'])
-        self.assertFalse(g.is_message_needed(build))
+        self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_branches_sends_mail(self):
@@ -84,7 +84,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(branches=['master'])
-        self.assertTrue(g.is_message_needed(build))
+        self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_branches_doesnt_send_mail(self):
@@ -92,7 +92,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(branches=['some-random-branch'])
-        self.assertFalse(g.is_message_needed(build))
+        self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def run_simple_test_sends_message_for_mode(self, mode, result, should_send=True):
@@ -100,7 +100,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         g = BuildStatusGenerator(mode=mode)
 
-        self.assertEqual(g.is_message_needed(builds[0]), should_send)
+        self.assertEqual(g.is_message_needed_by_results(builds[0]), should_send)
 
     def run_simple_test_ignores_message_for_mode(self, mode, result):
         return self.run_simple_test_sends_message_for_mode(mode, result, False)
@@ -180,7 +180,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
             build['prev_build']['results'] = results1
         else:
             build['prev_build'] = None
-        self.assertEqual(g.is_message_needed(builds[0]), should_send)
+        self.assertEqual(g.is_message_needed_by_results(builds[0]), should_send)
 
     def test_is_message_needed_mode_problem_sends_on_problem(self):
         return self.run_sends_message_for_problems("problem", SUCCESS, FAILURE, True)
