@@ -86,6 +86,12 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(props, {'year': (1651, 'Wikipedia'),
                          'island_name': ("despair", 'Book')})
 
+    @defer.inlineCallbacks
+    def test_get_properties_from_builder(self):
+        props = yield self.callGet(('builders', 1, 'builds', 786, 'properties'))
+        self.assertEqual(props, {'year': (1651, 'Wikipedia'),
+                         'island_name': ("despair", 'Book')})
+
 
 class Properties(interfaces.InterfaceTests, TestReactorMixin,
                  unittest.TestCase):

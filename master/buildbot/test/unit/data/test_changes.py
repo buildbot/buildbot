@@ -77,6 +77,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Change(changeid=14, branch='devel', revision='9284',
                           repository='svn://...', codebase='cbsvn',
                           project='world-domination', sourcestampid=144),
+            fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1),
         ])
 
     def tearDown(self):
@@ -90,6 +91,37 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(changes[0]['changeid'], 13)
         self.validateData(changes[1])
         self.assertEqual(changes[1]['changeid'], 14)
+
+    @defer.inlineCallbacks
+    def test_getChanges_from_build(self):
+        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+
+        mockGetChangeById = mock.Mock(spec=self.db.changes.getChangesForBuild,
+                                      return_value=[fake_change])
+        self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
+
+        changes = yield self.callGet(('builds', '1', 'changes'))
+
+        self.validateData(changes[0])
+        self.assertEqual(changes[0]['changeid'], 14)
+
+    @defer.inlineCallbacks
+    def test_getChanges_from_builder(self):
+
+        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+        mockGetChangeById = mock.Mock(spec=self.db.changes.getChangesForBuild,
+                                      return_value=[fake_change])
+        self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
+
+        fake_build = yield {'id': 1}
+        mockGetBuildByNumber = mock.Mock(spec=self.db.builds.getBuildByNumber,
+                                         return_value=fake_build)
+        self.patch(self.db.builds, 'getBuildByNumber', mockGetBuildByNumber)
+
+        changes = yield self.callGet(('builders', '1', 'builds', '1', 'changes'))
+
+        self.validateData(changes[0])
+        self.assertEqual(changes[0]['changeid'], 14)
 
     @defer.inlineCallbacks
     def test_getChanges_recent(self):

@@ -34,11 +34,15 @@ class BuildPropertiesEndpoint(base.Endpoint):
 
     isCollection = False
     pathPatterns = """
+        /builders/n:builderid/builds/n:build_number/properties
         /builds/n:buildid/properties
     """
 
     def get(self, resultSpec, kwargs):
-        return self.master.db.builds.getBuildProperties(kwargs['buildid'])
+        buildid = kwargs.get("buildid", None)
+        if buildid is None:
+            buildid = kwargs.get("build_number")
+        return self.master.db.builds.getBuildProperties(buildid)
 
 
 class Properties(base.ResourceType):
