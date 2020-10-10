@@ -21,6 +21,7 @@ class ReporterTestMixin:
     TEST_PROJECT = 'testProject'
     TEST_REPO = 'https://example.org/repo'
     TEST_REVISION = 'd34db33fd43db33f'
+    TEST_BRANCH = "master"
     TEST_CODEBASE = 'cbgerrit'
     TEST_CHANGE_ID = 'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
     TEST_BUILDER_NAME = 'Builder0'
@@ -35,24 +36,36 @@ class ReporterTestMixin:
     }
     THING_URL = 'http://thing.example.com'
 
-    def insertTestData(self, buildResults, finalResult, insertSS=True):
+    def insertTestData(self, buildResults, finalResult, insertSS=True, parentPlan=False):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
-            fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
-            fakedb.Change(changeid=13, branch='master', revision='9283', author='me@foo',
+            fakedb.Buildset(id=98, results=finalResult, reason="testReason1",
+                            parent_buildid=19 if parentPlan else None),
+            fakedb.Change(changeid=13, branch=self.TEST_BRANCH, revision='9283', author='me@foo',
                           repository=self.TEST_REPO, codebase=self.TEST_CODEBASE,
                           project='world-domination', sourcestampid=234),
         ])
+
+        if parentPlan:
+            self.db.insertTestData([
+                fakedb.Worker(id=12, name='wrk_parent'),
+                fakedb.Builder(id=78, name='Builder_parent'),
+                fakedb.Buildset(id=97, results=finalResult, reason="testReason0"),
+                fakedb.BuildRequest(id=10, buildsetid=98, builderid=78),
+                fakedb.Build(id=19, number=1, builderid=78, buildrequestid=10, workerid=12,
+                             masterid=92, results=finalResult, state_string="buildText"),
+            ])
 
         if insertSS:
             self.db.insertTestData([
                 fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
                 fakedb.SourceStamp(
                     id=234,
+                    branch=self.TEST_BRANCH,
                     project=self.TEST_PROJECT,
                     revision=self.TEST_REVISION,
                     repository=self.TEST_REPO,
@@ -76,6 +89,8 @@ class ReporterTestMixin:
                     buildid=20 + i, name="reason", value="because"),
                 fakedb.BuildProperty(
                     buildid=20 + i, name="buildername", value="Builder0"),
+                fakedb.BuildProperty(
+                    buildid=20 + i, name="buildnumber", value="{}".format(i)),
             ])
             for k, v in self.TEST_PROPS.items():
                 self.db.insertTestData([
