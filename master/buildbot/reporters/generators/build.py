@@ -38,13 +38,11 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
 
     @defer.inlineCallbacks
     def generate(self, master, reporter, key, build):
-        br = yield master.data.get(("buildrequests", build['buildrequestid']))
-        buildset = yield master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(master, buildset, [build],
-                                        wantProperties=self.formatter.wantProperties,
-                                        wantSteps=self.formatter.wantSteps,
-                                        wantPreviousBuild=self._want_previous_build(),
-                                        wantLogs=self.formatter.wantLogs)
+        yield utils.getDetailsForBuild(master, build,
+                                       wantProperties=self.formatter.wantProperties,
+                                       wantSteps=self.formatter.wantSteps,
+                                       wantPreviousBuild=self._want_previous_build(),
+                                       wantLogs=self.formatter.wantLogs)
 
         # only include builds for which isMessageNeeded returns true
         if not self.is_message_needed(build):
