@@ -210,21 +210,25 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
 
     @defer.inlineCallbacks
-    def setup_build_message(self, **kwargs):
+    def setup_build_message(self, results=SUCCESS, message=None, **kwargs):
+        if message is None:
+            message = {
+                "body": "body",
+                "type": "text",
+                "subject": "subject"
+            }
 
-        _, builds = yield self.setupBuildResults(SUCCESS)
+        _, builds = yield self.setupBuildResults(results)
 
         g = BuildStatusGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
-        g.formatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                                 "type": "text",
-                                                                 "subject": "subject"}
+        g.formatter.formatMessageForBuildResults.return_value = message
 
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
-        report = yield g.build_message(self.master, reporter, "mybldr", builds, SUCCESS)
+        report = yield g.build_message(self.master, reporter, "mybldr", builds, results)
         return (g, builds, report)
 
     @defer.inlineCallbacks
@@ -241,6 +245,53 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
             'type': 'text',
             'builder_name': 'mybldr',
             'results': SUCCESS,
+            'builds': builds,
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_build_message_no_result(self):
+        g, builds, report = yield self.setup_build_message(results=None, mode=("change",))
+
+        build = builds[0]
+        g.formatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'mybldr',
+            'results': None,
+            'builds': builds,
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_build_message_no_result_default_subject(self):
+        subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
+        message = {
+            "body": "body",
+            "type": "text"
+        }
+
+        g, builds, report = yield self.setup_build_message(results=None, subject=subject,
+                                                           message=message, mode=("change",))
+
+        build = builds[0]
+        g.formatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'result: not finished builder: mybldr title: Buildbot',
+            'type': 'text',
+            'builder_name': 'mybldr',
+            'results': None,
             'builds': builds,
             'users': [],
             'patches': [],

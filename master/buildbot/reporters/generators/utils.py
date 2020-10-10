@@ -22,7 +22,7 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
+from buildbot.process.results import statusToString
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 
 
@@ -160,7 +160,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 subject = buildmsg['subject']
 
         if subject is None:
-            subject = self.subject % {'result': Results[results],
+            subject = self.subject % {'result': statusToString(results),
                                       'projectName': master.config.title,
                                       'title': master.config.title,
                                       'builder': name}
