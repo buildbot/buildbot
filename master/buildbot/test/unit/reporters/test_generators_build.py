@@ -236,6 +236,14 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         return report
 
     @defer.inlineCallbacks
+    def generate(self, g, key, build):
+        reporter = Mock()
+        reporter.getResponsibleUsersForBuild.return_value = []
+
+        report = yield g.generate(self.master, reporter, key, build)
+        return report
+
+    @defer.inlineCallbacks
     def test_build_message_nominal(self):
         g, builds = yield self.setup_generator(mode=("change",))
         report = yield self.build_message(g, builds)
@@ -340,3 +348,37 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         g, builds = yield self.setup_generator(mode=("change",), add_patch=True)
         report = yield self.build_message(g, builds)
         self.assertEqual(report['patches'], [])
+
+    @defer.inlineCallbacks
+    def test_generate_finished(self):
+        g, builds = yield self.setup_generator()
+        report = yield self.generate(g, ('builds', 123, 'finished'), builds[0])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'Builder1',
+            'results': SUCCESS,
+            'builds': [builds[0]],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_generate_new(self):
+        g, builds = yield self.setup_generator(results=None, mode=('failing',), report_new=True)
+        report = yield self.generate(g, ('builds', 123, 'new'), builds[0])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'Builder1',
+            'results': None,
+            'builds': [builds[0]],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
