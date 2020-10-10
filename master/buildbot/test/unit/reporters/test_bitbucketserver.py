@@ -46,6 +46,10 @@ from buildbot.test.util.reporter import ReporterTestMixin
 HTTP_NOT_FOUND = 404
 
 
+class TestException(Exception):
+    pass
+
+
 class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
                                     ReporterTestMixin, LoggingMixin):
 
@@ -189,19 +193,21 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
                                            ReporterTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
-    def setupReporter(self, **kwargs):
+    def setupReporter(self, token=None, **kwargs):
         self.setUpTestReactor()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
+        http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
+
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            'serv', auth=('username', 'passwd'), headers={},
+            'serv', auth=('username', 'passwd'), headers=http_headers,
             debug=None, verify=None)
         self.sp = sp = BitbucketServerCoreAPIStatusPush(
-            "serv", token=None, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
+            "serv", token=token, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
         yield sp.setServiceParent(self.master)
         yield self.master.startService()
 
@@ -278,6 +284,26 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         yield self.setupReporter()
         build = yield self.setupBuildResults(SUCCESS, parentPlan=True)
         self._check_start_and_finish_build(build, parentPlan=True)
+
+    @defer.inlineCallbacks
+    def test_with_token(self):
+        yield self.setupReporter(token='tokentoken')
+        build = yield self.setupBuildResults(SUCCESS)
+        self._check_start_and_finish_build(build)
+
+    @defer.inlineCallbacks
+    def test_error_setup_status(self):
+        yield self.setupReporter()
+
+        @defer.inlineCallbacks
+        def raise_deferred_exception(**kwargs):
+            raise TestException()
+
+        self.sp.createStatus = Mock(side_effect=raise_deferred_exception)
+        build = yield self.setupBuildResults(SUCCESS)
+        self.sp.buildStarted(("build", 20, "started"), build)
+
+        self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
 
     @defer.inlineCallbacks
     def test_error(self):
