@@ -94,7 +94,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             params=dict(auth_token='auth'),
             json={'message': 'Buildbot started build Builder0 here: '
                              'http://localhost:8080/#builders/79/builds/0'})
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_build_started(self):
@@ -106,7 +106,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             params=dict(auth_token='abc'),
             json={'message': 'Buildbot started build Builder0 here: '
                              'http://localhost:8080/#builders/79/builds/0'})
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_build_finished(self):
@@ -119,7 +119,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             json={'message':
                   'Buildbot finished build Builder0 with result success '
                   'here: http://localhost:8080/#builders/79/builds/0'})
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_inject_extra_params(self):
@@ -135,7 +135,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
                   'here: http://localhost:8080/#builders/79/builds/0',
                   'format': 'html'})
 
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_no_message_sent_empty_message(self):

@@ -115,13 +115,13 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         build['complete'] = False
         build['complete_at'] = None
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_description(self):
@@ -156,11 +156,11 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         build['complete'] = False
         build['complete_at'] = None
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_name(self):
@@ -194,11 +194,11 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         build['complete'] = False
         build['complete_at'] = None
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_abstain(self):
@@ -232,11 +232,11 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         build['complete'] = False
         build['complete_at'] = None
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_category(self):
@@ -272,11 +272,11 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         build['complete'] = False
         build['complete_at'] = None
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_reporter(self):
@@ -310,11 +310,11 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         build['complete'] = False
         build['complete_at'] = None
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_verbose(self):
@@ -333,7 +333,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'duration': 'pending'
             })
         self.setUpLogging()
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Sending Gerrit status for")
 
     @defer.inlineCallbacks
@@ -354,7 +354,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             })
         self.setUpLogging()
         self._http.quiet = True
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertWasQuiet()
 
     @defer.inlineCallbacks

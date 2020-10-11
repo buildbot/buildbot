@@ -75,7 +75,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "project": "testProject",
                 "timestamp": 1554161923
             })
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_build_finished(self):
@@ -95,7 +95,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "timestamp": 1554161923,
                 "results": 0
             })
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_stream_none(self):
@@ -115,7 +115,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "timestamp": 1554161923,
                 "results": 0
             })
-        self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     def test_endpoint_string(self):
         with self.assertRaisesConfigError(
@@ -145,7 +145,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "timestamp": 1554161923
             }, code=500)
         self.setUpLogging()
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('500: Error pushing build status to Zulip')
 
     @defer.inlineCallbacks
@@ -166,7 +166,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
                 "timestamp": 1554161923
             }, code=404)
         self.setUpLogging()
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: Error pushing build status to Zulip')
 
     @defer.inlineCallbacks
@@ -188,5 +188,5 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
             }, code=401, content_json={"result": "error", "msg": "Invalid API key",
                                        "code": "INVALID_API_KEY"})
         self.setUpLogging()
-        self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('401: Error pushing build status to Zulip')
