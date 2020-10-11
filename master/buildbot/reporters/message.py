@@ -36,7 +36,7 @@ class MessageFormatterBase(util.ComparableMixin):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
 
-    compare_attrs = ['body_template', 'subject_teblate', 'template_type']
+    compare_attrs = ['body_template', 'subject_template', 'template_type']
 
     def __init__(self, template_dir=None,
                  template_filename=None, template=None,
