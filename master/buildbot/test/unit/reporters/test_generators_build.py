@@ -16,6 +16,8 @@
 
 import copy
 
+from parameterized import parameterized
+
 from mock import Mock
 
 from twisted.internet import defer
@@ -41,6 +43,27 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
+
+    @parameterized.expand([
+        ('tags', 'tag'),
+        ('tags', 1),
+        ('builders', 'builder'),
+        ('builders', 1),
+        ('schedulers', 'scheduler'),
+        ('schedulers', 1),
+        ('branches', 'branch'),
+        ('branches', 1),
+    ])
+    def test_list_params_check_raises(self, arg_name, arg_value):
+        kwargs = {arg_name: arg_value}
+        g = BuildStatusGenerator(**kwargs)
+        with self.assertRaisesConfigError('must be a list or None'):
+            g.check()
+
+    def test_subject_newlines_not_allowed(self):
+        g = BuildStatusGenerator(subject='subject\nwith\nnewline')
+        with self.assertRaisesConfigError('Newlines are not allowed'):
+            g.check()
 
     @defer.inlineCallbacks
     def test_is_message_needed_ignores_unspecified_tags(self):
