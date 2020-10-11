@@ -94,11 +94,11 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_sshurl(self):
@@ -118,7 +118,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_merge_request_forked(self):
@@ -133,7 +133,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         # Don't run these tests in parallel!
         del self.TEST_PROPS['source_project_id']
 
@@ -149,7 +149,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                 "message": 'project not found'
             }, code=404)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged(r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:"
                           r" project not found")
 
@@ -158,7 +158,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
         self.TEST_REPO = ''
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         # implicit check that no http request is done
         # nothing is logged as well
 
@@ -182,7 +182,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
             content_json={'message': 'sha1 not found for branch master'},
             code=404)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Could not send status \"running\" for"
                           " http://gitlab/buildbot/buildbot at d34db33fd43db33f:"
                           " sha1 not found for branch master")
@@ -198,7 +198,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                 "id": 1
             })
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Failed to send status \"running\" for"
                           " http://gitlab/buildbot/buildbot at d34db33fd43db33f\n"
                           "Traceback")

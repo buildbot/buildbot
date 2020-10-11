@@ -108,13 +108,13 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
             code=201)
 
         build['complete'] = False
-        self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.bsp._got_event(('builds', 20, 'new'), build)
 
         build['complete'] = True
-        self.bsp.buildFinished(('build', 20, 'finished'), build)
+        self.bsp._got_event(('builds', 20, 'finished'), build)
 
         build['results'] = FAILURE
-        self.bsp.buildFinished(('build', 20, 'finished'), build)
+        self.bsp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_success_return_codes(self):
@@ -135,7 +135,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
 
         build['complete'] = True
         self.setUpLogging()
-        self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.bsp._got_event(('builds', 20, 'new'), build)
         self.assertNotLogged('201: unable to upload Bitbucket status')
 
         # make sure a 200 return code does not trigger an error
@@ -153,7 +153,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
 
         build['complete'] = True
         self.setUpLogging()
-        self.bsp.buildStarted(('build', 20, 'finished'), build)
+        self.bsp._got_event(('builds', 20, 'finished'), build)
         self.assertNotLogged('200: unable to upload Bitbucket status')
 
     @defer.inlineCallbacks
@@ -165,7 +165,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
                                   "error_description": "Unsupported grant type: None",
                                   "error": "invalid_grant"})
         self.setUpLogging()
-        self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.bsp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('400: unable to authenticate to Bitbucket')
 
     @defer.inlineCallbacks
@@ -188,7 +188,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
                 "error_description": "This commit is unknown to us",
                 "error": "invalid_commit"})
         self.setUpLogging()
-        self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.bsp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: unable to upload Bitbucket status')
         self.assertLogged('This commit is unknown to us')
         self.assertLogged('invalid_commit')

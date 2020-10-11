@@ -342,8 +342,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
         buildset, builds = yield self.setupBuildResults([buildResult], buildResult)
 
-        yield gsp.buildStarted(None, builds[0])
-        yield gsp.buildComplete(None, builds[0])
+        yield gsp._got_event(('builds', builds[0]['buildid'], 'new'), builds[0])
+        yield gsp._got_event(('builds', builds[0]['buildid'], 'finished'), builds[0])
 
         if expWarning:
             self.assertEqual([w['message'] for w in self.flushWarnings()],

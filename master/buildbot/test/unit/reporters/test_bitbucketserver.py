@@ -77,7 +77,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(("builds", 20))
+        build = yield self.master.data.get(('builds', 20))
         return build
 
     def _check_start_and_finish_build(self, build):
@@ -103,11 +103,11 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
                   'state': 'FAILED', 'key': 'Builder0',
                   'description': 'Build done.'})
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -143,11 +143,11 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_error(self):
@@ -166,7 +166,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
                 "error": "invalid_commit"})
         build['complete'] = False
         self.setUpLogging()
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: Unable to send Bitbucket Server status')
 
     @defer.inlineCallbacks
@@ -181,12 +181,12 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Unable to get the commit hash")
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
@@ -222,7 +222,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, parentPlan=False):
         self.insertTestData([buildResults], buildResults, parentPlan=parentPlan)
-        build = yield self.master.data.get(("builds", 20))
+        build = yield self.master.data.get(('builds', 20))
         return build
 
     def _check_start_and_finish_build(self, build, parentPlan=False):
@@ -257,12 +257,12 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             code=HTTP_PROCESSED)
         build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
     def test_config_no_base_url(self):
         with self.assertRaisesConfigError("Parameter base_url has to be given"):
@@ -301,7 +301,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
 
         self.sp.createStatus = Mock(side_effect=raise_deferred_exception)
         build = yield self.setupBuildResults(SUCCESS)
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
 
@@ -320,7 +320,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
                   'parent': 'Builder0', 'duration': None, 'testResults': None},
             code=HTTP_NOT_FOUND)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: Unable to send Bitbucket Server status')
 
     @defer.inlineCallbacks
@@ -353,7 +353,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
                   'parent': 'Builder0', 'duration': None, 'testResults': None},
             code=HTTP_PROCESSED)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("WARNING: Unable to resolve ref for SSID: 234.")
 
     @defer.inlineCallbacks
@@ -368,7 +368,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Unable to get the commit hash for SSID: 234")
 
     @defer.inlineCallbacks
@@ -383,7 +383,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Unable to parse repository info from 'None' for SSID: 234")
 
     @defer.inlineCallbacks
@@ -427,7 +427,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
                   'skipped': 2, 'successful': 3}},
             code=HTTP_PROCESSED)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_with_test_results(self):
@@ -452,7 +452,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
         build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_verbose(self):
@@ -468,7 +468,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
                   'parent': 'Builder0', 'duration': None, 'testResults': None},
             code=HTTP_PROCESSED)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('Sending payload:')
         self.assertLogged('Status "INPROGRESS" sent for example.org/repo d34db33fd43db33f')
 
@@ -535,7 +535,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        yield self.cp._got_event(("builds", 20, "finished"), build)
+        yield self.cp._got_event(('builds', 20, 'finished'), build)
         self.assertLogged('Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
@@ -550,7 +550,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        yield self.cp._got_event(("builds", 20, "finished"), build)
+        yield self.cp._got_event(('builds', 20, 'finished'), build)
 
         self.assertNotLogged('Comment sent to {}'.format(PR_URL))
 
@@ -561,7 +561,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         build = builds[0]
         build["complete"] = True
         # we don't expect any request
-        yield self.cp._got_event(("builds", 20, "finished"), build)
+        yield self.cp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_missing_worker_does_nothing(self):
@@ -597,7 +597,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             content_json=error_body)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp._got_event(("builds", 20, "finished"), build)
+        yield self.cp._got_event(('builds', 20, 'finished'), build)
 
         self.assertLogged(
             "^{}: Unable to send a comment: ".format(http_error_code))
@@ -616,7 +616,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=http_error_code)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp._got_event(("builds", 20, "finished"), build)
+        yield self.cp._got_event(('builds', 20, 'finished'), build)
         self.assertLogged("^{}: Unable to send a comment: ".format(
             http_error_code))
 
@@ -634,5 +634,5 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             code=http_code)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp._got_event(("builds", 20, "finished"), build)
+        yield self.cp._got_event(('builds', 20, 'finished'), build)
         self.assertNotLogged("^{}:".format(http_code))
