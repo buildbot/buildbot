@@ -29,17 +29,23 @@ from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
+class TestException(Exception):
+    pass
+
+
+class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
                        unittest.TestCase, NotifierTestMixin):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setUpLogging()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -232,3 +238,20 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
         yield notifier.reconfigService(generators=[gen2])
         self.assertEqual(len(self.master.mq.qrefs), 1)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake2', None, None))
+
+    @defer.inlineCallbacks
+    def test_generator_throw_exception_on_generate(self):
+        gen = self.setup_mock_generator([('fake1', None, None)])
+
+        @defer.inlineCallbacks
+        def generate_throw(*args, **kwargs):
+            raise TestException()
+
+        gen.generate = generate_throw
+
+        notifier = yield self.setupNotifier(generators=[gen])
+
+        yield notifier._got_event(('fake1', None, None), None)
+
+        self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
+        self.assertLogged('Got exception when handling reporter events')

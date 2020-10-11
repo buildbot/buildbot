@@ -103,7 +103,7 @@ rmpyc:
 isort:
 	isort -rc worker master
 	git diff --name-only --stat "HEAD" | grep '.py$$' | xargs autopep8 -i
-	git commit -a -m "isort+autopep8 run"
+	git add -u
 
 
 docker: docker-buildbot-worker docker-buildbot-master
