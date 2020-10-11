@@ -76,7 +76,7 @@ class MessageFormatterBase(util.ComparableMixin):
         return env.get_template(filename)
 
     def buildAdditionalContext(self, master, ctx):
-        ctx.update(self.ctx)
+        pass
 
     def renderMessage(self, ctx):
         body = self.body_template.render(ctx)
@@ -216,6 +216,7 @@ class MessageFormatter(MessageFormatterBase):
                    sourcestamps=self.messageSourceStamps(ss_list)
                    )
         yield self.buildAdditionalContext(master, ctx)
+        ctx.update(self.ctx)
         msgdict = self.renderMessage(ctx)
         return msgdict
 
@@ -229,5 +230,6 @@ class MessageFormatterMissingWorker(MessageFormatterBase):
                    buildbot_url=master.config.buildbotURL,
                    worker=worker)
         yield self.buildAdditionalContext(master, ctx)
+        ctx.update(self.ctx)
         msgdict = self.renderMessage(ctx)
         return msgdict
