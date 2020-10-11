@@ -39,6 +39,10 @@ _GET_TOKEN_DATA = {
 class BitbucketStatusPush(http.HttpStatusPushBase):
     name = "BitbucketStatusPush"
 
+    def checkConfig(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
+                    **kwargs):
+        super().checkConfig(**kwargs)
+
     @defer.inlineCallbacks
     def reconfigService(self, oauth_key, oauth_secret,
                         base_url=_BASE_URL,
