@@ -138,13 +138,18 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
     name = "BitbucketServerCoreAPIStatusPush"
     secrets = ["token", "auth"]
 
-    def checkConfig(self, base_url, token=None, auth=None, **kwargs):
+    def checkConfig(self, base_url, token=None, auth=None,
+                    statusName=None, statusSuffix=None, startDescription=None,
+                    endDescription=None, key=None, parentName=None,
+                    buildNumber=None, ref=None, duration=None,
+                    testResults=None, verbose=False, debug=None,
+                    verify=None, **kwargs):
         if not base_url:
             config.error("Parameter base_url has to be given")
         if token is not None and auth is not None:
             config.error("Only one authentication method can be given "
                          "(token or auth)")
-        super().checkConfig(**kwargs)
+        super().checkConfig(wantProperties=True, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, base_url, token=None, auth=None,
