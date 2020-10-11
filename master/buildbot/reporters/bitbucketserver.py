@@ -46,6 +46,11 @@ HTTP_CREATED = 201
 class BitbucketServerStatusPush(http.HttpStatusPushBase):
     name = "BitbucketServerStatusPush"
 
+    def checkConfig(self, base_url, user, password, key=None, statusName=None,
+                    startDescription=None, endDescription=None, verbose=False,
+                    **kwargs):
+        super().checkConfig(wantProperties=True, **kwargs)
+
     @defer.inlineCallbacks
     def reconfigService(self, base_url, user, password, key=None,
                         statusName=None, startDescription=None,
