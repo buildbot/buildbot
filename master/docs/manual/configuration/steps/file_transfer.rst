@@ -64,7 +64,7 @@ This may help to avoid surprises: transferring a 100MB coredump when you were ex
 The ``blocksize=`` argument controls how the file is sent over the network: larger blocksizes are slightly more efficient but also consume more memory on each end, and there is a hard-coded limit of about 640kB.
 
 The ``mode=`` argument allows you to control the access permissions of the target file, traditionally expressed as an octal integer.
-The most common value is probably ``0755``, which sets the `x` executable bit on the file (useful for shell scripts and the like).
+The most common value is probably ``0o755``, which sets the `x` executable bit on the file (useful for shell scripts and the like).
 The default value for ``mode=`` is ``None``, which means the permission bits will default to whatever the umask of the writing process is.
 The default umask tends to be fairly restrictive, but at least on the worker you can make it less restrictive with a ``--umask`` command-line option at creation time (:ref:`Worker-Options`).
 
