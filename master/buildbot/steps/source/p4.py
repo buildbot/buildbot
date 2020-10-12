@@ -117,8 +117,10 @@ class P4(Source):
                 config.error('You can\'t use p4extra_views not p4viewspec with stream')
             if not p4base or not p4branch:
                 config.error('You must specify both p4base and p4branch when using stream')
-            if " " in p4base or " " in p4branch:
-                config.error('p4base and p4branch must not contain any whitespace')
+            if not interfaces.IRenderable.providedBy(p4base) and " " in p4base:
+                config.error('p4base must not contain any whitespace')
+            if not interfaces.IRenderable.providedBy(p4branch) and " " in p4branch:
+                config.error('p4branch must not contain any whitespace')
 
         if self.p4client_spec_options is None:
             self.p4client_spec_options = ''
