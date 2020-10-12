@@ -472,13 +472,10 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self._incremental(client_stdin=client_spec)
 
     def _full(self, client_stdin='', p4client='p4_client1', p4user='user',
-              workdir='wkdir', extra_args=None, obfuscated_pass=True):
+              workdir='wkdir', extra_args=None):
         if extra_args is None:
             extra_args = []
-        if obfuscated_pass:
-            expected_pass = ('obfuscated', 'pass', 'XXXXXX')
-        else:
-            expected_pass = 'pass'
+        expected_pass = ('obfuscated', 'pass', 'XXXXXX')
 
         self.expectCommands(
             ExpectShell(workdir=workdir,
@@ -544,34 +541,6 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
         self._full(client_stdin=client_stdin)
-
-    def test_mode_full_p4base_not_obfuscated(self):
-        self.setupStep(
-            P4(p4port='localhost:12000',
-               mode='full', p4base='//depot', p4branch='trunk',
-               p4user='user', p4client='p4_client1', p4passwd='pass'),
-            worker_version={'*': '2.15'})
-
-        root_dir = '/home/user/workspace/wkdir'
-        if _is_windows:
-            root_dir = r'C:\Users\username\Workspace\wkdir'
-        client_stdin = textwrap.dedent('''\
-        Client: p4_client1
-
-        Owner: user
-
-        Description:
-        \tCreated by user
-
-        Root:\t%s
-
-        Options:\tallwrite rmdir
-
-        LineEnd:\tlocal
-
-        View:
-        \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
-        self._full(client_stdin=client_stdin, obfuscated_pass=False)
 
     def test_mode_full_p4base_with_no_branch(self):
         self.setupStep(P4(p4port='localhost:12000', mode='full',

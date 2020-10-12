@@ -37,14 +37,13 @@ class SVN(Source):
 
     name = 'svn'
 
-    renderables = ['repourl', 'password']
+    renderables = ['repourl', 'username', 'password']
     possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
     def __init__(self, repourl=None, mode='incremental',
                  method=None, username=None,
                  password=None, extra_args=None, keep_on_purge=None,
                  depth=None, preferLastChangedRev=False, **kwargs):
-
         self.repourl = repourl
         self.username = username
         self.password = password
@@ -74,14 +73,9 @@ class SVN(Source):
         self.method = self._getMethod()
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
-        # if the version is new enough, and the password is set, then obfuscate
-        # it
-        if self.password is not None:
-            if not self.workerVersionIsOlderThan('shell', '2.16'):
-                self.password = ('obfuscated', self.password, 'XXXXXX')
-            else:
-                log.msg("Worker does not understand obfuscation; "
-                        "svn password will be logged")
+        if self.password is not None and not isinstance(self.password, tuple):
+            self.password = tuple(
+                remotecommand.ObfuscatedArgument(self.password))
 
         installed = yield self.checkSvn()
         if not installed:

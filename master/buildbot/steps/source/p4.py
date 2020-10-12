@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
+from buildbot.process import remotecommand
 import re
 
 from twisted.internet import defer
@@ -44,7 +45,8 @@ class P4(Source):
 
     name = 'p4'
 
-    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch']
+    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch',
+                   'p4user', 'p4passwd']
     possible_modes = ('incremental', 'full')
 
     def __init__(self, mode='incremental',
@@ -134,16 +136,10 @@ class P4(Source):
 
         installed = yield self.checkP4()
         if not installed:
-            raise WorkerTooOldError("p4 is not installed on worker")
+            raise buildstep.BuildStepFailed("p4 is not installed on worker")
 
-        # Try to obfuscate the password when used as an argument to commands.
-        if self.p4passwd is not None:
-            if not self.workerVersionIsOlderThan('shell', '2.16'):
-                self.p4passwd_arg = ('obfuscated', self.p4passwd, 'XXXXXX')
-            else:
-                self.p4passwd_arg = self.p4passwd
-                log.msg("Worker does not understand obfuscation; "
-                        "p4 password will be logged")
+        if self.p4passwd is not None and not isinstance(self.p4passwd, tuple):
+            self.p4passwd = tuple(remotecommand.ObfuscatedArgument(self.p4passwd))
 
         if self.use_tickets and self.p4passwd:
             yield self._acquireTicket()
@@ -217,7 +213,7 @@ class P4(Source):
         if self.p4user:
             command.extend(['-u', self.p4user])
         if not self.use_tickets and self.p4passwd:
-            command.extend(['-P', self.p4passwd_arg])
+            command.extend(['-P', self.p4passwd])
         if self.p4client:
             command.extend(['-c', self.p4client])
 
@@ -283,10 +279,13 @@ class P4(Source):
         prop_dict = self.getProperties().asDict()
         prop_dict['p4client'] = self.p4client
 
+        p4user = self.p4user
+        if isinstance(p4user, tuple):  # if obfuscated
+            p4user = p4user[1]
         client_spec = ''
         client_spec += "Client: {}\n\n".format(self.p4client)
-        client_spec += "Owner: {}\n\n".format(self.p4user)
-        client_spec += "Description:\n\tCreated by {}\n\n".format(self.p4user)
+        client_spec += "Owner: {}\n\n".format(p4user)
+        client_spec += "Description:\n\tCreated by {}\n\n".format(p4user)
         client_spec += "Root:\t{}\n\n".format(self.build.path_module.normpath(
             self.build.path_module.join(builddir, self.workdir)))
         client_spec += "Options:\t{}\n\n".format(self.p4client_spec_options)
@@ -354,7 +353,8 @@ class P4(Source):
             log.msg("P4:acquireTicket()")
 
         # TODO: check first if the ticket is still valid?
-        initialStdin = self.p4passwd + "\n"
+        initialStdin = (self.p4passwd[1] if isinstance(self.p4passwd, tuple)
+                        else self.p4passwd) + "\n"
         yield self._dovccmd(['login'], initialStdin=initialStdin)
 
     @defer.inlineCallbacks
@@ -399,7 +399,7 @@ class P4(Source):
 
     @defer.inlineCallbacks
     def checkP4(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['p4', '-V'],
+        cmd = buildstep.RemoteShellCommand(self.workdir, [self.p4bin, '-V'],
                                            env=self.env,
                                            logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)

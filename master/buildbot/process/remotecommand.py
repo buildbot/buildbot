@@ -33,6 +33,11 @@ class RemoteException(Exception):
     pass
 
 
+class ObfuscatedArgument(tuple):
+    def __new__(cls, real, fake='XXXXXX'):
+        return tuple.__new__(ObfuscatedArgument, ('obfuscated', real, fake))
+
+
 class RemoteCommand(base.RemoteCommandImpl):
 
     # class-level unique identifier generator for command ids
@@ -359,6 +364,7 @@ class RemoteShellCommand(RemoteCommand):
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         self.command = command  # stash .command, set it later
+        self.obfuscated = False
         if isinstance(self.command, (str, bytes)):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
@@ -366,6 +372,7 @@ class RemoteShellCommand(RemoteCommand):
             # Try to obfuscate command.
             def obfuscate(arg):
                 if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
+                    self.obfuscated = True
                     return arg[2]
                 return arg
             self.fake_command = [obfuscate(c) for c in self.command]
@@ -404,8 +411,14 @@ class RemoteShellCommand(RemoteCommand):
                 # buildbot-worker doesn't support worker-configured usePTY,
                 # and usePTY defaults to False.
                 self.args['usePTY'] = False
-
-        self.args['command'] = self.command
+        if self.obfuscated and self.step.workerVersionIsOlderThan('shell', '2.16'):
+            log.msg("WARNING! Worker does not understand obfuscation; "
+                    "real values will be logged")
+            command = [c[1] if isinstance(c, tuple) and len(c) == 3 and c[0] == 'obfuscated'
+                       else c for c in self.command]
+        else:
+            command = self.command
+        self.args['command'] = command
         if self.remote_command == "shell":
             # non-ShellCommand worker commands are responsible for doing this
             # fixup themselves
