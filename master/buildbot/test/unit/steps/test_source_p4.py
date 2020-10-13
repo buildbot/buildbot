@@ -897,6 +897,60 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         ''' % root_dir)
         self._full(client_stdin=client_spec)
 
+    def test_mode_full_stream_renderable_p4base(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4base=ConstantRenderable('//depot'), p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          stream=True))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        Stream:\t//depot/trunk
+        ''' % root_dir)
+        self._full(client_stdin=client_spec)
+
+    def test_mode_full_stream_renderable_p4branch(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4base='//depot', p4branch=ConstantRenderable('render_branch'),
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          stream=True))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        Stream:\t//depot/render_branch
+        ''' % root_dir)
+        self._full(client_stdin=client_spec)
+
     def test_worker_connection_lost(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
