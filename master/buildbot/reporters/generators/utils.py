@@ -22,7 +22,7 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
+from buildbot.process.results import statusToString
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 
 
@@ -85,22 +85,24 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return False
 
-    def is_message_needed(self, build):
+    def is_message_needed_by_props(self, build):
         # here is where we actually do something.
         builder = build['builder']
         scheduler = build['properties'].get('scheduler', [None])[0]
         branch = build['properties'].get('branch', [None])[0]
-        results = build['results']
 
         if self.builders is not None and builder['name'] not in self.builders:
-            return False  # ignore this build
+            return False
         if self.schedulers is not None and scheduler not in self.schedulers:
-            return False  # ignore this build
+            return False
         if self.branches is not None and branch not in self.branches:
-            return False  # ignore this build
+            return False
         if self.tags is not None and not self._matches_any_tag(builder['tags']):
-            return False  # ignore this build
+            return False
+        return True
 
+    def is_message_needed_by_results(self, build):
+        results = build['results']
         if "change" in self.mode:
             prev = build['prev_build']
             if prev and prev['results'] != results:
@@ -158,7 +160,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 subject = buildmsg['subject']
 
         if subject is None:
-            subject = self.subject % {'result': Results[results],
+            subject = self.subject % {'result': statusToString(results),
                                       'projectName': master.config.title,
                                       'title': master.config.title,
                                       'builder': name}

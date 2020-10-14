@@ -50,7 +50,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         # force tags
         build['builder']['tags'] = ['slow']
         g = BuildStatusGenerator(tags=["fast"])
-        self.assertFalse(g.is_message_needed(build))
+        self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_tags(self):
@@ -60,7 +60,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         # force tags
         build['builder']['tags'] = ['fast']
         g = BuildStatusGenerator(tags=["fast"])
-        self.assertTrue(g.is_message_needed(build))
+        self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_schedulers_sends_mail(self):
@@ -68,7 +68,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(schedulers=['checkin'])
-        self.assertTrue(g.is_message_needed(build))
+        self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_schedulers_doesnt_send_mail(self):
@@ -76,7 +76,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(schedulers=['some-random-scheduler'])
-        self.assertFalse(g.is_message_needed(build))
+        self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_branches_sends_mail(self):
@@ -84,7 +84,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(branches=['master'])
-        self.assertTrue(g.is_message_needed(build))
+        self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def test_is_message_needed_branches_doesnt_send_mail(self):
@@ -92,7 +92,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         build = builds[0]
         g = BuildStatusGenerator(branches=['some-random-branch'])
-        self.assertFalse(g.is_message_needed(build))
+        self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
     def run_simple_test_sends_message_for_mode(self, mode, result, should_send=True):
@@ -100,7 +100,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
         g = BuildStatusGenerator(mode=mode)
 
-        self.assertEqual(g.is_message_needed(builds[0]), should_send)
+        self.assertEqual(g.is_message_needed_by_results(builds[0]), should_send)
 
     def run_simple_test_ignores_message_for_mode(self, mode, result):
         return self.run_simple_test_sends_message_for_mode(mode, result, False)
@@ -180,7 +180,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
             build['prev_build']['results'] = results1
         else:
             build['prev_build'] = None
-        self.assertEqual(g.is_message_needed(builds[0]), should_send)
+        self.assertEqual(g.is_message_needed_by_results(builds[0]), should_send)
 
     def test_is_message_needed_mode_problem_sends_on_problem(self):
         return self.run_sends_message_for_problems("problem", SUCCESS, FAILURE, True)
@@ -210,26 +210,43 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
 
     @defer.inlineCallbacks
-    def setup_build_message(self, **kwargs):
+    def setup_generator(self, results=SUCCESS, message=None, **kwargs):
+        if message is None:
+            message = {
+                "body": "body",
+                "type": "text",
+                "subject": "subject"
+            }
 
-        _, builds = yield self.setupBuildResults(SUCCESS)
+        _, builds = yield self.setupBuildResults(results)
 
         g = BuildStatusGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
-        g.formatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                                 "type": "text",
-                                                                 "subject": "subject"}
+        g.formatter.formatMessageForBuildResults.return_value = message
 
+        return (g, builds)
+
+    @defer.inlineCallbacks
+    def build_message(self, g, builds, results=SUCCESS):
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
-        report = yield g.build_message(self.master, reporter, "mybldr", builds, SUCCESS)
-        return (g, builds, report)
+        report = yield g.build_message(self.master, reporter, "mybldr", builds, results)
+        return report
+
+    @defer.inlineCallbacks
+    def generate(self, g, key, build):
+        reporter = Mock()
+        reporter.getResponsibleUsersForBuild.return_value = []
+
+        report = yield g.generate(self.master, reporter, key, build)
+        return report
 
     @defer.inlineCallbacks
     def test_build_message_nominal(self):
-        g, builds, report = yield self.setup_build_message(mode=("change",))
+        g, builds = yield self.setup_generator(mode=("change",))
+        report = yield self.build_message(g, builds)
 
         build = builds[0]
         g.formatter.formatMessageForBuildResults.assert_called_with(
@@ -248,14 +265,66 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         })
 
     @defer.inlineCallbacks
+    def test_build_message_no_result(self):
+        g, builds = yield self.setup_generator(results=None, mode=("change",))
+        report = yield self.build_message(g, builds, results=None)
+
+        build = builds[0]
+        g.formatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'mybldr',
+            'results': None,
+            'builds': builds,
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_build_message_no_result_default_subject(self):
+        subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
+        message = {
+            "body": "body",
+            "type": "text"
+        }
+
+        g, builds = yield self.setup_generator(results=None, subject=subject,
+                                               message=message, mode=("change",))
+        report = yield self.build_message(g, builds, results=None)
+
+        build = builds[0]
+        g.formatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'result: not finished builder: mybldr title: Buildbot',
+            'type': 'text',
+            'builder_name': 'mybldr',
+            'results': None,
+            'builds': builds,
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
     def test_build_message_addLogs(self):
-        g, builds, report = yield self.setup_build_message(mode=("change",), add_logs=True)
+        g, builds = yield self.setup_generator(mode=("change",), add_logs=True)
+        report = yield self.build_message(g, builds)
+
         self.assertEqual(report['logs'][0]['logid'], 60)
         self.assertIn("log with", report['logs'][0]['content']['content'])
 
     @defer.inlineCallbacks
     def test_build_message_add_patch(self):
-        g, builds, report = yield self.setup_build_message(mode=("change",), add_patch=True)
+        g, builds = yield self.setup_generator(mode=("change",), add_patch=True)
+        report = yield self.build_message(g, builds)
 
         patch_dict = {
             'author': 'him@foo',
@@ -276,5 +345,40 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
                 super().__init__(id=id)
 
         self.patch(fakedb, 'SourceStamp', NoPatchSourcestamp)
-        g, builds, report = yield self.setup_build_message(mode=("change",), add_patch=True)
+        g, builds = yield self.setup_generator(mode=("change",), add_patch=True)
+        report = yield self.build_message(g, builds)
         self.assertEqual(report['patches'], [])
+
+    @defer.inlineCallbacks
+    def test_generate_finished(self):
+        g, builds = yield self.setup_generator()
+        report = yield self.generate(g, ('builds', 123, 'finished'), builds[0])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'Builder1',
+            'results': SUCCESS,
+            'builds': [builds[0]],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_generate_new(self):
+        g, builds = yield self.setup_generator(results=None, mode=('failing',), report_new=True)
+        report = yield self.generate(g, ('builds', 123, 'new'), builds[0])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'builder_name': 'Builder1',
+            'results': None,
+            'builds': [builds[0]],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
