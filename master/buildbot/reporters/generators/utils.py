@@ -55,6 +55,15 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if '\n' in self.subject:
             config.error('Newlines are not allowed in message subjects')
 
+        list_or_none_params = [
+            ('tags', self.tags),
+            ('builders', self.builders),
+            ('schedulers', self.schedulers),
+            ('branches', self.branches),
+        ]
+        for name, param in list_or_none_params:
+            self._verify_list_or_none_param(name, param)
+
         # you should either limit on builders or tags, not both
         if self.builders is not None and self.tags is not None:
             config.error("Please specify only builders or tags to include - not both.")
@@ -197,6 +206,10 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                                  "passed in as a separate string")
                 else:
                     config.error("mode {} is not a valid mode".format(m))
+
+    def _verify_list_or_none_param(self, name, param):
+        if param is not None and not isinstance(param, list):
+            config.error("{} must be a list or None".format(name))
 
     def _compute_shortcut_modes(self, mode):
         if isinstance(mode, str):

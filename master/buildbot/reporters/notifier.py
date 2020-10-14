@@ -16,6 +16,7 @@
 import abc
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot import config
 from buildbot import util
@@ -165,15 +166,18 @@ class NotifierBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def _got_event(self, key, msg):
-        reports = []
-        for g in self.generators:
-            if self._does_generator_want_key(g, key):
-                report = yield g.generate(self.master, self, key, msg)
-                if report is not None:
-                    reports.append(report)
+        try:
+            reports = []
+            for g in self.generators:
+                if self._does_generator_want_key(g, key):
+                    report = yield g.generate(self.master, self, key, msg)
+                    if report is not None:
+                        reports.append(report)
 
-        if reports:
-            yield self.sendMessage(reports)
+            if reports:
+                yield self.sendMessage(reports)
+        except Exception as e:
+            log.err(e, 'Got exception when handling reporter events')
 
     def getResponsibleUsersForBuild(self, master, buildid):
         # Use library method but subclassers may want to override that
