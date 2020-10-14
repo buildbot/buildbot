@@ -94,11 +94,11 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def setupBuildResultsMin(self, buildResults):
@@ -110,11 +110,11 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
     def test_empty(self):
         build = yield self.setupBuildResultsMin(SUCCESS)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_source_stamp_no_props_nightly_scheduler(self):
@@ -144,11 +144,11 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = SUCCESS
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_multiple_source_stamps_no_props(self):
@@ -220,11 +220,11 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = SUCCESS
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
@@ -293,11 +293,11 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_https(self):
@@ -323,11 +323,11 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestGitHubCommentPush(TestGitHubStatusPush):
@@ -350,21 +350,21 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
             json={'body': 'Build done.'})
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_empty(self):
         build = yield self.setupBuildResultsMin(SUCCESS)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_multiple_source_stamps_no_props(self):
@@ -419,8 +419,8 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = SUCCESS
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
