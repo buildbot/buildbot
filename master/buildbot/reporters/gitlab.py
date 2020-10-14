@@ -37,6 +37,10 @@ HOSTED_BASE_URL = 'https://gitlab.com'
 class GitLabStatusPush(http.HttpStatusPushBase):
     name = "GitLabStatusPush"
 
+    def checkConfig(token, startDescription=None, endDescription=None,
+                    context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
+        super().checkConfig(wantProperties=wantProperties, **kwargs)
+
     @defer.inlineCallbacks
     def reconfigService(self, token,
                         startDescription=None, endDescription=None,
