@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import os
-import pprint
 import re
 
 from twisted.internet import defer
@@ -26,16 +25,10 @@ from twisted.python import runtime
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
-from buildbot.steps.master_oldstyle import MasterShellCommand
 from buildbot.util import deferwaiter
 
-_hush_pyflakes = [
-    MasterShellCommand
-]
-del _hush_pyflakes
 
-
-class MasterShellCommandNewStyle(BuildStep):
+class MasterShellCommand(BuildStep):
 
     """
     Run a shell command locally - on the buildmaster.  The shell command
@@ -181,73 +174,3 @@ class MasterShellCommandNewStyle(BuildStep):
         except error.ProcessExitedAlready:
             pass
         super().interrupt(reason)
-
-
-class SetProperty(BuildStep):
-    name = 'SetProperty'
-    description = ['Setting']
-    descriptionDone = ['Set']
-    renderables = ['property', 'value']
-
-    def __init__(self, property, value, **kwargs):
-        super().__init__(**kwargs)
-        self.property = property
-        self.value = value
-
-    def run(self):
-        properties = self.build.getProperties()
-        properties.setProperty(
-            self.property, self.value, self.name, runtime=True)
-        return defer.succeed(SUCCESS)
-
-
-class SetProperties(BuildStep):
-    name = 'SetProperties'
-    description = ['Setting Properties..']
-    descriptionDone = ['Properties Set']
-    renderables = ['properties']
-
-    def __init__(self, properties=None, **kwargs):
-        super().__init__(**kwargs)
-        self.properties = properties
-
-    def run(self):
-        if self.properties is None:
-            return defer.succeed(SUCCESS)
-        for k, v in self.properties.items():
-            self.setProperty(k, v, self.name, runtime=True)
-        return defer.succeed(SUCCESS)
-
-
-class Assert(BuildStep):
-    name = 'Assert'
-    description = ['Checking..']
-    descriptionDone = ["checked"]
-    renderables = ['check']
-
-    def __init__(self, check, **kwargs):
-        super().__init__(**kwargs)
-        self.check = check
-        self.descriptionDone = ["checked {}".format(repr(self.check))]
-
-    def run(self):
-        if self.check:
-            return defer.succeed(SUCCESS)
-        return defer.succeed(FAILURE)
-
-
-class LogRenderable(BuildStep):
-    name = 'LogRenderable'
-    description = ['Logging']
-    descriptionDone = ['Logged']
-    renderables = ['content']
-
-    def __init__(self, content, **kwargs):
-        super().__init__(**kwargs)
-        self.content = content
-
-    @defer.inlineCallbacks
-    def run(self):
-        content = pprint.pformat(self.content)
-        yield self.addCompleteLog(name='Output', text=content)
-        return SUCCESS
