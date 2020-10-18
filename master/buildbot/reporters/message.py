@@ -32,6 +32,87 @@ from buildbot.reporters import utils
 from buildbot.warnings import warn_deprecated
 
 
+def get_detected_status_text(mode, results, previous_results):
+    if results == FAILURE:
+        if "change" in mode and previous_results is not None and previous_results != results:
+            text = "new failure"
+        elif "problem" in mode and previous_results and previous_results != FAILURE:
+            text = "new failure"
+        else:
+            text = "failed build"
+    elif results == WARNINGS:
+        text = "problem in the build"
+    elif results == SUCCESS:
+        if "change" in mode and previous_results is not None and previous_results != results:
+            text = "restored build"
+        else:
+            text = "passing build"
+    elif results == EXCEPTION:
+        text = "build exception"
+    else:
+        text = "{} build".format(statusToString(results))
+
+    return text
+
+
+def get_message_summary_text(build, results):
+    t = build['state_string']
+    if t:
+        t = ": " + t
+    else:
+        t = ""
+
+    if results == SUCCESS:
+        text = "Build succeeded!"
+    elif results == WARNINGS:
+        text = "Build Had Warnings{}".format(t)
+    elif results == CANCELLED:
+        text = "Build was cancelled"
+    else:
+        text = "BUILD FAILED{}".format(t)
+
+    return text
+
+
+def get_message_source_stamp_text(source_stamps):
+    text = ""
+
+    for ss in source_stamps:
+        source = ""
+
+        if ss['branch']:
+            source += "[branch {}] ".format(ss['branch'])
+
+        if ss['revision']:
+            source += str(ss['revision'])
+        else:
+            source += "HEAD"
+
+        if ss['patch'] is not None:
+            source += " (plus patch)"
+
+        discriminator = ""
+        if ss['codebase']:
+            discriminator = " '{}'".format(ss['codebase'])
+
+        text += "Build Source Stamp{}: {}\n".format(discriminator, source)
+
+    return text
+
+
+def get_projects_text(source_stamps, master):
+    projects = set()
+
+    for ss in source_stamps:
+        if ss['project']:
+            projects.add(ss['project'])
+
+    if not projects:
+        projects = [master.config.title]
+
+    return ', '.join(list(projects))
+
+
 class MessageFormatterBase(util.ComparableMixin):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
@@ -111,84 +192,6 @@ class MessageFormatter(MessageFormatterBase):
         self.wantSteps = wantSteps
         self.wantLogs = wantLogs
 
-    def getDetectedStatus(self, mode, results, previous_results):
-
-        if results == FAILURE:
-            if "change" in mode and previous_results is not None and previous_results != results:
-                text = "new failure"
-            elif "problem" in mode and previous_results and previous_results != FAILURE:
-                text = "new failure"
-            else:
-                text = "failed build"
-        elif results == WARNINGS:
-            text = "problem in the build"
-        elif results == SUCCESS:
-            if "change" in mode and previous_results is not None and previous_results != results:
-                text = "restored build"
-            else:
-                text = "passing build"
-        elif results == EXCEPTION:
-            text = "build exception"
-        else:
-            text = "{} build".format(statusToString(results))
-
-        return text
-
-    def getProjects(self, source_stamps, master):
-        projects = set()
-
-        for ss in source_stamps:
-            if ss['project']:
-                projects.add(ss['project'])
-
-        if not projects:
-            projects = [master.config.title]
-
-        return ', '.join(list(projects))
-
-    def messageSourceStamps(self, source_stamps):
-        text = ""
-
-        for ss in source_stamps:
-            source = ""
-
-            if ss['branch']:
-                source += "[branch {}] ".format(ss['branch'])
-
-            if ss['revision']:
-                source += str(ss['revision'])
-            else:
-                source += "HEAD"
-
-            if ss['patch'] is not None:
-                source += " (plus patch)"
-
-            discriminator = ""
-            if ss['codebase']:
-                discriminator = " '{}'".format(ss['codebase'])
-
-            text += "Build Source Stamp{}: {}\n".format(discriminator, source)
-
-        return text
-
-    def messageSummary(self, build, results):
-        t = build['state_string']
-        if t:
-            t = ": " + t
-        else:
-            t = ""
-
-        if results == SUCCESS:
-            text = "Build succeeded!"
-        elif results == WARNINGS:
-            text = "Build Had Warnings{}".format(t)
-        elif results == CANCELLED:
-            text = "Build was cancelled"
-        else:
-            text = "BUILD FAILED{}".format(t)
-
-        return text
-
     @defer.inlineCallbacks
     def format_message_for_build(self, mode, buildername, build, master, blamelist):
         """Generate a buildbot mail message and return a dictionary
@@ -209,16 +212,15 @@ class MessageFormatter(MessageFormatterBase):
                        'workername', ["<unknown>"])[0],
                    buildset=buildset,
                    build=build,
-                   projects=self.getProjects(ss_list, master),
+                   projects=get_projects_text(ss_list, master),
                    previous_results=previous_results,
-                   status_detected=self.getDetectedStatus(
-                       mode, results, previous_results),
+                   status_detected=get_detected_status_text(mode, results, previous_results),
                    build_url=utils.getURLForBuild(
                        master, build['builder']['builderid'], build['number']),
                    buildbot_url=master.config.buildbotURL,
                    blamelist=blamelist,
-                   summary=self.messageSummary(build, results),
-                   sourcestamps=self.messageSourceStamps(ss_list)
+                   summary=get_message_summary_text(build, results),
+                   sourcestamps=get_message_source_stamp_text(ss_list)
                    )
         yield self.buildAdditionalContext(master, ctx)
         ctx.update(self.ctx)
