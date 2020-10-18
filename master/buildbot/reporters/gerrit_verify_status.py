@@ -50,7 +50,10 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     def checkConfig(self, baseURL, auth, startDescription=None, endDescription=None,
                     verification_name=None, abstain=False, category=None, reporter=None,
                     verbose=False, wantProperties=True, **kwargs):
-        super().checkConfig(wantProperties=wantProperties, **kwargs)
+        super().checkConfig(wantProperties=wantProperties,
+                            _has_old_arg_names={
+                                'wantProperties': wantProperties is not True
+                            }, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self,

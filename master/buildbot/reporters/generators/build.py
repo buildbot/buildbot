@@ -32,10 +32,15 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
     def __init__(self, mode=("failing", "passing", "warnings"),
                  tags=None, builders=None, schedulers=None, branches=None,
                  subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                 add_logs=False, add_patch=False, report_new=False, message_formatter=None):
+                 add_logs=False, add_patch=False, report_new=False, message_formatter=None,
+                 _want_previous_build=None):
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch,
                          message_formatter)
         self._report_new = report_new
+
+        # TODO: private and deprecated, included only to support HttpStatusPushBase
+        self._want_previous_build_override = _want_previous_build
+
         if report_new:
             self.wanted_event_keys = [
                 ('builds', None, 'finished'),
@@ -47,6 +52,8 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         _, _, event = key
         is_new = event == 'new'
         want_previous_build = False if is_new else self._want_previous_build()
+        if self._want_previous_build_override is not None:
+            want_previous_build = self._want_previous_build_override
 
         yield utils.getDetailsForBuild(master, build,
                                        wantProperties=self.formatter.wantProperties,

@@ -126,10 +126,16 @@ class ReporterTestMixin:
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                 ])
 
-            @defer.inlineCallbacks
-            def getChangesForBuild(buildid):
-                assert buildid == 20
-                ch = yield self.master.db.changes.getChange(13)
-                return [ch]
+        self.setup_fake_get_changes_for_build()
 
-            self.master.db.changes.getChangesForBuild = getChangesForBuild
+    def setup_fake_get_changes_for_build(self, has_change=True):
+        @defer.inlineCallbacks
+        def getChangesForBuild(buildid):
+            if not has_change:
+                return []
+
+            assert buildid == 20
+            ch = yield self.master.db.changes.getChange(13)
+            return [ch]
+
+        self.master.db.changes.getChangesForBuild = getChangesForBuild

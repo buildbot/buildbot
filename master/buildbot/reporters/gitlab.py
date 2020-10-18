@@ -39,7 +39,10 @@ class GitLabStatusPush(http.HttpStatusPushBase):
 
     def checkConfig(token, startDescription=None, endDescription=None,
                     context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
-        super().checkConfig(wantProperties=wantProperties, **kwargs)
+        super().checkConfig(wantProperties=wantProperties,
+                            _has_old_arg_names={
+                                'wantProperties': wantProperties is not True
+                            }, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, token,

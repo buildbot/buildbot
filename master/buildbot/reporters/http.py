@@ -13,29 +13,56 @@
 #
 # Copyright Buildbot Team Members
 
-import abc
-
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
-from buildbot.reporters import utils
+from buildbot.reporters import notifier
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.message import DeprecatedMessageFormatterBuildJson
+from buildbot.reporters.message import MessageFormatterEmpty
 from buildbot.util import httpclientservice
-from buildbot.util import service
 from buildbot.warnings import warn_deprecated
 
 
-class HttpStatusPushBase(service.BuildbotService):
-    def checkConfig(self, *args, **kwargs):
-        super().checkConfig()
+class HttpStatusPushBase(notifier.NotifierBase):
+    def checkConfig(self, builders=None, debug=None, verify=None,
+                    wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False,
+                    generators=None, _has_old_arg_names=None):
+
+        old_arg_names = {
+            'builders': builders is not None,
+            'wantProperties': wantProperties is not False,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
+        }
+        if _has_old_arg_names is not None:
+            old_arg_names.update(_has_old_arg_names)
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error(("can't specify generators and deprecated HTTPStatusPushBase "
+                              "arguments ({}) at the same time").format(old_arg_names_msg))
+            warn_deprecated('2.9.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs)
+
+        super().checkConfig(generators=generators)
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
-        if not isinstance(kwargs.get('builders'), (type(None), list)):
-            config.error("builders must be a list or None")
 
     @defer.inlineCallbacks
     def reconfigService(self, builders=None, debug=None, verify=None,
                         wantProperties=False, wantSteps=False,
-                        wantPreviousBuild=False, wantLogs=False, **kwargs):
+                        wantPreviousBuild=False, wantLogs=False, generators=None, **kwargs):
         yield super().reconfigService()
         self.debug = debug
         self.verify = verify
@@ -45,58 +72,27 @@ class HttpStatusPushBase(service.BuildbotService):
         self.wantPreviousBuild = wantPreviousBuild
         self.wantLogs = wantLogs
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs)
 
-        startConsuming = self.master.mq.startConsuming
-        self._buildCompleteConsumer = yield startConsuming(
-            self.buildFinished,
-            ('builds', None, 'finished'))
+        yield super().reconfigService(generators=generators)
 
-        self._buildStartedConsumer = yield startConsuming(
-            self.buildStarted,
-            ('builds', None, 'new'))
+    def _create_generators_from_old_args(self, builders, want_properties, want_steps,
+                                         want_previous_build, want_logs):
+        formatter = MessageFormatterEmpty(wantProperties=want_properties, wantSteps=want_steps,
+                                          wantLogs=want_logs)
+        return [
+            BuildStatusGenerator(builders=builders, message_formatter=formatter, report_new=True,
+                                 _want_previous_build=want_previous_build)
+        ]
 
-    def stopService(self):
-        self._buildCompleteConsumer.stopConsuming()
-        self._buildStartedConsumer.stopConsuming()
+    def sendMessage(self, reports):
+        return self.send(reports[0]['builds'][0])
 
-    @defer.inlineCallbacks
-    def _got_event(self, key, msg):
-        # This function is used only from tests
-        if key[0] != 'builds':  # pragma: no cover
-            raise Exception('Invalid key for _got_event: {}'.format(key))
-        if key[2] == 'new':
-            yield self.buildStarted(key, msg)
-        elif key[2] == 'finished':
-            yield self.buildFinished(key, msg)
-        else:  # pragma: no cover
-            raise Exception('Invalid key for _got_event: {}'.format(key))
-
-    def buildStarted(self, key, build):
-        return self.getMoreInfoAndSend(build)
-
-    def buildFinished(self, key, build):
-        return self.getMoreInfoAndSend(build)
-
-    def filterBuilds(self, build):
-        if self.builders is not None:
-            return build['builder']['name'] in self.builders
-        return True
-
-    @defer.inlineCallbacks
-    def getMoreInfoAndSend(self, build):
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=self.wantProperties,
-                                       wantSteps=self.wantSteps,
-                                       wantPreviousBuild=self.wantPreviousBuild,
-                                       wantLogs=self.wantLogs)
-        if self.filterBuilds(build):
-            yield self.send(build)
-
-    @abc.abstractmethod
-    def send(self, build):
-        pass
+    # Deprecated overridden method, will be removed in Buildbot 3.0
+    # def send(self, build):
+    #    pass
 
     def isStatus2XX(self, code):
         return code // 100 == 2
@@ -106,31 +102,78 @@ class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
     secrets = ['user', 'password', "auth"]
 
-    def checkConfig(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
+    def checkConfig(self, serverUrl, user=None, password=None, auth=None, format_fn=None,
+                    builders=None, wantProperties=False, wantSteps=False,
+                    wantPreviousBuild=False, wantLogs=False, generators=None, **kwargs):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
         if user is not None:
             warn_deprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
         if (format_fn is not None) and not callable(format_fn):
             config.error("format_fn must be a function")
-        super().checkConfig(**kwargs)
+
+        old_arg_names = {
+            'format_fn': format_fn is not None,
+            'builders': builders is not None,
+            'wantProperties': wantProperties is not False,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error(("can't specify generators and deprecated HTTPStatusPushBase "
+                              "arguments ({}) at the same time").format(old_arg_names_msg))
+            warn_deprecated('2.9.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(format_fn, builders, wantProperties,
+                                                               wantSteps, wantPreviousBuild,
+                                                               wantLogs)
+
+        super().checkConfig(generators=generators, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None,
+                        builders=None, wantProperties=False, wantSteps=False,
+                        wantPreviousBuild=False, wantLogs=False, generators=None,
                         **kwargs):
-        yield super().reconfigService(**kwargs)
         if user is not None:
             auth = (user, password)
         if format_fn is None:
-            self.format_fn = lambda x: x
-        else:
-            self.format_fn = format_fn
+            format_fn = lambda x: x
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(format_fn, builders, wantProperties,
+                                                               wantSteps, wantPreviousBuild,
+                                                               wantLogs)
+
+        yield super().reconfigService(generators=generators, **kwargs)
+
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, serverUrl, auth=auth,
             debug=self.debug, verify=self.verify)
 
+    def _create_generators_from_old_args(self, format_fn, builders, want_properties, want_steps,
+                                         want_logs, want_previous_build):
+        formatter = DeprecatedMessageFormatterBuildJson(format_fn,
+                                                        wantProperties=want_properties,
+                                                        wantSteps=want_steps,
+                                                        wantLogs=want_logs)
+        return [
+            BuildStatusGenerator(builders=builders, message_formatter=formatter, report_new=True,
+                                 _want_previous_build=want_previous_build)
+        ]
+
     @defer.inlineCallbacks
-    def send(self, build):
-        response = yield self._http.post("", json=self.format_fn(build))
+    def sendMessage(self, reports):
+        response = yield self._http.post("", json=reports[0]['body'])
         if not self.isStatus2XX(response.code):
             log.msg("{}: unable to upload status: {}".format(response.code, response.content))
