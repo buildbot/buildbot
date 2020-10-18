@@ -138,7 +138,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
-        body = ""
+        body = None
         subject = None
         msgtype = None
         users = set()
@@ -161,7 +161,12 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                                                                      master, blamelist)
             users.update(set(blamelist))
             msgtype = buildmsg['type']
-            body += buildmsg['body']
+
+            if body is None:
+                body = buildmsg['body']
+            elif buildmsg['body'] is not None:
+                body = body + buildmsg['body']
+
             if buildmsg['subject'] is not None:
                 subject = buildmsg['subject']
 
