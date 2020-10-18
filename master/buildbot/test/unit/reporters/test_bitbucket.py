@@ -63,14 +63,8 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
         yield self.bsp.stopService()
 
     @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults):
-        self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(('builds', 20))
-        return build
-
-    @defer.inlineCallbacks
     def test_basic(self):
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
 
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
@@ -107,10 +101,10 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
                 'name': 'Builder0'},
             code=201)
 
-        build['complete'] = False
         yield self.bsp._got_event(('builds', 20, 'new'), build)
 
         build['complete'] = True
+        build['results'] = SUCCESS
         yield self.bsp._got_event(('builds', 20, 'finished'), build)
 
         build['results'] = FAILURE
@@ -118,7 +112,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_success_return_codes(self):
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_finished(SUCCESS)
 
         # make sure a 201 return code does not trigger an error
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
@@ -158,7 +152,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_unable_to_authenticate(self):
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
 
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'}, code=400,
                               content_json={
@@ -170,7 +164,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_unable_to_send_status(self):
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
 
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})

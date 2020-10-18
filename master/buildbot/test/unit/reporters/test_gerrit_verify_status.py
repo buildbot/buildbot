@@ -67,15 +67,9 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
         return self.master.stopService()
 
     @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults):
-        self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(("builds", 20))
-        return build
-
-    @defer.inlineCallbacks
     def test_basic(self):
         yield self.createGerritStatus()
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
@@ -113,12 +107,11 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'value': -1,
                 'duration': '2h 1m 4s'
             })
-        build['complete'] = False
-        build['complete_at'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
@@ -128,7 +121,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
         yield self.createGerritStatus(
             startDescription=Interpolate("started %(prop:buildername)s"),
             endDescription=Interpolate("finished %(prop:buildername)s"))
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
@@ -154,19 +147,18 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
-        build['complete'] = False
-        build['complete_at'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_name(self):
         yield self.createGerritStatus(
             verification_name=Interpolate("builder %(prop:buildername)s"))
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
@@ -192,19 +184,18 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
-        build['complete'] = False
-        build['complete_at'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_abstain(self):
         yield self.createGerritStatus(
             abstain=renderer(lambda p: p.getProperty("buildername") == 'Builder0'))
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
@@ -230,19 +221,18 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
-        build['complete'] = False
-        build['complete_at'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_category(self):
         yield self.createGerritStatus(
             category=renderer(lambda p: p.getProperty("buildername")))
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
@@ -270,19 +260,18 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
-        build['complete'] = False
-        build['complete_at'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_custom_reporter(self):
         yield self.createGerritStatus(
             reporter=renderer(lambda p: p.getProperty("buildername")))
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
@@ -308,18 +297,17 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                 'value': 1,
                 'duration': '2h 1m 4s'
             })
-        build['complete'] = False
-        build['complete_at'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + \
             datetime.timedelta(hours=2, minutes=1, seconds=4)
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_verbose(self):
         yield self.createGerritStatus(verbose=True)
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -339,7 +327,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
     @defer.inlineCallbacks
     def test_not_verbose(self):
         yield self.createGerritStatus(verbose=False)
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',

@@ -30,7 +30,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.notifier import NotifierTestMixin
+from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -40,7 +40,7 @@ class TestException(Exception):
 
 
 class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
-                       unittest.TestCase, NotifierTestMixin):
+                       unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
         self.setUpTestReactor()
@@ -71,7 +71,7 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
     @defer.inlineCallbacks
     def setupBuildMessage(self, old_style=False, **mnKwargs):
 
-        _, builds = yield self.setupBuildResults(FAILURE)
+        build = yield self.insert_build_finished(FAILURE)
 
         formatter = mock.Mock(spec=MessageFormatter)
         formatter.format_message_for_build.return_value = {
@@ -96,8 +96,8 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
             mn = yield self.setupNotifier(generators=[generator], **mnKwargs)
 
-        yield mn._got_event(('builds', 97, 'finished'), builds[0])
-        return (mn, builds, formatter)
+        yield mn._got_event(('builds', 20, 'finished'), build)
+        return (mn, build, formatter)
 
     def setup_mock_generator(self, events_filter):
         gen = mock.Mock()
@@ -152,19 +152,18 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
     ])
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self, name, old_style):
-        mn, builds, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("change",))
+        mn, build, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("failing",))
 
-        build = builds[0]
-        formatter.format_message_for_build.assert_called_with(('change',), 'Builder1', build,
+        formatter.format_message_for_build.assert_called_with(('failing',), 'Builder0', build,
                                                               self.master, ['me@foo'])
 
         report = {
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
-            'builder_name': 'Builder1',
+            'builder_name': 'Builder0',
             'results': FAILURE,
-            'builds': builds,
+            'builds': [build],
             'users': ['me@foo'],
             'patches': [],
             'logs': []
