@@ -134,7 +134,7 @@ class P4(Source):
 
         installed = yield self.checkP4()
         if not installed:
-            raise WorkerTooOldError("p4 is not installed on worker")
+            raise buildstep.BuildStepFailed("p4 is not installed on worker")
 
         # Try to obfuscate the password when used as an argument to commands.
         if self.p4passwd is not None:
