@@ -193,9 +193,11 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         _, builds = yield self.setupBuildResults(SUCCESS)
 
         formatter = Mock(spec=MessageFormatter)
-        formatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                               "type": "text",
-                                                               "subject": "subject"}
+        formatter.format_message_for_build.return_value = {
+            "body": "body",
+            "type": "text",
+            "subject": "subject"
+        }
         formatter.wantProperties = False
         formatter.wantSteps = False
         formatter.wantLogs = False
@@ -222,9 +224,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn, builds, formatter = yield self.setupBuildMessage(mode=("passing",))
 
         build = builds[0]
-        formatter.formatMessageForBuildResults.assert_called_with(
-            ('passing',), 'Builder1', build['buildset'], build, self.master,
-            None, ['me@foo'])
+        formatter.format_message_for_build.assert_called_with(('passing',), 'Builder1', build,
+                                                              self.master, ['me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with(['me@foo'])
         mn.processRecipients.assert_called_with('<recipients>', '<email>')
@@ -332,9 +333,11 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         _, builds = yield self.setupBuildResults(SUCCESS)
 
         formatter = Mock(spec=MessageFormatter)
-        formatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                               "type": "text",
-                                                               "subject": "subject"}
+        formatter.format_message_for_build.return_value = {
+            "body": "body",
+            "type": "text",
+            "subject": "subject"
+        }
         formatter.wantProperties = False
         formatter.wantSteps = False
         formatter.wantLogs = False

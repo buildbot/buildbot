@@ -18,13 +18,110 @@ import textwrap
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.reporters import message
 from buildbot.reporters import utils
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
+
+
+class TestMessageFormatting(unittest.TestCase):
+    def test_get_detected_status_text_failure(self):
+        self.assertEqual(message.get_detected_status_text(['change'], FAILURE, FAILURE),
+                         'failed build')
+        self.assertEqual(message.get_detected_status_text(['change'], FAILURE, SUCCESS),
+                         'new failure')
+        self.assertEqual(message.get_detected_status_text(['change'], FAILURE, None),
+                         'failed build')
+        self.assertEqual(message.get_detected_status_text(['problem'], FAILURE, FAILURE),
+                         'failed build')
+        self.assertEqual(message.get_detected_status_text(['problem'], FAILURE, SUCCESS),
+                         'new failure')
+        self.assertEqual(message.get_detected_status_text(['problem'], FAILURE, None),
+                         'failed build')
+
+    def test_get_detected_status_text_warnings(self):
+        self.assertEqual(message.get_detected_status_text(['change'], WARNINGS, SUCCESS),
+                         'problem in the build')
+        self.assertEqual(message.get_detected_status_text(['change'], WARNINGS, None),
+                         'problem in the build')
+
+    def test_get_detected_status_text_success(self):
+        self.assertEqual(message.get_detected_status_text(['change'], SUCCESS, FAILURE),
+                         'restored build')
+        self.assertEqual(message.get_detected_status_text(['change'], SUCCESS, SUCCESS),
+                         'passing build')
+        self.assertEqual(message.get_detected_status_text(['change'], SUCCESS, None),
+                         'passing build')
+
+        self.assertEqual(message.get_detected_status_text(['problem'], SUCCESS, FAILURE),
+                         'passing build')
+        self.assertEqual(message.get_detected_status_text(['problem'], SUCCESS, SUCCESS),
+                         'passing build')
+        self.assertEqual(message.get_detected_status_text(['problem'], SUCCESS, None),
+                         'passing build')
+
+    def test_get_detected_status_text_exception(self):
+        self.assertEqual(message.get_detected_status_text(['problem'], EXCEPTION, FAILURE),
+                         'build exception')
+        self.assertEqual(message.get_detected_status_text(['problem'], EXCEPTION, SUCCESS),
+                         'build exception')
+        self.assertEqual(message.get_detected_status_text(['problem'], EXCEPTION, None),
+                         'build exception')
+
+    def test_get_detected_status_text_other(self):
+        self.assertEqual(message.get_detected_status_text(['problem'], SKIPPED, None),
+                         'skipped build')
+        self.assertEqual(message.get_detected_status_text(['problem'], RETRY, None),
+                         'retry build')
+        self.assertEqual(message.get_detected_status_text(['problem'], CANCELLED, None),
+                         'cancelled build')
+
+    def test_get_message_summary_text_success(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, SUCCESS),
+                         'Build succeeded!')
+
+    def test_get_message_summary_text_warnings(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, WARNINGS),
+                         'Build Had Warnings: mywarning')
+        self.assertEqual(message.get_message_summary_text({'state_string': None}, WARNINGS),
+                         'Build Had Warnings')
+
+    def test_get_message_summary_text_cancelled(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, CANCELLED),
+                         'Build was cancelled')
+
+    def test_get_message_summary_text_skipped(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, SKIPPED),
+                         'BUILD FAILED: mywarning')
+        self.assertEqual(message.get_message_summary_text({'state_string': None}, SKIPPED),
+                         'BUILD FAILED')
+
+    def test_get_message_source_stamp_text_empty(self):
+        self.assertEqual(message.get_message_source_stamp_text([]), '')
+
+    def test_get_message_source_stamp_text_multiple(self):
+        stamps = [
+            {'codebase': 'a', 'branch': None, 'revision': None, 'patch': None},
+            {'codebase': 'b', 'branch': None, 'revision': None, 'patch': None},
+        ]
+        self.assertEqual(message.get_message_source_stamp_text(stamps),
+                         "Build Source Stamp 'a': HEAD\n"
+                         "Build Source Stamp 'b': HEAD\n")
+
+    def test_get_message_source_stamp_text_with_props(self):
+        stamps = [
+            {'codebase': 'a', 'branch': 'br', 'revision': 'abc', 'patch': 'patch'}
+        ]
+        self.assertEqual(message.get_message_source_stamp_text(stamps),
+                         "Build Source Stamp 'a': [branch br] abc (plus patch)\n")
 
 
 class TestMessage(TestReactorMixin, unittest.TestCase):
@@ -51,7 +148,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
             fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=results1),
             fakedb.Build(id=21, number=1, builderid=80, buildrequestid=12, workerid=13,
-                         masterid=92, results=results1),
+                         masterid=92, results=results2),
         ])
         for _id in (20, 21):
             self.db.insertTestData([
@@ -63,13 +160,12 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def doOneTest(self, lastresults, results, mode="all"):
-        self.setupDb(results, lastresults)
-        res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True)
+        self.setupDb(lastresults, results)
+        res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True,
+                                                wantPreviousBuild=True)
         build = res['builds'][0]
-        buildset = res['buildset']
-        res = yield self.message.formatMessageForBuildResults(
-            mode, "Builder1", buildset, build, self.master,
-            lastresults, ["him@bar", "me@foo"])
+        res = yield self.message.format_message_for_build(mode, "Builder1", build, self.master,
+                                                          ["him@bar", "me@foo"])
         return res
 
     @defer.inlineCallbacks
@@ -92,7 +188,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
 
             Sincerely,
              -The Buildbot'''))
-        self.assertTrue('subject' not in res)
+        self.assertIsNone(res['subject'])
 
     @defer.inlineCallbacks
     def test_inline_template(self):

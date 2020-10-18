@@ -497,9 +497,11 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             verify=None)
 
         formatter = Mock(spec=MessageFormatter)
-        formatter.formatMessageForBuildResults.return_value = {"body": UNICODE_BODY,
-                                                               "type": "text",
-                                                               "subject": "subject"}
+        formatter.format_message_for_build.return_value = {
+            "body": UNICODE_BODY,
+            "type": "text",
+            "subject": "subject"
+        }
         formatter.wantProperties = True
         formatter.wantSteps = False
         formatter.wantLogs = False

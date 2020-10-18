@@ -246,7 +246,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         g = BuildStatusGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
-        g.formatter.formatMessageForBuildResults.return_value = message
+        g.formatter.format_message_for_build.return_value = message
 
         return (g, builds)
 
@@ -272,8 +272,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds)
 
         build = builds[0]
-        g.formatter.formatMessageForBuildResults.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+        g.formatter.format_message_for_build.assert_called_with(('change',), 'mybldr', build,
+                                                                self.master, [])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -293,8 +293,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds, results=None)
 
         build = builds[0]
-        g.formatter.formatMessageForBuildResults.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+        g.formatter.format_message_for_build.assert_called_with(('change',), 'mybldr', build,
+                                                                self.master, [])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -313,7 +313,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
         message = {
             "body": "body",
-            "type": "text"
+            "type": "text",
+            "subject": None,
         }
 
         g, builds = yield self.setup_generator(results=None, subject=subject,
@@ -321,8 +322,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds, results=None)
 
         build = builds[0]
-        g.formatter.formatMessageForBuildResults.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+        g.formatter.format_message_for_build.assert_called_with(('change',), 'mybldr', build,
+                                                                self.master, [])
 
         self.assertEqual(report, {
             'body': 'body',
