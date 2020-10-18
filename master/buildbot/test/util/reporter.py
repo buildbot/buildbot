@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.test import fakedb
 
 
@@ -36,7 +38,15 @@ class ReporterTestMixin:
     }
     THING_URL = 'http://thing.example.com'
 
-    def insertTestData(self, buildResults, finalResult, insertSS=True, parentPlan=False):
+    @defer.inlineCallbacks
+    def insert_build_finished(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
+        self.insertTestData([results], results, insertSS=insert_ss,
+                            parentPlan=parent_plan, insert_patch=insert_patch)
+        build = yield self.master.data.get(('builds', 20))
+        return build
+
+    def insertTestData(self, buildResults, finalResult, insertSS=True,
+                       parentPlan=False, insert_patch=False):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
@@ -61,6 +71,8 @@ class ReporterTestMixin:
             ])
 
         if insertSS:
+            patchid = 99 if insert_patch else None
+
             self.db.insertTestData([
                 fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
                 fakedb.SourceStamp(
@@ -69,7 +81,11 @@ class ReporterTestMixin:
                     project=self.TEST_PROJECT,
                     revision=self.TEST_REVISION,
                     repository=self.TEST_REPO,
-                    codebase=self.TEST_CODEBASE)
+                    codebase=self.TEST_CODEBASE,
+                    patchid=patchid),
+                fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+                             patch_author='him@foo', patch_comment='foo', subdir='/foo',
+                             patchlevel=3),
             ])
 
         for i, results in enumerate(buildResults):
@@ -91,8 +107,17 @@ class ReporterTestMixin:
                     buildid=20 + i, name="buildername", value="Builder0"),
                 fakedb.BuildProperty(
                     buildid=20 + i, name="buildnumber", value="{}".format(i)),
+                fakedb.BuildProperty(buildid=20 + i, name="scheduler", value="checkin"),
             ])
             for k, v in self.TEST_PROPS.items():
                 self.db.insertTestData([
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                 ])
+
+            @defer.inlineCallbacks
+            def getChangesForBuild(buildid):
+                assert buildid == 20
+                ch = yield self.master.db.changes.getChange(13)
+                return [ch]
+
+            self.master.db.changes.getChangesForBuild = getChangesForBuild
