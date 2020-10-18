@@ -94,18 +94,11 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         config._errors = None
 
     @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults):
-        self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(("builds", 20))
-        return build
-
-    @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
         self._http.expect("post", "", json=BuildLookAlike(complete=False))
         self._http.expect("post", "", json=BuildLookAlike(complete=True))
-        build = yield self.setupBuildResults(SUCCESS)
-        build['complete'] = False
+        build = yield self.insert_build_new()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         yield self.sp._got_event(('builds', 20, 'finished'), build)
@@ -115,8 +108,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         yield self.createReporter(auth=None)
         self._http.expect("post", "", json=BuildLookAlike(complete=False))
         self._http.expect("post", "", json=BuildLookAlike(complete=True))
-        build = yield self.setupBuildResults(SUCCESS)
-        build['complete'] = False
+        build = yield self.insert_build_new()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         yield self.sp._got_event(('builds', 20, 'finished'), build)
@@ -124,14 +116,14 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
     @defer.inlineCallbacks
     def test_filtering(self):
         yield self.createReporter(builders=['foo'])
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filteringPass(self):
         yield self.createReporter(builders=['Builder0'])
         self._http.expect("post", "", json=BuildLookAlike())
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
@@ -146,8 +138,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
                                   wantPreviousBuild=True, wantLogs=True)
         self._http.expect("post", "", json=BuildLookAlike(
             keys=['steps', 'prev_build']))
-        build = yield self.setupBuildResults(SUCCESS)
-        build['complete'] = True
+        build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
@@ -155,7 +146,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         yield self.createReporter()
         self._http.expect('post', '', code=code, content=content,
                           json=BuildLookAlike())
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
