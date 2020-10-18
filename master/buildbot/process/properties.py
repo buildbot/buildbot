@@ -218,8 +218,9 @@ class Properties(util.ComparableMixin):
     # somewhere and that could contain secrets
     def cleanupTextFromSecrets(self, text):
         # Better be correct and inefficient than efficient and wrong
-        for k, v in self._used_secrets.items():
-            text = text.replace(k, v)
+        secrets = self._used_secrets
+        for k in sorted(secrets, key=len, reverse=True):
+            text = text.replace(k, secrets[k])
         return text
 
 
