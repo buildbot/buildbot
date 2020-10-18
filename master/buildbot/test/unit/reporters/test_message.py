@@ -51,7 +51,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
             fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=results1),
             fakedb.Build(id=21, number=1, builderid=80, buildrequestid=12, workerid=13,
-                         masterid=92, results=results1),
+                         masterid=92, results=results2),
         ])
         for _id in (20, 21):
             self.db.insertTestData([
@@ -63,7 +63,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def doOneTest(self, lastresults, results, mode="all"):
-        self.setupDb(results, lastresults)
+        self.setupDb(lastresults, results)
         res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True)
         build = res['builds'][0]
         buildset = res['buildset']
