@@ -34,9 +34,8 @@ from buildbot.warnings import warn_deprecated
 
 def get_detected_status_text(mode, results, previous_results):
     if results == FAILURE:
-        if "change" in mode and previous_results is not None and previous_results != results:
-            text = "new failure"
-        elif "problem" in mode and previous_results and previous_results != FAILURE:
+        if ('change' in mode or 'problem' in mode) and previous_results is not None \
+                and previous_results != FAILURE:
             text = "new failure"
         else:
             text = "failed build"

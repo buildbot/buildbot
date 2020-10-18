@@ -18,8 +18,13 @@ import textwrap
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.reporters import message
 from buildbot.reporters import utils
 from buildbot.test import fakedb
@@ -27,6 +32,57 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 
 
+class TestMessageFormatting(unittest.TestCase):
+    def test_get_detected_status_text_failure(self):
+        self.assertEqual(message.get_detected_status_text(['change'], FAILURE, FAILURE),
+                         'failed build')
+        self.assertEqual(message.get_detected_status_text(['change'], FAILURE, SUCCESS),
+                         'new failure')
+        self.assertEqual(message.get_detected_status_text(['change'], FAILURE, None),
+                         'failed build')
+        self.assertEqual(message.get_detected_status_text(['problem'], FAILURE, FAILURE),
+                         'failed build')
+        self.assertEqual(message.get_detected_status_text(['problem'], FAILURE, SUCCESS),
+                         'new failure')
+        self.assertEqual(message.get_detected_status_text(['problem'], FAILURE, None),
+                         'failed build')
+
+    def test_get_detected_status_text_warnings(self):
+        self.assertEqual(message.get_detected_status_text(['change'], WARNINGS, SUCCESS),
+                         'problem in the build')
+        self.assertEqual(message.get_detected_status_text(['change'], WARNINGS, None),
+                         'problem in the build')
+
+    def test_get_detected_status_text_success(self):
+        self.assertEqual(message.get_detected_status_text(['change'], SUCCESS, FAILURE),
+                         'restored build')
+        self.assertEqual(message.get_detected_status_text(['change'], SUCCESS, SUCCESS),
+                         'passing build')
+        self.assertEqual(message.get_detected_status_text(['change'], SUCCESS, None),
+                         'passing build')
+
+        self.assertEqual(message.get_detected_status_text(['problem'], SUCCESS, FAILURE),
+                         'passing build')
+        self.assertEqual(message.get_detected_status_text(['problem'], SUCCESS, SUCCESS),
+                         'passing build')
+        self.assertEqual(message.get_detected_status_text(['problem'], SUCCESS, None),
+                         'passing build')
+
+    def test_get_detected_status_text_exception(self):
+        self.assertEqual(message.get_detected_status_text(['problem'], EXCEPTION, FAILURE),
+                         'build exception')
+        self.assertEqual(message.get_detected_status_text(['problem'], EXCEPTION, SUCCESS),
+                         'build exception')
+        self.assertEqual(message.get_detected_status_text(['problem'], EXCEPTION, None),
+                         'build exception')
+
+    def test_get_detected_status_text_other(self):
+        self.assertEqual(message.get_detected_status_text(['problem'], SKIPPED, None),
+                         'skipped build')
+        self.assertEqual(message.get_detected_status_text(['problem'], RETRY, None),
+                         'retry build')
+        self.assertEqual(message.get_detected_status_text(['problem'], CANCELLED, None),
+                         'cancelled build')
 class TestMessage(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
