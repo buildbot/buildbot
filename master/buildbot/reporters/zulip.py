@@ -45,7 +45,7 @@ class ZulipStatusPush(HttpStatusPushBase):
 
     @defer.inlineCallbacks
     def send(self, build):
-        event = ("new", "finished")[0 if build["complete_at"] is None else 1]
+        event = ("new", "finished")[0 if build["complete"] is False else 1]
         jsondata = dict(event=event, buildid=build["buildid"], buildername=build["builder"]["name"],
                         url=build["url"], project=build["properties"]["project"][0])
         if event == "new":
