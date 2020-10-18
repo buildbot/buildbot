@@ -113,6 +113,42 @@ def get_projects_text(source_stamps, master):
     return ', '.join(list(projects))
 
 
+def create_context_for_build(mode, buildername, build, master, blamelist):
+    buildset = build['buildset']
+    ss_list = buildset['sourcestamps']
+    results = build['results']
+
+    if 'prev_build' in build and build['prev_build'] is not None:
+        previous_results = build['prev_build']['results']
+    else:
+        previous_results = None
+
+    return {
+        'results': build['results'],
+        'mode': mode,
+        'buildername': buildername,
+        'workername': build['properties'].get('workername', ["<unknown>"])[0],
+        'buildset': buildset,
+        'build': build,
+        'projects': get_projects_text(ss_list, master),
+        'previous_results': previous_results,
+        'status_detected': get_detected_status_text(mode, results, previous_results),
+        'build_url': utils.getURLForBuild(master, build['builder']['builderid'], build['number']),
+        'buildbot_url': master.config.buildbotURL,
+        'blamelist': blamelist,
+        'summary': get_message_summary_text(build, results),
+        'sourcestamps': get_message_source_stamp_text(ss_list)
+    }
+
+
+def create_context_for_worker(master, worker):
+    return {
+        'buildbot_title': master.config.title,
+        'buildbot_url': master.config.buildbotURL,
+        'worker': worker,
+    }
+
+
 class MessageFormatterBase(util.ComparableMixin):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
@@ -159,7 +195,14 @@ class MessageFormatterBase(util.ComparableMixin):
     def buildAdditionalContext(self, master, ctx):
         pass
 
-    def renderMessage(self, ctx):
+    @defer.inlineCallbacks
+    def renderMessage(self, master, ctx):
+        """Generate a buildbot mail message and return a dictionary
+           containing the message body, type and subject."""
+
+        yield self.buildAdditionalContext(master, ctx)
+        ctx.update(self.ctx)
+
         body = self.body_template.render(ctx)
         msgdict = {'body': body, 'type': self.template_type}
         if self.subject_template is not None:
@@ -194,37 +237,8 @@ class MessageFormatter(MessageFormatterBase):
 
     @defer.inlineCallbacks
     def format_message_for_build(self, mode, buildername, build, master, blamelist):
-        """Generate a buildbot mail message and return a dictionary
-           containing the message body, type and subject."""
-        buildset = build['buildset']
-        ss_list = buildset['sourcestamps']
-        results = build['results']
-
-        if 'prev_build' in build and build['prev_build'] is not None:
-            previous_results = build['prev_build']['results']
-        else:
-            previous_results = None
-
-        ctx = dict(results=build['results'],
-                   mode=mode,
-                   buildername=buildername,
-                   workername=build['properties'].get(
-                       'workername', ["<unknown>"])[0],
-                   buildset=buildset,
-                   build=build,
-                   projects=get_projects_text(ss_list, master),
-                   previous_results=previous_results,
-                   status_detected=get_detected_status_text(mode, results, previous_results),
-                   build_url=utils.getURLForBuild(
-                       master, build['builder']['builderid'], build['number']),
-                   buildbot_url=master.config.buildbotURL,
-                   blamelist=blamelist,
-                   summary=get_message_summary_text(build, results),
-                   sourcestamps=get_message_source_stamp_text(ss_list)
-                   )
-        yield self.buildAdditionalContext(master, ctx)
-        ctx.update(self.ctx)
-        msgdict = self.renderMessage(ctx)
+        ctx = create_context_for_build(mode, buildername, build, master, blamelist)
+        msgdict = yield self.renderMessage(master, ctx)
         return msgdict
 
 
@@ -233,10 +247,6 @@ class MessageFormatterMissingWorker(MessageFormatterBase):
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(self, master, worker):
-        ctx = dict(buildbot_title=master.config.title,
-                   buildbot_url=master.config.buildbotURL,
-                   worker=worker)
-        yield self.buildAdditionalContext(master, ctx)
-        ctx.update(self.ctx)
-        msgdict = self.renderMessage(ctx)
+        ctx = create_context_for_worker(master, worker)
+        msgdict = yield self.renderMessage(master, ctx)
         return msgdict
