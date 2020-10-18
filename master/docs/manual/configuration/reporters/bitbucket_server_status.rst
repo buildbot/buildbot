@@ -1,0 +1,43 @@
+.. bb:reporter:: BitbucketServerStatusPush
+
+BitbucketServerStatusPush
++++++++++++++++++++++++++
+
+.. code-block:: python
+
+    from buildbot.plugins import reporters
+
+    ss = reporters.BitbucketServerStatusPush('https://bitbucketserver.example.com:8080/',
+                                             'bitbucketserver_username',
+                                             'secret_password')
+    c['services'].append(ss)
+
+:class:`BitbucketServerStatusPush` publishes build status using `BitbucketServer Build Integration REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.1.0/bitbucket-build-rest.html#idm46185565214672>`_.
+The build status is published to a specific commit SHA in Bitbucket Server.
+It tracks the last build for each builderName for each commit built.
+
+Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
+
+It requires `txrequests`_ package to allow interaction with Bitbucket Server REST API.
+
+It uses HTTP Basic AUTH.
+As a result, we recommend you use https in your base_url rather than http.
+
+.. py:class:: BitbucketServerStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
+
+    :param string base_url: The base url of the Bitbucket Server host, up to and optionally including the first `/` of the path.
+    :param string user: The Bitbucket Server user to post as. (can be a :ref:`Secret`)
+    :param string password: The Bitbucket Server user's password. (can be a :ref:`Secret`)
+    :param renderable string key: Passed to Bitbucket Server to differentiate between statuses.
+        A static string can be passed or :class:`Interpolate` for dynamic substitution.
+        The default key is `%(prop:buildername)s`.
+    :param renderable string statusName: The name that is displayed for this status.
+        The default name is nothing, so Bitbucket Server will use the ``key`` parameter.
+    :param renderable string startDescription: Custom start message (default: 'Build started.')
+    :param renderable string endDescription: Custom end message (default: 'Build done.')
+    :param boolean verbose: If True, logs a message for each successful status push.
+    :param list builders: Only send update for specified builders.
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests

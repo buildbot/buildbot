@@ -24,7 +24,7 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     steps/index
     interlocks
     report_generators/index
-    reporters
+    reporters/index
     www
     wwwhooks
     services
