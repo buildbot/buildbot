@@ -162,7 +162,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             users.update(set(blamelist))
             msgtype = buildmsg['type']
             body += buildmsg['body']
-            if 'subject' in buildmsg:
+            if buildmsg['subject'] is not None:
                 subject = buildmsg['subject']
 
         if subject is None:

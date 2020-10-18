@@ -203,8 +203,11 @@ class MessageFormatterBase(util.ComparableMixin):
         yield self.buildAdditionalContext(master, ctx)
         ctx.update(self.ctx)
 
-        body = self.body_template.render(ctx)
-        msgdict = {'body': body, 'type': self.template_type}
+        msgdict = {
+            'body': self.body_template.render(ctx),
+            'type': self.template_type,
+            'subject': None
+        }
         if self.subject_template is not None:
             msgdict['subject'] = self.subject_template.render(ctx)
         return msgdict

@@ -313,7 +313,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
         message = {
             "body": "body",
-            "type": "text"
+            "type": "text",
+            "subject": None,
         }
 
         g, builds = yield self.setup_generator(results=None, subject=subject,

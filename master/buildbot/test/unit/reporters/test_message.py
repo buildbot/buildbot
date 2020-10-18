@@ -91,7 +91,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
 
             Sincerely,
              -The Buildbot'''))
-        self.assertTrue('subject' not in res)
+        self.assertIsNone(res['subject'])
 
     @defer.inlineCallbacks
     def test_inline_template(self):
