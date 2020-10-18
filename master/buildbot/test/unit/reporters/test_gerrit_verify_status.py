@@ -319,7 +319,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
     @defer.inlineCallbacks
     def test_verbose(self):
         yield self.createGerritStatus(verbose=True)
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -339,7 +339,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
     @defer.inlineCallbacks
     def test_not_verbose(self):
         yield self.createGerritStatus(verbose=False)
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',

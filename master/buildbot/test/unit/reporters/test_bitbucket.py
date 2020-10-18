@@ -170,7 +170,7 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_unable_to_send_status(self):
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
 
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})

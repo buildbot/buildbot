@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 
+from buildbot.process.results import SUCCESS
 from buildbot.test import fakedb
 
 
@@ -39,11 +40,19 @@ class ReporterTestMixin:
     THING_URL = 'http://thing.example.com'
 
     @defer.inlineCallbacks
-    def insert_build_finished(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
+    def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
         self.insertTestData([results], results, insertSS=insert_ss,
                             parentPlan=parent_plan, insert_patch=insert_patch)
-        build = yield self.master.data.get(('builds', 20))
+        build = yield self.master.data.get(("builds", 20))
         return build
+
+    @defer.inlineCallbacks
+    def insert_build_finished(self, results=SUCCESS, **kwargs):
+        return (yield self.insert_build(results=results, **kwargs))
+
+    @defer.inlineCallbacks
+    def insert_build_new(self, **kwargs):
+        return (yield self.insert_build(results=None, **kwargs))
 
     def insertTestData(self, buildResults, finalResult, insertSS=True,
                        parentPlan=False, insert_patch=False):
@@ -89,11 +98,14 @@ class ReporterTestMixin:
             ])
 
         for i, results in enumerate(buildResults):
+            started_at = 10000001
+            complete_at = None if results is None else 10000005
             self.db.insertTestData([
                 fakedb.BuildRequest(
                     id=11 + i, buildsetid=98, builderid=79 + i),
                 fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i,
-                             workerid=13, masterid=92, results=results, state_string="buildText"),
+                             workerid=13, masterid=92, results=results, state_string="buildText",
+                             started_at=started_at, complete_at=complete_at),
                 fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
                 fakedb.Log(id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s',
                            num_lines=7),
