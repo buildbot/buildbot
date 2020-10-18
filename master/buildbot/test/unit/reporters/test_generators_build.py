@@ -246,7 +246,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         g = BuildStatusGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
-        g.formatter.formatMessageForBuildResults.return_value = message
+        g.formatter.format_message_for_build.return_value = message
 
         return (g, builds)
 
@@ -272,7 +272,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds)
 
         build = builds[0]
-        g.formatter.formatMessageForBuildResults.assert_called_with(
+        g.formatter.format_message_for_build.assert_called_with(
             ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
 
         self.assertEqual(report, {
@@ -293,7 +293,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds, results=None)
 
         build = builds[0]
-        g.formatter.formatMessageForBuildResults.assert_called_with(
+        g.formatter.format_message_for_build.assert_called_with(
             ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
 
         self.assertEqual(report, {
@@ -321,7 +321,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds, results=None)
 
         build = builds[0]
-        g.formatter.formatMessageForBuildResults.assert_called_with(
+        g.formatter.format_message_for_build.assert_called_with(
             ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
 
         self.assertEqual(report, {

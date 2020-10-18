@@ -75,9 +75,11 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         _, builds = yield self.setupBuildResults(FAILURE)
 
         formatter = mock.Mock(spec=MessageFormatter)
-        formatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                               "type": "text",
-                                                               "subject": "subject"}
+        formatter.format_message_for_build.return_value = {
+            "body": "body",
+            "type": "text",
+            "subject": "subject"
+        }
         formatter.wantProperties = False
         formatter.wantSteps = False
         formatter.wantLogs = False
@@ -154,7 +156,7 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         mn, builds, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("change",))
 
         build = builds[0]
-        formatter.formatMessageForBuildResults.assert_called_with(
+        formatter.format_message_for_build.assert_called_with(
             ('change',), 'Builder1', build['buildset'], build, self.master, SUCCESS, ['me@foo'])
 
         report = {

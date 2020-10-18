@@ -67,7 +67,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
         res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True)
         build = res['builds'][0]
         buildset = res['buildset']
-        res = yield self.message.formatMessageForBuildResults(
+        res = yield self.message.format_message_for_build(
             mode, "Builder1", buildset, build, self.master,
             lastresults, ["him@bar", "me@foo"])
         return res

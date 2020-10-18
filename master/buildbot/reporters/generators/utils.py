@@ -160,7 +160,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             else:
                 previous_results = None
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
-            buildmsg = yield self.formatter.formatMessageForBuildResults(
+            buildmsg = yield self.formatter.format_message_for_build(
                 self.mode, name, build['buildset'], build, master, previous_results, blamelist)
             users.update(set(blamelist))
             msgtype = buildmsg['type']
