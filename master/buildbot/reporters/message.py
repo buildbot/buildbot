@@ -190,12 +190,17 @@ class MessageFormatter(MessageFormatterBase):
         return text
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, buildset, build, master,
-                                 previous_results, blamelist):
+    def format_message_for_build(self, mode, buildername, build, master, blamelist):
         """Generate a buildbot mail message and return a dictionary
            containing the message body, type and subject."""
+        buildset = build['buildset']
         ss_list = buildset['sourcestamps']
         results = build['results']
+
+        if 'prev_build' in build and build['prev_build'] is not None:
+            previous_results = build['prev_build']['results']
+        else:
+            previous_results = None
 
         ctx = dict(results=build['results'],
                    mode=mode,

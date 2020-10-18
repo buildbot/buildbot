@@ -272,8 +272,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds)
 
         build = builds[0]
-        g.formatter.format_message_for_build.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+        g.formatter.format_message_for_build.assert_called_with(('change',), 'mybldr', build,
+                                                                self.master, [])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -293,8 +293,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds, results=None)
 
         build = builds[0]
-        g.formatter.format_message_for_build.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+        g.formatter.format_message_for_build.assert_called_with(('change',), 'mybldr', build,
+                                                                self.master, [])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -321,8 +321,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         report = yield self.build_message(g, builds, results=None)
 
         build = builds[0]
-        g.formatter.format_message_for_build.assert_called_with(
-            ('change',), 'mybldr', build['buildset'], build, self.master, None, [])
+        g.formatter.format_message_for_build.assert_called_with(('change',), 'mybldr', build,
+                                                                self.master, [])
 
         self.assertEqual(report, {
             'body': 'body',

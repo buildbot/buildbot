@@ -22,7 +22,6 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.reporters.message import MessageFormatter
@@ -156,8 +155,8 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         mn, builds, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("change",))
 
         build = builds[0]
-        formatter.format_message_for_build.assert_called_with(
-            ('change',), 'Builder1', build['buildset'], build, self.master, SUCCESS, ['me@foo'])
+        formatter.format_message_for_build.assert_called_with(('change',), 'Builder1', build,
+                                                              self.master, ['me@foo'])
 
         report = {
             'body': 'body',

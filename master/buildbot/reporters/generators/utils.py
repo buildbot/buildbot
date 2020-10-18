@@ -135,6 +135,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
     @defer.inlineCallbacks
     def build_message(self, master, reporter, name, builds, results):
+        # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
         body = ""
@@ -155,13 +156,9 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                     build_logs = [log for log in build_logs if self._should_attach_log(log)]
                 logs.extend(build_logs)
 
-            if 'prev_build' in build and build['prev_build'] is not None:
-                previous_results = build['prev_build']['results']
-            else:
-                previous_results = None
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
-            buildmsg = yield self.formatter.format_message_for_build(
-                self.mode, name, build['buildset'], build, master, previous_results, blamelist)
+            buildmsg = yield self.formatter.format_message_for_build(self.mode, name, build,
+                                                                     master, blamelist)
             users.update(set(blamelist))
             msgtype = buildmsg['type']
             body += buildmsg['body']

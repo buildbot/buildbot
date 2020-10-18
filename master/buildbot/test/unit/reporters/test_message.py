@@ -64,12 +64,11 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def doOneTest(self, lastresults, results, mode="all"):
         self.setupDb(lastresults, results)
-        res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True)
+        res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True,
+                                                wantPreviousBuild=True)
         build = res['builds'][0]
-        buildset = res['buildset']
-        res = yield self.message.format_message_for_build(
-            mode, "Builder1", buildset, build, self.master,
-            lastresults, ["him@bar", "me@foo"])
+        res = yield self.message.format_message_for_build(mode, "Builder1", build, self.master,
+                                                          ["him@bar", "me@foo"])
         return res
 
     @defer.inlineCallbacks
