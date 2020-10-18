@@ -83,6 +83,47 @@ class TestMessageFormatting(unittest.TestCase):
                          'retry build')
         self.assertEqual(message.get_detected_status_text(['problem'], CANCELLED, None),
                          'cancelled build')
+
+    def test_get_message_summary_text_success(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, SUCCESS),
+                         'Build succeeded!')
+
+    def test_get_message_summary_text_warnings(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, WARNINGS),
+                         'Build Had Warnings: mywarning')
+        self.assertEqual(message.get_message_summary_text({'state_string': None}, WARNINGS),
+                         'Build Had Warnings')
+
+    def test_get_message_summary_text_cancelled(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, CANCELLED),
+                         'Build was cancelled')
+
+    def test_get_message_summary_text_skipped(self):
+        self.assertEqual(message.get_message_summary_text({'state_string': 'mywarning'}, SKIPPED),
+                         'BUILD FAILED: mywarning')
+        self.assertEqual(message.get_message_summary_text({'state_string': None}, SKIPPED),
+                         'BUILD FAILED')
+
+    def test_get_message_source_stamp_text_empty(self):
+        self.assertEqual(message.get_message_source_stamp_text([]), '')
+
+    def test_get_message_source_stamp_text_multiple(self):
+        stamps = [
+            {'codebase': 'a', 'branch': None, 'revision': None, 'patch': None},
+            {'codebase': 'b', 'branch': None, 'revision': None, 'patch': None},
+        ]
+        self.assertEqual(message.get_message_source_stamp_text(stamps),
+                         "Build Source Stamp 'a': HEAD\n"
+                         "Build Source Stamp 'b': HEAD\n")
+
+    def test_get_message_source_stamp_text_with_props(self):
+        stamps = [
+            {'codebase': 'a', 'branch': 'br', 'revision': 'abc', 'patch': 'patch'}
+        ]
+        self.assertEqual(message.get_message_source_stamp_text(stamps),
+                         "Build Source Stamp 'a': [branch br] abc (plus patch)\n")
+
+
 class TestMessage(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
