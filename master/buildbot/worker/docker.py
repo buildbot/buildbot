@@ -333,6 +333,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
+        self.resetWorkerPropsOnStop()
         return threads.deferToThread(self._thd_stop_instance, instance, fast)
 
     def _thd_stop_instance(self, instance, fast):

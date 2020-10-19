@@ -315,6 +315,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
+        self.resetWorkerPropsOnStop()
         self._stop_instance(instance, fast)
         return None
 

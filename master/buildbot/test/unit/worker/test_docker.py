@@ -46,7 +46,10 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')
+        self.build2 = Properties(
+            image='busybox:latest', builder='docker_worker2', distro='wheezy')
         self.patch(dockerworker, 'client', docker)
+        docker.Client.containerCreated = False
 
     @defer.inlineCallbacks
     def test_constructor_nodocker(self):
@@ -194,6 +197,28 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(client.call_args_create_container), 1)
         self.assertEqual(client.call_args_create_container[0]['volumes'],
                          ['/worker/docker_worker/build'])
+
+    @defer.inlineCallbacks
+    def test_interpolate_renderables_for_new_build(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+            volumes=[Interpolate('/data:/worker/%(kw:builder)s/build',
+                                 builder=Property('builder'))])
+        yield bs.start_instance(self.build)
+        docker.Client.containerCreated = True
+        # the worker recreates the (mock) client on every action, clearing the containers
+        # but stop_instance only works if the there is a docker container running
+        yield bs.stop_instance()
+        self.assertTrue((yield bs.isCompatibleWithBuild(self.build2)))
+
+    @defer.inlineCallbacks
+    def test_reject_incompatible_build_while_running(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+            volumes=[Interpolate('/data:/worker/%(kw:builder)s/build',
+                                 builder=Property('builder'))])
+        yield bs.start_instance(self.build)
+        self.assertFalse((yield bs.isCompatibleWithBuild(self.build2)))
 
     @defer.inlineCallbacks
     def test_volume_no_suffix(self):
