@@ -1,0 +1,67 @@
+.. bb:reporter:: BitbucketServerCoreAPIStatusPush
+
+BitbucketServerCoreAPIStatusPush
+++++++++++++++++++++++++++++++++
+
+.. code-block:: python
+
+    from buildbot.plugins import reporters
+
+    ss = reporters.BitbucketServerCoreAPIStatusPush('https://bitbucketserver.example.com:8080/',
+                                                    auth=('bitbucketserver_username',
+                                                          'secret_password'))
+    c['services'].append(ss)
+
+Or using `Bitbucket personal access token <https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html>`_
+
+.. code-block:: python
+
+    from buildbot.plugins import reporters
+
+    ss = reporters.BitbucketServerCoreAPIStatusPush('https://bitbucketserver.example.com:8080/',
+                                                    token='MDM0MjM5NDc2MDxxxxxxxxxxxxxxxxxxxxx')
+    c['services'].append(ss)
+
+
+:class:`BitbucketServerCoreAPIStatusPush` publishes build status using `BitbucketServer Core REST API <https://docs.atlassian.com/bitbucket-server/rest/7.4.0/bitbucket-rest.html#idp219>`_ into which it was integrated in `Bitbucket Server 7.4 <https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-4-release-notes-1013849643.html#BitbucketServer7.4releasenotes-cicdStreamlineyourworkflowwithIntegratedCI/CD>`_.
+The build status is published to a specific commit SHA in specific repository in Bitbucket Server with some additional information about reference name, build duration, parent relationship and also possibly test results.
+
+It requires `txrequests`_ package to allow interaction with Bitbucket Server REST API.
+
+.. py:class:: BitbucketServerCoreAPIStatusPush(base_url, token=None, auth=None, name=None, statusSuffix=None, startDescription=None, endDescription=None, key=None, parentName=None, buildNumber=None, ref=None, duration=None, testResults=None, verbose=False, debug=None, verify=None)
+
+    :param string base_url: The base url of the Bitbucket Server host.
+    :param string token: Bitbucket personal access token (mutually exclusive with `auth`) (can be a :ref:`Secret`)
+    :param tuple auth: A tuple of Bitbucket Server username and password (mutually exclusive with `token`) (can be a :ref:`Secret`)
+    :param renderable string statusName: The name that is displayed for this status.
+         If not defined it is constructed to look like `"%(prop:buildername)s #%(prop:buildnumber)s"`.
+         Or if the plan has a parent plan the default is constructed to look like `"<parent's buildername> #<parent's buildnumber> >> %(prop:buildername)s #%(prop:buildnumber)s"`.
+         Note: Parent information is not accessible as properties for user defined renderer.
+    :param renderable string statusSuffix: Additional string that is appended to `statusName`.
+         Empty by default.
+         It is useful when the same plan is launched multiple times for a single parent plan instance.
+         This way every instance of the child plan can have unique suffix and thus be more recognizable (than it would be just by the buildnumber).
+    :param renderable string startDescription: Custom start message (default: 'Build started.')
+    :param renderable string endDescription: Custom end message (default: 'Build done.')
+    :param renderable string key: Passed to Bitbucket Server to differentiate between statuses.
+         A static string can be passed or :class:`Interpolate` for dynamic substitution.
+         The default key is `%(prop:buildername)s`.
+    :param renderable string parentName: Defaults to parent's buildername if plan has a parent plan.
+         Otherwise plan's own buildername is used as default.
+    :param renderable string buildNumber: The default build number is `%(prop:buildername)s`.
+    :param renderable string ref: By default branch name from :class:`SourceStamp` is used.
+         If branch doesn't start with string `refs/` prefix `refs/heads/` is added to it's beginning.
+    :param renderable int duration: Computed for finished builds.
+         Otherwise None.
+         (value in milliseconds)
+    :param renderable dict testResults: Test results can be reported via this parameter.
+         Resulting dictionary must contain keys `failed`, `skipped`, `successful`.
+         By default these keys are filled with values from build properties (`tests_failed`, `tests_skipped`, `tests_successful`) if at least one of the properties is found (missing values will default to `0`).
+         Otherwise None.
+         Note: If you want to suppress the default behavior pass renderable that always interpolates to None.
+    :param boolean verbose: If True, logs a message for each successful status push.
+    :param list builders: Only send update for specified builders.
+    :param boolean verify: Disable ssl verification for the case you use temporary self signed certificates.
+    :param boolean debug: Logs every requests and their response.
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
