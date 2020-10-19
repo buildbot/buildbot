@@ -87,9 +87,10 @@ matrix:
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
-    # keep worker supported on py2.7
+    # keep worker supported on py2.7.
+    # Twisted 20.3.0 is last version which supports py2.7.
     - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
+      env: TWISTED=20.3.0 SQLALCHEMY=latest TESTS=trial_worker
 
 # Dependencies installation commands
 install:
