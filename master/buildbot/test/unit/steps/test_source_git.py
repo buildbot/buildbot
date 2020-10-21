@@ -318,8 +318,8 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.runStep()
 
-        expected = b'#!/bin/sh\nssh -i "%s" "$@"\n' % (unicode2bytes(ssh_key_path),)
-        self.assertEqual(b''.join(read), expected)
+        expected = '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(ssh_key_path)
+        self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     @parameterized.expand([
         ('host_key', dict(sshHostKey='sshhostkey')),
@@ -543,9 +543,10 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.runStep()
 
-        expected = b'#!/bin/sh\nssh -i "%s" -o "UserKnownHostsFile=%s" "$@"\n' \
-            % (unicode2bytes(ssh_key_path), unicode2bytes(ssh_known_hosts_path))
-        self.assertEqual(b''.join(read), expected)
+        expected = '#!/bin/sh\n'\
+                   'ssh -i "{0}" -o "UserKnownHostsFile={1}" "$@"\n'.format(ssh_key_path,
+                                                                            ssh_known_hosts_path)
+        self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     def test_mode_full_clean_ssh_host_key_1_7_progress(self):
         self.setupStep(
