@@ -281,6 +281,21 @@ class GerritStatusPush(service.BuildbotService):
         self._buildStartedConsumer.stopConsuming()
 
     @defer.inlineCallbacks
+    def _got_event(self, key, msg):
+        # This function is used only from tests
+        if key[0] == 'builds':
+            if key[2] == 'new':
+                yield self.buildStarted(key, msg)
+                return
+            elif key[2] == 'finished':
+                yield self.buildComplete(key, msg)
+                return
+        if key[0] == 'buildsets' and key[2] == 'complete':  # pragma: no cover
+            yield self.buildsetComplete(key, msg)
+            return
+        raise Exception('Invalid key for _got_event: {}'.format(key))  # pragma: no cover
+
+    @defer.inlineCallbacks
     def buildStarted(self, key, build):
         if self.startCB is None:
             return

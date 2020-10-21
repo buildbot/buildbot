@@ -17,10 +17,10 @@ import os
 import re
 import sys
 import textwrap
+from io import StringIO
 
 import mock
 
-from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.scripts import base
@@ -59,8 +59,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 f.write(contents)
 
         old_stdout, old_stderr = sys.stdout, sys.stderr
-        stdout = sys.stdout = NativeStringIO()
-        stderr = sys.stderr = NativeStringIO()
+        stdout = sys.stdout = StringIO()
+        stderr = sys.stderr = StringIO()
         try:
             checkconfig._loadConfig(
                 basedir=self.configdir, configFile="master.cfg", quiet=False)

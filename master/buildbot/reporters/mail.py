@@ -103,7 +103,7 @@ class MailNotifier(NotifierBase):
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
 
-        super(MailNotifier, self).checkConfig(
+        super().checkConfig(
             mode=mode, tags=tags, builders=builders,
             buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
             subject=subject, addLogs=addLogs, addPatch=addPatch,

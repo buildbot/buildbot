@@ -14,12 +14,21 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import reactor
 
 from buildbot import config
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
+from buildbot.steps.http_oldstyle import DELETE
+from buildbot.steps.http_oldstyle import GET
+from buildbot.steps.http_oldstyle import HEAD
+from buildbot.steps.http_oldstyle import OPTIONS
+from buildbot.steps.http_oldstyle import POST
+from buildbot.steps.http_oldstyle import PUT
+from buildbot.steps.http_oldstyle import HTTPStep
+from buildbot.steps.http_oldstyle import closeSession
+from buildbot.steps.http_oldstyle import getSession
+from buildbot.steps.http_oldstyle import setSession
 
 # use the 'requests' lib: https://requests.readthedocs.io/en/master/
 try:
@@ -28,36 +37,24 @@ try:
 except ImportError:
     txrequests = None
 
+_hush_pyflakes = [
+    DELETE,
+    GET,
+    HEAD,
+    HTTPStep,
+    OPTIONS,
+    POST,
+    PUT,
+    closeSession,
+    getSession,
+    setSession,
+]
+del _hush_pyflakes
 
-# This step uses a global Session object, which encapsulates a thread pool as
-# well as state such as cookies and authentication.  This state may pose
-# problems for users, where one step may get a cookie that is subsequently used
-# by another step in a different build.
-
-_session = None
-
-
-def getSession():
-    global _session
-    if _session is None:
-        _session = txrequests.Session()
-        reactor.addSystemEventTrigger("before", "shutdown", closeSession)
-    return _session
-
-
-def setSession(session):
-    global _session
-    _session = session
+# TODO: move session singleton handling back to this module from http_oldstyle
 
 
-def closeSession():
-    global _session
-    if _session is not None:
-        _session.close()
-        _session = None
-
-
-class HTTPStep(BuildStep):
+class HTTPStepNewStyle(BuildStep):
 
     name = 'HTTPStep'
     description = 'Requesting'
@@ -80,7 +77,7 @@ class HTTPStep(BuildStep):
         self.method = method
         self.url = url
 
-        for param in HTTPStep.requestsParams:
+        for param in self.requestsParams:
             setattr(self, param, kwargs.pop(param, None))
 
         super().__init__(**kwargs)
@@ -167,37 +164,37 @@ class HTTPStep(BuildStep):
         yield content_log.addStdout(response.text)
 
 
-class POST(HTTPStep):
+class POSTNewStyle(HTTPStepNewStyle):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='POST', **kwargs)
 
 
-class GET(HTTPStep):
+class GETNewStyle(HTTPStepNewStyle):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='GET', **kwargs)
 
 
-class PUT(HTTPStep):
+class PUTNewStyle(HTTPStepNewStyle):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='PUT', **kwargs)
 
 
-class DELETE(HTTPStep):
+class DELETENewStyle(HTTPStepNewStyle):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='DELETE', **kwargs)
 
 
-class HEAD(HTTPStep):
+class HEADNewStyle(HTTPStepNewStyle):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='HEAD', **kwargs)
 
 
-class OPTIONS(HTTPStep):
+class OPTIONSNewStyle(HTTPStepNewStyle):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='OPTIONS', **kwargs)

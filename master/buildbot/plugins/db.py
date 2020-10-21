@@ -203,22 +203,23 @@ class _Plugins:
         if self._check_extras:
             try:
                 entry.require()
-            except Exception as err:
+            except Exception as e:
                 raise PluginDBError(('Requirements are not satisfied '
-                                     'for {}:{}: {}').format(self._group, entry.name, str(err)))
+                                     'for {}:{}: {}').format(
+                                         self._group, entry.name, str(e))) from e
         try:
             result = entry.load()
-        except Exception as err:
+        except Exception as e:
             # log full traceback of the bad entry to help support
             traceback.print_exc()
             raise PluginDBError('Unable to load {}:{}: {}'.format(self._group, entry.name,
-                                                                  str(err)))
+                                                                  str(e))) from e
         if self._interface:
             try:
                 verifyClass(self._interface, result)
-            except Invalid as err:
+            except Invalid as e:
                 raise PluginDBError('Plugin {}:{} does not implement {}: {}'.format(self._group,
-                        entry.name, self._interface.__name__, str(err)))
+                        entry.name, self._interface.__name__, str(e))) from e
         return result
 
     @property
@@ -266,8 +267,8 @@ class _Plugins:
     def __getattr__(self, name):
         try:
             return getattr(self._tree, name)
-        except PluginDBError as err:
-            raise AttributeError(str(err))
+        except PluginDBError as e:
+            raise AttributeError(str(e)) from e
 
 
 class _PluginDB:

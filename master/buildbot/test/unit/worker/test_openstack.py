@@ -294,6 +294,29 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
 
     @defer.inlineCallbacks
+    def test_interpolate_renderables_for_new_build(self):
+        build1 = Properties(image=novaclient.TEST_UUIDS['image'], block_device="some-device")
+        build2 = Properties(image="build2-image")
+        block_devices = [{'uuid': Interpolate('%(prop:block_device)s'), 'volume_size': 10}]
+        bs = yield self.setupWorker(
+            'bot', 'pass', block_devices=block_devices, **self.bs_image_args)
+        bs._poll_resolution = 0
+        yield bs.start_instance(build1)
+        yield bs.stop_instance(build1)
+        self.assertTrue((yield bs.isCompatibleWithBuild(build2)))
+
+    @defer.inlineCallbacks
+    def test_reject_incompatible_build_while_running(self):
+        build1 = Properties(image=novaclient.TEST_UUIDS['image'], block_device="some-device")
+        build2 = Properties(image="build2-image")
+        block_devices = [{'uuid': Interpolate('%(prop:block_device)s'), 'volume_size': 10}]
+        bs = yield self.setupWorker(
+            'bot', 'pass', block_devices=block_devices, **self.bs_image_args)
+        bs._poll_resolution = 0
+        yield bs.start_instance(build1)
+        self.assertFalse((yield bs.isCompatibleWithBuild(build2)))
+
+    @defer.inlineCallbacks
     def test_stop_instance_not_set(self):
         """
         Test stopping the instance but with no instance to stop.

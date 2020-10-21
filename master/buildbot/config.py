@@ -100,7 +100,7 @@ def loadConfigDict(basedir, configFileName):
     except IOError as e:
         raise ConfigErrors([
             "unable to open configuration file {}: {}".format(repr(filename), e),
-        ])
+        ]) from e
 
     log.msg("Loading configuration from %r" % (filename,))
 

@@ -57,14 +57,8 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
         return self.master.stopService()
 
     @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults):
-        self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(("builds", 20))
-        return build
-
-    @defer.inlineCallbacks
     def test_basic(self):
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
@@ -93,17 +87,17 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
 
-        build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = SUCCESS
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_sshurl(self):
         self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
@@ -118,13 +112,13 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_merge_request_forked(self):
         self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
         self.TEST_PROPS['source_project_id'] = 20922342342
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         self._http.expect(
             'post',
             '/api/v4/projects/20922342342/statuses/d34db33fd43db33f',
@@ -133,7 +127,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         # Don't run these tests in parallel!
         del self.TEST_PROPS['source_project_id']
 
@@ -141,7 +135,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
     def test_noproject(self):
         self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
         self.setUpLogging()
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
@@ -149,23 +143,23 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                 "message": 'project not found'
             }, code=404)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged(r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:"
                           r" project not found")
 
     @defer.inlineCallbacks
     def test_nourl(self):
         self.TEST_REPO = ''
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         # implicit check that no http request is done
         # nothing is logged as well
 
     @defer.inlineCallbacks
     def test_senderror(self):
         self.setUpLogging()
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
@@ -182,7 +176,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
             content_json={'message': 'sha1 not found for branch master'},
             code=404)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Could not send status \"running\" for"
                           " http://gitlab/buildbot/buildbot at d34db33fd43db33f:"
                           " sha1 not found for branch master")
@@ -190,7 +184,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def test_badchange(self):
         self.setUpLogging()
-        build = yield self.setupBuildResults(SUCCESS)
+        build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
@@ -198,7 +192,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                 "id": 1
             })
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Failed to send status \"running\" for"
                           " http://gitlab/buildbot/buildbot at d34db33fd43db33f\n"
                           "Traceback")

@@ -226,12 +226,14 @@ class GitHubAuth(OAuth2Auth):
                  **kwargs):
 
         super().__init__(clientId, clientSecret, autologin, **kwargs)
+        self.apiResourceEndpoint = None
         if serverURL is not None:
             # setup for enterprise github
-            if serverURL.endswith("/"):
-                serverURL = serverURL[:-1]
+            serverURL = serverURL.rstrip("/")
             # v3 is accessible directly at /api/v3 for enterprise, but directly for SaaS..
             self.resourceEndpoint = serverURL + '/api/v3'
+            # v4 is accessible endpoint for enterprise
+            self.apiResourceEndpoint = serverURL + '/api/graphql'
 
             self.authUri = '{0}/login/oauth/authorize'.format(serverURL)
             self.tokenUri = '{0}/login/oauth/access_token'.format(serverURL)
@@ -248,7 +250,8 @@ class GitHubAuth(OAuth2Auth):
                     'Retrieving team membership information using GitHubAuth is only '
                     'possible using GitHub api v4.')
         else:
-            self.apiResourceEndpoint = self.serverURL + '/graphql'
+            defaultGraphqlEndpoint = self.serverURL + '/graphql'
+            self.apiResourceEndpoint = self.apiResourceEndpoint or defaultGraphqlEndpoint
         if getTeamsMembership:
             # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/
             self._orgname_slug_sub_re = re.compile(r'[^_a-zA-Z0-9]')
@@ -366,7 +369,7 @@ class GitLabAuth(OAuth2Auth):
         self.authUri = "{}/oauth/authorize".format(uri)
         self.tokenUri = "{}/oauth/token".format(uri)
         self.resourceEndpoint = "{}/api/v4".format(uri)
-        super(GitLabAuth, self).__init__(clientId, clientSecret, **kwargs)
+        super().__init__(clientId, clientSecret, **kwargs)
 
     def getUserInfoFromOAuthClient(self, c):
         user = self.get(c, "/user")

@@ -451,8 +451,8 @@ class RealTests(Tests):
     def test_lz4_compress_big_chunk(self):
         try:
             import lz4  # noqa pylint: disable=unused-import,import-outside-toplevel
-        except ImportError:
-            raise unittest.SkipTest("lz4 not installed, skip the test")
+        except ImportError as e:
+            raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000

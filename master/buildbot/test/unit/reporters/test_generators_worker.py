@@ -22,11 +22,10 @@ from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.notifier import NotifierTestMixin
 
 
 class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin,
-                                 unittest.TestCase, NotifierTestMixin):
+                                 unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()

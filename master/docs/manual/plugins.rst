@@ -33,7 +33,7 @@ Available ``kind``\s are:
     build steps, described in :doc:`configuration/steps/index`
 
 ``reporters``
-    reporters (or reporter targets), described in :doc:`configuration/reporters`
+    reporters (or reporter targets), described in :doc:`configuration/reporters/index`
 
 ``util``
     utility classes.

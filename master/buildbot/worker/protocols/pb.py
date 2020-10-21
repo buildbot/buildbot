@@ -115,10 +115,10 @@ class _NoSuchMethod(Exception):
 def _wrapRemoteException():
     try:
         yield
-    except pb.RemoteError as ex:
-        if ex.remoteType in (b'twisted.spread.flavors.NoSuchMethod',
-                             'twisted.spread.flavors.NoSuchMethod'):
-            raise _NoSuchMethod(ex)
+    except pb.RemoteError as e:
+        if e.remoteType in (b'twisted.spread.flavors.NoSuchMethod',
+                            'twisted.spread.flavors.NoSuchMethod'):
+            raise _NoSuchMethod(e) from e
         raise
 
 

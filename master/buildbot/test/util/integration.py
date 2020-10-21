@@ -317,21 +317,32 @@ class RunMasterBase(unittest.TestCase):
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
+    def _match_patterns_consume(self, text, patterns, is_regex):
+        for pattern in patterns[:]:
+            if is_regex:
+                if re.search(pattern, text):
+                    patterns.remove(pattern)
+            else:
+                if pattern in text:
+                    patterns.remove(pattern)
+        return patterns
+
     @defer.inlineCallbacks
     def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False, regex=False):
+        if isinstance(expectedLog, str):
+            expectedLog = [expectedLog]
+        if not isinstance(expectedLog, list):
+            raise Exception('The expectedLog argument must be either string or a list of strings')
+
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         for step in build['steps']:
             for log in step['logs']:
                 for line in log['contents']['content'].splitlines():
                     if onlyStdout and line[0] != 'o':
                         continue
-                    if regex:
-                        if re.search(expectedLog, line):
-                            return True
-                    else:
-                        if expectedLog in line:
-                            return True
-        return False
+                    expectedLog = self._match_patterns_consume(line, expectedLog, is_regex=regex)
+
+        return len(expectedLog) == 0
 
     def printLog(self, log, out):
         print(u" " * 8 + "*********** LOG: {} *********".format(log['name']), file=out)

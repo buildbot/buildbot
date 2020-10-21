@@ -92,6 +92,11 @@ The following parameters are supported:
     Patches are usually used on a :class:`Try` server.
     Defaults to ``False``.
 
+``report_new``
+    (boolean, optional)
+    Whether new builds will be reported in addition to finished builds.
+    Defaults to ``False``.
+
 ``message_formatter``
     (optional, instance of ``reporters.MessageFormatter``)
     This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom message.

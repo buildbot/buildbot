@@ -247,9 +247,9 @@ class ResultSpec:
         if eqVals and len(eqVals) == 1:
             try:
                 return int(eqVals[0])
-            except ValueError:
+            except ValueError as e:
                 raise ValueError("Filter value for {} should be integer, but got: {}".format(
-                    field, eqVals[0]))
+                    field, eqVals[0])) from e
         return None
 
     def removePagination(self):

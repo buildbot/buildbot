@@ -26,10 +26,16 @@ from twisted.python import runtime
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
+from buildbot.steps.master_oldstyle import MasterShellCommand
 from buildbot.util import deferwaiter
 
+_hush_pyflakes = [
+    MasterShellCommand
+]
+del _hush_pyflakes
 
-class MasterShellCommand(BuildStep):
+
+class MasterShellCommandNewStyle(BuildStep):
 
     """
     Run a shell command locally - on the buildmaster.  The shell command

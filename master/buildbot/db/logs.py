@@ -150,9 +150,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                                  dict(name=name, slug=slug, stepid=stepid,
                                       complete=0, num_lines=0, type=type))
                 return r.inserted_primary_key[0]
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 raise KeyError(
-                    "log with slug '%r' already exists in this step" % (slug,))
+                    "log with slug '%r' already exists in this step" % (slug,)) from e
         return self.db.pool.do(thdAddLog)
 
     def thdCompressChunk(self, chunk):

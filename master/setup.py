@@ -336,6 +336,7 @@ setup_args = {
             ('buildbot.reporters.stash', ['StashStatusPush']),
             ('buildbot.reporters.bitbucketserver', [
                 'BitbucketServerStatusPush',
+                'BitbucketServerCoreAPIStatusPush',
                 'BitbucketServerPRCommentPush'
             ]),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),

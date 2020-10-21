@@ -51,8 +51,8 @@ def checkPidFile(pidfile):
         try:
             with open(pidfile) as f:
                 pid = int(f.read())
-        except ValueError:
-            raise ValueError('Pidfile {} contains non-numeric value'.format(pidfile))
+        except ValueError as e:
+            raise ValueError('Pidfile {} contains non-numeric value'.format(pidfile)) from e
         try:
             os.kill(pid, 0)
         except OSError as why:
@@ -62,7 +62,7 @@ def checkPidFile(pidfile):
                 os.remove(pidfile)
             else:
                 raise OSError("Can't check status of PID {} from pidfile {}: {}".format(
-                    pid, pidfile, why))
+                    pid, pidfile, why)) from why
         else:
             raise BusyError("'{}' exists - is this master still running?".format(pidfile))
 

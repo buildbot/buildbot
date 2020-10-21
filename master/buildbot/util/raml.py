@@ -96,8 +96,8 @@ class RamlSpec:
                     if 'bbget' in _is:
                         try:
                             v['eptype'] = _is['bbget']['bbtype']
-                        except TypeError:
-                            raise Exception('Unexpected "is" target {}'.format(_is['bbget']))
+                        except TypeError as e:
+                            raise Exception('Unexpected "is" target {}'.format(_is['bbget'])) from e
 
                         self.endpoints_by_type.setdefault(v['eptype'], {})
                         self.endpoints_by_type[v['eptype']][base] = api

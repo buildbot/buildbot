@@ -22,24 +22,29 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.notifier import NotifierTestMixin
+from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
-                       unittest.TestCase, NotifierTestMixin):
+class TestException(Exception):
+    pass
+
+
+class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
+                       unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setUpLogging()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -66,12 +71,14 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def setupBuildMessage(self, old_style=False, **mnKwargs):
 
-        _, builds = yield self.setupBuildResults(FAILURE)
+        build = yield self.insert_build_finished(FAILURE)
 
         formatter = mock.Mock(spec=MessageFormatter)
-        formatter.formatMessageForBuildResults.return_value = {"body": "body",
-                                                               "type": "text",
-                                                               "subject": "subject"}
+        formatter.format_message_for_build.return_value = {
+            "body": "body",
+            "type": "text",
+            "subject": "subject"
+        }
         formatter.wantProperties = False
         formatter.wantSteps = False
         formatter.wantLogs = False
@@ -89,8 +96,8 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
 
             mn = yield self.setupNotifier(generators=[generator], **mnKwargs)
 
-        yield mn._got_event(('builds', 97, 'finished'), builds[0])
-        return (mn, builds, formatter)
+        yield mn._got_event(('builds', 20, 'finished'), build)
+        return (mn, build, formatter)
 
     def setup_mock_generator(self, events_filter):
         gen = mock.Mock()
@@ -145,19 +152,18 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
     ])
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self, name, old_style):
-        mn, builds, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("change",))
+        mn, build, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("failing",))
 
-        build = builds[0]
-        formatter.formatMessageForBuildResults.assert_called_with(
-            ('change',), 'Builder1', build['buildset'], build, self.master, SUCCESS, ['me@foo'])
+        formatter.format_message_for_build.assert_called_with(('failing',), 'Builder0', build,
+                                                              self.master, ['me@foo'])
 
         report = {
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
-            'builder_name': 'Builder1',
+            'builder_name': 'Builder0',
             'results': FAILURE,
-            'builds': builds,
+            'builds': [build],
             'users': ['me@foo'],
             'patches': [],
             'logs': []
@@ -232,3 +238,20 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin,
         yield notifier.reconfigService(generators=[gen2])
         self.assertEqual(len(self.master.mq.qrefs), 1)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake2', None, None))
+
+    @defer.inlineCallbacks
+    def test_generator_throw_exception_on_generate(self):
+        gen = self.setup_mock_generator([('fake1', None, None)])
+
+        @defer.inlineCallbacks
+        def generate_throw(*args, **kwargs):
+            raise TestException()
+
+        gen.generate = generate_throw
+
+        notifier = yield self.setupNotifier(generators=[gen])
+
+        yield notifier._got_event(('fake1', None, None), None)
+
+        self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
+        self.assertLogged('Got exception when handling reporter events')

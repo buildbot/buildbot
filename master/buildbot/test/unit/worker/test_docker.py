@@ -46,7 +46,10 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
 
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')
+        self.build2 = Properties(
+            image='busybox:latest', builder='docker_worker2', distro='wheezy')
         self.patch(dockerworker, 'client', docker)
+        docker.Client.containerCreated = False
 
     @defer.inlineCallbacks
     def test_constructor_nodocker(self):
@@ -141,6 +144,49 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(bs.encoding, 'gzip')
 
     @defer.inlineCallbacks
+    def test_constructor_host_config_build(self):
+        # Volumes have their own tests
+        bs = yield self.setupWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img',
+                                    ['/bin/sh'],
+                                    dockerfile="FROM ubuntu",
+                                    volumes=["/tmp:/tmp:ro"],
+                                    hostconfig={'network_mode': 'fake',
+                                                'dns': ['1.1.1.1', '1.2.3.4']},
+                                    custom_context=False, buildargs=None,
+                                    encoding='gzip')
+        id, name = yield bs.start_instance(self.build)
+        client = docker.APIClient.latest
+        self.assertEqual(client.call_args_create_host_config, [
+            {'network_mode': 'fake',
+             'dns': ['1.1.1.1', '1.2.3.4'],
+             'init': True,
+             'binds': ['/tmp:/tmp:ro'],
+             }
+        ])
+
+    @defer.inlineCallbacks
+    def test_constructor_host_config_build_set_init(self):
+        # Volumes have their own tests
+        bs = yield self.setupWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img',
+                                    ['/bin/sh'],
+                                    dockerfile="FROM ubuntu",
+                                    volumes=["/tmp:/tmp:ro"],
+                                    hostconfig={'network_mode': 'fake',
+                                                'dns': ['1.1.1.1', '1.2.3.4'],
+                                                'init': False},
+                                    custom_context=False, buildargs=None,
+                                    encoding='gzip')
+        id, name = yield bs.start_instance(self.build)
+        client = docker.APIClient.latest
+        self.assertEqual(client.call_args_create_host_config, [
+            {'network_mode': 'fake',
+             'dns': ['1.1.1.1', '1.2.3.4'],
+             'init': False,
+             'binds': ['/tmp:/tmp:ro'],
+             }
+        ])
+
+    @defer.inlineCallbacks
     def test_start_instance_volume_renderable(self):
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
@@ -151,6 +197,28 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(client.call_args_create_container), 1)
         self.assertEqual(client.call_args_create_container[0]['volumes'],
                          ['/worker/docker_worker/build'])
+
+    @defer.inlineCallbacks
+    def test_interpolate_renderables_for_new_build(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+            volumes=[Interpolate('/data:/worker/%(kw:builder)s/build',
+                                 builder=Property('builder'))])
+        yield bs.start_instance(self.build)
+        docker.Client.containerCreated = True
+        # the worker recreates the (mock) client on every action, clearing the containers
+        # but stop_instance only works if the there is a docker container running
+        yield bs.stop_instance()
+        self.assertTrue((yield bs.isCompatibleWithBuild(self.build2)))
+
+    @defer.inlineCallbacks
+    def test_reject_incompatible_build_while_running(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+            volumes=[Interpolate('/data:/worker/%(kw:builder)s/build',
+                                 builder=Property('builder'))])
+        yield bs.start_instance(self.build)
+        self.assertFalse((yield bs.isCompatibleWithBuild(self.build2)))
 
     @defer.inlineCallbacks
     def test_volume_no_suffix(self):

@@ -51,8 +51,8 @@ def validateMasterOption(master):
     try:
         hostname, port = master.split(":")
         port = int(port)
-    except (TypeError, ValueError):
-        raise usage.UsageError("master must have the form 'hostname:port'")
+    except (TypeError, ValueError) as e:
+        raise usage.UsageError("master must have the form 'hostname:port'") from e
 
 
 class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -155,16 +155,16 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         else:
             try:
                 self['log-count'] = int(self['log-count'])
-            except ValueError:
+            except ValueError as e:
                 raise usage.UsageError(
-                    "log-count parameter needs to be an int or None")
+                    "log-count parameter needs to be an int or None") from e
 
         # validate 'db' parameter
         try:
             # check if sqlalchemy will be able to parse specified URL
             sa.engine.url.make_url(self['db'])
-        except sa.exc.ArgumentError:
-            raise usage.UsageError("could not parse database URL '{}'".format(self['db']))
+        except sa.exc.ArgumentError as e:
+            raise usage.UsageError("could not parse database URL '{}'".format(self['db'])) from e
 
 
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -286,8 +286,8 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('when'):
             try:
                 self['when'] = float(self['when'])
-            except (TypeError, ValueError):
-                raise usage.UsageError('invalid "when" value {}'.format(self['when']))
+            except (TypeError, ValueError) as e:
+                raise usage.UsageError('invalid "when" value {}'.format(self['when'])) from e
         else:
             self['when'] = None
 

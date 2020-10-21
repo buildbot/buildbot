@@ -208,6 +208,8 @@ class BuildStepMixin:
         b.workerEnvironment = worker_env.copy()
         step.setBuild(b)
 
+        self.build.builder.config.env = worker_env.copy()
+
         # watch for properties being set
         self.properties = interfaces.IProperties(b)
 

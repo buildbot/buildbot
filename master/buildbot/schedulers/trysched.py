@@ -154,8 +154,8 @@ class Try_Jobdir(TryBase):
         f.seek(0, 0)
         try:
             p.feed(f.read())
-        except basic.NetstringParseError:
-            raise BadJobfile("unable to parse netstrings")
+        except basic.NetstringParseError as e:
+            raise BadJobfile("unable to parse netstrings") from e
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
         ver = bytes2unicode(p.strings.pop(0))
@@ -192,8 +192,8 @@ class Try_Jobdir(TryBase):
             try:
                 data = bytes2unicode(p.strings[0])
                 parsed_job = json.loads(data)
-            except ValueError:
-                raise BadJobfile("unable to parse JSON")
+            except ValueError as e:
+                raise BadJobfile("unable to parse JSON") from e
             postprocess_parsed_job()
         else:
             raise BadJobfile("unknown version '{}'".format(ver))

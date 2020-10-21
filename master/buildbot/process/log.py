@@ -56,8 +56,8 @@ class Log:
         type = str(type)
         try:
             subcls = cls._byType[type]
-        except KeyError:
-            raise RuntimeError("Invalid log type %r" % (type,))
+        except KeyError as e:
+            raise RuntimeError("Invalid log type %r" % (type,)) from e
         decoder = Log._decoderFromString(logEncoding)
         return subcls(master, name, type, logid, decoder)
 
@@ -124,7 +124,7 @@ class Log:
 class PlainLog(Log):
 
     def __init__(self, master, name, type, logid, decoder):
-        super(PlainLog, self).__init__(master, name, type, logid, decoder)
+        super().__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
             self.subPoint.deliver(None, lines)
@@ -140,7 +140,7 @@ class PlainLog(Log):
     @defer.inlineCallbacks
     def finish(self):
         yield self.lbf.flush()
-        yield super(PlainLog, self).finish()
+        yield super().finish()
 
 
 class TextLog(PlainLog):
@@ -164,7 +164,7 @@ class StreamLog(Log):
     pat = re.compile('^', re.M)
 
     def __init__(self, step, name, type, logid, decoder):
-        super(StreamLog, self).__init__(step, name, type, logid, decoder)
+        super().__init__(step, name, type, logid, decoder)
         self.lbfs = {}
 
     def _getLbf(self, stream):
@@ -200,7 +200,7 @@ class StreamLog(Log):
     def finish(self):
         for lbf in self.lbfs.values():
             yield lbf.flush()
-        yield super(StreamLog, self).finish()
+        yield super().finish()
 
 
 Log._byType['s'] = StreamLog

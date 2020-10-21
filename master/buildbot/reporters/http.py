@@ -62,6 +62,18 @@ class HttpStatusPushBase(service.BuildbotService):
         self._buildCompleteConsumer.stopConsuming()
         self._buildStartedConsumer.stopConsuming()
 
+    @defer.inlineCallbacks
+    def _got_event(self, key, msg):
+        # This function is used only from tests
+        if key[0] != 'builds':  # pragma: no cover
+            raise Exception('Invalid key for _got_event: {}'.format(key))
+        if key[2] == 'new':
+            yield self.buildStarted(key, msg)
+        elif key[2] == 'finished':
+            yield self.buildFinished(key, msg)
+        else:  # pragma: no cover
+            raise Exception('Invalid key for _got_event: {}'.format(key))
+
     def buildStarted(self, key, build):
         return self.getMoreInfoAndSend(build)
 

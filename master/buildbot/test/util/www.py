@@ -16,6 +16,7 @@
 import json
 import os
 import pkg_resources
+from io import StringIO
 from urllib.parse import parse_qs
 from urllib.parse import unquote as urlunquote
 from uuid import uuid1
@@ -23,7 +24,6 @@ from uuid import uuid1
 import mock
 
 from twisted.internet import defer
-from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
@@ -187,7 +187,7 @@ class WwwTestMixin(RequiresWwwMixin):
         id = id or self.UUID
         request = self.make_request(path)
         request.method = b"POST"
-        request.content = NativeStringIO(requestJson or json.dumps(
+        request.content = StringIO(requestJson or json.dumps(
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
         request.input_headers = {b'content-type': content_type}
         rv = rsrc.render(request)
