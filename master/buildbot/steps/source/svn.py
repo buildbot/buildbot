@@ -26,6 +26,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
@@ -85,7 +86,7 @@ class SVN(Source):
 
         installed = yield self.checkSvn()
         if not installed:
-            raise buildstep.BuildStepFailed("SVN is not installed on worker")
+            raise WorkerSetupError("SVN is not installed on worker")
 
         patched = yield self.sourcedirIsPatched()
         if patched:
