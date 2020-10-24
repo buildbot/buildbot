@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.buildstep import FAILURE
@@ -145,7 +145,7 @@ class FileUpload(_TransferBuildStep):
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = (("This worker ({}) does not support preserving timestamps. "
                   "Please upgrade the worker.").format(self.build.workername))
-            raise WorkerTooOldError(m)
+            raise WorkerSetupError(m)
 
         # default arguments
         args = {
@@ -383,7 +383,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = (("This worker ({}) does not support preserving timestamps. "
                   "Please upgrade the worker.").format(self.build.workername))
-            raise WorkerTooOldError(m)
+            raise WorkerSetupError(m)
 
         if not sources:
             return SKIPPED

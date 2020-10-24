@@ -25,6 +25,8 @@ Define the interfaces that are implemented by various buildbot classes.
 
 from zope.interface import Attribute
 from zope.interface import Interface
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 
 # exceptions that can be raised while trying to start a build
 
@@ -33,8 +35,17 @@ class BuilderInUseError(Exception):
     pass
 
 
-class WorkerTooOldError(Exception):
+class WorkerSetupError(Exception):
     pass
+
+
+WorkerTooOldError = WorkerSetupError
+deprecatedModuleAttribute(
+    Version("buildbot", 2, 8, 5),
+    message="Use WorkerSetupError instead.",
+    moduleName="buildbot.interfaces",
+    name="WorkerTooOldError",
+)
 
 
 class LatentWorkerFailedToSubstantiate(Exception):

@@ -22,7 +22,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import results
@@ -103,7 +103,7 @@ class Mercurial(Source):
         installed = yield self.checkHg()
 
         if not installed:
-            raise WorkerTooOldError("Mercurial is not installed on worker")
+            raise WorkerSetupError("Mercurial is not installed on worker")
 
         # FIXME: this does not do anything
         yield self.sourcedirIsPatched()

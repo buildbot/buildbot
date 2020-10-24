@@ -35,7 +35,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.interfaces import IRenderable
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
@@ -819,7 +819,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def checkWorkerHasCommand(self, command):
         if not self.workerVersion(command):
             message = "worker is too old, does not know about {}".format(command)
-            raise WorkerTooOldError(message)
+            raise WorkerSetupError(message)
 
     def getWorkerName(self):
         return self.build.getWorkerName()

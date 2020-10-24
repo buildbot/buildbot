@@ -18,7 +18,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import config as bbconfig
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.steps.worker import CompositeStepMixin
@@ -126,7 +126,7 @@ class Git(Source, GitStepMixin):
             gitInstalled = yield self.checkFeatureSupport()
 
             if not gitInstalled:
-                raise WorkerTooOldError("git is not installed on worker")
+                raise WorkerSetupError("git is not installed on worker")
 
             patched = yield self.sourcedirIsPatched()
 
@@ -578,7 +578,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
             gitInstalled = yield self.checkFeatureSupport()
 
             if not gitInstalled:
-                raise WorkerTooOldError("git is not installed on worker")
+                raise WorkerSetupError("git is not installed on worker")
 
             yield self._downloadSshPrivateKeyIfNeeded()
             ret = yield self._doPush()
@@ -650,7 +650,7 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         gitInstalled = yield self.checkFeatureSupport()
 
         if not gitInstalled:
-            raise WorkerTooOldError("git is not installed on worker")
+            raise WorkerSetupError("git is not installed on worker")
 
         ret = yield self._doTag()
         return ret
@@ -729,7 +729,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         gitInstalled = yield self.checkFeatureSupport()
 
         if not gitInstalled:
-            raise WorkerTooOldError("git is not installed on worker")
+            raise WorkerSetupError("git is not installed on worker")
 
         yield self._checkDetachedHead()
         yield self._doAdd()

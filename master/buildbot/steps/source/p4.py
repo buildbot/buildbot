@@ -21,7 +21,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import results
 from buildbot.process.properties import Interpolate
@@ -134,7 +134,7 @@ class P4(Source):
 
         installed = yield self.checkP4()
         if not installed:
-            raise WorkerTooOldError("p4 is not installed on worker")
+            raise WorkerSetupError("p4 is not installed on worker")
 
         # Try to obfuscate the password when used as an argument to commands.
         if self.p4passwd is not None:
