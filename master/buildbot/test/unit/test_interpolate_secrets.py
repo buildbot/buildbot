@@ -73,8 +73,9 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
-        fakeStorageService.reconfigService(secretdict={"foo": "bar",
-                                                       "other": "value"})
+        password = "bar"
+        secretdict = {"foo": password, "other": password + 'random'}
+        fakeStorageService.reconfigService(secretdict=secretdict)
         self.secretsrv = SecretManager()
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)
@@ -86,3 +87,10 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
         rendered = yield self.build.render(command)
         cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
         self.assertEqual(cleantext, "echo <foo>")
+
+    @defer.inlineCallbacks
+    def test_secret_replace(self):
+        command = Interpolate("echo %(secret:foo)s %(secret:other)s")
+        rendered = yield self.build.render(command)
+        cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+        self.assertEqual(cleantext, "echo <foo> <other>")
