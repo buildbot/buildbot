@@ -26,7 +26,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class FakeSecretReporter(HttpStatusPush):
-    def send(self, build):
+    def sendMessage(self, reports):
         assert self.auth == ('user', 'myhttppasswd')
         self.reported = True
 

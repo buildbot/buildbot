@@ -132,16 +132,10 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
-    def test_no_message_sent_empty_message(self):
-        yield self.createReporter()
-        build = yield self.insert_build_new()
-        self.sp.send(build, 'unknown')
-
-    @defer.inlineCallbacks
     def test_no_message_sent_without_id(self):
         yield self.createReporter()
         build = yield self.insert_build_new()
-        self.sp.send(build, 'new')
+        self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_private_message_sent_with_user_id(self):
@@ -158,7 +152,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             '/v2/user/123/message',
             params=dict(auth_token=token),
             json=message)
-        self.sp.send({}, 'test')
+        self.sp.send({'complete': True})
 
     @defer.inlineCallbacks
     def test_room_message_sent_with_room_id(self):
@@ -175,7 +169,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             '/v2/room/123/notification',
             params=dict(auth_token=token),
             json=message)
-        self.sp.send({}, 'test')
+        self.sp.send({'complete': True})
 
     @defer.inlineCallbacks
     def test_private_and_room_message_sent_with_both_ids(self):
@@ -197,7 +191,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             '/v2/room/123/notification',
             params=dict(auth_token=token),
             json=message)
-        self.sp.send({}, 'test')
+        self.sp.send({'complete': True})
 
     @defer.inlineCallbacks
     def test_postData_values_passed_through(self):
@@ -214,7 +208,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             '/v2/user/123/message',
             params=dict(auth_token=token),
             json=message)
-        self.sp.send({}, 'test')
+        self.sp.send({'complete': True})
 
     @defer.inlineCallbacks
     def test_postData_error(self):
@@ -235,5 +229,5 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
                 "error_description": "This user is unknown to us",
                 "error": "invalid_user"})
         self.setUpLogging()
-        self.sp.send({}, 'test')
+        self.sp.send({'complete': True})
         self.assertLogged('404: unable to upload status')

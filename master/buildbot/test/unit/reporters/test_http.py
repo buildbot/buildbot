@@ -27,6 +27,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class BuildLookAlike:
@@ -115,27 +117,35 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
 
     @defer.inlineCallbacks
     def test_filtering(self):
-        yield self.createReporter(builders=['foo'])
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='have been deprecated'):
+            yield self.createReporter(builders=['foo'])
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filteringPass(self):
-        yield self.createReporter(builders=['Builder0'])
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='have been deprecated'):
+            yield self.createReporter(builders=['Builder0'])
         self._http.expect("post", "", json=BuildLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
-        yield self.createReporter(builders='Builder0')
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='have been deprecated'):
+            yield self.createReporter(builders='Builder0')
         config._errors.addError.assert_any_call(
             "builders must be a list or None")
 
     @defer.inlineCallbacks
     def test_wantKwargsCheck(self):
-        yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
-                                  wantPreviousBuild=True, wantLogs=True)
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='have been deprecated'):
+            yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
+                                      wantPreviousBuild=True, wantLogs=True)
         self._http.expect("post", "", json=BuildLookAlike(
             keys=['steps', 'prev_build']))
         build = yield self.insert_build_finished(SUCCESS)

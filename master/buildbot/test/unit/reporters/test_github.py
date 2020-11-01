@@ -129,6 +129,8 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
             fakedb.BuildProperty(buildid=20, name="revision", value=None),
         ])
 
+        self.setup_fake_get_changes_for_build(has_change=False)
+
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
@@ -204,6 +206,8 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                          workerid=13, masterid=92, results=SUCCESS, state_string="build_text"),
             fakedb.BuildProperty(buildid=20, name="buildername", value="Builder0"),
         ])
+
+        self.setup_fake_get_changes_for_build(has_change=False)
 
         build = yield self.master.data.get(("builds", 20))
 
@@ -398,6 +402,8 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
             fakedb.BuildProperty(buildid=20, name="buildername", value="Builder0"),
             fakedb.BuildProperty(buildid=20, name="branch", value=branch2),
         ])
+
+        self.setup_fake_get_changes_for_build(has_change=False)
 
         build = yield self.master.data.get(("builds", 20))
 

@@ -183,6 +183,35 @@ class MessageFormatterBase(util.ComparableMixin):
         return None
 
 
+class MessageFormatterEmpty(MessageFormatterBase):
+    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+        return {
+            'body': None,
+            'type': 'plain',
+            'subject': None
+        }
+
+
+class DeprecatedMessageFormatterBuildJson(MessageFormatterBase):
+
+    template_type = 'json'
+
+    def __init__(self, format_fn, **kwargs):
+        super().__init__(**kwargs)
+        self.format_fn = format_fn
+
+    @defer.inlineCallbacks
+    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+        msgdict = yield self.render_message_dict(master, {'build': build})
+        return msgdict
+
+    def render_message_body(self, context):
+        return self.format_fn(context['build'])
+
+    def render_message_subject(self, context):
+        return None
+
+
 class MessageFormatterBaseJinja(MessageFormatterBase):
     template_filename = 'default_mail.txt'
 

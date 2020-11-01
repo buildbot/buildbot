@@ -41,14 +41,6 @@ class HipChatStatusPush(HttpStatusPushBase):
         self.builder_room_map = builder_room_map
         self.builder_user_map = builder_user_map
 
-    # returns a Deferred that returns None
-    def buildStarted(self, key, build):
-        return self.send(build, key[2])
-
-    # returns a Deferred that returns None
-    def buildFinished(self, key, build):
-        return self.send(build, key[2])
-
     @defer.inlineCallbacks
     def getBuildDetailsAndSendMessage(self, build, key):
         yield utils.getDetailsForBuild(self.master, build, wantProperties=self.wantProperties,
@@ -85,7 +77,9 @@ class HipChatStatusPush(HttpStatusPushBase):
         return {}
 
     @defer.inlineCallbacks
-    def send(self, build, key):
+    def send(self, build):
+        key = 'new' if build['complete'] is False else 'finished'
+
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
         if not postData or 'message' not in postData or not postData['message']:
             return
