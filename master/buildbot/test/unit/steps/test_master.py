@@ -37,7 +37,7 @@ from buildbot.test.util.misc import TestReactorMixin
 _COMSPEC_ENV = 'COMSPEC'
 
 
-class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
+class TestMasterShellCommandNewStyle(steps.BuildStepMixin, TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
@@ -75,8 +75,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_real_cmd(self):
         cmd = [sys.executable, '-c', 'print("hello")']
-        self.setupStep(
-            master.MasterShellCommand(command=cmd))
+        self.setupStep(master.MasterShellCommandNewStyle(command=cmd))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello\r\n")
         else:
@@ -86,8 +85,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_real_cmd_interrupted(self):
         cmd = [sys.executable, '-c', 'while True: pass']
-        self.setupStep(
-            master.MasterShellCommand(command=cmd))
+        self.setupStep(master.MasterShellCommandNewStyle(command=cmd))
         self.expectLogfile('stdio', "")
         if runtime.platformType == 'win32':
             # windows doesn't have signals, so we don't get 'killed',
@@ -104,16 +102,16 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
     def test_real_cmd_fails(self):
         cmd = [sys.executable, '-c', 'import sys; sys.exit(1)']
         self.setupStep(
-            master.MasterShellCommand(command=cmd))
+            master.MasterShellCommandNewStyle(command=cmd))
         self.expectLogfile('stdio', "")
         self.expectOutcome(result=FAILURE, state_string="failed (1) (failure)")
         return self.runStep()
 
     def test_constr_args(self):
         self.setupStep(
-            master.MasterShellCommand(description='x', descriptionDone='y',
-                                      env={'a': 'b'}, workdir='build', usePTY=True,
-                                      command='true'))
+            master.MasterShellCommandNewStyle(description='x', descriptionDone='y',
+                                              env={'a': 'b'}, workdir='build', usePTY=True,
+                                              command='true'))
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
@@ -134,8 +132,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
         self.setupStep(
-            master.MasterShellCommand(command=cmd,
-                                      env={'HELLO': '${WORLD}'}))
+            master.MasterShellCommandNewStyle(command=cmd, env={'HELLO': '${WORLD}'}))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello\r\n")
         else:
@@ -155,8 +152,8 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
         self.setupStep(
-            master.MasterShellCommand(command=cmd,
-                                      env={'HELLO': ['${WORLD}', '${LIST}']}))
+            master.MasterShellCommandNewStyle(command=cmd,
+                                              env={'HELLO': ['${WORLD}', '${LIST}']}))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello;world\r\n")
         else:
@@ -177,8 +174,8 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             'import os; print("%s"); print(os.environ[\"BUILD\"])',
             'project')]
         self.setupStep(
-            master.MasterShellCommand(command=cmd,
-                                      env={'BUILD': WithProperties('%s', "project")}))
+            master.MasterShellCommandNewStyle(command=cmd,
+                                              env={'BUILD': WithProperties('%s', "project")}))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
@@ -189,10 +186,10 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_constr_args_descriptionSuffix(self):
         self.setupStep(
-            master.MasterShellCommand(description='x', descriptionDone='y',
-                                      descriptionSuffix='z',
-                                      env={'a': 'b'}, workdir='build', usePTY=True,
-                                      command='true'))
+            master.MasterShellCommandNewStyle(description='x', descriptionDone='y',
+                                              descriptionSuffix='z',
+                                              env={'a': 'b'}, workdir='build', usePTY=True,
+                                              command='true'))
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']

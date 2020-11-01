@@ -94,45 +94,37 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         config._errors = None
 
     @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults):
-        self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(("builds", 20))
-        return build
-
-    @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
         self._http.expect("post", "", json=BuildLookAlike(complete=False))
         self._http.expect("post", "", json=BuildLookAlike(complete=True))
-        build = yield self.setupBuildResults(SUCCESS)
-        build['complete'] = False
-        self.sp.buildStarted(("build", 20, "new"), build)
+        build = yield self.insert_build_new()
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_basic_noauth(self):
         yield self.createReporter(auth=None)
         self._http.expect("post", "", json=BuildLookAlike(complete=False))
         self._http.expect("post", "", json=BuildLookAlike(complete=True))
-        build = yield self.setupBuildResults(SUCCESS)
-        build['complete'] = False
-        self.sp.buildStarted(("build", 20, "new"), build)
+        build = yield self.insert_build_new()
+        yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filtering(self):
         yield self.createReporter(builders=['foo'])
-        build = yield self.setupBuildResults(SUCCESS)
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filteringPass(self):
         yield self.createReporter(builders=['Builder0'])
         self._http.expect("post", "", json=BuildLookAlike())
-        build = yield self.setupBuildResults(SUCCESS)
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
@@ -146,17 +138,16 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
                                   wantPreviousBuild=True, wantLogs=True)
         self._http.expect("post", "", json=BuildLookAlike(
             keys=['steps', 'prev_build']))
-        build = yield self.setupBuildResults(SUCCESS)
-        build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def http2XX(self, code, content):
         yield self.createReporter()
         self._http.expect('post', '', code=code, content=content,
                           json=BuildLookAlike())
-        build = yield self.setupBuildResults(SUCCESS)
-        self.sp.buildStarted(('build', 20, 'finished'), build)
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_http200(self):

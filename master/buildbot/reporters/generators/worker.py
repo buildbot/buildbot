@@ -50,9 +50,8 @@ class WorkerMissingGenerator(util.ComparableMixin):
 
         msg = yield self.formatter.formatMessageForMissingWorker(master, worker)
         body = msg['body'].encode(ENCODING)
-        if 'subject' in msg:
-            subject = msg['subject']
-        else:
+        subject = msg['subject']
+        if subject is None:
             subject = "Buildbot worker {name} missing".format(**worker)
         assert msg['type'] in ('plain', 'html'), \
             "'{}' message type must be 'plain' or 'html'.".format(msg['type'])

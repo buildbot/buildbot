@@ -148,6 +148,8 @@ disable=
   duplicate-string-formatting-argument,
   cyclic-import,  # only happens when pylint is ran in non-parallel mode
   wrong-import-order, # we use isort for import orders
+  raise-missing-from, # TODO: remove when we no longer have Python 2 code
+  super-with-arguments, # TODO: remove when we no longer have Python 2 code
 
 [REPORTS]
 

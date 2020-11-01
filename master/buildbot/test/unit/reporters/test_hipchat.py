@@ -57,12 +57,6 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def setupBuildResults(self):
-        self.insertTestData([SUCCESS], SUCCESS)
-        build = yield self.master.data.get(("builds", 20))
-        return build
-
-    @defer.inlineCallbacks
     def test_authtokenTypeCheck(self):
         yield self.createReporter(auth_token=2)
         config._errors.addError.assert_any_call('auth_token must be a string')
@@ -87,31 +81,31 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
     def test_interpolateAuth(self):
         yield self.createReporter(auth_token=Interpolate('auth'),
                                   builder_user_map={'Builder0': '123'})
-        build = yield self.setupBuildResults()
+        build = yield self.insert_build_new()
         self._http.expect(
             'post',
             '/v2/user/123/message',
             params=dict(auth_token='auth'),
             json={'message': 'Buildbot started build Builder0 here: '
                              'http://localhost:8080/#builders/79/builds/0'})
-        self.sp.buildStarted(('build', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_build_started(self):
         yield self.createReporter(builder_user_map={'Builder0': '123'})
-        build = yield self.setupBuildResults()
+        build = yield self.insert_build_new()
         self._http.expect(
             'post',
             '/v2/user/123/message',
             params=dict(auth_token='abc'),
             json={'message': 'Buildbot started build Builder0 here: '
                              'http://localhost:8080/#builders/79/builds/0'})
-        self.sp.buildStarted(('build', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)
 
     @defer.inlineCallbacks
     def test_build_finished(self):
         yield self.createReporter(builder_room_map={'Builder0': '123'})
-        build = yield self.setupBuildResults()
+        build = yield self.insert_build_finished(SUCCESS)
         self._http.expect(
             'post',
             '/v2/room/123/notification',
@@ -119,14 +113,14 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
             json={'message':
                   'Buildbot finished build Builder0 with result success '
                   'here: http://localhost:8080/#builders/79/builds/0'})
-        self.sp.buildFinished(('build', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_inject_extra_params(self):
         yield self.createReporter(builder_room_map={'Builder0': '123'})
         self.sp.getExtraParams = Mock()
         self.sp.getExtraParams.return_value = {'format': 'html'}
-        build = yield self.setupBuildResults()
+        build = yield self.insert_build_finished(SUCCESS)
         self._http.expect(
             'post',
             '/v2/room/123/notification',
@@ -135,18 +129,18 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
                   'here: http://localhost:8080/#builders/79/builds/0',
                   'format': 'html'})
 
-        self.sp.buildFinished(('build', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_no_message_sent_empty_message(self):
         yield self.createReporter()
-        build = yield self.setupBuildResults()
+        build = yield self.insert_build_new()
         self.sp.send(build, 'unknown')
 
     @defer.inlineCallbacks
     def test_no_message_sent_without_id(self):
         yield self.createReporter()
-        build = yield self.setupBuildResults()
+        build = yield self.insert_build_new()
         self.sp.send(build, 'new')
 
     @defer.inlineCallbacks

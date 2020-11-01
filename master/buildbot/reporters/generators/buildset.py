@@ -49,7 +49,9 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         buildset = res['buildset']
 
         # only include builds for which isMessageNeeded returns true
-        builds = [build for build in builds if self.is_message_needed(build)]
+        builds = [build for build in builds
+                  if self.is_message_needed_by_props(build) and
+                  self.is_message_needed_by_results(build)]
         if not builds:
             return None
 

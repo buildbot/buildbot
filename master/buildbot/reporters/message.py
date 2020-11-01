@@ -32,17 +32,166 @@ from buildbot.reporters import utils
 from buildbot.warnings import warn_deprecated
 
 
+def get_detected_status_text(mode, results, previous_results):
+    if results == FAILURE:
+        if ('change' in mode or 'problem' in mode) and previous_results is not None \
+                and previous_results != FAILURE:
+            text = "new failure"
+        else:
+            text = "failed build"
+    elif results == WARNINGS:
+        text = "problem in the build"
+    elif results == SUCCESS:
+        if "change" in mode and previous_results is not None and previous_results != results:
+            text = "restored build"
+        else:
+            text = "passing build"
+    elif results == EXCEPTION:
+        text = "build exception"
+    else:
+        text = "{} build".format(statusToString(results))
+
+    return text
+
+
+def get_message_summary_text(build, results):
+    t = build['state_string']
+    if t:
+        t = ": " + t
+    else:
+        t = ""
+
+    if results == SUCCESS:
+        text = "Build succeeded!"
+    elif results == WARNINGS:
+        text = "Build Had Warnings{}".format(t)
+    elif results == CANCELLED:
+        text = "Build was cancelled"
+    else:
+        text = "BUILD FAILED{}".format(t)
+
+    return text
+
+
+def get_message_source_stamp_text(source_stamps):
+    text = ""
+
+    for ss in source_stamps:
+        source = ""
+
+        if ss['branch']:
+            source += "[branch {}] ".format(ss['branch'])
+
+        if ss['revision']:
+            source += str(ss['revision'])
+        else:
+            source += "HEAD"
+
+        if ss['patch'] is not None:
+            source += " (plus patch)"
+
+        discriminator = ""
+        if ss['codebase']:
+            discriminator = " '{}'".format(ss['codebase'])
+
+        text += "Build Source Stamp{}: {}\n".format(discriminator, source)
+
+    return text
+
+
+def get_projects_text(source_stamps, master):
+    projects = set()
+
+    for ss in source_stamps:
+        if ss['project']:
+            projects.add(ss['project'])
+
+    if not projects:
+        projects = [master.config.title]
+
+    return ', '.join(list(projects))
+
+
+def create_context_for_build(mode, buildername, build, master, blamelist):
+    buildset = build['buildset']
+    ss_list = buildset['sourcestamps']
+    results = build['results']
+
+    if 'prev_build' in build and build['prev_build'] is not None:
+        previous_results = build['prev_build']['results']
+    else:
+        previous_results = None
+
+    return {
+        'results': build['results'],
+        'mode': mode,
+        'buildername': buildername,
+        'workername': build['properties'].get('workername', ["<unknown>"])[0],
+        'buildset': buildset,
+        'build': build,
+        'projects': get_projects_text(ss_list, master),
+        'previous_results': previous_results,
+        'status_detected': get_detected_status_text(mode, results, previous_results),
+        'build_url': utils.getURLForBuild(master, build['builder']['builderid'], build['number']),
+        'buildbot_url': master.config.buildbotURL,
+        'blamelist': blamelist,
+        'summary': get_message_summary_text(build, results),
+        'sourcestamps': get_message_source_stamp_text(ss_list)
+    }
+
+
+def create_context_for_worker(master, worker):
+    return {
+        'buildbot_title': master.config.title,
+        'buildbot_url': master.config.buildbotURL,
+        'worker': worker,
+    }
+
+
 class MessageFormatterBase(util.ComparableMixin):
-    template_filename = 'default_mail.txt'
+
     template_type = 'plain'
 
-    compare_attrs = ['body_template', 'subject_teblate', 'template_type']
+    def __init__(self, ctx=None, wantProperties=True, wantSteps=False, wantLogs=False):
+        if ctx is None:
+            ctx = {}
+        self.context = ctx
+        self.wantProperties = wantProperties
+        self.wantSteps = wantSteps
+        self.wantLogs = wantLogs
+
+    def buildAdditionalContext(self, master, ctx):
+        pass
+
+    @defer.inlineCallbacks
+    def render_message_dict(self, master, context):
+        """Generate a buildbot reporter message and return a dictionary
+           containing the message body, type and subject."""
+        yield self.buildAdditionalContext(master, context)
+        context.update(self.context)
+
+        return {
+            'body': self.render_message_body(context),
+            'type': self.template_type,
+            'subject': self.render_message_subject(context)
+        }
+
+    def render_message_body(self, context):
+        return None
+
+    def render_message_subject(self, context):
+        return None
+
+
+class MessageFormatterBaseJinja(MessageFormatterBase):
+    template_filename = 'default_mail.txt'
+
+    compare_attrs = ['body_template', 'subject_template', 'template_type']
 
     def __init__(self, template_dir=None,
                  template_filename=None, template=None,
                  subject_filename=None, subject=None,
-                 template_type=None, ctx=None,
-                 ):
+                 template_type=None, **kwargs):
         self.body_template = self.getTemplate(template_filename, template_dir, template)
         self.subject_template = None
         if subject_filename or subject:
@@ -51,10 +200,7 @@ class MessageFormatterBase(util.ComparableMixin):
         if template_type is not None:
             self.template_type = template_type
 
-        if ctx is None:
-            ctx = {}
-
-        self.ctx = ctx
+        super().__init__(**kwargs)
 
     def getTemplate(self, filename, dirname, content):
         if content and (filename or dirname):
@@ -76,158 +222,41 @@ class MessageFormatterBase(util.ComparableMixin):
         return env.get_template(filename)
 
     def buildAdditionalContext(self, master, ctx):
-        ctx.update(self.ctx)
+        pass
 
-    def renderMessage(self, ctx):
-        body = self.body_template.render(ctx)
-        msgdict = {'body': body, 'type': self.template_type}
-        if self.subject_template is not None:
-            msgdict['subject'] = self.subject_template.render(ctx)
-        return msgdict
+    def render_message_body(self, context):
+        return self.body_template.render(context)
+
+    def render_message_subject(self, context):
+        if self.subject_template is None:
+            return None
+        return self.subject_template.render(context)
 
 
-class MessageFormatter(MessageFormatterBase):
+class MessageFormatter(MessageFormatterBaseJinja):
     template_filename = 'default_mail.txt'
-    template_type = 'plain'
 
     compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
 
-    def __init__(self, template_dir=None,
-                 template_filename=None, template=None, template_name=None,
-                 subject_filename=None, subject=None,
-                 template_type=None, ctx=None,
-                 wantProperties=True, wantSteps=False, wantLogs=False):
+    def __init__(self, template_name=None, **kwargs):
 
         if template_name is not None:
             warn_deprecated('0.9.1', "template_name is deprecated, use template_filename")
-            template_filename = template_name
-        super().__init__(template_dir=template_dir,
-                         template_filename=template_filename,
-                         template=template,
-                         subject_filename=subject_filename,
-                         subject=subject,
-                         template_type=template_type, ctx=ctx)
-        self.wantProperties = wantProperties
-        self.wantSteps = wantSteps
-        self.wantLogs = wantLogs
-
-    def getDetectedStatus(self, mode, results, previous_results):
-
-        if results == FAILURE:
-            if "change" in mode and previous_results is not None and previous_results != results:
-                text = "new failure"
-            elif "problem" in mode and previous_results and previous_results != FAILURE:
-                text = "new failure"
-            else:
-                text = "failed build"
-        elif results == WARNINGS:
-            text = "problem in the build"
-        elif results == SUCCESS:
-            if "change" in mode and previous_results is not None and previous_results != results:
-                text = "restored build"
-            else:
-                text = "passing build"
-        elif results == EXCEPTION:
-            text = "build exception"
-        else:
-            text = "{} build".format(statusToString(results))
-
-        return text
-
-    def getProjects(self, source_stamps, master):
-        projects = set()
-
-        for ss in source_stamps:
-            if ss['project']:
-                projects.add(ss['project'])
-
-        if not projects:
-            projects = [master.config.title]
-
-        return ', '.join(list(projects))
-
-    def messageSourceStamps(self, source_stamps):
-        text = ""
-
-        for ss in source_stamps:
-            source = ""
-
-            if ss['branch']:
-                source += "[branch {}] ".format(ss['branch'])
-
-            if ss['revision']:
-                source += str(ss['revision'])
-            else:
-                source += "HEAD"
-
-            if ss['patch'] is not None:
-                source += " (plus patch)"
-
-            discriminator = ""
-            if ss['codebase']:
-                discriminator = " '{}'".format(ss['codebase'])
-
-            text += "Build Source Stamp{}: {}\n".format(discriminator, source)
-
-        return text
-
-    def messageSummary(self, build, results):
-        t = build['state_string']
-        if t:
-            t = ": " + t
-        else:
-            t = ""
-
-        if results == SUCCESS:
-            text = "Build succeeded!"
-        elif results == WARNINGS:
-            text = "Build Had Warnings{}".format(t)
-        elif results == CANCELLED:
-            text = "Build was cancelled"
-        else:
-            text = "BUILD FAILED{}".format(t)
-
-        return text
+            kwargs['template_filename'] = template_name
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
-    def formatMessageForBuildResults(self, mode, buildername, buildset, build, master,
-                                     previous_results, blamelist):
-        """Generate a buildbot mail message and return a dictionary
-           containing the message body, type and subject."""
-        ss_list = buildset['sourcestamps']
-        results = build['results']
-
-        ctx = dict(results=build['results'],
-                   mode=mode,
-                   buildername=buildername,
-                   workername=build['properties'].get(
-                       'workername', ["<unknown>"])[0],
-                   buildset=buildset,
-                   build=build,
-                   projects=self.getProjects(ss_list, master),
-                   previous_results=previous_results,
-                   status_detected=self.getDetectedStatus(
-                       mode, results, previous_results),
-                   build_url=utils.getURLForBuild(
-                       master, build['builder']['builderid'], build['number']),
-                   buildbot_url=master.config.buildbotURL,
-                   blamelist=blamelist,
-                   summary=self.messageSummary(build, results),
-                   sourcestamps=self.messageSourceStamps(ss_list)
-                   )
-        yield self.buildAdditionalContext(master, ctx)
-        msgdict = self.renderMessage(ctx)
+    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+        ctx = create_context_for_build(mode, buildername, build, master, blamelist)
+        msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 
 
-class MessageFormatterMissingWorker(MessageFormatterBase):
+class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
     template_filename = 'missing_mail.txt'
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(self, master, worker):
-        ctx = dict(buildbot_title=master.config.title,
-                   buildbot_url=master.config.buildbotURL,
-                   worker=worker)
-        yield self.buildAdditionalContext(master, ctx)
-        msgdict = self.renderMessage(ctx)
+        ctx = create_context_for_worker(master, worker)
+        msgdict = yield self.render_message_dict(master, ctx)
         return msgdict

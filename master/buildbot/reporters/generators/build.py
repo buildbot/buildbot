@@ -32,22 +32,31 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
     def __init__(self, mode=("failing", "passing", "warnings"),
                  tags=None, builders=None, schedulers=None, branches=None,
                  subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                 add_logs=False, add_patch=False, message_formatter=None):
+                 add_logs=False, add_patch=False, report_new=False, message_formatter=None):
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch,
                          message_formatter)
+        self._report_new = report_new
+        if report_new:
+            self.wanted_event_keys = [
+                ('builds', None, 'finished'),
+                ('builds', None, 'new'),
+            ]
 
     @defer.inlineCallbacks
     def generate(self, master, reporter, key, build):
-        br = yield master.data.get(("buildrequests", build['buildrequestid']))
-        buildset = yield master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(master, buildset, [build],
-                                        wantProperties=self.formatter.wantProperties,
-                                        wantSteps=self.formatter.wantSteps,
-                                        wantPreviousBuild=self._want_previous_build(),
-                                        wantLogs=self.formatter.wantLogs)
+        _, _, event = key
+        is_new = event == 'new'
+        want_previous_build = False if is_new else self._want_previous_build()
 
-        # only include builds for which isMessageNeeded returns true
-        if not self.is_message_needed(build):
+        yield utils.getDetailsForBuild(master, build,
+                                       wantProperties=self.formatter.wantProperties,
+                                       wantSteps=self.formatter.wantSteps,
+                                       wantPreviousBuild=want_previous_build,
+                                       wantLogs=self.formatter.wantLogs)
+
+        if not self.is_message_needed_by_props(build):
+            return None
+        if not is_new and not self.is_message_needed_by_results(build):
             return None
 
         report = yield self.build_message(master, reporter, build['builder']['name'], [build],

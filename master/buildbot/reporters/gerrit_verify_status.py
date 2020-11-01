@@ -47,6 +47,11 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     }
     DEFAULT_RESULT = -1
 
+    def checkConfig(self, baseURL, auth, startDescription=None, endDescription=None,
+                    verification_name=None, abstain=False, category=None, reporter=None,
+                    verbose=False, wantProperties=True, **kwargs):
+        super().checkConfig(wantProperties=wantProperties, **kwargs)
+
     @defer.inlineCallbacks
     def reconfigService(self,
                         baseURL,
