@@ -22,7 +22,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import results
@@ -73,7 +73,7 @@ class Darcs(Source):
 
         installed = yield self.checkDarcs()
         if not installed:
-            raise WorkerTooOldError("Darcs is not installed on worker")
+            raise WorkerSetupError("Darcs is not installed on worker")
 
         patched = yield self.sourcedirIsPatched()
 

@@ -22,7 +22,7 @@ from twisted.python import log
 from twisted.trial import unittest
 
 from buildbot import locks
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.plugins import util
 from buildbot.process import buildstep
 from buildbot.process import properties
@@ -688,7 +688,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         # make sure appropriate exception is raised
         step = buildstep.BuildStep()
-        with self.assertRaisesRegex(WorkerTooOldError,
+        with self.assertRaisesRegex(WorkerSetupError,
                                     "worker is too old, does not know about foo"):
             step.checkWorkerHasCommand("foo")
 

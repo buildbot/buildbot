@@ -20,6 +20,7 @@ from twisted.python.reflect import namedModule
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
@@ -146,7 +147,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['svn', '--version'])
             + 1,
         )
-        self.expectOutcome(result=FAILURE)
+        self.expectException(WorkerSetupError)
         return self.runStep()
 
     def test_corrupt_xml(self):

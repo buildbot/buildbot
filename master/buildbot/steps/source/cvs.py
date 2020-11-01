@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import results
@@ -68,7 +68,7 @@ class CVS(Source):
 
         installed = yield self.checkCvs()
         if not installed:
-            raise WorkerTooOldError("CVS is not installed on worker")
+            raise WorkerSetupError("CVS is not installed on worker")
 
         yield self.checkLogin()
 

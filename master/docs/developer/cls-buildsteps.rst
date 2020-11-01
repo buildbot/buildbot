@@ -406,7 +406,7 @@ BuildStep
         :param command: command to examine
         :type command: string
 
-        This method raise :py:class:`~buildbot.interfaces.WorkerTooOldError` if ``command`` is not implemented on the worker
+        This method raise :py:class:`~buildbot.interfaces.WorkerSetupError` if ``command`` is not implemented on the worker
 
     .. py:method:: getWorkerName()
 

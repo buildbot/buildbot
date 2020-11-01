@@ -18,7 +18,7 @@ import stat
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotetransfer
@@ -144,7 +144,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=EXCEPTION,
                            state_string="finished (exception)")
         yield self.runStep()
-        self.flushLoggedErrors(WorkerTooOldError)
+        self.flushLoggedErrors(WorkerSetupError)
 
 
 class TestCopyDirectory(steps.BuildStepMixin, TestReactorMixin,

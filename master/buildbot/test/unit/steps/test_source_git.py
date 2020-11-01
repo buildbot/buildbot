@@ -20,7 +20,7 @@ from twisted.internet import error
 from twisted.trial import unittest
 
 from buildbot import config as bbconfig
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import remotetransfer
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -3452,13 +3452,13 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     @defer.inlineCallbacks
-    def _test_WorkerTooOldError(self, _dovccmd, step, msg):
+    def _test_WorkerSetupError(self, _dovccmd, step, msg):
 
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
         gitStep = self.setupStep(step)
 
         gitStep._start_deferred = defer.Deferred()
-        with self.assertRaisesRegex(WorkerTooOldError, msg):
+        with self.assertRaisesRegex(WorkerSetupError, msg):
             yield gitStep.run_vc("branch", "revision", "patch")
 
     def test_noGitCommandInstalled(self):
@@ -3474,7 +3474,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                               mode='full', method='clean')
         msg = 'git is not installed on worker'
-        return self._test_WorkerTooOldError(_dovccmd, step, msg)
+        return self._test_WorkerSetupError(_dovccmd, step, msg)
 
     def test_gitCommandOutputShowsNoVersion(self):
         @defer.inlineCallbacks
@@ -3491,7 +3491,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                               mode='full', method='clean')
         msg = 'git is not installed on worker'
-        return self._test_WorkerTooOldError(_dovccmd, step, msg)
+        return self._test_WorkerSetupError(_dovccmd, step, msg)
 
     def test_config_get_description_not_dict_or_boolean(self):
         with self.assertRaisesConfigError("Git: getDescription must be a boolean or a dict."):
@@ -3868,7 +3868,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setupStep(step)
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
-        self.flushLoggedErrors(WorkerTooOldError)
+        self.flushLoggedErrors(WorkerSetupError)
 
     def test_config_fail_no_branch(self):
         with self.assertRaisesConfigError("GitPush: must provide branch"):
@@ -3988,7 +3988,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setupStep(step)
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
-        self.flushLoggedErrors(WorkerTooOldError)
+        self.flushLoggedErrors(WorkerSetupError)
 
 
 class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
@@ -4232,4 +4232,4 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setupStep(step)
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
-        self.flushLoggedErrors(WorkerTooOldError)
+        self.flushLoggedErrors(WorkerSetupError)

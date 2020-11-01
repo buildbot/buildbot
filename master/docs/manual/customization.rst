@@ -1121,7 +1121,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
 
     from buildbot.plugins import steps, util
-    from buildbot.interfaces import WorkerTooOldError
+    from buildbot.interfaces import WorkerSetupError
     import stat
 
     class MyBuildStep(steps.BuildStep):
@@ -1135,7 +1135,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
             workerver = (self.workerVersion('stat'),
                         self.workerVersion('glob'))
             if not all(workerver):
-                raise WorkerTooOldError('need stat and glob')
+                raise WorkerSetupError('need stat and glob')
 
             cmd = buildstep.RemoteCommand('stat', {'file': self.dirname})
 

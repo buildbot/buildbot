@@ -20,7 +20,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.interfaces import WorkerTooOldError
+from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import results
@@ -73,7 +73,7 @@ class Bzr(Source):
         installed = yield self.checkBzr()
 
         if not installed:
-            raise WorkerTooOldError("bzr is not installed on worker")
+            raise WorkerSetupError("bzr is not installed on worker")
 
         patched = yield self.sourcedirIsPatched()
 
