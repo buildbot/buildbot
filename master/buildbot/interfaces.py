@@ -23,10 +23,10 @@ Define the interfaces that are implemented by various buildbot classes.
 # pylint: disable=no-method-argument
 # pylint: disable=inherit-non-class
 
-from zope.interface import Attribute
-from zope.interface import Interface
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
+from zope.interface import Attribute
+from zope.interface import Interface
 
 # exceptions that can be raised while trying to start a build
 
@@ -41,7 +41,7 @@ class WorkerSetupError(Exception):
 
 WorkerTooOldError = WorkerSetupError
 deprecatedModuleAttribute(
-    Version("buildbot", 2, 8, 5),
+    Version("buildbot", 2, 9, 0),
     message="Use WorkerSetupError instead.",
     moduleName="buildbot.interfaces",
     name="WorkerTooOldError",
