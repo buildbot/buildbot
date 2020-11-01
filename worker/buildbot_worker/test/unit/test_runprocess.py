@@ -354,10 +354,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         # set up to cause an exception in _startCommand
         def _startCommand(*args, **kwargs):
-            raise RuntimeError()
+            raise RuntimeError('error message')
         s._startCommand = _startCommand
 
-        d = s.start()
         try:
             yield s.start()
         except AbandonChain:
@@ -370,7 +369,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             if 'stderr' in u:
                 stderr.append(u['stderr'])
         stderr = ''.join(stderr)
-        self.assertTrue("RuntimeError" in stderr, stderr)
+        self.assertTrue(stderr.startswith('error in RunProcess._startCommand (error message)'))
 
         yield self.flushLoggedErrors()
 
