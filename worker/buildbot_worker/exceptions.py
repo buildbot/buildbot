@@ -21,8 +21,9 @@ class AbandonChain(Exception):
 
     """A series of chained steps can raise this exception to indicate that
     one of the intermediate RunProcesses has failed, such that there is no
-    point in running the remainder. 'rc' should be the non-zero exit code of
-    the failing ShellCommand."""
+    point in running the remainder. The first argument to the exception
+    is the 'rc' - the non-zero exit code of the failing ShellCommand.
+    The second is an optional error message."""
 
     def __repr__(self):
         return "<AbandonChain rc={0}>".format(self.args[0])

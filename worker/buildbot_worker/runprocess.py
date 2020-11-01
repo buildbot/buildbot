@@ -451,13 +451,13 @@ class RunProcess(object):
         self.deferred = defer.Deferred()
         try:
             self._startCommand()
-        except Exception:
+        except Exception as e:
             log.err(failure.Failure(), "error in RunProcess._startCommand")
-            self._addToBuffers('stderr', "error in RunProcess._startCommand\n")
+            self._addToBuffers('stderr', "error in RunProcess._startCommand (%s)\n" % str(e))
             self._addToBuffers('stderr', traceback.format_exc())
             self._sendBuffers()
             # pretend it was a shell error
-            self.deferred.errback(AbandonChain(-1))
+            self.deferred.errback(AbandonChain(-1, 'Got exception (%s)' % str(e)))
         return self.deferred
 
     def _startCommand(self):
