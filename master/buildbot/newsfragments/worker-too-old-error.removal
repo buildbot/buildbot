@@ -1,2 +1,2 @@
-``buildbot.interfaces.WorkerTooOldError` is deprecated in favour
+`buildbot.interfaces.WorkerTooOldError` is deprecated in favour
 of `buildbot.interfaces.WorkerSetupError`
