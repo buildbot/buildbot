@@ -61,6 +61,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         with self.assertRaises(config.ConfigErrors):
             P4()
 
+    def test_p4base_has_whitespace(self):
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot with space/')
+
+    def test_p4branch_has_whitespace(self):
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot/', p4branch='branch with space')
+
     def test_no_multiple_type_step_config(self):
         with self.assertRaises(config.ConfigErrors):
             P4(p4viewspec=('//depot/trunk', ''), p4base='//depot',
