@@ -82,6 +82,28 @@ On Python 3:
   source sandbox/bin/activate
 
 
+Next, we need to install several build dependencies to make sure we can install buildbot and its supporting packages.
+These build dependencies are:
+
+* GCC build tools (``gcc`` for RHEL/CentOS/Fedora based distributions, or ``build-essential``  for Ubuntu/Debian based distributions).
+* Python development library (``python3-devel`` for RHEL/CentOS/Fedora based distributions, or ``python3-dev`` for Ubuntu/Debian based distributions).
+* OpenSSL development library (``openssl-devel`` for RHEL/CentOS/Fedora based distributions, or ``libssl-dev`` for Ubuntu/Debian based distributions).
+* `libffi` development library (``libffi-devel`` for RHEL/CentOS/Fedora based distributions, or ``libffi-dev`` for Ubuntu/Debian based distributions).
+
+Install these build dependencies:
+
+.. code-block:: bash
+
+  # if in Ubuntu/Debian based distributions:
+  sudo apt-get install build-essential python3-dev libssl-dev libffi-dev
+
+  # if in RHEL/CentOS/Fedora based distributions:
+  sudo yum install gcc python3-devel openssl-devel libffi-devel
+
+
+or refer to your distribution's documentation on how to install these packages.
+
+
 Now that we are ready, we need to install buildbot:
 
 .. code-block:: bash
