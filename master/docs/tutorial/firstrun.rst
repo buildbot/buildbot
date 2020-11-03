@@ -88,7 +88,7 @@ These build dependencies are:
 * GCC build tools (``gcc`` for RHEL/CentOS/Fedora based distributions, or ``build-essential``  for Ubuntu/Debian based distributions).
 * Python development library (``python3-devel`` for RHEL/CentOS/Fedora based distributions, or ``python3-dev`` for Ubuntu/Debian based distributions).
 * OpenSSL development library (``openssl-devel`` for RHEL/CentOS/Fedora based distributions, or ``libssl-dev`` for Ubuntu/Debian based distributions).
-* libffi development library (``libffi-devel`` for RHEL/CentOS/Fedora based distributions, or ``libffi-dev`` for Ubuntu/Debian based distributions).
+* `libffi` development library (``libffi-devel`` for RHEL/CentOS/Fedora based distributions, or ``libffi-dev`` for Ubuntu/Debian based distributions).
 
 Install these build dependencies:
 
