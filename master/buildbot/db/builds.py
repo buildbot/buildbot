@@ -200,7 +200,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             q = tbl.update(whereclause=(tbl.c.id == buildid))
             conn.execute(q,
-                         complete_at=self.master.reactor.seconds(),
+                         complete_at=int(self.master.reactor.seconds()),
                          results=results)
         return self.db.pool.do(thd)
 
