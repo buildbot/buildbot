@@ -169,7 +169,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q,
-                         complete_at=self.master.reactor.seconds(),
+                         complete_at=int(self.master.reactor.seconds()),
                          results=results,
                          hidden=1 if hidden else 0)
         return self.db.pool.do(thd)
