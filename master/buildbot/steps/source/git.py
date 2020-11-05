@@ -362,14 +362,14 @@ class Git(Source, GitStepMixin):
         """Retry if clone failed"""
 
         command = ['clone']
-        switchToBranch = False
+        switchToBranch = self.branch != 'HEAD'
         if self.supportsBranch and self.branch != 'HEAD':
             if self.branch.startswith('refs/'):
                 # we can't choose this branch from 'git clone' directly; we
                 # must do so after the clone
-                switchToBranch = True
                 command += ['--no-checkout']
             else:
+                switchToBranch = False
                 command += ['--branch', self.branch]
         if shallowClone:
             command += ['--depth', str(int(shallowClone))]
