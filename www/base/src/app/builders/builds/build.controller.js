@@ -147,9 +147,16 @@ class BuildController {
                     }
                 });
 
-                build.getProperties().onNew = properties => $scope.properties = properties;
-                $scope.changes = build.getChanges();
                 $scope.responsibles = {};
+                build.getProperties().onNew = function(properties) {
+                    $scope.properties = properties;
+                    if (properties.scheduler[0] === 'force') {
+                        var owner = properties.owners[0][0].split(new RegExp('<|>'));
+                        if (owner[0] !== "")
+                            $scope.responsibles[owner[0]] = owner[1];
+                    }
+                }
+                $scope.changes = build.getChanges();
                 $scope.changes.onNew = change => $scope.responsibles[change.author_name] = change.author_email;
 
                 data.getWorkers(build.workerid).onNew = worker => $scope.worker = publicFieldsFilter(worker);
