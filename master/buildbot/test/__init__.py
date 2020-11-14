@@ -134,3 +134,9 @@ warnings.filterwarnings('ignore', ".*Not importing directory .*/zope: missing __
                         category=ImportWarning)
 warnings.filterwarnings('ignore', ".*Not importing directory .*/sphinxcontrib: missing __init__",
                         category=ImportWarning)
+
+# ignore warnings from importing lib2to3 via buildbot_pkg ->
+# setuptools.command.build_py -> setuptools.lib2to3_ex -> lib2to3
+# https://github.com/pypa/setuptools/issues/2086
+warnings.filterwarnings('ignore', ".*lib2to3 package is deprecated",
+                        category=PendingDeprecationWarning)
