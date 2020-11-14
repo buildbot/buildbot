@@ -32,7 +32,7 @@ class TryClientE2E(RunMasterBase):
 
         def trigger_callback():
             def thd():
-                os.system("buildbot try --connect=pb --master=127.0.0.1:8031 -b testy "
+                os.system("buildbot try --connect=pb --master=127.0.0.1:8030 -b testy "
                           "--property=foo:bar --username=alice --passwd=pw1 --vc=none")
             reactor.callInThread(thd)
 
@@ -51,7 +51,7 @@ def masterConfig():
     c['schedulers'] = [
         schedulers.Try_Userpass(name="try",
                                 builderNames=["testy"],
-                                port=8031,
+                                port=8030,
                                 userpass=[("alice", "pw1")])
     ]
     f = BuildFactory()

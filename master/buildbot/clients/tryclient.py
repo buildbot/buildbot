@@ -531,6 +531,13 @@ class RemoteTryPP(protocol.ProcessProtocol):
         self.d.callback((sig, rc))
 
 
+class FakeBuildSetStatus:
+    def callRemote(self, name):
+        if name == "getBuildRequests":
+            return defer.succeed([])
+        raise NotImplementedError()
+
+
 class Try(pb.Referenceable):
     buildsetStatus = None
     quiet = False
@@ -623,6 +630,7 @@ class Try(pb.Referenceable):
                ss.revision,
                self.builderNames,
                ss.patch[1]))
+        self.buildsetStatus = FakeBuildSetStatus()
         d = defer.Deferred()
         d.callback(True)
         return d
@@ -719,6 +727,8 @@ class Try(pb.Referenceable):
             self.running = defer.Deferred()
             assert self.buildsetStatus
             self._getStatus_1()
+            if bool(self.config.get("dryrun")):
+                self.statusDone()
             return self.running
         return None
 
@@ -914,7 +924,8 @@ class Try(pb.Referenceable):
             d.addCallback(lambda res: self.getStatus())
         d.addErrback(self.trapSystemExit)
         d.addErrback(log.err)
-        d.addCallback(self.cleanup)
+        if not bool(self.config.get("dryrun")):
+            d.addCallback(self.cleanup)
         if _inTests:
             return d
         d.addCallback(lambda res: reactor.stop())
