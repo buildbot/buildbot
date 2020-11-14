@@ -93,7 +93,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 'project': project,
                 'patchid': patchid,
                 'ss_hash': ss_hash,
-                'created_at': self.master.reactor.seconds(),
+                'created_at': int(self.master.reactor.seconds()),
             })
         return sourcestampid, found
 
