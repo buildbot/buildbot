@@ -75,14 +75,11 @@ class GitMixin:
         self.supportsSshPrivateKeyAsConfigOption = False
 
     def parseGitFeatures(self, version_stdout):
-
-        if 'git' not in version_stdout:
+        match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
+        if not match:
             return
 
-        try:
-            version = version_stdout.strip().split(' ')[2]
-        except IndexError:
-            return
+        version = match.group(1)
 
         self.gitInstalled = True
         if parse_version(version) >= parse_version("1.6.5"):
