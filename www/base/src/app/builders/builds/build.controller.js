@@ -150,12 +150,13 @@ class BuildController {
                 $scope.responsibles = {};
                 build.getProperties().onNew = function(properties) {
                     $scope.properties = properties;
-                    if (properties.scheduler[0] === 'force') {
-                        var owner = properties.owners[0][0].split(new RegExp('<|>'));
-                        if (owner[0] !== "")
-                            $scope.responsibles[owner[0]] = owner[1];
+                    var owner = properties.owner[0];
+                    if (properties.scheduler[0] === 'force' && owner.match(/^.+\<.+\@.+\..+\>.*$/)) {
+                        var name = owner.split(new RegExp('<|>'))[0];
+                        var email = owner.split(new RegExp('<|>'))[1];
+                            $scope.responsibles[name] = email;
                     }
-                }
+                };
                 $scope.changes = build.getChanges();
                 $scope.changes.onNew = change => $scope.responsibles[change.author_name] = change.author_email;
 
