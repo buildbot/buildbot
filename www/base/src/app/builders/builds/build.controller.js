@@ -154,7 +154,7 @@ class BuildController {
                     if (properties.scheduler[0] === 'force' && owner.match(/^.+\<.+\@.+\..+\>.*$/)) {
                         var name = owner.split(new RegExp('<|>'))[0];
                         var email = owner.split(new RegExp('<|>'))[1];
-                            $scope.responsibles[name] = email;
+                        $scope.responsibles[name] = email;
                     }
                 };
                 $scope.changes = build.getChanges();
