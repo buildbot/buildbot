@@ -55,6 +55,7 @@ class MasterShellCommand(BuildStep):
         self.masterWorkdir = self.workdir
         self._deferwaiter = deferwaiter.DeferWaiter()
         self._status_object = None
+        self.warn_deprecated_if_oldstyle_subclass('MasterShellCommand')
 
     class LocalPP(ProcessProtocol):
 
