@@ -29,10 +29,10 @@ from buildbot import config
 from buildbot.process import logobserver
 from buildbot.process import remotecommand
 from buildbot.process import results
-from buildbot.steps.shell import WarningCountingShellCommand
+from buildbot.steps.shell import WarningCountingShellCommandNewStyle
 
 
-class DebPbuilder(WarningCountingShellCommand):
+class DebPbuilder(WarningCountingShellCommandNewStyle):
 
     """Build a debian package with pbuilder inside of a chroot."""
     name = "pbuilder"
