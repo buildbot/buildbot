@@ -16,8 +16,53 @@ The recommended upgrade procedure is as follows:
 
   - Upgrade to Buildbot 3.0.
 
+  - Fix all usages of deprecated APIs.
+    In this case, the only deprecated APIs are temporary ``*NewStyle`` build step aliases.
+
   - (Optional) Upgrade to newest Buildbot 3.x.
     The newest point release will contain bug fixes and functionality improvements.
+
+Build steps
+-----------
+
+Buildbot 3.0 no longer supports old-style steps (steps which implement ``start`` method as opposed to ``run`` method).
+This only affects users who use steps as base classes for their own steps.
+New style steps provide a completely different set of functions that may be overridden.
+Direct instantiation of step classes is not affected.
+Old and new style steps work exactly the same in that case and users don't need to do anything.
+
+See :ref:`New-Style-Build-Steps` for instructions of migration to new-style steps.
+
+Migrating build steps that subclass one of the build steps provided by Buildbot is a little bit more involved.
+The new and old-style step APIs cannot be provided by a single class.
+Therefore Buildbot 2.9 introduces a number of new-style build steps that are direct equivalent of their old-style counterparts.
+These build steps are named as ``<StepType>NewStyle`` where ``<StepType>`` is the old-style step they provide compatibility interface for.
+Buildbot 3.0 removes old-style step support and changes the ``<StepType>`` classes to be equivalent to ``<StepType>NewStyle`` counterparts.
+Buildbot 3.2 removes the ``<StepType>NewStyle`` aliases.
+
+If a custom step is a subclass of ``<StepType`` step which is provided by Buildbot, then the migration process is as follows.
+The custom step should be changed to subclass the ``<StepType>NewStyle`` equivalent and use the new-style APIs as specified in :ref:`New-Style-Build-Steps`.
+This part of the migration must be done before the build master is migrated to 3.0.
+The resulting custom step will work in Buildbot 2.9.x-3.1.x.
+After the build master is migrated to 3.0, the custom step may be changed to subclass ``<StepType``.
+This is a simple renaming change, no other related changes are necessary.
+This part of the migration must be done before the build master is migrated to 3.2.
+
+The following build steps have their new-style equivalents since Buildbot 2.9:
+
+The list of old-style steps that have new-style equivalents for gradual migration is as follows:
+
+ - ``Configure`` (new-style equivalent is ``ConfigureNewStyle``)
+ - ``Compile`` (new-style equivalent is ``CompileNewStyle``)
+ - ``HTTPStep`` (new-style equivalent is ``HTTPStepNewStyle``)
+ - ``GET``, ``PUT``, ``POST``, ``DELETE``, ``HEAD``, ``OPTIONS`` (new-style equivalent is ``GETNewStyle``, ``PUTNewStyle``, ``POSTNewStyle``, ``DELETENewStyle``, ``HEADNewStyle``, ``OPTIONSNewStyle``)
+ - ``MasterShellCommand`` (new-style equivalent is ``MasterShellCommandNewStyle``)
+ - ``ShellCommand`` (new-style equivalent is ``ShellCommandNewStyle``)
+ - ``SetPropertyFromCommand`` (new-style equivalent is ``SetPropertyFromCommandNewStyle``)
+ - ``WarningCountingShellCommand`` (new-style equivalent is ``WarningCountingShellCommandNewStyle``)
+ - ``Test`` (new-style equivalent is ``TestNewStyle``)
+
+The migration path of all other steps is more involved as no compatibility steps are provided.
 
 Reporters and report generators
 -------------------------------

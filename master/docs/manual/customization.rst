@@ -794,7 +794,7 @@ The :py:class:`~buildbot.process.buildstep.CommandMixin` class offers a simple i
 For the much more common task of running a shell command on the worker, use :py:class:`~buildbot.process.buildstep.ShellMixin`.
 This class provides a method to handle the myriad constructor arguments related to shell commands, as well as a method to create new :py:class:`~buildbot.process.remotecommand.RemoteCommand` instances.
 This mixin is the recommended method of implementing custom shell-based steps.
-The older pattern of subclassing ``ShellCommand`` is no longer recommended.
+For simple steps that don't involve much logic the `:bb:step:`ShellCommand` is recommended.
 
 A simple example of a step using the shell mixin is:
 
