@@ -393,6 +393,14 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if not builderNames:
             return None
 
+        branch = bytes2unicode(branch)
+        revision = bytes2unicode(revision)
+        patch = patch[0], bytes2unicode(patch[1])
+        repository = bytes2unicode(repository)
+        project = bytes2unicode(project)
+        who = bytes2unicode(who)
+        comment = bytes2unicode(comment)
+
         reason = "'try' job"
 
         if who:

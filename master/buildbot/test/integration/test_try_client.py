@@ -66,10 +66,10 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
+        self.sourcestamp = tryclient.SourceStamp(branch='br', revision='rr', patch=(0, '++--'))
+
         def getSourceStamp(vctype, treetop, branch=None, repository=None):
-            return defer.succeed(
-                tryclient.SourceStamp(branch='br', revision='rr',
-                                      patch=(0, '++--')))
+            return defer.succeed(self.sourcestamp)
         self.patch(tryclient, 'getSourceStamp', getSourceStamp)
 
         self.output = []
@@ -140,6 +140,30 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def test_userpass_wait(self):
+        yield self.startMaster(
+            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.runClient({
+            'connect': 'pb',
+            'master': '127.0.0.1:{}'.format(self.serverPort),
+            'username': 'u',
+            'passwd': b'p',
+            'wait': True,
+        })
+        self.assertEqual(self.output, [
+            "using 'pb' connect method",
+            'job created',
+            'Delivering job; comment= None',
+            'job has been delivered',
+            'All Builds Complete',
+            'a: success (build successful)',
+        ])
+        buildsets = yield self.master.db.buildsets.getBuildsets()
+        self.assertEqual(len(buildsets), 1)
+
+    @defer.inlineCallbacks
+    def test_userpass_wait_bytes(self):
+        self.sourcestamp = tryclient.SourceStamp(branch=b'br', revision=b'rr', patch=(0, b'++--'))
+
         yield self.startMaster(
             trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({

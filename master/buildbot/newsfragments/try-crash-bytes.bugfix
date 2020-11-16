@@ -1,0 +1,1 @@
+Fix bytes-related master crash when calling buildbot try (:issue:`4488`)
