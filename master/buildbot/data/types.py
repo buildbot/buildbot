@@ -116,8 +116,25 @@ class Integer(Instance):
 
 
 class DateTime(Instance):
+
     name = "datetime"
-    types = (datetime.datetime)
+    types = (datetime.datetime,)
+
+    def valueFromString(self, arg):
+        return int(arg)
+
+    def validate(self, name, object):
+        if isinstance(object, datetime.datetime):
+            return
+        if isinstance(object, int):
+            try:
+                datetime.datetime.fromtimestamp(object)
+            except (OverflowError, OSError):
+                pass
+            else:
+                return
+        yield "{} ({}) is not a valid timestamp".format(name, object)
+
     ramlType = "date"
 
 

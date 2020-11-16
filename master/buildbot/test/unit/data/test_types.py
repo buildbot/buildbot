@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from datetime import datetime
+
 from twisted.trial import unittest
 
 from buildbot.data import types
@@ -76,6 +78,17 @@ class Integer(TypeMixin, unittest.TestCase):
     stringValues = [('0', 0), ('-10', -10)]
     badStringValues = ['one', '', '0x10']
     cmpResults = [(10, '9', 1), (-2, '-1', -1)]
+
+
+class DateTime(TypeMixin, unittest.TestCase):
+
+    klass = types.DateTime
+    good = [0, 1604843464, datetime(2020, 11, 15, 18, 40, 1, 630219)]
+    bad = [int(1e60), 'bad', 1604843464.388657]
+    stringValues = [
+        ('1604843464', 1604843464),
+    ]
+    badStringValues = ['one', '', '0x10']
 
 
 class String(TypeMixin, unittest.TestCase):
