@@ -12,7 +12,7 @@ lothar . com>`_, and currently maintained by `the Botherders
 
 Visit us on http://buildbot.net !
 
-|travis-badge|_ |codecov-badge|_ |readthedocs-badge|_
+|circleci-badge|_ |codecov-badge|_ |readthedocs-badge|_
 
 Buildbot consists of several components:
 
@@ -31,8 +31,8 @@ Related repositories:
 * https://github.com/buildbot/buildbot-media - Buildbot-related media
 * https://github.com/buildbot/buildbot-website - Source for http://buildbot.net
 
-.. |travis-badge| image:: https://travis-ci.org/buildbot/buildbot.svg?branch=master
-.. _travis-badge: https://travis-ci.org/buildbot/buildbot
+.. |circleci-badge| image:: https://circleci.com/gh/buildbot/buildbot/tree/master.svg?style=svg
+.. _circleci-badge: https://app.circleci.com/pipelines/github/buildbot/buildbot
 .. |codecov-badge| image:: http://codecov.io/github/buildbot/buildbot/coverage.svg?branch=master
 .. _codecov-badge: http://codecov.io/github/buildbot/buildbot?branch=master
 .. |readthedocs-badge| image:: https://readthedocs.org/projects/buildbot/badge/?version=latest
