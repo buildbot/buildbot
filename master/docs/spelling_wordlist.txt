@@ -629,6 +629,7 @@ prepend
 prepended
 prepending
 prev
+PrivateTemporaryDirectory
 procmail
 prois
 propertiesDict
@@ -700,6 +701,7 @@ revlink
 revlinks
 rmdir
 rmfile
+rmtree
 Robocopy
 rootlink
 routingkeys
