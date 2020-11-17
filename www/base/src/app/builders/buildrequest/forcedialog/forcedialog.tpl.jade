@@ -1,4 +1,5 @@
 .modal-content
+  form
     .modal-body
         // put the header in the body in order to correctly display error popup
         h4 {{sch.label}}
@@ -9,4 +10,4 @@
             forcefield(field="rootfield" ng-if="rootfield")
     .modal-footer
       button.btn.btn-default(ng-click="cancel()") Cancel
-      button.btn.btn-primary(ng-click="ok()", ng-disabled="!sch.enabled || startDisabled") Start Build
+      button.btn.btn-primary(type="submit", ng-click="ok()", ng-disabled="!sch.enabled || startDisabled") Start Build
