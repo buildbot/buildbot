@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-
+import os
 import shutil
+import stat
 import tempfile
 
 
@@ -38,5 +39,12 @@ class PrivateTemporaryDirectory:
 
     def cleanup(self):
         if self._cleanup_needed:
-            shutil.rmtree(self.name)
+            def remove_readonly(func, path, _):
+                """ Workaround Permission Error on Windows if any files in path are read-only.
+
+                See https://docs.python.org/3/library/shutil.html#rmtree-example
+                """
+                os.chmod(path, stat.S_IWRITE)
+                func(path)
+            shutil.rmtree(self.name, onerror=remove_readonly)
             self._cleanup_needed = False
