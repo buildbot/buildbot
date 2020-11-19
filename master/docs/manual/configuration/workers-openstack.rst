@@ -51,7 +51,7 @@ These are the same details set in either environment variables or passed as opti
     A password for the worker to login to the master with.
 
 ``flavor``
-    The flavor ID to use for the instance.
+    A string containing the flavor name or UUID to use for the instance.
 
 ``image``
     A string containing the image UUID to use for the instance.
