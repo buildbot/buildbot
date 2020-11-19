@@ -89,6 +89,10 @@ class Image(Item):
         setattr(self, 'OS-EXT-IMG-SIZE:size', self.size)
 
 
+class Flavor(Item):
+    pass
+
+
 class Volume(Item):
     pass
 

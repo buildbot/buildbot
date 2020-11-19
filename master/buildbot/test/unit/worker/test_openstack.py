@@ -51,7 +51,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.patch(openstack, "client", novaclient)
         self.patch(openstack, "loading", novaclient)
         self.patch(openstack, "session", novaclient)
-        self.build = Properties(image=novaclient.TEST_UUIDS['image'])
+        self.build = Properties(image=novaclient.TEST_UUIDS['image'],
+                                flavor=novaclient.TEST_UUIDS['flavor'])
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
@@ -237,6 +238,29 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
                                     **self.os_auth)
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
+
+    @defer.inlineCallbacks
+    def test_getFlavor_string(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', **self.bs_image_args)
+        flavor_uuid = yield bs._getFlavor(self.build)
+        self.assertEqual(1, flavor_uuid)
+
+    @defer.inlineCallbacks
+    def test_getFlavor_renderable(self):
+        bs = yield self.setupWorker('bot', 'pass', image="1",
+                                    flavor=Interpolate('%(prop:flavor)s'),
+                                    **self.os_auth)
+        flavor_uuid = yield bs._getFlavor(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['flavor'], flavor_uuid)
+
+    @defer.inlineCallbacks
+    def test_getFlavor_name(self):
+        bs = yield self.setupWorker('bot', 'pass', image="1",
+                                    flavor='m1.small',
+                                    **self.os_auth)
+        flavor_uuid = yield bs._getFlavor(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['flavor'], flavor_uuid)
 
     @defer.inlineCallbacks
     def test_start_instance_already_exists(self):
