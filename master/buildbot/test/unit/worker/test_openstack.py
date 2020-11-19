@@ -52,7 +52,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.patch(openstack, "loading", novaclient)
         self.patch(openstack, "session", novaclient)
         self.build = Properties(image=novaclient.TEST_UUIDS['image'],
-                                flavor=novaclient.TEST_UUIDS['flavor'])
+                                flavor=novaclient.TEST_UUIDS['flavor'],
+                                meta_value='value')
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
@@ -315,7 +316,17 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
+        self.assertEquals(bs.instance.boot_kwargs['meta'], meta_arg)
+
+    @defer.inlineCallbacks
+    def test_start_instance_check_meta_renderable(self):
+        meta_arg = {'some_key': Interpolate('%(prop:meta_value)s')}
+        bs = yield self.setupWorker('bot', 'pass', meta=meta_arg,
+                                    **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertIn('meta', bs.instance.boot_kwargs)
+        self.assertEquals(bs.instance.boot_kwargs['meta'], {'some_key': 'value'})
 
     @defer.inlineCallbacks
     def test_interpolate_renderables_for_new_build(self):
