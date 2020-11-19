@@ -151,7 +151,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
             {'source_type': 'snapshot', 'uuid': novaclient.TEST_UUIDS['snapshot']},
         ]
 
-        def check_volume_sizes(_images, block_devices):
+        def check_volume_sizes(_images, _flavors, block_devices, nova_args, metas):
             self.assertEqual(len(block_devices), 4)
             self.assertEqual(block_devices[0]['volume_size'], 1)
             self.assertIsInstance(block_devices[0]['volume_size'], int,
