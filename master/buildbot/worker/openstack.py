@@ -237,8 +237,19 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         return image_uuid
 
     @defer.inlineCallbacks
+    def _getFlavor(self, build):
+        flavor_uuid = yield build.render(self.flavor)
+        # check if we got name instead of uuid
+        for flavor in self.novaclient.flavors.list():
+            if flavor.name == flavor_uuid:
+                flavor_uuid = flavor.id
+        return flavor_uuid
+
+    @defer.inlineCallbacks
     def renderWorkerProps(self, build):
         image = yield self._getImage(build)
+        flavor = yield self._getFlavor(build)
+
         if self.block_devices is not None:
             block_devices = []
             for bd in self.block_devices:
@@ -246,20 +257,20 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
-        return (image, block_devices)
+        return (image, flavor, block_devices)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
 
-        image, block_devices = yield self.renderWorkerPropsOnStart(build)
-        res = yield threads.deferToThread(self._start_instance, image,
+        image, flavor, block_devices = yield self.renderWorkerPropsOnStart(build)
+        res = yield threads.deferToThread(self._start_instance, image, flavor,
                                           block_devices)
         return res
 
-    def _start_instance(self, image_uuid, block_devices):
-        boot_args = [self.workername, image_uuid, self.flavor]
+    def _start_instance(self, image_uuid, flavor_uuid, block_devices):
+        boot_args = [self.workername, image_uuid, flavor_uuid]
         boot_kwargs = dict(
             meta=self.meta,
             block_device_mapping_v2=block_devices,
