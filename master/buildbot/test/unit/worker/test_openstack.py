@@ -222,7 +222,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs = yield self.setupWorker('bot', 'pass', flavor=1,
                                     image=image_callable, **self.os_auth)
         os_client = bs.novaclient
-        os_client.images._add_items([
+        os_client.glance._add_items([
             novaclient.Image('uuid1', 'name1', 1),
             novaclient.Image('uuid2', 'name2', 1),
             novaclient.Image('uuid3', 'name3', 1),
