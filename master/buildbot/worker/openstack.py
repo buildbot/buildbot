@@ -207,7 +207,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         if source_type == 'image':
             # The size returned for an image is in bytes. Round up to the next
             # integer GiB.
-            image = nova.images.get(source_uuid)
+            image = nova.glance.get(source_uuid)
             if hasattr(image, 'OS-EXT-IMG-SIZE:size'):
                 size = getattr(image, 'OS-EXT-IMG-SIZE:size')
                 size_gb = int(math.ceil(size / 1024.0**3))
@@ -231,7 +231,8 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         # function should return the image's UUID to use.
         image = self.image
         if callable(image):
-            image_uuid = image(self.novaclient.images.list())
+            # novaclient has renamed images to glance
+            image_uuid = image(self.novaclient.glance.list())
         else:
             image_uuid = yield build.render(image)
         return image_uuid
