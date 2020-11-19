@@ -250,6 +250,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         image = yield self._getImage(build)
         flavor = yield self._getFlavor(build)
         nova_args = yield build.render(self.nova_args)
+        meta = yield build.render(self.meta)
 
         if self.block_devices is not None:
             block_devices = []
@@ -258,22 +259,22 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
-        return (image, flavor, block_devices, nova_args)
+        return (image, flavor, block_devices, nova_args, meta)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
 
-        image, flavor, block_devices, nova_args = yield self.renderWorkerPropsOnStart(build)
+        image, flavor, block_devices, nova_args, meta = yield self.renderWorkerPropsOnStart(build)
         res = yield threads.deferToThread(self._start_instance, image, flavor,
-                                          block_devices, nova_args)
+                                          block_devices, nova_args, meta)
         return res
 
-    def _start_instance(self, image_uuid, flavor_uuid, block_devices, nova_args):
+    def _start_instance(self, image_uuid, flavor_uuid, block_devices, nova_args, meta):
         boot_args = [self.workername, image_uuid, flavor_uuid]
         boot_kwargs = dict(
-            meta=self.meta,
+            meta=meta,
             block_device_mapping_v2=block_devices,
             **nova_args)
         instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
