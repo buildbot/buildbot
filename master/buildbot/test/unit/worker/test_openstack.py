@@ -329,6 +329,28 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEquals(bs.instance.boot_kwargs['meta'], {'some_key': 'value'})
 
     @defer.inlineCallbacks
+    def test_start_instance_check_nova_args(self):
+        nova_args = {'some-key': 'some-value'}
+
+        bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args,
+                                    **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertIn('meta', bs.instance.boot_kwargs)
+        self.assertEquals(bs.instance.boot_kwargs['some-key'], 'some-value')
+
+    @defer.inlineCallbacks
+    def test_start_instance_check_nova_args_renderable(self):
+        nova_args = {'some-key': Interpolate('%(prop:meta_value)s')}
+
+        bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args,
+                                    **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertIn('meta', bs.instance.boot_kwargs)
+        self.assertEquals(bs.instance.boot_kwargs['some-key'], 'value')
+
+    @defer.inlineCallbacks
     def test_interpolate_renderables_for_new_build(self):
         build1 = Properties(image=novaclient.TEST_UUIDS['image'], block_device="some-device")
         build2 = Properties(image="build2-image")
