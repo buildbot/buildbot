@@ -59,9 +59,9 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, "gerrit", auth=('log', 'pass'),
             debug=None, verify=None)
-        self.sp = sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)
-        sp.sessionFactory = Mock(return_value=Mock())
-        yield sp.setServiceParent(self.master)
+        self.sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)
+        self.sp.sessionFactory = Mock(return_value=Mock())
+        yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
         return self.master.stopService()

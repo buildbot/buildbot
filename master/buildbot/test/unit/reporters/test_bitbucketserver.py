@@ -64,9 +64,9 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
             self.master, self,
             'serv', auth=('username', 'passwd'),
             debug=None, verify=None)
-        self.sp = sp = BitbucketServerStatusPush(
-            "serv", Interpolate("username"), Interpolate("passwd"), **kwargs)
-        yield sp.setServiceParent(self.master)
+        self.sp = BitbucketServerStatusPush("serv", Interpolate("username"),
+                                            Interpolate("passwd"), **kwargs)
+        yield self.sp.setServiceParent(self.master)
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -199,9 +199,9 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             self.master, self,
             'serv', auth=('username', 'passwd'), headers=http_headers,
             debug=None, verify=None)
-        self.sp = sp = BitbucketServerCoreAPIStatusPush(
+        self.sp = BitbucketServerCoreAPIStatusPush(
             "serv", token=token, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
-        yield sp.setServiceParent(self.master)
+        yield self.sp.setServiceParent(self.master)
         yield self.master.startService()
 
     def setUp(self):

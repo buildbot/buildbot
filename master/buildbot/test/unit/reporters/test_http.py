@@ -87,8 +87,8 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
             passwd = Interpolate(passwd)
             interpolated_auth = (username, passwd)
 
-        self.sp = sp = HttpStatusPush("serv", auth=interpolated_auth, **kwargs)
-        yield sp.setServiceParent(self.master)
+        self.sp = HttpStatusPush("serv", auth=interpolated_auth, **kwargs)
+        yield self.sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def tearDown(self):
