@@ -216,26 +216,17 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual('image-uuid', image_uuid)
 
     @defer.inlineCallbacks
-    def test_getImage_callable(self):
-        def image_callable(images):
-            filtered = [i for i in images if i.id == 'uuid1']
-            return filtered[0].id
-
-        bs = yield self.setupWorker('bot', 'pass', flavor=1,
-                                    image=image_callable, **self.os_auth)
-        os_client = bs.novaclient
-        os_client.glance._add_items([
-            novaclient.Image('uuid1', 'name1', 1),
-            novaclient.Image('uuid2', 'name2', 1),
-            novaclient.Image('uuid3', 'name3', 1),
-            ])
-        image_uuid = yield bs._getImage(self.build)
-        self.assertEqual('uuid1', image_uuid)
-
-    @defer.inlineCallbacks
     def test_getImage_renderable(self):
         bs = yield self.setupWorker('bot', 'pass', flavor=1,
                                     image=Interpolate('%(prop:image)s'),
+                                    **self.os_auth)
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
+
+    @defer.inlineCallbacks
+    def test_getImage_name(self):
+        bs = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    image='CirrOS 0.3.4',
                                     **self.os_auth)
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
