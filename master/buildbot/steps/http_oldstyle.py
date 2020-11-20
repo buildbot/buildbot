@@ -84,6 +84,8 @@ class HTTPStep(BuildStep):
             setattr(self, param, kwargs.pop(param, None))
 
         super().__init__(**kwargs)
+        if self.__class__.__name__ not in ['POST', 'PUT', 'GET', 'DELETE', 'HEAD', 'OPTIONS']:
+            self.warn_deprecated_if_oldstyle_subclass('HTTPStep')
 
     @defer.inlineCallbacks
     def run(self):
@@ -171,33 +173,39 @@ class POST(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='POST', **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('POST')
 
 
 class GET(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='GET', **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('GET')
 
 
 class PUT(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='PUT', **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('PUT')
 
 
 class DELETE(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='DELETE', **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('DELETE')
 
 
 class HEAD(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='HEAD', **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('HEAD')
 
 
 class OPTIONS(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='OPTIONS', **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('OPTIONS')

@@ -57,6 +57,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.util.test_result_submitter import TestResultSubmitter
+from buildbot.warnings import warn_deprecated
 
 
 class BuildStepFailed(Exception):
@@ -953,6 +954,12 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.descriptionSuffix:
             desc += self.descriptionSuffix
         return desc
+
+    def warn_deprecated_if_oldstyle_subclass(self, name):
+        if self.__class__.__name__ != name:
+            warn_deprecated('2.9.0', ('Subclassing old-style step {0} in {1} is deprecated, '
+                                      'please migrate to new-style equivalent {0}NewStyle'
+                                      ).format(name, self.__class__.__name__))
 
 
 components.registerAdapter(

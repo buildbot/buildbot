@@ -271,9 +271,12 @@ setup_args = {
             ('buildbot.steps.cppcheck', ['Cppcheck']),
             ('buildbot.steps.http', [
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
-                'OPTIONS']),
+                'OPTIONS',
+                'HTTPStepNewStyle', 'POSTNewStyle', 'GETNewStyle', 'PUTNewStyle', 'DELETENewStyle',
+                'HEADNewStyle', 'OPTIONSNewStyle']),
             ('buildbot.steps.master', [
-                'MasterShellCommand', 'SetProperty', 'SetProperties', 'LogRenderable', "Assert"]),
+                'MasterShellCommand', 'MasterShellCommandNewStyle',
+                'SetProperty', 'SetProperties', 'LogRenderable', "Assert"]),
             ('buildbot.steps.maxq', ['MaxQ']),
             ('buildbot.steps.mswin', ['Robocopy']),
             ('buildbot.steps.mtrlogobserver', ['MTR']),
@@ -290,9 +293,12 @@ setup_args = {
             ('buildbot.steps.python_twisted', [
                 'HLint', 'Trial', 'RemovePYCs']),
             ('buildbot.steps.shell', [
-                'ShellCommand', 'TreeSize', 'SetPropertyFromCommand',
-                'Configure', 'WarningCountingShellCommand', 'Compile',
-                'Test', 'PerlModuleTest']),
+                'ShellCommand', 'ShellCommandNewStyle', 'TreeSize',
+                'SetPropertyFromCommand', 'SetPropertyFromCommandNewStyle',
+                'Configure', 'ConfigureNewStyle',
+                'WarningCountingShellCommand', 'WarningCountingShellCommandNewStyle',
+                'Compile', 'CompileNewStyle',
+                'Test', 'TestNewStyle', 'PerlModuleTest']),
             ('buildbot.steps.shellsequence', ['ShellSequence']),
             ('buildbot.steps.source.bzr', ['Bzr']),
             ('buildbot.steps.source.cvs', ['CVS']),

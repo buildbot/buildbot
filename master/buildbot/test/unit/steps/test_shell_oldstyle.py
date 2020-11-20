@@ -34,6 +34,8 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestShellCommandExecution(steps.BuildStepMixin,
@@ -780,6 +782,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
 
     def test_suppressions_addSuppression(self):
         # call addSuppression "manually" from a subclass
+
         class MyWCSC(shell.WarningCountingShellCommand):
 
             def start(self):
@@ -788,19 +791,22 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
 
         def warningExtractor(step, line, match):
             return line.split(':', 2)
-        step = MyWCSC(command=['make'], suppressionFile='supps',
-                      warningExtractor=warningExtractor)
-        stdout = textwrap.dedent("""\
-            abc.c:99: warning: seen 1
-            abc.c:150: warning: unseen
-            abc.c:200: warning: seen 2
-            """)
-        exp_warning_log = textwrap.dedent("""\
-            abc.c:99: warning: seen 1
-            abc.c:200: warning: seen 2
-            """)
-        return self.do_test_suppressions(step, '', stdout, 2,
-                                         exp_warning_log)
+
+        with assertProducesWarnings(DeprecatedApiWarning, num_warnings=4,
+                                    message_pattern='Subclassing old-style step'):
+            step = MyWCSC(command=['make'], suppressionFile='supps',
+                          warningExtractor=warningExtractor)
+            stdout = textwrap.dedent("""\
+                abc.c:99: warning: seen 1
+                abc.c:150: warning: unseen
+                abc.c:200: warning: seen 2
+                """)
+            exp_warning_log = textwrap.dedent("""\
+                abc.c:99: warning: seen 1
+                abc.c:200: warning: seen 2
+                """)
+            return self.do_test_suppressions(step, '', stdout, 2,
+                                             exp_warning_log)
 
     def test_suppressions_suppressionsParameter(self):
         def warningExtractor(step, line, match):

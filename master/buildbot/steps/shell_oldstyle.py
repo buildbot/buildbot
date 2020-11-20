@@ -154,6 +154,10 @@ class ShellCommand(buildstep.LoggingBuildStep):
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
         self.remote_kwargs['workdir'] = workdir
+        if self.__class__.__name__ not in ['TreeSize', 'SetPropertyFromCommand', 'Configure',
+                                           'WarningCountingShellCommand', 'Compile', 'Test',
+                                           'MTR', 'DebPbuilder', 'DebCowbuilder', 'UbuPbuilder']:
+            self.warn_deprecated_if_oldstyle_subclass('ShellCommand')
 
     def setBuild(self, build):
         super().setBuild(build)
@@ -338,6 +342,8 @@ class SetPropertyFromCommand(ShellCommand):
 
         self.property_changes = {}
 
+        self.warn_deprecated_if_oldstyle_subclass('SetPropertyFromCommand')
+
     def commandComplete(self, cmd):
         if self.property:
             if cmd.didFail():
@@ -380,6 +386,10 @@ class Configure(ShellCommand):
     description = ["configuring"]
     descriptionDone = ["configure"]
     command = ["./configure"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('Configure')
 
 
 class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
@@ -447,6 +457,10 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         self.addLogObserver(
             'stdio',
             logobserver.LineConsumerLogObserver(self.warningLogConsumer))
+
+        if self.__class__.__name__ not in ['Compile', 'Test', 'DebPbuilder', 'DebCowbuilder',
+                                           'UbuPbuilder']:
+            self.warn_deprecated_if_oldstyle_subclass('WarningCountingShellCommand')
 
     def addSuppression(self, suppressionList):
         """
@@ -625,6 +639,10 @@ class Compile(WarningCountingShellCommand):
     descriptionDone = ["compile"]
     command = ["make", "all"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.warn_deprecated_if_oldstyle_subclass('Compile')
+
 
 class Test(WarningCountingShellCommand):
 
@@ -633,6 +651,11 @@ class Test(WarningCountingShellCommand):
     description = ["testing"]
     descriptionDone = ["test"]
     command = ["make", "test"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.__class__.__name__ not in ['MTR']:
+            self.warn_deprecated_if_oldstyle_subclass('Test')
 
     def setTestResults(self, total=0, failed=0, passed=0, warnings=0):
         """

@@ -8,7 +8,7 @@ As a result, custom build steps which call these methods will need to be rewritt
 
 Buildbot-0.8.9 supports old-style steps natively, while new-style steps are emulated.
 Buildbot-0.9.0 supports new-style steps natively, while old-style steps are emulated.
-Later versions of Buildbot will not support old-style steps at all.
+Buildbot-3.0 no longer supports old-style steps at all.
 All custom steps should be rewritten in the new style as soon as possible.
 
 Buildbot distinguishes new-style from old-style steps by the presence of a :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
@@ -34,7 +34,7 @@ Backward Compatibility
 
 Some hacks are in place to support old-style steps.
 These hacks are only activated when an old-style step is detected.
-Support for old-style steps will be dropped soon after Buildbot-0.9.0 is released.
+Support for old-style steps has been dropped in Buildbot-3.0.
 
 * The Deferreds from all asynchronous methods invoked during step execution are gathered internally.
   The step is not considered finished until all such Deferreds have fired, and is marked EXCEPTION if any fail.
@@ -43,7 +43,7 @@ Support for old-style steps will be dropped soon after Buildbot-0.9.0 is release
 * Logfile data is available while the step is still in memory.
   This means that logs returned from ``step.getLog`` have the expected methods ``getText``, ``readlines`` and so on.
 
-* :py:class:`~buildbot.steps.shell.ShellCommand` subclasses implicitly gather all stdio output in memory and provide it to the ``createSummary`` method.
+* :bb:step:`ShellCommand` subclasses implicitly gather all stdio output in memory and provide it to the ``createSummary`` method.
 
 Rewriting ``start``
 +++++++++++++++++++
@@ -122,7 +122,6 @@ All methods that can be overridden in custom steps can return a Deferred.
 Properties
 ++++++++++
 
-Good news!
 The API for properties is the same synchronous API as was available in old-style steps.
 Properties are handled synchronously during the build, and persisted to the database at completion of each step.
 

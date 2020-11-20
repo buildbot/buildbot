@@ -27,6 +27,8 @@ from buildbot.process import results
 from buildbot.process.factory import BuildFactory
 from buildbot.steps import shell
 from buildbot.test.util.integration import RunFakeMasterTestCase
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestLogObserver(buildstep.LogObserver):
@@ -310,17 +312,21 @@ class RunSteps(RunFakeMasterTestCase):
     @defer.inlineCallbacks
     def test_OldBuildEPYDoc(self):
         # test old-style calls to log.getText, figuring readlines will be ok
-        step = OldBuildEPYDoc()
-        builder_id = yield self.create_config_for_step(step)
+        with assertProducesWarnings(DeprecatedApiWarning, num_warnings=2,
+                                    message_pattern='Subclassing old-style step'):
+            step = OldBuildEPYDoc()
+            builder_id = yield self.create_config_for_step(step)
 
-        yield self.do_test_build(builder_id)
-        yield self.assertBuildResults(1, results.FAILURE)
+            yield self.do_test_build(builder_id)
+            yield self.assertBuildResults(1, results.FAILURE)
 
     @defer.inlineCallbacks
     def test_OldPerlModuleTest(self):
         # test old-style calls to self.getLog
-        step = OldPerlModuleTest()
-        builder_id = yield self.create_config_for_step(step)
+        with assertProducesWarnings(DeprecatedApiWarning, num_warnings=2,
+                                    message_pattern='Subclassing old-style step'):
+            step = OldPerlModuleTest()
+            builder_id = yield self.create_config_for_step(step)
 
-        yield self.do_test_build(builder_id)
-        yield self.assertBuildResults(1, results.SUCCESS)
+            yield self.do_test_build(builder_id)
+            yield self.assertBuildResults(1, results.SUCCESS)
