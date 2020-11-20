@@ -49,9 +49,9 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
             self.master, self,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)
-        self.sp = sp = GitLabStatusPush(Interpolate('XXYYZZ'))
-        sp.sessionFactory = Mock(return_value=Mock())
-        yield sp.setServiceParent(self.master)
+        self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
+        self.sp.sessionFactory = Mock(return_value=Mock())
+        yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
         return self.master.stopService()

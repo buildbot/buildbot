@@ -53,13 +53,12 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                 'User-Agent': 'Buildbot'
             },
             debug=None, verify=None)
-        sp = self.setService()
-        sp.sessionFactory = Mock(return_value=Mock())
-        yield sp.setServiceParent(self.master)
+        self.sp = self.createService()
+        self.sp.sessionFactory = Mock(return_value=Mock())
+        yield self.sp.setServiceParent(self.master)
 
-    def setService(self):
-        self.sp = GitHubStatusPush(Interpolate('XXYYZZ'))
-        return self.sp
+    def createService(self):
+        return GitHubStatusPush(Interpolate('XXYYZZ'))
 
     def tearDown(self):
         return self.master.stopService()
@@ -242,13 +241,12 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
                 'User-Agent': 'Buildbot'
             },
             debug=None, verify=None)
-        sp = self.setService()
-        sp.sessionFactory = Mock(return_value=Mock())
-        yield sp.setServiceParent(self.master)
+        self.sp = self.createService()
+        self.sp.sessionFactory = Mock(return_value=Mock())
+        yield self.sp.setServiceParent(self.master)
 
-    def setService(self):
-        self.sp = GitHubStatusPush('XXYYZZ')
-        return self.sp
+    def createService(self):
+        return GitHubStatusPush('XXYYZZ')
 
     def tearDown(self):
         return self.master.stopService()
@@ -318,9 +316,8 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
 
 class TestGitHubCommentPush(TestGitHubStatusPush):
 
-    def setService(self):
-        self.sp = GitHubCommentPush('XXYYZZ')
-        return self.sp
+    def createService(self):
+        return GitHubCommentPush('XXYYZZ')
 
     @defer.inlineCallbacks
     def test_basic(self):
