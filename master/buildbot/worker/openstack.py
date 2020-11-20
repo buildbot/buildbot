@@ -227,14 +227,11 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
 
     @defer.inlineCallbacks
     def _getImage(self, build):
-        # If image is a callable, then pass it the list of images. The
-        # function should return the image's UUID to use.
-        image = self.image
-        if callable(image):
-            # novaclient has renamed images to glance
-            image_uuid = image(self.novaclient.glance.list())
-        else:
-            image_uuid = yield build.render(image)
+        image_uuid = yield build.render(self.image)
+        # check if we got name instead of uuid
+        for image in self.novaclient.glance.list():
+            if image.name == image_uuid:
+                image_uuid = image.id
         return image_uuid
 
     @defer.inlineCallbacks
