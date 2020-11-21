@@ -33,7 +33,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
                                                       vaultToken="someToken",
                                                       apiVersion=version)
         self.master = fakemaster.make_master(self, wantData=True)
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
                 self.master, self, 'http://vaultServer', headers={'X-Vault-Token': "someToken"})
         yield self.srvcVault.setServiceParent(self.master)
         yield self.master.startService()
@@ -109,7 +109,7 @@ class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 
     @defer.inlineCallbacks
     def testReconfigSecretInVaultService(self):
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
                 self.master, self, 'serveraddr', headers={'X-Vault-Token': "someToken"})
         yield self.srvcVault.reconfigService(vaultServer="serveraddr",
                                              vaultToken="someToken")

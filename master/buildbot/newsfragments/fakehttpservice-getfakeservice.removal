@@ -1,0 +1,2 @@
+``buildbot.test.fake.httpclientservice.HttpClientService.getFakeService()`` has been deprecated.
+Use ``getService`` method of the same class.

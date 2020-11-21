@@ -76,7 +76,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
 
     @defer.inlineCallbacks
     def createReporter(self, auth=("username", "passwd"), **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             "serv", auth=auth,
             debug=None, verify=None)

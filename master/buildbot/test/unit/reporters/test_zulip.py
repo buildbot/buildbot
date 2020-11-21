@@ -42,7 +42,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
     def setupZulipStatusPush(self, endpoint="http://example.com", token="123", stream=None):
         self.sp = ZulipStatusPush(
             endpoint=endpoint, token=token, stream=stream)
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, debug=None, verify=None)
         yield self.sp.setServiceParent(self.master)
         yield self.master.startService()

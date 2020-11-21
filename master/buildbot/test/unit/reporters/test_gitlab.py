@@ -45,7 +45,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                                              wantMq=True)
 
         yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)

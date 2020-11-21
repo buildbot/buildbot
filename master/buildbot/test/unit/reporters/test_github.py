@@ -46,7 +46,7 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                                              wantMq=True)
 
         yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             HOSTED_BASE_URL, headers={
                 'Authorization': 'token XXYYZZ',
@@ -234,7 +234,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
                                              wantMq=True)
 
         yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             HOSTED_BASE_URL, headers={
                 'Authorization': 'token XXYYZZ',

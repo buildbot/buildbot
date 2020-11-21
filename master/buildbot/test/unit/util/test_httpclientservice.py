@@ -28,10 +28,12 @@ from twisted.web import server
 
 from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.warnings import DeprecatedApiWarning
 
 try:
     from requests.auth import HTTPDigestAuth
@@ -436,9 +438,12 @@ class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):
 
 class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):
 
+    @defer.inlineCallbacks
     def httpFactory(self, parent):
-        return fakehttpclientservice.HTTPClientService.getService(
-            parent, 'http://127.0.0.1:{}'.format(self.port))
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='getFakeService'):
+            service = yield fakehttpclientservice.HTTPClientService.getService(
+                parent, self, 'http://127.0.0.1:{}'.format(self.port))
+            return service
 
     def expect(self, *arg, **kwargs):
         self._http.expect(*arg, **kwargs)
