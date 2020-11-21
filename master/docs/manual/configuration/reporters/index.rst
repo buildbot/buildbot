@@ -9,6 +9,7 @@ Reporters
     :hidden:
     :maxdepth: 2
 
+    notifier_base
     bitbucket_server_core_api_status
     bitbucket_server_pr_comment_push
     bitbucket_server_status
@@ -70,3 +71,5 @@ The following reporters are available:
  * :bb:reporter:`PushoverNotifier`
  * :bb:reporter:`TelegramBot`
  * :bb:reporter:`ZulipStatusPush`
+
+Most of the report generators derive from :class:`NotifierBase` which implements basic reporter management functionality.
