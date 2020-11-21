@@ -76,8 +76,8 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
 
     @defer.inlineCallbacks
     def createReporter(self, auth=("username", "passwd"), **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master,
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self,
             "serv", auth=auth,
             debug=None, verify=None)
 
@@ -103,6 +103,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         build = yield self.insert_build_new()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
@@ -113,6 +114,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         build = yield self.insert_build_new()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
