@@ -80,10 +80,10 @@ class TestHgPollerBranches(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"73591"),
             gpo.Expect(
-                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"22341"),
         )
 
@@ -106,7 +106,7 @@ class TestHgPollerBranches(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'6' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-r', '4::6',
                        '--template={rev}:{node}\\n')
@@ -127,7 +127,7 @@ class TestHgPollerBranches(TestHgPollerBase):
                 b'Comment',
                 b''])),
             gpo.Expect(
-                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'3' + LINESEP_BYTES),
         )
 
@@ -154,10 +154,10 @@ class TestHgPollerBookmarks(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"73591"),
             gpo.Expect(
-                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"22341"),
         )
 
@@ -180,7 +180,7 @@ class TestHgPollerBookmarks(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'one', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'6' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-r', '4::6',
                        '--template={rev}:{node}\\n')
@@ -201,7 +201,7 @@ class TestHgPollerBookmarks(TestHgPollerBase):
                 b'Comment',
                 b''])),
             gpo.Expect(
-                'hg', 'heads', '-r', 'two', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'3' + LINESEP_BYTES),
         )
 
@@ -265,7 +265,7 @@ class TestHgPoller(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b"73591"),
         )
 
@@ -287,7 +287,7 @@ class TestHgPoller(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
         )
 
@@ -305,7 +305,7 @@ class TestHgPoller(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-r', '4::5',
                        '--template={rev}:{node}\\n')
@@ -345,7 +345,7 @@ class TestHgPoller(TestHgPollerBase):
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
-                'hg', 'heads', '-r', 'default', '--template={rev}' + os.linesep)
+                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-r', '4::5',
                        '--template={rev}:{node}\\n')

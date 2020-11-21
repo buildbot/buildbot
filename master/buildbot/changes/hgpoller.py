@@ -218,7 +218,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         yet, one shouldn't be surprised to get errors)
         """
         d = utils.getProcessOutput(self.hgbin,
-                                   ['heads', '-r', branch,
+                                   ['heads', branch,
                                        '--template={rev}' + os.linesep],
                                    path=self._absWorkdir(), env=os.environ, errortoo=False)
 
