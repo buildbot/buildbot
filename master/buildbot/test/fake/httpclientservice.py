@@ -83,21 +83,19 @@ class HTTPClientService(service.SharedService):
         return cls.getService(master, case, *args, **kwargs)
 
     @classmethod
+    @defer.inlineCallbacks
     def getService(cls, master, case, *args, **kwargs):
-        ret = super().getService(master, *args, **kwargs)
-
         def assertNotCalled(self, *_args, **_kwargs):
             case.fail(("HTTPClientService called with *{!r}, **{!r}"
                        "while should be called *{!r} **{!r}").format(
                 _args, _kwargs, args, kwargs))
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
 
-        @ret.addCallback
-        def assertNoOutstanding(fake):
-            fake.case = case
-            case.addCleanup(fake.assertNoOutstanding)
-            return fake
-        return ret
+        service = yield super().getService(master, *args, **kwargs)
+        service.case = case
+        case.addCleanup(service.assertNoOutstanding)
+        return service
+
     # tests should ensure this has been called
     checkAvailable = mock.Mock()
 
