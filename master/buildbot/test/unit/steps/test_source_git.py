@@ -74,7 +74,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -113,7 +113,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD'])
             + 0,
@@ -169,7 +169,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', '-c', ssh_command_config,
-                                 'fetch', '-t',
+                                 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -226,7 +226,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'],
                         env={'GIT_SSH_COMMAND': ssh_command})
@@ -296,7 +296,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD'],
                         env={'GIT_SSH': ssh_wrapper_path})
@@ -373,7 +373,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', '-c', ssh_command_config,
-                                 'fetch', '-t',
+                                 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -442,7 +442,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'],
                         env={'GIT_SSH_COMMAND': ssh_command})
@@ -521,7 +521,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD'],
                         env={'GIT_SSH': ssh_wrapper_path})
@@ -600,7 +600,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD'],
                         env={'GIT_SSH': ssh_wrapper_path})
@@ -674,7 +674,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir=workdir,
                         command=['git', '-c', ssh_command_config,
-                                 'fetch', '-t',
+                                 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -717,7 +717,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -773,7 +773,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', '-c', ssh_command_config,
-                                 'fetch', '-t',
+                                 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -831,7 +831,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'],
                         env={'GIT_SSH_COMMAND': ssh_command})
@@ -897,7 +897,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD'],
                         env={'GIT_SSH': ssh_wrapper_path})
@@ -944,7 +944,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -990,7 +990,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1057,7 +1057,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1119,7 +1119,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1171,7 +1171,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch', '--progress'])
             + 0,
@@ -1249,7 +1249,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1406,7 +1406,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1558,7 +1558,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '.'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch'])
             + 0,
@@ -1597,7 +1597,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1634,7 +1634,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1671,7 +1671,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1750,7 +1750,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch', '--progress'])
             + 0,
@@ -1808,7 +1808,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', '-c', ssh_command_config,
-                                 'fetch', '-t',
+                                 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch', '--progress'])
             + 0,
@@ -1853,7 +1853,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -1970,7 +1970,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'cat-file', '-e', 'abcdef01'])
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2009,7 +2009,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2061,7 +2061,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2115,7 +2115,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2268,7 +2268,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2276,7 +2276,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2313,7 +2313,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch', '--progress'])
             + 0,
@@ -2321,7 +2321,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch', '--progress'])
             + 0,
@@ -2361,7 +2361,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2407,7 +2407,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'test-branch', '--progress'])
             + 0,
@@ -2457,7 +2457,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2516,7 +2516,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='source',
                         command=['git', '-c', ssh_command_config,
-                                 'fetch', '-t',
+                                 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2883,7 +2883,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -2924,7 +2924,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'],
                         env={'abc': '123'})
@@ -2968,7 +2968,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'],
                         logEnviron=False)
@@ -3044,7 +3044,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -3096,7 +3096,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
@@ -3431,7 +3431,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=prefix + ['clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=prefix + ['fetch', '-t',
+                        command=prefix + ['fetch', '-f', '-t',
                                           '{}/buildbot/buildbot.git'.format(value),
                                           'HEAD', '--progress'])
             + 0,

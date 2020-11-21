@@ -75,7 +75,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             + 0,
             # here we always ignore revision, and fetch the merge branch
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'git@gitlab.example.com:build/awesome_project.git',
                                  'ms-viewport', '--progress'])
             + 0,

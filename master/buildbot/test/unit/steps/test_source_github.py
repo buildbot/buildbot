@@ -48,7 +48,7 @@ class TestGitHub(test_source_git.TestGit):
             + 0,
             # here we always ignore revision, and fetch the merge branch
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/pull/1234/merge', '--progress'])
             + 0,

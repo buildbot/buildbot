@@ -59,7 +59,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'gerrit_branch', '--progress'])
             + 0,
@@ -105,7 +105,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/changes/34/1234/567', '--progress'])
             + 0,
@@ -151,7 +151,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'refs/changes/34/1234/567', '--progress'])
             + 0,
@@ -197,7 +197,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'fetch', '-t',
+                        command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
