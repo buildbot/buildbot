@@ -207,7 +207,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         if source_type == 'image':
             # The size returned for an image is in bytes. Round up to the next
             # integer GiB.
-            image = nova.images.get(source_uuid)
+            image = nova.glance.get(source_uuid)
             if hasattr(image, 'OS-EXT-IMG-SIZE:size'):
                 size = getattr(image, 'OS-EXT-IMG-SIZE:size')
                 size_gb = int(math.ceil(size / 1024.0**3))
@@ -227,18 +227,29 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
 
     @defer.inlineCallbacks
     def _getImage(self, build):
-        # If image is a callable, then pass it the list of images. The
-        # function should return the image's UUID to use.
-        image = self.image
-        if callable(image):
-            image_uuid = image(self.novaclient.images.list())
-        else:
-            image_uuid = yield build.render(image)
+        image_uuid = yield build.render(self.image)
+        # check if we got name instead of uuid
+        for image in self.novaclient.glance.list():
+            if image.name == image_uuid:
+                image_uuid = image.id
         return image_uuid
+
+    @defer.inlineCallbacks
+    def _getFlavor(self, build):
+        flavor_uuid = yield build.render(self.flavor)
+        # check if we got name instead of uuid
+        for flavor in self.novaclient.flavors.list():
+            if flavor.name == flavor_uuid:
+                flavor_uuid = flavor.id
+        return flavor_uuid
 
     @defer.inlineCallbacks
     def renderWorkerProps(self, build):
         image = yield self._getImage(build)
+        flavor = yield self._getFlavor(build)
+        nova_args = yield build.render(self.nova_args)
+        meta = yield build.render(self.meta)
+
         if self.block_devices is not None:
             block_devices = []
             for bd in self.block_devices:
@@ -246,24 +257,24 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
-        return (image, block_devices)
+        return (image, flavor, block_devices, nova_args, meta)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
 
-        image, block_devices = yield self.renderWorkerPropsOnStart(build)
-        res = yield threads.deferToThread(self._start_instance, image,
-                                          block_devices)
+        image, flavor, block_devices, nova_args, meta = yield self.renderWorkerPropsOnStart(build)
+        res = yield threads.deferToThread(self._start_instance, image, flavor,
+                                          block_devices, nova_args, meta)
         return res
 
-    def _start_instance(self, image_uuid, block_devices):
-        boot_args = [self.workername, image_uuid, self.flavor]
+    def _start_instance(self, image_uuid, flavor_uuid, block_devices, nova_args, meta):
+        boot_args = [self.workername, image_uuid, flavor_uuid]
         boot_kwargs = dict(
-            meta=self.meta,
+            meta=meta,
             block_device_mapping_v2=block_devices,
-            **self.nova_args)
+            **nova_args)
         instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
         # There is an issue when using sessions that the status is not
         # available on the first try. Trying again will work fine. Fetch the

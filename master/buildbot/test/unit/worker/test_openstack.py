@@ -51,7 +51,9 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.patch(openstack, "client", novaclient)
         self.patch(openstack, "loading", novaclient)
         self.patch(openstack, "session", novaclient)
-        self.build = Properties(image=novaclient.TEST_UUIDS['image'])
+        self.build = Properties(image=novaclient.TEST_UUIDS['image'],
+                                flavor=novaclient.TEST_UUIDS['flavor'],
+                                meta_value='value')
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
@@ -149,7 +151,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
             {'source_type': 'snapshot', 'uuid': novaclient.TEST_UUIDS['snapshot']},
         ]
 
-        def check_volume_sizes(_images, block_devices):
+        def check_volume_sizes(_images, _flavors, block_devices, nova_args, metas):
             self.assertEqual(len(block_devices), 4)
             self.assertEqual(block_devices[0]['volume_size'], 1)
             self.assertIsInstance(block_devices[0]['volume_size'], int,
@@ -214,29 +216,43 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual('image-uuid', image_uuid)
 
     @defer.inlineCallbacks
-    def test_getImage_callable(self):
-        def image_callable(images):
-            filtered = [i for i in images if i.id == 'uuid1']
-            return filtered[0].id
-
-        bs = yield self.setupWorker('bot', 'pass', flavor=1,
-                                    image=image_callable, **self.os_auth)
-        os_client = bs.novaclient
-        os_client.images._add_items([
-            novaclient.Image('uuid1', 'name1', 1),
-            novaclient.Image('uuid2', 'name2', 1),
-            novaclient.Image('uuid3', 'name3', 1),
-            ])
-        image_uuid = yield bs._getImage(self.build)
-        self.assertEqual('uuid1', image_uuid)
-
-    @defer.inlineCallbacks
     def test_getImage_renderable(self):
         bs = yield self.setupWorker('bot', 'pass', flavor=1,
                                     image=Interpolate('%(prop:image)s'),
                                     **self.os_auth)
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
+
+    @defer.inlineCallbacks
+    def test_getImage_name(self):
+        bs = yield self.setupWorker('bot', 'pass', flavor=1,
+                                    image='CirrOS 0.3.4',
+                                    **self.os_auth)
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
+
+    @defer.inlineCallbacks
+    def test_getFlavor_string(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', **self.bs_image_args)
+        flavor_uuid = yield bs._getFlavor(self.build)
+        self.assertEqual(1, flavor_uuid)
+
+    @defer.inlineCallbacks
+    def test_getFlavor_renderable(self):
+        bs = yield self.setupWorker('bot', 'pass', image="1",
+                                    flavor=Interpolate('%(prop:flavor)s'),
+                                    **self.os_auth)
+        flavor_uuid = yield bs._getFlavor(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['flavor'], flavor_uuid)
+
+    @defer.inlineCallbacks
+    def test_getFlavor_name(self):
+        bs = yield self.setupWorker('bot', 'pass', image="1",
+                                    flavor='m1.small',
+                                    **self.os_auth)
+        flavor_uuid = yield bs._getFlavor(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['flavor'], flavor_uuid)
 
     @defer.inlineCallbacks
     def test_start_instance_already_exists(self):
@@ -291,7 +307,39 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
+        self.assertEquals(bs.instance.boot_kwargs['meta'], meta_arg)
+
+    @defer.inlineCallbacks
+    def test_start_instance_check_meta_renderable(self):
+        meta_arg = {'some_key': Interpolate('%(prop:meta_value)s')}
+        bs = yield self.setupWorker('bot', 'pass', meta=meta_arg,
+                                    **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertIn('meta', bs.instance.boot_kwargs)
+        self.assertEquals(bs.instance.boot_kwargs['meta'], {'some_key': 'value'})
+
+    @defer.inlineCallbacks
+    def test_start_instance_check_nova_args(self):
+        nova_args = {'some-key': 'some-value'}
+
+        bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args,
+                                    **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertIn('meta', bs.instance.boot_kwargs)
+        self.assertEquals(bs.instance.boot_kwargs['some-key'], 'some-value')
+
+    @defer.inlineCallbacks
+    def test_start_instance_check_nova_args_renderable(self):
+        nova_args = {'some-key': Interpolate('%(prop:meta_value)s')}
+
+        bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args,
+                                    **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertIn('meta', bs.instance.boot_kwargs)
+        self.assertEquals(bs.instance.boot_kwargs['some-key'], 'value')
 
     @defer.inlineCallbacks
     def test_interpolate_renderables_for_new_build(self):

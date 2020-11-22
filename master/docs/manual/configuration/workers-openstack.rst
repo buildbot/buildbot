@@ -51,12 +51,10 @@ These are the same details set in either environment variables or passed as opti
     A password for the worker to login to the master with.
 
 ``flavor``
-    The flavor ID to use for the instance.
+    A string containing the flavor name or UUID to use for the instance.
 
 ``image``
-    A string containing the image UUID to use for the instance.
-    A callable may instead be passed.
-    It will be passed the list of available images and must return the image to use.
+    A string containing the image name or UUID to use for the instance.
 
 ``os_username``
 

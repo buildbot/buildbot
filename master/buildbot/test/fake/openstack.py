@@ -27,6 +27,7 @@ TEST_UUIDS = {
     'image': '28a65eb4-f354-4420-97dc-253b826547f7',
     'volume': '65fbb9f1-c4d5-40a8-a233-ad47c52bb837',
     'snapshot': 'ab89152d-3c26-4d30-9ae5-65b705f874b7',
+    'flavor': '853774a1-459f-4f1f-907e-c96f62472531',
 }
 
 
@@ -38,12 +39,14 @@ class FakeNovaClient():
 class Client():
 
     def __init__(self, version, session):
-        self.images = ItemManager()
-        self.images._add_items([Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
+        self.glance = ItemManager()
+        self.glance._add_items([Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
         self.volumes = ItemManager()
         self.volumes._add_items([Volume(TEST_UUIDS['volume'], 'CirrOS 0.3.4', 4)])
         self.volume_snapshots = ItemManager()
         self.volume_snapshots._add_items([Snapshot(TEST_UUIDS['snapshot'], 'CirrOS 0.3.4', 2)])
+        self.flavors = ItemManager()
+        self.flavors._add_items([Flavor(TEST_UUIDS['flavor'], 'm1.small', 0)])
         self.servers = Servers()
         self.session = session
         self.client = FakeNovaClient()
@@ -84,6 +87,10 @@ class Image(Item):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         setattr(self, 'OS-EXT-IMG-SIZE:size', self.size)
+
+
+class Flavor(Item):
+    pass
 
 
 class Volume(Item):
