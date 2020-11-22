@@ -73,6 +73,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
     def tearDown(self):
         yield self.master.stopService()
 
+    @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build):
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -106,7 +107,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
     def test_basic(self):
         self.setupReporter()
         build = yield self.insert_build_finished(SUCCESS)
-        self._check_start_and_finish_build(build)
+        yield self._check_start_and_finish_build(build)
 
     @defer.inlineCallbacks
     def test_setting_options(self):
@@ -212,6 +213,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
         if self.master and self.master.running:
             yield self.master.stopService()
 
+    @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build, parentPlan=False):
         # we make sure proper calls to txrequests have been made
 
@@ -264,19 +266,19 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     def test_basic(self):
         yield self.setupReporter()
         build = yield self.insert_build_finished(SUCCESS)
-        self._check_start_and_finish_build(build)
+        yield self._check_start_and_finish_build(build)
 
     @defer.inlineCallbacks
     def test_with_parent(self):
         yield self.setupReporter()
         build = yield self.insert_build_finished(SUCCESS, parent_plan=True)
-        self._check_start_and_finish_build(build, parentPlan=True)
+        yield self._check_start_and_finish_build(build, parentPlan=True)
 
     @defer.inlineCallbacks
     def test_with_token(self):
         yield self.setupReporter(token='tokentoken')
         build = yield self.insert_build_finished(SUCCESS)
-        self._check_start_and_finish_build(build)
+        yield self._check_start_and_finish_build(build)
 
     @defer.inlineCallbacks
     def test_error_setup_status(self):
@@ -319,7 +321,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             build = yield self.insert_build_finished(SUCCESS)
         finally:
             self.TEST_BRANCH = old_test_branch
-        self._check_start_and_finish_build(build)
+        yield self._check_start_and_finish_build(build)
 
     @defer.inlineCallbacks
     def test_with_no_ref(self):
