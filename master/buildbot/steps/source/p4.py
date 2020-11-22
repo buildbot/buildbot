@@ -108,10 +108,6 @@ class P4(Source):
             config.error('p4branch should not end with a trailing / [p4branch = {}]'.format(
                     p4branch))
 
-        if (p4branch or p4extra_views) and not p4base:
-            config.error(
-                'If you specify either p4branch or p4extra_views you must also specify p4base')
-
         if stream:
             if (p4extra_views or p4viewspec):
                 config.error('You can\'t use p4extra_views not p4viewspec with stream')
@@ -265,14 +261,6 @@ class P4(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
         return None
-
-    def _sourcedirIsUpdatable(self):
-        # In general you should always be able to write to the directory
-        # You just specified as the root of your client
-        # So just return.
-        # If we find a case where this is no longer true, then this
-        # needs to be implemented
-        return defer.succeed(True)
 
     @defer.inlineCallbacks
     def _createClientSpec(self):
