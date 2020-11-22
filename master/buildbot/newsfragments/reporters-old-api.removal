@@ -28,3 +28,4 @@ The following reporters have been affected:
  - ``GitHubStatusPush``
  - ``GitLabStatusPush``
  - ``HipChatStatusPush``
+ - ``ZulipStatusPush``
