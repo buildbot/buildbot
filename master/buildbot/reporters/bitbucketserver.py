@@ -239,6 +239,21 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
 
     @defer.inlineCallbacks
     def send(self, build):
+        # the only case when this function is called is when the user derives this class, overrides
+        # send() and calls super().send(build) from there.
+        yield self._send_impl(build)
+
+    @defer.inlineCallbacks
+    def sendMessage(self, reports):
+        build = reports[0]['builds'][0]
+        if self.send.__func__ is not BitbucketServerCoreAPIStatusPush.send:
+            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
+            yield self.send(build)
+        else:
+            yield self._send_impl(build)
+
+    @defer.inlineCallbacks
+    def _send_impl(self, build):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 

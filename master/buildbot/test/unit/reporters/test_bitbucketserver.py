@@ -551,6 +551,103 @@ EXPECTED_API = '/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comment
 PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 
 
+class BitbucketServerCoreAPIStatusPushDeprecatedSend(BitbucketServerCoreAPIStatusPush):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.send_called_count = 0
+
+    @defer.inlineCallbacks
+    def send(self, build):
+        self.send_called_count += 1
+        yield super().send(build)
+
+
+class TestBitbucketServerCoreAPIStatusPushDeprecatedSend(ConfigErrorsMixin, TestReactorMixin,
+                                                         unittest.TestCase,
+                                                         ReporterTestMixin, LoggingMixin):
+
+    @defer.inlineCallbacks
+    def setupReporter(self, token=None, **kwargs):
+        self.setUpTestReactor()
+        # ignore config error if txrequests is not installed
+        self.patch(config, '_errors', Mock())
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
+
+        http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
+
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master, self,
+            'serv', auth=('username', 'passwd'), headers=http_headers,
+            debug=None, verify=None)
+        self.sp = BitbucketServerCoreAPIStatusPushDeprecatedSend(
+            "serv", token=token, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
+        yield self.sp.setServiceParent(self.master)
+        yield self.master.startService()
+
+    def setUp(self):
+        self.master = None
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        if self.master and self.master.running:
+            yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_start_and_finish_build(self, build, parentPlan=False):
+        # we make sure proper calls to txrequests have been made
+
+        _name = "Builder_parent #1 \u00BB Builder0 #0" if parentPlan else "Builder0 #0"
+        _parent = "Builder_parent" if parentPlan else "Builder0"
+
+        self._http.expect(
+            'post',
+            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
+            json={'name': _name, 'description': 'Build started.', 'key': 'Builder0',
+                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'INPROGRESS',
+                  'parent': _parent, 'duration': None, 'testResults': None},
+            code=HTTP_PROCESSED)
+        self._http.expect(
+            'post',
+            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
+            json={'name': _name, 'description': 'Build done.', 'key': 'Builder0',
+                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'SUCCESSFUL',
+                  'parent': _parent, 'duration': 10000, 'testResults': None},
+            code=HTTP_PROCESSED)
+        self._http.expect(
+            'post',
+            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
+            json={'name': _name, 'description': 'Build done.', 'key': 'Builder0',
+                  'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'FAILED',
+                  'parent': _parent, 'duration': 10000, 'testResults': None},
+            code=HTTP_PROCESSED)
+        build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
+        build['complete'] = False
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+            yield self.sp._got_event(('builds', 20, 'new'), build)
+        build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        build['complete'] = True
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+            yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = FAILURE
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+            yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+        self.assertEqual(self.sp.send_called_count, 3)
+
+    @defer.inlineCallbacks
+    def test_basic(self):
+        yield self.setupReporter()
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self._check_start_and_finish_build(build)
+
+
 class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
                                        ReporterTestMixin, LoggingMixin):
 
