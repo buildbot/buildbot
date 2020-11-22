@@ -25,3 +25,4 @@ The following reporters have been affected:
  - ``BitbucketServerStatusPush``
  - ``BitbucketServerCoreAPIStatusPush``
  - ``GerritVerifyStatusPush``
+ - ``GitHubStatusPush``
