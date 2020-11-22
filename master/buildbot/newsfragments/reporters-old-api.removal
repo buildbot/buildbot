@@ -27,3 +27,4 @@ The following reporters have been affected:
  - ``GerritVerifyStatusPush``
  - ``GitHubStatusPush``
  - ``GitLabStatusPush``
+ - ``HipChatStatusPush``
