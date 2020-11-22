@@ -9,8 +9,10 @@ Babel==2.8.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.15.11
-botocore==1.18.11
+boto3==1.16.18;  python_version >= "3.6"
+boto3==1.15.11;  python_version < "3.6"
+botocore==1.19.18;  python_version >= "3.6"
+botocore==1.18.11;  python_version < "3.6"
 cffi==1.14.3
 click==7.1.2
 # pin configparser, because 5.x no longer supports Python 3.5
