@@ -92,7 +92,7 @@ class P4(Source):
 
         if p4viewspec and (p4base or p4branch or p4extra_views):
             config.error(
-                "Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
+                "Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views)")
 
         if p4viewspec and isinstance(p4viewspec, str):
             config.error(
