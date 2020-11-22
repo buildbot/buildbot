@@ -88,6 +88,10 @@ class HttpStatusPushBase(notifier.NotifierBase):
         ]
 
     def sendMessage(self, reports):
+        # All reporters that subclass HttpStatusPushBase and are provided by Buildbot implement
+        # sendMessage. So the only case when this function is called is when we have a custom
+        # reporter that inherits from HttpStatusPushBase.
+        warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
         return self.send(reports[0]['builds'][0])
 
     # Deprecated overridden method, will be removed in Buildbot 3.0
