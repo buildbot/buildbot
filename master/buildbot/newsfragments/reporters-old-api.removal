@@ -22,3 +22,4 @@ Please use ``sendMessage`` as the replacement.
 The following reporters have been affected:
 
  - ``BitbucketStatusPush``
+ - ``BitbucketServerStatusPush``

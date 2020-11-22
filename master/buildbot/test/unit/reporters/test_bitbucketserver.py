@@ -41,6 +41,8 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 HTTP_NOT_FOUND = 404
 
@@ -181,6 +183,88 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+
+class BitbucketServerStatusPushDeprecatedSend(BitbucketServerStatusPush):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.send_called_count = 0
+
+    @defer.inlineCallbacks
+    def send(self, build):
+        self.send_called_count += 1
+        yield super().send(build)
+
+
+class TestBitbucketServerStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
+                                                  ReporterTestMixin, LoggingMixin):
+
+    @defer.inlineCallbacks
+    def setupReporter(self, **kwargs):
+        self.setUpTestReactor()
+        # ignore config error if txrequests is not installed
+        self.patch(config, '_errors', Mock())
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
+
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master, self,
+            'serv', auth=('username', 'passwd'),
+            debug=None, verify=None)
+        self.sp = BitbucketServerStatusPushDeprecatedSend("serv", Interpolate("username"),
+                                                          Interpolate("passwd"), **kwargs)
+        yield self.sp.setServiceParent(self.master)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_start_and_finish_build(self, build):
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
+                  'description': 'Build started.'},
+            code=HTTP_PROCESSED)
+        self._http.expect(
+            'post',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'SUCCESSFUL', 'key': 'Builder0',
+                  'description': 'Build done.'},
+            code=HTTP_PROCESSED)
+        self._http.expect(
+            'post',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'FAILED', 'key': 'Builder0',
+                  'description': 'Build done.'})
+        build['complete'] = False
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+
+            yield self.sp._got_event(('builds', 20, 'new'), build)
+        build['complete'] = True
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+
+            yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = FAILURE
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+            yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+        self.assertEqual(self.sp.send_called_count, 3)
+
+    @defer.inlineCallbacks
+    def test_basic(self):
+        self.setupReporter()
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self._check_start_and_finish_build(build)
 
 
 class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
