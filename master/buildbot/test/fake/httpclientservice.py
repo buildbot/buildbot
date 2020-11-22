@@ -57,12 +57,14 @@ class ResponseWrapper:
 
 
 class HTTPClientService(service.SharedService):
-    """A SharedService class that fakes http requests for buildbot http service testing.
+    """ HTTPClientService is a SharedService class that fakes http requests for buildbot http
+        service testing.
 
-    It is called HTTPClientService so that it substitute the real HTTPClientService
-    if created earlier in the test.
-
-    getName from the fake and getName from the real must return the same values.
+        This class is named the same as the real HTTPClientService so that it could replace the real
+        class in tests. If a test creates this class earlier than the real one, fake is going to be
+        used until the master is destroyed. Whenever a master wants to create real
+        HTTPClientService, it will find an existing fake service with the same name and use it
+        instead.
     """
     quiet = False
 
