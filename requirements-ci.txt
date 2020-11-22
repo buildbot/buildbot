@@ -48,7 +48,8 @@ parameterized==0.7.4
 pathlib2==2.3.5
 pbr==5.5.0
 pep8==1.7.1
-Pillow==7.2.0
+Pillow==8.0.1;  python_version >= "3.6"
+Pillow==7.2;  python_version < "3.6"
 pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
