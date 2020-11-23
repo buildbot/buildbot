@@ -49,7 +49,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.worker = worker = kubernetes.KubeLatentWorker(
             *args, kube_config=config, **kwargs)
         master = fakemaster.make_master(self, wantData=True)
-        self._kube = yield KubeClientService.getFakeService(master, self, kube_config=config)
+        self._kube = yield KubeClientService.getService(master, self, kube_config=config)
         worker.setServiceParent(master)
         yield master.startService()
         self.assertTrue(config.running)

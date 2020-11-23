@@ -188,7 +188,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         token = kwargs.get('token', None)
         if token:
             http_headers.update({'Authorization': 'token ' + token})
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, headers=http_headers)
         self.changesource = GitHubPullrequestPoller(owner, repo, **kwargs)
 

@@ -39,7 +39,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin,
 
     # returns a Deferred
     def setupFakeHttp(self, base_url='https://api.pushjet.io'):
-        return fakehttpclientservice.HTTPClientService.getFakeService(self.master, self, base_url)
+        return fakehttpclientservice.HTTPClientService.getService(self.master, self, base_url)
 
     @defer.inlineCallbacks
     def setupPushjetNotifier(self, secret=Interpolate("1234"), **kwargs):

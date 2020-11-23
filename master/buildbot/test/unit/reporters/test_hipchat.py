@@ -49,7 +49,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
     def createReporter(self, **kwargs):
         kwargs['auth_token'] = kwargs.get('auth_token', 'abc')
         self.sp = HipChatStatusPush(**kwargs)
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             kwargs.get('endpoint', HOSTED_BASE_URL),
             debug=None, verify=None)

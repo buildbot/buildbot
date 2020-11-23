@@ -562,7 +562,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     # returns a Deferred
     def setupFakeHttp(self):
         url = 'https://api.telegram.org/bot12345:secret'
-        return fakehttpclientservice.HTTPClientService.getFakeService(self.master, self, url)
+        return fakehttpclientservice.HTTPClientService.getService(self.master, self, url)
 
     @defer.inlineCallbacks
     def makeBot(self, chat_ids=None, authz=None, *args, **kwargs):
@@ -907,7 +907,7 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
     # returns a Deferred
     def setupFakeHttpWithErrors(self, skip, errs):
         url = 'https://api.telegram.org/bot12345:secret'
-        return self.HttpServiceWithErrors.getFakeService(self.master, self, skip, errs, url)
+        return self.HttpServiceWithErrors.getService(self.master, self, skip, errs, url)
 
     @defer.inlineCallbacks
     def test_post_not_ok(self):

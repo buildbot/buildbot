@@ -380,7 +380,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
     @defer.inlineCallbacks
     def newChangeSource(self, **kwargs):
         auth = kwargs.pop('auth', ('log', 'pass'))
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'gerrit', auth=auth)
         self.changesource = gerritchangesource.GerritEventLogPoller(
             'gerrit', auth=auth, gitBaseURL="ssh://someuser@somehost:29418", pollAtLaunch=False,

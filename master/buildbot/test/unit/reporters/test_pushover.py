@@ -39,8 +39,8 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
 
     # returns a Deferred
     def setupFakeHttp(self):
-        return fakehttpclientservice.HTTPClientService.getFakeService(self.master, self,
-                                                                      'https://api.pushover.net')
+        return fakehttpclientservice.HTTPClientService.getService(self.master, self,
+                                                                  'https://api.pushover.net')
 
     @defer.inlineCallbacks
     def setupPushoverNotifier(self, user_key="1234", api_token=Interpolate("abcd"), **kwargs):

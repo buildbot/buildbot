@@ -60,7 +60,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             'serv', auth=('username', 'passwd'),
             debug=None, verify=None)
@@ -195,7 +195,7 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
 
         http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             'serv', auth=('username', 'passwd'), headers=http_headers,
             debug=None, verify=None)
@@ -479,7 +479,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def setupReporter(self, verbose=True, generator_class=BuildStatusGenerator, **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None,
             verify=None)
 

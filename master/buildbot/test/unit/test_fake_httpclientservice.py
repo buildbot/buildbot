@@ -17,8 +17,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.util import httpclientservice
 from buildbot.util import service
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class myTestedService(service.BuildbotService):
@@ -45,8 +47,41 @@ class Test(unittest.TestCase):
     def setUp(self):
         baseurl = 'http://127.0.0.1:8080'
         self.parent = service.MasterService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.parent, self, baseurl)
+        self.tested = myTestedService(baseurl)
+
+        yield self.tested.setServiceParent(self.parent)
+        yield self.parent.startService()
+
+    @defer.inlineCallbacks
+    def test_root(self):
+        self._http.expect("get", "/", content_json={'foo': 'bar'})
+
+        response = yield self.tested.doGetRoot()
+        self.assertEqual(response, {'foo': 'bar'})
+
+    @defer.inlineCallbacks
+    def test_root_error(self):
+        self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
+
+        try:
+            yield self.tested.doGetRoot()
+        except Exception as e:
+            self.assertEqual(str(e), '404: server did not succeed')
+
+
+# TODO: remove once Buildbot 3.0 is released.
+class TestGetFakeService(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        baseurl = 'http://127.0.0.1:8080'
+        self.parent = service.MasterService()
+
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='getFakeService'):
+            self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+                self.parent, self, baseurl)
         self.tested = myTestedService(baseurl)
 
         yield self.tested.setServiceParent(self.parent)

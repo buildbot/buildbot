@@ -56,7 +56,7 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
     def createGerritStatus(self, **kwargs):
         auth = kwargs.pop('auth', ('log', Interpolate('pass')))
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "gerrit", auth=('log', 'pass'),
             debug=None, verify=None)
         self.sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)

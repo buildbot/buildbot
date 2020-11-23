@@ -45,11 +45,11 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             _BASE_URL,
             debug=None, verify=None)
-        self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             _OAUTH_URL, auth=('key', 'secret'),
             debug=None, verify=None)
