@@ -166,6 +166,11 @@ class _buildsummary {
                     (step.fulldisplay = this.fulldisplay));
             };
 
+            this.closeParentModal = function () {
+                if ('modal' in $scope.$parent)
+                    return $scope.$parent.modal.close();
+            };
+
             const data = dataService.open().closeOnDestroy($scope);
             $scope.$watch((() => this.buildid), function (buildid) {
                 if ((buildid == null)) {
