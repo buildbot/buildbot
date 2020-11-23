@@ -88,6 +88,10 @@ class HttpStatusPushBase(notifier.NotifierBase):
         ]
 
     def sendMessage(self, reports):
+        # All reporters that subclass HttpStatusPushBase and are provided by Buildbot implement
+        # sendMessage. So the only case when this function is called is when we have a custom
+        # reporter that inherits from HttpStatusPushBase.
+        warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
         return self.send(reports[0]['builds'][0])
 
     # Deprecated overridden method, will be removed in Buildbot 3.0
@@ -149,6 +153,7 @@ class HttpStatusPush(HttpStatusPushBase):
             auth = (user, password)
         if format_fn is None:
             format_fn = lambda x: x
+        self.format_fn = format_fn  # TODO: remove when send() is removed
 
         if generators is None:
             generators = self._create_generators_from_old_args(format_fn, builders, wantProperties,
@@ -173,7 +178,21 @@ class HttpStatusPush(HttpStatusPushBase):
         ]
 
     @defer.inlineCallbacks
+    def send(self, build):
+        # the only case when this function is called is when the user derives this class, overrides
+        # send() and calls super().send(build) from there. We'll call format_fn twice in that case,
+        # once in generators, once here.
+        response = yield self._http.post("", json=self.format_fn(build))
+        if not self.isStatus2XX(response.code):
+            log.msg("{}: unable to upload status: {}".format(response.code, response.content))
+
+    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        if self.send.__func__ is not HttpStatusPush.send:
+            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
+            yield self.send(reports[0]['builds'][0])
+            return
+
         response = yield self._http.post("", json=reports[0]['body'])
         if not self.isStatus2XX(response.code):
             log.msg("{}: unable to upload status: {}".format(response.code, response.content))

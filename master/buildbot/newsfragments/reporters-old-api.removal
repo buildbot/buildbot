@@ -15,3 +15,20 @@ The list of deprecated parameters is as follows:
  - ``branches``
  - ``watchedWorkers``
  - ``messageFormatterMissingWorker``
+
+The undocumented ``HttpStatusPushBase`` class has been deprecated. Please use ``NotifierBase`` directly.
+
+The ``send`` method of the reporters based on ``HttpStatusPushBase`` has been deprecated.
+This affects only users who implemented custom reporters that directly or indirectly derive ``HttpStatusPushBase``.
+Please use ``sendMessage`` as the replacement.
+The following reporters have been affected:
+
+ - ``HttpStatusPush``
+ - ``BitbucketStatusPush``
+ - ``BitbucketServerStatusPush``
+ - ``BitbucketServerCoreAPIStatusPush``
+ - ``GerritVerifyStatusPush``
+ - ``GitHubStatusPush``
+ - ``GitLabStatusPush``
+ - ``HipChatStatusPush``
+ - ``ZulipStatusPush``

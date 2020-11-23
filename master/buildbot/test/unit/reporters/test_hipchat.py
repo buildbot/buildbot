@@ -28,6 +28,8 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
@@ -231,3 +233,56 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
         self.setUpLogging()
         self.sp.send({'complete': True})
         self.assertLogged('404: unable to upload status')
+
+
+class HipChatStatusPushDeprecatedSend(HipChatStatusPush):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.send_called_count = 0
+
+    @defer.inlineCallbacks
+    def send(self, build):
+        self.send_called_count += 1
+        yield super().send(build)
+
+
+class TestHipchatStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
+                                          ReporterTestMixin, LoggingMixin):
+
+    def setUp(self):
+        self.setUpTestReactor()
+        # ignore config error if txrequests is not installed
+        self.patch(config, '_errors', Mock())
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        if self.master.running:
+            yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def createReporter(self, **kwargs):
+        kwargs['auth_token'] = kwargs.get('auth_token', 'abc')
+        self.sp = HipChatStatusPushDeprecatedSend(**kwargs)
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master, self,
+            kwargs.get('endpoint', HOSTED_BASE_URL),
+            debug=None, verify=None)
+        yield self.sp.setServiceParent(self.master)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def test_build_started(self):
+        yield self.createReporter(builder_user_map={'Builder0': '123'})
+        build = yield self.insert_build_new()
+        self._http.expect(
+            'post',
+            '/v2/user/123/message',
+            params=dict(auth_token='abc'),
+            json={'message': 'Buildbot started build Builder0 here: '
+                             'http://localhost:8080/#builders/79/builds/0'})
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='send\\(\\) in reporters has been deprecated'):
+            yield self.sp._got_event(('builds', 20, 'new'), build)
+        self.assertEqual(self.sp.send_called_count, 1)

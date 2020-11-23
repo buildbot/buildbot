@@ -6,6 +6,7 @@ from buildbot.reporters import utils
 from buildbot.reporters.http import HttpStatusPushBase
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
+from buildbot.warnings import warn_deprecated
 
 log = Logger()
 
@@ -78,6 +79,21 @@ class HipChatStatusPush(HttpStatusPushBase):
 
     @defer.inlineCallbacks
     def send(self, build):
+        # the only case when this function is called is when the user derives this class, overrides
+        # send() and calls super().send(build) from there.
+        yield self._send_impl(build)
+
+    @defer.inlineCallbacks
+    def sendMessage(self, reports):
+        build = reports[0]['builds'][0]
+        if self.send.__func__ is not HipChatStatusPush.send:
+            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
+            yield self.send(build)
+        else:
+            yield self._send_impl(build)
+
+    @defer.inlineCallbacks
+    def _send_impl(self, build):
         key = 'new' if build['complete'] is False else 'finished'
 
         postData = yield self.getBuildDetailsAndSendMessage(build, key)
