@@ -16,13 +16,17 @@
 ALL_RESULTS = list(range(7))
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = ALL_RESULTS
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
+MultipleResults = ["successes", "warnings", "failures", "skipped", "exceptions",
+                   "retries", "cancelled"]
 
 
-def statusToString(status):
+def statusToString(status, count=1):
     if status is None:
         return "not finished"
     if status < 0 or status >= len(Results):
         return "Invalid status"
+    if count > 1:
+        return MultipleResults[status]
     return Results[status]
 
 
