@@ -15,6 +15,13 @@ Using ShellCommands
 
 .. py:class:: buildbot.steps.shell.ShellCommand
 
+.. note::
+
+    This step is being migrated to :ref:`new-style<New-Style-Build-Steps>`.
+    A new-style equivalent is provided as ``ShellCommandNewStyle``.
+    This should be inherited by any custom steps until :ref:`Buildbot 3.0 is released<3.0_Upgrading>`.
+    Regular uses without inheritance are not affected.
+
 This is a useful base class for just about everything you might want to do during a build (except for the initial source checkout).
 It runs a single command in a child shell on the worker.
 All stdout/stderr is recorded into a :class:`LogFile`.
