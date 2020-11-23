@@ -23,6 +23,7 @@ from twisted.python import log
 
 from buildbot.process.buildstep import LogLineObserver
 from buildbot.steps.shell import Test
+from buildbot.warnings import warn_deprecated
 
 
 class EqConnectionPool(adbapi.ConnectionPool):
@@ -286,6 +287,11 @@ class MTR(Test):
                  parallel=4, logfiles=None, lazylogfiles=True,
                  warningPattern="MTR's internal check of the test case '.*' failed",
                  mtr_subdir="mysql-test", **kwargs):
+
+        warn_deprecated('2.9.0', 'The MTR step has been deprecated due to migration to new style '
+                                 'steps and the build result APIs. It would be great if someone '
+                                 'steps up and migrates the step to newer APIs and adds a proper '
+                                 'test suite so that this situation never happens again.')
 
         if logfiles is None:
             logfiles = {}
