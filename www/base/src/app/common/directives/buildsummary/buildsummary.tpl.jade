@@ -9,7 +9,7 @@
                     | {{buildsummary.levelOfDetails()}}
                 | #{' '}
                 span(ng-if="buildsummary.prefix") {{buildsummary.prefix}}#{' '}
-                a(ui-sref="build({builder:buildsummary.build.builderid, build:buildsummary.build.number})")
+                a(ui-sref="build({builder:buildsummary.build.builderid, build:buildsummary.build.number})" ng-click="buildsummary.closeParentModal()")
                   | {{buildsummary.builder.name}}/{{buildsummary.build.number}}#{' '}
                 span(ng-if="buildsummary.reason") | {{buildsummary.reason}}
             .flex-grow-1.text-right
