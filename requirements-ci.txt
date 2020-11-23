@@ -20,7 +20,7 @@ configparser==4.0.2  # pyup: ignore
 constantly==15.1.0
 cookies==2.2.1
 cryptography==3.2.1; python_version >= "3.6"
-cryptography==3.2; python_version < "3.6"
+cryptography==3.2; python_version < "3.6"  # pyup: ignore
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
@@ -52,7 +52,7 @@ pathlib2==2.3.5
 pbr==5.5.1
 pep8==1.7.1
 Pillow==8.0.1;  python_version >= "3.6"
-Pillow==7.2;  python_version < "3.6"
+Pillow==7.2;  python_version < "3.6"  # pyup: ignore
 pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
