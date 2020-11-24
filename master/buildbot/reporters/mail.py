@@ -33,8 +33,8 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
-from buildbot.reporters.notifier import ENCODING
-from buildbot.reporters.notifier import NotifierBase
+from buildbot.reporters.base import ENCODING
+from buildbot.reporters.base import ReporterBase
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
@@ -83,7 +83,7 @@ class Domain(util.ComparableMixin):
 
 
 @implementer(interfaces.IEmailSender)
-class MailNotifier(NotifierBase):
+class MailNotifier(ReporterBase):
     secrets = ["smtpUser", "smtpPassword"]
 
     def checkConfig(self, fromaddr, mode=("failing", "passing", "warnings"),

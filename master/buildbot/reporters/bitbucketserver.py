@@ -25,7 +25,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
-from buildbot.reporters import notifier
+from buildbot.reporters.base import ReporterBase
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
@@ -369,7 +369,7 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                     ))
 
 
-class BitbucketServerPRCommentPush(notifier.NotifierBase):
+class BitbucketServerPRCommentPush(ReporterBase):
     name = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks

@@ -22,10 +22,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
+from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.reporters.message import MessageFormatter
-from buildbot.reporters.notifier import NotifierBase
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
@@ -39,7 +39,7 @@ class TestException(Exception):
     pass
 
 
-class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
+class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
                        unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
@@ -53,14 +53,14 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         if old_style:
             with assertProducesWarnings(DeprecatedApiWarning,
                                         message_pattern='have been deprecated'):
-                mn = NotifierBase(*args, **kwargs)
+                mn = ReporterBase(*args, **kwargs)
         else:
             if 'generators' not in kwargs:
                 if 'watchedWorkers' in kwargs:
                     generator = WorkerMissingGenerator(workers=kwargs.pop('watchedWorkers'))
                     kwargs['generators'] = [generator]
 
-            mn = NotifierBase(*args, **kwargs)
+            mn = ReporterBase(*args, **kwargs)
 
         mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
@@ -120,7 +120,7 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         ('messageFormatterMissingWorker', mock.Mock()),
     ])
     def test_check_config_raises_error_when_deprecated_and_generator(self, arg_name, arg_value):
-        notifier = NotifierBase()
+        notifier = ReporterBase()
         with assertProducesWarnings(DeprecatedApiWarning, message_pattern='have been deprecated'):
             with self.assertRaisesConfigError('can\'t specify generators and deprecated notifier'):
                 kwargs = {arg_name: arg_value}
@@ -141,7 +141,7 @@ class TestNotifierBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         ('messageFormatterMissingWorker', mock.Mock()),
     ])
     def test_check_config_raises_warning_when_deprecated(self, arg_name, arg_value):
-        notifier = NotifierBase()
+        notifier = ReporterBase()
         with assertProducesWarnings(DeprecatedApiWarning, message_pattern='have been deprecated'):
             kwargs = {arg_name: arg_value}
             notifier.checkConfig(**kwargs)

@@ -23,9 +23,9 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
-from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import httpclientservice
 
 from .utils import merge_reports_prop
@@ -45,7 +45,7 @@ PRIORITIES = {
 }
 
 
-class PushoverNotifier(NotifierBase):
+class PushoverNotifier(ReporterBase):
 
     def checkConfig(self, user_key, api_token,
                     mode=("failing", "passing", "warnings"),

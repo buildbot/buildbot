@@ -1,17 +1,17 @@
-NotifierBase
+ReporterBase
 ++++++++++++
 
-.. py:currentmodule:: buildbot.reporters.notifier
+.. py:currentmodule:: buildbot.reporters.base
 
-.. py:class:: NotifierBase
+.. py:class:: ReporterBase
 
-:class:`NotifierBase` is a base class used to implement various reporters.
+:class:`ReporterBase` is a base class used to implement various reporters.
 It accepts a list of :ref:`report generators<Report-Generators>` which define what messages to issue on what events.
 If generators decide that an event needs a report, then the ``sendMessages`` function is called.
 The ``sendMessages`` function should be implemented by deriving classes.
 
 
-.. py:class:: NotifierBase(generators=None)
+.. py:class:: ReporterBase(generators=None)
     :noindex:
 
 ``generators``

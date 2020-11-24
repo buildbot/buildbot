@@ -22,9 +22,9 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
-from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import httpclientservice
 
 from .utils import merge_reports_prop
@@ -41,7 +41,7 @@ LEVELS = {
 }
 
 
-class PushjetNotifier(NotifierBase):
+class PushjetNotifier(ReporterBase):
 
     def checkConfig(self, secret,
                     mode=("failing", "passing", "warnings"),
