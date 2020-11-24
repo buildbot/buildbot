@@ -13,6 +13,14 @@ class BuilderController {
         const builderid = $stateParams.builder;
         $scope.forceschedulers = [];
         $scope.is_cancelling = false;
+
+        // Clear breadcrumb and contextual action buttons on destroy
+        const clearGl = function () {
+            glBreadcrumbService.setBreadcrumb([]);
+            glTopbarContextualActionsService.setContextualActions([]);
+        };
+        $scope.$on('$destroy', clearGl);
+
         data.getBuilders(builderid).onNew = function(builder) {
             $window.document.title = $state.current.data.pageTitle({
                 builder: builder['name']});

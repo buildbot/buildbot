@@ -15,6 +15,10 @@ class LogController {
         const buildnumber = dataUtilsService.numberOrString($stateParams.build);
         const stepnumber = dataUtilsService.numberOrString($stateParams.step);
         const slug = $stateParams.log;
+
+        // Clear breadcrumb on destroy
+        $scope.$on('$destroy', () => glBreadcrumbService.setBreadcrumb([]));
+
         data.getBuilders(builderid).onNew = function(builder) {
             $scope.builder = (builder = builder);
             builder.getBuilds(buildnumber).onNew = function(build) {

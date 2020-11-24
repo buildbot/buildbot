@@ -40,6 +40,13 @@ class Workers {
 
         const data = dataService.open().closeOnDestroy($scope);
 
+        // Clear breadcrumb and contextual action buttons on destroy
+        const clearGl = function() {
+            glTopbarContextualActionsService.setContextualActions([]);
+            glBreadcrumbService.setBreadcrumb([]);
+        };
+        $scope.$on('$destroy', clearGl);
+
         $scope.builders = data.getBuilders();
         $scope.masters = data.getMasters();
         $scope.workers = data.getWorkers();
@@ -82,6 +89,7 @@ class Workers {
             };
             $scope.$on('$stateChangeSuccess', setupGl);
             setupGl();
+
             $scope.worker_infos = [];
             for (worker of Array.from(workers)) {
                 worker.num_connections = worker.connected_to.length;
