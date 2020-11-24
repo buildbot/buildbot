@@ -16,7 +16,9 @@ The list of deprecated parameters is as follows:
  - ``watchedWorkers``
  - ``messageFormatterMissingWorker``
 
-The undocumented ``HttpStatusPushBase`` class has been deprecated. Please use ``NotifierBase`` directly.
+The undocumented ``NotifierBase`` class has been renamed to ``ReporterBase``.
+
+The undocumented ``HttpStatusPushBase`` class has been deprecated. Please use ``ReporterBase`` directly.
 
 The ``send`` method of the reporters based on ``HttpStatusPushBase`` has been deprecated.
 This affects only users who implemented custom reporters that directly or indirectly derive ``HttpStatusPushBase``.

@@ -17,7 +17,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
-from buildbot.reporters import notifier
+from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import DeprecatedMessageFormatterBuildJson
 from buildbot.reporters.message import MessageFormatterEmpty
@@ -25,7 +25,7 @@ from buildbot.util import httpclientservice
 from buildbot.warnings import warn_deprecated
 
 
-class HttpStatusPushBase(notifier.NotifierBase):
+class HttpStatusPushBase(ReporterBase):
     def checkConfig(self, builders=None, debug=None, verify=None,
                     wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False,
                     generators=None, _has_old_arg_names=None):
