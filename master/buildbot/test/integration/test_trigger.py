@@ -25,7 +25,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 expectedOutputRegex = \
     r"""\*\*\* BUILD 1 \*\*\* ==> build successful \(success\)
-    \*\*\* STEP worker_preparation \*\*\* ==> worker ready \(success\)
+    \*\*\* STEP worker_preparation \*\*\* ==> worker local1 ready \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
         log:stdio \({loglines}\)
     \*\*\* STEP trigger \*\*\* ==> triggered trigsched \(success\)
@@ -34,7 +34,7 @@ expectedOutputRegex = \
     \*\*\* STEP shell_1 \*\*\* ==> 'echo world' \(success\)
         log:stdio \({loglines}\)
 \*\*\* BUILD 2 \*\*\* ==> build successful \(success\)
-    \*\*\* STEP worker_preparation \*\*\* ==> worker ready \(success\)
+    \*\*\* STEP worker_preparation \*\*\* ==> worker local1 ready \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo ola' \(success\)
         log:stdio \({loglines}\)
 """

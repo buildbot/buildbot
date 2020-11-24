@@ -402,8 +402,9 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'acquiring locks')
         yield self.acquireLocks()
-        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
-                                                          "worker ready")
+
+        readymsg = "worker {} ready".format(self.getWorkerName())
+        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid, readymsg)
         yield self.master.data.updates.finishStep(self.preparation_step.stepid, SUCCESS, False)
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
