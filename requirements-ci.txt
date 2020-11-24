@@ -1,7 +1,7 @@
 alabaster==0.7.12
 appdirs==1.4.4
 asn1crypto==1.4.0
-astroid==2.4.2; python_version >= "3.4"
+astroid==2.4.2;
 attrs==20.3.0
 autobahn==20.6.1  # pyup: ignore  (#5438)
 Automat==20.2.0
@@ -9,9 +9,9 @@ Babel==2.9.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.16.18;  python_version >= "3.6"
+boto3==1.16.23;  python_version >= "3.6"
 boto3==1.15.11;  python_version < "3.6"
-botocore==1.19.18;  python_version >= "3.6"
+botocore==1.19.23;  python_version >= "3.6"
 botocore==1.18.11;  python_version < "3.6"
 cffi==1.14.3
 click==7.1.2
@@ -20,11 +20,10 @@ configparser==4.0.2  # pyup: ignore
 constantly==15.1.0
 cookies==2.2.1
 cryptography==3.2.1; python_version >= "3.6"
-cryptography==3.2; python_version < "3.6"
+cryptography==3.2; python_version < "3.6"  # pyup: ignore
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
-enum34==1.1.10; python_version <= "3.4"
 flake8==3.8.4
 funcparserlib==0.3.6
 funcsigs==1.0.2
@@ -38,7 +37,7 @@ Jinja2==2.11.2
 jmespath==0.10.0
 jsonref==0.2
 lazy-object-proxy==1.5.1
-lz4==3.1.0
+lz4==3.1.1
 markdown2==2.3.10
 MarkupSafe==1.1.1
 mccabe==0.6.1
@@ -52,7 +51,7 @@ pathlib2==2.3.5
 pbr==5.5.1
 pep8==1.7.1
 Pillow==8.0.1;  python_version >= "3.6"
-Pillow==7.2;  python_version < "3.6"
+Pillow==7.2;  python_version < "3.6"  # pyup: ignore
 pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -62,7 +61,7 @@ pyenchant==3.1.1
 pyflakes==2.2.0
 pypugjs==5.9.5
 PyJWT==1.7.1
-pylint==2.6.0; python_version >= "3.4"
+pylint==2.6.0;
 pyOpenSSL==19.1.0
 pyparsing==2.4.7
 python-dateutil==2.8.1
@@ -88,7 +87,6 @@ treq==20.9.0
 Twisted==20.3.0
 txaio==20.4.1
 txrequests==0.9.6
-typing==3.7.4.3; python_version < "3.5"
 webcolors==1.11.1
 Werkzeug==1.0.1
 wrapt==1.12.1
