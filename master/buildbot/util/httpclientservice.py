@@ -59,6 +59,10 @@ class TxRequestsResponseWrapper:
     def code(self):
         return self._res.status_code
 
+    @property
+    def url(self):
+        return self._res.url
+
 
 class HTTPClientService(service.SharedService):
     """A SharedService class that can make http requests to remote services.

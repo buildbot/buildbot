@@ -151,6 +151,11 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
+        if result.code != 200:
+            message = my_json.get('message', 'unknown')
+            log.error("GitHubPullrequestPoller error {0.code} '{1}' "
+                      "while loading {0.url}".format(result, message))
+            return []
         return my_json
 
     @defer.inlineCallbacks

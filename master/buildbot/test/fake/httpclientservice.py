@@ -35,9 +35,10 @@ log = Logger()
 @implementer(IHttpResponse)
 class ResponseWrapper:
 
-    def __init__(self, code, content):
+    def __init__(self, code, content, url=None):
         self._content = content
         self._code = code
+        self._url = url
 
     def content(self):
         content = unicode2bytes(self._content)
@@ -49,6 +50,10 @@ class ResponseWrapper:
     @property
     def code(self):
         return self._code
+
+    @property
+    def url(self):
+        return self._url
 
 
 class HTTPClientService(service.SharedService):

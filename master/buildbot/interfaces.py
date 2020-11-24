@@ -1079,8 +1079,10 @@ class IHttpResponse(Interface):
         """
         :returns: json decoded content of the response via deferred
         """
-    master = Attribute('code',
-                       "http status code of the request's response (e.g 200)")
+    code = Attribute('code',
+                     "http status code of the request's response (e.g 200)")
+    url = Attribute('url',
+                    "request's url (e.g https://api.github.com/endpoint')")
 
 
 class IConfigurator(Interface):

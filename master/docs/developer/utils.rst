@@ -1252,6 +1252,10 @@ For example, a particular daily scheduler could be configured on multiple master
 
         :returns: http status code of the request's response (e.g 200)
 
+    .. py:attribute:: url
+
+        :returns: request's url (e.g https://api.github.com/endpoint')
+
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _treq: https://pypi.python.org/pypi/treq
 .. _twisted IResponse API: https://twistedmatrix.com/documents/current/api/twisted.web.iweb.IResponse.html
