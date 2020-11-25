@@ -32,6 +32,7 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.master = fakemaster.make_master(
             testcase=self, wantData=True, wantDb=True, wantMq=True)
 
@@ -187,6 +188,7 @@ class TestZulipStatusPushDeprecatedSend(unittest.TestCase, ReporterTestMixin, Lo
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.master = fakemaster.make_master(
             testcase=self, wantData=True, wantDb=True, wantMq=True)
 

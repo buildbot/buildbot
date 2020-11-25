@@ -35,12 +35,15 @@ from buildbot.warnings import DeprecatedApiWarning
 
 class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
                            ReporterTestMixin, logging.LoggingMixin):
-    # repository must be in the form http://gitlab/<owner>/<project>
-    TEST_REPO = 'http://gitlab/buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        # repository must be in the form http://gitlab/<owner>/<project>
+        self.reporter_test_repo = 'http://gitlab/buildbot/buildbot'
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -98,7 +101,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_sshurl(self):
-        self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
+        self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -118,8 +121,8 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_merge_request_forked(self):
-        self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
-        self.TEST_PROPS['source_project_id'] = 20922342342
+        self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
+        self.reporter_test_props['source_project_id'] = 20922342342
         build = yield self.insert_build_new()
         self._http.expect(
             'post',
@@ -131,11 +134,11 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
         # Don't run these tests in parallel!
-        del self.TEST_PROPS['source_project_id']
+        del self.reporter_test_props['source_project_id']
 
     @defer.inlineCallbacks
     def test_noproject(self):
-        self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
+        self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         self.setUpLogging()
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
@@ -151,7 +154,7 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_nourl(self):
-        self.TEST_REPO = ''
+        self.reporter_test_repo = ''
         build = yield self.insert_build_new()
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
@@ -214,12 +217,15 @@ class GitLabStatusPushDeprecatedSend(GitLabStatusPush):
 
 class TestGitLabStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
                                          ReporterTestMixin, logging.LoggingMixin):
-    # repository must be in the form http://gitlab/<owner>/<project>
-    TEST_REPO = 'http://gitlab/buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        # repository must be in the form http://gitlab/<owner>/<project>
+        self.reporter_test_repo = 'http://gitlab/buildbot/buildbot'
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,

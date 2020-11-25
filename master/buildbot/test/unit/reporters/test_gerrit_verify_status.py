@@ -42,11 +42,14 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
                                  logging.LoggingMixin,
                                  unittest.TestCase):
 
-    TEST_PROPS = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
+        self.reporter_test_props = {
+            'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]
+        }
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -391,11 +394,13 @@ class GerritVerifyStatusPushDeprecatedSend(GerritVerifyStatusPush):
 class TestGerritVerifyStatusPushDeprecatedSend(TestReactorMixin, ReporterTestMixin,
                                                logging.LoggingMixin, unittest.TestCase):
 
-    TEST_PROPS = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
+        self.reporter_test_props = {
+            'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]
+        }
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,

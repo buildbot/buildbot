@@ -36,12 +36,15 @@ from buildbot.warnings import DeprecatedApiWarning
 
 class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                            ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = 'buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        # project must be in the form <owner>/<project>
+        self.reporter_test_project = 'buildbot/buildbot'
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -88,6 +91,8 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
+        build['complete'] = False
+        build['results'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
@@ -222,13 +227,15 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
 
 class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
                               ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = 'buildbot'
-    TEST_REPO = 'https://github.com/buildbot1/buildbot1.git'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        # project must be in the form <owner>/<project>
+        self.reporter_test_project = 'buildbot'
+        self.reporter_test_repo = 'https://github.com/buildbot1/buildbot1.git'
 
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
@@ -255,7 +262,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_ssh(self):
-        self.TEST_REPO = 'git@github.com:buildbot2/buildbot2.git'
+        self.reporter_test_repo = 'git@github.com:buildbot2/buildbot2.git'
 
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
@@ -329,12 +336,15 @@ class GitHubStatusPushDeprecatedSend(GitHubStatusPush):
 
 class TestGitHubStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
                                          ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = 'buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        # project must be in the form <owner>/<project>
+        self.reporter_test_project = 'buildbot/buildbot'
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,

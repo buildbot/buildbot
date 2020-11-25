@@ -142,6 +142,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -214,8 +215,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
+        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
+                                                   self.reporter_test_revision,
                                                    result)
 
     @defer.inlineCallbacks
@@ -228,8 +229,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
+        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
+                                                   self.reporter_test_revision,
                                                    result)
 
     @defer.inlineCallbacks
@@ -243,8 +244,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore),
                                   (GERRIT_LABEL_REVIEWED, 0))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
+        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
+                                                   self.reporter_test_revision,
                                                    result)
 
     @defer.inlineCallbacks
@@ -361,12 +362,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
-        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
                                  (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
-                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
+                 call(self.reporter_test_project, self.reporter_test_revision, result)]
         gsp.sendCodeReview.assert_has_calls(calls)
 
     # same goes for check_single_build and check_single_build_legacy
@@ -377,12 +378,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCBDeferred)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
-        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
                                  (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
-                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
+                 call(self.reporter_test_project, self.reporter_test_revision, result)]
         gsp.sendCodeReview.assert_has_calls(calls)
 
     @defer.inlineCallbacks
@@ -392,13 +393,13 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         msg = yield self.run_fake_single_build(gsp, buildResult, expWarning=True)
 
-        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
                                  (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore),
                                   (GERRIT_LABEL_REVIEWED, 0))
-        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
-                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
+                 call(self.reporter_test_project, self.reporter_test_revision, result)]
         gsp.sendCodeReview.assert_has_calls(calls)
 
     def test_buildComplete_success_sends_review(self):

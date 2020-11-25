@@ -44,6 +44,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.setUpLogging()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)

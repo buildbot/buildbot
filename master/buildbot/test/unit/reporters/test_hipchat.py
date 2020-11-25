@@ -37,6 +37,7 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -251,6 +252,7 @@ class TestHipchatStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
