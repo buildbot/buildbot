@@ -30,14 +30,15 @@ class BuildbotWWWPkg(unittest.TestCase):
 
     loadTestScript = dedent("""
         import pkg_resources
+        import re
         apps = {}
         for ep in pkg_resources.iter_entry_points('buildbot.www'):
             apps[ep.name] = ep.load()
 
-        assert("scripts.js" in apps["%(epName)s"].resource.listNames())
-        assert(apps["%(epName)s"].version.startswith("0."))
-        assert(apps["%(epName)s"].description is not None)
         print(apps["%(epName)s"])
+        assert("scripts.js" in apps["%(epName)s"].resource.listNames())
+        assert(re.match(r'\d+\.\d+\.\d+', apps["%(epName)s"].version) is not None)
+        assert(apps["%(epName)s"].description is not None)
         """)
 
     @property
