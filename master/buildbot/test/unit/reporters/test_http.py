@@ -69,6 +69,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         config._errors = Mock()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -191,6 +192,7 @@ class TestHttpStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase, Repo
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         config._errors = Mock()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -252,6 +254,7 @@ class TestHttpStatusPushBaseDeprecatedSend(TestReactorMixin, unittest.TestCase, 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
         yield self.master.startService()

@@ -36,11 +36,13 @@ from buildbot.warnings import DeprecatedApiWarning
 
 class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase,
                               ReporterTestMixin, LoggingMixin):
-    TEST_REPO = 'https://example.org/user/repo'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        self.reporter_test_repo = 'https://example.org/user/repo'
 
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
@@ -226,11 +228,13 @@ class BitbucketStatusPushDeprecatedSend(BitbucketStatusPush):
 
 class TestBitbucketStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
                                             ReporterTestMixin, LoggingMixin):
-    TEST_REPO = 'https://example.org/user/repo'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+
+        self.setup_reporter_test()
+        self.reporter_test_repo = 'https://example.org/user/repo'
 
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())

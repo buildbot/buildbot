@@ -57,6 +57,7 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setupReporter(self, **kwargs):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -168,12 +169,10 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def test_basic_with_no_revision(self):
         yield self.setupReporter()
-        old_test_revision = self.TEST_REVISION
-        try:
-            self.TEST_REVISION = None
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_REVISION = old_test_revision
+        self.reporter_test_revision = None
+
+        build = yield self.insert_build_finished(SUCCESS)
+
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
@@ -202,6 +201,7 @@ class TestBitbucketServerStatusPushDeprecatedSend(TestReactorMixin, unittest.Tes
     @defer.inlineCallbacks
     def setupReporter(self, **kwargs):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -273,6 +273,8 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     @defer.inlineCallbacks
     def setupReporter(self, token=None, **kwargs):
         self.setUpTestReactor()
+        self.setup_reporter_test()
+
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -399,23 +401,18 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     @defer.inlineCallbacks
     def test_with_full_ref(self):
         yield self.setupReporter()
-        old_test_branch = self.TEST_BRANCH
-        try:
-            self.TEST_BRANCH = "refs/heads/master"
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_BRANCH = old_test_branch
+        self.reporter_test_branch = "refs/heads/master"
+        build = yield self.insert_build_finished(SUCCESS)
+
         yield self._check_start_and_finish_build(build)
 
     @defer.inlineCallbacks
     def test_with_no_ref(self):
         yield self.setupReporter()
-        old_test_branch = self.TEST_BRANCH
-        try:
-            self.TEST_BRANCH = None
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_BRANCH = old_test_branch
+
+        self.reporter_test_branch = None
+        build = yield self.insert_build_finished(SUCCESS)
+
         self.setUpLogging()
         self._http.expect(
             'post',
@@ -432,12 +429,10 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     @defer.inlineCallbacks
     def test_with_no_revision(self):
         yield self.setupReporter()
-        old_test_revision = self.TEST_REVISION
-        try:
-            self.TEST_REVISION = None
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_REVISION = old_test_revision
+
+        self.reporter_test_revision = None
+        build = yield self.insert_build_finished(SUCCESS)
+
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
@@ -447,12 +442,10 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     @defer.inlineCallbacks
     def test_with_no_repo(self):
         yield self.setupReporter()
-        old_test_repo = self.TEST_REPO
-        try:
-            self.TEST_REPO = None
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_REPO = old_test_repo
+
+        self.reporter_test_repo = None
+        build = yield self.insert_build_finished(SUCCESS)
+
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
@@ -477,19 +470,16 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
             statusSuffix=Interpolate(" [%(prop:unittests_os)s]"), buildNumber=Interpolate('100'),
             ref=Interpolate("%(prop:branch)s"), parentName=Interpolate("%(prop:master_plan)s"),
             testResults=r_testresults, duration=r_duration)
-        old_test_props = self.TEST_PROPS
-        try:
-            self.TEST_PROPS = self.TEST_PROPS.copy()
-            self.TEST_PROPS['unittests_failed'] = 0
-            self.TEST_PROPS['unittests_skipped'] = 2
-            self.TEST_PROPS['unittests_successful'] = 3
-            self.TEST_PROPS['unittests_runtime'] = 50000
-            self.TEST_PROPS['unittests_os'] = "win10"
-            self.TEST_PROPS['plan_name'] = "Unittests"
-            self.TEST_PROPS['master_plan'] = "Unittests-master"
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_PROPS = old_test_props
+
+        self.reporter_test_props['unittests_failed'] = 0
+        self.reporter_test_props['unittests_skipped'] = 2
+        self.reporter_test_props['unittests_successful'] = 3
+        self.reporter_test_props['unittests_runtime'] = 50000
+        self.reporter_test_props['unittests_os'] = "win10"
+        self.reporter_test_props['plan_name'] = "Unittests"
+        self.reporter_test_props['master_plan'] = "Unittests-master"
+        build = yield self.insert_build_finished(SUCCESS)
+
         self._http.expect(
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
@@ -505,14 +495,11 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     @defer.inlineCallbacks
     def test_with_test_results(self):
         yield self.setupReporter()
-        old_test_props = self.TEST_PROPS
-        try:
-            self.TEST_PROPS = self.TEST_PROPS.copy()
-            self.TEST_PROPS['tests_skipped'] = 2
-            self.TEST_PROPS['tests_successful'] = 3
-            build = yield self.insert_build_finished(SUCCESS)
-        finally:
-            self.TEST_PROPS = old_test_props
+
+        self.reporter_test_props['tests_skipped'] = 2
+        self.reporter_test_props['tests_successful'] = 3
+        build = yield self.insert_build_finished(SUCCESS)
+
         self._http.expect(
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
@@ -569,6 +556,7 @@ class TestBitbucketServerCoreAPIStatusPushDeprecatedSend(ConfigErrorsMixin, Test
     @defer.inlineCallbacks
     def setupReporter(self, token=None, **kwargs):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
@@ -654,6 +642,7 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
