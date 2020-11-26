@@ -34,10 +34,10 @@ class BuildbotWWWPkg(unittest.TestCase):
         for ep in pkg_resources.iter_entry_points('buildbot.www'):
             apps[ep.name] = ep.load()
 
+        print(apps["%(epName)s"])
         assert("scripts.js" in apps["%(epName)s"].resource.listNames())
         assert(apps["%(epName)s"].version.startswith("0."))
         assert(apps["%(epName)s"].description is not None)
-        print(apps["%(epName)s"])
         """)
 
     @property
