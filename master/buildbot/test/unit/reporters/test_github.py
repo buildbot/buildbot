@@ -443,6 +443,28 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
+    def test_basic_branch_head(self):
+        self.reporter_test_props['branch'] = 'refs/pull/13/head'
+        build = yield self.insert_build_new()
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/issues/13/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/issues/13/comments',
+            json={'body': 'Build done.'})
+
+        build['complete'] = False
+        yield self.sp._got_event(('builds', 20, 'new'), build)
+        build['complete'] = True
+        build['results'] = SUCCESS
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = FAILURE
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
     def test_multiple_source_stamps_no_props(self):
         repository = 'http://test_repo'
         project = 'test_user/test_project'
