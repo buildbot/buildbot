@@ -126,7 +126,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                 return infos
 
             # needs double quoting of backslashing
-            pattern = self.groupMemberPattern % dict(dn=dn)
+            pattern = self.groupMemberPattern % dict(dn=ldap3.utils.conv.escape_filter_chars(dn))
             res = self.search(c, self.groupBase, pattern,
                               attributes=[self.groupName])
             infos['groups'] = flatten([group_infos['attributes'][self.groupName]
