@@ -14,13 +14,14 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import types
 
 import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
+
+from buildbot.www import ldapuserinfo
 
 
 def get_config_parameter(p):
@@ -31,9 +32,6 @@ def get_config_parameter(p):
 fake_ldap = types.ModuleType('ldap3')
 fake_ldap.SEARCH_SCOPE_WHOLE_SUBTREE = 2
 fake_ldap.get_config_parameter = get_config_parameter
-
-with mock.patch.dict(sys.modules, {'ldap3': fake_ldap}):
-    from buildbot.www import ldapuserinfo
 
 
 class FakeLdap:
@@ -67,7 +65,7 @@ class CommonTestCase(unittest.TestCase):
 
     def _makeSearchSideEffect(self, attribute_type, ret):
         ret = [[{'dn': i[0], attribute_type: i[1]} for i in r]
-             for r in ret]
+               for r in ret]
         self.userInfoProvider.search.side_effect = ret
 
     def makeSearchSideEffect(self, ret):
@@ -102,6 +100,7 @@ class LdapUserInfo(CommonTestCase):
     @defer.inlineCallbacks
     def test_updateUserInfoNoResults(self):
         self.makeSearchSideEffect([[], [], []])
+
         try:
             yield self.userInfoProvider.getUserInfo("me")
         except KeyError as e:
@@ -187,6 +186,39 @@ class LdapUserInfo(CommonTestCase):
         mimeTypeAndData = ('', b'unknown image format')
         res = yield self._getUserAvatar(mimeTypeAndData)
         self.assertIsNone(res)
+
+
+class LdapUserInfoNotEscCharsDn(CommonTestCase):
+    def makeUserInfoProvider(self):
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
+            uri="ldap://uri", bindUser="user", bindPw="pass",
+            accountBase="accbase", groupBase="groupbase",
+            accountPattern="accpattern", groupMemberPattern="(member=%(dn)s)",
+            accountFullName="accountFullName",
+            accountEmail="accountEmail",
+            groupName="groupName",
+            avatarPattern="avatar",
+            avatarData="picture")
+
+    @defer.inlineCallbacks
+    def test_getUserInfoGroupsNotEscCharsDn(self):
+        dn = "cn=Lastname, Firstname \28UIDxxx\29,dc=example,dc=org"
+        pattern = self.userInfoProvider.groupMemberPattern % dict(dn=dn)
+        self.makeSearchSideEffect([[(dn, {"accountFullName": "Lastname, Firstname (UIDxxx)",
+                                          "accountEmail": "mee@too"})],
+                                   [("cn", {"groupName": ["group"]}),
+                                    ("cn", {"groupName": ["group2"]})
+                                    ], []])
+        res = yield self.userInfoProvider.getUserInfo("me")
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern',
+              ['accountEmail', 'accountFullName']), {}),
+            (('groupbase', pattern, ['groupName']), {}),
+        ])
+        self.assertEqual(res, {'email': 'mee@too',
+                               'full_name': 'Lastname, Firstname (UIDxxx)',
+                               'groups': ["group", "group2"],
+                               'username': 'me'})
 
 
 class LdapUserInfoNoGroups(CommonTestCase):
