@@ -31,6 +31,13 @@ In this example, the step renames a tarball based on the day of the week.
    By default, this step passes a copy of the buildmaster's environment variables to the subprocess.
    To pass an explicit environment instead, add an ``env={..}`` argument.
 
+.. note::
+
+    This step is being migrated to :ref:`new-style<New-Style-Build-Steps>`.
+    A new-style equivalent is provided as ``MasterShellCommandNewStyle``.
+    This should be inherited by any custom steps until :ref:`Buildbot 3.0 is released<3.0_Upgrading>`.
+    Regular uses without inheritance are not affected.
+
 Environment variables constructed using the ``env`` argument support expansion so that if you just want to prepend  :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
 Variables that don't exist on the master will be replaced by ``""``.
 
