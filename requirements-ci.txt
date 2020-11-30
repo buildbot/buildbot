@@ -9,7 +9,7 @@ Babel==2.9.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.16.23;  python_version >= "3.6"
+boto3==1.16.25;  python_version >= "3.6"
 boto3==1.15.11;  python_version < "3.6"
 botocore==1.19.23;  python_version >= "3.6"
 botocore==1.18.11;  python_version < "3.6"
