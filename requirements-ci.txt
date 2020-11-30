@@ -13,7 +13,7 @@ boto3==1.16.25;  python_version >= "3.6"
 boto3==1.15.11;  python_version < "3.6"
 botocore==1.19.25;  python_version >= "3.6"
 botocore==1.18.11;  python_version < "3.6"
-cffi==1.14.3
+cffi==1.14.4
 click==7.1.2
 # pin configparser, because 5.x no longer supports Python 3.5
 configparser==4.0.2  # pyup: ignore
