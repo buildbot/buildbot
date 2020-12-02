@@ -147,15 +147,6 @@ class BuildStepMixin:
     def tearDownBuildStep(self):
         pass
 
-    # utilities
-    def _getWorkerCommandVersionWrapper(self):
-        originalGetWorkerCommandVersion = self.step.build.getWorkerCommandVersion
-
-        def getWorkerCommandVersion(cmd, oldversion):
-            return originalGetWorkerCommandVersion(cmd, oldversion)
-
-        return getWorkerCommandVersion
-
     def setupStep(self, step, worker_version=None, worker_env=None,
                   buildFiles=None, wantDefaultWorkdir=True):
         """
@@ -350,8 +341,6 @@ class BuildStepMixin:
 
         @returns: Deferred
         """
-        self.step.build.getWorkerCommandVersion = self._getWorkerCommandVersionWrapper()
-
         self.conn = mock.Mock(name="WorkerForBuilder(connection)")
         self.step.setupProgress()
         result = yield self.step.startStep(self.conn)
