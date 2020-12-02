@@ -113,10 +113,8 @@ class HTTPStepNewStyle(BuildStep):
         yield log.addHeader('Performing {} request to {}\n'.format(self.method, self.url))
         if self.params:
             yield log.addHeader('Parameters:\n')
-            params = requestkwargs.get("params", {})
-            if params:
-                params = sorted(params.items(), key=lambda x: x[0])
-                requestkwargs['params'] = params
+            params = sorted(self.params.items(), key=lambda x: x[0])
+            requestkwargs['params'] = params
             for k, v in params:
                 yield log.addHeader('\t{}: {}\n'.format(k, v))
         data = requestkwargs.get("data", None)
