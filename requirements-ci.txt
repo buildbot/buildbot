@@ -36,7 +36,7 @@ isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 
 Jinja2==2.11.2
 jmespath==0.10.0
 jsonref==0.2
-lazy-object-proxy==1.5.1
+lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
 lz4==3.1.1
 markdown2==2.3.10
 MarkupSafe==1.1.1
