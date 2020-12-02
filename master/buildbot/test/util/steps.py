@@ -19,7 +19,6 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
 
-from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process.results import EXCEPTION
@@ -200,7 +199,7 @@ class BuildStepMixin:
         self.build.builder.config.env = worker_env.copy()
 
         # watch for properties being set
-        self.properties = interfaces.IProperties(b)
+        self.properties = b.getProperties()
 
         # step.progress
 

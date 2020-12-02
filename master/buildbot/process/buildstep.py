@@ -20,7 +20,6 @@ from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import components
 from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
@@ -436,6 +435,9 @@ class BuildStep(results.ResultComputingConfigMixin,
     @workdir.setter
     def workdir(self, workdir):
         self._workdir = workdir
+
+    def getProperties(self):
+        return self.build.getProperties()
 
     def get_step_factory(self):
         return self._factory
@@ -972,11 +974,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             warn_deprecated('2.9.0', ('Subclassing old-style step {0} in {1} is deprecated, '
                                       'please migrate to new-style equivalent {0}NewStyle'
                                       ).format(name, self.__class__.__name__))
-
-
-components.registerAdapter(
-    lambda step: interfaces.IProperties(step.build),
-    BuildStep, interfaces.IProperties)
 
 
 class LoggingBuildStep(BuildStep):

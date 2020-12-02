@@ -18,7 +18,6 @@ from functools import reduce
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.failure import Failure
@@ -109,6 +108,9 @@ class Build(properties.PropertiesMixin):
 
         # tracks the config version for locks
         self.config_version = None
+
+    def getProperties(self):
+        return self.properties
 
     def setBuilder(self, builder):
         """
@@ -759,8 +761,3 @@ class Build(properties.PropertiesMixin):
         return self.build_status
 
     # stopBuild is defined earlier
-
-
-components.registerAdapter(
-    lambda build: interfaces.IProperties(build.properties),
-    Build, interfaces.IProperties)

@@ -228,7 +228,7 @@ class PropertiesMixin:
 
     """
     A mixin to add L{IProperties} methods to a class which does not implement
-    the interface, but which can be coerced to the interface via an adapter.
+    the full interface, only getProperties() function.
 
     This is useful because L{IProperties} methods are often called on L{Build}
     and L{BuildStatus} objects without first coercing them.
@@ -240,29 +240,23 @@ class PropertiesMixin:
     set_runtime_properties = False
 
     def getProperty(self, propname, default=None):
-        props = IProperties(self)
-        return props.getProperty(propname, default)
+        return self.getProperties().getProperty(propname, default)
 
     def hasProperty(self, propname):
-        props = IProperties(self)
-        return props.hasProperty(propname)
+        return self.getProperties().hasProperty(propname)
 
     has_key = hasProperty
 
     def setProperty(self, propname, value, source='Unknown', runtime=None):
         # source is not optional in IProperties, but is optional here to avoid
         # breaking user-supplied code that fails to specify a source
-        props = IProperties(self)
+        props = self.getProperties()
         if runtime is None:
             runtime = self.set_runtime_properties
         props.setProperty(propname, value, source, runtime=runtime)
 
-    def getProperties(self):
-        return IProperties(self)
-
     def render(self, value):
-        props = IProperties(self)
-        return props.render(value)
+        return self.getProperties().render(value)
 
 
 @implementer(IRenderable)

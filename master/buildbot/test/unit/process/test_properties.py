@@ -18,11 +18,9 @@ from copy import deepcopy
 import mock
 
 from twisted.internet import defer
-from twisted.python import components
 from twisted.trial import unittest
 from zope.interface import implementer
 
-from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
 from buildbot.process.buildrequest import TempChange
 from buildbot.process.buildrequest import TempSourceStamp
@@ -1078,12 +1076,8 @@ class TestProperties(unittest.TestCase):
 class MyPropertiesThing(PropertiesMixin):
     set_runtime_properties = True
 
-
-def adaptMyProperties(mp):
-    return mp.properties
-
-
-components.registerAdapter(adaptMyProperties, MyPropertiesThing, IProperties)
+    def getProperties(self):
+        return self.properties
 
 
 class TestPropertiesMixin(unittest.TestCase):
