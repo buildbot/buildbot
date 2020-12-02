@@ -175,9 +175,7 @@ class BuildStepMixin:
         if buildFiles is None:
             buildFiles = list()
 
-        factory = interfaces.IBuildStepFactory(step)
-
-        step = self.step = factory.buildStep()
+        step = self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
         if wantDefaultWorkdir:
