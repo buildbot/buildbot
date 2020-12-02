@@ -151,7 +151,7 @@ class HTTPStepNewStyle(BuildStep):
     @defer.inlineCallbacks
     def log_response(self, log, response):
 
-        yield log.addHeader('Request Header:\n')
+        yield log.addHeader('Request Headers:\n')
         for k, v in response.request.headers.items():
             if k.casefold() in self.hide_request_headers:
                 v = '<HIDDEN>'
@@ -164,7 +164,7 @@ class HTTPStepNewStyle(BuildStep):
         else:
             yield log.addStderr('Status: {}\n'.format(response.status_code))
 
-        yield log.addHeader('Response Header:\n')
+        yield log.addHeader('Response Headers:\n')
         for k, v in response.headers.items():
             if k.casefold() in self.hide_response_headers:
                 v = '<HIDDEN>'
