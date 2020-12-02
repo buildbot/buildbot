@@ -421,10 +421,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     def workdir(self, workdir):
         self._workdir = workdir
 
-    def addFactoryArguments(self, **kwargs):
-        # this is here for backwards compatibility
-        pass
-
     def _getStepFactory(self):
         return self._factory
 
