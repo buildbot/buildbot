@@ -54,6 +54,10 @@ del _hush_pyflakes
 # TODO: move session singleton handling back to this module from http_oldstyle
 
 
+def _headerSet(headers):
+    return frozenset(map(lambda x: x.casefold(), headers))
+
+
 class HTTPStepNewStyle(BuildStep):
 
     name = 'HTTPStep'
@@ -66,7 +70,9 @@ class HTTPStepNewStyle(BuildStep):
     renderables = requestsParams + ["method", "url"]
     session = None
 
-    def __init__(self, url, method, **kwargs):
+    def __init__(self, url, method,
+                 hide_request_headers=None, hide_response_headers=None,
+                 **kwargs):
         if txrequests is None:
             config.error(
                 "Need to install txrequest to use this step:\n\n pip install txrequests")
@@ -76,6 +82,9 @@ class HTTPStepNewStyle(BuildStep):
 
         self.method = method
         self.url = url
+
+        self.hide_request_headers = _headerSet(hide_request_headers or [])
+        self.hide_response_headers = _headerSet(hide_response_headers or [])
 
         for param in self.requestsParams:
             setattr(self, param, kwargs.pop(param, None))
@@ -104,10 +113,8 @@ class HTTPStepNewStyle(BuildStep):
         yield log.addHeader('Performing {} request to {}\n'.format(self.method, self.url))
         if self.params:
             yield log.addHeader('Parameters:\n')
-            params = requestkwargs.get("params", {})
-            if params:
-                params = sorted(params.items(), key=lambda x: x[0])
-                requestkwargs['params'] = params
+            params = sorted(self.params.items(), key=lambda x: x[0])
+            requestkwargs['params'] = params
             for k, v in params:
                 yield log.addHeader('\t{}: {}\n'.format(k, v))
         data = requestkwargs.get("data", None)
@@ -144,8 +151,10 @@ class HTTPStepNewStyle(BuildStep):
     @defer.inlineCallbacks
     def log_response(self, log, response):
 
-        yield log.addHeader('Request Header:\n')
+        yield log.addHeader('Request Headers:\n')
         for k, v in response.request.headers.items():
+            if k.casefold() in self.hide_request_headers:
+                v = '<HIDDEN>'
             yield log.addHeader('\t{}: {}\n'.format(k, v))
 
         yield log.addStdout('URL: {}\n'.format(response.url))
@@ -155,8 +164,10 @@ class HTTPStepNewStyle(BuildStep):
         else:
             yield log.addStderr('Status: {}\n'.format(response.status_code))
 
-        yield log.addHeader('Response Header:\n')
+        yield log.addHeader('Response Headers:\n')
         for k, v in response.headers.items():
+            if k.casefold() in self.hide_response_headers:
+                v = '<HIDDEN>'
             yield log.addHeader('\t{}: {}\n'.format(k, v))
 
         yield log.addStdout(' ------ Content ------\n{}'.format(response.text))

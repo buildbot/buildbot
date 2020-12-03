@@ -192,6 +192,18 @@ OK:key1=value1'''.format(url))
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()
 
+    @defer.inlineCallbacks
+    def test_hidden_header(self):
+        url = self.getURL("header")
+        self.setupStep(http.GETNewStyle(url, headers={"X-Test": "True"},
+                                        hide_request_headers=["X-Test"],
+                                        hide_response_headers=["Content-Length"]))
+        self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
+        self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
+        yield self.runStep()
+        self.assertIn("X-Test: <HIDDEN>", self.step.logs['log'].header)
+        self.assertIn("Content-Length: <HIDDEN>", self.step.logs['log'].header)
+
     def test_params_renderable(self):
         url = self.getURL()
         self.setupStep(http.GETNewStyle(url, params=properties.Property("x")))
