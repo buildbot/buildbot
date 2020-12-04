@@ -1,2 +1,0 @@
-Fixed :py:class:`~HashiCorpVaultSecretProvider`
-fixed reading secrets attributes, when they are not named 'value'

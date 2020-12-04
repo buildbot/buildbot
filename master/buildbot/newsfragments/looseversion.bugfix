@@ -1,1 +1,0 @@
-remove usage of `distutils.LooseVersion` is favor of `packaging.version`

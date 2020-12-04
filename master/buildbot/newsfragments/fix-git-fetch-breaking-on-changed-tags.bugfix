@@ -1,1 +1,0 @@
-Fixed an issue where ``git fetch`` would break on tag changes by adding the ``-f`` option. This could previously be handled by manually specifying ``clobberOnFailure``, but as that is rather heavy handed and off by default, this new default functionality will keep Buildbot in sync with the repository it is fetching from.

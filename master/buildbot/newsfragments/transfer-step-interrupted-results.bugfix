@@ -1,1 +1,0 @@
-Transfer steps now return CANCELLED instead of SUCCESS when interrupted.

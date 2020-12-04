@@ -1,1 +1,0 @@
-Fix AssertionError when calling try client with ``--dryrun`` option (:issue: `5618`).

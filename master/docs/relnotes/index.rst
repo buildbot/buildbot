@@ -10,6 +10,214 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.9.0`` ( ``2020-12-04`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed a bug preventing the ``timeout=None`` parameter of CopyDirectory step from having effect (:issue:`3032`).
+- Fixed a bug in ``GitHubStatusPush`` that would cause silent failures for builders that specified multiple codebases.
+- Fixed display refresh of breadcrumb and topbar contextual action buttons (:issue:`5549`)
+- Throwing an exception out of a log observer while processing logs will now correctly fail the step in the case of new style steps.
+- Fixed an issue where ``git fetch`` would break on tag changes by adding the ``-f`` option.
+  This could previously be handled by manually specifying ``clobberOnFailure``, but as that is rather heavy handed and off by default, this new default functionality will keep Buildbot in sync with the repository it is fetching from.
+- Fixed :py:class:`~GitHubStatusPush` logging an error when triggered by the NightlyScheduler
+- Fixed GitHub webhook event handler when no token has been set
+- Fixed :py:class:`~HashiCorpVaultSecretProvider` reading secrets attributes, when they are not named ``value``
+- Fixed :py:class:`~buildbot.changes.HgPoller` misuse of ``hg heads -r <branch>`` to ``hg heads <branch>`` because ``-r`` option shows heads that may not be on the wanted branch.
+- Fixed inconsistent REST api, buildid vs build_number, :issue:`3427`
+- Fixed permission denied in ``rmtree()`` usage in ``PrivateTemporaryDirectory`` on Windows
+- Fixed AssertionError when calling try client with ``--dryrun`` option (:issue:`5618`).
+- Fixed issue with known hosts not working when using git with a version less than 2.3.0
+- ``ForceScheduler`` now gets Responsible Users from owner property (:issue:`3476`)
+- Added support for ``refs/pull/###/head`` ref for fetching the issue ID in the GitHub reporter instead of always expecting ``refs/pull/###/merge``.
+- Fixed Github v4 API URL
+- Fixed ``show_old_builders`` to have expected effects in the waterfall view.
+- Latent workers no longer reuse the started worker when it's incompatible with the requested build.
+- Fixed handling of submission of non-decoded ``bytes`` logs in new style steps.
+- Removed usage of `distutils.LooseVersion` is favor of `packaging.version`
+- Updated :py:class:`OpenstackLatentWorker` to use checkConfig/reconfigService structure.
+- Fixed :py:class:`OpenstackLatentWorker` to use correct method when listing images.
+  Updated :py:class:`OpenstackLatentWorker` to support renderable ``flavor``, ``nova_args`` and ``meta``.
+- Fixed support of renderables for `p4base`` and ``p4branch`` arguments of the P4 step.
+- Buildbot now uses pypugjs library instead of pyjade to render pug templates.
+- Step summary is now updated after the last point where the step status is changed.
+  Previously exceptions in log finish methods would be ignored.
+- Transfer steps now return ``CANCELLED`` instead of ``SUCCESS`` when interrupted.
+- Fixed bytes-related master crash when calling buildbot try (:issue:`4488`)
+- The waterfall modal is now closed upon clicking build summary link
+- The worker will now report low level cause of errors during the command startup.
+
+Improved Documentation
+----------------------
+
+- Added documentation of how to log to stdout instead of twistd.log.
+- Added documentation of how to use pdb in a buildbot application.
+- Fixed import path for plugins
+- Added documentation about vault secrets handling.
+
+Features
+--------
+
+- Added UpCloud latent worker :py:class:`~buildbot.worker.upcloud.UpCloudLatentWorker`
+- The init flag is now allowed to be set to false in the host config for :py:class:`~buildbot.plugins.worker.DockerLatentWorker`
+- Added ability for the browser to auto-complete force dialog form fields.
+- AvatarGitHub class has been implemented, which lets us display the user's GitHub avatar.
+- New reporter has been implemented :py:class:`~buildbot.reporters.bitbucketserver.BitbucketServerCoreAPIStatusPush`.
+  Reporting build status has been integrated into `BitbucketServer Core REST API <https://docs.atlassian.com/bitbucket-server/rest/7.4.0/bitbucket-rest.html#idp219>`_ in `Bitbucket Server 7.4 <https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-4-release-notes-1013849643.html#BitbucketServer7.4releasenotes-cicdStreamlineyourworkflowwithIntegratedCI/CD>`_.
+  Old `BitbucketServer Build REST API <https://docs.atlassian.com/bitbucket-server/rest/7.4.0/bitbucket-build-rest.html#idp7>`_ is still working, but does not provide the new and improved functionality.
+- A per-build key-value store and related APIs have been created for transient and potentially large per-build data.
+- Buildbot worker docker image has been upgraded to ``python3``.
+- Added the ability to copy build properties to the clipboard.
+- The ``urlText`` parameter to the ``DirectoryUpload`` step is now renderable.
+- Added the option to hide sensitive HTTP header values from the log in :py:class:`~buildbot.steps.http.HTTPStep`.
+- It is now possible to set ``urlText`` on a url linked to a ``MultipleFileUpload`` step.
+- Use ``os_auth_args`` to pass in authentication for :py:class:`OpenstackLatentWorker`.
+- ``DebPbuilder``, ``DebCowbuilder``, ``UbuPbuilder`` and ``UbuCowbuilder`` now support renderables for the step parameters.
+- A new report generator API has been implemented to abstract generation of various reports that are then sent via the reporters.
+  The ``BitbucketServerPRCommentPush``, ``MailNotifier``, ``PushjetNotifier`` and ``PushoverNotifier`` support this new API via their new ``generators`` parameter.
+- Added rules for Bitbucket to default revlink helpers.
+- Added counts of the statuses of the triggered builds to the summary of trigger steps
+- The worker preparation step now shows the worker name.
+
+Deprecations and Removals
+-------------------------
+
+- ``buildbot.test.fake.httpclientservice.HttpClientService.getFakeService()`` has been deprecated.
+  Use ``getService`` method of the same class.
+- The ``MTR`` step has been deprecated due to migration to new style steps and the build result APIs.
+  The lack of proper unit tests made it too time-consuming to migrate this step along with other steps.
+  Contributors are welcome to step in, migrate this step and add a proper test suite so that this situation never happens again.
+- Many steps have been migrated to new style from old style.
+
+  This only affects users who use steps as base classes for their own steps.
+  New style steps provide a completely different set of functions that may be overridden.
+  Direct instantiation of step classes is not affected.
+  Old and new style steps work exactly the same in that case and users don't need to do anything.
+
+  The old-style steps have been deprecated since Buildbot v0.9.0 released in October 2016.
+  The support for old-style steps will be removed entirely Buildbot v3.0.0 which will be released in near future.
+  Users are advised to upgrade their custom steps to new-style steps as soon as possible.
+
+  A gradual migration path is provided for steps that are likely to be used as base classes.
+  Users need to inherit from ``<StepName>NewStyle`` class and convert all overridden APIs to use new-style step APIs.
+  The old-style ``<StepName>`` classes will be provided until Buildbot v3.0.0 release.
+  In Buildbot v3.0.0 ``<StepName>`` will refer to new-style steps and will be equivalent to ``<StepName>NewStyle``.
+  ``<StepName>NewStyle`` aliases will be removed in Buildbot v3.2.0.
+
+  The list of old-style steps that have new-style equivalents for gradual migration is as follows:
+
+   - ``Configure`` (new-style equivalent is ``ConfigureNewStyle``)
+   - ``Compile`` (new-style equivalent is ``CompileNewStyle``)
+   - ``HTTPStep`` (new-style equivalent is ``HTTPStepNewStyle``)
+   - ``GET``, ``PUT``, ``POST``, ``DELETE``, ``HEAD``, ``OPTIONS`` (new-style equivalent is ``GETNewStyle``, ``PUTNewStyle``, ``POSTNewStyle``, ``DELETENewStyle``, ``HEADNewStyle``, ``OPTIONSNewStyle``)
+   - ``MasterShellCommand`` (new-style equivalent is ``MasterShellCommandNewStyle``)
+   - ``ShellCommand`` (new-style equivalent is ``ShellCommandNewStyle``)
+   - ``SetPropertyFromCommand`` (new-style equivalent is ``SetPropertyFromCommandNewStyle``)
+   - ``WarningCountingShellCommand`` (new-style equivalent is ``WarningCountingShellCommandNewStyle``)
+   - ``Test`` (new-style equivalent is ``TestNewStyle``)
+
+  The list of old-style steps that have been converted to new style without a gradual migration path is as follows:
+
+   - ``BuildEPYDoc``
+   - ``CopyDirectory``
+   - ``DebLintian``
+   - ``DebPbuilder``
+   - ``DirectoryUpload``
+   - ``FileDownload``
+   - ``FileExists``
+   - ``FileUpload``
+   - ``HLint``
+   - ``JsonPropertiesDownload``
+   - ``JsonStringDownload``
+   - ``LogRenderable``
+   - ``MakeDirectory``
+   - ``MaxQ``
+   - ``Mock``
+   - ``MockBuildSRPM``
+   - ``MsBuild``, ``MsBuild4``, ``MsBuild12``, ``MsBuild14``, ``MsBuild141``
+   - ``MultipleFileUpload``
+   - ``PerlModuleTest``
+   - ``PyFlakes``
+   - ``PyLint``
+   - ``RemoveDirectory``
+   - ``RemovePYCs``
+   - ``RpmLint``
+   - ``RpmBuild``
+   - ``SetPropertiesFromEnv``
+   - ``Sphinx``
+   - ``StringDownload``
+   - ``TreeSize``
+   - ``Trial``
+   - ``VC6``, ``VC7``, ``VC8``, ``VC9``, ``VC10``, ``VC11``, ``VC12``, ``VC14``, ``VC141``
+   - ``VS2003``, ``VS2005``, ``VS2008``, ``VS2010`, ``VS2012``, ``VS2013``, ``VS2015``, ``VS2017``
+
+  Additionally, all source steps have been migrated to new style without a gradual migration path.
+  Ability to be used as base classes was not documented and thus is considered unsupported.
+  Please submit any custom steps to Buildbot for inclusion into the main tree to reduce maintenance burden.
+  Additionally, bugs can be submitted to expose needed APIs publicly for which a migration path will be provided in the future.
+
+  The list of old-style source steps that have been converted to new style is as follows:
+
+   - ``Bzr``
+   - ``CVS``
+   - ``Darcs``
+   - ``Gerrit``
+   - ``Git``
+   - ``GitCommit``
+   - ``GitLab``
+   - ``GitPush``
+   - ``GitTag``
+   - ``Monotone``
+   - ``Mercurial``
+   - ``P4``
+   - ``Repo``
+   - ``Source``
+   - ``SVN``
+- The undocumented and broken RpmSpec step has been removed.
+- The usage of certain parameters have been deprecated in ``BitbucketServerPRCommentPush``, ``MailNotifier``, ``PushjetNotifier`` and ``PushoverNotifier`` reporters.
+  They have been replaced by the ``generators`` parameter.
+  The support for the deprecated parameters will be removed in Buildbot v3.0.
+  The list of deprecated parameters is as follows:
+
+   - ``mode``
+   - ``tags``
+   - ``builders``
+   - ``buildSetSummary``
+   - ``messageFormatter``
+   - ``subject``
+   - ``addLogs``
+   - ``addPatch``
+   - ``schedulers``
+   - ``branches``
+   - ``watchedWorkers``
+   - ``messageFormatterMissingWorker``
+
+  The undocumented ``NotifierBase`` class has been renamed to ``ReporterBase``.
+
+  The undocumented ``HttpStatusPushBase`` class has been deprecated. Please use ``ReporterBase`` directly.
+
+  The ``send`` method of the reporters based on ``HttpStatusPushBase`` has been deprecated.
+  This affects only users who implemented custom reporters that directly or indirectly derive ``HttpStatusPushBase``.
+  Please use ``sendMessage`` as the replacement.
+  The following reporters have been affected:
+
+   - ``HttpStatusPush``
+   - ``BitbucketStatusPush``
+   - ``BitbucketServerStatusPush``
+   - ``BitbucketServerCoreAPIStatusPush``
+   - ``GerritVerifyStatusPush``
+   - ``GitHubStatusPush``
+   - ``GitLabStatusPush``
+   - ``HipChatStatusPush``
+   - ``ZulipStatusPush``
+- BuildBot now requires SQLAlchemy 1.2.0 or newer.
+- Deprecation warnings have been added to the ``buildbot.status`` module. It has been deprecated in documentation since v0.9.0.
+- ``buildbot.interfaces.WorkerTooOldError`` is deprecated in favour of ``buildbot.interfaces.WorkerSetupError``
+- The ``worker_transition`` module has been removed.
+
+
 Buildbot ``2.8.4`` ( ``2020-08-29`` )
 =====================================
 
