@@ -42,7 +42,7 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
 
     def checkConfig(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
                     **kwargs):
-        super().checkConfig(**kwargs)
+        super().checkConfig(_has_old_arg_names={'builders': False}, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, oauth_key, oauth_secret,

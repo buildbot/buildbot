@@ -84,7 +84,7 @@ class HttpStatusPushBase(ReporterBase):
                                           wantLogs=want_logs)
         return [
             BuildStatusGenerator(builders=builders, message_formatter=formatter, report_new=True,
-                                 _want_previous_build=want_previous_build)
+                                 mode="all", _want_previous_build=want_previous_build)
         ]
 
     def sendMessage(self, reports):

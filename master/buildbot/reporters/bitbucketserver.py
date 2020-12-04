@@ -50,7 +50,8 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
     def checkConfig(self, base_url, user, password, key=None, statusName=None,
                     startDescription=None, endDescription=None, verbose=False,
                     **kwargs):
-        super().checkConfig(wantProperties=True, _has_old_arg_names={'wantProperties': False},
+        super().checkConfig(wantProperties=True,
+                            _has_old_arg_names={'builders': False, 'wantProperties': False},
                             **kwargs)
 
     @defer.inlineCallbacks
@@ -166,7 +167,8 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
         if token is not None and auth is not None:
             config.error("Only one authentication method can be given "
                          "(token or auth)")
-        super().checkConfig(wantProperties=True, _has_old_arg_names={'wantProperties': False},
+        super().checkConfig(wantProperties=True,
+                            _has_old_arg_names={'builders': False, 'wantProperties': False},
                             **kwargs)
 
     @defer.inlineCallbacks
@@ -396,15 +398,6 @@ class BitbucketServerPRCommentPush(ReporterBase):
                             addPatch=False,
                             _has_old_arg_names={'subject': False},
                             **kwargs)
-
-    def isMessageNeeded(self, build):
-        if 'pullrequesturl' in build['properties']:
-            return super().isMessageNeeded(build)
-        return False
-
-    def workerMissing(self, key, worker):
-        # a comment is always associated to a change
-        pass
 
     def sendComment(self, pr_url, text):
         path = urlparse(unicode2bytes(pr_url)).path
