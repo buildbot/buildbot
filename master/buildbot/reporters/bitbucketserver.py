@@ -397,15 +397,6 @@ class BitbucketServerPRCommentPush(ReporterBase):
                             _has_old_arg_names={'subject': False},
                             **kwargs)
 
-    def isMessageNeeded(self, build):
-        if 'pullrequesturl' in build['properties']:
-            return super().isMessageNeeded(build)
-        return False
-
-    def workerMissing(self, key, worker):
-        # a comment is always associated to a change
-        pass
-
     def sendComment(self, pr_url, text):
         path = urlparse(unicode2bytes(pr_url)).path
         payload = {'text': text}

@@ -723,11 +723,6 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
         yield self.cp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
-    def test_missing_worker_does_nothing(self):
-        yield self.setupReporter()
-        self.cp.workerMissing(("workers", 13, "missing"), 13)
-
-    @defer.inlineCallbacks
     def test_reporter_with_buildset(self):
         yield self.setupReporter(generator_class=BuildSetStatusGenerator)
         yield self.setupBuildResults(SUCCESS)
