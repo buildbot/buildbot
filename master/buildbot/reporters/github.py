@@ -43,6 +43,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
         super().checkConfig(wantProperties=wantProperties,
                             _has_old_arg_names={
+                                'builders': False,
                                 'wantProperties': wantProperties is not True
                             }, **kwargs)
 
