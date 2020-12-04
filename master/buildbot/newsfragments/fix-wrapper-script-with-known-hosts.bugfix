@@ -1,1 +1,0 @@
-Fix issue with known hosts not working when using git with a version less than 2.3.0

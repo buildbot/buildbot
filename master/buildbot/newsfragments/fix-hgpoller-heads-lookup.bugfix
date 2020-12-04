@@ -1,1 +1,0 @@
-fixed :py:class:`~buildbot.changes.HgPoller` misuse of `hg heads -r <branch>` to `hg heads <branch>` because `-r` option shows heads that may not be on the wanted branch.

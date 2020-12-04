@@ -1,3 +1,0 @@
-The ``MTR`` step has been deprecated due to migration to new style steps and the build result APIs.
-The lack of proper unit tests made it too time-consuming to migrate this step along with other steps.
-Contributors are welcome to step in, migrate this step and add a proper test suite so that this situation never happens again.

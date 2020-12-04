@@ -1,1 +1,0 @@
-Fix support of renderables for `p4base`` and ``p4branch`` arguments of the P4 step.
