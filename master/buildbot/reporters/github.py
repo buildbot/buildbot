@@ -39,7 +39,7 @@ HOSTED_BASE_URL = 'https://api.github.com'
 class GitHubStatusPush(http.HttpStatusPushBase):
     name = "GitHubStatusPush"
 
-    def checkConfig(token, startDescription=None, endDescription=None,
+    def checkConfig(self, token, startDescription=None, endDescription=None,
                     context=None, baseURL=None, verbose=False, wantProperties=True, **kwargs):
         super().checkConfig(wantProperties=wantProperties,
                             _has_old_arg_names={

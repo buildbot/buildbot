@@ -68,6 +68,14 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
     def tearDown(self):
         return self.master.stopService()
 
+    def test_check_config(self):
+        service = GitHubStatusPush(Interpolate('XXYYZZ'))
+        service.checkConfig(Interpolate('token'), startDescription=Interpolate('start'),
+                            endDescription=Interpolate('end'),
+                            context=Interpolate('context'),
+                            verbose=True,
+                            builders=['builder1'])
+
     @defer.inlineCallbacks
     def test_basic(self):
         build = yield self.insert_build_new()
