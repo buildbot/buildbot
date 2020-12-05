@@ -1,1 +1,0 @@
-Fixed ``checkConfig`` failures in ``GitHubStatusPush`` and ``GitLabStatusPush`` (:issue:`5664`).

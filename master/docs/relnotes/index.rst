@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.9.1`` ( ``2020-12-05`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed ``checkConfig`` failures in ``GitHubStatusPush`` and ``GitLabStatusPush`` (:issue:`5664`).
+- Fixed incorrect deprecation notice for the ``builders`` argument of ``GitLabStatusPush``.
+
+
 Buildbot ``2.9.0`` ( ``2020-12-04`` )
 =====================================
 
