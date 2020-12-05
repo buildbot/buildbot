@@ -216,6 +216,7 @@ Deprecations and Removals
 - Deprecation warnings have been added to the ``buildbot.status`` module. It has been deprecated in documentation since v0.9.0.
 - ``buildbot.interfaces.WorkerTooOldError`` is deprecated in favour of ``buildbot.interfaces.WorkerSetupError``
 - The ``worker_transition`` module has been removed.
+- The buildbot worker Docker image has been updated to Ubuntu 20.04.
 
 
 Buildbot ``2.8.4`` ( ``2020-08-29`` )
