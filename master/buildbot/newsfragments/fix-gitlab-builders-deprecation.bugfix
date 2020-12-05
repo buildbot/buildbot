@@ -1,1 +1,0 @@
-Fixed incorrect deprecation notice for the ``builders`` argument of ``GitLabStatusPush``.
