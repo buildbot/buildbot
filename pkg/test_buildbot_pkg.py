@@ -93,10 +93,6 @@ class BuildbotWWWPkg(unittest.TestCase):
         self.check_correct_installation()
 
 
-class BuildbotMDWWWPkg(BuildbotWWWPkg):
-    pkgPaths = ["www"]
-
-
 class BuildbotConsolePkg(BuildbotWWWPkg):
     pkgName = "buildbot-console-view"
     pkgPaths = ["www", "console_view"]
