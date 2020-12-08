@@ -1,1 +1,0 @@
-Revert too early deprecation of the ``format_fn``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs`` arguments of ``HttpStatusPush``.

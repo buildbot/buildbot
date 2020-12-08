@@ -10,6 +10,17 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.9.2`` ( ``2020-12-08`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed the profile menu wrapping because the avatar shows more often and hiding the profile name was not kept in sync.
+- Reverted too early deprecation of the ``format_fn``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs`` arguments of ``HttpStatusPush``.
+- Reverted accidental too early migration of ``MasterShellCommand`` and HTTP steps to new style (:issue:`5674`).
+
+
 Buildbot ``2.9.1`` ( ``2020-12-05`` )
 =====================================
 
