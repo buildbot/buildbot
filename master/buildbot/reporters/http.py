@@ -117,12 +117,12 @@ class HttpStatusPush(HttpStatusPushBase):
             config.error("format_fn must be a function")
 
         old_arg_names = {
-            'format_fn': format_fn is not None,
-            'builders': builders is not None,
-            'wantProperties': wantProperties is not False,
-            'wantSteps': wantSteps is not False,
-            'wantPreviousBuild': wantPreviousBuild is not False,
-            'wantLogs': wantLogs is not False,
+            'format_fn': False,
+            'builders': False,
+            'wantProperties': False,
+            'wantSteps': False,
+            'wantPreviousBuild': False,
+            'wantLogs': False,
         }
 
         passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
