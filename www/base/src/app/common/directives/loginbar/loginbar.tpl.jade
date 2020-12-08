@@ -15,9 +15,8 @@ ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'NoAuth'")
 
     li.dropdown(uib-dropdown, ng-hide="anonymous")
         a.dropdown-toggle(uib-dropdown-toggle)
-            .avatar()
-                img(ng-src="avatar?username={{username}}&email={{email}}")
-            span(ng-if="!email")
+            img.avatar(ng-if="config.avatar_methods.length" ng-src="avatar?username={{username}}&email={{email}}")
+            span(ng-if="!config.avatar_methods.length")
                 | {{full_name || username}}
                 b.caret
         ul.dropdown-menu(uib-dropdown-menu)
