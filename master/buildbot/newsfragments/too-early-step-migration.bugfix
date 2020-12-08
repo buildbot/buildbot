@@ -1,0 +1,1 @@
+Reverted accidental too early migration of ``MasterShellCommand`` and HTTP steps to new style (:issue:`5674`).
