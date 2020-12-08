@@ -85,10 +85,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         formatter.wantLogs = False
 
         if old_style:
-            with assertProducesWarnings(DeprecatedApiWarning,
-                                        message_pattern='have been deprecated'):
-                mn = yield self.setupNotifier(old_style=True, messageFormatter=formatter,
-                                              **mnKwargs)
+            mn = yield self.setupNotifier(old_style=True, messageFormatter=formatter, **mnKwargs)
         else:
             generator_kwargs = {}
             if 'mode' in mnKwargs:
@@ -122,10 +119,9 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
     ])
     def test_check_config_raises_error_when_deprecated_and_generator(self, arg_name, arg_value):
         notifier = ReporterBase()
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='have been deprecated'):
-            with self.assertRaisesConfigError('can\'t specify generators and deprecated notifier'):
-                kwargs = {arg_name: arg_value}
-                notifier.checkConfig(generators=[mock.Mock()], **kwargs)
+        with self.assertRaisesConfigError('can\'t specify generators and deprecated notifier'):
+            kwargs = {arg_name: arg_value}
+            notifier.checkConfig(generators=[mock.Mock()], **kwargs)
 
     @parameterized.expand([
         ('mode', ('failing',)),
