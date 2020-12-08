@@ -121,35 +121,27 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
 
     @defer.inlineCallbacks
     def test_filtering(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='have been deprecated'):
-            yield self.createReporter(builders=['foo'])
+        yield self.createReporter(builders=['foo'])
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filteringPass(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='have been deprecated'):
-            yield self.createReporter(builders=['Builder0'])
+        yield self.createReporter(builders=['Builder0'])
         self._http.expect("post", "", json=BuildLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='have been deprecated'):
-            yield self.createReporter(builders='Builder0')
+        yield self.createReporter(builders='Builder0')
         config._errors.addError.assert_any_call(
             "builders must be a list or None")
 
     @defer.inlineCallbacks
     def test_wantKwargsCheck(self):
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='have been deprecated'):
-            yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
-                                      wantPreviousBuild=True, wantLogs=True)
+        yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
+                                  wantPreviousBuild=True, wantLogs=True)
         self._http.expect("post", "", json=BuildLookAlike(
             keys=['steps', 'prev_build']))
         build = yield self.insert_build_finished(SUCCESS)
