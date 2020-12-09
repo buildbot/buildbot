@@ -64,17 +64,20 @@ def _dict_diff(d1, d2):
     return missing_in_d1, missing_in_d2, different
 
 
-def _describe_cmd_difference(exp, command):
-    if exp.args == command.args:
+def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
+    if exp_command != got_command:
+        return 'Expected command type {} got {}. Expected args {}'.format(exp_command, got_command,
+                                                                          repr(exp_args))
+    if exp_args == got_args:
         return ""
     text = ""
-    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp.args, command.args)
+    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp_args, got_args)
     if missing_in_exp:
-        text += (
-            'Keys in cmd missing from expectation: {0}\n'.format(missing_in_exp))
+        missing_dict = {key: got_args[key] for key in missing_in_exp}
+        text += 'Keys in cmd missing from expectation: {0!r}\n'.format(missing_dict)
     if missing_in_cmd:
-        text += (
-            'Keys in expectation missing from command: {0}\n'.format(missing_in_cmd))
+        missing_dict = {key: exp_args[key] for key in missing_in_cmd}
+        text += 'Keys in expectation missing from command: {0!r}\n'.format(missing_dict)
     if diff:
         formatted_diff = [
             '"{0}": expected {1!r}, got {2!r}'.format(*d) for d in diff]
@@ -418,7 +421,8 @@ class BuildStepMixin:
             # first check any ExpectedRemoteReference instances
             exp_tup = (exp.remote_command, exp.args)
             if exp_tup != got:
-                text = _describe_cmd_difference(exp, command)
+                text = _describe_cmd_difference(exp.remote_command, exp.args,
+                                                command.remote_command, command.args)
                 raise AssertionError(
                     "Command contents different from expected; " + text)
 
