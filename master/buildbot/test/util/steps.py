@@ -143,6 +143,7 @@ class BuildStepMixin:
             self.patch(module, 'RemoteCommand', create_fake_remote_command)
             self.patch(module, 'RemoteShellCommand', create_fake_remote_shell_command)
         self.expected_remote_commands = []
+        self._expected_remote_commands_popped = 0
 
         self.master = fakemaster.make_master(self, wantData=wantData, wantDb=wantDb, wantMq=wantMq)
 
@@ -421,10 +422,11 @@ class BuildStepMixin:
             # first check any ExpectedRemoteReference instances
             exp_tup = (exp.remote_command, exp.args)
             if exp_tup != got:
-                text = _describe_cmd_difference(exp.remote_command, exp.args,
-                                                command.remote_command, command.args)
-                raise AssertionError(
-                    "Command contents different from expected; " + text)
+                msg = "Command contents different from expected (command index: {}); {}".format(
+                    self._expected_remote_commands_popped,
+                    _describe_cmd_difference(exp.remote_command, exp.args,
+                                             command.remote_command, command.args))
+                raise AssertionError(msg)
 
         if exp.shouldRunBehaviors():
             # let the Expect object show any behaviors that are required
@@ -454,6 +456,7 @@ class BuildStepMixin:
         finally:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
+                self._expected_remote_commands_popped += 1
         return command
 
     def changeWorkerSystem(self, system):
