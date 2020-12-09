@@ -19,10 +19,9 @@ from contextlib import contextmanager
 from twisted.python import deprecate
 from twisted.python import versions
 
-from buildbot import interfaces
 from buildbot import util
+from buildbot.process import buildstep
 from buildbot.process.build import Build
-from buildbot.process.buildstep import BuildStep
 from buildbot.steps.download_secret_to_worker import DownloadSecretsToWorker
 from buildbot.steps.download_secret_to_worker import RemoveWorkerFileSecret
 from buildbot.steps.shell import Compile
@@ -40,7 +39,7 @@ from buildbot.warnings import warn_deprecated
 def s(steptype, **kwargs):
     # convenience function for master.cfg files, to create step
     # specification tuples
-    return interfaces.IBuildStepFactory(steptype(**kwargs))
+    return buildstep.get_factory_from_step_or_factory(steptype(**kwargs))
 
 
 class BuildFactory(util.ComparableMixin):
@@ -72,12 +71,13 @@ class BuildFactory(util.ComparableMixin):
         return b
 
     def addStep(self, step, **kwargs):
-        if kwargs or (isinstance(step, type(BuildStep)) and issubclass(step, BuildStep)):
+        if kwargs or (isinstance(step, type(buildstep.BuildStep))
+                      and issubclass(step, buildstep.BuildStep)):
             warn_deprecated("0.8.8",
                             "Passing a BuildStep subclass to factory.addStep is "
                             "deprecated. Please pass a BuildStep instance instead.")
             step = step(**kwargs)
-        self.steps.append(interfaces.IBuildStepFactory(step))
+        self.steps.append(buildstep.get_factory_from_step_or_factory(step))
 
     def addSteps(self, steps, withSecrets=None):
         if withSecrets is None:

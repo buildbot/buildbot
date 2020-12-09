@@ -17,10 +17,7 @@ import posixpath
 
 import mock
 
-from twisted.python import components
-
 from buildbot import config
-from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.process import workerforbuilder
@@ -32,6 +29,9 @@ class FakeBuildStatus(properties.PropertiesMixin):
 
     def __init__(self):
         self.properties = properties.Properties()
+
+    def getProperties(self):
+        return self.properties
 
     def getInterestedUsers(self):
         return []
@@ -59,11 +59,6 @@ class FakeBuildStatus(properties.PropertiesMixin):
         pass
 
     getBuilder = mock.Mock()
-
-
-components.registerAdapter(
-    lambda build_status: build_status.properties,
-    FakeBuildStatus, interfaces.IProperties)
 
 
 class FakeWorkerStatus(properties.PropertiesMixin):
@@ -98,9 +93,15 @@ class FakeBuild(properties.PropertiesMixin):
             props = properties.Properties()
         props.build = self
         self.build_status.properties = props
-        self.properties = props
         self.master = None
         self.config_version = 0
+
+    def getProperties(self):
+        return self.build_status.getProperties()
+
+    @property
+    def properties(self):
+        return self.getProperties()
 
     def getSourceStamp(self, codebase):
         if codebase in self.sources:
@@ -130,11 +131,6 @@ class FakeBuild(properties.PropertiesMixin):
 
     def setUniqueStepName(self, step):
         pass
-
-
-components.registerAdapter(
-    lambda build: build.build_status.properties,
-    FakeBuild, interfaces.IProperties)
 
 
 class FakeBuildForRendering:

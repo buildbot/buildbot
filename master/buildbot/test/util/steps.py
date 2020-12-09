@@ -19,7 +19,6 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
 
-from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process.results import EXCEPTION
@@ -147,15 +146,6 @@ class BuildStepMixin:
     def tearDownBuildStep(self):
         pass
 
-    # utilities
-    def _getWorkerCommandVersionWrapper(self):
-        originalGetWorkerCommandVersion = self.step.build.getWorkerCommandVersion
-
-        def getWorkerCommandVersion(cmd, oldversion):
-            return originalGetWorkerCommandVersion(cmd, oldversion)
-
-        return getWorkerCommandVersion
-
     def setupStep(self, step, worker_version=None, worker_env=None,
                   buildFiles=None, wantDefaultWorkdir=True):
         """
@@ -184,9 +174,7 @@ class BuildStepMixin:
         if buildFiles is None:
             buildFiles = list()
 
-        factory = interfaces.IBuildStepFactory(step)
-
-        step = self.step = factory.buildStep()
+        step = self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
         if wantDefaultWorkdir:
@@ -211,7 +199,7 @@ class BuildStepMixin:
         self.build.builder.config.env = worker_env.copy()
 
         # watch for properties being set
-        self.properties = interfaces.IProperties(b)
+        self.properties = b.getProperties()
 
         # step.progress
 
@@ -350,8 +338,6 @@ class BuildStepMixin:
 
         @returns: Deferred
         """
-        self.step.build.getWorkerCommandVersion = self._getWorkerCommandVersionWrapper()
-
         self.conn = mock.Mock(name="WorkerForBuilder(connection)")
         self.step.setupProgress()
         result = yield self.step.startStep(self.conn)

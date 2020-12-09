@@ -18,7 +18,6 @@ from functools import reduce
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.failure import Failure
@@ -109,6 +108,9 @@ class Build(properties.PropertiesMixin):
 
         # tracks the config version for locks
         self.config_version = None
+
+    def getProperties(self):
+        return self.properties
 
     def setBuilder(self, builder):
         """
@@ -467,7 +469,7 @@ class Build(properties.PropertiesMixin):
     def setupBuildSteps(self, step_factories):
         steps = []
         for factory in step_factories:
-            step = factory.buildStep()
+            step = buildstep.create_step_from_step_or_factory(factory)
             step.setBuild(self)
             step.setWorker(self.workerforbuilder.worker)
             steps.append(step)
@@ -489,18 +491,14 @@ class Build(properties.PropertiesMixin):
             self.setProperty('owners', sorted(owners), 'Build')
         self.text = []  # list of text string lists (text2)
 
-    def _addBuildSteps(self, step_factories):
-        factories = [interfaces.IBuildStepFactory(s) for s in step_factories]
-        return self.setupBuildSteps(factories)
-
     def addStepsAfterCurrentStep(self, step_factories):
         # Add the new steps after the step that is running.
         # The running step has already been popped from self.steps
-        self.steps[0:0] = self._addBuildSteps(step_factories)
+        self.steps[0:0] = self.setupBuildSteps(step_factories)
 
     def addStepsAfterLastStep(self, step_factories):
         # Add the new steps to the end.
-        self.steps.extend(self._addBuildSteps(step_factories))
+        self.steps.extend(self.setupBuildSteps(step_factories))
 
     def getNextStep(self):
         """This method is called to obtain the next BuildStep for this build.
@@ -763,8 +761,3 @@ class Build(properties.PropertiesMixin):
         return self.build_status
 
     # stopBuild is defined earlier
-
-
-components.registerAdapter(
-    lambda build: interfaces.IProperties(build.properties),
-    Build, interfaces.IProperties)

@@ -20,7 +20,6 @@ from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import components
 from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
@@ -250,10 +249,26 @@ class BuildStepStatus:
     pass
 
 
+def get_factory_from_step_or_factory(step_or_factory):
+    if hasattr(step_or_factory, 'get_step_factory'):
+        factory = step_or_factory.get_step_factory()
+    else:
+        factory = step_or_factory
+    # make sure the returned value actually implements IBuildStepFactory
+    return interfaces.IBuildStepFactory(factory)
+
+
+def create_step_from_step_or_factory(step_or_factory):
+    return get_factory_from_step_or_factory(step_or_factory).buildStep()
+
+
 @implementer(interfaces.IBuildStep)
 class BuildStep(results.ResultComputingConfigMixin,
                 properties.PropertiesMixin,
                 util.ComparableMixin):
+    # Note that the BuildStep is at the same time a template from which per-build steps are
+    # constructed. This works by creating a new IBuildStepFactory in __new__, retrieving it via
+    # get_step_factory() and then calling buildStep() on that factory.
 
     alwaysRun = False
     doStepIf = True
@@ -421,11 +436,10 @@ class BuildStep(results.ResultComputingConfigMixin,
     def workdir(self, workdir):
         self._workdir = workdir
 
-    def addFactoryArguments(self, **kwargs):
-        # this is here for backwards compatibility
-        pass
+    def getProperties(self):
+        return self.build.getProperties()
 
-    def _getStepFactory(self):
+    def get_step_factory(self):
         return self._factory
 
     def setupProgress(self):
@@ -960,14 +974,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             warn_deprecated('2.9.0', ('Subclassing old-style step {0} in {1} is deprecated, '
                                       'please migrate to new-style equivalent {0}NewStyle'
                                       ).format(name, self.__class__.__name__))
-
-
-components.registerAdapter(
-    BuildStep._getStepFactory,
-    BuildStep, interfaces.IBuildStepFactory)
-components.registerAdapter(
-    lambda step: interfaces.IProperties(step.build),
-    BuildStep, interfaces.IProperties)
 
 
 class LoggingBuildStep(BuildStep):
