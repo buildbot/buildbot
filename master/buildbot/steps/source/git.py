@@ -71,9 +71,10 @@ class Git(Source, GitStepMixin):
                    "codebase", "mode", "method", "origin"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
-                 reference=None, submodules=False, shallow=False, progress=True, retryFetch=False,
-                 clobberOnFailure=False, getDescription=False, config=None,
-                 origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None, **kwargs):
+                 reference=None, submodules=False, remoteSubmodules=False, shallow=False,
+                 progress=True, retryFetch=False, clobberOnFailure=False, getDescription=False,
+                 config=None, origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
+                 **kwargs):
 
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
@@ -84,6 +85,7 @@ class Git(Source, GitStepMixin):
         self.reference = reference
         self.retryFetch = retryFetch
         self.submodules = submodules
+        self.remoteSubmodules = remoteSubmodules
         self.shallow = shallow
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
@@ -427,9 +429,10 @@ class Git(Source, GitStepMixin):
         # init and update submodules, recursively. If there's not recursion
         # it will not do it.
         if self.submodules:
-            res = yield self._dovccmd(['submodule', 'update',
-                                       '--init', '--recursive'],
-                                      shallowClone)
+            cmdArgs = ["submodule", "update", "--init", "--recursive"]
+            if self.remoteSubmodules:
+                cmdArgs.append("--remote")
+            res = yield self._dovccmd(cmdArgs, shallowClone)
 
         return res
 
@@ -474,7 +477,10 @@ class Git(Source, GitStepMixin):
             if self.supportsSubmoduleForce:
                 vccmd.extend(['--force'])
             if self.supportsSubmoduleCheckout:
-                vccmd.extend(['--checkout'])
+                vccmd.extend(["--checkout"])
+            if self.remoteSubmodules:
+                vccmd.extend(["--remote"])
+
             rc = yield self._dovccmd(vccmd)
         return rc
 
