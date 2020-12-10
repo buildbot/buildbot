@@ -21,20 +21,29 @@ from twisted.python import log
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
+from buildbot.warnings import warn_deprecated
 
 
 class ShellArg(results.ResultComputingConfigMixin):
     publicAttributes = (
         results.ResultComputingConfigMixin.resultConfig +
-        ["command", "logfile"])
+        ["command", "logname"])
 
-    def __init__(self, command=None, logfile=None, **kwargs):
+    def __init__(self, command=None, logname=None, logfile=None, **kwargs):
         name = self.__class__.__name__
         if command is None:
             config.error(("the 'command' parameter of {} "
                           "must not be None").format(name))
         self.command = command
-        self.logfile = logfile
+
+        self.logname = logname
+        if logfile is not None:
+            warn_deprecated('2.10.0', "{}: logfile is deprecated, use logname")
+            if self.logname is not None:
+                config.error(("{}: the 'logfile' parameter must not be specified when 'logname' " +
+                              "is set").format(name))
+            self.logname = logfile
+
         for k, v in kwargs.items():
             if k not in self.resultConfig:
                 config.error(("the parameter '{}' is not "
@@ -108,7 +117,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             self.last_command = command
 
             cmd = yield self.makeRemoteShellCommand(command=command,
-                                                    stdioLogName=arg.logfile)
+                                                    stdioLogName=arg.logname)
             yield self.runCommand(cmd)
             overall_result, terminate = results.computeResultAndTermination(
                 arg, cmd.results(), overall_result)

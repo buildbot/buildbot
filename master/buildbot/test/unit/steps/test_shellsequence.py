@@ -26,6 +26,8 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class DynamicRun(shellsequence.ShellSequence):
@@ -43,6 +45,18 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def tearDown(self):
         return self.tearDownBuildStep()
+
+    def test_shell_arg_warn_deprecated_logfile(self):
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern="logfile is deprecated, use logname"):
+            shellsequence.ShellArg(command="command", logfile="logfile")
+
+    def test_shell_arg_error_logfile_and_logname(self):
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern="logfile is deprecated, use logname"):
+            with self.assertRaisesConfigError(
+                    "the 'logfile' parameter must not be specified when 'logname' is set"):
+                shellsequence.ShellArg(command="command", logname="logname", logfile="logfile")
 
     def testShellArgInput(self):
         with self.assertRaisesConfigError(
@@ -63,7 +77,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testShellArgsAreRendered(self):
         arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
-                                      logfile=WithProperties('make %s', 'project'))
+                                      logname=WithProperties('make %s', 'project'))
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
@@ -100,7 +114,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testMultipleCommandsAreRun(self):
         arg1 = shellsequence.ShellArg(command='make p1')
-        arg2 = shellsequence.ShellArg(command='deploy p1', logfile='deploy')
+        arg2 = shellsequence.ShellArg(command='deploy p1', logname='deploy')
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
@@ -153,7 +167,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         each new build.
         """
         arg = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
-                                     logfile=WithProperties('make %s', 'project'))
+                                     logname=WithProperties('make %s', 'project'))
         step = shellsequence.ShellSequence(commands=[arg], workdir='build')
 
         # First "build"

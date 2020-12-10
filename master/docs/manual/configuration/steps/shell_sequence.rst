@@ -32,25 +32,26 @@ A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderabl
     f.addStep(steps.ShellSequence(
         commands=[
             util.ShellArg(command=['configure']),
-            util.ShellArg(command=['make'], logfile='make'),
-            util.ShellArg(
-                command=['make', 'check_warning'], logfile='warning', warnOnFailure=True),
-            util.ShellArg(command=['make', 'install'], logfile='make install')
+            util.ShellArg(command=['make'], logname='make'),
+            util.ShellArg(command=['make', 'check_warning'], logname='warning',
+                          warnOnFailure=True),
+            util.ShellArg(command=['make', 'install'], logname='make install')
         ]))
 
 All these commands share the same configuration of ``environment``, ``workdir`` and ``pty`` usage that can be setup the same way as in :bb:step:`ShellCommand`.
 
-.. py:class:: buildbot.steps.shellsequence.ShellArg(self, command=None, logfile=None, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=False, warnOnWarnings=False, warnOnFailure=False)
+.. py:class:: buildbot.steps.shellsequence.ShellArg(self, command=None, logname=None, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=False, warnOnWarnings=False, warnOnFailure=False)
 
     :param command: (see the :bb:step:`ShellCommand` ``command`` argument),
-    :param logfile: optional log file name, used as the stdio log of the command
+    :param logname: optional log name, used as the stdio log of the command
 
     The ``haltOnFailure``, ``flunkOnWarnings``, ``flunkOnFailure``, ``warnOnWarnings``, ``warnOnFailure`` parameters drive the execution of the sequence, the same way steps are scheduled in the build.
     They have the same default values as for buildsteps - see :ref:`Buildstep-Common-Parameters`.
 
     Any of the arguments to this class can be renderable.
 
-    Note that if ``logfile`` name does not start with the prefix ``stdio``, that prefix will be set like ``stdio <logfile>``.
+    Note that if ``logname`` name does not start with the prefix ``stdio``, that prefix will be set like ``stdio <logname>``.
+    If no ``logname`` is supplied, the output of the command will not be collected.
 
 
 The two :bb:step:`ShellSequence` methods below tune the behavior of how the list of shell commands are executed, and can be overridden in subclasses.
