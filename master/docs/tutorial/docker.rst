@@ -116,6 +116,8 @@ Multi-master
 ------------
 A multi-master environment can be setup using the ``multimaster/docker-compose.yml`` file in the example repository
 
+.. code-block:: bash
+
   # Build the Buildbot container (it will take a few minutes to download packages)
   cd buildbot-docker-example-config/simple
   docker-compose up -d
