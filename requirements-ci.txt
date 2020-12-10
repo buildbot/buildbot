@@ -9,9 +9,9 @@ Babel==2.9.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.16.25;  python_version >= "3.6"
+boto3==1.16.30;  python_version >= "3.6"
 boto3==1.15.11;  python_version < "3.6"  # pyup: ignore
-botocore==1.19.25;  python_version >= "3.6"
+botocore==1.19.30;  python_version >= "3.6"
 botocore==1.18.11;  python_version < "3.6"  # pyup: ignore
 cffi==1.14.4
 click==7.1.2
@@ -59,7 +59,7 @@ pycodestyle==2.6.0
 pycparser==2.20
 pyenchant==3.1.1
 pyflakes==2.2.0
-pypugjs==5.9.6
+pypugjs==5.9.7
 PyJWT==1.7.1
 pylint==2.6.0;
 pyOpenSSL==20.0.0
@@ -98,4 +98,4 @@ codecov==2.1.10
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==2.8.4
+buildbot-www==2.9.1
