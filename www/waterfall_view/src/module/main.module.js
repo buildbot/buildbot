@@ -66,6 +66,12 @@ var WaterfallController = (function() {
 
             glTopbarContextualActionsService.setContextualActions(actions);
 
+            // Clear contextual action buttons on destroy
+            const clearGl = function () {
+                glTopbarContextualActionsService.setContextualActions([]);
+            };
+            $scope.$on('$destroy', clearGl);
+
             // Show the loading spinner
             this.loading = true;
             this.dataAccessor = dataService.open().closeOnDestroy(this.$scope);
@@ -156,6 +162,7 @@ var WaterfallController = (function() {
 
                 // Update view on data change
                 this.loadingMore = false;
+                this.$scope.masters.onChange = this.renderNewData;
                 this.builds.onChange = (this.all_builders.onChange = this.renderNewData);
 
 
