@@ -25,7 +25,7 @@ from buildbot import config
 from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
-from buildbot.status.worker import WorkerStatus
+from buildbot.status.worker_compat import WorkerStatus
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import service
