@@ -23,30 +23,10 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
-# user modules expect these symbols to be present here
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
-from buildbot.process.results import RETRY
-from buildbot.process.results import SKIPPED
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
-from buildbot.process.results import worst_status
-from buildbot.status.build import BuildStatus
-from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot.status.event import Event
+from buildbot.status.build_compat import BuildStatus
+from buildbot.status.buildrequest_compat import BuildRequestStatus
+from buildbot.status.event_compat import Event
 from buildbot.util.lru import LRUCache
-from buildbot.warnings import warn_deprecated
-
-_hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
-                  EXCEPTION, RETRY, CANCELLED, Results, worst_status]
-
-
-warn_deprecated(
-    '0.9.0',
-    'buildbot.status.worker has been deprecated, consume the buildbot.data APIs'
-)
 
 
 @implementer(interfaces.IBuilderStatus, interfaces.IEventSource)

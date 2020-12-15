@@ -43,7 +43,7 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
-from buildbot.status.master import Status
+from buildbot.status.master_compat import Status
 from buildbot.util import check_functional_environment
 from buildbot.util import service
 from buildbot.util.eventual import eventually
