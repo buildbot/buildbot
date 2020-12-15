@@ -13,104 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
-
-from zope.interface import implementer
-
-from buildbot import pbutil
-from buildbot import util
-from buildbot.interfaces import IStatusReceiver
-from buildbot.util import service
+from buildbot.status.base_compat import StatusReceiver
+from buildbot.status.base_compat import StatusReceiverBase
+from buildbot.status.base_compat import StatusReceiverMultiService
+from buildbot.status.base_compat import StatusReceiverPerspective
+from buildbot.status.base_compat import StatusReceiverService
 from buildbot.warnings import warn_deprecated
+
+# This file is here to allow few remaining users of status within Buildbot to use it
+# without triggering deprecation warnings
+
+_hush_pyflakes = [
+    StatusReceiverMultiService,
+    StatusReceiverBase,
+    StatusReceiverService,
+    StatusReceiver,
+    StatusReceiverPerspective,
+]
 
 warn_deprecated(
     '0.9.0',
     'buildbot.status.base has been deprecated, consume the buildbot.data APIs'
 )
-
-
-@implementer(IStatusReceiver)
-class StatusReceiverBase:
-
-    def requestSubmitted(self, request):
-        pass
-
-    def requestCancelled(self, builder, request):
-        pass
-
-    def buildsetSubmitted(self, buildset):
-        pass
-
-    def builderAdded(self, builderName, builder):
-        pass
-
-    def builderChangedState(self, builderName, state):
-        pass
-
-    def buildStarted(self, builderName, build):
-        pass
-
-    def buildETAUpdate(self, build, ETA):
-        pass
-
-    def changeAdded(self, change):
-        pass
-
-    def stepStarted(self, build, step):
-        pass
-
-    def stepTextChanged(self, build, step, text):
-        pass
-
-    def stepText2Changed(self, build, step, text2):
-        pass
-
-    def logStarted(self, build, step, log):
-        pass
-
-    def logChunk(self, build, step, log, channel, text):
-        pass
-
-    def logFinished(self, build, step, log):
-        pass
-
-    def stepFinished(self, build, step, results):
-        pass
-
-    def buildFinished(self, builderName, build, results):
-        pass
-
-    def builderRemoved(self, builderName):
-        pass
-
-    def workerConnected(self, workerName):
-        pass
-
-    def workerDisconnected(self, workerName):
-        pass
-
-    def workerPaused(self, name):
-        pass
-
-    def workerUnpaused(self, name):
-        pass
-
-    def checkConfig(self, otherStatusReceivers):
-        pass
-
-
-class StatusReceiverMultiService(StatusReceiverBase, service.AsyncMultiService,
-                                 util.ComparableMixin):
-    pass
-
-
-class StatusReceiverService(StatusReceiverBase, service.AsyncService,
-                            util.ComparableMixin):
-    pass
-
-
-StatusReceiver = StatusReceiverService
-
-
-@implementer(IStatusReceiver)
-class StatusReceiverPerspective(StatusReceiver, pbutil.NewCredPerspective):
-    pass
