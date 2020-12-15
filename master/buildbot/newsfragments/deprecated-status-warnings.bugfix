@@ -1,0 +1,1 @@
+Fixed extraneous warnings due to deprecation of ``buildbot.status`` module even when it's not used (:issue:`5693`).
