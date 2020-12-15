@@ -21,7 +21,7 @@ from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import LoggingBuildStep
-from buildbot.status.builder import FAILURE
+from buildbot.process.results import FAILURE
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import bytes2unicode
 
