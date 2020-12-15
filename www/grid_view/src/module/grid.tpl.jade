@@ -46,5 +46,11 @@
                             | {{ tag }}
                 td(ng-repeat="ch in changes track by ch.changeid")
                     a(ng-repeat="build in b.builds[ch.changeid] | orderBy: 'buildid'", ui-sref="build({builder: b.builderid, build: build.number})")
-                        span.badge-status(ng-class="results2class(build, 'pulse')")
+                        script(type="text/ng-template" id="buildsummarytooltip")
+                            buildsummary(buildid="build.buildid" type="tooltip")
+                        span.badge-status(uib-tooltip-template="'buildsummarytooltip'"
+                                          tooltip-class="buildsummarytooltipstyle"
+                                          tooltip-placement="left"
+                                          tooltip-popup-close-delay="100"
+                                          ng-class="results2class(build, 'pulse')")
                             | {{ build.number }}
