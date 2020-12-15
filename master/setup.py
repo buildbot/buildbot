@@ -485,7 +485,7 @@ setup_args['install_requires'] = [
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
     'sqlalchemy>=1.2.0',
-    'sqlalchemy-migrate>=0.9',
+    'sqlalchemy-migrate>=0.13',
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
