@@ -1,0 +1,1 @@
+Buildbot now requires at least the version 0.13 of sqlalchemy-migrate (:issue:`5669`).
