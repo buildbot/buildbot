@@ -45,27 +45,49 @@ beforeEach(function() {
 describe('Waterfall view controller', function() {
     let $document, $state, $timeout, $uibModal, $window, bbSettingsService, dataService, elem, w;
     let $rootScope = ($state = (elem = (w = ($document = ($window = ($uibModal = ($timeout =
-        (bbSettingsService = (dataService = null)))))))));
+        (bbSettingsService = ($rootElement = (dataService = null))))))))));
+
+    const masters = [{
+        masterid: 1,
+        name: 'master1',
+        active: true,
+    }
+    ,{
+        masterid: 2,
+        name: 'master2',
+        active: false,
+    }
+    ];
 
     const builders = [{
         builderid: 1,
         name: 'builder1',
-        masterids: [1]
+        masterids: [1],
+        tags: [""],
     }
     , {
         builderid: 2,
         name: 'builder2',
-        masterids: [1]
+        masterids: [1],
+        tags: [""],
     }
     , {
         builderid: 3,
         name: 'builder3',
-        masterids: [1]
+        masterids: [1],
+        tags: [""],
     }
     , {
         builderid: 4,
         name: 'builder4',
-        masterids: [1]
+        masterids: [1],
+        tags: [""],
+    }
+    , {
+        builderid: 5,
+        name: 'builder5',
+        masterids: [2],
+        tags: [""],
     }
     ];
 
@@ -123,6 +145,7 @@ describe('Waterfall view controller', function() {
     ];
 
     const injected = function($injector) {
+        $rootElement = $injector.get('$rootElement');
         $rootScope = $injector.get('$rootScope');
         let scope = $rootScope.$new();
         const $compile = $injector.get('$compile');
@@ -135,11 +158,14 @@ describe('Waterfall view controller', function() {
         bbSettingsService = $injector.get('bbSettingsService');
         dataService = $injector.get('dataService');
 
+        dataService.when('masters', masters);
         dataService.when('builds', {limit: 2}, builds.slice(0, 2));
         dataService.when('builders', builders);
         dataService.when('buildrequests', buildrequests);
         dataService.when('builds/1/steps', [{buildid: 1}]);
 
+        mockBody = $compile('<body>')(scope);
+        $rootElement.append(mockBody);
         elem = $compile('<div><ui-view></ui-view></div>')(scope);
         $document.find('body').append(elem);
 
@@ -167,12 +193,13 @@ describe('Waterfall view controller', function() {
         expect($document.find('svg').length).toEqual(0);
     });
 
-    /* FIXME: TODO: BUG: Currently broken
     it('should be defined', () => expect(w).toBeDefined());
 
-    it('should bind the builds and builders to scope', function() {
+    it('should bind the masters, builds, and builders to scope', function() {
         const group = bbSettingsService.getSettingsGroup();
         const limit = group.lazy_limit_waterfall.value;
+        expect(w.$scope.masters).toBeDefined();
+        expect(w.$scope.masters.length).not.toBe(0);
         expect(w.builds).toBeDefined();
         expect(w.builds.length).toBe(limit);
         expect(w.builders).toBeDefined();
@@ -184,6 +211,17 @@ describe('Waterfall view controller', function() {
         expect(elem.find('g').length).toBeGreaterThan(1);
     });
 
+    it('should remove body class called hundredpercent on destroy', function() {
+        expect(w.$rootElement.find('body').hasClass('hundredpercent')).toBeTruthy();
+        w.$scope.$destroy();
+        expect(w.$rootElement.find('body').hasClass('hundredpercent')).toBeFalsy();
+    });
+
+    it('should check if builder has active master or not', function() {
+        expect(w.hasActiveMaster(builders[3])).toBeTruthy();
+        expect(w.hasActiveMaster(builders[4])).toBeFalsy();
+    });
+
     it('should rerender the waterfall on resize', function() {
         spyOn(w, 'render').and.callThrough();
         expect(w.render).not.toHaveBeenCalled();
@@ -191,7 +229,7 @@ describe('Waterfall view controller', function() {
         expect(w.render).toHaveBeenCalled();
     });
 
-    it('should rerender the waterfall on data change', function() {
+    it('should rerender the waterfall on builds data change', function() {
         dataService.when('builds', builds);
         spyOn(w, 'render').and.callThrough();
         expect(w.render).not.toHaveBeenCalled();
@@ -199,6 +237,20 @@ describe('Waterfall view controller', function() {
         w.buildLimit = 0;
         w.loadMore();
         $timeout.flush();
+        expect(w.render).toHaveBeenCalled();
+    });
+
+    it('should rerender the waterfall on masters data change', function() {
+        spyOn(w, 'render').and.callThrough();
+        expect(w.render).not.toHaveBeenCalled();
+        w.$scope.masters.onChange();
+        expect(w.render).toHaveBeenCalled();
+    });
+
+    it('should rerender the waterfall on builders data change', function() {
+        spyOn(w, 'render').and.callThrough();
+        expect(w.render).not.toHaveBeenCalled();
+        w.all_builders.onChange();
         expect(w.render).toHaveBeenCalled();
     });
 
@@ -248,5 +300,4 @@ describe('Waterfall view controller', function() {
             expect(w.getResultClassFromThing(testBuild)).toBe(results[i]);
         }
     });
-    */
 });
