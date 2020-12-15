@@ -10,6 +10,17 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.9.3`` ( ``2020-12-15`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed extraneous warnings due to deprecation of ``buildbot.status`` module even when it's not used (:issue:`5693`).
+- The topbar zoom buttons are now cleared when leaving waterfall view.
+- The waterfall is now re-rendered upon change to masters.
+
+
 Buildbot ``2.9.2`` ( ``2020-12-08`` )
 =====================================
 
