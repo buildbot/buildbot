@@ -16,10 +16,10 @@
 
 from twisted.python import log
 
-from buildbot.status import base
+from buildbot.status import base_compat
 
 
-class PBListener(base.StatusReceiverBase):
+class PBListener(base_compat.StatusReceiverBase):
 
     # This class is still present in users' configs, so keep it here.
 

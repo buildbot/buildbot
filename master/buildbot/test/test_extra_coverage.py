@@ -29,7 +29,7 @@ from buildbot.scripts import checkconfig
 from buildbot.scripts import logwatcher
 from buildbot.scripts import reconfig
 from buildbot.scripts import runner
-from buildbot.status import client
+from buildbot.status import client_compat
 from buildbot.steps import master
 from buildbot.steps import maxq
 from buildbot.steps import python
@@ -47,7 +47,7 @@ modules.extend([p4poller, svnpoller])
 modules.extend([base, sendchange, tryclient])
 modules.extend([subunitlogobserver])
 modules.extend([checkconfig, logwatcher, reconfig, runner])
-modules.extend([client])
+modules.extend([client_compat])
 modules.extend([master, maxq, python, python_twisted, subunit])
 modules.extend([trigger, vstudio])
 modules.extend([rpmbuild, rpmlint])

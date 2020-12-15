@@ -23,19 +23,13 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot import util
 from buildbot.changes import changes
-from buildbot.status import builder
-from buildbot.status import buildrequest
-from buildbot.status import buildset
+from buildbot.status import builder_compat
+from buildbot.status import buildrequest_compat
+from buildbot.status import buildset_compat
 from buildbot.util import bbcollections
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.warnings import warn_deprecated
-
-warn_deprecated(
-    '0.9.0',
-    'buildbot.status.master has been deprecated, consume the buildbot.data APIs'
-)
 
 
 @implementer(interfaces.IStatus)
@@ -252,7 +246,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         @d.addCallback
         def make_status_objects(bsdicts):
-            return [buildset.BuildSetStatus(bsdict, self)
+            return [buildset_compat.BuildSetStatus(bsdict, self)
                     for bsdict in bsdicts]
         return d
 
@@ -339,8 +333,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         """
         @rtype: L{BuilderStatus}
         """
-        builder_status = builder.BuilderStatus(name, tags, self.master,
-                                               description)
+        builder_status = builder_compat.BuilderStatus(name, tags, self.master,
+                                                      description)
         builder_status.setTags(tags)
         builder_status.description = description
         builder_status.master = self.master
@@ -392,8 +386,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 buildername = b.name
                 break
         if buildername in self._builder_observers:
-            brs = buildrequest.BuildRequestStatus(buildername,
-                                                  msg['buildrequestid'], self)
+            brs = buildrequest_compat.BuildRequestStatus(buildername,
+                                                         msg['buildrequestid'], self)
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestSubmitted'):
                     eventually(observer.requestSubmitted, brs)
@@ -450,7 +444,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         @d.addCallback
         def do_notifies(bsdict):
-            bss = buildset.BuildSetStatus(bsdict, self)
+            bss = buildset_compat.BuildSetStatus(bsdict, self)
             if bss.isFinished():
                 for d in self._buildset_finished_waiters.pop(bsid):
                     eventually(d.callback, bss)
@@ -469,7 +463,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         @d.addCallback
         def do_notifies(bsdict):
-            bss = buildset.BuildSetStatus(bsdict, self)
+            bss = buildset_compat.BuildSetStatus(bsdict, self)
             for t in self.watchers:
                 if hasattr(t, 'buildsetSubmitted'):
                     t.buildsetSubmitted(bss)
