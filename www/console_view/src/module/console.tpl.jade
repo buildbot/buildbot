@@ -26,8 +26,14 @@
                 changedetails(change="change")
             td.column(ng-repeat="builder in change.builders"
                       title="{{builder.name}}")
-                a(ng-repeat="build in builder.builds | orderBy: ['number']")
+                span(ng-repeat="build in builder.builds | orderBy: ['number']")
+                    script(type="text/ng-template" id="buildsummarytooltip")
+                        buildsummary(buildid="build.buildid" type="tooltip")
                     span.badge-status(ng-if='build.buildid'
-                                  ng-class="c.results2class(build, 'pulse')"
-                                  ng-click='c.selectBuild(build)')
+                                      uib-tooltip-template="'buildsummarytooltip'"
+                                      tooltip-class="buildsummarytooltipstyle"
+                                      tooltip-placement="left"
+                                      tooltip-popup-close-delay="100"
+                                      ng-class="c.results2class(build, 'pulse')"
+                                      ng-click='c.selectBuild(build)')
                         | {{ build.number }}

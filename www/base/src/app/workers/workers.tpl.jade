@@ -27,10 +27,15 @@
                     a(ui-sref='worker({worker: worker.workerid})')
                         | {{worker.name}}
                 td
-                    span(ng-repeat="build in worker.builds | orderBy : '-buildid' |limitTo: '7' ")
-                        a(ui-sref='build({builder: build.builderid, build: build.number})')
-                            span.badge-status(ng-class="results2class(build, 'pulse')")
-                              | {{ builders.get(build.builderid).name }}/{{ build.number }}
+                    a(ng-repeat="build in worker.builds | orderBy: '-buildid' | limitTo: '7' ", ui-sref="build({builder: build.builderid, build: build.number})")
+                        script(type="text/ng-template" id="buildsummarytooltip")
+                            buildsummary(buildid="build.buildid" type="tooltip")
+                        span.badge-status(uib-tooltip-template="'buildsummarytooltip'"
+                                          tooltip-class="buildsummarytooltipstyle"
+                                          tooltip-placement="left"
+                                          tooltip-popup-close-delay="100"
+                                          ng-class="results2class(build, 'pulse')")
+                            | {{ builders.get(build.builderid).name }}/{{ build.number }}
                 td(ng-if="settings.showWorkerBuilders.value")
                     ul.list-inline
                         li(ng-repeat='builder in getUniqueBuilders(worker) | orderBy: ["name"]')

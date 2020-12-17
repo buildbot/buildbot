@@ -831,6 +831,7 @@ th
 timestamp
 Todo
 tokenUri
+tooltip
 topbar
 topicmatch
 trac
