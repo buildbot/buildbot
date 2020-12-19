@@ -134,6 +134,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                     command=None, volumes=None, dockerfile=None, version=None,
                     tls=None, followStartupLogs=False, masterFQDN=None,
                     hostconfig=None, autopull=False, alwaysPull=False,
+                    pullOnDemand=False,
                     custom_context=False, encoding='gzip', buildargs=None,
                     **kwargs):
 
@@ -165,7 +166,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                         command=None, volumes=None, dockerfile=None,
                         version=None, tls=None, followStartupLogs=False,
                         masterFQDN=None, hostconfig=None, autopull=False,
-                        alwaysPull=False, custom_context=False,
+                        alwaysPull=False, pullOnDemand=False, custom_context=False,
                         encoding='gzip', buildargs=None, **kwargs):
 
         yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
@@ -177,6 +178,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         self.hostconfig = hostconfig or {}
         self.autopull = autopull
         self.alwaysPull = alwaysPull
+        self.pullOnDemand = pullOnDemand
         self.custom_context = custom_context
         self.encoding = encoding
         self.buildargs = buildargs
@@ -278,10 +280,18 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                     log.msg(streamline)
 
         imageExists = self._image_exists(docker_client, image)
-        if ((not imageExists) or self.alwaysPull) and self.autopull:
-            if (not imageExists):
-                log.msg("Image '{}' not found, pulling from registry".format(image))
-            docker_client.pull(image)
+        if self.autopull:
+            if ((not imageExists) or self.alwaysPull):
+                if (not imageExists):
+                    log.msg("Image '{}' not found, pulling from registry".format(image))
+                docker_client.pull(image)
+            elif imageExists and self.pullOnDemand:
+                img_data = docker_client.get(image)
+                repo_data = docker_client.get_repository_data(image)
+                if img_data.id != repo_data.id:
+                    log.msg("Image '{}' updated in registry. pulling from registry")
+                    docker_client.pull(image)
+
 
         if (not self._image_exists(docker_client, image)):
             msg = 'Image "{}" not found on docker host.'.format(image)
