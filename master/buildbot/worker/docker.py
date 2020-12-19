@@ -286,9 +286,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                     log.msg("Image '{}' not found, pulling from registry".format(image))
                 docker_client.pull(image)
             elif imageExists and self.pullOnDemand:
-                img_data = docker_client.get(image)
-                repo_data = docker_client.get_repository_data(image)
-                if img_data.id != repo_data.id:
+                img_data = docker_client.inspect_image(image)["RepoDigests"]
+                repo_data = docker_client.inspect_distribution(image)["digest"]
+                if (not img_data) or img_data.split('@')[1] != repo_data["digest"]:
                     log.msg("Image '{}' updated in registry. pulling from registry")
                     docker_client.pull(image)
 
