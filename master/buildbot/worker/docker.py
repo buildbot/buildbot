@@ -287,10 +287,12 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                 docker_client.pull(image)
             elif imageExists and self.pullOnDemand:
                 img_data = docker_client.inspect_image(image)["RepoDigests"]
-                repo_data = docker_client.inspect_distribution(image)["digest"]
-                if (not img_data) or img_data.split('@')[1] != repo_data["digest"]:
-                    log.msg("Image '{}' updated in registry. pulling from registry")
+                repo_data = docker_client.inspect_distribution(image)["Descriptor"]["digest"]
+                if (not img_data) or img_data.split('@')[1] != repo_data:
+                    log.msg("Image '{}' updated in registry. pulling from registry".format(image))
                     docker_client.pull(image)
+                else:
+                    log.msg("Image '{}' is already available on the host as latest version".format(image))
 
 
         if (not self._image_exists(docker_client, image)):
