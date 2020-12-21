@@ -68,7 +68,7 @@ python-dateutil==2.8.1
 python-subunit==1.4.0
 pytz==2020.4
 PyYAML==5.3.1
-requests==2.25.0
+requests==2.25.1
 s3transfer==0.3.3
 scandir==1.10.0
 service-identity==18.1.0
