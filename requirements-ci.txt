@@ -85,7 +85,7 @@ toml==0.10.2
 towncrier==19.2.0
 treq==20.9.0
 Twisted==20.3.0
-txaio==20.4.1;  python_version >= "3.6"
+txaio==20.12.1;  python_version >= "3.6"
 txaio==20.4.1;  python_version < "3.6"  # pyup: ignore
 txrequests==0.9.6
 webcolors==1.11.1
