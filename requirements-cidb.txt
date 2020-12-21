@@ -1,5 +1,5 @@
 psycopg2-binary==2.8.6
-mysqlclient==2.0.1
+mysqlclient==2.0.2
 # Pre-1.4 SQLAlchemy does not support 1.16.6 due to incompatible change,
 # https://github.com/sqlalchemy/sqlalchemy/issues/5645
 pg8000==1.16.5  # pyup: ignore
