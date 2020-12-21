@@ -98,4 +98,4 @@ codecov==2.1.11
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==2.9.1
+buildbot-www==2.9.3
