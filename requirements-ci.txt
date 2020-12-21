@@ -59,7 +59,7 @@ pycodestyle==2.6.0
 pycparser==2.20
 pyenchant==3.2.0
 pyflakes==2.2.0
-pypugjs==5.9.7
+pypugjs==5.9.8
 PyJWT==1.7.1
 pylint==2.6.0;
 pyOpenSSL==20.0.0
