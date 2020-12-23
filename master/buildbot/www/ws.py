@@ -135,6 +135,7 @@ class WsProtocolFactory(WebSocketServerFactory):
     def __init__(self, master):
         super().__init__()
         self.master = master
+        self.setProtocolOptions(webStatus=False)
 
     def buildProtocol(self, addr):
         p = WsProtocol(self.master)
