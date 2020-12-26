@@ -10,6 +10,33 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.9.4`` ( ``2020-12-26`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed spam messages to stdout when renderable operators were being used.
+- Fixed handling of very long lines in the logs during Buildbot startup (:issue:`5706`).
+- Fixed logging of error message to ``twistd.log`` in case of old git and ``progress`` option being enabled.
+
+Deprecations and Removals
+-------------------------
+
+- Removed setup of unused ``webstatus`` feature of autobahn.
+
+
+Buildbot ``2.9.3`` ( ``2020-12-15`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed extraneous warnings due to deprecation of ``buildbot.status`` module even when it's not used (:issue:`5693`).
+- The topbar zoom buttons are now cleared when leaving waterfall view.
+- The waterfall is now re-rendered upon change to masters.
+
+
 Buildbot ``2.9.2`` ( ``2020-12-08`` )
 =====================================
 
