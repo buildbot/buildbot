@@ -323,7 +323,7 @@ class Git(Source, GitStepMixin):
                 if self.supportsProgress:
                     command.append('--progress')
                 else:
-                    print("Git versions < 1.7.2 don't support progress")
+                    log.msg("Git versions < 1.7.2 don't support progress")
 
             yield self._dovccmd(command)
 
@@ -385,7 +385,7 @@ class Git(Source, GitStepMixin):
             if self.supportsProgress:
                 command.append('--progress')
             else:
-                print("Git versions < 1.7.2 don't support progress")
+                log.msg("Git versions < 1.7.2 don't support progress")
         if self.retry:
             abandonOnFailure = (self.retry[1] <= 0)
         else:
