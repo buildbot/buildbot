@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-
 import mock
 
 from twisted.internet import defer
@@ -28,6 +26,19 @@ from buildbot.test.util import dirs
 from buildbot.test.util.misc import TestReactorMixin
 
 
+class MockedLogWatcher(LogWatcher):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.printed_output = []
+        self.created_paths = []
+
+    def create_logfile(self, path):
+        self.created_paths.append(path)
+
+    def print_output(self, output):
+        self.printed_output.append(output)
+
+
 class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
 
     def setUp(self):
@@ -39,17 +50,17 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
         self.reactor.spawnProcess = mock.Mock(return_value=self.spawned_process)
 
     def test_start(self):
-        lw = LogWatcher('workdir/test.log', _reactor=self.reactor)
+        lw = MockedLogWatcher('workdir/test.log', _reactor=self.reactor)
         lw._start = mock.Mock()
 
         lw.start()
         self.reactor.spawnProcess.assert_called()
-        self.assertTrue(os.path.exists('workdir/test.log'))
+        self.assertEqual(lw.created_paths, ['workdir/test.log'])
         self.assertTrue(lw.running)
 
     @defer.inlineCallbacks
     def test_success_before_timeout(self):
-        lw = LogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
+        lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'BuildMaster is running')
@@ -58,7 +69,7 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_failure_after_timeout(self):
-        lw = LogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
+        lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(5.1)
         lw.lineReceived(b'BuildMaster is running')
@@ -67,7 +78,7 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
 
     @defer.inlineCallbacks
     def test_progress_restarts_timeout(self):
-        lw = LogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
+        lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'added builder')
@@ -90,8 +101,7 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
         ]
 
         for line, expected in lines_and_expected:
-            lw = LogWatcher('workdir/test.log', timeout=5,
-                            _reactor=self.reactor)
+            lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
             d = lw.start()
             lw.lineReceived(line)
 

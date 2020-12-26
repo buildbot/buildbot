@@ -49,7 +49,7 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(data)
 
     def errReceived(self, data):
-        print("ERR: '{}'".format(data))
+        self.lw.print_output("ERR: '{}'".format(data))
 
 
 class LogWatcher(LineOnlyReceiver):
@@ -69,8 +69,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def start(self):
         # If the log file doesn't exist, create it now.
-        if not os.path.exists(self.logfile):
-            open(self.logfile, 'a').close()
+        self.create_logfile(self.logfile)
 
         # return a Deferred that fires when the reconfig process has
         # finished. It errbacks with TimeoutError if the startup has not
@@ -121,6 +120,13 @@ class LogWatcher(LineOnlyReceiver):
         self.in_reconfig = False
         self.d.callback(results)
 
+    def create_logfile(self, path):  # pragma: no cover
+        if not os.path.exists(path):
+            open(path, 'a').close()
+
+    def print_output(self, output):  # pragma: no cover
+        print(output)
+
     def lineReceived(self, line):
         if not self.running:
             return None
@@ -130,7 +136,7 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
 
         if self.in_reconfig:
-            print(line.decode())
+            self.print_output(line.decode())
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
