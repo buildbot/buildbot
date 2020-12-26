@@ -247,7 +247,6 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             filters=[resultspec.Filter('paused', 'eq', [True])])
 
         workers = yield self.callGet(('workers',), resultSpec=resultSpec)
-        print(workers)
         self.assertEqual(len(workers), 1)
         worker = workers[0]
         self.validateData(worker)
