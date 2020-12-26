@@ -1,0 +1,1 @@
+Fixed handling of very long lines in the logs during Buildbot startup (:issue:`5706`).

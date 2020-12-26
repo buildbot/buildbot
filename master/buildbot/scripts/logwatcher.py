@@ -21,7 +21,6 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.protocols.basic import LineOnlyReceiver
 from twisted.python.failure import Failure
 
 from buildbot.util import unicode2bytes
@@ -49,10 +48,41 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(data)
 
     def errReceived(self, data):
-        print("ERR: '{}'".format(data))
+        self.lw.print_output("ERR: '{}'".format(data))
 
 
-class LogWatcher(LineOnlyReceiver):
+class LineOnlyLongLineReceiver(protocol.Protocol):
+    """
+    This is almost the same as Twisted's LineOnlyReceiver except that long lines are handled
+    appropriately.
+    """
+    _buffer = b''
+    delimiter = b'\r\n'
+    MAX_LENGTH = 16384
+
+    def dataReceived(self, data):
+        lines = (self._buffer + data).split(self.delimiter)
+        self._buffer = lines.pop(-1)
+        for line in lines:
+            if self.transport.disconnecting:
+                # this is necessary because the transport may be told to lose
+                # the connection by a line within a larger packet, and it is
+                # important to disregard all the lines in that packet following
+                # the one that told it to close.
+                return
+            if len(line) > self.MAX_LENGTH:
+                self.lineLengthExceeded(line)
+            else:
+                self.lineReceived(line)
+
+    def lineReceived(self, line):
+        raise NotImplementedError
+
+    def lineLengthExceeded(self, line):
+        raise NotImplementedError
+
+
+class LogWatcher(LineOnlyLongLineReceiver):
     POLL_INTERVAL = 0.1
     TIMEOUT_DELAY = 10.0
     delimiter = unicode2bytes(os.linesep)
@@ -69,8 +99,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def start(self):
         # If the log file doesn't exist, create it now.
-        if not os.path.exists(self.logfile):
-            open(self.logfile, 'a').close()
+        self.create_logfile(self.logfile)
 
         # return a Deferred that fires when the reconfig process has
         # finished. It errbacks with TimeoutError if the startup has not
@@ -121,6 +150,17 @@ class LogWatcher(LineOnlyReceiver):
         self.in_reconfig = False
         self.d.callback(results)
 
+    def create_logfile(self, path):  # pragma: no cover
+        if not os.path.exists(path):
+            open(path, 'a').close()
+
+    def print_output(self, output):  # pragma: no cover
+        print(output)
+
+    def lineLengthExceeded(self, line):
+        msg = 'Got an a very long line in the log (length {} bytes), ignoring'.format(len(line))
+        self.print_output(msg)
+
     def lineReceived(self, line):
         if not self.running:
             return None
@@ -130,7 +170,7 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
 
         if self.in_reconfig:
-            print(line.decode())
+            self.print_output(line.decode())
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
