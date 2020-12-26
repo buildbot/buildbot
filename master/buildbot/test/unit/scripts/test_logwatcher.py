@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 import mock
 
 from twisted.internet import defer
@@ -24,6 +26,7 @@ from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.test.util import dirs
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.util import unicode2bytes
 
 
 class MockedLogWatcher(LogWatcher):
@@ -40,6 +43,8 @@ class MockedLogWatcher(LogWatcher):
 
 
 class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
+
+    delimiter = unicode2bytes(os.linesep)
 
     def setUp(self):
         self.setUpDirs('workdir')
@@ -85,6 +90,42 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
         self.reactor.advance(4.9)
         lw.lineReceived(b'BuildMaster is running')
         res = yield d
+        self.assertEqual(res, 'buildmaster')
+
+    @defer.inlineCallbacks
+    def test_handles_very_long_lines(self):
+        lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
+        d = lw.start()
+        lw.dataReceived(b't' * lw.MAX_LENGTH * 2 + self.delimiter + b'BuildMaster is running' +
+                        self.delimiter)
+        res = yield d
+        self.assertEqual(lw.printed_output, [
+            'Got an a very long line in the log (length 32768 bytes), ignoring'
+        ])
+        self.assertEqual(res, 'buildmaster')
+
+    @defer.inlineCallbacks
+    def test_handles_very_long_lines_separate_packet(self):
+        lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
+        d = lw.start()
+        lw.dataReceived(b't' * lw.MAX_LENGTH * 2)
+        lw.dataReceived(self.delimiter + b'BuildMaster is running' + self.delimiter)
+        res = yield d
+        self.assertEqual(lw.printed_output, [
+            'Got an a very long line in the log (length 32768 bytes), ignoring'
+        ])
+        self.assertEqual(res, 'buildmaster')
+
+    @defer.inlineCallbacks
+    def test_handles_very_long_lines_separate_packet_with_newline(self):
+        lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
+        d = lw.start()
+        lw.dataReceived(b't' * lw.MAX_LENGTH * 2 + self.delimiter)
+        lw.dataReceived(b'BuildMaster is running' + self.delimiter)
+        res = yield d
+        self.assertEqual(lw.printed_output, [
+            'Got an a very long line in the log (length 32768 bytes), ignoring'
+        ])
         self.assertEqual(res, 'buildmaster')
 
     @defer.inlineCallbacks
