@@ -1,0 +1,1 @@
+Fixed spam messages to stdout when renderable operators were being used.

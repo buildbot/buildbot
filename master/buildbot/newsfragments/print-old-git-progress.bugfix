@@ -1,0 +1,1 @@
+Fixed logging of error message to ``twistd.log`` in case of old git and ``progress`` option being enabled.
