@@ -331,7 +331,6 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
     @defer.inlineCallbacks
     def getRenderingFor(self, props):
         v1, v2 = yield props.render((self.v1, self.v2))
-        print(v1, self.cstr, v2)
         return self.comparator(v1, v2)
 
     def __repr__(self):
