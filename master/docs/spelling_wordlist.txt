@@ -727,6 +727,7 @@ secretsmount
 sed
 selectable
 sendchange
+sendMessage
 serializable
 serviceid
 setDefaultWorkdir
