@@ -1,0 +1,26 @@
+
+/* The RTD default uses a lot of horizontal space for the "Parameters" heading which is placed
+    to a separate column. The descriptions of parameters are often very long in Buildbot, so
+    just some indentation is fine
+*/
+
+html.writer-html5 .rst-content dl.field-list {
+    display: initial;
+}
+
+html.writer-html5 .rst-content dl.field-list dt {
+    padding-left: 0;
+}
+
+html.writer-html5 .rst-content dl.field-list dd {
+    margin-left: 0;
+}
+
+/* The left and right padding for the contents seems excessive
+*/
+
+.wy-nav-content {
+    /* the values used are the same as for top and bottom padding */
+    padding-right: 1.618em;
+    padding-left: 1.618em;
+}

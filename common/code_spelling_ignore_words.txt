@@ -1213,6 +1213,7 @@ rsa
 rsh
 rst
 rstrip
+rtd
 rtype
 rtypes
 runcommand
