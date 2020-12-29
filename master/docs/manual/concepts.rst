@@ -1,3 +1,5 @@
+.. _Concepts:
+
 Concepts
 ========
 
@@ -68,13 +70,15 @@ The design of Buildbot requires the workers to have their own copies of the sour
 
 .. index: change
 
-.. _Concept-Changes:
+.. _Concept-Change:
 
 Changes
 -------
 
 A :ref:`Change<Change-Attrs>` is an abstract way Buildbot uses to represent a single change to the source files performed by a developer.
 In version control systems that support the notion of atomic check-ins a change represents a changeset or commit.
+
+Changes are used for the :ref:`Change sources<Concepts-Change-Source>` to communicate with :ref:`Schedulers <Concepts-Scheduler>`.
 
 A :class:`Change` comprises the following information:
 
@@ -88,38 +92,21 @@ A :class:`Change` comprises the following information:
 
  - the revision and the branch of the commit
 
-.. _Scheduling-Builds:
+.. _Concepts-Scheduler:
 
-Scheduling Builds
------------------
+Schedulers
+----------
+
+A scheduler is a component that decides when to start a build.
+The decision could be based on time, on new code being committed or on similar events.
+
+Schedulers are responsible for creating :ref:`Build Requests<Concepts-Build-Request>` which identify a request to start a build on a specific versions of the source code.
 
 Each Buildmaster has a set of scheduler objects, each of which gets a copy of every incoming :class:`Change`.
 The Schedulers are responsible for deciding when :class:`Build`\s should be run.
 Some Buildbot installations might have a single scheduler, while others may have several, each for a different purpose.
 
-.. _Concepts-Build:
-
-Builds
-------
-
-A :class:`Build` represents a single compile or test run of a particular version of the source code.
-A build is comprised of a series of steps.
-The steps may be arbitrary. For example, for compiled software a build generally consists of the checkout, configure, make, and make check sequence.
-For interpreted projects like Python modules, a build is generally a checkout followed by an invocation of the bundled test suite.
-
-Builds are created by instances of :class:`Builder` (see below).
-A :class:`BuildFactory` (see below) that is attached to the :class:`Builder` creates a list of the steps for the new build.
-
-.. _Concepts-BuildSet:
-
-BuildSets
----------
-
-A :class:`BuildSet` represents a set of potentially not yet created :class:`Build`\s that all compile and/or test the same version of the source tree.
-It tracks whether this set of builds as a whole succeeded or not.
-The information that is stored in a BuildSet is a set of :class:`SourceStamp`\s which define the version of the code to test and a set of :class:`Builder`\s which define what builds to create.
-
-.. _BuildRequest:
+.. _Concepts-Build-Request:
 
 BuildRequests
 -------------
@@ -131,10 +118,10 @@ A :class:`BuildRequest` consists of the following information:
 
  - the set of :class:`SourceStamp`\s (see above) that specify the version of the source tree to build and/or test.
 
-A :class:`BuildRequest` may be merged with another :class:`BuildRequest` if they represent the same version of the source code and the same builder.
+Two build requests representing the same version of the source code and the same builder may be merged.
 The user may configure additional restrictions for determining mergeability of build requests.
 
-.. _Builder:
+.. _Concepts-Builder:
 
 .. _Concepts-Build-Factories:
 
@@ -142,8 +129,13 @@ Builders and Build Factories
 ----------------------------
 
 A :class:`Builder` is responsible for creating new builds from :class:`BuildRequest`\s.
-Creating a new build is essentially determining the exact steps and other properties of the build and/or test sequence to execute.
-This is performed by a :class:`BuildFactory` that is attached to each :class:`Builder`.
+Creating a new build is essentially determining the following properties of the subsequent build:
+
+ - the exact :ref:`steps <Concepts-Step>` a build will execute
+
+ - the :ref:`workers <Concepts-Worker>` that the build may run on
+
+The sequence of steps to run is performed by user-configurable :class:`BuildFactory` that is attached to each :class:`Builder` by the user.
 
 A :class:`Builder` will attempt to create a :class:`Build` from a :class:`BuildRequest` as soon as it is possible, that is, as soon as the associated worker becomes free.
 When a worker becomes free, the build master will select the oldest :class:`BuildRequest` that can run on that worker and notify the corresponding :class:`Builder` to maybe start a build out of it.
@@ -156,7 +148,30 @@ At a low level, each builder has its own exclusive directory on the build master
 The directory on the master is used for keeping status information.
 The directories on the workers are used as a location where the actual checkout, compilation and testing steps happen.
 
-.. _Concepts-Workers:
+.. _Concepts-Build:
+
+.. _Concepts-Step:
+
+Builds
+------
+
+A :class:`Build` represents a single compile or test run of a particular version of the source code.
+A build is comprised of a series of steps.
+The steps may be arbitrary. For example, for compiled software a build generally consists of the checkout, configure, make, and make check sequence.
+For interpreted projects like Python modules, a build is generally a checkout followed by an invocation of the bundled test suite.
+
+Builds are created by instances of :class:`Builder` (see above).
+
+.. _Concepts-BuildSet:
+
+BuildSets
+---------
+
+A :class:`BuildSet` represents a set of potentially not yet created :class:`Build`\s that all compile and/or test the same version of the source tree.
+It tracks whether this set of builds as a whole succeeded or not.
+The information that is stored in a BuildSet is a set of :class:`SourceStamp`\s which define the version of the code to test and a set of :class:`Builder`\s which define what builds to create.
+
+.. _Concepts-Worker:
 
 Workers
 -------

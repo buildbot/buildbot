@@ -40,7 +40,7 @@ You will now see that a successful test run has happened:
 
 This simple process is essentially is the whole purpose of the Buildbot project.
 
-The information about what actions are executed for a certain build are defined in things called :ref:`builders <Builder>`.
+The information about what actions are executed for a certain build are defined in things called :ref:`builders <Concepts-Builder>`.
 
 The information about when a certain builder should launch a build are defined in things called :ref:`schedulers <Concepts-Scheduler>`.
 In fact, the blue "force" button that was pushed in this example activated a scheduler too.
