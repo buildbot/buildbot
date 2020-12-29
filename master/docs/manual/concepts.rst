@@ -54,19 +54,17 @@ In turn, each source stamp has enough information to identify a particular versi
 .. image:: _images/changes.*
    :alt: Source Stamp Sets
 
-.. _Version-Control-Systems:
+.. _Concepts-Change-Source:
 
-Version Control Systems
------------------------
+Change sources
+--------------
 
-Buildbot supports a significant number of version control systems, so it treats them abstractly.
+Change sources are user-configurable components that interact with external version control systems and retrieve new code.
+Internally new code is represented as :ref:`Changes <Concept-Change>` which roughly correspond to single commit or changeset.
+The changes are sent to the schedulers which then decide whether new builds should be created for these new code changes.
 
-For purposes of deciding when to perform builds, Buildbot's change sources monitor repositories, and represent any updates to those repositories as *changes*.
-These change sources fall broadly into two categories: pollers which periodically check the repository for updates; and hooks, where the repository is configured to notify Buildbot whenever an update occurs.
-For more information see :ref:`Change-Sources` and :ref:`How-Different-VC-Systems-Specify-Sources`.
+The design of Buildbot requires the workers to have their own copies of the source code, thus change sources is an optional component as long as there are no schedulers that create new builds based on new code commit events.
 
-When it comes time to actually perform a build, a scheduler prepares a source stamp set, as described above, based on its configuration.
-When the build begins, one or more source steps use the information in the source stamp set to actually check out the source code, using the normal VCS commands.
 
 .. index: change
 
