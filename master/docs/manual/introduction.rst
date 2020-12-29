@@ -108,30 +108,6 @@ The :class:`Build` is then randomly assigned to a free :class:`WorkerForBuilder`
 
 The behaviour when :class:`BuildRequest`\s are merged can be customized, :ref:`Collapsing-Build-Requests`.
 
-.. _Status-Delivery-Architecture:
-
-Status Delivery Architecture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The buildmaster maintains a central :class:`Status` object, to which various status plugins are connected.
-Through this :class:`Status` object, a full hierarchy of build status objects can be obtained.
-
-.. image:: _images/status.*
-   :alt: Status Delivery
-
-The configuration file controls which status plugins are active.
-Each status plugin gets a reference to the top-level :class:`Status` object.
-From there they can request information on each :class:`Builder`, :class:`Build`, :class:`Step`, and :class:`LogFile`.
-This query-on-demand interface is used by the ``html.Waterfall`` plugin to create the main status page each time a web browser hits the main URL.
-
-The status plugins can also subscribe to hear about new :class:`Build`\s as they occur: this is used by the :class:`MailNotifier` to create new email messages for each recently-completed :class:`Build`.
-
-The :class:`Status` object records the status of old builds on disk in the buildmaster's base directory.
-This allows it to return information about historical builds.
-
-There are also status objects that correspond to :class:`Scheduler`\s and :class:`Worker`\s.
-These allow status plugins to report information about upcoming builds, and the online/offline status of each worker.
-
 .. _Control-Flow:
 
 Control Flow
