@@ -16,29 +16,6 @@ Features:
 * debug tools to force a new build, submit fake :class:`Change`\s, query worker status
 * released under the `GPL <https://opensource.org/licenses/gpl-2.0.php>`_
 
-.. _History-and-Philosophy:
-
-History and Philosophy
-----------------------
-
-The Buildbot was inspired by a similar project built for a development team writing a cross-platform embedded system.
-The various components of the project were supposed to compile and run on several flavors of unix (linux, solaris, BSD), but individual developers had their own preferences and tended to stick to a single platform.
-From time to time, incompatibilities would sneak in (some unix platforms want to use :file:`string.h`, some prefer :file:`strings.h`), and then the project would compile for some developers but not others.
-The Buildbot was written to automate the human process of walking into the office, updating a project, compiling (and discovering the breakage), finding the developer at fault, and complaining to them about the problem they had introduced.
-With multiple platforms it was difficult for developers to do the right thing (compile their potential change on all platforms); the Buildbot offered a way to help.
-
-Another problem was when programmers would change the behavior of a library without warning its users, or change internal aspects that other code was (unfortunately) depending upon.
-Adding unit tests to the codebase helps here: if an application's unit tests pass despite changes in the libraries it uses, you can have more confidence that the library changes haven't broken anything.
-Many developers complained that the unit tests were inconvenient or took too long to run: having the Buildbot run them reduces the developer's workload to a minimum.
-
-In general, having more visibility into the project is always good, and automation makes it easier for developers to do the right thing.
-When everyone can see the status of the project, developers are encouraged to keep the project in good working order.
-Unit tests that aren't run on a regular basis tend to suffer from bitrot just like code does: exercising them on a regular basis helps to keep them functioning and useful.
-
-The current version of the Buildbot is additionally targeted at distributed free-software projects, where resources and platforms are only available when provided by interested volunteers.
-The workers are designed to require an absolute minimum of configuration, reducing the effort a potential volunteer needs to expend to be able to contribute a new test environment to the project.
-The goal is for anyone who wishes that a given project would run on their favorite platform should be able to offer that project a worker, running on that platform, where they can verify that their portability code works, and keeps working.
-
 .. _System-Architecture:
 
 System Architecture
