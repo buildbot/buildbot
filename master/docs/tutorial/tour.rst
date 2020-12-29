@@ -20,6 +20,26 @@ This section will teach you how to:
 - enable and control the IRC bot
 - add a 'try' scheduler
 
+The First Build
+---------------
+
+On the `Builders <http://localhost:8010/#/builders>`_ page, click on the runtests link.
+You'll see a builder page, and a blue "force" button that will bring up the
+following dialog box:
+
+.. image:: _images/force-build.png
+   :alt: force a build.
+
+Click *Start Build* - there's no need to fill in any of the fields in this case.
+Next, click on `view in waterfall <http://localhost:8010/#/waterfall?show=runtests>`_.
+
+You will now see that a successful test run has happened:
+
+.. image:: _images/runtests-success.png
+   :alt: an successful test run happened.
+
+This simple process is essentially is the whole purpose of the Buildbot project.
+
 Setting Project Name and URL
 ----------------------------
 
@@ -134,25 +154,6 @@ Luckily, the Buildbot master will ignore the wrong configuration and keep runnin
 
 The message is clear enough, so open the configuration again, fix the error, and reconfig the master.
 
-Your First Build
-----------------
-
-By now you're probably thinking: "All this time spent and still not done a single build? What was the name of this project again?"
-
-On the `Builders <http://localhost:8010/#/builders>`_ page, click on the runtests link.
-You'll see a builder page, and a blue "force" button that will bring up the
-following dialog box:
-
-.. image:: _images/force-build.png
-   :alt: force a build.
-
-Click *Start Build* - there's no need to fill in any of the fields in this case.
-Next, click on `view in waterfall <http://localhost:8010/#/waterfall?show=runtests>`_.
-
-You will now see:
-
-.. image:: _images/runtests-success.png
-   :alt: an successful test run happened.
 
 Enabling the IRC Bot
 --------------------
