@@ -21,7 +21,7 @@ Features:
 System Architecture
 -------------------
 
-The Buildbot consists of a single *buildmaster* and one or more *workers*, connected in a star topology.
+The Buildbot consists of a single *buildmaster* and one or more *workers* that connect to the master.
 The buildmaster makes all decisions about what, when, and how to build.
 It sends commands to be run on the workers, which simply execute the commands and return the results.
 (certain steps involve more local decision making, where the overhead of sending a lot of commands back and forth would be inappropriate, but in general the buildmaster is responsible for everything).
