@@ -19,7 +19,6 @@ Features:
 * minimal host requirements: Python and Twisted
 * workers can be behind a firewall if they can still do checkout
 * status delivery through web page, email, IRC, other protocols
-* track builds in progress, provide estimated completion time
 * flexible configuration by subclassing generic build process classes
 * debug tools to force a new build, submit fake :class:`Change`\s, query worker status
 * released under the `GPL <https://opensource.org/licenses/gpl-2.0.php>`_
