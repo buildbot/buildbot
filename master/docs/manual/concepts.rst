@@ -13,29 +13,43 @@ You'll need to understand how the Buildbot sees the world to configure it proper
 
 .. _Source-Stamps:
 
-Source Stamps
--------------
+Source identification
+---------------------
 
-Buildbot uses the concept of *source stamp set* to identify exact source code that needs to be built for a certain project.
-A *source stamp set* is a collection of one or more source stamps.
+The following concepts are used within Buildbot to describe source code that is being built:
 
-A *source stamp* is a collection of information needed to identify a particular version of code on a certain codebase. This information most often is a revision and possibly a branch.
+Repository
+    A repository is a location where files tracked by a version control system reside.
+    Usually it is identified by a URL or a location on a disk.
+    It contains a subset of history of a codebase.
 
-A *codebase* is a collection of related files and their history tracked as a unit by version control systems.
-A single codebase may appear in multiple repositories which themselves are identified by URLs.
-For example, ``https://github.com/mozilla/mozilla-central`` and ``http://hg.mozilla.org/mozilla-release`` both contain the Firefox codebase, although not exactly the same code.
+Codebase
+    A codebase is a collection of related files and their history tracked as a unit by version control systems.
+    The files and their history are stored in one or more repositories.
+    For example, the primary repository for the Buildbot codebase is at ``https://github.com/buildbot/buildbot/``.
+    There are also more than a thousand forks of Buildbot.
+    These repositories, while storing potentially very old versions of Buildbot code, still contain the same codebase.
 
-A *project* corresponds to a set of one or more codebases that together may be built and produce some end artifact.
-For example, a company may build several applications based on the same core library.
-The "app" codebase and the "core" codebase are in separate repositories, but are compiled together and constitute a single project.
-Changes to either codebase should cause a rebuild of the application.
+Project
+    A project is a set of one or more codebases that together may be built and produce some end artifact.
+    For example, an application may be comprised of two codebases - one for the code and one for the test data the latter of which occupies a lot of space.
+    Building and testing such an application requires acquiring code from both codebases.
 
-A *revision* is an identifier used by most version control systems to uniquely specify a particular version of the source code.
-Sometimes in order to do that a revision may make sense only if used in combination with a *branch*.
+Revision:
+    A revision is an textual identifier used by most version control systems to uniquely specify a particular version of the source code is a particular codebase.
 
-To sum up the above, to build a project, Buildbot needs to know exactly which version of each codebase it should build.
-It uses a *source stamp* to do so for each codebase, each of which informs Buildbot that it should use a specific *revision* from that codebase.
-Collectively these source stamps are called *source stamp set* for each project.
+Source stamp:
+    A source stamp is a collection of information needed to identify a particular version of code on a certain codebase.
+    In most version control systems source stamp only stores a revision.
+    On certain version control systems a branch is also required.
+
+Source stamp set:
+    A source stamp set is a set of source stamps to identify a particular version of code on a certain project.
+    Like a project is a collection of codebases, a source stamp set is a collection of source stamps, one for each codebase within a project.
+
+In order to build a project Buildbot only needs to know a source stamp set corresponding to that project.
+This source stamp set has a source stamp for each codebase comprising the project.
+In turn, each source stamp has enough information to identify a particular version of the code within the codebase.
 
 .. image:: _images/changes.*
    :alt: Source Stamp Sets
