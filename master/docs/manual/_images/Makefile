@@ -31,4 +31,4 @@ images-eps: $(EPSS)
 	inkscape --export-eps $@ $<
 	mogrify -trim +repage $@
 clean:
-	rm -f *.png *.eps overview.svg workers.svg master.svg status.svg
+	rm -f $(PNGS) $(SVGS) $(EPSS)
