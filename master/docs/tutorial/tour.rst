@@ -32,7 +32,7 @@ Open a new terminal, go to the directory you created master in, activate the sam
 
 .. code-block:: bash
 
-  cd ~/tmp/bb-master
+  cd ~/buildbot-test/master
   source sandbox/bin/activate
   $EDITOR master/master.cfg
 
@@ -256,7 +256,7 @@ To use this you will need to install an additional package or two to your virtua
 
 .. code-block:: bash
 
-  cd ~/tmp/bb-master
+  cd ~/buildbot-test/master
   source sandbox/bin/activate
   pip install -U pip
   pip install cryptography pyasn1
@@ -340,7 +340,7 @@ Then run buildbot's ``try`` command as follows:
 
 .. code-block:: bash
 
-    cd ~/tmp/bb-master
+    cd ~/buildbot-test/master
     source sandbox/bin/activate
     buildbot try --connect=pb --master=127.0.0.1:5555 \
         --username=sampleuser --passwd=samplepass --vc=git
