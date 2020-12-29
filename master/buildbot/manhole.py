@@ -210,25 +210,9 @@ class _BaseManhole(service.AsyncMultiService):
 
 class TelnetManhole(_BaseManhole, ComparableMixin):
 
-    """This Manhole accepts unencrypted (telnet) connections, and requires a
-    username and password authorize access. You are encouraged to use the
-    encrypted ssh-based manhole classes instead."""
-
     compare_attrs = ("port", "username", "password")
 
     def __init__(self, port, username, password):
-        """
-        @type port: string or int
-        @param port: what port should the Manhole listen on? This is a
-        strports specification string, like 'tcp:12345' or
-        'tcp:12345:interface=127.0.0.1'. Bare integers are treated as a
-        simple tcp port.
-
-        @param username:
-        @param password: username= and password= form a pair of strings to
-                         use when authenticating the remote user.
-        """
-
         self.username = username
         self.password = password
 
@@ -240,28 +224,9 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
 
 class PasswordManhole(_BaseManhole, ComparableMixin):
 
-    """This Manhole accepts encrypted (ssh) connections, and requires a
-    username and password to authorize access.
-    """
-
     compare_attrs = ("port", "username", "password", "ssh_hostkey_dir")
 
     def __init__(self, port, username, password, ssh_hostkey_dir):
-        """
-        @type port: string or int
-        @param port: what port should the Manhole listen on? This is a
-        strports specification string, like 'tcp:12345' or
-        'tcp:12345:interface=127.0.0.1'. Bare integers are treated as a
-        simple tcp port.
-
-        @param username:
-        @param password: username= and password= form a pair of strings to
-                         use when authenticating the remote user.
-        @type ssh_hostkey_dir: str
-        @param ssh_hostkey_dir: directory which contains ssh host keys for
-                                this server
-        """
-
         if not manhole_ssh:
             config.error("cryptography required for ssh mahole.")
         self.username = username
@@ -276,30 +241,9 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
 
 class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
 
-    """This Manhole accepts ssh connections, and requires that the
-    prospective client have an ssh private key that matches one of the public
-    keys in our authorized_keys file. It is created with the name of a file
-    that contains the public keys that we will accept."""
-
     compare_attrs = ("port", "keyfile", "ssh_hostkey_dir")
 
     def __init__(self, port, keyfile, ssh_hostkey_dir):
-        """
-        @type port: string or int
-        @param port: what port should the Manhole listen on? This is a
-        strports specification string, like 'tcp:12345' or
-        'tcp:12345:interface=127.0.0.1'. Bare integers are treated as a
-        simple tcp port.
-
-        @param keyfile: the name of a file (relative to the buildmaster's
-                        basedir) that contains SSH public keys of authorized
-                        users, one per line. This is the exact same format
-                        as used by sshd in ~/.ssh/authorized_keys .
-        @type ssh_hostkey_dir: str
-        @param ssh_hostkey_dir: directory which contains ssh host keys for
-                                this server
-        """
-
         if not manhole_ssh:
             config.error("cryptography required for ssh mahole.")
 

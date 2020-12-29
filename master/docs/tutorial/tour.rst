@@ -18,7 +18,6 @@ This section will teach you how to:
 - deal with configuration errors
 - force builds
 - enable and control the IRC bot
-- enable ssh debugging
 - add a 'try' scheduler
 
 Setting Project Name and URL
@@ -245,54 +244,6 @@ and append::
   c['www']['auth'] = util.UserPasswordAuth([('Alice','Password1')])
 
 For more details, see :ref:`Web-Authentication`.
-
-Debugging with Manhole
-----------------------
-
-You can do some debugging by using manhole, an interactive Python shell.
-It exposes full access to the buildmaster's account (including the ability to modify and delete files), so it should not be enabled with a weak or easily guessable password.
-
-To use this you will need to install an additional package or two to your virtualenv:
-
-.. code-block:: bash
-
-  cd ~/buildbot-test/master
-  source sandbox/bin/activate
-  pip install -U pip
-  pip install cryptography pyasn1
-
-You will also need to generate an SSH host key for the Manhole server.
-
-.. code-block:: bash
-
-  mkdir -p /data/ssh_host_keys
-  ckeygen -t rsa -f /data/ssh_host_keys/ssh_host_rsa_key
-
-In your master.cfg find::
-
-  c = BuildmasterConfig = {}
-
-Insert the following to enable debugging mode with manhole::
-
-  ####### DEBUGGING
-  from buildbot import manhole
-  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1",
-                                         "admin", "passwd",
-                                         ssh_hostkey_dir="/data/ssh_host_keys/")
-
-After restarting the master, you can ssh into the master and get an interactive Python shell:
-
-.. code-block:: bash
-
-  ssh -p1234 admin@127.0.0.1
-  # enter passwd at prompt
-
-If you wanted to check which workers are connected and what builders those workers are assigned to you could do::
-
-  >>> master.workers.workers
-  {'example-worker': <Worker 'example-worker', current builders: runtests>}
-
-Objects can be explored in more depth using `dir(x)` or the helper function `show(x)`.
 
 Adding a 'try' scheduler
 ------------------------
