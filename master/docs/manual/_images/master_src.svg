@@ -1598,8 +1598,8 @@
      id="namedview4"
      showgrid="true"
      inkscape:zoom="3.5"
-     inkscape:cx="345.15701"
-     inkscape:cy="244.271"
+     inkscape:cx="338.14406"
+     inkscape:cy="225.73641"
      inkscape:window-x="7680"
      inkscape:window-y="28"
      inkscape:window-maximized="1"
@@ -1615,13 +1615,6 @@
      inkscape:label="master"
      transform="matrix(1.25,0,0,-1.25,0,781.25)"
      style="display:inline"><g
-   id="g12"
-   transform="translate(290.7554,208.7295)"><path
-     d="m 0,0 4.999,0 0,-104.987 -226.754,0 0,104.987 61.233,0"
-     style="fill:none;stroke:#d74227;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:4;stroke-dashoffset:0"
-     id="path14"
-     inkscape:connector-curvature="0"
-     sodipodi:nodetypes="cccccc" /></g><g
    id="g16"
    transform="translate(357.9199,277.3525)"><path
      d="M 0,0 0,8.647"
@@ -2659,42 +2652,11 @@
 
 
 
-<text
-   transform="scale(1,-1)"
-   id="text2582"
-   x="146.21712"
-   y="-112.69279"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:23px;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="146.21712"
-     y="-112.69279"
-     id="tspan2584">W</tspan></text>
 
 
-<text
-   transform="scale(1,-1)"
-   id="text2586"
-   x="160.43248"
-   y="-112.69279"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="160.43248"
-     sodipodi:role="line"
-     id="tspan2588"
-     y="-112.69279"> ORKER</tspan></text>
 
 
 <g
-   id="g2598"><g
-     id="g2600"
-     clip-path="url(#clipPath2602)"><g
-       id="g2606"
-       transform="translate(543.0244,208.7295)"><path
-         d="m 0,0 12.729,0 0,-104.987 -226.753,0 0,104.987 61.233,0"
-         style="fill:none;stroke:#d74227;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:4;stroke-dashoffset:0"
-         id="path2608"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccccc" /></g></g></g><g
    id="g2626"><g
      id="g2628"
      clip-path="url(#clipPath2630)"><g
@@ -2770,528 +2732,65 @@
      id="tspan2734">UILDER</tspan></text>
 
 
-<text
-   y="-112.69279"
-   x="407.3244"
-   id="text4796"
-   transform="scale(1,-1)"
-   style="line-height:0%"><tspan
-     id="tspan4798"
-     y="-112.69279"
-     x="407.3244"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:23px;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none">W</tspan></text>
 
 
-<text
-   y="-112.69279"
-   x="421.53973"
-   id="text4800"
-   transform="scale(1,-1)"
-   style="line-height:0%"><tspan
-     y="-112.69279"
-     id="tspan4802"
-     sodipodi:role="line"
-     x="421.53973"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"> ORKER</tspan></text>
+
+
+
+
+
+
+
+
+
+
 
 
 <g
-   transform="matrix(1,0,0,1.168421,0,-34.021056)"
-   style="display:inline"
-   id="g2040"><g
-     id="g2042" /><g
-     id="g2068"><g
-       clip-path="url(#clipPath2044)"
-       id="g2070"
-       style="opacity:0.30000299"><g
-         id="g2072"><g
-           id="g2074" /><g
-           mask="url(#mask2052)"
-           id="g2076"><g
-             transform="matrix(103,0,0,57,80,145)"
-             id="g2078"><image
-               width="1"
-               height="1"
-               transform="matrix(1,0,0,-1,0,1)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAAA5CAYAAAArxTV+AAAABHNCSVQICAgIfAhkiAAAAMZJREFUeJzt3DEOAyEMAEHg/38mTU53iSKlZIuZCll0K7eee+893uacg7MeOca6HsI0PDus7wHnXT3Wn38cMucUp0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycsDXG50VWGvbe9+YI1HG1WL+GnPNs8AL4hBlrpkbNPgAAAABJRU5ErkJggg=="
-               mask="url(#mask2064)"
-               id="image2080" /></g></g></g></g></g></g><g
-   style="display:inline"
-   id="g2082"
-   transform="translate(178.4829,150.8867)"><path
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z"
-     style="fill:#d9d5d2;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     id="path2084"
-     inkscape:connector-curvature="0"
-     sodipodi:nodetypes="sssssssss" /></g><g
-   style="display:inline"
-   id="g2086"
-   transform="translate(178.4829,150.8867)"><path
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z"
-     style="fill:none;stroke:#303539;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-     id="path2088"
-     inkscape:connector-curvature="0"
-     sodipodi:nodetypes="sssssssss" /></g><g
-   transform="matrix(1,0,0,1.168421,0,-34.021056)"
-   style="display:inline"
-   id="g2090"><g
-     id="g2092" /><g
-     id="g2118"><g
-       clip-path="url(#clipPath2094)"
-       id="g2120"
-       style="opacity:0.30000299"><g
-         id="g2122"><g
-           id="g2124" /><g
-           mask="url(#mask2102)"
-           id="g2126"><g
-             transform="matrix(101,0,0,53,81,148)"
-             id="g2128"><image
-               width="1"
-               height="1"
-               transform="matrix(1,0,0,-1,0,1)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGUAAAA1CAYAAABY8iU4AAAABHNCSVQICAgIfAhkiAAAALNJREFUeJzt3LENw0AMBEG++u+ZDmwlcgHaYKaCAxZMeXZ3Z2bOOcO7finmmhGk4u5wZmbfncLT9fYA/okSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEHX/SKPht39XoowDXeHD6ptFF7TWzbKAAAAAElFTkSuQmCC"
-               mask="url(#mask2114)"
-               id="image2130" /></g></g></g></g></g></g><path
-   d="m 177.91,144.466 -94.111,0 0,54.265 94.111,0 z"
-   style="fill:#e5e7e4;fill-opacity:1;fill-rule:nonzero;stroke:none;display:inline"
-   id="path2132"
-   inkscape:connector-curvature="0"
-   sodipodi:nodetypes="ccccc" /><text
-   style="font-size:15px;line-height:0%;display:inline"
-   id="text2134"
-   x="119.33474"
-   y="557.81439"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="119.33474"
-     y="557.81439"
-     id="tspan2136">W</tspan></text>
-
-
-<text
-   style="line-height:0%;display:inline"
-   id="text2138"
-   x="142.5739"
-   y="557.81439"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="142.5739"
-     y="557.81439"
-     sodipodi:role="line"
-     id="tspan2140">ORKER</tspan></text>
-
-
-<text
-   style="font-size:15px;line-height:0%;display:inline"
-   id="text2142"
-   x="118.68816"
-   y="597.56451"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="118.68816"
-     y="597.56451"
-     id="tspan2144">B</tspan></text>
-
-
-<text
-   style="line-height:0%;display:inline"
-   id="text2146"
-   x="136.05269"
-   y="597.56451"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="136.05269 151.39769 157.8102 169.30769 184.9677 196.9827"
-     y="597.56451"
-     sodipodi:role="line"
-     id="tspan2148">UILDER</tspan></text>
-
-
-<text
-   y="577.45093"
-   x="143.58073"
-   style="line-height:0%;display:inline"
-   id="text2138-5"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="143.58073"
-     y="577.45093"
-     sodipodi:role="line"
-     id="tspan2140-4">FOR</tspan></text>
-
-
-<g
-   id="g4598"
-   style="display:inline"
-   transform="matrix(1,0,0,1.168421,102.4,-34.021056)"><g
-     id="g4600" /><g
-     id="g4602"><g
-       style="opacity:0.30000299"
-       id="g4604"
-       clip-path="url(#clipPath2044)"><g
-         id="g4606"><g
-           id="g4608" /><g
-           id="g4610"
-           mask="url(#mask2052)"><g
-             id="g4612"
-             transform="matrix(103,0,0,57,80,145)"><image
-               id="image4614"
-               mask="url(#mask2064)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAAA5CAYAAAArxTV+AAAABHNCSVQICAgIfAhkiAAAAMZJREFUeJzt3DEOAyEMAEHg/38mTU53iSKlZIuZCll0K7eee+893uacg7MeOca6HsI0PDus7wHnXT3Wn38cMucUp0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycsDXG50VWGvbe9+YI1HG1WL+GnPNs8AL4hBlrpkbNPgAAAABJRU5ErkJggg=="
-               transform="matrix(1,0,0,-1,0,1)"
-               height="1"
-               width="1" /></g></g></g></g></g></g><g
-   transform="translate(280.8829,150.8867)"
-   id="g4616"
-   style="display:inline"><path
-     sodipodi:nodetypes="sssssssss"
-     inkscape:connector-curvature="0"
-     id="path4618"
-     style="fill:#d9d5d2;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z" /></g><g
-   transform="translate(280.8829,150.8867)"
-   id="g4620"
-   style="display:inline"><path
+   id="g431707"
+   transform="translate(-8)"><path
      sodipodi:nodetypes="sssssssss"
      inkscape:connector-curvature="0"
      id="path4622"
-     style="fill:none;stroke:#303539;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z" /></g><g
-   id="g4624"
-   style="display:inline"
-   transform="matrix(1,0,0,1.168421,102.4,-34.021056)"><g
-     id="g4626" /><g
-     id="g4628"><g
-       style="opacity:0.30000299"
-       id="g4630"
-       clip-path="url(#clipPath2094)"><g
-         id="g4632"><g
-           id="g4634" /><g
-           id="g4636"
-           mask="url(#mask2102)"><g
-             id="g4638"
-             transform="matrix(101,0,0,53,81,148)"><image
-               id="image4640"
-               mask="url(#mask2114)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGUAAAA1CAYAAABY8iU4AAAABHNCSVQICAgIfAhkiAAAALNJREFUeJzt3LENw0AMBEG++u+ZDmwlcgHaYKaCAxZMeXZ3Z2bOOcO7finmmhGk4u5wZmbfncLT9fYA/okSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEHX/SKPht39XoowDXeHD6ptFF7TWzbKAAAAAElFTkSuQmCC"
-               transform="matrix(1,0,0,-1,0,1)"
-               height="1"
-               width="1" /></g></g></g></g></g></g><path
-   sodipodi:nodetypes="ccccc"
-   inkscape:connector-curvature="0"
-   id="path4642"
-   style="fill:#e5e7e4;fill-opacity:1;fill-rule:nonzero;stroke:none;display:inline"
-   d="m 350.3875,600.6675 -117.63875,0 0,-67.83125 117.63875,0 z"
-   transform="matrix(0.8,0,0,-0.8,0,625)" /><text
-   y="557.81439"
-   x="247.33475"
-   id="text4644"
-   style="font-size:15px;line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4646"
-     y="557.81439"
-     x="247.33475"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">W</tspan></text>
+     style="fill:#e5e7e4;fill-opacity:1;stroke:#303539;stroke-width:1.02695966;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 304,167.84248 c 0,-0.30754 -0.84874,-0.55917 -1.88609,-0.55917 H 126.31529 c -1.03735,0 -1.88609,0.25163 -1.88609,0.55917 v 31.09605 c 0,0.30754 0.84874,0.55917 1.88609,0.55917 h 175.79862 c 1.03735,0 1.88609,-0.25163 1.88609,-0.55917 z" /><text
+     transform="scale(1,-1)"
+     style="font-size:12px;line-height:0%;display:inline;stroke-width:0.80000001"
+     id="text4644"
+     x="172.03923"
+     y="-175.54849"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:23.00053215px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Bold';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.80000001"
+       x="172.03923"
+       y="-175.54849"
+       id="tspan4646">Worker</tspan></text>
+</g>
 
 
-<text
-   y="557.81439"
-   x="270.57391"
-   id="text4648"
-   style="line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4650"
-     sodipodi:role="line"
-     y="557.81439"
-     x="270.57391"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">ORKER</tspan></text>
 
 
-<text
-   y="597.56451"
-   x="246.68817"
-   id="text4652"
-   style="font-size:15px;line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4654"
-     y="597.56451"
-     x="246.68817"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">B</tspan></text>
 
 
-<text
-   y="597.56451"
-   x="264.05267"
-   id="text4656"
-   style="line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4658"
-     sodipodi:role="line"
-     y="597.56451"
-     x="264.05267 279.39771 285.81018 297.30768 312.96771 324.9827"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">UILDER</tspan></text>
 
 
-<text
-   id="text4660"
-   style="line-height:0%;display:inline"
-   x="271.58075"
-   y="577.45093"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4662"
-     sodipodi:role="line"
-     y="577.45093"
-     x="271.58075"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">FOR</tspan></text>
 
 
-<g
-   id="g4664"
-   style="display:inline"
-   transform="matrix(1,0,0,1.168421,260.49299,-34.021056)"><g
-     id="g4666" /><g
-     id="g4668"><g
-       style="opacity:0.30000299"
-       id="g4670"
-       clip-path="url(#clipPath2044)"><g
-         id="g4672"><g
-           id="g4674" /><g
-           id="g4676"
-           mask="url(#mask2052)"><g
-             id="g4678"
-             transform="matrix(103,0,0,57,80,145)"><image
-               id="image4680"
-               mask="url(#mask2064)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAAA5CAYAAAArxTV+AAAABHNCSVQICAgIfAhkiAAAAMZJREFUeJzt3DEOAyEMAEHg/38mTU53iSKlZIuZCll0K7eee+893uacg7MeOca6HsI0PDus7wHnXT3Wn38cMucUp0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycsDXG50VWGvbe9+YI1HG1WL+GnPNs8AL4hBlrpkbNPgAAAABJRU5ErkJggg=="
-               transform="matrix(1,0,0,-1,0,1)"
-               height="1"
-               width="1" /></g></g></g></g></g></g><g
-   transform="translate(438.97589,150.8867)"
-   id="g4682"
-   style="display:inline"><path
-     sodipodi:nodetypes="sssssssss"
-     inkscape:connector-curvature="0"
-     id="path4684"
-     style="fill:#d9d5d2;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z" /></g><g
-   transform="translate(438.97589,150.8867)"
-   id="g4686"
-   style="display:inline"><path
-     sodipodi:nodetypes="sssssssss"
-     inkscape:connector-curvature="0"
-     id="path4688"
-     style="fill:none;stroke:#303539;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z" /></g><g
-   id="g4690"
-   style="display:inline"
-   transform="matrix(1,0,0,1.168421,260.49299,-34.021056)"><g
-     id="g4692" /><g
-     id="g4694"><g
-       style="opacity:0.30000299"
-       id="g4696"
-       clip-path="url(#clipPath2094)"><g
-         id="g4698"><g
-           id="g4700" /><g
-           id="g4702"
-           mask="url(#mask2102)"><g
-             id="g4704"
-             transform="matrix(101,0,0,53,81,148)"><image
-               id="image4706"
-               mask="url(#mask2114)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGUAAAA1CAYAAABY8iU4AAAABHNCSVQICAgIfAhkiAAAALNJREFUeJzt3LENw0AMBEG++u+ZDmwlcgHaYKaCAxZMeXZ3Z2bOOcO7finmmhGk4u5wZmbfncLT9fYA/okSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEHX/SKPht39XoowDXeHD6ptFF7TWzbKAAAAAElFTkSuQmCC"
-               transform="matrix(1,0,0,-1,0,1)"
-               height="1"
-               width="1" /></g></g></g></g></g></g><path
-   sodipodi:nodetypes="ccccc"
-   inkscape:connector-curvature="0"
-   id="path4708"
-   style="fill:#e5e7e4;fill-opacity:1;fill-rule:nonzero;stroke:none;display:inline"
-   d="m 548.00374,600.6675 -117.63875,0 0,-67.83125 117.63875,0 z"
-   transform="matrix(0.8,0,0,-0.8,0,625)" /><text
-   y="557.81439"
-   x="444.95102"
-   id="text4710"
-   style="font-size:15px;line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4712"
-     y="557.81439"
-     x="444.95102"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">W</tspan></text>
 
 
-<text
-   y="557.81439"
-   x="468.19019"
-   id="text4714"
-   style="line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4716"
-     sodipodi:role="line"
-     y="557.81439"
-     x="468.19019"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">ORKER</tspan></text>
 
 
-<text
-   y="597.56451"
-   x="444.30444"
-   id="text4718"
-   style="font-size:15px;line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4720"
-     y="597.56451"
-     x="444.30444"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">B</tspan></text>
 
 
-<text
-   y="597.56451"
-   x="461.66895"
-   id="text4722"
-   style="line-height:0%;display:inline"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4724"
-     sodipodi:role="line"
-     y="597.56451"
-     x="461.66895 477.01398 483.42645 494.92395 510.58398 522.59888"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">UILDER</tspan></text>
 
 
-<text
-   id="text4726"
-   style="line-height:0%;display:inline"
-   x="469.19702"
-   y="577.45093"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     id="tspan4728"
-     sodipodi:role="line"
-     y="577.45093"
-     x="469.19702"
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none">FOR</tspan></text>
 
 
-<g
-   transform="matrix(1,0,0,1.168421,362.89299,-34.021056)"
-   style="display:inline"
-   id="g4730"><g
-     id="g4732" /><g
-     id="g4734"><g
-       clip-path="url(#clipPath2044)"
-       id="g4736"
-       style="opacity:0.30000299"><g
-         id="g4738"><g
-           id="g4740" /><g
-           mask="url(#mask2052)"
-           id="g4742"><g
-             transform="matrix(103,0,0,57,80,145)"
-             id="g4744"><image
-               width="1"
-               height="1"
-               transform="matrix(1,0,0,-1,0,1)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAAA5CAYAAAArxTV+AAAABHNCSVQICAgIfAhkiAAAAMZJREFUeJzt3DEOAyEMAEHg/38mTU53iSKlZIuZCll0K7eee+893uacg7MeOca6HsI0PDus7wHnXT3Wn38cMucUp0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycMHHCxAkTJ0ycsDXG50VWGvbe9+YI1HG1WL+GnPNs8AL4hBlrpkbNPgAAAABJRU5ErkJggg=="
-               mask="url(#mask2064)"
-               id="image4746" /></g></g></g></g></g></g><g
-   style="display:inline"
-   id="g4748"
-   transform="translate(541.37589,150.8867)"><path
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z"
-     style="fill:#d9d5d2;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     id="path4750"
-     inkscape:connector-curvature="0"
-     sodipodi:nodetypes="sssssssss" /></g><g
-   style="display:inline"
-   id="g4752"
-   transform="translate(541.37589,150.8867)"><path
-     d="m 0,-8 c 0,-0.55 -0.45,-1 -1,-1 l -93.208,0 c -0.55,0 -1,0.45 -1,1 l 0,55.611 c 0,0.55 0.45,1 1,1 l 93.208,0 c 0.55,0 1,-0.45 1,-1 z"
-     style="fill:none;stroke:#303539;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-     id="path4754"
-     inkscape:connector-curvature="0"
-     sodipodi:nodetypes="sssssssss" /></g><g
-   transform="matrix(1,0,0,1.168421,362.89299,-34.021056)"
-   style="display:inline"
-   id="g4756"><g
-     id="g4758" /><g
-     id="g4760"><g
-       clip-path="url(#clipPath2094)"
-       id="g4762"
-       style="opacity:0.30000299"><g
-         id="g4764"><g
-           id="g4766" /><g
-           mask="url(#mask2102)"
-           id="g4768"><g
-             transform="matrix(101,0,0,53,81,148)"
-             id="g4770"><image
-               width="1"
-               height="1"
-               transform="matrix(1,0,0,-1,0,1)"
-               xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGUAAAA1CAYAAABY8iU4AAAABHNCSVQICAgIfAhkiAAAALNJREFUeJzt3LENw0AMBEG++u+ZDmwlcgHaYKaCAxZMeXZ3Z2bOOcO7finmmhGk4u5wZmbfncLT9fYA/okSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEGiBIkSJEqQKEHX/SKPht39XoowDXeHD6ptFF7TWzbKAAAAAElFTkSuQmCC"
-               mask="url(#mask2114)"
-               id="image4772" /></g></g></g></g></g></g><path
-   d="m 676.00374,600.6675 -117.63875,0 0,-67.83125 117.63875,0 z"
-   style="fill:#e5e7e4;fill-opacity:1;fill-rule:nonzero;stroke:none;display:inline"
-   id="path4774"
-   inkscape:connector-curvature="0"
-   sodipodi:nodetypes="ccccc"
-   transform="matrix(0.8,0,0,-0.8,0,625)" /><text
-   style="font-size:15px;line-height:0%;display:inline"
-   id="text4776"
-   x="572.95093"
-   y="557.81439"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="572.95093"
-     y="557.81439"
-     id="tspan4778">W</tspan></text>
 
 
-<text
-   style="line-height:0%;display:inline"
-   id="text4780"
-   x="596.19012"
-   y="557.81439"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="596.19012"
-     y="557.81439"
-     sodipodi:role="line"
-     id="tspan4782">ORKER</tspan></text>
 
 
-<text
-   style="font-size:15px;line-height:0%;display:inline"
-   id="text4784"
-   x="572.30438"
-   y="597.56451"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.75px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="572.30438"
-     y="597.56451"
-     id="tspan4786">B</tspan></text>
 
 
-<text
-   style="line-height:0%;display:inline"
-   id="text4788"
-   x="589.66888"
-   y="597.56451"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="589.66888 605.01392 611.42639 622.92389 638.58392 650.59888"
-     y="597.56451"
-     sodipodi:role="line"
-     id="tspan4790">UILDER</tspan></text>
 
-
-<text
-   y="577.45093"
-   x="597.19696"
-   style="line-height:0%;display:inline"
-   id="text4792"
-   transform="matrix(0.8,0,0,-0.8,0,625)"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.5px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="597.19696"
-     y="577.45093"
-     sodipodi:role="line"
-     id="tspan4794">FOR</tspan></text>
 
 
 <g
@@ -3619,4 +3118,22 @@
        y="-266.57507"
        x="83.560204"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:extra-condensed;font-size:13.86666679px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Extra-Condensed';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none">Build</tspan></text>
+</g><g
+   style="display:inline"
+   id="g431707-5"
+   transform="translate(248)"><path
+     sodipodi:nodetypes="sssssssss"
+     inkscape:connector-curvature="0"
+     id="path4622-7"
+     style="fill:#e5e7e4;fill-opacity:1;stroke:#303539;stroke-width:1.02695966;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 304,167.84248 c 0,-0.30754 -0.84874,-0.55917 -1.88609,-0.55917 H 126.31529 c -1.03735,0 -1.88609,0.25163 -1.88609,0.55917 v 31.09605 c 0,0.30754 0.84874,0.55917 1.88609,0.55917 h 175.79862 c 1.03735,0 1.88609,-0.25163 1.88609,-0.55917 z" /><text
+     transform="scale(1,-1)"
+     style="font-size:12px;line-height:0%;display:inline;stroke-width:0.80000001"
+     id="text4644-4"
+     x="172.03923"
+     y="-175.54849"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:23.00053215px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Bold';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.80000001"
+       x="172.03923"
+       y="-175.54849"
+       id="tspan4646-3">Worker</tspan></text>
 </g></g></svg>
