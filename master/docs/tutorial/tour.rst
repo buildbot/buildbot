@@ -287,21 +287,6 @@ After restarting the master, you can ssh into the master and get an interactive 
   ssh -p1234 admin@127.0.0.1
   # enter passwd at prompt
 
-.. note::
-    The pyasn1-0.1.1 release has a bug which results in an exception similar to
-    this on startup:
-
-    .. code-block:: none
-
-        exceptions.TypeError: argument 2 must be long, not int
-
-    If you see this, the temporary solution is to install the previous version
-    of pyasn1:
-
-    .. code-block:: bash
-
-        pip install pyasn1-0.0.13b
-
 If you wanted to check which workers are connected and what builders those workers are assigned to you could do::
 
   >>> master.workers.workers
