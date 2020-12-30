@@ -124,7 +124,7 @@ class TestMessageFormatting(unittest.TestCase):
                          "Build Source Stamp 'a': [branch br] abc (plus patch)\n")
 
 
-class TestMessage(TestReactorMixin, unittest.TestCase):
+class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
@@ -164,6 +164,8 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
                                                        ["him@bar", "me@foo"])
         return res
 
+
+class TestMessageFormatter(MessageFormatterTestBase):
     @defer.inlineCallbacks
     def test_message_success(self):
         formatter = message.MessageFormatter()
@@ -236,8 +238,10 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
         self.assertIn(
             "The Buildbot has detected a failed build on builder", res['body'])
 
+
+class TestMessageFormatterMissingWorker(MessageFormatterTestBase):
     @defer.inlineCallbacks
-    def test_missing_worker(self):
+    def test_basic(self):
         formatter = message.MessageFormatterMissingWorker()
         self.setupDb(SUCCESS, SUCCESS)
         workers = yield self.master.data.get(('workers',))
