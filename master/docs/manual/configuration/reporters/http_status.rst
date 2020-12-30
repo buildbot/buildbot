@@ -11,7 +11,8 @@ HttpStatusPush
     sp = reporters.HttpStatusPush(serverUrl="http://example.com/submit")
     c['services'].append(sp)
 
-:class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
+:class:`HttpStatusPush` sends HTTP POST requests to ``serverUrl``.
+The body of request contains json-encoded data of the build as returned by the data API.
 It is useful to create a status front end outside of Buildbot for better scalability.
 
 It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
@@ -23,7 +24,7 @@ It requires either `txrequests`_ or `treq`_ to be installed to allow interaction
 
 .. py:class:: HttpStatusPush(serverUrl, user=None, password=None, auth=None, format_fn=None, builders=None, wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False, debug=None, verify=None)
 
-    :param string serverUrl: the url where to do the http post
+    :param string serverUrl: the url where to do the HTTP POST request
     :param string user: the BasicAuth user to post as
     :param string password: the BasicAuth user's password (can be a :ref:`Secret`).
     :param auth: the authentication method to use.
