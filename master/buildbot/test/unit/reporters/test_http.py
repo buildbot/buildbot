@@ -77,10 +77,10 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def createReporter(self, auth=("username", "passwd"), **kwargs):
+    def createReporter(self, auth=("username", "passwd"), headers=None, **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
-            "serv", auth=auth,
+            "serv", auth=auth, headers=headers,
             debug=None, verify=None)
 
         interpolated_auth = None
@@ -89,7 +89,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
             passwd = Interpolate(passwd)
             interpolated_auth = (username, passwd)
 
-        self.sp = HttpStatusPush("serv", auth=interpolated_auth, **kwargs)
+        self.sp = HttpStatusPush("serv", auth=interpolated_auth, headers=headers, **kwargs)
         yield self.sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -117,6 +117,13 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
+    def test_header(self):
+        yield self.createReporter(headers={'Custom header': 'On'})
+        self._http.expect("post", "", json=BuildLookAlike())
+        build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
@@ -195,7 +202,7 @@ class TestHttpStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase, Repo
     def createReporter(self, auth=("username", "passwd"), **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
-            "serv", auth=auth,
+            "serv", auth=auth, headers=None,
             debug=None, verify=None)
 
         interpolated_auth = None
