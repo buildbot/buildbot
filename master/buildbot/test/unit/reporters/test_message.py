@@ -128,11 +128,7 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
-
-        self.message = message.MessageFormatter()
-        self.messageMissing = message.MessageFormatterMissingWorker()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     def setupDb(self, results1, results2):
 
@@ -159,18 +155,19 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
             ])
 
     @defer.inlineCallbacks
-    def doOneTest(self, lastresults, results, mode="all"):
+    def do_one_test(self, formatter, lastresults, results, mode="all"):
         self.setupDb(lastresults, results)
         res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True,
                                                 wantPreviousBuild=True)
         build = res['builds'][0]
-        res = yield self.message.format_message_for_build(mode, "Builder1", build, self.master,
-                                                          ["him@bar", "me@foo"])
+        res = yield formatter.format_message_for_build(mode, "Builder1", build, self.master,
+                                                       ["him@bar", "me@foo"])
         return res
 
     @defer.inlineCallbacks
     def test_message_success(self):
-        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
         self.assertEqual(res['body'], textwrap.dedent('''\
             The Buildbot has detected a passing build on builder Builder1 while building Buildbot.
@@ -192,55 +189,61 @@ class TestMessage(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_inline_template(self):
-        self.message = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
-        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        formatter = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
         self.assertEqual(res['body'],
                          "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
 
     @defer.inlineCallbacks
     def test_inline_subject(self):
-        self.message = message.MessageFormatter(subject="subject")
-        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        formatter = message.MessageFormatter(subject="subject")
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(res['subject'], "subject")
 
     @defer.inlineCallbacks
     def test_message_failure(self):
-        res = yield self.doOneTest(SUCCESS, FAILURE)
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, SUCCESS, FAILURE)
         self.assertIn(
             "The Buildbot has detected a failed build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_failure_change(self):
-        res = yield self.doOneTest(SUCCESS, FAILURE, "change")
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, SUCCESS, FAILURE, "change")
         self.assertIn(
             "The Buildbot has detected a new failure on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_success_change(self):
-        res = yield self.doOneTest(FAILURE, SUCCESS, "change")
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, FAILURE, SUCCESS, "change")
         self.assertIn(
             "The Buildbot has detected a restored build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_success_nochange(self):
-        res = yield self.doOneTest(SUCCESS, SUCCESS, "change")
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS, "change")
         self.assertIn(
             "The Buildbot has detected a passing build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_failure_nochange(self):
-        res = yield self.doOneTest(FAILURE, FAILURE, "change")
+        formatter = message.MessageFormatter()
+        res = yield self.do_one_test(formatter, FAILURE, FAILURE, "change")
         self.assertIn(
             "The Buildbot has detected a failed build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_missing_worker(self):
+        formatter = message.MessageFormatterMissingWorker()
         self.setupDb(SUCCESS, SUCCESS)
         workers = yield self.master.data.get(('workers',))
         worker = workers[0]
         worker['notify'] = ['e@mail']
         worker['last_connection'] = ['yesterday']
-        res = yield self.messageMissing.formatMessageForMissingWorker(self.master, worker)
+        res = yield formatter.formatMessageForMissingWorker(self.master, worker)
         text = res['body']
         self.assertIn("has noticed that the worker named wrkr went away", text)
