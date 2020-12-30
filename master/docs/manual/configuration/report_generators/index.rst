@@ -11,6 +11,7 @@ Report Generators
     buildset
     worker
     formatter
+    formatter_renderable
     formatter_missing_worker
 
 Report generators abstract the conditions of when a message is sent by a :ref:`Reporter <Reporters>` and the content of the message.
@@ -40,4 +41,5 @@ The report generators may customize the reports using message formatters.
 The following message formatter classes are provided:
 
  * :ref:`MessageFormatter` (used in ``BuildStatusGenerator`` and ``BuildSetStatusGenerator``)
+ * :ref:`MessageFormatterRenderable` (used in ``BuildStatusGenerator``)
  * :ref:`MessageFormatterMissingWorkers` (used in ``WorkerMissingGenerator``)
