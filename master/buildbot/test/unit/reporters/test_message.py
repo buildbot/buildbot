@@ -18,6 +18,7 @@ import textwrap
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -237,6 +238,20 @@ class TestMessageFormatter(MessageFormatterTestBase):
         res = yield self.do_one_test(formatter, FAILURE, FAILURE, "change")
         self.assertIn(
             "The Buildbot has detected a failed build on builder", res['body'])
+
+
+class TestMessageFormatterRenderable(MessageFormatterTestBase):
+    @defer.inlineCallbacks
+    def test_basic(self):
+        template = Interpolate('templ_%(prop:workername)s/%(prop:reason)s')
+        subject = Interpolate('subj_%(prop:workername)s/%(prop:reason)s')
+        formatter = message.MessageFormatterRenderable(template, subject)
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        self.assertEqual(res, {
+            'body': 'templ_wrkr/because',
+            'type': 'plain',
+            'subject': 'subj_wrkr/because',
+        })
 
 
 class TestMessageFormatterMissingWorker(MessageFormatterTestBase):

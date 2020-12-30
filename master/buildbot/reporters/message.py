@@ -22,6 +22,7 @@ from twisted.internet import defer
 
 from buildbot import config
 from buildbot import util
+from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -171,9 +172,9 @@ class MessageFormatterBase(util.ComparableMixin):
         context.update(self.context)
 
         return {
-            'body': self.render_message_body(context),
+            'body': (yield self.render_message_body(context)),
             'type': self.template_type,
-            'subject': self.render_message_subject(context)
+            'subject': (yield self.render_message_subject(context))
         }
 
     def render_message_body(self, context):
@@ -210,6 +211,37 @@ class DeprecatedMessageFormatterBuildJson(MessageFormatterBase):
 
     def render_message_subject(self, context):
         return None
+
+
+class MessageFormatterRenderable(MessageFormatterBase):
+
+    template_type = 'plain'
+
+    def __init__(self, template, subject):
+        super().__init__()
+        self.template = template
+        self.subject = subject
+
+    @defer.inlineCallbacks
+    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+        msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
+        return msgdict
+
+    @defer.inlineCallbacks
+    def render_message_body(self, context):
+        props = Properties.fromDict(context['build']['properties'])
+        props.master = context['master']
+
+        body = yield props.render(self.template)
+        return body
+
+    @defer.inlineCallbacks
+    def render_message_subject(self, context):
+        props = Properties.fromDict(context['build']['properties'])
+        props.master = context['master']
+
+        body = yield props.render(self.subject)
+        return body
 
 
 class MessageFormatterBaseJinja(MessageFormatterBase):
