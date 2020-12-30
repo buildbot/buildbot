@@ -302,8 +302,14 @@ class MessageFormatter(MessageFormatterBaseJinja):
     def __init__(self, template_name=None, **kwargs):
 
         if template_name is not None:
-            warn_deprecated('0.9.1', "template_name is deprecated, use template_filename")
+            warn_deprecated('0.9.1', "template_name is deprecated, supply the template as text")
             kwargs['template_filename'] = template_name
+        if 'template_filename' in kwargs:
+            warn_deprecated('2.10.0',
+                            "template_filename is deprecated, supply the template as text")
+        if 'subject_filename' in kwargs:
+            warn_deprecated('2.10.0',
+                            "subject_filename is deprecated, supply the template as text")
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks

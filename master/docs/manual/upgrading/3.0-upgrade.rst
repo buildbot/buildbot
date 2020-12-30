@@ -146,11 +146,16 @@ The following arguments have been removed:
 * ``buildSetSummary``. Defines whether the *status generator* will be instance of :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
 
 * ``messageFormatter``. Replacement is ``message_formatter`` parameter of the *status generator*.
-  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``DefaultMessageFormatter(template_type='html', template_filename='default_notification.txt')``.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatter(template_type='html', template=<default text>)``.
 
 * ``watchedWorkers``. Replacement is ``workers`` parameter of the *missing worker generator*.
   If the value was ``None``, then there's no *missing worker generator* and the value of ``messageFormatterMissingWorker`` is ignored.
 
 * ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
-  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template_filename='missing_notification.txt')``.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template=<default text>)``.
 
+Template files in message formatters
+------------------------------------
+
+Paths to template files that are passed to message formatters for rendering are no longer supported.
+Please read the templates in the configuration file and pass strings instead.
