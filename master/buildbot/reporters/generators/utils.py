@@ -47,7 +47,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
     def check(self):
         self._verify_build_generator_mode(self.mode)
 
-        if '\n' in self.subject:
+        if self.subject is not None and '\n' in self.subject:
             config.error('Newlines are not allowed in message subjects')
 
         list_or_none_params = [
@@ -165,7 +165,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             if buildmsg['subject'] is not None:
                 subject = buildmsg['subject']
 
-        if subject is None:
+        if subject is None and self.subject is not None:
             subject = self.subject % {'result': statusToString(results),
                                       'projectName': master.config.title,
                                       'title': master.config.title,
