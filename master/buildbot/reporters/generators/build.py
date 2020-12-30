@@ -19,6 +19,7 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterRenderable
 
 from .utils import BuildStatusGeneratorMixin
 
@@ -80,3 +81,44 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
 
     def _matches_any_tag(self, tags):
         return self.tags and any(tag for tag in self.tags if tag in tags)
+
+
+@implementer(interfaces.IReportGenerator)
+class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
+
+    wanted_event_keys = [
+        ('builds', None, 'new'),
+        ('builds', None, 'finished'),
+    ]
+
+    compare_attrs = ['start_formatter', 'end_formatter']
+
+    def __init__(self, tags=None, builders=None, schedulers=None, branches=None, add_logs=False,
+                 add_patch=False, start_formatter=None, end_formatter=None):
+
+        super().__init__('all', tags, builders, schedulers, branches, None, add_logs, add_patch)
+        self.start_formatter = start_formatter
+        if self.start_formatter is None:
+            self.start_formatter = MessageFormatterRenderable('Build started.')
+        self.end_formatter = end_formatter
+        if self.end_formatter is None:
+            self.end_formatter = MessageFormatterRenderable('Build done.')
+
+    @defer.inlineCallbacks
+    def generate(self, master, reporter, key, build):
+        _, _, event = key
+        is_new = event == 'new'
+
+        formatter = self.start_formatter if is_new else self.end_formatter
+
+        yield utils.getDetailsForBuild(master, build,
+                                       wantProperties=formatter.wantProperties,
+                                       wantSteps=formatter.wantSteps,
+                                       wantLogs=formatter.wantLogs)
+
+        if not self.is_message_needed_by_props(build):
+            return None
+
+        report = yield self.build_message(formatter, master, reporter, build['builder']['name'],
+                                          [build], build['results'])
+        return report
