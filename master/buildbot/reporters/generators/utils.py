@@ -23,7 +23,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
-from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 
 
 class BuildStatusGeneratorMixin(util.ComparableMixin):
@@ -32,10 +31,9 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                       "cancelled")
 
     compare_attrs = ['mode', 'tags', 'builders', 'schedulers', 'branches', 'subject', 'add_logs',
-                     'add_patch', 'formatter']
+                     'add_patch']
 
-    def __init__(self, mode, tags, builders, schedulers, branches, subject, add_logs, add_patch,
-                 message_formatter):
+    def __init__(self, mode, tags, builders, schedulers, branches, subject, add_logs, add_patch):
         self.mode = self._compute_shortcut_modes(mode)
 
         self.tags = tags
@@ -45,9 +43,6 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         self.subject = subject
         self.add_logs = add_logs
         self.add_patch = add_patch
-        self.formatter = message_formatter
-        if self.formatter is None:
-            self.formatter = DefaultMessageFormatter()
 
     def check(self):
         self._verify_build_generator_mode(self.mode)
@@ -134,7 +129,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         return False
 
     @defer.inlineCallbacks
-    def build_message(self, master, reporter, name, builds, results):
+    def build_message(self, formatter, master, reporter, name, builds, results):
         # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
@@ -157,8 +152,8 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 logs.extend(build_logs)
 
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
-            buildmsg = yield self.formatter.format_message_for_build(self.mode, name, build,
-                                                                     master, blamelist)
+            buildmsg = yield formatter.format_message_for_build(self.mode, name, build,
+                                                                master, blamelist)
             users.update(set(blamelist))
             msgtype = buildmsg['type']
 

@@ -253,7 +253,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
-        report = yield g.build_message(self.master, reporter, "mybldr", builds, results)
+        report = yield g.build_message(g.formatter, self.master, reporter, "mybldr", builds,
+                                       results)
         return report
 
     @defer.inlineCallbacks
