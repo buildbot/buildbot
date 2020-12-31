@@ -20,6 +20,12 @@ class HipChatStatusPush(HttpStatusPushBase):
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
                     event_messages=None, **kwargs):
+        warn_deprecated('2.10.0', 'HipChatStatusPush has been deprecated because the public ' +
+                                  'version of hipchat has been shut down. This reporter will ' +
+                                  'be removed in Buildbot 3.0 unless there is someone who will ' +
+                                  'upgrade the reporter to the new internal APIs present in ' +
+                                  'Buildbot 3.0')
+
         if not isinstance(auth_token, str) and not interfaces.IRenderable.providedBy(auth_token):
             config.error('auth_token must be a string')
         if not isinstance(endpoint, str):

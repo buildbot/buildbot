@@ -49,7 +49,11 @@ class TestHipchatStatusPush(ConfigErrorsMixin, TestReactorMixin, unittest.TestCa
     @defer.inlineCallbacks
     def createReporter(self, **kwargs):
         kwargs['auth_token'] = kwargs.get('auth_token', 'abc')
-        self.sp = HipChatStatusPush(**kwargs)
+
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='has been deprecated because the public'):
+            self.sp = HipChatStatusPush(**kwargs)
+
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             kwargs.get('endpoint', HOSTED_BASE_URL),
@@ -64,7 +68,9 @@ class TestHipchatStatusPush(ConfigErrorsMixin, TestReactorMixin, unittest.TestCa
 
     def test_endpointTypeCheck(self):
         with self.assertRaisesConfigError('endpoint must be a string'):
-            HipChatStatusPush(auth_token="2", endpoint=2)
+            with assertProducesWarnings(DeprecatedApiWarning,
+                                        message_pattern='has been deprecated because the public'):
+                HipChatStatusPush(auth_token="2", endpoint=2)
 
     @defer.inlineCallbacks
     def test_builderRoomMapTypeCheck(self):
@@ -260,7 +266,11 @@ class TestHipchatStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def createReporter(self, **kwargs):
         kwargs['auth_token'] = kwargs.get('auth_token', 'abc')
-        self.sp = HipChatStatusPushDeprecatedSend(**kwargs)
+
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='has been deprecated because the public'):
+            self.sp = HipChatStatusPushDeprecatedSend(**kwargs)
+
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             kwargs.get('endpoint', HOSTED_BASE_URL),
