@@ -779,6 +779,7 @@ stepdicts
 stepid
 stopService
 storages
+strports
 subclassed
 subclasses
 subclassing
@@ -820,6 +821,7 @@ tac
 tarball
 tarballs
 Tarballs
+tcp
 templateCache
 templating
 testability

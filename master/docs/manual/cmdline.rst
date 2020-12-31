@@ -636,8 +636,8 @@ Note carefully that the names in the :file:`options` file usually do not match t
 ``masterstatus``
     ``try_wait`` and ``masterstatus`` (equivalent to option `--wait` and ``master``, respectively) are used to ask the :bb:cmdline:`try` command to wait for the requested build to complete.
 
-worker
-------
+buildbot-worker
+---------------
 
 :command:`buildbot-worker` command-line tool is used for worker management only and does not provide any additional functionality.
 One can create, start, stop and restart the worker.

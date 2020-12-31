@@ -311,6 +311,33 @@ The entire set of allowed arguments, then, is
 A Change passes the filter only if *all* arguments are satisfied.
 If no filter object is given to a scheduler, then all changes will be built (subject to any other restrictions the scheduler enforces).
 
+Usage example
+~~~~~~~~~~~~~
+
+A *quick* scheduler might exist to give immediate feedback to developers, hoping to catch obvious problems in the code that can be detected quickly.
+These typically do not run the full test suite, nor do they run on a wide variety of platforms.
+They also usually do a VC update rather than performing a brand-new checkout each time.
+
+A separate *full* scheduler might run more comprehensive tests, to catch more subtle problems.
+It might be configured to run after the quick scheduler, to give developers time to commit fixes to bugs caught by the quick scheduler before running the comprehensive tests.
+This scheduler would also feed multiple :class:`Builder`\s.
+
+Many schedulers can be configured to wait a while after seeing a source-code change - this is the *tree stable timer*.
+The timer allows multiple commits to be "batched" together.
+This is particularly useful in distributed version control systems, where a developer may push a long sequence of changes all at once.
+To save resources, it's often desirable only to test the most recent change.
+
+Schedulers can also filter out the changes they are interested in, based on a number of criteria.
+For example, a scheduler that only builds documentation might skip any changes that do not affect the documentation.
+Schedulers can also filter on the branch to which a commit was made.
+
+Periodic builds (those which are run every N seconds rather than after new Changes arrive) are triggered by a special :bb:sched:`Periodic` scheduler.
+
+Each scheduler creates and submits :class:`BuildSet` objects to the :class:`BuildMaster`, which is then responsible for making sure the individual :class:`BuildRequests` are delivered to the target :class:`Builder`\s.
+
+Scheduler instances are activated by placing them in the :bb:cfg:`schedulers` list in the buildmaster config file.
+Each scheduler must have a unique name.
+
 Scheduler Types
 ~~~~~~~~~~~~~~~
 

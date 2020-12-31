@@ -70,8 +70,8 @@ We will also use a separate directory to demonstrate the distinction between a m
 
 .. code-block:: bash
 
-  mkdir -p ~/tmp/bb-master
-  cd ~/tmp/bb-master
+  mkdir -p ~/buildbot-test/master
+  cd ~/buildbot-test/master
 
 
 On Python 3:
@@ -158,8 +158,8 @@ It would however be completely ok to do this on another computer - as long as th
 
 .. code-block:: bash
 
-  mkdir -p ~/tmp/bb-worker
-  cd ~/tmp/bb-worker
+  mkdir -p ~/buildbot-test/worker
+  cd ~/buildbot-test/worker
 
 On Python 2:
 

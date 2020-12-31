@@ -476,103 +476,20 @@ The :bb:cfg:`properties` configuration key defines a dictionary of properties th
 Manhole
 ~~~~~~~
 
-If you set :bb:cfg:`manhole` to an instance of one of the classes in ``buildbot.manhole``, you can telnet or ssh into the buildmaster and get an interactive Python shell, which may be useful for debugging buildbot internals.
+Manhole is an interactive Python shell which allows full access to the Buildbot master instance.
 It is probably only useful for buildbot developers.
-It exposes full access to the buildmaster's account (including the ability to modify and delete files), so it should not be enabled with a weak or easily guessable password.
 
-There are three separate :class:`Manhole` classes.
-Two of them use SSH, one uses unencrypted telnet.
-Two of them use a username+password combination to grant access, one of them uses an SSH-style :file:`authorized_keys` file which contains a list of ssh public keys.
+See :ref:`documentation on Manhole implementations <Manhole>` for available authentication and connection methods.
 
-.. note::
-
-   Using any Manhole requires that ``cryptography`` and ``pyasn1`` be installed.
-   These are not part of the normal Buildbot dependencies.
-
-`manhole.AuthorizedKeysManhole`
-    You construct this with the name of a file that contains one SSH public key per line, just like :file:`~/.ssh/authorized_keys`.
-    If you provide a non-absolute filename, it will be interpreted relative to the buildmaster's base directory.
-    You must also specify a directory which contains an SSH host key for the Manhole server.
-
-`manhole.PasswordManhole`
-    This one accepts SSH connections but asks for a username and password when authenticating.
-    It accepts only one such pair.
-    You must also specify a directory which contains an SSH host key for the Manhole server.
-
-`manhole.TelnetManhole`
-    This accepts regular unencrypted telnet connections, and asks for a username/password pair before providing access.
-    Because this username/password is transmitted in the clear, and because Manhole access to the buildmaster is equivalent to granting full shell privileges to both the buildmaster and all the workers (and to all accounts which then run code produced by the workers), it is  highly recommended that you use one of the SSH manholes instead.
+The ``manhole`` configuration key accepts a single instance of a Manhole class.
+For example:
 
 .. code-block:: python
 
-    # some examples:
-    from buildbot.plugins import util
-    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys",
-                                              ssh_hostkey_dir="/data/ssh_host_keys/")
-    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword",
-                                        ssh_hostkey_dir="/data/ssh_host_keys/")
-    c['manhole'] = util.TelnetManhole(1234, "bob", "snoop_my_password_please")
-
-The :class:`Manhole` instance can be configured to listen on a specific port.
-You may wish to have this listening port bind to the loopback interface (sometimes known as `lo0`, `localhost`, or 127.0.0.1) to restrict access to clients which are running on the same host.
-
-.. code-block:: python
-
-    from buildbot.plugins import util
-    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd",
-                                        ssh_hostkey_dir="/data/ssh_host_keys/")
-
-To have the :class:`Manhole` listen on all interfaces, use ``"tcp:9999"`` or simply 9999.
-This port specification uses ``twisted.application.strports``, so you can make it listen on SSL or even UNIX-domain sockets if you want.
-
-Note that using any :class:`Manhole` requires that the `TwistedConch`_ package be installed.
-
-The buildmaster's SSH server will use a different host key than the normal sshd running on a typical unix host.
-This will cause the ssh client to complain about a `host key mismatch`, because it does not realize there are two separate servers running on the same host.
-To avoid this, use a clause like the following in your :file:`.ssh/config` file:
-
-.. code-block:: none
-
-    Host remotehost-buildbot
-    HostName remotehost
-    HostKeyAlias remotehost-buildbot
-    Port 9999
-    # use 'user' if you use PasswordManhole and your name is not 'admin'.
-    # if you use AuthorizedKeysManhole, this probably doesn't matter.
-    User admin
-
-Using Manhole
-+++++++++++++
-
-After you have connected to a manhole instance, you will find yourself at a Python prompt.
-You have access to two objects: ``master`` (the BuildMaster) and ``status`` (the master's Status object).
-Most interesting objects on the master can be reached from these two objects.
-
-To aid in navigation, the ``show`` method is defined.
-It displays the non-method attributes of an object.
-
-A manhole session might look like:
-
-.. code-block:: python
-
-    >>> show(master)
-    data attributes of <buildbot.master.BuildMaster instance at 0x7f7a4ab7df38>
-                           basedir : '/home/dustin/code/buildbot/t/buildbot/'...
-                         botmaster : <type 'instance'>
-                    buildCacheSize : None
-                      buildHorizon : None
-                       buildbotURL : http://localhost:8010/
-                   changeCacheSize : None
-                        change_svc : <type 'instance'>
-                    configFileName : master.cfg
-                                db : <class 'buildbot.db.connector.DBConnector'>
-                            db_url : sqlite:///state.sqlite
-                                  ...
-    >>> show(master.botmaster.builders['win32'])
-    data attributes of <Builder ''builder'' at 48963528>
-                                  ...
-    >>> win32 = _
-    >>> win32.category = 'w32'
+  from buildbot import manhole
+  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1",
+                                         "admin", "passwd",
+                                         ssh_hostkey_dir="/data/ssh_host_keys/")
 
 .. bb:cfg:: metrics
 

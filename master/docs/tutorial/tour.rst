@@ -18,8 +18,32 @@ This section will teach you how to:
 - deal with configuration errors
 - force builds
 - enable and control the IRC bot
-- enable ssh debugging
 - add a 'try' scheduler
+
+The First Build
+---------------
+
+On the `Builders <http://localhost:8010/#/builders>`_ page, click on the runtests link.
+You'll see a builder page, and a blue "force" button that will bring up the
+following dialog box:
+
+.. image:: _images/force-build.png
+   :alt: force a build.
+
+Click *Start Build* - there's no need to fill in any of the fields in this case.
+Next, click on `view in waterfall <http://localhost:8010/#/waterfall?show=runtests>`_.
+
+You will now see that a successful test run has happened:
+
+.. image:: _images/runtests-success.png
+   :alt: an successful test run happened.
+
+This simple process is essentially is the whole purpose of the Buildbot project.
+
+The information about what actions are executed for a certain build are defined in things called :ref:`builders <Concepts-Builder>`.
+
+The information about when a certain builder should launch a build are defined in things called :ref:`schedulers <Concepts-Scheduler>`.
+In fact, the blue "force" button that was pushed in this example activated a scheduler too.
 
 Setting Project Name and URL
 ----------------------------
@@ -32,7 +56,7 @@ Open a new terminal, go to the directory you created master in, activate the sam
 
 .. code-block:: bash
 
-  cd ~/tmp/bb-master
+  cd ~/buildbot-test/master
   source sandbox/bin/activate
   $EDITOR master/master.cfg
 
@@ -135,25 +159,6 @@ Luckily, the Buildbot master will ignore the wrong configuration and keep runnin
 
 The message is clear enough, so open the configuration again, fix the error, and reconfig the master.
 
-Your First Build
-----------------
-
-By now you're probably thinking: "All this time spent and still not done a single build? What was the name of this project again?"
-
-On the `Builders <http://localhost:8010/#/builders>`_ page, click on the runtests link.
-You'll see a builder page, and a blue "force" button that will bring up the
-following dialog box:
-
-.. image:: _images/force-build.png
-   :alt: force a build.
-
-Click *Start Build* - there's no need to fill in any of the fields in this case.
-Next, click on `view in waterfall <http://localhost:8010/#/waterfall?show=runtests>`_.
-
-You will now see:
-
-.. image:: _images/runtests-success.png
-   :alt: an successful test run happened.
 
 Enabling the IRC Bot
 --------------------
@@ -246,69 +251,6 @@ and append::
 
 For more details, see :ref:`Web-Authentication`.
 
-Debugging with Manhole
-----------------------
-
-You can do some debugging by using manhole, an interactive Python shell.
-It exposes full access to the buildmaster's account (including the ability to modify and delete files), so it should not be enabled with a weak or easily guessable password.
-
-To use this you will need to install an additional package or two to your virtualenv:
-
-.. code-block:: bash
-
-  cd ~/tmp/bb-master
-  source sandbox/bin/activate
-  pip install -U pip
-  pip install cryptography pyasn1
-
-You will also need to generate an SSH host key for the Manhole server.
-
-.. code-block:: bash
-
-  mkdir -p /data/ssh_host_keys
-  ckeygen -t rsa -f /data/ssh_host_keys/ssh_host_rsa_key
-
-In your master.cfg find::
-
-  c = BuildmasterConfig = {}
-
-Insert the following to enable debugging mode with manhole::
-
-  ####### DEBUGGING
-  from buildbot import manhole
-  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1",
-                                         "admin", "passwd",
-                                         ssh_hostkey_dir="/data/ssh_host_keys/")
-
-After restarting the master, you can ssh into the master and get an interactive Python shell:
-
-.. code-block:: bash
-
-  ssh -p1234 admin@127.0.0.1
-  # enter passwd at prompt
-
-.. note::
-    The pyasn1-0.1.1 release has a bug which results in an exception similar to
-    this on startup:
-
-    .. code-block:: none
-
-        exceptions.TypeError: argument 2 must be long, not int
-
-    If you see this, the temporary solution is to install the previous version
-    of pyasn1:
-
-    .. code-block:: bash
-
-        pip install pyasn1-0.0.13b
-
-If you wanted to check which workers are connected and what builders those workers are assigned to you could do::
-
-  >>> master.workers.workers
-  {'example-worker': <Worker 'example-worker', current builders: runtests>}
-
-Objects can be explored in more depth using `dir(x)` or the helper function `show(x)`.
-
 Adding a 'try' scheduler
 ------------------------
 
@@ -340,7 +282,7 @@ Then run buildbot's ``try`` command as follows:
 
 .. code-block:: bash
 
-    cd ~/tmp/bb-master
+    cd ~/buildbot-test/master
     source sandbox/bin/activate
     buildbot try --connect=pb --master=127.0.0.1:5555 \
         --username=sampleuser --passwd=samplepass --vc=git

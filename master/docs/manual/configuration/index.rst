@@ -30,3 +30,6 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     services
     dbconfig
     configurators
+    manhole
+    multimaster
+    multicodebase

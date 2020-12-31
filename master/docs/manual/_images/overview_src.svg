@@ -12,7 +12,7 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
    width="896.25"
    height="457.5"
    xml:space="preserve"
@@ -328,15 +328,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1325"
-     inkscape:window-height="744"
+     inkscape:window-width="3840"
+     inkscape:window-height="2093"
      id="namedview4"
      showgrid="false"
-     inkscape:zoom="0.89001174"
-     inkscape:cx="483.65759"
-     inkscape:cy="249.73884"
-     inkscape:window-x="41"
-     inkscape:window-y="24"
+     inkscape:zoom="3.560047"
+     inkscape:cx="359.71526"
+     inkscape:cy="271.85275"
+     inkscape:window-x="7680"
+     inkscape:window-y="28"
      inkscape:window-maximized="1"
      inkscape:current-layer="g10"
      fit-margin-top="50"
@@ -373,21 +373,14 @@
      inkscape:connector-curvature="0" /></g><text
    transform="matrix(1,0,0,-1,496.7573,374.4609)"
    id="text28"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14px;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
+   style="line-height:0%;-inkscape-font-specification:'Noto Sans Medium Condensed';font-family:'Noto Sans';font-weight:500;font-style:normal;font-stretch:condensed;font-variant:normal;font-size:14.93333334px;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;"><tspan
+     style="font-variant:normal;font-weight:500;font-stretch:condensed;font-size:14.93333334px;font-family:'Noto Sans';writing-mode:lr;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none;-inkscape-font-specification:'Noto Sans Medium Condensed';font-style:normal;text-anchor:start;text-align:start;font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;"
      x="0"
      y="0"
-     id="tspan30">S</tspan></text>
+     id="tspan30">Status</tspan></text>
 
-<text
-   transform="matrix(1,0,0,-1,504.3174,374.4609)"
-   id="text32"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 5.2360001 11.539 17.566999 25.069"
-     y="0"
-     sodipodi:role="line"
-     id="tspan34">TATUS</tspan></text>
+
+
 
 <g
    id="g36"><g
@@ -436,6 +429,7 @@
      y="23.808001"
      sodipodi:role="line"
      id="tspan98">MASTER</tspan></text>
+
 
 <g
    id="g100"><g
@@ -516,24 +510,9 @@
        d="m 203.689,436.32 -119.605,0 0,24.899 119.605,0 0,-24.899 z"
        style="fill:#e5e7e4;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path216"
-       inkscape:connector-curvature="0" /></g></g><text
-   transform="matrix(1,0,0,-1,92.3149,440.9028)"
-   id="text218"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:20px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0"
-     y="0"
-     id="tspan220">R</tspan></text>
+       inkscape:connector-curvature="0" /></g></g>
 
-<text
-   transform="matrix(1,0,0,-1,104.1753,440.9028)"
-   id="text222"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 9.6120005 20.07 32.976002 42.695999 47.826 57.167999 70.073997 80.405998"
-     y="0"
-     sodipodi:role="line"
-     id="tspan224">EPOSITORY</tspan></text>
+
 
 <text
    transform="matrix(1,0,0,-1,96.5322,414.2539)"
@@ -570,24 +549,18 @@
      sodipodi:role="line"
      id="tspan238">• CVS</tspan></text>
 
+
 <text
    transform="matrix(1,0,0,-1,245.7573,374.5488)"
    id="text240"
    style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14px;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
+     style="font-variant:normal;font-weight:500;font-stretch:condensed;font-size:14px;font-family:'Noto Sans';writing-mode:lr;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none;-inkscape-font-specification:'Noto Sans, Medium Condensed';font-style:normal;text-anchor:start;text-align:start;font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal"
      x="0"
      y="0"
-     id="tspan242">C</tspan></text>
+     id="tspan242">Changes</tspan></text>
 
-<text
-   transform="matrix(1,0,0,-1,254.0869,374.5488)"
-   id="text244"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 7.579 14.795 22.385 29.886999 35.761002"
-     y="0"
-     sodipodi:role="line"
-     id="tspan246">HANGES</tspan></text>
+
+
 
 <g
    id="g248"><g
@@ -610,24 +583,9 @@
          d="M 0,0 -1.696,-1.696 0,-3.392 l -1.439,0 -1.696,1.696 L -1.439,0 0,0 z"
          style="fill:#737d84;fill-opacity:1;fill-rule:nonzero;stroke:none"
          id="path266"
-         inkscape:connector-curvature="0" /></g></g></g><text
-   transform="matrix(1,0,0,-1,267.6172,392.3662)"
-   id="text268"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:13px;font-family:'PT Sans Narrow';fill:#737d84;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0"
-     y="0"
-     id="tspan270">P</tspan></text>
+         inkscape:connector-curvature="0" /></g></g></g>
 
-<text
-   transform="matrix(1,0,0,-1,273.5581,392.3662)"
-   id="text272"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:12px;line-height:1.25;font-family:'PT Sans Narrow';fill:#737d84;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 5.1719999 7.8720002"
-     y="0"
-     sodipodi:role="line"
-     id="tspan274">oll</tspan></text>
+
 
 <g
    id="g276"><g
@@ -684,24 +642,9 @@
        d="m 711.102,436.232 -119.605,0 0,24.899 119.605,0 0,-24.899 z"
        style="fill:#e5e7e4;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path376"
-       inkscape:connector-curvature="0" /></g></g><text
-   transform="matrix(1,0,0,-1,608.3794,440.8149)"
-   id="text378"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:20px;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0"
-     y="0"
-     id="tspan380">N</tspan></text>
+       inkscape:connector-curvature="0" /></g></g>
 
-<text
-   transform="matrix(1,0,0,-1,622.1792,440.8149)"
-   id="text382"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#141416;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 12.402 22.266001 27.396 36.882 42.012001 51.624001 62.298"
-     y="0"
-     sodipodi:role="line"
-     id="tspan384">OTIFIERS</tspan></text>
+
 
 <text
    transform="matrix(1,0,0,-1,603.9453,405.166)"
@@ -727,6 +670,7 @@
      y="57.599998"
      sodipodi:role="line"
      id="tspan394">• Status Client</tspan></text>
+
 
 <g
    id="g396"><g
@@ -772,6 +716,7 @@
      y="-232.517"
      sodipodi:role="line"
      id="tspan460">WORKER</tspan></text>
+
 
 <g
    id="g462"><g
@@ -828,23 +773,18 @@
          style="fill:none;stroke:#303539;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="path546"
          inkscape:connector-curvature="0" /></g></g></g><text
-   transform="matrix(1,0,0,-1,312.2217,305.1875)"
+   transform="scale(1,-1)"
    id="text548"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14px;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0"
-     y="0"
-     id="tspan550">C</tspan></text>
+   style="line-height:0%"
+   x="425.51617"
+   y="-303.59851"><tspan
+     style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:condensed;font-size:14.9333334px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Medium Condensed';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
+     x="425.51617"
+     y="-303.59851"
+     id="tspan550">Commands</tspan></text>
 
-<text
-   transform="matrix(1,0,0,-1,320.5513,305.1875)"
-   id="text552"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 7.8870001 17.193001 26.466 33.681999 41.271999 48.928001"
-     y="0"
-     sodipodi:role="line"
-     id="tspan554">OMMANDS</tspan></text>
+
+
 
 <g
    id="g556"><g
@@ -867,24 +807,9 @@
          d="M 0,0 -16.802,16.801"
          style="fill:none;stroke:#303539;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="path574"
-         inkscape:connector-curvature="0" /></g></g></g><text
-   transform="matrix(1,0,0,-1,429.2217,305.1875)"
-   id="text576"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14px;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0"
-     y="0"
-     id="tspan578">C</tspan></text>
+         inkscape:connector-curvature="0" /></g></g></g>
 
-<text
-   transform="matrix(1,0,0,-1,437.5513,305.1875)"
-   id="text580"
-   style="line-height:0%"><tspan
-     style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none"
-     x="0 7.8870001 17.193001 26.466 33.681999 41.271999 48.928001"
-     y="0"
-     sodipodi:role="line"
-     id="tspan582">OMMANDS</tspan></text>
+
 
 <text
    y="-232.517"
@@ -898,4 +823,45 @@
      x="479.59943"
      style="font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;line-height:1.25;font-family:'PT Sans';writing-mode:lr-tb;fill:#303359;fill-opacity:1;fill-rule:nonzero;stroke:none">WORKER</tspan></text>
 
+
+<text
+   y="-304.00778"
+   x="317.08524"
+   id="text548-8"
+   style="font-size:12px;line-height:0%;stroke-width:1"
+   transform="scale(1,-1)"><tspan
+     style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:condensed;font-size:14.93333244px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Medium Condensed';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#d93d04;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1"
+     x="317.08524"
+     y="-304.00778"
+     id="tspan550-2">Commands</tspan></text>
+<text
+   id="text360"
+   style="font-size:12px;line-height:0%;stroke-width:1"
+   x="102.08018"
+   y="-441.32101"
+   transform="scale(1,-1)"><tspan
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;font-size:21.33333397px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Condensed';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#303031;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1"
+     x="102.08018"
+     y="-441.32101"
+     id="tspan362">Repository</tspan></text>
+<text
+   id="text360-0"
+   style="font-size:12px;line-height:0%;stroke-width:1"
+   x="613.09711"
+   y="-441.00323"
+   transform="scale(1,-1)"><tspan
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;font-size:21.33333397px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Condensed';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#303031;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1"
+     x="613.09711"
+     y="-441.00323"
+     id="tspan362-2">Reporters</tspan></text>
+<text
+   y="-390.78165"
+   x="263.1077"
+   id="text240-4"
+   style="font-size:12px;line-height:0%;fill:#737d84;fill-opacity:1;stroke-width:1"
+   transform="scale(1,-1)"><tspan
+     style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:condensed;font-size:14px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Medium Condensed';font-variant-ligatures:normal;font-variant-caps:small-caps;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#737d84;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1"
+     x="263.1077"
+     y="-390.78165"
+     id="tspan242-5">Poll</tspan></text>
 </g></svg>

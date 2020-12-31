@@ -11,7 +11,7 @@ First Buildbot run with Docker
 
     .. code-block:: bash
 
-      docker run ubuntu:12.04 apt-get update
+      docker run ubuntu:20.04 apt-get update
 
     If that fails, look for help with your Docker install.
     On the other hand, if that succeeds, then you may have better luck getting help from members of the Buildbot community.
