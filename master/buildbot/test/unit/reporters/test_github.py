@@ -54,7 +54,6 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
             },
             debug=None, verify=None)
         self.sp = self.createService()
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def createService(self):
@@ -252,7 +251,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
             },
             debug=None, verify=None)
         self.sp = self.createService()
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def createService(self):
@@ -358,7 +356,6 @@ class TestGitHubStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
             },
             debug=None, verify=None)
         self.sp = self.createService()
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def createService(self):

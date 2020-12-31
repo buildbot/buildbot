@@ -50,7 +50,6 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
@@ -238,7 +237,6 @@ class TestGitLabStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)
         self.sp = GitLabStatusPushDeprecatedSend(Interpolate('XXYYZZ'))
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):

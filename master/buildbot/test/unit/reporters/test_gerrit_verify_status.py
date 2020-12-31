@@ -60,7 +60,6 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             self.master, self, "gerrit", auth=('log', 'pass'),
             debug=None, verify=None)
         self.sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
@@ -409,7 +408,6 @@ class TestGerritVerifyStatusPushDeprecatedSend(TestReactorMixin, ReporterTestMix
             self.master, self, "gerrit", auth=('log', 'pass'),
             debug=None, verify=None)
         self.sp = GerritVerifyStatusPushDeprecatedSend("gerrit", auth=auth, **kwargs)
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
