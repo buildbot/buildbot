@@ -29,6 +29,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import utils
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -253,7 +254,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
-        report = yield g.build_message(self.master, reporter, "mybldr", builds, results)
+        report = yield g.build_message(g.formatter, self.master, reporter, "mybldr", builds,
+                                       results)
         return report
 
     @defer.inlineCallbacks
@@ -396,3 +398,196 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
             'patches': [],
             'logs': []
         })
+
+
+class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
+                                 unittest.TestCase, ReporterTestMixin):
+
+    all_messages = ('failing', 'passing', 'warnings', 'exception', 'cancelled')
+
+    def setUp(self):
+        self.setUpTestReactor()
+        self.setup_reporter_test()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
+
+    @defer.inlineCallbacks
+    def insert_build_finished_get_props(self, results, **kwargs):
+        build = yield self.insert_build_finished(results, **kwargs)
+        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        return build
+
+    @parameterized.expand([
+        ('tags', 'tag'),
+        ('tags', 1),
+        ('builders', 'builder'),
+        ('builders', 1),
+        ('schedulers', 'scheduler'),
+        ('schedulers', 1),
+        ('branches', 'branch'),
+        ('branches', 1),
+    ])
+    def test_list_params_check_raises(self, arg_name, arg_value):
+        kwargs = {arg_name: arg_value}
+        g = BuildStartEndStatusGenerator(**kwargs)
+        with self.assertRaisesConfigError('must be a list or None'):
+            g.check()
+
+    def setup_generator(self, results=SUCCESS, start_message=None, end_message=None, **kwargs):
+        if start_message is None:
+            start_message = {
+                "body": "start body",
+                "type": "plain",
+                "subject": "start subject"
+            }
+
+        if end_message is None:
+            end_message = {
+                "body": "end body",
+                "type": "plain",
+                "subject": "end subject"
+            }
+
+        g = BuildStartEndStatusGenerator(**kwargs)
+
+        g.start_formatter = Mock(spec=g.start_formatter)
+        g.start_formatter.format_message_for_build.return_value = start_message
+        g.end_formatter = Mock(spec=g.end_formatter)
+        g.end_formatter.format_message_for_build.return_value = end_message
+
+        return g
+
+    @defer.inlineCallbacks
+    def build_message(self, g, builds, results=SUCCESS):
+        reporter = Mock()
+        reporter.getResponsibleUsersForBuild.return_value = []
+
+        report = yield g.build_message(g.start_formatter, self.master, reporter, "mybldr",
+                                       builds, results)
+        return report
+
+    @defer.inlineCallbacks
+    def generate(self, g, key, build):
+        reporter = Mock()
+        reporter.getResponsibleUsersForBuild.return_value = []
+
+        report = yield g.generate(self.master, reporter, key, build)
+        return report
+
+    @defer.inlineCallbacks
+    def test_build_message_start(self):
+        g = yield self.setup_generator()
+        build = yield self.insert_build_finished_get_props(SUCCESS)
+        report = yield self.build_message(g, [build])
+
+        g.start_formatter.format_message_for_build.assert_called_with(
+            self.all_messages, 'mybldr', build, self.master, [])
+
+        self.assertEqual(report, {
+            'body': 'start body',
+            'subject': 'start subject',
+            'type': 'plain',
+            'builder_name': 'mybldr',
+            'results': SUCCESS,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_build_message_start_no_result(self):
+        g = yield self.setup_generator(results=None)
+        build = yield self.insert_build_new()
+        report = yield self.build_message(g, [build], results=None)
+
+        g.start_formatter.format_message_for_build.assert_called_with(
+            self.all_messages, 'mybldr', build, self.master, [])
+
+        self.assertEqual(report, {
+            'body': 'start body',
+            'subject': 'start subject',
+            'type': 'plain',
+            'builder_name': 'mybldr',
+            'results': None,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_build_message_add_logs(self):
+        g = yield self.setup_generator(add_logs=True)
+        build = yield self.insert_build_finished_get_props(SUCCESS)
+        report = yield self.build_message(g, [build])
+
+        self.assertEqual(report['logs'][0]['logid'], 60)
+        self.assertIn("log with", report['logs'][0]['content']['content'])
+
+    @defer.inlineCallbacks
+    def test_build_message_add_patch(self):
+        g = yield self.setup_generator(add_patch=True)
+        build = yield self.insert_build_finished_get_props(SUCCESS, insert_patch=True)
+        report = yield self.build_message(g, [build])
+
+        patch_dict = {
+            'author': 'him@foo',
+            'body': b'hello, world',
+            'comment': 'foo',
+            'level': 3,
+            'patchid': 99,
+            'subdir': '/foo'
+        }
+        self.assertEqual(report['patches'], [patch_dict])
+
+    @defer.inlineCallbacks
+    def test_build_message_add_patch_no_patch(self):
+        g = yield self.setup_generator(add_patch=True)
+        build = yield self.insert_build_finished_get_props(SUCCESS, insert_patch=False)
+        report = yield self.build_message(g, [build])
+        self.assertEqual(report['patches'], [])
+
+    @defer.inlineCallbacks
+    def test_generate_new(self):
+        g = yield self.setup_generator()
+        build = yield self.insert_build_new()
+        report = yield self.generate(g, ('builds', 123, 'new'), build)
+
+        self.assertEqual(report, {
+            'body': 'start body',
+            'subject': 'start subject',
+            'type': 'plain',
+            'builder_name': 'Builder0',
+            'results': None,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_generate_finished(self):
+        g = yield self.setup_generator()
+        build = yield self.insert_build_finished_get_props(SUCCESS)
+        report = yield self.generate(g, ('builds', 123, 'finished'), build)
+
+        self.assertEqual(report, {
+            'body': 'end body',
+            'subject': 'end subject',
+            'type': 'plain',
+            'builder_name': 'Builder0',
+            'results': SUCCESS,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_generate_none(self):
+        g = yield self.setup_generator(builders=['other builder'])
+        build = yield self.insert_build_new()
+        report = yield self.generate(g, ('builds', 123, 'new'), build)
+
+        self.assertIsNone(report, None)

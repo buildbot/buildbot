@@ -217,7 +217,7 @@ class MessageFormatterRenderable(MessageFormatterBase):
 
     template_type = 'plain'
 
-    def __init__(self, template, subject):
+    def __init__(self, template, subject=None):
         super().__init__()
         self.template = template
         self.subject = subject
