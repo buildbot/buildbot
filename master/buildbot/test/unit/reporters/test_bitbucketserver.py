@@ -281,13 +281,15 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
                                              wantMq=True)
 
         http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
+        http_auth = ('username', 'passwd') if token is None else None
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            'serv', auth=('username', 'passwd'), headers=http_headers,
+            self.master, self, 'serv', auth=http_auth, headers=http_headers,
             debug=None, verify=None)
-        self.sp = BitbucketServerCoreAPIStatusPush(
-            "serv", token=token, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
+
+        auth = (Interpolate("username"), Interpolate("passwd")) if token is None else None
+
+        self.sp = BitbucketServerCoreAPIStatusPush("serv", token=token, auth=auth, **kwargs)
         yield self.sp.setServiceParent(self.master)
         yield self.master.startService()
 
