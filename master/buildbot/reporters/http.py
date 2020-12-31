@@ -106,8 +106,8 @@ class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
     secrets = ['user', 'password', "auth"]
 
-    def checkConfig(self, serverUrl, user=None, password=None, auth=None, format_fn=None,
-                    builders=None, wantProperties=False, wantSteps=False,
+    def checkConfig(self, serverUrl, user=None, password=None, auth=None, headers=None,
+                    format_fn=None, builders=None, wantProperties=False, wantSteps=False,
                     wantPreviousBuild=False, wantLogs=False, generators=None, **kwargs):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
@@ -145,8 +145,8 @@ class HttpStatusPush(HttpStatusPushBase):
         super().checkConfig(generators=generators, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None,
-                        builders=None, wantProperties=False, wantSteps=False,
+    def reconfigService(self, serverUrl, user=None, password=None, auth=None, headers=None,
+                        format_fn=None, builders=None, wantProperties=False, wantSteps=False,
                         wantPreviousBuild=False, wantLogs=False, generators=None,
                         **kwargs):
         if user is not None:
@@ -163,7 +163,7 @@ class HttpStatusPush(HttpStatusPushBase):
         yield super().reconfigService(generators=generators, **kwargs)
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, serverUrl, auth=auth,
+            self.master, serverUrl, auth=auth, headers=headers,
             debug=self.debug, verify=self.verify)
 
     def _create_generators_from_old_args(self, format_fn, builders, want_properties, want_steps,
