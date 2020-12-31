@@ -13,12 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from mock import Mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -45,8 +42,6 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
         # project must be in the form <owner>/<project>
         self.reporter_test_project = 'buildbot/buildbot'
 
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -245,8 +240,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
         self.reporter_test_project = 'buildbot'
         self.reporter_test_repo = 'https://github.com/buildbot1/buildbot1.git'
 
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -353,8 +346,6 @@ class TestGitHubStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
         # project must be in the form <owner>/<project>
         self.reporter_test_project = 'buildbot/buildbot'
 
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
