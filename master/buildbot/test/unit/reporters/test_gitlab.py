@@ -13,12 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from mock import Mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -44,8 +41,6 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
         # repository must be in the form http://gitlab/<owner>/<project>
         self.reporter_test_repo = 'http://gitlab/buildbot/buildbot'
 
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -55,7 +50,6 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
@@ -234,8 +228,6 @@ class TestGitLabStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
         # repository must be in the form http://gitlab/<owner>/<project>
         self.reporter_test_repo = 'http://gitlab/buildbot/buildbot'
 
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -245,7 +237,6 @@ class TestGitLabStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)
         self.sp = GitLabStatusPushDeprecatedSend(Interpolate('XXYYZZ'))
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):

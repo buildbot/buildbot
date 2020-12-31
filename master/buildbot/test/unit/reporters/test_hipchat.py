@@ -18,13 +18,13 @@ from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.hipchat import HOSTED_BASE_URL
 from buildbot.reporters.hipchat import HipChatStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
@@ -32,14 +32,12 @@ from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
+class TestHipchatStatusPush(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
                             ReporterTestMixin, LoggingMixin):
 
     def setUp(self):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -61,24 +59,22 @@ class TestHipchatStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_authtokenTypeCheck(self):
-        yield self.createReporter(auth_token=2)
-        config._errors.addError.assert_any_call('auth_token must be a string')
+        with self.assertRaisesConfigError('auth_token must be a string'):
+            yield self.createReporter(auth_token=2)
 
     def test_endpointTypeCheck(self):
-        HipChatStatusPush(auth_token="2", endpoint=2)
-        config._errors.addError.assert_any_call('endpoint must be a string')
+        with self.assertRaisesConfigError('endpoint must be a string'):
+            HipChatStatusPush(auth_token="2", endpoint=2)
 
     @defer.inlineCallbacks
     def test_builderRoomMapTypeCheck(self):
-        yield self.createReporter(builder_room_map=2)
-        config._errors.addError.assert_any_call(
-            'builder_room_map must be a dict')
+        with self.assertRaisesConfigError('builder_room_map must be a dict'):
+            yield self.createReporter(builder_room_map=2)
 
     @defer.inlineCallbacks
     def test_builderUserMapTypeCheck(self):
-        yield self.createReporter(builder_user_map=2)
-        config._errors.addError.assert_any_call(
-            'builder_user_map must be a dict')
+        with self.assertRaisesConfigError('builder_user_map must be a dict'):
+            yield self.createReporter(builder_user_map=2)
 
     @defer.inlineCallbacks
     def test_interpolateAuth(self):
@@ -253,8 +249,6 @@ class TestHipchatStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
     def setUp(self):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 

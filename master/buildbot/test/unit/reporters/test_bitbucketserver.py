@@ -22,7 +22,6 @@ from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.plugins import util
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
@@ -58,8 +57,6 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
     def setupReporter(self, **kwargs):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -202,8 +199,6 @@ class TestBitbucketServerStatusPushDeprecatedSend(TestReactorMixin, unittest.Tes
     def setupReporter(self, **kwargs):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -274,20 +269,19 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     def setupReporter(self, token=None, **kwargs):
         self.setUpTestReactor()
         self.setup_reporter_test()
-
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
         http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
+        http_auth = ('username', 'passwd') if token is None else None
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            'serv', auth=('username', 'passwd'), headers=http_headers,
+            self.master, self, 'serv', auth=http_auth, headers=http_headers,
             debug=None, verify=None)
-        self.sp = BitbucketServerCoreAPIStatusPush(
-            "serv", token=token, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
+
+        auth = (Interpolate("username"), Interpolate("passwd")) if token is None else None
+
+        self.sp = BitbucketServerCoreAPIStatusPush("serv", token=token, auth=auth, **kwargs)
         yield self.sp.setServiceParent(self.master)
         yield self.master.startService()
 
@@ -557,8 +551,6 @@ class TestBitbucketServerCoreAPIStatusPushDeprecatedSend(ConfigErrorsMixin, Test
     def setupReporter(self, token=None, **kwargs):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -643,8 +635,6 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
     def setUp(self):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
         yield self.master.startService()

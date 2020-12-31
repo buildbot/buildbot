@@ -1,6 +1,7 @@
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot import interfaces
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.reporters.http import HttpStatusPushBase
@@ -19,7 +20,7 @@ class HipChatStatusPush(HttpStatusPushBase):
     def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
                     event_messages=None, **kwargs):
-        if not isinstance(auth_token, str):
+        if not isinstance(auth_token, str) and not interfaces.IRenderable.providedBy(auth_token):
             config.error('auth_token must be a string')
         if not isinstance(endpoint, str):
             config.error('endpoint must be a string')

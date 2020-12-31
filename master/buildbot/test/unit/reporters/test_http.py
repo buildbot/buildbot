@@ -13,19 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-
-from mock import Mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.http import HttpStatusPush
 from buildbot.reporters.http import HttpStatusPushBase
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
@@ -64,14 +61,12 @@ class BuildLookAlike:
         return "{ any build }"
 
 
-class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
+class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin, ConfigErrorsMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        config._errors = Mock()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
         yield self.master.startService()
@@ -95,7 +90,6 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        config._errors = None
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -141,13 +135,12 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin)
 
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
-        yield self.createReporter(builders='Builder0')
-        config._errors.addError.assert_any_call(
-            "builders must be a list or None")
+        with self.assertRaisesConfigError("builders must be a list or None"):
+            yield self.createReporter(builders='Builder0')
 
     @defer.inlineCallbacks
     def test_wantKwargsCheck(self):
-        yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
+        yield self.createReporter(builders=['Builder0'], wantProperties=True, wantSteps=True,
                                   wantPreviousBuild=True, wantLogs=True)
         self._http.expect("post", "", json=BuildLookAlike(
             keys=['steps', 'prev_build']))
@@ -192,8 +185,6 @@ class TestHttpStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase, Repo
     def setUp(self):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        # ignore config error if txrequests is not installed
-        config._errors = Mock()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
         yield self.master.startService()
@@ -217,7 +208,6 @@ class TestHttpStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase, Repo
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        config._errors = None
 
     @defer.inlineCallbacks
     def test_basic(self):
