@@ -24,13 +24,14 @@ from buildbot.reporters.gitlab import GitLabStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import logging
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
+class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCase,
                            ReporterTestMixin, logging.LoggingMixin):
 
     @defer.inlineCallbacks
@@ -56,12 +57,16 @@ class TestGitLabStatusPush(TestReactorMixin, unittest.TestCase,
         return self.master.stopService()
 
     def test_check_config(self):
-        service = GitLabStatusPush(Interpolate('XXYYZZ'))
-        service.checkConfig(Interpolate('token'), startDescription=Interpolate('start'),
-                            endDescription=Interpolate('end'),
-                            context=Interpolate('context'),
-                            verbose=True,
-                            builders=['builder1'])
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            GitLabStatusPush(Interpolate('token'), startDescription=Interpolate('start'),
+                             endDescription=Interpolate('end'),
+                             context=Interpolate('context'),
+                             verbose=True,
+                             builders=['builder1'])
+
+    def test_deprecated_generators(self):
+        with self.assertRaisesConfigError("can't specify generators and deprecated"):
+            GitLabStatusPush(Interpolate('token'), generators=[], builders=['builder1'])
 
     @defer.inlineCallbacks
     def test_basic(self):

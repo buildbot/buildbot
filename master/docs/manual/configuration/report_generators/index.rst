@@ -25,6 +25,7 @@ At this moment, only the following reporters support report generators:
  * :bb:reporter:`BitbucketStatusPush`
  * :bb:reporter:`GitHubStatusPush`
  * :bb:reporter:`GitHubCommentPush`
+ * :bb:reporter:`GitLabStatusPush`
  * :bb:reporter:`MailNotifier`
  * :bb:reporter:`PushjetNotifier`
  * :bb:reporter:`PushoverNotifier`
