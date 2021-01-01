@@ -68,7 +68,7 @@ Reporters and report generators
 -------------------------------
 
 Buildbot 2.9 introduced report generators as the preferred way of configuring the conditions of when a message is sent by a reporter and contents of the messages.
-The old parameters have been deprecated in Buildbot 2.9 and removed in Buildbot 3.0.
+The old parameters have been gradually deprecated in Buildbot 2.9 and Buildbot 2.10 and removed in Buildbot 3.0.
 
 The following describes the procedure of upgrading reporters.
 
@@ -153,6 +153,27 @@ The following arguments have been removed:
 
 * ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
   In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template=<default text>)``.
+
+GitHubStatusPush, GitHubCommentPush
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStartEndStatusGenerator`.
+
+The following arguments have been removed:
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when information on previous build is needed.
+
+* ``startDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``start_formatter`` parameter to the *status generator*.
+
+* ``endDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``end_formatter`` parameter to the *status generator*.
 
 Template files in message formatters
 ------------------------------------

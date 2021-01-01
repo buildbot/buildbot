@@ -22,6 +22,8 @@ Multiple report generators can be registered to a reporter.
 At this moment, only the following reporters support report generators:
 
  * :bb:reporter:`BitbucketServerPRCommentPush`
+ * :bb:reporter:`GitHubStatusPush`
+ * :bb:reporter:`GitHubCommentPush`
  * :bb:reporter:`MailNotifier`
  * :bb:reporter:`PushjetNotifier`
  * :bb:reporter:`PushoverNotifier`
