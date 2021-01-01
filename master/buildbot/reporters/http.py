@@ -118,12 +118,12 @@ class HttpStatusPush(ReporterBase):
             config.error("format_fn must be a function")
 
         old_arg_names = {
-            'format_fn': False,
-            'builders': False,
-            'wantProperties': False,
-            'wantSteps': False,
-            'wantPreviousBuild': False,
-            'wantLogs': False,
+            'format_fn': format_fn is not None,
+            'builders': builders is not None,
+            'wantProperties': wantProperties is not False,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
         }
 
         passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
@@ -134,7 +134,7 @@ class HttpStatusPush(ReporterBase):
             if generators is not None:
                 config.error(("can't specify generators and deprecated HTTPStatusPushBase "
                               "arguments ({}) at the same time").format(old_arg_names_msg))
-            warn_deprecated('2.9.0',
+            warn_deprecated('2.10.0',
                             ('The arguments {} passed to {} have been deprecated. Use generators '
                              'instead').format(old_arg_names_msg, self.__class__.__name__))
 

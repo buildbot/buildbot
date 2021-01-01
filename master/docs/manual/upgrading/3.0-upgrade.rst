@@ -175,6 +175,29 @@ The following arguments have been removed:
 
 * ``endDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``end_formatter`` parameter to the *status generator*.
 
+HttpStatusPush
+^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStatusGenerator`.
+
+The following arguments have been removed:
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when information on previous build is needed.
+
+* ``format_fn``. Replacement is a message formatter of type ``MessageFormatterFunction`` passed as the ``message_formatter`` parameter to the *status generator*.
+  The ``MessageFormatterFunction`` should be passed a callable function as the ``function`` parameter.
+  This ``function`` parameter has a different signature than ``format_fn``.
+  ``format_fn`` was previously passed a build dictionary directly as the first argument.
+  ``function`` will be passed a dictionary, which contains a ``build`` key which will contain the build dictionary as the value.
+
 BitbucketStatusPush
 ^^^^^^^^^^^^^^^^^^^
 
