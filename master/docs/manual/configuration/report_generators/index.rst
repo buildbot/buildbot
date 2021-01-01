@@ -12,6 +12,7 @@ Report Generators
     buildset
     worker
     formatter
+    formatter_function
     formatter_renderable
     formatter_missing_worker
 
@@ -48,4 +49,5 @@ The following message formatter classes are provided:
 
  * :ref:`MessageFormatter` (used in ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and ``BuildSetStatusGenerator``)
  * :ref:`MessageFormatterRenderable` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
+ * :ref:`MessageFormatterFunction` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
  * :ref:`MessageFormatterMissingWorkers` (used in ``WorkerMissingGenerator``)

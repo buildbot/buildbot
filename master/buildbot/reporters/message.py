@@ -213,6 +213,25 @@ class DeprecatedMessageFormatterBuildJson(MessageFormatterBase):
         return None
 
 
+class MessageFormatterFunction(MessageFormatterBase):
+
+    def __init__(self, function, template_type, **kwargs):
+        super().__init__(**kwargs)
+        self.template_type = template_type
+        self._function = function
+
+    @defer.inlineCallbacks
+    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+        msgdict = yield self.render_message_dict(master, {'build': build})
+        return msgdict
+
+    def render_message_body(self, context):
+        return self._function(context)
+
+    def render_message_subject(self, context):
+        return None
+
+
 class MessageFormatterRenderable(MessageFormatterBase):
 
     template_type = 'plain'
