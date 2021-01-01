@@ -23,7 +23,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters.base import ReporterBase
-from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
+from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import httpclientservice
 
@@ -39,6 +39,14 @@ LEVELS = {
     SUCCESS: 'passing',
     WARNINGS: 'warnings'
 }
+
+DEFAULT_MSG_TEMPLATE = \
+    ('The Buildbot has detected a <a href="{{ build_url }}">{{ status_detected }}</a>' +
+     'of <i>{{ buildername }}</i> while building {{ projects }} on {{ workername }}.')
+
+DEFAULT_MSG_TEMPLATE_MISSING_WORKER = \
+    ('The Buildbot \'{{buildbot_title}}\' has noticed that the worker named ' +
+     '{{worker.name}} went away. It last disconnected at {{worker.last_connection}}.')
 
 
 class PushjetNotifier(ReporterBase):
@@ -74,11 +82,10 @@ class PushjetNotifier(ReporterBase):
                         generators=None):
         secret = yield self.renderSecrets(secret)
         if messageFormatter is None:
-            messageFormatter = DefaultMessageFormatter(template_type='html',
-                template_filename='default_notification.txt')
+            messageFormatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
         if messageFormatterMissingWorker is None:
-            messageFormatterMissingWorker = MessageFormatterMissingWorker(
-                template_filename='missing_notification.txt')
+            messageFormatterMissingWorker = \
+                MessageFormatterMissingWorker(template=DEFAULT_MSG_TEMPLATE_MISSING_WORKER)
         yield super().reconfigService(mode, tags, builders,
                                       buildSetSummary, messageFormatter,
                                       subject, False, False,
