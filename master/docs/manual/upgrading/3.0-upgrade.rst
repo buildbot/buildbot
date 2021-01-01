@@ -154,8 +154,8 @@ The following arguments have been removed:
 * ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
   In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template=<default text>)``.
 
-GitHubStatusPush, GitHubCommentPush, GitLabStatusPush
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GerritVerifyStatusPush, GitHubStatusPush, GitHubCommentPush, GitLabStatusPush
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStartEndStatusGenerator`.
 
