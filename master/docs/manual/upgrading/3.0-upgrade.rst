@@ -175,6 +175,17 @@ The following arguments have been removed:
 
 * ``endDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``end_formatter`` parameter to the *status generator*.
 
+BitbucketStatusPush
+^^^^^^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStartEndStatusGenerator`.
+
+The following arguments have been removed:
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``wantProperties``, ``wantSteps``, ``wantLogs`` and ``wantPreviousBuild`` were previously accepted, but they do not affect the behavior of the reporter.
+
 Template files in message formatters
 ------------------------------------
 
