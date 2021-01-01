@@ -54,12 +54,14 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
                                     ReporterTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
-    def setupReporter(self, **kwargs):
+    def setUp(self):
         self.setUpTestReactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        yield self.master.startService()
 
+    @defer.inlineCallbacks
+    def setupReporter(self, **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self,
             'serv', auth=('username', 'passwd'),
@@ -67,7 +69,6 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
         self.sp = BitbucketServerStatusPush("serv", Interpolate("username"),
                                             Interpolate("passwd"), **kwargs)
         yield self.sp.setServiceParent(self.master)
-        yield self.master.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
