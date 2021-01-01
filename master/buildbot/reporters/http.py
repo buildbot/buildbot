@@ -102,12 +102,13 @@ class HttpStatusPushBase(ReporterBase):
         return code // 100 == 2
 
 
-class HttpStatusPush(HttpStatusPushBase):
+class HttpStatusPush(ReporterBase):
     name = "HttpStatusPush"
     secrets = ['user', 'password', "auth"]
 
     def checkConfig(self, serverUrl, user=None, password=None, auth=None, headers=None,
-                    format_fn=None, builders=None, wantProperties=False, wantSteps=False,
+                    format_fn=None, builders=None, debug=None, verify=None,
+                    wantProperties=False, wantSteps=False,
                     wantPreviousBuild=False, wantLogs=False, generators=None, **kwargs):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
@@ -143,12 +144,16 @@ class HttpStatusPush(HttpStatusPushBase):
                                                                wantLogs)
 
         super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(self, serverUrl, user=None, password=None, auth=None, headers=None,
-                        format_fn=None, builders=None, wantProperties=False, wantSteps=False,
+                        format_fn=None, builders=None, debug=None, verify=None,
+                        wantProperties=False, wantSteps=False,
                         wantPreviousBuild=False, wantLogs=False, generators=None,
                         **kwargs):
+        self.debug = debug
+        self.verify = verify
         if user is not None:
             auth = (user, password)
         if format_fn is None:
@@ -177,13 +182,16 @@ class HttpStatusPush(HttpStatusPushBase):
                                  _want_previous_build=want_previous_build)
         ]
 
+    def is_status_2xx(self, code):
+        return code // 100 == 2
+
     @defer.inlineCallbacks
     def send(self, build):
         # the only case when this function is called is when the user derives this class, overrides
         # send() and calls super().send(build) from there. We'll call format_fn twice in that case,
         # once in generators, once here.
         response = yield self._http.post("", json=self.format_fn(build))
-        if not self.isStatus2XX(response.code):
+        if not self.is_status_2xx(response.code):
             log.msg("{}: unable to upload status: {}".format(response.code, response.content))
 
     @defer.inlineCallbacks
@@ -194,5 +202,5 @@ class HttpStatusPush(HttpStatusPushBase):
             return
 
         response = yield self._http.post("", json=reports[0]['body'])
-        if not self.isStatus2XX(response.code):
+        if not self.is_status_2xx(response.code):
             log.msg("{}: unable to upload status: {}".format(response.code, response.content))
