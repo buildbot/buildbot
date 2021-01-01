@@ -24,8 +24,9 @@ from buildbot.plugins import util
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
-from buildbot.reporters import http
 from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
@@ -44,30 +45,84 @@ HTTP_PROCESSED = 204
 HTTP_CREATED = 201
 
 
-class BitbucketServerStatusPush(http.HttpStatusPushBase):
+class BitbucketServerStatusPush(ReporterBase):
     name = "BitbucketServerStatusPush"
 
     def checkConfig(self, base_url, user, password, key=None, statusName=None,
                     startDescription=None, endDescription=None, verbose=False,
+                    builders=None, debug=None, verify=None, wantProperties=True,
+                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
                     **kwargs):
-        super().checkConfig(wantProperties=True,
-                            _has_old_arg_names={'builders': False, 'wantProperties': False},
-                            **kwargs)
+
+        old_arg_names = {
+            'startDescription': startDescription is not None,
+            'endDescription': endDescription is not None,
+            'wantProperties': wantProperties is not True,
+            'builders': builders is not None,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
+                              "same time").format(self.__class__.__name__, old_arg_names_msg))
+            warn_deprecated('2.10.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs,
+                                                               startDescription, endDescription)
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(self, base_url, user, password, key=None,
                         statusName=None, startDescription=None,
-                        endDescription=None, verbose=False, **kwargs):
+                        endDescription=None, verbose=False,
+                        builders=None, debug=None, verify=None, wantProperties=True,
+                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+                        **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield super().reconfigService(wantProperties=True, **kwargs)
+        self.debug = debug
+        self.verify = verify
+        self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs,
+                                                               startDescription, endDescription)
+
+        yield super().reconfigService(generators=generators, **kwargs)
+
         self.key = key or Interpolate('%(prop:buildername)s')
         self.context = statusName
-        self.endDescription = endDescription or 'Build done.'
-        self.startDescription = startDescription or 'Build started.'
-        self.verbose = verbose
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password),
             debug=self.debug, verify=self.verify)
+
+    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
+                                         wantPreviousBuild, wantLogs,
+                                         startDescription, endDescription):
+        # wantProperties is ignored, because MessageFormatterRenderable always wants properties.
+        # wantSteps and wantPreviousBuild are ignored ignored, because they are not used in
+        # this reporter.
+        start_formatter = MessageFormatterRenderable(startDescription or 'Build started.')
+        end_formatter = MessageFormatterRenderable(endDescription or 'Build done.')
+
+        return [
+            BuildStartEndStatusGenerator(builders=builders, add_logs=wantLogs,
+                                         start_formatter=start_formatter,
+                                         end_formatter=end_formatter)
+        ]
 
     def createStatus(self, sha, state, url, key, description=None, context=None):
         payload = {
@@ -87,32 +142,32 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
     def send(self, build):
         # the only case when this function is called is when the user derives this class, overrides
         # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
+        yield self._send_impl(build, self._cached_report)
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
         if self.send.__func__ is not BitbucketServerStatusPush.send:
             warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
+            self._cached_report = reports[0]
             yield self.send(build)
         else:
-            yield self._send_impl(build)
+            yield self._send_impl(build, reports[0])
 
     @defer.inlineCallbacks
-    def _send_impl(self, build):
+    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
+
+        description = report.get('body', None)
 
         results = build['results']
         if build['complete']:
             state = SUCCESSFUL if results == SUCCESS else FAILED
-            description = self.endDescription
         else:
             state = INPROGRESS
-            description = self.startDescription
 
         key = yield props.render(self.key)
-        description = yield props.render(description) if description else None
         context = yield props.render(self.context) if self.context else None
 
         sourcestamps = build['buildset']['sourcestamps']
@@ -152,7 +207,7 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                     ))
 
 
-class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
+class BitbucketServerCoreAPIStatusPush(ReporterBase):
     name = "BitbucketServerCoreAPIStatusPush"
     secrets = ["token", "auth"]
 
@@ -160,25 +215,56 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                     statusName=None, statusSuffix=None, startDescription=None,
                     endDescription=None, key=None, parentName=None,
                     buildNumber=None, ref=None, duration=None,
-                    testResults=None, verbose=False, debug=None,
-                    verify=None, **kwargs):
+                    testResults=None, verbose=False, wantProperties=True,
+                    builders=None, debug=None, verify=None,
+                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+                    **kwargs):
+
+        old_arg_names = {
+            'startDescription': startDescription is not None,
+            'endDescription': endDescription is not None,
+            'wantProperties': wantProperties is not True,
+            'builders': builders is not None,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
+                              "same time").format(self.__class__.__name__, old_arg_names_msg))
+            warn_deprecated('2.10.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs,
+                                                               startDescription, endDescription)
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
+
         if not base_url:
             config.error("Parameter base_url has to be given")
         if token is not None and auth is not None:
             config.error("Only one authentication method can be given "
                          "(token or auth)")
-        super().checkConfig(wantProperties=True,
-                            _has_old_arg_names={'builders': False, 'wantProperties': False},
-                            **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, base_url, token=None, auth=None,
                         statusName=None, statusSuffix=None, startDescription=None,
                         endDescription=None, key=None, parentName=None,
                         buildNumber=None, ref=None, duration=None,
-                        testResults=None, verbose=False, debug=None,
-                        verify=None, **kwargs):
-        yield super().reconfigService(wantProperties=True, **kwargs)
+                        testResults=None, verbose=False, wantProperties=True,
+                        builders=None, debug=None, verify=None,
+                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+                        **kwargs):
         self.status_name = statusName
         self.status_suffix = statusSuffix
         self.start_description = startDescription or 'Build started.'
@@ -188,6 +274,17 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
         self.build_number = buildNumber or Interpolate('%(prop:buildnumber)s')
         self.ref = ref
         self.duration = duration
+
+        self.debug = debug
+        self.verify = verify
+        self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs,
+                                                               startDescription, endDescription)
+
+        yield super().reconfigService(generators=generators, **kwargs)
 
         if testResults:
             self.test_results = testResults
@@ -206,13 +303,27 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                 return None
             self.test_results = r_testresults
 
-        self.verbose = verbose
         headers = {}
         if token:
             headers["Authorization"] = "Bearer {}".format(token)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=auth, headers=headers, debug=debug,
             verify=verify)
+
+    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
+                                         wantPreviousBuild, wantLogs,
+                                         startDescription, endDescription):
+        # wantProperties is ignored, because MessageFormatterRenderable always wants properties.
+        # wantSteps and wantPreviousBuild are ignored ignored, because they are not used in
+        # this reporter.
+        start_formatter = MessageFormatterRenderable(startDescription or 'Build started.')
+        end_formatter = MessageFormatterRenderable(endDescription or 'Build done.')
+
+        return [
+            BuildStartEndStatusGenerator(builders=builders, add_logs=wantLogs,
+                                         start_formatter=start_formatter,
+                                         end_formatter=end_formatter)
+        ]
 
     def createStatus(self, proj_key, repo_slug, sha, state, url, key, parent,
                      build_number, ref, description, name, duration,
@@ -243,27 +354,29 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
     def send(self, build):
         # the only case when this function is called is when the user derives this class, overrides
         # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
+        yield self._send_impl(build, self._cached_report)
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
         if self.send.__func__ is not BitbucketServerCoreAPIStatusPush.send:
             warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
+            self._cached_report = reports[0]
             yield self.send(build)
         else:
-            yield self._send_impl(build)
+            yield self._send_impl(build, reports[0])
 
     @defer.inlineCallbacks
-    def _send_impl(self, build):
+    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
+
+        description = report.get('body', None)
 
         duration = None
         test_results = None
         if build['complete']:
             state = SUCCESSFUL if build['results'] == SUCCESS else FAILED
-            description = yield props.render(self.end_description)
             if self.duration:
                 duration = yield props.render(self.duration)
             else:
@@ -273,7 +386,6 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                 test_results = yield props.render(self.test_results)
         else:
             state = INPROGRESS
-            description = yield props.render(self.start_description)
             duration = None
 
         parent_name = (build['parentbuilder'] or {}).get('name')

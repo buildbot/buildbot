@@ -50,7 +50,7 @@ class TestException(Exception):
     pass
 
 
-class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
+class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCase,
                                     ReporterTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
@@ -104,6 +104,17 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
+    def test_deprecated_generators(self):
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            BitbucketServerStatusPush("serv", Interpolate("username"), Interpolate("passwd"),
+                                      startDescription=Interpolate('start'),
+                                      endDescription=Interpolate('end'))
+
+    def test_deprecated_args_and_generators(self):
+        with self.assertRaisesConfigError("can't specify generators and deprecated"):
+            BitbucketServerStatusPush("serv", Interpolate("username"), Interpolate("passwd"),
+                                      generators=[], builders=['builder1'])
+
     @defer.inlineCallbacks
     def test_basic(self):
         self.setupReporter()
@@ -112,8 +123,9 @@ class TestBitbucketServerStatusPush(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_setting_options(self):
-        self.setupReporter(statusName='Build', startDescription='Build started.',
-                           endDescription='Build finished.')
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            self.setupReporter(statusName='Build', startDescription='Build started.',
+                               endDescription='Build finished.')
         build = yield self.insert_build_finished(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -293,6 +305,17 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     def tearDown(self):
         if self.master and self.master.running:
             yield self.master.stopService()
+
+    def test_deprecated_generators(self):
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            BitbucketServerCoreAPIStatusPush("serv", token="token",
+                                             startDescription=Interpolate('start'),
+                                             endDescription=Interpolate('end'))
+
+    def test_deprecated_args_and_generators(self):
+        with self.assertRaisesConfigError("can't specify generators and deprecated"):
+            BitbucketServerCoreAPIStatusPush("serv", token="token",
+                                             generators=[], builders=['builder1'])
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build, parentPlan=False):
