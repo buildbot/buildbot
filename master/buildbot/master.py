@@ -268,11 +268,13 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
             yield self.mq.setup()
 
+            # the buildbot scripts send the SIGHUP signal to reconfig master
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):
                     eventually(self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
+            # the buildbot scripts send the SIGUSR1 signal to stop master
             if hasattr(signal, "SIGUSR1"):
                 def sigusr1(*args):
                     eventually(self.botmaster.cleanShutdown)
