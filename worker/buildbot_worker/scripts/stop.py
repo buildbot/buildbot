@@ -31,7 +31,7 @@ class WorkerNotRunning(Exception):
     """
 
 
-def stopWorker(basedir, quiet, signame="TERM"):
+def stopWorker(basedir, quiet, signame="SIGTERM"):
     """
     Stop worker process by sending it a signal.
 
@@ -52,7 +52,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
         raise WorkerNotRunning()
 
     pid = int(f.read().strip())
-    signum = getattr(signal, "SIG" + signame)
+    signum = getattr(signal, signame)
     timer = 0
     try:
         os.kill(pid, signum)
@@ -76,7 +76,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
     return 1
 
 
-def stop(config, signame="TERM"):
+def stop(config, signame="SIGTERM"):
     quiet = config['quiet']
     basedir = config['basedir']
 

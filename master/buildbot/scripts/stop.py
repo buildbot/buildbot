@@ -24,7 +24,7 @@ from twisted.python.runtime import platformType
 from buildbot.scripts import base
 
 
-def stop(config, signame="TERM", wait=None):
+def stop(config, signame="SIGTERM", wait=None):
     basedir = config['basedir']
     quiet = config['quiet']
 
@@ -32,7 +32,7 @@ def stop(config, signame="TERM", wait=None):
         wait = not config['no-wait']
 
     if config['clean']:
-        signame = 'USR1'
+        signame = 'SIGUSR1'
 
     if not base.isBuildmasterDir(config['basedir']):
         return 1
@@ -46,7 +46,7 @@ def stop(config, signame="TERM", wait=None):
             print("buildmaster not running")
         return 0
 
-    signum = getattr(signal, "SIG" + signame)
+    signum = getattr(signal, signame)
     try:
         os.kill(pid, signum)
     except OSError as e:
@@ -63,7 +63,7 @@ def stop(config, signame="TERM", wait=None):
 
     if not wait:
         if not quiet:
-            print("sent SIG{} to process".format(signame))
+            print("sent {} to process".format(signame))
         return 0
 
     time.sleep(0.1)
