@@ -17,7 +17,7 @@
 # the door" and trigger a change source to poll.
 
 
-from buildbot.changes.base import PollingChangeSource
+from buildbot.changes.base import ReconfigurablePollingChangeSource
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
@@ -38,7 +38,7 @@ class PollingHandler(BaseHookHandler):
         pollers = []
 
         for source in change_svc:
-            if not isinstance(source, PollingChangeSource):
+            if not isinstance(source, ReconfigurablePollingChangeSource):
                 continue
             if not hasattr(source, "name"):
                 continue

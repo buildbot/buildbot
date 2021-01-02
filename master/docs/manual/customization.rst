@@ -564,7 +564,7 @@ Writing a Change Poller
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Polling is a very common means of seeking changes, so Buildbot supplies a utility parent class to make it easier.
-A poller should subclass :class:`buildbot.changes.base.PollingChangeSource`, which is a subclass of :class:`~buildbot.changes.base.ChangeSource`.
+A poller should subclass :class:`buildbot.changes.base.ReconfigurablePollingChangeSource`, which is a subclass of :class:`~buildbot.changes.base.ChangeSource`.
 This subclass implements the :meth:`Service` methods, and calls the :meth:`poll` method according to the ``pollInterval`` and ``pollAtLaunch`` options.
 The ``poll`` method should return a Deferred to signal its completion.
 
