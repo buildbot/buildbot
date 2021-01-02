@@ -47,7 +47,7 @@ class Tests(RunFakeMasterTestCase):
 
         controller.connect_worker()
         controller.sever_connection()
-        yield self.createBuildrequest(self.master, [builder_id])
+        yield self.create_build_request([builder_id])
 
         # give time for any delayed actions to complete
         self.reactor.advance(1)

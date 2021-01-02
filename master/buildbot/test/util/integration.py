@@ -132,9 +132,9 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         self.assertEqual(got_logs, exp_logs)
 
     @defer.inlineCallbacks
-    def createBuildrequest(self, master, builder_ids, properties=None):
+    def create_build_request(self, builder_ids, properties=None):
         properties = properties.asDict() if properties is not None else None
-        ret = yield master.data.updates.addBuildset(
+        ret = yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[

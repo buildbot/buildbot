@@ -124,8 +124,8 @@ class Tests(RunFakeMasterTestCase):
     def assert_two_builds_created_one_after_another(self, stepcontrollers, builder_ids):
         # start two builds and verify that a second build starts after the
         # first is finished
-        yield self.createBuildrequest(self.master, [builder_ids[0]])
-        yield self.createBuildrequest(self.master, [builder_ids[1]])
+        yield self.create_build_request([builder_ids[0]])
+        yield self.create_build_request([builder_ids[1]])
 
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 1)
@@ -154,8 +154,8 @@ class Tests(RunFakeMasterTestCase):
     def assert_two_steps_created_one_after_another(self, stepcontrollers, builder_ids):
         # start two builds and verify that a second build starts after the
         # first is finished
-        yield self.createBuildrequest(self.master, [builder_ids[0]])
-        yield self.createBuildrequest(self.master, [builder_ids[1]])
+        yield self.create_build_request([builder_ids[0]])
+        yield self.create_build_request([builder_ids[1]])
 
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
@@ -333,7 +333,7 @@ class TestReconfig(RunFakeMasterTestCase):
         # create a number of builds and check that the expected number of them
         # start
         for i in range(builder_count):
-            yield self.createBuildrequest(self.master, [builder_ids[i]])
+            yield self.create_build_request([builder_ids[i]])
 
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), allowed_builds_before)
@@ -384,7 +384,7 @@ class TestReconfig(RunFakeMasterTestCase):
         # create a number of builds and check that the expected number of them
         # start their steps
         for i in range(builder_count):
-            yield self.createBuildrequest(self.master, [builder_ids[i]])
+            yield self.create_build_request([builder_ids[i]])
 
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), builder_count)
