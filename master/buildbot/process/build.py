@@ -39,7 +39,6 @@ from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
-from buildbot.worker.latent import AbstractLatentWorker
 
 
 @implementer(interfaces.IBuildControl)
@@ -106,6 +105,9 @@ class Build(properties.PropertiesMixin):
         # tracks execution during the build finish phase
         self._locks_released = False
         self._build_finished = False
+
+        # tracks execution during substantiation
+        self._is_substantiating = False
 
         # tracks the config version for locks
         self.config_version = None
@@ -348,9 +350,12 @@ class Build(properties.PropertiesMixin):
         try:
             ready_or_failure = False
             if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
+                self._is_substantiating = True
                 ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
         except Exception:
             ready_or_failure = Failure()
+        finally:
+            self._is_substantiating = False
 
         # If prepare returns True then it is ready and we start a build
         # If it returns failure then we don't start a new build.
@@ -638,13 +643,10 @@ class Build(properties.PropertiesMixin):
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
-        elif not self.conn and isinstance(self.workerforbuilder.worker, AbstractLatentWorker):
-            # if this function can be called (because we appear to be building)
-            # if there is no connection, but we are also not waiting for locks
-            # then we are likely having a LatentWorker which hasn't been substantiated yet
-            # (maybe it couldn't connect to the master?)
-            # and the substantiation needs to be aborted
-            self.workerforbuilder.worker.insubstantiate()
+        elif self._is_substantiating:
+            # We're having a latent worker that hasn't been substantiated yet. We need to abort
+            # that to not have a latent worker without an associated build
+            self.workerforbuilder.insubstantiate_if_needed()
 
     def allStepsDone(self):
         if self.results == FAILURE:

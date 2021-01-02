@@ -110,6 +110,9 @@ class AbstractWorkerForBuilder:
     def substantiate_if_needed(self, build):
         return defer.succeed(True)
 
+    def insubstantiate_if_needed(self):
+        pass
+
     def ping(self, status=None):
         """Ping the worker to make sure it is still there. Returns a Deferred
         that fires with True if it is.
@@ -216,6 +219,9 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.state = States.DETACHED
         d = self.substantiate(build)
         return d
+
+    def insubstantiate_if_needed(self):
+        self.worker.insubstantiate()
 
     def attached(self, worker, commands):
         # When a latent worker is attached, it is actually because it prepared for a build
