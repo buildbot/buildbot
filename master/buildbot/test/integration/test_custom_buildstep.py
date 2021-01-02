@@ -180,7 +180,7 @@ class RunSteps(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
         builder_id = yield self.master.data.updates.findBuilderId('builder')
         return builder_id
 
@@ -196,7 +196,7 @@ class RunSteps(RunFakeMasterTestCase):
         consumer = yield self.master.mq.startConsuming(on_finished, ('builds', None, 'finished'))
 
         # start the builder
-        yield self.createBuildrequest(self.master, [builder_id])
+        yield self.create_build_request([builder_id])
 
         # and wait for build completion
         yield d_finished

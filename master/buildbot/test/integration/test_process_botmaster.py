@@ -42,17 +42,17 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        yield self.setup_master(config_dict)
+        builder_id = yield self.master.data.updates.findBuilderId('testy')
 
         controller.connect_worker()
         controller.sever_connection()
-        yield self.createBuildrequest(master, [builder_id])
+        yield self.create_build_request([builder_id])
 
         # give time for any delayed actions to complete
         self.reactor.advance(1)
 
-        yield master.botmaster.cleanShutdown(quickMode=quick_mode, stopReactor=False)
+        yield self.master.botmaster.cleanShutdown(quickMode=quick_mode, stopReactor=False)
         self.flushLoggedErrors(PingException)
 
     def test_terminates_ping_on_shutdown_quick_mode(self):

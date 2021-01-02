@@ -84,19 +84,19 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
         builder_ids = [
-            (yield master.data.updates.findBuilderId('testy-1')),
-            (yield master.data.updates.findBuilderId('testy-2')),
+            (yield self.master.data.updates.findBuilderId('testy-1')),
+            (yield self.master.data.updates.findBuilderId('testy-2')),
         ]
 
         started_builds = []
-        yield master.mq.startConsuming(
+        yield self.master.mq.startConsuming(
             lambda key, build: started_builds.append(build),
             ('builds', None, 'new'))
 
         # Trigger a buildrequest
-        bsid, brids = yield master.data.updates.addBuildset(
+        bsid, brids = yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
@@ -138,19 +138,19 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
         builder_ids = [
-            (yield master.data.updates.findBuilderId('testy-1')),
-            (yield master.data.updates.findBuilderId('testy-2')),
+            (yield self.master.data.updates.findBuilderId('testy-1')),
+            (yield self.master.data.updates.findBuilderId('testy-2')),
         ]
 
         started_builds = []
-        yield master.mq.startConsuming(
+        yield self.master.mq.startConsuming(
             lambda key, build: started_builds.append(build),
             ('builds', None, 'new'))
 
         # Trigger a buildrequest
-        bsid, brids = yield master.data.updates.addBuildset(
+        bsid, brids = yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
@@ -182,7 +182,7 @@ class Tests(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
 
         self.assertIs(worker.machine, machine)
 
@@ -202,7 +202,7 @@ class Tests(RunFakeMasterTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
 
         config_dict['builders'] += [
             BuilderConfig(name="builder2",
@@ -212,7 +212,7 @@ class Tests(RunFakeMasterTestCase):
         config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
 
         # reconfig should succeed
-        yield self.reconfigMaster(config_dict)
+        yield self.reconfig_master(config_dict)
 
     @defer.inlineCallbacks
     def test_worker_os_release_info_roundtrip(self):
@@ -234,7 +234,7 @@ class Tests(RunFakeMasterTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
 
         props = worker.worker_status.info
 
