@@ -158,6 +158,12 @@ class AbstractLatentWorker(AbstractWorker):
         NOT_SUBSTANTIATED -> SHUT_DOWN
     '''
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._substantiation_notifier = Notifier()
+        self._start_stop_lock = defer.DeferredLock()
+        self._deferwaiter = deferwaiter.DeferWaiter()
+
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
                     **kwargs):
@@ -166,9 +172,6 @@ class AbstractLatentWorker(AbstractWorker):
     def reconfigService(self, name, password,
                         build_wait_timeout=60 * 10,
                         **kwargs):
-        self._substantiation_notifier = Notifier()
-        self._start_stop_lock = defer.DeferredLock()
-        self._deferwaiter = deferwaiter.DeferWaiter()
         self.build_wait_timeout = build_wait_timeout
         return super().reconfigService(name, password, **kwargs)
 
