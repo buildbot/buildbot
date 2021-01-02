@@ -1,3 +1,0 @@
-Fixed :issue:`5727` which prevented polling change sources derived from
-:py:class:`~buildbot.changes.base.ReconfigurablePollingChangeSource` from
-working correctly with `/change_hook/poller`.
