@@ -99,8 +99,9 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         self.master = yield getMaster(self, self.reactor, config_dict)
 
     @defer.inlineCallbacks
-    def reconfigMaster(self, config_dict):
-        self.master.config_loader.config_dict = config_dict
+    def reconfig_master(self, config_dict=None):
+        if config_dict is not None:
+            self.master.config_loader.config_dict = config_dict
         yield self.master.doReconfig()
 
     def createLocalWorker(self, name, **kwargs):

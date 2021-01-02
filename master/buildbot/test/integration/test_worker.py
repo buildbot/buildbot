@@ -212,7 +212,7 @@ class Tests(RunFakeMasterTestCase):
         config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
 
         # reconfig should succeed
-        yield self.reconfigMaster(config_dict)
+        yield self.reconfig_master(config_dict)
 
     @defer.inlineCallbacks
     def test_worker_os_release_info_roundtrip(self):
