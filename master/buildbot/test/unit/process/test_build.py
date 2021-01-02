@@ -197,7 +197,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
-        self.workerforbuilder.prepare = lambda _: True
+        self.workerforbuilder.substantiate_if_needed = lambda _: True
         self.workerforbuilder.ping = lambda: True
 
         self.build.setBuilder(self.builder)
@@ -236,39 +236,39 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         self.assertIn('stop it', step.interrupted)
 
-    def testBuildRetryWhenWorkerPrepareReturnFalse(self):
+    def test_build_retry_when_worker_substantiate_returns_false(self):
         b = self.build
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        self.workerforbuilder.prepare = lambda _: False
+        self.workerforbuilder.substantiate_if_needed = lambda _: False
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, RETRY)
         self.assertWorkerPreparationFailure('error while worker_prepare')
 
-    def testBuildCancelledWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
+    def test_build_cancelled_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
         d = defer.Deferred()
-        self.workerforbuilder.prepare = lambda _: d
+        self.workerforbuilder.substantiate_if_needed = lambda _: d
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         b.stopBuild('Cancel Build', CANCELLED)
         d.callback(False)
         self.assertEqual(b.results, CANCELLED)
         self.assertWorkerPreparationFailure('error while worker_prepare')
 
-    def testBuildRetryWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
+    def test_build_retry_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
         d = defer.Deferred()
-        self.workerforbuilder.prepare = lambda _: d
+        self.workerforbuilder.substantiate_if_needed = lambda _: d
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
@@ -448,7 +448,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         eWorker.worker = self.worker
         cWorker.worker = self.worker
-        eWorker.prepare = cWorker.prepare = lambda _: True
+        eWorker.substantiate_if_needed = cWorker.substantiate_if_needed = lambda _: True
         eWorker.ping = cWorker.ping = lambda: True
 
         lock = WorkerLock('lock', 2)

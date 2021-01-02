@@ -42,7 +42,7 @@ class FakeWorker:
         self.workerid = 383
 
     def acquireLocks(self):
-        pass
+        return True
 
     def releaseLocks(self):
         pass

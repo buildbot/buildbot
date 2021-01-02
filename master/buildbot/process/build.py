@@ -106,6 +106,9 @@ class Build(properties.PropertiesMixin):
         self._locks_released = False
         self._build_finished = False
 
+        # tracks execution during substantiation
+        self._is_substantiating = False
+
         # tracks the config version for locks
         self.config_version = None
 
@@ -345,9 +348,14 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'preparing worker')
         try:
-            ready_or_failure = yield workerforbuilder.prepare(self)
+            ready_or_failure = False
+            if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
+                self._is_substantiating = True
+                ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
         except Exception:
             ready_or_failure = Failure()
+        finally:
+            self._is_substantiating = False
 
         # If prepare returns True then it is ready and we start a build
         # If it returns failure then we don't start a new build.
@@ -417,13 +425,21 @@ class Build(properties.PropertiesMixin):
 
     @defer.inlineCallbacks
     def buildPreparationFailure(self, why, state_string):
-        log.err(why, "while " + state_string)
-        self.workerforbuilder.worker.putInQuarantine()
-        if isinstance(why, failure.Failure):
-            yield self.preparation_step.addLogWithFailure(why)
-        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
-                                                          "error while " + state_string)
-        yield self.master.data.updates.finishStep(self.preparation_step.stepid, EXCEPTION, False)
+        if self.stopped:
+            # if self.stopped, then this failure is a LatentWorker's failure to substantiate
+            # which we triggered on purpose in stopBuild()
+            log.msg("worker stopped while " + state_string, why)
+            yield self.master.data.updates.finishStep(self.preparation_step.stepid,
+                                                      CANCELLED, False)
+        else:
+            log.err(why, "while " + state_string)
+            self.workerforbuilder.worker.putInQuarantine()
+            if isinstance(why, failure.Failure):
+                yield self.preparation_step.addLogWithFailure(why)
+            yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                                                            "error while " + state_string)
+            yield self.master.data.updates.finishStep(self.preparation_step.stepid,
+                                                      EXCEPTION, False)
 
     @staticmethod
     def _canAcquireLocks(lockList, workerforbuilder):
@@ -627,6 +643,10 @@ class Build(properties.PropertiesMixin):
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
+        elif self._is_substantiating:
+            # We're having a latent worker that hasn't been substantiated yet. We need to abort
+            # that to not have a latent worker without an associated build
+            self.workerforbuilder.insubstantiate_if_needed()
 
     def allStepsDone(self):
         if self.results == FAILURE:

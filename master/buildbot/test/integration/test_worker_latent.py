@@ -33,6 +33,7 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
+from buildbot.test.fake.latent import ControllableLatentWorker
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.machine import LatentMachineController
 from buildbot.test.fake.step import BuildStepController
@@ -518,6 +519,56 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
 
         yield controller.stop_instance(True)
         yield d
+
+    @defer.inlineCallbacks
+    def test_substantiation_is_cancelled_by_build_stop(self):
+        """
+        Stopping a build during substantiation should cancel the substantiation itself.
+        Otherwise we will be left with a substantiating worker without a corresponding build
+        which means that master shutdown may not work correctly.
+        """
+        controller, builder_id = yield self.create_single_worker_config()
+        controller.auto_connect_worker = False
+        controller.auto_stop(True)
+
+        # Substantiate worker via a build
+        yield self.create_build_request([builder_id])
+        yield controller.start_instance(True)
+
+        self.master.mq.produce(('control', 'builds', '1', 'stop'), {'reason': 'no reason'})
+
+        self.reactor.advance(1)  # force build to actually execute the stop instruction
+
+        self.assertTrue(controller.stopped)
+
+    @parameterized.expand([
+        ('without_worker_connecting', False),
+        ('with_worker_connecting', True),
+    ])
+    @defer.inlineCallbacks
+    def test_reconfigservice_during_substantiation_clean_shutdown_after(self, name,
+                                                                        worker_connects):
+        """
+        When stopService is called and a worker is substantiating, we should wait for this
+        process to complete.
+        """
+        controller, builder_id = yield self.create_single_worker_config()
+        controller.auto_connect_worker = worker_connects
+        controller.auto_stop(True)
+
+        # Substantiate worker via a build
+        yield self.create_build_request([builder_id])
+        self.assertTrue(controller.starting)
+
+        yield controller.start_instance(True)
+
+        # change some unimportant property of the worker to force configuration
+        self.master.config_loader.config_dict['workers'] = [
+            ControllableLatentWorker('local', controller, max_builds=3)
+        ]
+        yield self.reconfig_master()
+
+        yield self.clean_master_shutdown(quick=True)
 
     @defer.inlineCallbacks
     def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):
