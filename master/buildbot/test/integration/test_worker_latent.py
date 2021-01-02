@@ -520,6 +520,27 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield d
 
     @defer.inlineCallbacks
+    def test_substantiation_is_cancelled_by_build_stop(self):
+        """
+        Stopping a build during substantiation should cancel the substantiation itself.
+        Otherwise we will be left with a substantiating worker without a corresponding build
+        which means that master shutdown may not work correctly.
+        """
+        controller, builder_id = yield self.create_single_worker_config()
+        controller.auto_connect_worker = False
+        controller.auto_stop(True)
+
+        # Substantiate worker via a build
+        yield self.create_build_request([builder_id])
+        yield controller.start_instance(True)
+
+        self.master.mq.produce(('control', 'builds', '1', 'stop'), {'reason': 'no reason'})
+
+        self.reactor.advance(1)  # force build to actually execute the stop instruction
+
+        self.assertTrue(controller.stopped)
+
+    @defer.inlineCallbacks
     def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):
         """
         We should cancel substantiation if we insubstantiate when that substantiation is waiting
