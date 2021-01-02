@@ -17,8 +17,10 @@ from urllib.parse import urlparse
 
 from twisted.internet import defer
 
+from buildbot import config
 from buildbot.process.results import SUCCESS
-from buildbot.reporters import http
+from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
 from buildbot.warnings import warn_deprecated
@@ -37,20 +39,56 @@ _GET_TOKEN_DATA = {
 }
 
 
-class BitbucketStatusPush(http.HttpStatusPushBase):
+class BitbucketStatusPush(ReporterBase):
     name = "BitbucketStatusPush"
 
     def checkConfig(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
+                    builders=None, debug=None, verify=None, wantProperties=False,
+                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
                     **kwargs):
-        super().checkConfig(_has_old_arg_names={'builders': False}, **kwargs)
+
+        old_arg_names = {
+            'wantProperties': wantProperties is not False,
+            'builders': builders is not None,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                print(generators is not None)
+                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
+                              "same time").format(self.__class__.__name__, old_arg_names_msg))
+            warn_deprecated('2.10.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs)
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, oauth_key, oauth_secret,
-                        base_url=_BASE_URL,
-                        oauth_url=_OAUTH_URL,
+    def reconfigService(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
+                        builders=None, debug=None, verify=None, wantProperties=False,
+                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
                         **kwargs):
         oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
-        yield super().reconfigService(**kwargs)
+        self.debug = debug
+        self.verify = verify
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs)
+
+        yield super().reconfigService(generators=generators, **kwargs)
 
         if base_url.endswith('/'):
             base_url = base_url[:-1]
@@ -62,6 +100,12 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
         self.oauthhttp = yield httpclientservice.HTTPClientService.getService(
             self.master, oauth_url, auth=(oauth_key, oauth_secret),
             debug=self.debug, verify=self.verify)
+
+    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
+                                         wantPreviousBuild, wantLogs):
+        # wantProperties, wantLogs, wantSteps and wantPreviousBuild are ignored, because they are
+        # not used in this reporter.
+        return [BuildStartEndStatusGenerator(builders=builders)]
 
     @defer.inlineCallbacks
     def send(self, build):

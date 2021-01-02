@@ -17,7 +17,8 @@
 from twisted.internet import defer
 
 from buildbot import config
-from buildbot.reporters.http import HttpStatusPushBase
+from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
 from buildbot.warnings import warn_deprecated
@@ -25,19 +26,23 @@ from buildbot.warnings import warn_deprecated
 log = Logger()
 
 
-class ZulipStatusPush(HttpStatusPushBase):
+class ZulipStatusPush(ReporterBase):
     name = "ZulipStatusPush"
 
-    def checkConfig(self, endpoint, token, stream=None, **kwargs):
+    def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None):
         if not isinstance(endpoint, str):
             config.error("Endpoint must be a string")
         if not isinstance(token, str):
             config.error("Token must be a string")
-        super().checkConfig(**kwargs)
+
+        super().checkConfig(generators=[BuildStartEndStatusGenerator()])
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, endpoint, token, stream=None, wantProperties=True, **kwargs):
-        super().reconfigService(wantProperties=wantProperties, **kwargs)
+    def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None):
+        self.debug = debug
+        self.verify = verify
+        yield super().reconfigService(generators=[BuildStartEndStatusGenerator()])
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, endpoint,
             debug=self.debug, verify=self.verify)

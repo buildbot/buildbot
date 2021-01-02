@@ -17,6 +17,7 @@
 from twisted.internet import defer
 from twisted.python import failure
 
+from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -26,7 +27,9 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.reporters import http
+from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
 from buildbot.warnings import warn_deprecated
@@ -34,7 +37,7 @@ from buildbot.warnings import warn_deprecated
 log = Logger()
 
 
-class GerritVerifyStatusPush(http.HttpStatusPushBase):
+class GerritVerifyStatusPush(ReporterBase):
     name = "GerritVerifyStatusPush"
     # overridable constants
     RESULTS_TABLE = {
@@ -50,28 +53,58 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
 
     def checkConfig(self, baseURL, auth, startDescription=None, endDescription=None,
                     verification_name=None, abstain=False, category=None, reporter=None,
-                    verbose=False, wantProperties=True, **kwargs):
-        super().checkConfig(wantProperties=wantProperties,
-                            _has_old_arg_names={
-                                'builders': False,
-                                'wantProperties': wantProperties is not True
-                            }, **kwargs)
+                    verbose=False, wantProperties=True,
+                    builders=None, debug=None, verify=None,
+                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+                    **kwargs):
+        old_arg_names = {
+            'startDescription': startDescription is not None,
+            'endDescription': endDescription is not None,
+            'wantProperties': wantProperties is not True,
+            'builders': builders is not None,
+            'wantSteps': wantSteps is not False,
+            'wantPreviousBuild': wantPreviousBuild is not False,
+            'wantLogs': wantLogs is not False,
+        }
+
+        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
+
+        if passed_old_arg_names:
+
+            old_arg_names_msg = ', '.join(passed_old_arg_names)
+            if generators is not None:
+                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
+                              "same time").format(self.__class__.__name__, old_arg_names_msg))
+            warn_deprecated('2.10.0',
+                            ('The arguments {} passed to {} have been deprecated. Use generators '
+                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs,
+                                                               startDescription, endDescription)
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self,
-                        baseURL,
-                        auth,
-                        startDescription=None,
-                        endDescription=None,
-                        verification_name=None,
-                        abstain=False,
-                        category=None,
-                        reporter=None,
-                        verbose=False,
-                        wantProperties=True,
+    def reconfigService(self, baseURL, auth, startDescription=None, endDescription=None,
+                        verification_name=None, abstain=False, category=None, reporter=None,
+                        verbose=False, wantProperties=True,
+                        builders=None, debug=None, verify=None,
+                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
                         **kwargs):
         auth = yield self.renderSecrets(auth)
-        yield super().reconfigService(wantProperties=wantProperties, **kwargs)
+        self.debug = debug
+        self.verify = verify
+        self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
+                                                               wantPreviousBuild, wantLogs,
+                                                               startDescription, endDescription)
+
+        yield super().reconfigService(generators=generators, **kwargs)
 
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
@@ -85,9 +118,22 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         self._reporter = reporter or "buildbot"
         self._abstain = abstain
         self._category = category
-        self._startDescription = startDescription or 'Build started.'
-        self._endDescription = endDescription or 'Build done.'
         self._verbose = verbose
+
+    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
+                                         wantPreviousBuild, wantLogs,
+                                         startDescription, endDescription):
+        # wantProperties is ignored, because MessageFormatterRenderable always wants properties.
+        # wantSteps and wantPreviousBuild are ignored ignored, because they are not used in
+        # this reporter.
+        start_formatter = MessageFormatterRenderable(startDescription or 'Build started.')
+        end_formatter = MessageFormatterRenderable(endDescription or 'Build done.')
+
+        return [
+            BuildStartEndStatusGenerator(builders=builders, add_logs=wantLogs,
+                                         start_formatter=start_formatter,
+                                         end_formatter=end_formatter)
+        ]
 
     def createStatus(self,
                      change_id,
@@ -204,29 +250,31 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     def send(self, build):
         # the only case when this function is called is when the user derives this class, overrides
         # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
+        yield self._send_impl(build, self._cached_report)
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
         if self.send.__func__ is not GerritVerifyStatusPush.send:
             warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
+            self._cached_report = reports[0]
             yield self.send(build)
         else:
-            yield self._send_impl(build)
+            yield self._send_impl(build, reports[0])
 
     @defer.inlineCallbacks
-    def _send_impl(self, build):
+    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
+        props.master = self.master
+
+        comment = report.get('body', None)
+
         if build['complete']:
             value = self.RESULTS_TABLE.get(build['results'],
                                            self.DEFAULT_RESULT)
-            comment = yield props.render(self._endDescription)
-            duration = self.formatDuration(build['complete_at'] - build[
-                'started_at'])
+            duration = self.formatDuration(build['complete_at'] - build['started_at'])
         else:
             value = 0
-            comment = yield props.render(self._startDescription)
             duration = 'pending'
 
         name = yield props.render(self._verification_name)

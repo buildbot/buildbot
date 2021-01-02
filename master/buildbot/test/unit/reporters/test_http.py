@@ -23,42 +23,11 @@ from buildbot.reporters.http import HttpStatusPushBase
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import BuildDictLookAlike
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
-
-
-class BuildLookAlike:
-
-    """ a class whose instances compares to any build dict that this reporter is supposed to send
-    out"""
-
-    def __init__(self, keys=None, **assertions):
-        self.keys = [
-            'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
-            'buildset', 'complete', 'complete_at', 'masterid', 'number',
-            'parentbuild', 'parentbuilder', 'properties', 'results',
-            'started_at', 'state_string', 'url', 'workerid'
-            ]
-        if keys:
-            self.keys.extend(keys)
-            self.keys.sort()
-        self.assertions = assertions
-
-    def __eq__(self, b):
-        if sorted(b.keys()) != self.keys:
-            return False
-        for k, v in self.assertions.items():
-            if b[k] != v:
-                return False
-        return True
-
-    def __ne__(self, b):
-        return not (self == b)
-
-    def __repr__(self):
-        return "{ any build }"
 
 
 class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin, ConfigErrorsMixin):
@@ -94,8 +63,8 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
     @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
-        self._http.expect("post", "", json=BuildLookAlike(complete=False))
-        self._http.expect("post", "", json=BuildLookAlike(complete=True))
+        self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
         build = yield self.insert_build_new()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
@@ -105,8 +74,8 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
     @defer.inlineCallbacks
     def test_basic_noauth(self):
         yield self.createReporter(auth=None)
-        self._http.expect("post", "", json=BuildLookAlike(complete=False))
-        self._http.expect("post", "", json=BuildLookAlike(complete=True))
+        self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
         build = yield self.insert_build_new()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
@@ -116,34 +85,37 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
     @defer.inlineCallbacks
     def test_header(self):
         yield self.createReporter(headers={'Custom header': 'On'})
-        self._http.expect("post", "", json=BuildLookAlike())
+        self._http.expect("post", "", json=BuildDictLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filtering(self):
-        yield self.createReporter(builders=['foo'])
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            yield self.createReporter(builders=['foo'])
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_filteringPass(self):
-        yield self.createReporter(builders=['Builder0'])
-        self._http.expect("post", "", json=BuildLookAlike())
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            yield self.createReporter(builders=['Builder0'])
+        self._http.expect("post", "", json=BuildDictLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
-        with self.assertRaisesConfigError("builders must be a list or None"):
-            yield self.createReporter(builders='Builder0')
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            with self.assertRaisesConfigError("builders must be a list or None"):
+                yield self.createReporter(builders='Builder0')
 
     @defer.inlineCallbacks
     def test_wantKwargsCheck(self):
-        yield self.createReporter(builders=['Builder0'], wantProperties=True, wantSteps=True,
-                                  wantPreviousBuild=True, wantLogs=True)
-        self._http.expect("post", "", json=BuildLookAlike(
-            keys=['steps', 'prev_build']))
+        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
+            yield self.createReporter(builders=['Builder0'], wantProperties=True, wantSteps=True,
+                                      wantPreviousBuild=True, wantLogs=True)
+        self._http.expect("post", "", json=BuildDictLookAlike(extra_keys=['steps', 'prev_build']))
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
@@ -151,7 +123,7 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
     def http2XX(self, code, content):
         yield self.createReporter()
         self._http.expect('post', '', code=code, content=content,
-                          json=BuildLookAlike())
+                          json=BuildDictLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
@@ -212,8 +184,8 @@ class TestHttpStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase, Repo
     @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
-        self._http.expect("post", "", json=BuildLookAlike(complete=False))
-        self._http.expect("post", "", json=BuildLookAlike(complete=True))
+        self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
 
         build = yield self.insert_build_new()
         with assertProducesWarnings(DeprecatedApiWarning,

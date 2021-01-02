@@ -1,0 +1,1 @@
+The following arguments of ``GerritVerifyStatusPush`` reporter have been deprecated in favor of the list of report generators provided via the ``generators`` argument: ``startDescription``, ``endDescription``, ``builders``.

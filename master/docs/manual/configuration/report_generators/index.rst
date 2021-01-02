@@ -12,6 +12,7 @@ Report Generators
     buildset
     worker
     formatter
+    formatter_function
     formatter_renderable
     formatter_missing_worker
 
@@ -22,6 +23,11 @@ Multiple report generators can be registered to a reporter.
 At this moment, only the following reporters support report generators:
 
  * :bb:reporter:`BitbucketServerPRCommentPush`
+ * :bb:reporter:`BitbucketStatusPush`
+ * :bb:reporter:`GitHubStatusPush`
+ * :bb:reporter:`GitHubCommentPush`
+ * :bb:reporter:`GitLabStatusPush`
+ * :bb:reporter:`HttpStatusPush`
  * :bb:reporter:`MailNotifier`
  * :bb:reporter:`PushjetNotifier`
  * :bb:reporter:`PushoverNotifier`
@@ -44,4 +50,5 @@ The following message formatter classes are provided:
 
  * :ref:`MessageFormatter` (used in ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and ``BuildSetStatusGenerator``)
  * :ref:`MessageFormatterRenderable` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
+ * :ref:`MessageFormatterFunction` (used in ``BuildStatusGenerator`` and ``BuildStartEndStatusGenerator``)
  * :ref:`MessageFormatterMissingWorkers` (used in ``WorkerMissingGenerator``)

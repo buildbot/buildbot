@@ -15,6 +15,8 @@
 
 import textwrap
 
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -30,6 +32,7 @@ from buildbot.reporters import message
 from buildbot.reporters import utils
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.misc import BuildDictLookAlike
 from buildbot.test.util.misc import TestReactorMixin
 
 
@@ -251,6 +254,47 @@ class TestMessageFormatterRenderable(MessageFormatterTestBase):
             'body': 'templ_wrkr/because',
             'type': 'plain',
             'subject': 'subj_wrkr/because',
+        })
+
+
+class TestMessageFormatterFunction(MessageFormatterTestBase):
+    @defer.inlineCallbacks
+    def test_basic(self):
+        function = mock.Mock(side_effect=lambda x: {'key': 'value'})
+        formatter = message.MessageFormatterFunction(function, 'json')
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+
+        function.assert_called_with({
+            'build': BuildDictLookAlike(extra_keys=['prev_build'],
+                                        expected_missing_keys=['parentbuilder', 'buildrequest',
+                                                               'parentbuild'])
+        })
+        self.assertEqual(res, {
+            'body': {'key': 'value'},
+            'type': 'json',
+            'subject': None,
+        })
+
+    @defer.inlineCallbacks
+    def test_renderable(self):
+        function = mock.Mock(side_effect=lambda x: {'key': 'value'})
+
+        def renderable_function(context):
+            return defer.succeed(function(context))
+
+        formatter = message.MessageFormatterFunction(function, 'json')
+
+        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+
+        function.assert_called_with({
+            'build': BuildDictLookAlike(extra_keys=['prev_build'],
+                                        expected_missing_keys=['parentbuilder', 'buildrequest',
+                                                               'parentbuild'])
+        })
+        self.assertEqual(res, {
+            'body': {'key': 'value'},
+            'type': 'json',
+            'subject': None,
         })
 
 
