@@ -286,7 +286,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(controller.starting, False)
 
         # advance the time to the point where we should retry
-        master.reactor.advance(controller.worker.quarantine_initial_timeout)
+        self.reactor.advance(controller.worker.quarantine_initial_timeout)
 
         # If the worker started again after the failure, then the retry logic will have
         # already kicked in to start a new build on this (the only) worker. We check that
@@ -303,10 +303,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(1, RETRY)
 
         # advance the time to the point where we should not retry
-        master.reactor.advance(controller.worker.quarantine_initial_timeout)
+        self.reactor.advance(controller.worker.quarantine_initial_timeout)
         self.assertEqual(controller.starting, False)
         # advance the time to the point where we should retry
-        master.reactor.advance(controller.worker.quarantine_initial_timeout)
+        self.reactor.advance(controller.worker.quarantine_initial_timeout)
         self.assertEqual(controller.starting, True)
 
         controller.auto_start(True)
@@ -574,7 +574,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             ('buildrequests', None, 'unclaimed'))
 
         # We never start the worker, rather timeout it.
-        master.reactor.advance(controller.worker.missing_timeout)
+        self.reactor.advance(controller.worker.missing_timeout)
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(defer.TimeoutError)
 
