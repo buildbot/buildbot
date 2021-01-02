@@ -1234,6 +1234,9 @@ The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH 
 
 Note that the Gerrit event stream is stateless and any events that occur while buildbot is not connected to Gerrit will be lost. See :bb:chsrc:`GerritEventLogPoller` for a stateful change source.
 
+The ``patchset-created`` and ``ref-updated`` events will be deduplicated, that is, if multiple events related to the same revision are received, only the first will be acted upon.
+This allows ``GerritChangeSource`` to be used together with :bb:chsrc:`GerritEventLogPoller`.
+
 The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
 ``gerritserver``

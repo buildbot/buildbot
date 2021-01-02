@@ -163,7 +163,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         return func(properties, event)
 
     @defer.inlineCallbacks
-    def addChange(self, chdict):
+    def addChange(self, event_type, chdict):
         stampdict = {
             "branch": chdict["branch"],
             "revision": chdict["revision"],
@@ -177,7 +177,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         stampid, found_existing = yield(
              self.master.db.sourcestamps.findOrCreateId(**stampdict))
 
-        if found_existing:
+        if found_existing and event_type in ("patchset-created", "ref-updated"):
             if self.debug or True:
                 eventstr = "{}/{} -- {}:{}".format(
                     self.gitBaseURL, chdict["project"], chdict["branch"],
@@ -236,7 +236,7 @@ class GerritChangeSourceBase(base.ChangeSource):
                 patchset=event["patchSet"]["number"]
             )
 
-        yield self.addChange({
+        yield self.addChange(event['type'], {
             'author': _gerrit_user_to_author(event_change["owner"]),
             'project': util.bytes2unicode(event_change["project"]),
             'repository': "{}/{}".format(
