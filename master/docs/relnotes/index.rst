@@ -10,6 +10,59 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.10.0`` ( ``2021-01-02`` )
+======================================
+
+Highlights
+----------
+
+This is the last release in 2.x series.
+Only 2.10.y bugfix releases will follow.
+Upgrading existing Buildbot instances to 3.x will require an upgrade to 2.10.y first and resolving all deprecation warnings.
+Please see :ref:`the documentation on upgrading to 3.0 <3.0_Upgrading>` for more information.
+
+Please submit bug reports for any issues found in new functionality that replaces deprecated functionality to be removed in Buildbot 3.0.
+These bugs will be fixed with extra priority in 2.10.y bugfix releases.
+
+Bug fixes
+---------
+
+- Fixed a bug that caused builds running on latent workers to become unstoppable when an attempt was made to stop them while the latent worker was being substantiated (:issue:`5136`).
+- Fixed a bug that caused the buildmaster to be unable to restart if a latent worker was previously reconfigured during its substantiation.
+- Fixed handling of very long lines in the logs during Buildbot startup (:issue:`5706`).
+- Fixed a bug which prevented polling change sources derived from :py:class:`~buildbot.changes.base.ReconfigurablePollingChangeSource` from working correctly with `/change_hook/poller` (:issue:`5727`)
+
+Improved Documentation
+----------------------
+
+- Corrected the formatting for the code sample in the Docker Tutorial's Multi-master section.
+- Improved the readability of the documentation by conserving horizontal space.
+- Improved the introduction and concepts parts of the documentation.
+
+Features
+--------
+
+- Added build summary tooltip for build bubbles in grid and console views (:issue:`4733`).
+- Added support for custom HTTP headers to ``HttpStatusPush`` reporter (:issue:`5398`).
+- Implemented ``MessageFormatterFunction`` that creates build report text or json by processing full build dictionary.
+- Implemented ``MessageFormatterRenderable`` that creates build report text by rendering build properties onto a renderable.
+- Implemented ``BuildStartEndStatusGenerator`` which ensures that a report is generated for either both build start and end events or neither of them.
+- The ``BitbucketServerCoreAPIStatusPush``, ``BitbucketServerStatusPush``, ``BitbucketStatusPush``, ``GerritVerifyStatusPush``, ``GitHubStatusPush``, ``GitHubCommentPush``, ``GitLabStatusPush`` and ``HttpStatusPush`` reporters now support report generators via the ``generators`` argument.
+- Implemented support for remote submodules when cloning a Git repository.
+
+Deprecations and Removals
+-------------------------
+
+- The following arguments of ``BitbucketServerCoreAPIStatusPush``, ``BitbucketServerStatusPush``, ``GerritVerifyStatusPush``, ``GitHubStatusPush``, ``GitHubCommentPush`` and ``GitLabStatusPush`` reporters have been deprecated in favor of the list of report generators provided via the ``generators`` argument: ``startDescription``, ``endDescription``, ``builders``.
+- The following arguments of ``BitbucketStatusPush`` reporter have been deprecated in favor of the list of report generators provided via the ``generators`` argument: ``builders``.
+- The following arguments of ``HttpStatusPush`` reporter have been deprecated in favor of the list of report generators provided via the ``generators`` argument: ``format_fn``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``.
+- ``HipChatStatusPush`` has been deprecated because the public version of hipchat has been shut down.
+  This reporter will be removed in Buildbot 3.0 unless there is someone who will upgrade the reporter to the new internal APIs present in Buildbot 3.0.
+- Support for passing paths to template files for rendering in message formatters has been deprecated.
+- Buildbot now requires at least the version 0.13 of sqlalchemy-migrate (:issue:`5669`).
+- The ``logfile`` argument of ``ShellArg`` has been deprecated (:issue:`3771`).
+
+
 Buildbot ``2.9.4`` ( ``2020-12-26`` )
 =====================================
 

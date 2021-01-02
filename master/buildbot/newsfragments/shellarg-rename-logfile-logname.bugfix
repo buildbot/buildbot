@@ -1,1 +1,0 @@
-Deprecated ShellArg's ``logfile`` argument over ``logname`` to reflect the actual meaning. (:issue:`3771`)

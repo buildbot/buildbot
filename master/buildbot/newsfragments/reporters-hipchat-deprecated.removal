@@ -1,2 +1,0 @@
-``HipChatStatusPush`` has been deprecated because the public version of hipchat has been shut down.
-This reporter will be removed in Buildbot 3.0 unless there is someone who will upgrade the reporter to the new internal APIs present in Buildbot 3.0.
