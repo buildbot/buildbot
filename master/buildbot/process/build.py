@@ -39,6 +39,7 @@ from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
+from buildbot.worker.latent import AbstractLatentWorker
 
 
 @implementer(interfaces.IBuildControl)
@@ -417,13 +418,21 @@ class Build(properties.PropertiesMixin):
 
     @defer.inlineCallbacks
     def buildPreparationFailure(self, why, state_string):
-        log.err(why, "while " + state_string)
-        self.workerforbuilder.worker.putInQuarantine()
-        if isinstance(why, failure.Failure):
-            yield self.preparation_step.addLogWithFailure(why)
-        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
-                                                          "error while " + state_string)
-        yield self.master.data.updates.finishStep(self.preparation_step.stepid, EXCEPTION, False)
+        if self.stopped:
+            # if self.stopped, then this failure is a LatentWorker's failure to substantiate
+            # which we triggered on purpose in stopBuild()
+            log.msg("worker stopped while " + state_string, why)
+            yield self.master.data.updates.finishStep(self.preparation_step.stepid,
+                                                      CANCELLED, False)
+        else:
+            log.err(why, "while " + state_string)
+            self.workerforbuilder.worker.putInQuarantine()
+            if isinstance(why, failure.Failure):
+                yield self.preparation_step.addLogWithFailure(why)
+            yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                                                            "error while " + state_string)
+            yield self.master.data.updates.finishStep(self.preparation_step.stepid,
+                                                      EXCEPTION, False)
 
     @staticmethod
     def _canAcquireLocks(lockList, workerforbuilder):
@@ -627,6 +636,13 @@ class Build(properties.PropertiesMixin):
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
+        elif not self.conn and isinstance(self.workerforbuilder.worker, AbstractLatentWorker):
+            # if this function can be called (because we appear to be building)
+            # if there is no connection, but we are also not waiting for locks
+            # then we are likely having a LatentWorker which hasn't been substantiated yet
+            # (maybe it couldn't connect to the master?)
+            # and the substantiation needs to be aborted
+            self.workerforbuilder.worker.insubstantiate()
 
     def allStepsDone(self):
         if self.results == FAILURE:
