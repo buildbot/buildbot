@@ -95,9 +95,8 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         self.assertFalse(self.master.running, "master is still running!")
 
     @defer.inlineCallbacks
-    def getMaster(self, config_dict):
+    def setup_master(self, config_dict):
         self.master = yield getMaster(self, self.reactor, config_dict)
-        return self.master
 
     @defer.inlineCallbacks
     def reconfigMaster(self, config_dict):

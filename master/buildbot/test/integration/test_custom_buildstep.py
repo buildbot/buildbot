@@ -180,7 +180,7 @@ class RunSteps(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.getMaster(config_dict)
+        yield self.setup_master(config_dict)
         builder_id = yield self.master.data.updates.findBuilderId('builder')
         return builder_id
 
