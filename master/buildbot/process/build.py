@@ -346,7 +346,9 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'preparing worker')
         try:
-            ready_or_failure = yield workerforbuilder.prepare(self)
+            ready_or_failure = False
+            if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
+                ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
         except Exception:
             ready_or_failure = Failure()
 

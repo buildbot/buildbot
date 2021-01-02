@@ -107,9 +107,7 @@ class AbstractWorkerForBuilder:
         yield self.worker.conn.remotePrint(message="attached")
         return self
 
-    def prepare(self, build):
-        if not self.worker or not self.worker.acquireLocks():
-            return defer.succeed(False)
+    def substantiate_if_needed(self, build):
         return defer.succeed(True)
 
     def ping(self, status=None):
@@ -214,11 +212,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.worker.addWorkerForBuilder(self)
         log.msg("Latent worker {} attached to {}".format(worker.workername, self.builder_name))
 
-    def prepare(self, build):
-        # If we can't lock, then don't bother trying to substantiate
-        if not self.worker or not self.worker.acquireLocks():
-            return defer.succeed(False)
-
+    def substantiate_if_needed(self, build):
         self.state = States.DETACHED
         d = self.substantiate(build)
         return d
