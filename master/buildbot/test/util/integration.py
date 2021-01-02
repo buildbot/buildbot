@@ -104,6 +104,10 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
             self.master.config_loader.config_dict = config_dict
         yield self.master.doReconfig()
 
+    @defer.inlineCallbacks
+    def clean_master_shutdown(self, quick=False):
+        yield self.master.botmaster.cleanShutdown(quickMode=quick, stopReactor=False)
+
     def createLocalWorker(self, name, **kwargs):
         workdir = FilePath(self.mktemp())
         workdir.createDirectory()
