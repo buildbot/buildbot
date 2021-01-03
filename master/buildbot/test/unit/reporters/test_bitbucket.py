@@ -28,8 +28,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin,
@@ -61,16 +59,6 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.bsp.stopService()
-
-    def test_deprecated_arguments(self):
-        service = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            service.checkConfig(Interpolate('key'), Interpolate('secret'), builders=['builder1'])
-
-    def test_deprecated_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            BitbucketStatusPush(Interpolate('key'), Interpolate('secret'), generators=[],
-                                builders=['builder1'])
 
     @defer.inlineCallbacks
     def test_basic(self):
