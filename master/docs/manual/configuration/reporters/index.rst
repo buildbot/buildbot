@@ -19,7 +19,6 @@ Reporters
     github_comment
     github_status
     gitlab_status
-    hipchat_status
     http_status
     irc
     mail_notifier
@@ -63,7 +62,6 @@ The following reporters are available:
  * :bb:reporter:`GitHubCommentPush`
  * :bb:reporter:`GitHubStatusPush`
  * :bb:reporter:`GitLabStatusPush`
- * :bb:reporter:`HipchatStatusPush`
  * :bb:reporter:`HttpStatusPush`
  * :bb:reporter:`IRC`
  * :bb:reporter:`MailNotifier`
