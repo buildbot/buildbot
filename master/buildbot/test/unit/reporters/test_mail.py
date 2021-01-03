@@ -15,7 +15,6 @@
 
 import base64
 import copy
-import sys
 from email import charset
 
 from mock import Mock
@@ -38,9 +37,6 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
-
-py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
-                                    and sys.version_info[1] >= 7)
 
 
 class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,

@@ -85,12 +85,15 @@ For example, if only short emails are desired (e.g., for delivery to phones):
 .. code-block:: python
 
     from buildbot.plugins import reporters
-    mn = reporters.MailNotifier(
-        fromaddr="buildbot@example.org",
-        sendToInterestedUsers=False,
+
+    generator = reporters.BuildStatusGenerator(
         mode=('problem',),
-        extraRecipients=['listaddr@example.org'],
-        messageFormatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
+        message_formatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
+
+    mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                sendToInterestedUsers=False,
+                                extraRecipients=['listaddr@example.org'],
+                                generators=[generator])
 
 Another example of a function delivering a customized html email is given below:
 
@@ -107,13 +110,17 @@ Another example of a function delivering a customized html email is given below:
     <p><b> -- The Buildbot</b></p>
     '''
 
+    generator = reporters.BuildStatusGenerator(
+        mode=('failing',),
+        message_formatter=reporters.MessageFormatter(
+            template=template, template_type='html',
+            wantProperties=True, wantSteps=True))
+
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,
                                 mode=('failing',),
                                 extraRecipients=['listaddr@example.org'],
-                                messageFormatter=reporters.MessageFormatter(
-                                    template=template, template_type='html',
-                                    wantProperties=True, wantSteps=True))
+                                generators=[generator])
 
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
 
@@ -139,99 +146,6 @@ MailNotifier arguments
     (list)
     A list of instances of ``IReportGenerator`` which defines the conditions of when the messages will be sent and contents of them.
     See :ref:`Report-Generators` for more information.
-
-``subject``
-    (string, deprecated).
-    A string to be used as the subject line of the message.
-    ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
-
-``mode``
-    (list of strings or string, deprecated).
-    Defines the cases when a message should be sent.
-    There are two strings which can be used as shortcuts instead of the full lists.
-
-    The possible shortcuts are:
-
-    ``all``
-        Always send mail about builds.
-        Equivalent to (``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``).
-
-    ``warnings``
-        Equivalent to (``warnings``, ``failing``).
-
-    Set these shortcuts as actual strings in the configuration:
-
-    .. code-block:: python
-
-        from buildbot.plugins import reporters
-        mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
-                                    mode="warnings")
-        c['services'].append(mn)
-
-    If the argument is list of strings, it must be a combination of:
-
-    ``cancelled``
-        Send mail about builds which were cancelled.
-
-    ``change``
-        Send mail about builds which change status.
-
-    ``failing``
-        Send mail about builds which fail.
-
-    ``passing``
-        Send mail about builds which succeed.
-
-    ``problem``
-        Send mail about a build which failed when the previous build has passed.
-
-    ``warnings``
-        Send mail about builds which generate warnings.
-
-    ``exception``
-        Send mail about builds which generate exceptions.
-
-    Defaults to (``failing``, ``passing``, ``warnings``).
-
-``builders``
-    (list of strings, deprecated).
-    A list of builder names for which mail should be sent.
-    Defaults to ``None`` (send mail for all builds).
-    Use either builders or tags, but not both.
-
-``tags``
-    (list of strings, deprecated).
-    A list of tag names to serve status information for.
-    Defaults to ``None`` (all tags).
-    Use either builders or tags, but not both.
-
-``schedulers``
-    (list of strings, deprecated).
-    A list of scheduler names to serve status information for.
-    Defaults to ``None`` (all schedulers).
-
-``branches``
-    (list of strings, deprecated).
-    A list of branch names to serve status information for.
-    Defaults to ``None`` (all branches).
-
-``addLogs``
-    (boolean, deprecated).
-    If ``True``, include all build logs as attachments to the messages.
-    These can be quite large.
-    This can also be set to a list of log names, to send a subset of the logs.
-    Defaults to ``False``.
-
-``addPatch``
-    (boolean, deprecated).
-    If ``True``, include the patch content if a patch was present.
-    Patches are usually used on a :class:`Try` server.
-    Defaults to ``True``.
-
-``buildSetSummary``
-    (boolean, deprecated).
-    If ``True``, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.
-    Defaults to ``False``.
 
 ``relayhost``
     (string, deprecated).
@@ -279,10 +193,6 @@ MailNotifier arguments
 
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
 
-``messageFormatter``
-    (optional, deprecated)
-    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom mail message.
-
 ``extraHeaders``
     (dictionary).
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
@@ -291,10 +201,6 @@ MailNotifier arguments
 ``watchedWorkers``
     This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
     The value of ``watchedWorkers`` can also be set to *all* (default) or ``None``. You also need to specify email address to which the notification is sent in the worker configuration.
-
-``messageFormatterMissingWorker``
-    (optional, deprecated)
-    This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
 
 ``dumpMailsToLog``
     If set to ``True``, all completely formatted mails will be dumped to the log before being sent. This can be useful to debug problems with your mail provider.
