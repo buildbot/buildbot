@@ -3,7 +3,7 @@ ReporterBase
 
 .. py:currentmodule:: buildbot.reporters.base
 
-.. py:class:: ReporterBase(generators=None)
+.. py:class:: ReporterBase(generators)
 
     :class:`ReporterBase` is a base class used to implement various reporters.
     It accepts a list of :ref:`report generators<Report-Generators>` which define what messages to issue on what events.
@@ -11,7 +11,6 @@ ReporterBase
     The ``sendMessage`` function should be implemented by deriving classes.
 
     :param generators:
-        (optional until Buildbot 3.0 is released, then mandatory)
         (a list of report generator instances)
         A list of report generators to manage.
 
