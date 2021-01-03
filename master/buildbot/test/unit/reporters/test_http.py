@@ -25,8 +25,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import BuildDictLookAlike
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin, ConfigErrorsMixin):
@@ -85,36 +83,6 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
     def test_header(self):
         yield self.createReporter(headers={'Custom header': 'On'})
         self._http.expect("post", "", json=BuildDictLookAlike())
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-    @defer.inlineCallbacks
-    def test_filtering(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            yield self.createReporter(builders=['foo'])
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-    @defer.inlineCallbacks
-    def test_filteringPass(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            yield self.createReporter(builders=['Builder0'])
-        self._http.expect("post", "", json=BuildDictLookAlike())
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-    @defer.inlineCallbacks
-    def test_builderTypeCheck(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            with self.assertRaisesConfigError("builders must be a list or None"):
-                yield self.createReporter(builders='Builder0')
-
-    @defer.inlineCallbacks
-    def test_wantKwargsCheck(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            yield self.createReporter(builders=['Builder0'], wantProperties=True, wantSteps=True,
-                                      wantPreviousBuild=True, wantLogs=True)
-        self._http.expect("post", "", json=BuildDictLookAlike(extra_keys=['steps', 'prev_build']))
         build = yield self.insert_build_finished(SUCCESS)
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 

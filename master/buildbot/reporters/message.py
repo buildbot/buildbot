@@ -193,26 +193,6 @@ class MessageFormatterEmpty(MessageFormatterBase):
         }
 
 
-class DeprecatedMessageFormatterBuildJson(MessageFormatterBase):
-
-    template_type = 'json'
-
-    def __init__(self, format_fn, **kwargs):
-        super().__init__(**kwargs)
-        self.format_fn = format_fn
-
-    @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
-        msgdict = yield self.render_message_dict(master, {'build': build})
-        return msgdict
-
-    def render_message_body(self, context):
-        return self.format_fn(context['build'])
-
-    def render_message_subject(self, context):
-        return None
-
-
 class MessageFormatterFunction(MessageFormatterBase):
 
     def __init__(self, function, template_type, **kwargs):
