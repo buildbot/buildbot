@@ -16,24 +16,18 @@
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot import config
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import MessageFormatterFunction
 from buildbot.util import httpclientservice
-from buildbot.warnings import warn_deprecated
 
 
 class HttpStatusPush(ReporterBase):
     name = "HttpStatusPush"
-    secrets = ['user', 'password', "auth"]
+    secrets = ["auth"]
 
-    def checkConfig(self, serverUrl, user=None, password=None, auth=None, headers=None,
+    def checkConfig(self, serverUrl, auth=None, headers=None,
                     debug=None, verify=None, generators=None, **kwargs):
-        if user is not None and auth is not None:
-            config.error("Only one of user/password or auth must be given")
-        if user is not None:
-            warn_deprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
 
         if generators is None:
             generators = self._create_default_generators()
@@ -42,13 +36,11 @@ class HttpStatusPush(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, serverUrl, user=None, password=None, auth=None, headers=None,
+    def reconfigService(self, serverUrl, auth=None, headers=None,
                         debug=None, verify=None, generators=None,
                         **kwargs):
         self.debug = debug
         self.verify = verify
-        if user is not None:
-            auth = (user, password)
 
         if generators is None:
             generators = self._create_default_generators()
