@@ -298,11 +298,7 @@ class MessageFormatter(MessageFormatterBaseJinja):
 
     compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
 
-    def __init__(self, template_name=None, **kwargs):
-
-        if template_name is not None:
-            warn_deprecated('0.9.1', "template_name is deprecated, supply the template as text")
-            kwargs['template_filename'] = template_name
+    def __init__(self, **kwargs):
         if 'template_filename' in kwargs:
             warn_deprecated('2.10.0',
                             "template_filename is deprecated, supply the template as text")
