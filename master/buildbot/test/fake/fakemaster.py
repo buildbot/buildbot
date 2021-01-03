@@ -14,17 +14,14 @@
 # Copyright Buildbot Team Members
 
 
-import os
 import weakref
 
 import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implementer
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedata
@@ -69,14 +66,6 @@ class FakeStatus(service.BuildbotService):
     name = "status"
     lastBuilderStatus = None
 
-    def builderAdded(self, name, basedir, tags=None, description=None):
-        bs = FakeBuilderStatus(self.master)
-        self.lastBuilderStatus = bs
-        return bs
-
-    def getBuilderNames(self):
-        return []
-
     def getWorkerNames(self):
         return []
 
@@ -105,41 +94,13 @@ class FakeStatus(service.BuildbotService):
         return "h://bb.me"
 
 
-@implementer(interfaces.IBuilderStatus)
-class FakeBuilderStatus:
+class FakeBuilder:
 
     def __init__(self, master=None, buildername="Builder"):
         if master:
             self.master = master
             self.botmaster = master.botmaster
-            self.basedir = os.path.join(master.basedir, 'bldr')
-        self.lastBuildStatus = None
-        self._tags = None
         self.name = buildername
-
-    def setDescription(self, description):
-        self._description = description
-
-    def getDescription(self):
-        return self._description
-
-    def getTags(self):
-        return self._tags
-
-    def setTags(self, tags):
-        self._tags = tags
-
-    def matchesAnyTag(self, tags):
-        return set(self._tags) & set(tags)
-
-    def setWorkernames(self, names):
-        pass
-
-    def setCacheSize(self, size):
-        pass
-
-    def setBigState(self, state):
-        pass
 
 
 class FakeLogRotation:

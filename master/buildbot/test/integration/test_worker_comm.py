@@ -16,8 +16,6 @@
 
 import os
 
-import mock
-
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -117,10 +115,6 @@ class FakeWorkerWorker(pb.Referenceable):
 
 
 class FakeBuilder(builder.Builder):
-
-    def __init__(self, name):
-        super().__init__(name)
-        self.builder_status = mock.Mock()
 
     def attached(self, worker, commands):
         return defer.succeed(None)

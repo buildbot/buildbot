@@ -28,13 +28,7 @@ class StatusReceiverBase:
     def requestSubmitted(self, request):
         pass
 
-    def requestCancelled(self, builder, request):
-        pass
-
     def buildsetSubmitted(self, buildset):
-        pass
-
-    def builderAdded(self, builderName, builder):
         pass
 
     def builderChangedState(self, builderName, state):

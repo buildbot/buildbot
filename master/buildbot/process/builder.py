@@ -76,7 +76,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.workers = []
 
         self.config = None
-        self.builder_status = None
 
         # Tracks config version for locks
         self.config_version = None
@@ -90,14 +89,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 break
         assert found_config, "no config found for builder '{}'".format(self.name)
 
-        # set up a builder status object on the first reconfig
-        if not self.builder_status:
-            self.builder_status = self.master.status.builderAdded(
-                name=builder_config.name,
-                basedir=builder_config.builddir,
-                tags=builder_config.tags,
-                description=builder_config.description)
-
         self.config = builder_config
         self.config_version = self.master.config_version
 
@@ -109,11 +100,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         yield self.master.data.updates.updateBuilderInfo(builderid,
                                                          builder_config.description,
                                                          builder_config.tags)
-
-        self.builder_status.setDescription(builder_config.description)
-        self.builder_status.setTags(builder_config.tags)
-        self.builder_status.setWorkernames(self.config.workernames)
-        self.builder_status.setCacheSize(new_config.caches['Builds'])
 
         # if we have any workers attached which are no longer configured,
         # drop them.
@@ -490,7 +476,7 @@ class BuilderControl:
             return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
         for w in self.original.workers:
-            dl.append(w.ping(self.original.builder_status))
+            dl.append(w.ping())
         d = defer.DeferredList(dl)
         d.addCallback(self._gatherPingResults)
         return d

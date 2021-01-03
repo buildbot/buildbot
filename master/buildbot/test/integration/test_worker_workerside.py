@@ -17,8 +17,6 @@ import shutil
 import tempfile
 import time
 
-import mock
-
 from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -46,10 +44,6 @@ DEFAULT_PORT = os.environ.get("BUILDBOT_TEST_DEFAULT_PORT", "0")
 
 
 class FakeBuilder(builder.Builder):
-
-    def __init__(self, name):
-        super().__init__(name)
-        self.builder_status = mock.Mock()
 
     def attached(self, worker, commands):
         return defer.succeed(None)

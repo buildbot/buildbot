@@ -36,7 +36,7 @@ class FakeWorkerStatus(properties.PropertiesMixin):
 class FakeBuild(properties.PropertiesMixin):
 
     def __init__(self, props=None, master=None):
-        self.builder = fakemaster.FakeBuilderStatus(master)
+        self.builder = fakemaster.FakeBuilder(master)
         self.workerforbuilder = mock.Mock(
             spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)

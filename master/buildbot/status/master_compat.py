@@ -13,18 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import interfaces
-from buildbot import util
 from buildbot.changes import changes
-from buildbot.status import builder_compat
 from buildbot.util import bbcollections
-from buildbot.util import bytes2unicode
 from buildbot.util import service
 
 
@@ -157,9 +153,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             return prefix
         if interfaces.ISchedulerStatus.providedBy(thing):
             pass
-        if interfaces.IBuilderStatus.providedBy(thing):
-            bldr = thing
-            return prefix + "#builders/{}".format(urlquote(bldr.getName(), safe=''))
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
@@ -206,29 +199,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getSchedulers(self):
         return self.master.allSchedulers()
 
-    def getBuilderNames(self, tags=None, categories=None):
-        if categories is not None:
-            # Categories is deprecated; pretend they said "tags".
-            tags = categories
-
-        if tags is None:
-            # don't let them break it
-            return util.naturalSort(self.botmaster.builderNames)
-
-        ret = []
-        # respect addition order
-        for name in self.botmaster.builderNames:
-            bldr = self.getBuilder(name)
-            if bldr.matchesAnyTag(tags):
-                ret.append(name)
-        return util.naturalSort(ret)
-
-    def getBuilder(self, name):
-        """
-        @rtype: L{BuilderStatus}
-        """
-        return self.botmaster.builders[name].builder_status
-
     def getWorkerNames(self):
         return list(self.workers.workers.items())
 
@@ -237,34 +207,9 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def subscribe(self, target):
         self.watchers.append(target)
-        for name in self.botmaster.builderNames:
-            self.announceNewBuilder(target, name, self.getBuilder(name))
 
     def unsubscribe(self, target):
         self.watchers.remove(target)
-
-    # methods called by upstream objects
-    def announceNewBuilder(self, target, name, builder_status):
-        t = target.builderAdded(name, builder_status)
-        if t:
-            builder_status.subscribe(t)
-
-    def builderAdded(self, name, basedir, tags=None, description=None):
-        """
-        @rtype: L{BuilderStatus}
-        """
-        builder_status = builder_compat.BuilderStatus(name, tags, self.master,
-                                                      description)
-        builder_status.setTags(tags)
-        builder_status.description = description
-        builder_status.master = self.master
-        builder_status.basedir = os.path.join(bytes2unicode(self.basedir),
-                                              bytes2unicode(basedir))
-        builder_status.name = name  # it might have been updated
-        builder_status.status = self
-
-        builder_status.setBigState("offline")
-        return builder_status
 
     def builderRemoved(self, name):
         for t in self.watchers:
@@ -340,7 +285,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return d
 
     def _builder_subscribe(self, buildername, watcher):
-        # should get requestSubmitted and requestCancelled
         self._builder_observers.add(buildername, watcher)
 
     def _builder_unsubscribe(self, buildername, watcher):

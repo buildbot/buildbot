@@ -381,13 +381,6 @@ class IStatus(Interface):
         """Return a list of ISchedulerStatus objects for all
         currently-registered Schedulers."""
 
-    def getBuilderNames(tags=None):
-        """Return a list of the names of all current Builders."""
-
-    def getBuilder(name):
-        """Return the IBuilderStatus object for a given named Builder. Raises
-        KeyError if there is no Builder by that name."""
-
     def getWorkerNames():
         """Return a list of worker names, suitable for passing to
         getWorker()."""
@@ -439,58 +432,6 @@ class ISchedulerStatus(Interface):
         """Return an IBuildSet for all BuildSets that are pending. These
         BuildSets are waiting for their tree-stable-timers to expire."""
         # TODO: this is not implemented anywhere
-
-
-class IBuilderStatus(Interface):
-
-    def getName():
-        """Return the name of this Builder (a string)."""
-
-    def getDescription():
-        """Return the description of this builder (a string)."""
-
-    def getState():
-        # TODO: this isn't nearly as meaningful as it used to be
-        """Return a tuple (state, builds) for this Builder. 'state' is the
-        so-called 'big-status', indicating overall status (as opposed to
-        which step is currently running). It is a string, one of 'offline',
-        'idle', or 'building'. 'builds' is a list of IBuildStatus objects
-        (possibly empty) representing the currently active builds."""
-
-    def getWorkers():
-        """Return a list of IWorkerStatus objects for the workers that are
-        used by this builder."""
-
-    def getLastFinishedBuild():
-        """Return the IBuildStatus object representing the last finished
-        build, which may be None if the builder has not yet finished any
-        builds."""
-
-    def getBuild(number):
-        """Return an IBuildStatus object for a historical build. Each build
-        is numbered (starting at 0 when the Builder is first added),
-        getBuild(n) will retrieve the Nth such build. getBuild(-n) will
-        retrieve a recent build, with -1 being the most recent build
-        started. If the Builder is idle, this will be the same as
-        getLastFinishedBuild(). If the Builder is active, it will be an
-        unfinished build. This method will return None if the build is no
-        longer available. Older builds are likely to have less information
-        stored: Logs are the first to go, then Steps."""
-
-    def getEvent(number):
-        """Return an IStatusEvent object for a recent Event. Builders
-        connecting and disconnecting are events, as are ping attempts.
-        getEvent(-1) will return the most recent event. Events are numbered,
-        but it probably doesn't make sense to ever do getEvent(+n)."""
-
-    def subscribe(receiver):
-        """Register an IStatusReceiver to receive new status events. The
-        receiver will be given builderChangedState, buildStarted, and
-        buildFinished messages."""
-
-    def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messages will be
-        delivered."""
 
 
 class IEventSource(Interface):
@@ -588,24 +529,6 @@ class IStatusReceiver(IPlugin):
         """A new BuildRequest has been submitted to the buildmaster.
 
         @type request: implementer of L{IBuildRequestStatus}
-        """
-
-    def requestCancelled(builder, request):
-        """A BuildRequest has been cancelled on the given Builder.
-
-        @type builder: L{buildbot.status.builder.BuilderStatus}
-        @type request: implementer of L{IBuildRequestStatus}
-        """
-
-    def builderAdded(builderName, builder):
-        """
-        A new Builder has just been added. This method may return an
-        IStatusReceiver (probably 'self') which will be subscribed to receive
-        builderChangedState and buildStarted/Finished events.
-
-        @type  builderName: string
-        @type  builder:     L{buildbot.status.builder.BuilderStatus}
-        @rtype: implementer of L{IStatusReceiver}
         """
 
     def builderChangedState(builderName, state):
