@@ -150,7 +150,6 @@ setup_args = {
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
     ],
 
@@ -447,10 +446,10 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-py_35 = sys.version_info[0] > 3 or (
-    sys.version_info[0] == 3 and sys.version_info[1] >= 5)
-if not py_35:
-    raise RuntimeError("Buildbot master requires at least Python-3.5")
+py_36 = sys.version_info[0] > 3 or (
+    sys.version_info[0] == 3 and sys.version_info[1] >= 6)
+if not py_36:
+    raise RuntimeError("Buildbot master requires at least Python-3.6")
 
 # pip<1.4 doesn't have the --pre flag, and will thus attempt to install alpha
 # and beta versions of Buildbot.  Prevent that from happening.

@@ -16,7 +16,6 @@
 
 import os
 import sys
-import textwrap
 
 from twisted.internet import protocol
 from twisted.internet import reactor

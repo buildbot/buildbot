@@ -108,7 +108,7 @@ warnings.filterwarnings('ignore', r".*Use 'list\(elem\)' or iteration over elem 
 if sys.version_info[0] >= 3 and "pg8000" in os.getenv("BUILDBOT_TEST_DB_URL", ""):
     warnings.filterwarnings('ignore', ".*unclosed .*socket", ResourceWarning)
 
-# Python 3.5 on CircleCI shows this warning
+# Python 3.5-3.8 shows this warning
 warnings.filterwarnings('ignore', ".*the imp module is deprecated in favour of importlib*")
 
 # sqlalchemy-migrate uses deprecated api from sqlalchemy https://review.openstack.org/#/c/648072/

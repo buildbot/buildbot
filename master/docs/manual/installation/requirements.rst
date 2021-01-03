@@ -12,7 +12,7 @@ At a bare minimum, you'll need the following for both the buildmaster and a work
 
 Python: https://www.python.org
 
-  Buildbot master works with Python-3.5+.
+  Buildbot master works with Python-3.6+.
   Buildbot worker works with Python 2.7, or Python 3.5+.
 
   .. note::
