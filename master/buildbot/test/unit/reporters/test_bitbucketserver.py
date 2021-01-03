@@ -31,9 +31,11 @@ from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import BitbucketServerCoreAPIStatusPush
 from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
 from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -104,17 +106,6 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
-    def test_deprecated_generators(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            BitbucketServerStatusPush("serv", Interpolate("username"), Interpolate("passwd"),
-                                      startDescription=Interpolate('start'),
-                                      endDescription=Interpolate('end'))
-
-    def test_deprecated_args_and_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            BitbucketServerStatusPush("serv", Interpolate("username"), Interpolate("passwd"),
-                                      generators=[], builders=['builder1'])
-
     @defer.inlineCallbacks
     def test_basic(self):
         self.setupReporter()
@@ -123,9 +114,12 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
 
     @defer.inlineCallbacks
     def test_setting_options(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            self.setupReporter(statusName='Build', startDescription='Build started.',
-                               endDescription='Build finished.')
+        generator = BuildStartEndStatusGenerator(
+            start_formatter=MessageFormatterRenderable('Build started.'),
+            end_formatter=MessageFormatterRenderable('Build finished.')
+        )
+
+        self.setupReporter(statusName='Build', generators=[generator])
         build = yield self.insert_build_finished(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
