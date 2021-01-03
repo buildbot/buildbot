@@ -28,6 +28,8 @@ from buildbot.process.properties import Property
 from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
+from buildbot.reporters.utils import getURLForBuild
+from buildbot.reporters.utils import getURLForBuildrequest
 
 
 class Trigger(BuildStep):
@@ -232,7 +234,7 @@ class Trigger(BuildStep):
                             builderDict = yield self.master.data.get(("builders", builderid))
                             builderNames[builderid] = builderDict["name"]
                         num = build['number']
-                        url = self.master.status.getURLForBuild(builderid, num)
+                        url = getURLForBuild(self.master, builderid, num)
                         yield self.addURL("{}: {} #{}".format(statusToString(build["results"]),
                                                               builderNames[builderid], num),
                                           url)
@@ -311,7 +313,7 @@ class Trigger(BuildStep):
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from
                 # the beginning
-                url = self.master.status.getURLForBuildrequest(brid)
+                url = getURLForBuildrequest(self.master, brid)
                 yield self.addURL("{} #{}".format(sch.name, brid), url)
                 # No yield since we let this happen as the builds complete
                 self._add_results(brid)
