@@ -53,14 +53,12 @@ if parse_version(mock.__version__) < parse_version("0.8"):
 with assertProducesWarnings(DeprecatedApiWarning,
                             messages_patterns=[
                                 r" buildbot\.status\.base has been deprecated",
-                                r" buildbot\.status\.buildrequest has been deprecated",
                                 r" buildbot\.status\.event has been deprecated",
                                 r" buildbot\.status\.buildset has been deprecated",
                                 r" buildbot\.status\.master has been deprecated",
                                 r" buildbot\.status\.worker has been deprecated",
                             ]):
     import buildbot.status.base as _  # noqa
-    import buildbot.status.buildrequest as _  # noqa
     import buildbot.status.event as _  # noqa
     import buildbot.status.buildset as _  # noqa
     import buildbot.status.master as _  # noqa

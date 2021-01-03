@@ -19,7 +19,6 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import resultspec
-from buildbot.status.buildrequest_compat import BuildRequestStatus
 
 
 @implementer(interfaces.IBuildSetStatus)
@@ -46,18 +45,7 @@ class BuildSetStatus:
         return self.bsdict['complete']
 
     def getBuilderNamesAndBuildRequests(self):
-        # returns a Deferred; undocumented method that may be removed
-        # without warning
-        d = self.master.data.get(('buildrequests', ),
-                                 filters=[resultspec.Filter('buildsetid', 'eq', [self.id])])
-
-        @d.addCallback
-        def get_objects(brdicts):
-            return {
-                brd['buildername']: BuildRequestStatus(brd['buildername'],
-                                                       brd['brid'], self.status)
-                for brd in brdicts}
-        return d
+        return defer.succeed([])
 
     def getBuilderNames(self):
         d = self.master.data.get(('buildrequests', ),

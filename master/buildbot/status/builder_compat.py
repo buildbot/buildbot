@@ -22,7 +22,6 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
-from buildbot.status.buildrequest_compat import BuildRequestStatus
 from buildbot.status.event_compat import Event
 from buildbot.util.lru import LRUCache
 
@@ -113,21 +112,6 @@ class BuilderStatus(styles.Versioned):
 
     def getWorkers(self):
         return [self.status.getWorker(name) for name in self.workernames]
-
-    def getPendingBuildRequestStatuses(self):
-        # just assert 0 here. According to dustin the whole class will go away
-        # soon.
-        assert 0
-        db = self.status.master.db
-        d = db.buildrequests.getBuildRequests(claimed=False,
-                                              buildername=self.name)
-
-        @d.addCallback
-        def make_statuses(brdicts):
-            return [BuildRequestStatus(self.name, brdict['brid'],
-                                       self.status, brdict=brdict)
-                    for brdict in brdicts]
-        return d
 
     def getLastFinishedBuild(self):
         b = self.getBuild(-1)
@@ -280,17 +264,6 @@ class BuilderStatus(styles.Versioned):
             'pendingBuilds': 0
         }
         return result
-
-    def asDict_async(self):
-        """Just like L{asDict}, but with a nonzero pendingBuilds."""
-        result = self.asDict()
-        d = self.getPendingBuildRequestStatuses()
-
-        @d.addCallback
-        def combine(statuses):
-            result['pendingBuilds'] = len(statuses)
-            return result
-        return d
 
     def getMetrics(self):
         return self.botmaster.parent.metrics

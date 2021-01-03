@@ -24,7 +24,6 @@ from buildbot import interfaces
 from buildbot import util
 from buildbot.changes import changes
 from buildbot.status import builder_compat
-from buildbot.status import buildrequest_compat
 from buildbot.status import buildset_compat
 from buildbot.util import bbcollections
 from buildbot.util import bytes2unicode
@@ -311,21 +310,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if hasattr(t, 'changeAdded'):
                 t.changeAdded(change)
 
-    @defer.inlineCallbacks
     def br_consumer_cb(self, key, msg):
-        builderid = msg['builderid']
-        buildername = None
-        # convert builderid to buildername
-        for b in self.botmaster.builders.values():
-            if builderid == (yield b.getBuilderId()):
-                buildername = b.name
-                break
-        if buildername in self._builder_observers:
-            brs = buildrequest_compat.BuildRequestStatus(buildername,
-                                                         msg['buildrequestid'], self)
-            for observer in self._builder_observers[buildername]:
-                if hasattr(observer, 'requestSubmitted'):
-                    eventually(observer.requestSubmitted, brs)
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def change_consumer_cb(self, key, msg):

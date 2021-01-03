@@ -455,43 +455,6 @@ class IBuildSetStatus(Interface):
         yet"""
 
 
-class IBuildRequestStatus(Interface):
-
-    """I represent a request to build a particular set of source code on a
-    particular Builder. These requests may be merged by the time they are
-    finally turned into a Build."""
-
-    def getSourceStamp():
-        """
-        Get a SourceStamp object which can be used to re-create the source tree
-        that this build used.  This method will return an absolute SourceStamp
-        if possible, and its results may change as the build progresses.
-        Specifically, a "HEAD" build may later be more accurately specified by
-        an absolute SourceStamp with the specific revision information.
-
-        This method will return None if the source information is no longer
-        available.
-
-        @returns: SourceStamp via Deferred
-        """
-
-    def subscribe(observer):
-        """Register a callable that will be invoked (with a single
-        IBuildStatus object) for each Build that is created to satisfy this
-        request. There may be multiple Builds created in an attempt to handle
-        the request: they may be interrupted by the user or abandoned due to
-        a lost worker. The last Build (the one which actually gets to run to
-        completion) is said to 'satisfy' the BuildRequest. The observer will
-        be called once for each of these Builds, both old and new."""
-
-    def unsubscribe(observer):
-        """Unregister the callable that was registered with subscribe()."""
-
-    def getSubmitTime():
-        """Return the time when this request was submitted.  Returns a
-        Deferred."""
-
-
 class IWorkerStatus(Interface):
 
     def getName():
@@ -541,14 +504,6 @@ class IBuilderStatus(Interface):
     def getWorkers():
         """Return a list of IWorkerStatus objects for the workers that are
         used by this builder."""
-
-    def getPendingBuildRequestStatuses():
-        """
-        Get a L{IBuildRequestStatus} implementations for all unclaimed build
-        requests.
-
-        @returns: list of objects via Deferred
-        """
 
     def getLastFinishedBuild():
         """Return the IBuildStatus object representing the last finished

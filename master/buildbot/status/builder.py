@@ -23,7 +23,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import worst_status
 from buildbot.status.builder_compat import BuilderStatus
-from buildbot.status.buildrequest_compat import BuildRequestStatus
 from buildbot.status.buildset_compat import BuildSetStatus
 from buildbot.status.event_compat import Event
 from buildbot.status.master_compat import Status
@@ -35,7 +34,6 @@ from buildbot.warnings import warn_deprecated
 _hush_pyflakes = [
     BuilderStatus,
     Status,
-    BuildRequestStatus,
     BuildSetStatus,
     Event,
     SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED,

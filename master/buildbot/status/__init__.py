@@ -1,5 +1,4 @@
 from buildbot.status import builder_compat
-from buildbot.status import buildrequest_compat
 from buildbot.status import buildset_compat
 from buildbot.status import master_compat
 
@@ -7,4 +6,3 @@ from buildbot.status import master_compat
 # circular module references among the status modules
 builder_compat.BuildSetStatus = buildset_compat.BuildSetStatus
 builder_compat.Status = master_compat.Status
-builder_compat.BuildRequestStatus = buildrequest_compat.BuildRequestStatus
