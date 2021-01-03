@@ -42,17 +42,3 @@ The following parameters are accepted by this class:
 
 ``otherParams``
     Other parameters send to Pushover API. Check https://pushover.net/api/ for their list.
-
-Additionally, the following deprecated parameters are supported.
-They work in the same way as in the ``MailNotifier``, see above for their documentation.
-
- * ``subject``
- * ``mode``
- * ``builders``
- * ``tags``
- * ``schedulers``
- * ``branches``
- * ``buildSetSummary``
- * ``messageFormatter``
- * ``watchedWorkers`` (differently from ``MailNotifier``, the default is ``None``)
- * ``messageFormatterMissingWorker``
