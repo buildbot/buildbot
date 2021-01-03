@@ -49,12 +49,11 @@ if parse_version(mock.__version__) < parse_version("0.8"):
 # After the deprecated API has been removed, leave at least one instance of the import in a
 # commented state as reference.
 
-
-with assertProducesWarnings(DeprecatedApiWarning,
-                            messages_patterns=[
-                                r" buildbot\.status\.base has been deprecated",
-                            ]):
-    import buildbot.status.base as _  # noqa
+# with assertProducesWarnings(DeprecatedApiWarning,
+#                             messages_patterns=[
+#                                 r" buildbot\.status\.base has been deprecated",
+#                             ]):
+#     import buildbot.status.base as _  # noqa
 
 # All deprecated modules should be loaded, consider future warnings in tests as errors.
 # In order to not pollute the test outputs,

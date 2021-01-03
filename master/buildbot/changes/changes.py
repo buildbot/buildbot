@@ -18,15 +18,12 @@ import time
 
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implementer
 
-from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.util import datetime2epoch
 
 
-@implementer(interfaces.IStatusEvent)
 class Change:
 
     """I represent a single change to the source tree. This may involve several

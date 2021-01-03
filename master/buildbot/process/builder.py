@@ -19,7 +19,6 @@ import weakref
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import resultspec
@@ -437,49 +436,3 @@ class Builder(util_service.ReconfigurableServiceMixin,
     @staticmethod
     def _defaultCollapseRequestFn(master, builder, brdict1, brdict2):
         return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
-
-
-@implementer(interfaces.IBuilderControl)
-class BuilderControl:
-
-    def __init__(self, builder, control):
-        self.original = builder
-        self.control = control
-
-    @defer.inlineCallbacks
-    def getPendingBuildRequestControls(self):
-        master = self.original.master
-        # TODO Use DATA API
-        brdicts = yield master.db.buildrequests.getBuildRequests(
-            buildername=self.original.name,
-            claimed=False)
-
-        # convert those into BuildRequest objects
-        buildrequests = []
-        for brdict in brdicts:
-            br = yield buildrequest.BuildRequest.fromBrdict(
-                self.control.master, brdict)
-            buildrequests.append(br)
-
-        # and return the corresponding control objects
-        return [buildrequest.BuildRequestControl(self.original, r)
-            for r in buildrequests]
-
-    def getBuild(self, number):
-        return self.original.getBuild(number)
-
-    def ping(self):
-        if not self.original.workers:
-            return defer.succeed(False)  # interfaces.NoWorkerError
-        dl = []
-        for w in self.original.workers:
-            dl.append(w.ping())
-        d = defer.DeferredList(dl)
-        d.addCallback(self._gatherPingResults)
-        return d
-
-    def _gatherPingResults(self, res):
-        for ignored, success in res:
-            if not success:
-                return False
-        return True

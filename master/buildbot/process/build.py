@@ -21,7 +21,6 @@ from twisted.internet import error
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.failure import Failure
-from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.process import buildstep
@@ -41,7 +40,6 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 
-@implementer(interfaces.IBuildControl)
 class Build(properties.PropertiesMixin):
 
     """I represent a single build by a single worker. Specialized Builders can
@@ -762,6 +760,3 @@ class Build(properties.PropertiesMixin):
 
     def getWorkerInfo(self):
         return self.workerforbuilder.worker.info
-
-    # IBuildControl
-    # stopBuild is defined earlier
