@@ -54,11 +54,9 @@ with assertProducesWarnings(DeprecatedApiWarning,
                             messages_patterns=[
                                 r" buildbot\.status\.base has been deprecated",
                                 r" buildbot\.status\.master has been deprecated",
-                                r" buildbot\.status\.worker has been deprecated",
                             ]):
     import buildbot.status.base as _  # noqa
     import buildbot.status.master as _  # noqa
-    import buildbot.status.worker as _  # noqa
 
 # All deprecated modules should be loaded, consider future warnings in tests as errors.
 # In order to not pollute the test outputs,

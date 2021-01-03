@@ -169,10 +169,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 urlquote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urlquote(step.getName(), safe=''))
-        # IWorkerStatus
-        if interfaces.IWorkerStatus.providedBy(thing):
-            worker = thing
-            return prefix + "#workers/{}".format(urlquote(worker.getName(), safe=''))
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
@@ -201,9 +197,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getWorkerNames(self):
         return list(self.workers.workers.items())
-
-    def getWorker(self, workername):
-        return self.workers.workers[workername].worker_status
 
     def subscribe(self, target):
         self.watchers.append(target)

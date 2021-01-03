@@ -385,9 +385,6 @@ class IStatus(Interface):
         """Return a list of worker names, suitable for passing to
         getWorker()."""
 
-    def getWorker(name):
-        """Return the IWorkerStatus object for a given named worker."""
-
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
         receiver will immediately be sent a set of 'builderAdded' messages
@@ -402,25 +399,6 @@ class IStatus(Interface):
     def unsubscribe(receiver):
         """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
-
-
-class IWorkerStatus(Interface):
-
-    def getName():
-        """Return the name of the worker."""
-
-    def getAdmin():
-        """Return a string with the worker admin's contact data."""
-
-    def getHost():
-        """Return a string with the worker host info."""
-
-    def isConnected():
-        """Return True if the worker is currently online, False if not."""
-
-    def lastMessageReceived():
-        """Return a timestamp (seconds since epoch) indicating when the most
-        recent message was received from the worker."""
 
 
 class ISchedulerStatus(Interface):
