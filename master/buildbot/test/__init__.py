@@ -54,13 +54,11 @@ with assertProducesWarnings(DeprecatedApiWarning,
                             messages_patterns=[
                                 r" buildbot\.status\.base has been deprecated",
                                 r" buildbot\.status\.event has been deprecated",
-                                r" buildbot\.status\.buildset has been deprecated",
                                 r" buildbot\.status\.master has been deprecated",
                                 r" buildbot\.status\.worker has been deprecated",
                             ]):
     import buildbot.status.base as _  # noqa
     import buildbot.status.event as _  # noqa
-    import buildbot.status.buildset as _  # noqa
     import buildbot.status.master as _  # noqa
     import buildbot.status.worker as _  # noqa
 

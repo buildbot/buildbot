@@ -24,7 +24,6 @@ from buildbot import interfaces
 from buildbot import util
 from buildbot.changes import changes
 from buildbot.status import builder_compat
-from buildbot.status import buildset_compat
 from buildbot.util import bbcollections
 from buildbot.util import bytes2unicode
 from buildbot.util import service
@@ -179,8 +178,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 urlquote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urlquote(step.getName(), safe=''))
-        # IBuildSetStatus
-        # IBuildRequestStatus
         # IWorkerStatus
         if interfaces.IWorkerStatus.providedBy(thing):
             worker = thing
@@ -239,15 +236,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getWorker(self, workername):
         return self.workers.workers[workername].worker_status
-
-    def getBuildSets(self):
-        d = self.master.db.buildsets.getBuildsets(complete=False)
-
-        @d.addCallback
-        def make_status_objects(bsdicts):
-            return [buildset_compat.BuildSetStatus(bsdict, self)
-                    for bsdict in bsdicts]
-        return d
 
     def subscribe(self, target):
         self.watchers.append(target)
@@ -351,23 +339,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def _buildset_waitUntilFinished(self, bsid):
         d = defer.Deferred()
         self._buildset_finished_waiters.add(bsid, d)
-        self._maybeBuildsetFinished(bsid)
         return d
-
-    def _maybeBuildsetFinished(self, bsid):
-        # check bsid to see if it's successful or finished, and notify anyone
-        # who cares
-        if bsid not in self._buildset_finished_waiters:
-            return
-        d = self.master.db.buildsets.getBuildset(bsid)
-
-        @d.addCallback
-        def do_notifies(bsdict):
-            bss = buildset_compat.BuildSetStatus(bsdict, self)
-            if bss.isFinished():
-                for d in self._buildset_finished_waiters.pop(bsid):
-                    eventually(d.callback, bss)
-        d.addErrback(log.err, 'while notifying for buildset finishes')
 
     def _builder_subscribe(self, buildername, watcher):
         # should get requestSubmitted and requestCancelled
@@ -377,16 +349,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self._builder_observers.discard(buildername, watcher)
 
     def bs_new_consumer_cb(self, key, msg):
-        bsid = msg['bsid']
-        d = self.master.db.buildsets.getBuildset(bsid)
-
-        @d.addCallback
-        def do_notifies(bsdict):
-            bss = buildset_compat.BuildSetStatus(bsdict, self)
-            for t in self.watchers:
-                if hasattr(t, 'buildsetSubmitted'):
-                    t.buildsetSubmitted(bss)
-        return d
+        return defer.succeed(None)
 
     def bs_complete_consumer_cb(self, key, msg):
-        self._maybeBuildsetFinished(msg['bsid'])
+        return defer.succeed(None)

@@ -112,15 +112,6 @@ class OldImportPaths(unittest.TestCase):
             (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, Results,
              worst_status)
 
-    def test_status_builder_BuildSetStatus(self):
-        # We can't reliable check for these warnings as they depend on whether the tests are
-        # run in parallel mode
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecatedApiWarning)
-
-            from buildbot.status.builder import BuildSetStatus
-            assert BuildSetStatus
-
     def test_status_builder_Status(self):
         # We can't reliable check for these warnings as they depend on whether the tests are
         # run in parallel mode

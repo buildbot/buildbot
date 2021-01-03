@@ -395,13 +395,6 @@ class IStatus(Interface):
     def getWorker(name):
         """Return the IWorkerStatus object for a given named worker."""
 
-    def getBuildSets():
-        """
-        Return a list of un-completed build sets.
-
-        @returns: list of L{IBuildSetStatus} implementations, via Deferred.
-        """
-
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
         receiver will immediately be sent a set of 'builderAdded' messages
@@ -416,43 +409,6 @@ class IStatus(Interface):
     def unsubscribe(receiver):
         """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
-
-
-class IBuildSetStatus(Interface):
-
-    """I represent a set of Builds, each run on a separate Builder but all
-    using the same source tree."""
-
-    def getReason():
-        pass
-
-    def getID():
-        """Return the BuildSet's ID string, if any. The 'try' feature uses a
-        random string as a BuildSetID to relate submitted jobs with the
-        resulting BuildSet."""
-
-    def getResponsibleUsers():
-        pass  # not implemented
-
-    def getInterestedUsers():
-        pass  # not implemented
-
-    def getBuilderNames():
-        """Return a list of the names of all Builders on which this set will
-        do builds.
-
-        @returns: list of names via Deferred"""
-
-    def isFinished():
-        pass
-
-    def waitUntilFinished():
-        """Return a Deferred that fires (with this IBuildSetStatus object)
-        when all builds have finished."""
-
-    def getResults():
-        """Return SUCCESS/FAILURE, or None if the buildset is not finished
-        yet"""
 
 
 class IWorkerStatus(Interface):
