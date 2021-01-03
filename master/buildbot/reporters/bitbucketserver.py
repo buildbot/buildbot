@@ -26,6 +26,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
@@ -381,29 +382,30 @@ class BitbucketServerPRCommentPush(ReporterBase):
     name = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, messageFormatter=None,
-                        verbose=False, debug=None, verify=None, **kwargs):
+    def reconfigService(self, base_url, user, password,
+                        verbose=False, debug=None, verify=None, generators=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield super().reconfigService(
-            messageFormatter=messageFormatter, watchedWorkers=None,
-            messageFormatterMissingWorker=None, subject='', addLogs=False,
-            addPatch=False, **kwargs)
         self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators, **kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password),
             debug=debug, verify=verify)
 
-    def checkConfig(self, base_url, user, password, messageFormatter=None,
-                    verbose=False, debug=None, verify=None, **kwargs):
+    def checkConfig(self, base_url, user, password,
+                    verbose=False, debug=None, verify=None, generators=None, **kwargs):
 
-        super().checkConfig(messageFormatter=messageFormatter,
-                            watchedWorkers=None,
-                            messageFormatterMissingWorker=None,
-                            subject='',
-                            addLogs=False,
-                            addPatch=False,
-                            _has_old_arg_names={'subject': False},
-                            **kwargs)
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
+
+    def _create_default_generators(self):
+        return [BuildStatusGenerator()]
 
     def sendComment(self, pr_url, text):
         path = urlparse(unicode2bytes(pr_url)).path
