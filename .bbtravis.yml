@@ -82,7 +82,7 @@ matrix:
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
     # master twisted test
     - python: "3.8"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=10069-rodrigc-encoding SQLALCHEMY=latest TESTS=trial
 
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
@@ -110,10 +110,10 @@ install:
   - |
       # pip installs for backward compat
       set -e
-      if [ $TWISTED = trunk ]; then
-          pip install git+https://github.com/twisted/twisted
+      if [ $TWISTED = trunk -o $TWISTED = 10069-rodrigc-encoding ]; then
+          pip install git+https://github.com/twisted/twisted@$TWISTED
       fi
-      if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
+      #if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
   - step: !ShellCommand
         command: "pip check"
