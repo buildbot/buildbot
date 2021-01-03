@@ -22,7 +22,6 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
-from buildbot.status.event_compat import Event
 from buildbot.util.lru import LRUCache
 
 
@@ -183,27 +182,6 @@ class BuilderStatus(styles.Versioned):
 
     def setWorkernames(self, names):
         self.workernames = names
-
-    def addEvent(self, text=None):
-        # this adds a duration event. When it is done, the user should call
-        # e.finish(). They can also mangle it by modifying .text
-        e = Event()
-        e.started = util.now()
-        if text is None:
-            text = []
-        e.text = text
-        return e  # they are free to mangle it further
-
-    def addPointEvent(self, text=None):
-        # this adds a point event, one which occurs as a single atomic
-        # instant of time.
-        e = Event()
-        e.started = util.now()
-        e.finished = 0
-        if text is None:
-            text = []
-        e.text = text
-        return e  # for consistency, but they really shouldn't touch it
 
     def setBigState(self, state):
         needToUpdate = state != self.currentBigState

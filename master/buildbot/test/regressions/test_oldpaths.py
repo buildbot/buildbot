@@ -121,15 +121,6 @@ class OldImportPaths(unittest.TestCase):
             from buildbot.status.builder import Status
             assert Status
 
-    def test_status_builder_Event(self):
-        # We can't reliable check for these warnings as they depend on whether the tests are
-        # run in parallel mode
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecatedApiWarning)
-
-            from buildbot.status.builder import Event
-            assert Event
-
     def test_steps_source_Source(self):
         from buildbot.steps.source import Source
         assert Source
