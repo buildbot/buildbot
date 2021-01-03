@@ -21,7 +21,6 @@ from twisted.internet import error
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.failure import Failure
-from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.process import buildstep
@@ -41,7 +40,6 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 
-@implementer(interfaces.IBuildControl)
 class Build(properties.PropertiesMixin):
 
     """I represent a single build by a single worker. Specialized Builders can
@@ -53,24 +51,18 @@ class Build(properties.PropertiesMixin):
     L{buildbot.process.step.BuildStep} objects. Each step is a single remote
     command, possibly a shell command.
 
-    During the build, I put status information into my C{BuildStatus}
-    gatherer.
-
     After the build, I go away.
 
     I can be used by a factory by setting buildClass on
     L{buildbot.process.factory.BuildFactory}
 
     @ivar requests: the list of L{BuildRequest}s that triggered me
-    @ivar build_status: the L{buildbot.status.build.BuildStatus} that
-                        collects our status
     """
 
     VIRTUAL_BUILDERNAME_PROP = "virtual_builder_name"
     VIRTUAL_BUILDERDESCRIPTION_PROP = "virtual_builder_description"
     VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
-    build_status = None
     reason = "changes"
     finished = False
     results = None
@@ -262,7 +254,6 @@ class Build(properties.PropertiesMixin):
     def setupWorkerForBuilder(self, workerforbuilder):
         self.path_module = workerforbuilder.worker.path_module
         self.workername = workerforbuilder.worker.workername
-        self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks
     def getBuilderId(self):
@@ -288,7 +279,7 @@ class Build(properties.PropertiesMixin):
         return self._builderid
 
     @defer.inlineCallbacks
-    def startBuild(self, build_status, workerforbuilder):
+    def startBuild(self, workerforbuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
@@ -299,7 +290,6 @@ class Build(properties.PropertiesMixin):
 
         log.msg("{}.startBuild".format(self))
 
-        self.build_status = build_status
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the build to the first buildrequest
         brid = self.requests[0].id
@@ -332,7 +322,6 @@ class Build(properties.PropertiesMixin):
         # make sure properties are available to people listening on 'new'
         # events
         yield self.master.data.updates.setBuildProperties(self.buildid, self)
-        self.build_status.buildStarted(self)
         yield self.master.data.updates.setBuildStateString(self.buildid, 'starting')
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
@@ -687,9 +676,6 @@ class Build(properties.PropertiesMixin):
                 self.conn = None
             log.msg(" {}: build finished".format(self))
             self.results = worst_status(self.results, results)
-            self.build_status.setText(text)
-            self.build_status.setResults(self.results)
-            self.build_status.buildFinished()
             eventually(self.releaseLocks)
             metrics.MetricCountEvent.log('active_builds', -1)
 
@@ -773,11 +759,4 @@ class Build(properties.PropertiesMixin):
             lambda: self.finished)
 
     def getWorkerInfo(self):
-        return self.workerforbuilder.worker.worker_status.info
-
-    # IBuildControl
-
-    def getStatus(self):
-        return self.build_status
-
-    # stopBuild is defined earlier
+        return self.workerforbuilder.worker.info

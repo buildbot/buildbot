@@ -88,7 +88,7 @@ Secret Obfuscation
     text = Interpolate("some text and %(secret:foo)s")
     # some text rendered
     rendered = yield self.build.render(text)
-    cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+    cleantext = self.build.properties.cleanupTextFromSecrets(rendered)
 
 Secrets don't have to be visible to the normal user via logs and thus are transmitted directly to the workers.
 Secrets are rendered and can arrive anywhere in the logs.

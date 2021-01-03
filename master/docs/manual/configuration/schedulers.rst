@@ -1512,26 +1512,26 @@ The new parameter is:
 ``compatible_builds``
 
    A function to find compatible builds in the build history.
-   This function is given the master :py:class:`~buildbot.status.master.Status` instance as first argument, and the current builder name as second argument, or None when forcing all builds.
+   This function is given the master instance as first argument, and the current builder name as second argument, or None when forcing all builds.
 
 Example:
 
 .. code-block:: python
 
-    def get_compatible_builds(status, builder):
+    @defer.inlineCallbacks
+    def get_compatible_builds(master, builder):
         if builder is None: # this is the case for force_build_all
             return ["cannot generate build list here"]
         # find all successful builds in builder1 and builder2
         builds = []
-        for builder in ["builder1","builder2"]:
-            builder_status = status.getBuilder(builder)
-            for num in range(1,40): # 40 last builds
-                b = builder_status.getBuild(-num)
-                if not b:
+        for builder in ["builder1", "builder2"]:
+            # get 40 last builds for the builder
+            build_dicts = yield master.data.get(('builders', builder, 'builds'),
+                                                order=['-buildid'], limit=40)
+            for build_dict in build_dicts:
+                if build_dict['results'] != SUCCESS:
                     continue
-                if b.getResults() == FAILURE:
-                    continue
-                builds.append(builder+"/"+str(b.getNumber()))
+                builds.append(builder + "/" + str(build_dict['number']))
         return builds
 
     # ...

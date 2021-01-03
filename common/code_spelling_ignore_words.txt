@@ -179,7 +179,6 @@ buildermasterids
 buildername
 buildernames
 builderremoved
-builderstatus
 buildetaupdate
 buildfactory
 buildfinished
@@ -646,7 +645,6 @@ html
 http
 httpclientservice
 https
-ibuilderstatus
 ibuildrequestcontrol
 ibuildrequeststatus
 ibuildsetstatus

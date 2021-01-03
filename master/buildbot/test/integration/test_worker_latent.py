@@ -143,6 +143,23 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         config = MasterConfig.loadFromDict(config_dict, '<dict>')
         yield self.master.workers.reconfigServiceWithBuildbotConfig(config)
 
+    def stop_first_build(self, results):
+        stopped_d = defer.Deferred()
+
+        def new_callback(_, data):
+            if stopped_d.called:
+                return
+
+            # Stop the build
+            buildid = data['buildid']
+            self.master.mq.produce(('control', 'builds', str(buildid), 'stop'),
+                                   {'reason': 'no reason', 'results': results})
+            stopped_d.callback(None)
+
+        consumed_d = self.master.mq.startConsuming(new_callback, ('builds', None, 'new'))
+
+        return consumed_d, stopped_d
+
     @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
         """
@@ -1081,14 +1098,13 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         """
         controller, builder_id = yield self.create_single_worker_config()
 
-        builder = self.master.botmaster.builders['testy']
+        consumed_d, stopped_d = self.stop_first_build(CANCELLED)
+        yield consumed_d
 
         # Trigger a buildrequest
         yield self.create_build_request([builder_id])
 
-        # Stop the build
-        build = builder.getBuild(0)
-        build.stopBuild('no reason', results=CANCELLED)
+        yield stopped_d
 
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
@@ -1105,7 +1121,8 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         """
         controller, builder_id = yield self.create_single_worker_config()
 
-        builder = self.master.botmaster.builders['testy']
+        consumed_d, stopped_d = self.stop_first_build(RETRY)
+        yield consumed_d
 
         # Trigger a buildrequest
         _, brids = yield self.create_build_request([builder_id])
@@ -1115,9 +1132,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             lambda key, request: unclaimed_build_requests.append(request),
             ('buildrequests', None, 'unclaimed'))
 
-        # Stop the build
-        build = builder.getBuild(0)
-        build.stopBuild('no reason', results=RETRY)
+        yield stopped_d
 
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)

@@ -1582,8 +1582,9 @@ class Renderer(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_interpolate_worker(self):
+        self.build.workerforbuilder.worker.info.setProperty('test', 'testvalue', 'Worker')
         rend = yield self.build.render(Interpolate("%(worker:test)s"))
-        self.assertEqual(rend, "test")
+        self.assertEqual(rend, "testvalue")
 
 
 class Compare(unittest.TestCase):

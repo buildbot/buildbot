@@ -90,8 +90,6 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
         # patch out a few other annoying things the master likes to do
         self.patch(monkeypatches, 'patch_all', lambda: None)
         self.patch(signal, 'signal', lambda sig, hdlr: None)
-        # XXX temporary
-        self.patch(master, 'Status', lambda master: mock.Mock())
 
         master.BuildMaster.masterHeartbeatService = mock.Mock()
         self.master = master.BuildMaster(

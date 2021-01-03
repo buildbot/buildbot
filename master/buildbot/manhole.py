@@ -166,7 +166,6 @@ class _BaseManhole(service.AsyncMultiService):
             master = self.master
             namespace = {
                 'master': master,
-                'status': master.getStatus(),
                 'show': show,
             }
             return namespace

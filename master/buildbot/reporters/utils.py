@@ -203,6 +203,11 @@ def getURLForBuild(master, builderid, build_number):
         build_number)
 
 
+def getURLForBuildrequest(master, buildrequestid):
+    prefix = master.config.buildbotURL
+    return "{}#buildrequests/{}".format(prefix, buildrequestid)
+
+
 @renderer
 def URLForBuild(props):
     build = props.getBuild()

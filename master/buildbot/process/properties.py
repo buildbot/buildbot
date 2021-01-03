@@ -231,7 +231,7 @@ class PropertiesMixin:
     the full interface, only getProperties() function.
 
     This is useful because L{IProperties} methods are often called on L{Build}
-    and L{BuildStatus} objects without first coercing them.
+    objects without first coercing them.
 
     @ivar set_runtime_properties: the default value for the C{runtime}
     parameter of L{setProperty}.

@@ -43,7 +43,6 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
-from buildbot.status.master_compat import Status
 from buildbot.util import check_functional_environment
 from buildbot.util import service
 from buildbot.util.eventual import eventually
@@ -179,9 +178,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.debug = debug.DebugServices()
         yield self.debug.setServiceParent(self)
-
-        self.status = Status()
-        yield self.status.setServiceParent(self)
 
         self.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self)
@@ -441,12 +437,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     # informational methods
     def allSchedulers(self):
         return list(self.scheduler_manager)
-
-    def getStatus(self):
-        """
-        @rtype: L{buildbot.status.builder.Status}
-        """
-        return self.status
 
     # state maintenance (private)
     def getObjectId(self):
