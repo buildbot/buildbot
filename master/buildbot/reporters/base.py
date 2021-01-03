@@ -17,8 +17,6 @@ import abc
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 
 from buildbot import config
 from buildbot import util
@@ -103,12 +101,3 @@ class ReporterBase(service.BuildbotService):
     @abc.abstractmethod
     def sendMessage(self, reports):
         pass
-
-
-NotifierBase = ReporterBase
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 9, 0),
-    message="Use ReporterBase instead.",
-    moduleName="buildbot.reporters.base",
-    name="NotifierBase",
-)
