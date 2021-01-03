@@ -23,7 +23,9 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.gerrit_verify_status import GerritVerifyStatusPush
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.unit.changes.test_gerritchangesource import TestGerritChangeSource
@@ -31,8 +33,6 @@ from buildbot.test.util import logging
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErrorsMixin,
@@ -64,19 +64,6 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
 
     def tearDown(self):
         return self.master.stopService()
-
-    def test_check_config(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            GerritVerifyStatusPush('url', auth=('user', 'pass'),
-                                   startDescription=Interpolate('start'),
-                                   endDescription=Interpolate('end'),
-                                   reporter=Interpolate('context'),
-                                   verbose=True, builders=['builder1'])
-
-    def test_deprecated_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            GerritVerifyStatusPush('url', auth=('user', 'pass'), generators=[],
-                                   builders=['builder1'])
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -130,10 +117,13 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
 
     @defer.inlineCallbacks
     def test_custom_description(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            yield self.createGerritStatus(
-                startDescription=Interpolate("started %(prop:buildername)s"),
-                endDescription=Interpolate("finished %(prop:buildername)s"))
+        start_formatter = MessageFormatterRenderable(Interpolate("started %(prop:buildername)s"))
+        end_formatter = MessageFormatterRenderable(Interpolate("finished %(prop:buildername)s"))
+
+        generator = BuildStartEndStatusGenerator(start_formatter=start_formatter,
+                                                 end_formatter=end_formatter)
+
+        yield self.createGerritStatus(generators=[generator])
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
