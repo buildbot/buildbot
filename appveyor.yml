@@ -5,7 +5,6 @@ environment:
   matrix:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python35"
     - PYTHON: "C:\\Python36"
     - PYTHON: "C:\\Python37"
     - PYTHON: "C:\\Python38"
