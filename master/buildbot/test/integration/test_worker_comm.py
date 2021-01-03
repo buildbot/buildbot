@@ -32,7 +32,6 @@ from buildbot import worker
 from buildbot.process import botmaster
 from buildbot.process import builder
 from buildbot.process import factory
-from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
@@ -183,8 +182,6 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         self.botmaster = botmaster.BotMaster()
         yield self.botmaster.setServiceParent(self.master)
 
-        self.master.status = master.Status()
-        yield self.master.status.setServiceParent(self.master)
         self.master.botmaster = self.botmaster
         self.master.data.updates.workerConfigured = lambda *a, **k: None
         yield self.master.startService()

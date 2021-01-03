@@ -330,9 +330,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # another build request.
         workerforbuilder.buildStarted()
 
-        # let status know
-        self.master.status.build_started(buildrequests[0].id, self.name)
-
         # We put the result of startBuild into a fresh Deferred since _startBuildFor should not
         # wait until the build is finished.  This uses `maybeDeferred` to ensure that any exceptions
         # raised by startBuild are treated as deferred errbacks (see

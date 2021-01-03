@@ -349,69 +349,6 @@ class IReportGenerator(Interface):
 # #################### Deprecated Status Interfaces   ####################
 
 
-class IStatus(Interface):
-
-    """I am an object, obtainable from the buildmaster, which can provide
-    status information."""
-
-    def getTitle():
-        """Return the name of the project that this Buildbot is working
-        for."""
-
-    def getTitleURL():
-        """Return the URL of this Buildbot's project."""
-
-    def getBuildbotURL():
-        """Return the URL of the top-most Buildbot status page, or None if
-        this Buildbot does not provide a web status page."""
-
-    def getURLForThing(thing):
-        """Return the URL of a page which provides information on 'thing',
-        which should be an object that implements one of the status
-        interfaces defined in L{buildbot.interfaces}. Returns None if no
-        suitable page is available (or if no Waterfall is running)."""
-
-    def getChangeSources():
-        """Return a list of IChangeSource objects."""
-
-    def getChange(number):
-        """Return an IChange object."""
-
-    def getSchedulers():
-        """Return a list of ISchedulerStatus objects for all
-        currently-registered Schedulers."""
-
-    def getWorkerNames():
-        """Return a list of worker names, suitable for passing to
-        getWorker()."""
-
-    def subscribe(receiver):
-        """Register an IStatusReceiver to receive new status events. The
-        receiver will immediately be sent a set of 'builderAdded' messages
-        for all current builders. It will receive further 'builderAdded' and
-        'builderRemoved' messages as the config file is reloaded and builders
-        come and go. It will also receive 'buildsetSubmitted' messages for
-        all outstanding BuildSets (and each new BuildSet that gets
-        submitted). No additional messages will be sent unless the receiver
-        asks for them by calling .subscribe on the IBuilderStatus objects
-        which accompany the addedBuilder message."""
-
-    def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messages will be
-        delivered."""
-
-
-class ISchedulerStatus(Interface):
-
-    def getName():
-        """Return the name of this Scheduler (a string)."""
-
-    def getPendingBuildsets():
-        """Return an IBuildSet for all BuildSets that are pending. These
-        BuildSets are waiting for their tree-stable-timers to expire."""
-        # TODO: this is not implemented anywhere
-
-
 class IEventSource(Interface):
 
     def eventGenerator(branches=None, categories=None, committers=None, projects=None, minTime=0):
@@ -660,9 +597,6 @@ class IBuildRequestControl(Interface):
 
 
 class IBuildControl(Interface):
-
-    def getStatus():
-        """Return an IBuildStatus object for the Build that I control."""
     def stopBuild(reason="<no reason given>"):
         """Halt the build. This has no effect if the build has already
         finished."""

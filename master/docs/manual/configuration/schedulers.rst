@@ -1512,7 +1512,7 @@ The new parameter is:
 ``compatible_builds``
 
    A function to find compatible builds in the build history.
-   This function is given the master :py:class:`~buildbot.status.master.Status` instance as first argument, and the current builder name as second argument, or None when forcing all builds.
+   This function is given the master instance as first argument, and the current builder name as second argument, or None when forcing all builds.
 
 Example:
 

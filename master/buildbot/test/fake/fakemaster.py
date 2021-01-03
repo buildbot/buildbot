@@ -61,39 +61,6 @@ class FakeCaches:
         return FakeCache(name, miss_fn)
 
 
-class FakeStatus(service.BuildbotService):
-
-    name = "status"
-    lastBuilderStatus = None
-
-    def getWorkerNames(self):
-        return []
-
-    def workerConnected(self, name):
-        pass
-
-    def build_started(self, brid, buildername):
-        pass
-
-    def getURLForBuild(self, builder_name, build_number):
-        return "URLForBuild/{}/{}".format(builder_name, build_number)
-
-    def getURLForBuildrequest(self, buildrequestid):
-        return "URLForBuildrequest/%d" % (buildrequestid,)
-
-    def subscribe(self, _):
-        pass
-
-    def getTitle(self):
-        return "myBuildbot"
-
-    def getURLForThing(self, _):
-        return "h://thing"
-
-    def getBuildbotURL(self):
-        return "h://bb.me"
-
-
 class FakeBuilder:
 
     def __init__(self, master=None, buildername="Builder"):
@@ -130,8 +97,6 @@ class FakeMaster(service.MasterService):
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
-        self.status = FakeStatus()
-        self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
         self.workers = bworkermanager.FakeWorkerManager()
