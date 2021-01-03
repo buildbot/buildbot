@@ -224,7 +224,7 @@ See respective documentation for details.
 
 * new :bb:reporter:`GitLabStatusPush` to report builds results to GitLab.
 
-* new :bb:reporter:`HipchatStatusPush` to report build results to Hipchat.
+* new ``HipchatStatusPush`` to report build results to Hipchat.
 
 
 Fixes
