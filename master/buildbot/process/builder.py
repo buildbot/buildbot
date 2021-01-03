@@ -179,10 +179,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def getBuild(self, number):
         for b in self.building:
-            if b.build_status and b.build_status.number == number:
+            if b.number == number:
                 return b
         for b in self.old_building:
-            if b.build_status and b.build_status.number == number:
+            if b.number == number:
                 return b
         return None
 
@@ -344,22 +344,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # another build request.
         workerforbuilder.buildStarted()
 
-        # create the BuildStatus object that goes with the Build
-        bs = self.builder_status.newBuild()
-
         # let status know
-        self.master.status.build_started(buildrequests[0].id, self.name, bs)
+        self.master.status.build_started(buildrequests[0].id, self.name)
 
-        # start the build. This will first set up the steps, then tell the
-        # BuildStatus that it has started, which will announce it to the world
-        # (through our BuilderStatus object, which is its parent).  Finally it
-        # will start the actual build process.  This is done with a fresh
-        # Deferred since _startBuildFor should not wait until the build is
-        # finished.  This uses `maybeDeferred` to ensure that any exceptions
+        # We put the result of startBuild into a fresh Deferred since _startBuildFor should not
+        # wait until the build is finished.  This uses `maybeDeferred` to ensure that any exceptions
         # raised by startBuild are treated as deferred errbacks (see
         # http://trac.buildbot.net/ticket/2428).
-        d = defer.maybeDeferred(build.startBuild,
-                                bs, workerforbuilder)
+        d = defer.maybeDeferred(build.startBuild, workerforbuilder)
         # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
@@ -389,7 +381,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
-        results = build.build_status.getResults()
+        results = build.results
 
         self.building.remove(build)
         if results == RETRY:

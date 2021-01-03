@@ -402,40 +402,6 @@ class IStatus(Interface):
         @returns: list of L{IBuildSetStatus} implementations, via Deferred.
         """
 
-    def generateFinishedBuilds(builders=None, branches=None,
-                               num_builds=None, finished_before=None,
-                               max_search=200):
-        """Return a generator that will produce IBuildStatus objects each
-        time you invoke its .next() method, starting with the most recent
-        finished build and working backwards.
-
-        @param builders: this is a list of Builder names, and the generator
-                         will only produce builds that ran on the given
-                         Builders. If the list is empty, produce builds from
-                         all Builders.
-
-        @param branches: this is a list of branch names, and the generator
-                         will only produce builds that used the given
-                         branches. If the list is empty, produce builds from
-                         all branches.
-
-        @param num_builds: the generator will stop after providing this many
-                           builds. The default of None means to produce as
-                           many builds as possible.
-
-        @type finished_before: int: a timestamp, seconds since the epoch
-        @param finished_before: if provided, do not produce any builds that
-                                finished after the given timestamp.
-
-        @type max_search: int
-        @param max_search: this method may have to examine a lot of builds
-                           to find some that match the search parameters,
-                           especially if there aren't any matching builds.
-                           This argument imposes a hard limit on the number
-                           of builds that will be examined within any given
-                           Builder.
-        """
-
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
         receiver will immediately be sent a set of 'builderAdded' messages
@@ -508,10 +474,6 @@ class IBuildRequestStatus(Interface):
 
         @returns: SourceStamp via Deferred
         """
-
-    def getBuilds():
-        """Return a list of IBuildStatus objects for each Build that has been
-        started in an attempt to satisfy this BuildRequest."""
 
     def subscribe(observer):
         """Register a callable that will be invoked (with a single
@@ -588,13 +550,6 @@ class IBuilderStatus(Interface):
         @returns: list of objects via Deferred
         """
 
-    def getCurrentBuilds():
-        """Return a list containing an IBuildStatus object for each build
-        currently in progress."""
-        # again, we could probably provide an object for 'waiting' and
-        # 'interlocked' too, but things like the Change list might still be
-        # subject to change
-
     def getLastFinishedBuild():
         """Return the IBuildStatus object representing the last finished
         build, which may be None if the builder has not yet finished any
@@ -616,48 +571,6 @@ class IBuilderStatus(Interface):
         connecting and disconnecting are events, as are ping attempts.
         getEvent(-1) will return the most recent event. Events are numbered,
         but it probably doesn't make sense to ever do getEvent(+n)."""
-
-    def generateFinishedBuilds(branches=None,
-                               num_builds=None,
-                               max_buildnum=None, finished_before=None,
-                               max_search=200,
-                               ):
-        """Return a generator that will produce IBuildStatus objects each
-        time you invoke its .next() method, starting with the most recent
-        finished build, then the previous build, and so on back to the oldest
-        build available.
-
-        @param branches: this is a list of branch names, and the generator
-                         will only produce builds that involve the given
-                         branches. If the list is empty, the generator will
-                         produce all builds regardless of what branch they
-                         used.
-
-        @param num_builds: if provided, the generator will stop after
-                           providing this many builds. The default of None
-                           means to produce as many builds as possible.
-
-        @param max_buildnum: if provided, the generator will start by
-                             providing the build with this number, or the
-                             highest-numbered preceding build (i.e. the
-                             generator will not produce any build numbered
-                             *higher* than max_buildnum). The default of None
-                             means to start with the most recent finished
-                             build. -1 means the same as None. -2 means to
-                             start with the next-most-recent completed build,
-                             etc.
-
-        @type finished_before: int: a timestamp, seconds since the epoch
-        @param finished_before: if provided, do not produce any builds that
-                                finished after the given timestamp.
-
-        @type max_search: int
-        @param max_search: this method may have to examine a lot of builds
-                           to find some that match the search parameters,
-                           especially if there aren't any matching builds.
-                           This argument imposes a hard limit on the number
-                           of builds that will be examined.
-        """
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -695,122 +608,6 @@ class IEventSource(Interface):
         @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
-
-
-class IBuildStatus(Interface):
-
-    """I represent the status of a single Build/BuildRequest. It could be
-    in-progress or finished."""
-
-    def getBuilder():
-        """
-        Return the BuilderStatus that owns this build.
-
-        @rtype: implementer of L{IBuilderStatus}
-        """
-
-    def isFinished():
-        """Return a boolean. True means the build has finished, False means
-        it is still running."""
-
-    def waitUntilFinished():
-        """Return a Deferred that will fire when the build finishes. If the
-        build has already finished, this deferred will fire right away. The
-        callback is given this IBuildStatus instance as an argument."""
-
-    def getReason():
-        """Return a string that indicates why the build was run. 'changes',
-        'forced', and 'periodic' are the most likely values. 'try' will be
-        added in the future."""
-
-    def getChanges():
-        """Return a list of Change objects which represent which source
-        changes went into the build."""
-
-    def getRevisions():
-        """Returns a string representing the list of revisions that led to
-        the build, rendered from each Change.revision"""
-
-    def getResponsibleUsers():
-        """Return a list of Users who are to blame for the changes that went
-        into this build. If anything breaks (at least anything that wasn't
-        already broken), blame them. Specifically, this is the set of users
-        who were responsible for the Changes that went into this build. Each
-        User is a string, corresponding to their name as known by the VC
-        repository."""
-
-    def getInterestedUsers():
-        """Return a list of Users who will want to know about the results of
-        this build but who did not actually make the Changes that went into it
-        (build sheriffs, code-domain owners)."""
-
-    def getNumber():
-        """Within each builder, each Build has a number. Return it."""
-
-    def getPreviousBuild():
-        """Convenience method. Returns None if the previous build is
-        unavailable."""
-
-    def getSteps():
-        """Return a list of dictionary objects. For invariant builds
-        (those which always use the same set of Steps), this should always
-        return the complete list, however some of the steps may not have
-        started yet (step.getTimes()[0] will be None). For variant builds,
-        this may not be complete (asking again later may give you more of
-        them)."""
-
-    def getTimes():
-        """Returns a tuple of (start, end). 'start' and 'end' are the times
-        (seconds since the epoch) when the Build started and finished. If
-        the build is still running, 'end' will be None."""
-
-    # while the build is running, the following methods make sense.
-    # Afterwards they return None
-
-    def getCurrentStep():
-        """Return a dictionary object representing the currently
-        active step."""
-
-    # Once you know the build has finished, the following methods are legal.
-    # Before this build has finished, they all return None.
-
-    def getWorkername():
-        """Return the name of the worker which handled this build."""
-
-    def getText():
-        """Returns a list of strings to describe the build. These are
-        intended to be displayed in a narrow column. If more space is
-        available, the caller should join them together with spaces before
-        presenting them to the user."""
-
-    def getResults():
-        """Return a constant describing the results of the build: one of the
-        constants in buildbot.status.builder: SUCCESS, WARNINGS,
-        FAILURE, SKIPPED or EXCEPTION."""
-
-    def getLogs():
-        """Return a list of logs that describe the build as a whole. Some
-        steps will contribute their logs, while others are are less important
-        and will only be accessible through dictionary obtained from
-        `getSteps`.  Each log is an object which implements the IStatusLog
-        interface."""
-
-    def getTestResults():
-        """Return a dictionary that maps test-name tuples to ITestResult
-        objects. This may return an empty or partially-filled dictionary
-        until the build has completed."""
-
-    # subscription interface
-
-    def subscribe(receiver, updateInterval=None):
-        """Register an IStatusReceiver to receive new status events. The
-        receiver will be given stepStarted and stepFinished messages. If
-        'updateInterval' is non-None, buildETAUpdate messages will be sent
-        every 'updateInterval' seconds."""
-
-    def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messages will be
-        delivered."""
 
 
 class IStatusEvent(Interface):

@@ -250,71 +250,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     for bsdict in bsdicts]
         return d
 
-    def generateFinishedBuilds(self, builders=None, branches=None,
-                               num_builds=None, finished_before=None,
-                               max_search=200):
-        if builders is None:
-            builders = []
-
-        if branches is None:
-            branches = []
-
-        def want_builder(bn):
-            if builders:
-                return bn in builders
-            return True
-        builder_names = [bn
-                         for bn in self.getBuilderNames()
-                         if want_builder(bn)]
-
-        # 'sources' is a list of generators, one for each Builder we're
-        # using. When the generator is exhausted, it is replaced in this list
-        # with None.
-        sources = []
-        for bn in builder_names:
-            bldr = self.getBuilder(bn)
-            g = bldr.generateFinishedBuilds(branches,
-                                            finished_before=finished_before,
-                                            max_search=max_search)
-            sources.append(g)
-
-        # next_build the next build from each source
-        next_build = [None] * len(sources)
-
-        def refill():
-            for i, g in enumerate(sources):
-                if next_build[i]:
-                    # already filled
-                    continue
-                if not g:
-                    # already exhausted
-                    continue
-                try:
-                    next_build[i] = next(g)
-                except StopIteration:
-                    next_build[i] = None
-                    sources[i] = None
-
-        got = 0
-        while True:
-            refill()
-            # find the latest build among all the candidates
-            candidates = [(i, b, b.getTimes()[1])
-                          for i, b in enumerate(next_build)
-                          if b is not None]
-            candidates.sort(key=lambda x: x[2])
-            if not candidates:
-                return
-
-            # and remove it from the list
-            i, build, finshed_time = candidates[-1]
-            next_build[i] = None
-            got += 1
-            yield build
-            if num_builds is not None:
-                if got >= num_builds:
-                    return
-
     def subscribe(self, target):
         self.watchers.append(target)
         for name in self.botmaster.builderNames:
@@ -418,10 +353,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         }
         return result
 
-    def build_started(self, brid, buildername, build_status):
-        if brid in self._buildreq_observers:
-            for o in self._buildreq_observers[brid]:
-                eventually(o, build_status)
+    def build_started(self, brid, buildername):
+        pass
 
     def _buildrequest_subscribe(self, brid, observer):
         self._buildreq_observers.add(brid, observer)

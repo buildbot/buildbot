@@ -85,12 +85,12 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
     def test_secret(self):
         command = Interpolate("echo %(secret:foo)s")
         rendered = yield self.build.render(command)
-        cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+        cleantext = self.build.properties.cleanupTextFromSecrets(rendered)
         self.assertEqual(cleantext, "echo <foo>")
 
     @defer.inlineCallbacks
     def test_secret_replace(self):
         command = Interpolate("echo %(secret:foo)s %(secret:other)s")
         rendered = yield self.build.render(command)
-        cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+        cleantext = self.build.properties.cleanupTextFromSecrets(rendered)
         self.assertEqual(cleantext, "echo <foo> <other>")

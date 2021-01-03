@@ -25,7 +25,6 @@ from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.status import build
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedata
@@ -84,7 +83,7 @@ class FakeStatus(service.BuildbotService):
     def workerConnected(self, name):
         pass
 
-    def build_started(self, brid, buildername, build_status):
+    def build_started(self, brid, buildername):
         pass
 
     def getURLForBuild(self, builder_name, build_number):
@@ -140,14 +139,6 @@ class FakeBuilderStatus:
         pass
 
     def setBigState(self, state):
-        pass
-
-    def newBuild(self):
-        bld = build.BuildStatus(self, self.master, 3)
-        self.lastBuildStatus = bld
-        return bld
-
-    def buildStarted(self, builderStatus):
         pass
 
 

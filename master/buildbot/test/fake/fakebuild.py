@@ -25,42 +25,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.worker import base
 
 
-class FakeBuildStatus(properties.PropertiesMixin):
-
-    def __init__(self):
-        self.properties = properties.Properties()
-
-    def getProperties(self):
-        return self.properties
-
-    def getInterestedUsers(self):
-        return []
-
-    def setWorkername(self, _):
-        pass
-
-    def setSourceStamps(self, _):
-        pass
-
-    def setReason(self, _):
-        pass
-
-    def setBlamelist(self, _):
-        pass
-
-    def buildStarted(self, _):
-        return True
-
-    setText = mock.Mock()
-    setText2 = mock.Mock()
-    setResults = mock.Mock()
-
-    def buildFinished(self):
-        pass
-
-    getBuilder = mock.Mock()
-
-
 class FakeWorkerStatus(properties.PropertiesMixin):
 
     def __init__(self, name):
@@ -72,7 +36,6 @@ class FakeWorkerStatus(properties.PropertiesMixin):
 class FakeBuild(properties.PropertiesMixin):
 
     def __init__(self, props=None, master=None):
-        self.build_status = FakeBuildStatus()
         self.builder = fakemaster.FakeBuilderStatus(master)
         self.workerforbuilder = mock.Mock(
             spec=workerforbuilder.WorkerForBuilder)
@@ -92,16 +55,12 @@ class FakeBuild(properties.PropertiesMixin):
         if props is None:
             props = properties.Properties()
         props.build = self
-        self.build_status.properties = props
+        self.properties = props
         self.master = None
         self.config_version = 0
 
     def getProperties(self):
-        return self.build_status.getProperties()
-
-    @property
-    def properties(self):
-        return self.getProperties()
+        return self.properties
 
     def getSourceStamp(self, codebase):
         if codebase in self.sources:

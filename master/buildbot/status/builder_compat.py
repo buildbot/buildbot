@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-import itertools
 import os
 
 from twisted.persisted import styles
@@ -23,7 +22,6 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
-from buildbot.status.build_compat import BuildStatus
 from buildbot.status.buildrequest_compat import BuildRequestStatus
 from buildbot.status.event_compat import Event
 from buildbot.util.lru import LRUCache
@@ -131,9 +129,6 @@ class BuilderStatus(styles.Versioned):
                     for brdict in brdicts]
         return d
 
-    def getCurrentBuilds(self):
-        return self.currentBuilds
-
     def getLastFinishedBuild(self):
         b = self.getBuild(-1)
         if not (b and b.isFinished()):
@@ -181,51 +176,6 @@ class BuilderStatus(styles.Versioned):
 
     def _getBuildBranches(self, build):
         return {ss.branch for ss in build.getSourceStamps()}
-
-    def generateFinishedBuilds(self, branches=None,
-                               num_builds=None,
-                               max_buildnum=None,
-                               finished_before=None,
-                               results=None,
-                               max_search=200,
-                               filter_fn=None):
-        got = 0
-        if branches is None:
-            branches = set()
-        else:
-            branches = set(branches)
-        for Nb in itertools.count(1):
-            if Nb > self.nextBuildNumber:
-                break
-            if Nb > max_search:
-                break
-            build = self.getBuild(-Nb)
-            if build is None:
-                continue
-            if max_buildnum is not None:
-                if build.getNumber() > max_buildnum:
-                    continue
-            if not build.isFinished():
-                continue
-            if finished_before is not None:
-                start, end = build.getTimes()
-                if end >= finished_before:
-                    continue
-            # if we were asked to filter on branches, and none of the
-            # sourcestamps match, skip this build
-            if branches and not branches & self._getBuildBranches(build):
-                continue
-            if results is not None:
-                if build.getResults() not in results:
-                    continue
-            if filter_fn is not None:
-                if not filter_fn(build):
-                    continue
-            got += 1
-            yield build
-            if num_builds is not None:
-                if got >= num_builds:
-                    return
 
     def eventGenerator(self, branches=None, categories=None, committers=None, projects=None,
                        minTime=0):
@@ -289,41 +239,6 @@ class BuilderStatus(styles.Versioned):
                 w.builderChangedState(self.name, state)
             except Exception:
                 log.msg("Exception caught publishing state to %r" % w)
-                log.err()
-
-    def newBuild(self):
-        s = BuildStatus(self, self.master, 0)
-        return s
-
-    # buildStarted is called by our child BuildStatus instances
-    def buildStarted(self, s):
-        """Now the BuildStatus object is ready to go (it knows all of its
-        Steps, its ETA, etc), so it is safe to notify our watchers."""
-
-        assert s.builder is self  # paranoia
-        assert s not in self.currentBuilds
-        self.currentBuilds.append(s)
-        self.buildCache.get(s.number, val=s)
-
-        # now that the BuildStatus is prepared to answer queries, we can
-        # announce the new build to all our watchers
-
-        for w in self.watchers:  # TODO: maybe do this later? callLater(0)?
-            try:
-                receiver = w.buildStarted(self.getName(), s)
-                if receiver:
-                    if isinstance(receiver, type(())):
-                        s.subscribe(receiver[0], receiver[1])
-                    else:
-                        s.subscribe(receiver)
-                    d = s.waitUntilFinished()
-                    # TODO: This actually looks like a bug, but this code
-                    # will be removed anyway.
-                    # pylint: disable=cell-var-from-loop
-                    d.addCallback(lambda s: s.unsubscribe(receiver))
-            except Exception:
-                log.msg(
-                    "Exception caught notifying %r of buildStarted event" % w)
                 log.err()
 
     def _buildFinished(self, s):

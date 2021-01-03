@@ -15,11 +15,9 @@
 
 
 from twisted.internet import defer
-from twisted.python import log
 from zope.interface import implementer
 
 from buildbot import interfaces
-from buildbot.util.eventual import eventually
 
 
 @implementer(interfaces.IBuildRequestStatus)
@@ -91,31 +89,8 @@ class BuildRequestStatus:
     def getBuilderName(self):
         return self.buildername
 
-    @defer.inlineCallbacks
-    def getBuilds(self):
-        builder = self.status.getBuilder(self.getBuilderName())
-        builds = []
-
-        bdicts = yield self.master.db.builds.getBuilds(buildrequestid=self.brid)
-
-        buildnums = sorted([bdict['number'] for bdict in bdicts])
-
-        for buildnum in buildnums:
-            bs = builder.getBuild(buildnum)
-            if bs:
-                builds.append(bs)
-        return builds
-
     def subscribe(self, observer):
-        d = self.getBuilds()
-
-        @d.addCallback
-        def notify_old(oldbuilds):
-            for bs in oldbuilds:
-                eventually(observer, bs)
-        d.addCallback(lambda _:
-                      self.status._buildrequest_subscribe(self.brid, observer))
-        d.addErrback(log.err, 'while notifying subscribers')
+        return defer.succeed(None)
 
     def unsubscribe(self, observer):
         self.status._buildrequest_unsubscribe(self.brid, observer)
