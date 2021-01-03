@@ -18,7 +18,6 @@ from urllib.parse import quote_plus as urlquote_plus
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -33,7 +32,6 @@ from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
-from buildbot.warnings import warn_deprecated
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
@@ -41,48 +39,19 @@ HOSTED_BASE_URL = 'https://gitlab.com'
 class GitLabStatusPush(ReporterBase):
     name = "GitLabStatusPush"
 
-    def checkConfig(self, token, startDescription=None, endDescription=None,
-                    context=None, baseURL=None, verbose=False, wantProperties=True,
-                    builders=None, debug=None, verify=None,
-                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+    def checkConfig(self, token, context=None, baseURL=None, verbose=False,
+                    debug=None, verify=None, generators=None,
                     **kwargs):
 
-        old_arg_names = {
-            'startDescription': startDescription is not None,
-            'endDescription': endDescription is not None,
-            'wantProperties': wantProperties is not True,
-            'builders': builders is not None,
-            'wantSteps': wantSteps is not False,
-            'wantPreviousBuild': wantPreviousBuild is not False,
-            'wantLogs': wantLogs is not False,
-        }
-
-        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
-
-        if passed_old_arg_names:
-
-            old_arg_names_msg = ', '.join(passed_old_arg_names)
-            if generators is not None:
-                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
-                              "same time").format(self.__class__.__name__, old_arg_names_msg))
-            warn_deprecated('2.10.0',
-                            ('The arguments {} passed to {} have been deprecated. Use generators '
-                             'instead').format(old_arg_names_msg, self.__class__.__name__))
-
         if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs,
-                                                               startDescription, endDescription)
+            generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, token,
-                        startDescription=None, endDescription=None,
-                        context=None, baseURL=None, verbose=False, wantProperties=True,
-                        builders=None, debug=None, verify=None,
-                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+    def reconfigService(self, token, context=None, baseURL=None, verbose=False,
+                        debug=None, verify=None, generators=None,
                         **kwargs):
 
         token = yield self.renderSecrets(token)
@@ -92,9 +61,7 @@ class GitLabStatusPush(ReporterBase):
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
 
         if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs,
-                                                               startDescription, endDescription)
+            generators = self._create_default_generators()
 
         yield super().reconfigService(generators=generators, **kwargs)
 
@@ -108,18 +75,12 @@ class GitLabStatusPush(ReporterBase):
             debug=self.debug, verify=self.verify)
         self.project_ids = {}
 
-    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
-                                         wantPreviousBuild, wantLogs,
-                                         startDescription, endDescription):
-        # wantProperties is ignored, because MessageFormatterRenderable always wants properties.
-        # wantSteps and wantPreviousBuild are ignored ignored, because they are not used in
-        # this reporter.
-        start_formatter = MessageFormatterRenderable(startDescription or 'Build started.')
-        end_formatter = MessageFormatterRenderable(endDescription or 'Build done.')
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
 
         return [
-            BuildStartEndStatusGenerator(builders=builders, add_logs=wantLogs,
-                                         start_formatter=start_formatter,
+            BuildStartEndStatusGenerator(start_formatter=start_formatter,
                                          end_formatter=end_formatter)
         ]
 

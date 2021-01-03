@@ -21,13 +21,9 @@ It requires `txrequests`_ package to allow interaction with GitLab Commit Status
 It uses private token auth, and the token owner is required to have at least developer access to each repository. As a result, we recommend you use https in your base_url rather than http.
 
 
-.. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, generators=None, verbose=False)
+.. py:class:: GitLabStatusPush(token, context=None, baseURL=None, generators=None, verbose=False)
 
     :param string token: Private token of user permitted to update status for commits. (can be a :ref:`Secret`)
-    :param string startDescription: Description used when build starts.
-        This parameter is deprecated, use ``generators`` instead.
-    :param string endDescription: Description used when build ends.
-        This parameter is deprecated, use ``generators`` instead.
     :param string context: Name of your build system, eg. continuous-integration/buildbot
     :type generators: list of IReportGenerator instances
     :param generators: A list of report generators that will be used to generate reports to be sent by this reporter.
