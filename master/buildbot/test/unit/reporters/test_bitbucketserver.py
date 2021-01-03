@@ -42,8 +42,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 HTTP_NOT_FOUND = 404
 
@@ -218,17 +216,6 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     def tearDown(self):
         if self.master and self.master.running:
             yield self.master.stopService()
-
-    def test_deprecated_generators(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            BitbucketServerCoreAPIStatusPush("serv", token="token",
-                                             startDescription=Interpolate('start'),
-                                             endDescription=Interpolate('end'))
-
-    def test_deprecated_args_and_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            BitbucketServerCoreAPIStatusPush("serv", token="token",
-                                             generators=[], builders=['builder1'])
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build, parentPlan=False):
