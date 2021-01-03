@@ -26,11 +26,11 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
-from buildbot.warnings import warn_deprecated
 
 from .utils import merge_reports_prop
 
@@ -48,58 +48,25 @@ HTTP_CREATED = 201
 class BitbucketServerStatusPush(ReporterBase):
     name = "BitbucketServerStatusPush"
 
-    def checkConfig(self, base_url, user, password, key=None, statusName=None,
-                    startDescription=None, endDescription=None, verbose=False,
-                    builders=None, debug=None, verify=None, wantProperties=True,
-                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
-                    **kwargs):
-
-        old_arg_names = {
-            'startDescription': startDescription is not None,
-            'endDescription': endDescription is not None,
-            'wantProperties': wantProperties is not True,
-            'builders': builders is not None,
-            'wantSteps': wantSteps is not False,
-            'wantPreviousBuild': wantPreviousBuild is not False,
-            'wantLogs': wantLogs is not False,
-        }
-
-        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
-
-        if passed_old_arg_names:
-
-            old_arg_names_msg = ', '.join(passed_old_arg_names)
-            if generators is not None:
-                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
-                              "same time").format(self.__class__.__name__, old_arg_names_msg))
-            warn_deprecated('2.10.0',
-                            ('The arguments {} passed to {} have been deprecated. Use generators '
-                             'instead').format(old_arg_names_msg, self.__class__.__name__))
+    def checkConfig(self, base_url, user, password, key=None, statusName=None, verbose=False,
+                    debug=None, verify=None, generators=None, **kwargs):
 
         if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs,
-                                                               startDescription, endDescription)
+            generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, key=None,
-                        statusName=None, startDescription=None,
-                        endDescription=None, verbose=False,
-                        builders=None, debug=None, verify=None, wantProperties=True,
-                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
-                        **kwargs):
+    def reconfigService(self, base_url, user, password, key=None, statusName=None, verbose=False,
+                        debug=None, verify=None, generators=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
         self.debug = debug
         self.verify = verify
         self.verbose = verbose
 
         if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs,
-                                                               startDescription, endDescription)
+            generators = self._create_default_generators()
 
         yield super().reconfigService(generators=generators, **kwargs)
 
@@ -109,18 +76,12 @@ class BitbucketServerStatusPush(ReporterBase):
             self.master, base_url, auth=(user, password),
             debug=self.debug, verify=self.verify)
 
-    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
-                                         wantPreviousBuild, wantLogs,
-                                         startDescription, endDescription):
-        # wantProperties is ignored, because MessageFormatterRenderable always wants properties.
-        # wantSteps and wantPreviousBuild are ignored ignored, because they are not used in
-        # this reporter.
-        start_formatter = MessageFormatterRenderable(startDescription or 'Build started.')
-        end_formatter = MessageFormatterRenderable(endDescription or 'Build done.')
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
 
         return [
-            BuildStartEndStatusGenerator(builders=builders, add_logs=wantLogs,
-                                         start_formatter=start_formatter,
+            BuildStartEndStatusGenerator(start_formatter=start_formatter,
                                          end_formatter=end_formatter)
         ]
 
@@ -139,23 +100,10 @@ class BitbucketServerStatusPush(ReporterBase):
         return self._http.post(STATUS_API_URL.format(sha=sha), json=payload)
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build, self._cached_report)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketServerStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            self._cached_report = reports[0]
-            yield self.send(build)
-        else:
-            yield self._send_impl(build, reports[0])
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
@@ -212,40 +160,13 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
     secrets = ["token", "auth"]
 
     def checkConfig(self, base_url, token=None, auth=None,
-                    statusName=None, statusSuffix=None, startDescription=None,
-                    endDescription=None, key=None, parentName=None,
+                    statusName=None, statusSuffix=None, key=None, parentName=None,
                     buildNumber=None, ref=None, duration=None,
-                    testResults=None, verbose=False, wantProperties=True,
-                    builders=None, debug=None, verify=None,
-                    wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+                    testResults=None, verbose=False, debug=None, verify=None, generators=None,
                     **kwargs):
 
-        old_arg_names = {
-            'startDescription': startDescription is not None,
-            'endDescription': endDescription is not None,
-            'wantProperties': wantProperties is not True,
-            'builders': builders is not None,
-            'wantSteps': wantSteps is not False,
-            'wantPreviousBuild': wantPreviousBuild is not False,
-            'wantLogs': wantLogs is not False,
-        }
-
-        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
-
-        if passed_old_arg_names:
-
-            old_arg_names_msg = ', '.join(passed_old_arg_names)
-            if generators is not None:
-                config.error(("can't specify generators and deprecated {} arguments ({}) at the "
-                              "same time").format(self.__class__.__name__, old_arg_names_msg))
-            warn_deprecated('2.10.0',
-                            ('The arguments {} passed to {} have been deprecated. Use generators '
-                             'instead').format(old_arg_names_msg, self.__class__.__name__))
-
         if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs,
-                                                               startDescription, endDescription)
+            generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
@@ -258,17 +179,12 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
     @defer.inlineCallbacks
     def reconfigService(self, base_url, token=None, auth=None,
-                        statusName=None, statusSuffix=None, startDescription=None,
-                        endDescription=None, key=None, parentName=None,
+                        statusName=None, statusSuffix=None, key=None, parentName=None,
                         buildNumber=None, ref=None, duration=None,
-                        testResults=None, verbose=False, wantProperties=True,
-                        builders=None, debug=None, verify=None,
-                        wantSteps=False, wantPreviousBuild=False, wantLogs=False, generators=None,
+                        testResults=None, verbose=False, debug=None, verify=None, generators=None,
                         **kwargs):
         self.status_name = statusName
         self.status_suffix = statusSuffix
-        self.start_description = startDescription or 'Build started.'
-        self.end_description = endDescription or 'Build done.'
         self.key = key or Interpolate('%(prop:buildername)s')
         self.parent_name = parentName
         self.build_number = buildNumber or Interpolate('%(prop:buildnumber)s')
@@ -280,9 +196,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         self.verbose = verbose
 
         if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs,
-                                                               startDescription, endDescription)
+            generators = self._create_default_generators()
 
         yield super().reconfigService(generators=generators, **kwargs)
 
@@ -310,18 +224,12 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             self.master, base_url, auth=auth, headers=headers, debug=debug,
             verify=verify)
 
-    def _create_generators_from_old_args(self, builders, wantProperties, wantSteps,
-                                         wantPreviousBuild, wantLogs,
-                                         startDescription, endDescription):
-        # wantProperties is ignored, because MessageFormatterRenderable always wants properties.
-        # wantSteps and wantPreviousBuild are ignored ignored, because they are not used in
-        # this reporter.
-        start_formatter = MessageFormatterRenderable(startDescription or 'Build started.')
-        end_formatter = MessageFormatterRenderable(endDescription or 'Build done.')
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
 
         return [
-            BuildStartEndStatusGenerator(builders=builders, add_logs=wantLogs,
-                                         start_formatter=start_formatter,
+            BuildStartEndStatusGenerator(start_formatter=start_formatter,
                                          end_formatter=end_formatter)
         ]
 
@@ -351,23 +259,10 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         return self._http.post(_url, json=payload)
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build, self._cached_report)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketServerCoreAPIStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            self._cached_report = reports[0]
-            yield self.send(build)
-        else:
-            yield self._send_impl(build, reports[0])
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
@@ -487,29 +382,30 @@ class BitbucketServerPRCommentPush(ReporterBase):
     name = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, messageFormatter=None,
-                        verbose=False, debug=None, verify=None, **kwargs):
+    def reconfigService(self, base_url, user, password,
+                        verbose=False, debug=None, verify=None, generators=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield super().reconfigService(
-            messageFormatter=messageFormatter, watchedWorkers=None,
-            messageFormatterMissingWorker=None, subject='', addLogs=False,
-            addPatch=False, **kwargs)
         self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators, **kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password),
             debug=debug, verify=verify)
 
-    def checkConfig(self, base_url, user, password, messageFormatter=None,
-                    verbose=False, debug=None, verify=None, **kwargs):
+    def checkConfig(self, base_url, user, password,
+                    verbose=False, debug=None, verify=None, generators=None, **kwargs):
 
-        super().checkConfig(messageFormatter=messageFormatter,
-                            watchedWorkers=None,
-                            messageFormatterMissingWorker=None,
-                            subject='',
-                            addLogs=False,
-                            addPatch=False,
-                            _has_old_arg_names={'subject': False},
-                            **kwargs)
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
+
+    def _create_default_generators(self):
+        return [BuildStatusGenerator()]
 
     def sendComment(self, pr_url, text):
         path = urlparse(unicode2bytes(pr_url)).path

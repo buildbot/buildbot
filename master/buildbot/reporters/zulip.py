@@ -21,7 +21,6 @@ from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
-from buildbot.warnings import warn_deprecated
 
 log = Logger()
 
@@ -50,22 +49,8 @@ class ZulipStatusPush(ReporterBase):
         self.stream = stream
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not ZulipStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            yield self.send(build)
-        else:
-            yield self._send_impl(build)
-
-    @defer.inlineCallbacks
-    def _send_impl(self, build):
         event = ("new", "finished")[0 if build["complete"] is False else 1]
         jsondata = dict(event=event, buildid=build["buildid"], buildername=build["builder"]["name"],
                         url=build["url"], project=build["properties"]["project"][0])

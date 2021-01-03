@@ -31,17 +31,17 @@ from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import BitbucketServerCoreAPIStatusPush
 from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
 from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 HTTP_NOT_FOUND = 404
 
@@ -104,17 +104,6 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
-    def test_deprecated_generators(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            BitbucketServerStatusPush("serv", Interpolate("username"), Interpolate("passwd"),
-                                      startDescription=Interpolate('start'),
-                                      endDescription=Interpolate('end'))
-
-    def test_deprecated_args_and_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            BitbucketServerStatusPush("serv", Interpolate("username"), Interpolate("passwd"),
-                                      generators=[], builders=['builder1'])
-
     @defer.inlineCallbacks
     def test_basic(self):
         self.setupReporter()
@@ -123,9 +112,12 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
 
     @defer.inlineCallbacks
     def test_setting_options(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            self.setupReporter(statusName='Build', startDescription='Build started.',
-                               endDescription='Build finished.')
+        generator = BuildStartEndStatusGenerator(
+            start_formatter=MessageFormatterRenderable('Build started.'),
+            end_formatter=MessageFormatterRenderable('Build finished.')
+        )
+
+        self.setupReporter(statusName='Build', generators=[generator])
         build = yield self.insert_build_finished(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -194,87 +186,6 @@ class TestBitbucketServerStatusPush(TestReactorMixin, ConfigErrorsMixin, unittes
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
 
-class BitbucketServerStatusPushDeprecatedSend(BitbucketServerStatusPush):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.send_called_count = 0
-
-    @defer.inlineCallbacks
-    def send(self, build):
-        self.send_called_count += 1
-        yield super().send(build)
-
-
-class TestBitbucketServerStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
-                                                  ReporterTestMixin, LoggingMixin):
-
-    @defer.inlineCallbacks
-    def setupReporter(self, **kwargs):
-        self.setUpTestReactor()
-        self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
-
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            'serv', auth=('username', 'passwd'),
-            debug=None, verify=None)
-        self.sp = BitbucketServerStatusPushDeprecatedSend("serv", Interpolate("username"),
-                                                          Interpolate("passwd"), **kwargs)
-        yield self.sp.setServiceParent(self.master)
-        yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-
-    @defer.inlineCallbacks
-    def _check_start_and_finish_build(self, build):
-        # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'post',
-            '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': 'Builder0',
-                  'description': 'Build started.'},
-            code=HTTP_PROCESSED)
-        self._http.expect(
-            'post',
-            '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'SUCCESSFUL', 'key': 'Builder0',
-                  'description': 'Build done.'},
-            code=HTTP_PROCESSED)
-        self._http.expect(
-            'post',
-            '/rest/build-status/1.0/commits/d34db33fd43db33f',
-            json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'FAILED', 'key': 'Builder0',
-                  'description': 'Build done.'})
-        build['complete'] = False
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-
-            yield self.sp._got_event(('builds', 20, 'new'), build)
-        build['complete'] = True
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        build['results'] = FAILURE
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-        self.assertEqual(self.sp.send_called_count, 3)
-
-    @defer.inlineCallbacks
-    def test_basic(self):
-        self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self._check_start_and_finish_build(build)
-
-
 class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
                                            ReporterTestMixin, LoggingMixin):
 
@@ -305,17 +216,6 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
     def tearDown(self):
         if self.master and self.master.running:
             yield self.master.stopService()
-
-    def test_deprecated_generators(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            BitbucketServerCoreAPIStatusPush("serv", token="token",
-                                             startDescription=Interpolate('start'),
-                                             endDescription=Interpolate('end'))
-
-    def test_deprecated_args_and_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            BitbucketServerCoreAPIStatusPush("serv", token="token",
-                                             generators=[], builders=['builder1'])
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build, parentPlan=False):
@@ -554,102 +454,6 @@ class TestBitbucketServerCoreAPIStatusPush(ConfigErrorsMixin, TestReactorMixin, 
 UNICODE_BODY = "body: \u00E5\u00E4\u00F6 text"
 EXPECTED_API = '/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments'
 PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
-
-
-class BitbucketServerCoreAPIStatusPushDeprecatedSend(BitbucketServerCoreAPIStatusPush):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.send_called_count = 0
-
-    @defer.inlineCallbacks
-    def send(self, build):
-        self.send_called_count += 1
-        yield super().send(build)
-
-
-class TestBitbucketServerCoreAPIStatusPushDeprecatedSend(ConfigErrorsMixin, TestReactorMixin,
-                                                         unittest.TestCase,
-                                                         ReporterTestMixin, LoggingMixin):
-
-    @defer.inlineCallbacks
-    def setupReporter(self, token=None, **kwargs):
-        self.setUpTestReactor()
-        self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
-
-        http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
-
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            'serv', auth=('username', 'passwd'), headers=http_headers,
-            debug=None, verify=None)
-        self.sp = BitbucketServerCoreAPIStatusPushDeprecatedSend(
-            "serv", token=token, auth=(Interpolate("username"), Interpolate("passwd")), **kwargs)
-        yield self.sp.setServiceParent(self.master)
-        yield self.master.startService()
-
-    def setUp(self):
-        self.master = None
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.master and self.master.running:
-            yield self.master.stopService()
-
-    @defer.inlineCallbacks
-    def _check_start_and_finish_build(self, build, parentPlan=False):
-        # we make sure proper calls to txrequests have been made
-
-        _name = "Builder_parent #1 \u00BB Builder0 #0" if parentPlan else "Builder0 #0"
-        _parent = "Builder_parent" if parentPlan else "Builder0"
-
-        self._http.expect(
-            'post',
-            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
-            json={'name': _name, 'description': 'Build started.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'INPROGRESS',
-                  'parent': _parent, 'duration': None, 'testResults': None},
-            code=HTTP_PROCESSED)
-        self._http.expect(
-            'post',
-            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
-            json={'name': _name, 'description': 'Build done.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'SUCCESSFUL',
-                  'parent': _parent, 'duration': 10000, 'testResults': None},
-            code=HTTP_PROCESSED)
-        self._http.expect(
-            'post',
-            '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',
-            json={'name': _name, 'description': 'Build done.', 'key': 'Builder0',
-                  'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'ref': 'refs/heads/master', 'buildNumber': '0', 'state': 'FAILED',
-                  'parent': _parent, 'duration': 10000, 'testResults': None},
-            code=HTTP_PROCESSED)
-        build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
-        build['complete'] = False
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'new'), build)
-        build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
-        build['complete'] = True
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        build['results'] = FAILURE
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-        self.assertEqual(self.sp.send_called_count, 3)
-
-    @defer.inlineCallbacks
-    def test_basic(self):
-        yield self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self._check_start_and_finish_build(build)
 
 
 class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,

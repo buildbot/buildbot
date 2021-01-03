@@ -28,8 +28,6 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin,
@@ -62,17 +60,6 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
 
     def tearDown(self):
         return self.master.stopService()
-
-    def test_check_config(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            GitHubStatusPush(Interpolate('token'), startDescription=Interpolate('start'),
-                             endDescription=Interpolate('end'),
-                             context=Interpolate('context'),
-                             verbose=True, builders=['builder1'])
-
-    def test_deprecated_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            GitHubStatusPush(Interpolate('token'), generators=[], builders=['builder1'])
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -324,86 +311,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-
-class GitHubStatusPushDeprecatedSend(GitHubStatusPush):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.send_called_count = 0
-
-    @defer.inlineCallbacks
-    def send(self, build):
-        self.send_called_count += 1
-        yield super().send(build)
-
-
-class TestGitHubStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
-                                         ReporterTestMixin):
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        self.setUpTestReactor()
-
-        self.setup_reporter_test()
-        # project must be in the form <owner>/<project>
-        self.reporter_test_project = 'buildbot/buildbot'
-
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
-
-        yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            HOSTED_BASE_URL, headers={
-                'Authorization': 'token XXYYZZ',
-                'User-Agent': 'Buildbot'
-            },
-            debug=None, verify=None)
-        self.sp = self.createService()
-        yield self.sp.setServiceParent(self.master)
-
-    def createService(self):
-        return GitHubStatusPushDeprecatedSend(Interpolate('XXYYZZ'))
-
-    def tearDown(self):
-        return self.master.stopService()
-
-    @defer.inlineCallbacks
-    def test_basic(self):
-        build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build started.', 'context': 'buildbot/Builder0'})
-        self._http.expect(
-            'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
-        self._http.expect(
-            'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'failure',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
-
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'new'), build)
-        build['complete'] = True
-        build['results'] = SUCCESS
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        build['results'] = FAILURE
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        self.assertEqual(self.sp.send_called_count, 3)
 
 
 class TestGitHubCommentPush(TestGitHubStatusPush):

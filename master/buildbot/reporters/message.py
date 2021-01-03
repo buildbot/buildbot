@@ -193,26 +193,6 @@ class MessageFormatterEmpty(MessageFormatterBase):
         }
 
 
-class DeprecatedMessageFormatterBuildJson(MessageFormatterBase):
-
-    template_type = 'json'
-
-    def __init__(self, format_fn, **kwargs):
-        super().__init__(**kwargs)
-        self.format_fn = format_fn
-
-    @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
-        msgdict = yield self.render_message_dict(master, {'build': build})
-        return msgdict
-
-    def render_message_body(self, context):
-        return self.format_fn(context['build'])
-
-    def render_message_subject(self, context):
-        return None
-
-
 class MessageFormatterFunction(MessageFormatterBase):
 
     def __init__(self, function, template_type, **kwargs):
@@ -318,11 +298,7 @@ class MessageFormatter(MessageFormatterBaseJinja):
 
     compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
 
-    def __init__(self, template_name=None, **kwargs):
-
-        if template_name is not None:
-            warn_deprecated('0.9.1', "template_name is deprecated, supply the template as text")
-            kwargs['template_filename'] = template_name
+    def __init__(self, **kwargs):
         if 'template_filename' in kwargs:
             warn_deprecated('2.10.0',
                             "template_filename is deprecated, supply the template as text")

@@ -23,8 +23,8 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import MessageFormatter
-from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import httpclientservice
 
 from .utils import merge_reports_prop
@@ -44,54 +44,28 @@ DEFAULT_MSG_TEMPLATE = \
     ('The Buildbot has detected a <a href="{{ build_url }}">{{ status_detected }}</a>' +
      'of <i>{{ buildername }}</i> while building {{ projects }} on {{ workername }}.')
 
-DEFAULT_MSG_TEMPLATE_MISSING_WORKER = \
-    ('The Buildbot \'{{buildbot_title}}\' has noticed that the worker named ' +
-     '{{worker.name}} went away. It last disconnected at {{worker.last_connection}}.')
-
 
 class PushjetNotifier(ReporterBase):
 
-    def checkConfig(self, secret,
-                    mode=("failing", "passing", "warnings"),
-                    tags=None, builders=None,
-                    buildSetSummary=False, messageFormatter=None,
-                    subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                    schedulers=None, branches=None,
-                    levels=None, base_url='https://api.pushjet.io',
-                    watchedWorkers=None, messageFormatterMissingWorker=None,
+    def checkConfig(self, secret, levels=None, base_url='https://api.pushjet.io',
                     generators=None):
-        super().checkConfig(mode, tags, builders,
-                            buildSetSummary, messageFormatter,
-                            subject, False, False,
-                            schedulers,
-                            branches, watchedWorkers,
-                            messageFormatterMissingWorker,
-                            generators=generators)
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, secret,
-                        mode=("failing", "passing", "warnings"),
-                        tags=None, builders=None,
-                        buildSetSummary=False, messageFormatter=None,
-                        subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                        schedulers=None, branches=None,
-                        levels=None, base_url='https://api.pushjet.io',
-                        watchedWorkers=None, messageFormatterMissingWorker=None,
+    def reconfigService(self, secret, levels=None, base_url='https://api.pushjet.io',
                         generators=None):
         secret = yield self.renderSecrets(secret)
-        if messageFormatter is None:
-            messageFormatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
-        if messageFormatterMissingWorker is None:
-            messageFormatterMissingWorker = \
-                MessageFormatterMissingWorker(template=DEFAULT_MSG_TEMPLATE_MISSING_WORKER)
-        yield super().reconfigService(mode, tags, builders,
-                                      buildSetSummary, messageFormatter,
-                                      subject, False, False,
-                                      schedulers, branches,
-                                      watchedWorkers, messageFormatterMissingWorker,
-                                      generators=generators)
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators)
         self.secret = secret
         if levels is None:
             self.levels = {}
@@ -99,6 +73,10 @@ class PushjetNotifier(ReporterBase):
             self.levels = levels
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url)
+
+    def _create_default_generators(self):
+        formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
+        return [BuildStatusGenerator(message_formatter=formatter)]
 
     def sendMessage(self, reports):
         body = merge_reports_prop(reports, 'body')

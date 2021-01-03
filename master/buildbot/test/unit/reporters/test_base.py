@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from parameterized import parameterized
-
 import mock
 
 from twisted.internet import defer
@@ -31,8 +29,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestException(Exception):
@@ -50,19 +46,8 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
                                              wantMq=True)
 
     @defer.inlineCallbacks
-    def setupNotifier(self, old_style=False, *args, **kwargs):
-        if old_style:
-            with assertProducesWarnings(DeprecatedApiWarning,
-                                        message_pattern='have been deprecated'):
-                mn = ReporterBase(*args, **kwargs)
-        else:
-            if 'generators' not in kwargs:
-                if 'watchedWorkers' in kwargs:
-                    generator = WorkerMissingGenerator(workers=kwargs.pop('watchedWorkers'))
-                    kwargs['generators'] = [generator]
-
-            mn = ReporterBase(*args, **kwargs)
-
+    def setupNotifier(self, generators):
+        mn = ReporterBase(generators=generators)
         mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
@@ -70,7 +55,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         return mn
 
     @defer.inlineCallbacks
-    def setupBuildMessage(self, old_style=False, **mnKwargs):
+    def setupBuildMessage(self, **kwargs):
 
         build = yield self.insert_build_finished(FAILURE)
 
@@ -83,16 +68,9 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         formatter.wantProperties = False
         formatter.wantSteps = False
         formatter.wantLogs = False
+        generator = BuildStatusGenerator(message_formatter=formatter, **kwargs)
 
-        if old_style:
-            mn = yield self.setupNotifier(old_style=True, messageFormatter=formatter, **mnKwargs)
-        else:
-            generator_kwargs = {}
-            if 'mode' in mnKwargs:
-                generator_kwargs['mode'] = mnKwargs.pop('mode')
-            generator = BuildStatusGenerator(message_formatter=formatter, **generator_kwargs)
-
-            mn = yield self.setupNotifier(generators=[generator], **mnKwargs)
+        mn = yield self.setupNotifier(generators=[generator])
 
         yield mn._got_event(('builds', 20, 'finished'), build)
         return (mn, build, formatter)
@@ -103,53 +81,13 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         gen.generate_name = lambda: '<name>'
         return gen
 
-    @parameterized.expand([
-        ('mode', ('failing',)),
-        ('tags', ['tag']),
-        ('builders', ['builder']),
-        ('buildSetSummary', True),
-        ('messageFormatter', mock.Mock()),
-        ('subject', 'custom subject'),
-        ('addLogs', True),
-        ('addPatch', True),
-        ('schedulers', ['scheduler']),
-        ('branches', ['branch']),
-        ('watchedWorkers', ['worker']),
-        ('messageFormatterMissingWorker', mock.Mock()),
-    ])
-    def test_check_config_raises_error_when_deprecated_and_generator(self, arg_name, arg_value):
-        notifier = ReporterBase()
-        with self.assertRaisesConfigError('can\'t specify generators and deprecated notifier'):
-            kwargs = {arg_name: arg_value}
-            notifier.checkConfig(generators=[mock.Mock()], **kwargs)
+    def test_check_config_raises_error_when_generators_not_list(self):
+        with self.assertRaisesConfigError('generators argument must be a list'):
+            ReporterBase(generators='abc')
 
-    @parameterized.expand([
-        ('mode', ('failing',)),
-        ('tags', ['tag']),
-        ('builders', ['builder']),
-        ('buildSetSummary', True),
-        ('messageFormatter', mock.Mock()),
-        ('subject', 'custom subject'),
-        ('addLogs', True),
-        ('addPatch', True),
-        ('schedulers', ['scheduler']),
-        ('branches', ['branch']),
-        ('watchedWorkers', ['worker']),
-        ('messageFormatterMissingWorker', mock.Mock()),
-    ])
-    def test_check_config_raises_warning_when_deprecated(self, arg_name, arg_value):
-        notifier = ReporterBase()
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='have been deprecated'):
-            kwargs = {arg_name: arg_value}
-            notifier.checkConfig(**kwargs)
-
-    @parameterized.expand([
-        ('_old_style', True),
-        ('_new_style', False),
-    ])
     @defer.inlineCallbacks
-    def test_buildMessage_nominal(self, name, old_style):
-        mn, build, formatter = yield self.setupBuildMessage(old_style=old_style, mode=("failing",))
+    def test_buildMessage_nominal(self):
+        mn, build, formatter = yield self.setupBuildMessage(mode=("failing",))
 
         formatter.format_message_for_build.assert_called_with(('failing',), 'Builder0', build,
                                                               self.master, ['me@foo'])
@@ -169,14 +107,10 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         self.assertEqual(mn.sendMessage.call_count, 1)
         mn.sendMessage.assert_called_with([report])
 
-    @parameterized.expand([
-        ('_old_style', True),
-        ('_new_style', False),
-    ])
     @defer.inlineCallbacks
-    def test_worker_missing_sends_message(self, name, old_style):
-
-        mn = yield self.setupNotifier(old_style=old_style, watchedWorkers=['myworker'])
+    def test_worker_missing_sends_message(self):
+        generator = WorkerMissingGenerator(workers=['myworker'])
+        mn = yield self.setupNotifier(generators=[generator])
 
         worker_dict = {
             'name': 'myworker',

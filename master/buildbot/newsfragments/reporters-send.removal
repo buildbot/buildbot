@@ -1,0 +1,1 @@
+The deprecated ``send()`` function that can be overridden by custom reporters has been removed.
