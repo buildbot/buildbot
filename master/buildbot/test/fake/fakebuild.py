@@ -77,7 +77,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.workerforbuilder = mock.Mock(
             spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
-        self.workerforbuilder.worker.worker_status = FakeWorkerStatus("mock")
+        self.workerforbuilder.worker.info = properties.Properties()
         self.builder.config = config.BuilderConfig(
             name='bldr',
             workernames=['a'],
@@ -127,7 +127,7 @@ class FakeBuild(properties.PropertiesMixin):
         return self.builder
 
     def getWorkerInfo(self):
-        return self.workerforbuilder.worker.worker_status.info
+        return self.workerforbuilder.worker.info
 
     def setUniqueStepName(self, step):
         pass

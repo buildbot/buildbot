@@ -236,7 +236,7 @@ class Tests(RunFakeMasterTestCase):
         }
         yield self.setup_master(config_dict)
 
-        props = worker.worker_status.info
+        props = worker.info
 
         from buildbot_worker.base import BotBase
 

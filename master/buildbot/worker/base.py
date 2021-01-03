@@ -101,6 +101,7 @@ class AbstractWorker(service.BuildbotService):
         self.workerid = None
 
         self.worker_status = WorkerStatus(name)
+        self.info = Properties()
         self.worker_commands = None
         self.workerforbuilders = {}
         self.max_builds = max_builds
@@ -228,12 +229,14 @@ class AbstractWorker(service.BuildbotService):
         self.worker_status.setHost(info.get("host"))
         self.worker_status.setAccessURI(info.get("access_uri", None))
         self.worker_status.setVersion(info.get("version", "(unknown)"))
+        self.info.setProperty("version", "(unknown)", "Worker")
 
         # store everything as Properties
         for k, v in info.items():
             if k in ('environ', 'worker_commands'):
                 continue
             self.worker_status.info.setProperty(k, v, "Worker")
+            self.info.setProperty(k, v, "Worker")
 
     @defer.inlineCallbacks
     def _getWorkerInfo(self):

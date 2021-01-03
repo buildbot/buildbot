@@ -345,7 +345,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
     def test_worker_info(self):
         yield self.addWorker()
         worker = yield self.connectWorker()
-        props = self.buildworker.worker_status.info
+        props = self.buildworker.info
         # check worker info passing
         self.assertEqual(props.getProperty("info"),
                          "here")
