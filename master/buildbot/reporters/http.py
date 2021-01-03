@@ -20,78 +20,8 @@ from buildbot import config
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import DeprecatedMessageFormatterBuildJson
-from buildbot.reporters.message import MessageFormatterEmpty
 from buildbot.util import httpclientservice
 from buildbot.warnings import warn_deprecated
-
-
-class HttpStatusPushBase(ReporterBase):
-    def checkConfig(self, builders=None, debug=None, verify=None,
-                    wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False,
-                    generators=None, _has_old_arg_names=None):
-
-        old_arg_names = {
-            'builders': builders is not None,
-            'wantProperties': wantProperties is not False,
-            'wantSteps': wantSteps is not False,
-            'wantPreviousBuild': wantPreviousBuild is not False,
-            'wantLogs': wantLogs is not False,
-        }
-        if _has_old_arg_names is not None:
-            old_arg_names.update(_has_old_arg_names)
-
-        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
-
-        if passed_old_arg_names:
-
-            old_arg_names_msg = ', '.join(passed_old_arg_names)
-            if generators is not None:
-                config.error(("can't specify generators and deprecated HTTPStatusPushBase "
-                              "arguments ({}) at the same time").format(old_arg_names_msg))
-            warn_deprecated('2.9.0',
-                            ('The arguments {} passed to {} have been deprecated. Use generators '
-                             'instead').format(old_arg_names_msg, self.__class__.__name__))
-
-        if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs)
-
-        super().checkConfig(generators=generators)
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
-
-    @defer.inlineCallbacks
-    def reconfigService(self, builders=None, debug=None, verify=None,
-                        wantProperties=False, wantSteps=False,
-                        wantPreviousBuild=False, wantLogs=False, generators=None, **kwargs):
-        yield super().reconfigService()
-        self.debug = debug
-        self.verify = verify
-        self.builders = builders
-        self.wantProperties = wantProperties
-        self.wantSteps = wantSteps
-        self.wantPreviousBuild = wantPreviousBuild
-        self.wantLogs = wantLogs
-
-        if generators is None:
-            generators = self._create_generators_from_old_args(builders, wantProperties, wantSteps,
-                                                               wantPreviousBuild, wantLogs)
-
-        yield super().reconfigService(generators=generators)
-
-    def _create_generators_from_old_args(self, builders, want_properties, want_steps,
-                                         want_previous_build, want_logs):
-        formatter = MessageFormatterEmpty(wantProperties=want_properties, wantSteps=want_steps,
-                                          wantLogs=want_logs)
-        return [
-            BuildStatusGenerator(builders=builders, message_formatter=formatter, report_new=True,
-                                 mode="all", _want_previous_build=want_previous_build)
-        ]
-
-    def sendMessage(self, reports):
-        raise NotImplementedError()
-
-    def isStatus2XX(self, code):
-        return code // 100 == 2
 
 
 class HttpStatusPush(ReporterBase):
