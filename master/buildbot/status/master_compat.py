@@ -17,7 +17,6 @@ import os
 from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
-from twisted.python import log
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -27,7 +26,6 @@ from buildbot.status import builder_compat
 from buildbot.util import bbcollections
 from buildbot.util import bytes2unicode
 from buildbot.util import service
-from buildbot.util.eventual import eventually
 
 
 @implementer(interfaces.IStatus)
