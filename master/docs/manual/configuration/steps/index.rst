@@ -35,7 +35,6 @@ Build Steps
     test
     treesize
     perl_module_test
-    mtr
     subunit_shell_command
     hlint
     maxq
@@ -135,7 +134,6 @@ The following build steps are available:
     * :ref:`Step-Test`
     * :ref:`Step-TreeSize`
     * :ref:`Step-PerlModuleTest`
-    * :ref:`Step-MTR`
     * :ref:`Step-SubunitShellCommand`
     * :ref:`Step-HLint`
     * :ref:`Step-MaxQ`

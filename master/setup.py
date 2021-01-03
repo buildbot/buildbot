@@ -278,7 +278,6 @@ setup_args = {
                 'SetProperty', 'SetProperties', 'LogRenderable', "Assert"]),
             ('buildbot.steps.maxq', ['MaxQ']),
             ('buildbot.steps.mswin', ['Robocopy']),
-            ('buildbot.steps.mtrlogobserver', ['MTR']),
             ('buildbot.steps.package.deb.lintian', ['DebLintian']),
             ('buildbot.steps.package.deb.pbuilder', [
                 'DebPbuilder', 'DebCowbuilder', 'UbuPbuilder',

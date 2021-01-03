@@ -156,7 +156,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.remote_kwargs['workdir'] = workdir
         if self.__class__.__name__ not in ['TreeSize', 'SetPropertyFromCommand', 'Configure',
                                            'WarningCountingShellCommand', 'Compile', 'Test',
-                                           'MTR', 'DebPbuilder', 'DebCowbuilder', 'UbuPbuilder']:
+                                           'DebPbuilder', 'DebCowbuilder', 'UbuPbuilder']:
             self.warn_deprecated_if_oldstyle_subclass('ShellCommand')
 
     def setBuild(self, build):
@@ -654,8 +654,7 @@ class Test(WarningCountingShellCommand):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.__class__.__name__ not in ['MTR']:
-            self.warn_deprecated_if_oldstyle_subclass('Test')
+        self.warn_deprecated_if_oldstyle_subclass('Test')
 
     def setTestResults(self, total=0, failed=0, passed=0, warnings=0):
         """

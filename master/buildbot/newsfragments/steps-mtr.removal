@@ -1,0 +1,2 @@
+The deprecated ``MTR`` step has been removed.
+Contributors are welcome to step in, migrate this step to newer APIs and add a proper test suite to restore this step in Buildbot.
