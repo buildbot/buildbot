@@ -28,8 +28,6 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin,
@@ -62,17 +60,6 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixi
 
     def tearDown(self):
         return self.master.stopService()
-
-    def test_check_config(self):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern='Use generators instead'):
-            GitHubStatusPush(Interpolate('token'), startDescription=Interpolate('start'),
-                             endDescription=Interpolate('end'),
-                             context=Interpolate('context'),
-                             verbose=True, builders=['builder1'])
-
-    def test_deprecated_generators(self):
-        with self.assertRaisesConfigError("can't specify generators and deprecated"):
-            GitHubStatusPush(Interpolate('token'), generators=[], builders=['builder1'])
 
     @defer.inlineCallbacks
     def test_basic(self):
