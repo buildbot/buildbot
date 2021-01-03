@@ -108,22 +108,8 @@ class BitbucketStatusPush(ReporterBase):
         return [BuildStartEndStatusGenerator(builders=builders)]
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            yield self.send(build)
-        else:
-            yield self._send_impl(build)
-
-    @defer.inlineCallbacks
-    def _send_impl(self, build):
         results = build['results']
         oauth_request = yield self.oauthhttp.post("",
                                                   data=_GET_TOKEN_DATA)

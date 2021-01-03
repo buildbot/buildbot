@@ -160,27 +160,14 @@ class GitHubStatusPush(ReporterBase):
             '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
             json=payload)
 
-    @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build, self._cached_report)
-
     def is_status_2xx(self, code):
         return code // 100 == 2
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not GitHubStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            self._cached_report = reports[0]
-            yield self.send(build)
-        else:
-            yield self._send_impl(build, reports[0])
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
@@ -306,10 +293,11 @@ class GitHubCommentPush(GitHubStatusPush):
         ]
 
     @defer.inlineCallbacks
-    def _send_impl(self, build, report):
+    def sendMessage(self, reports):
+        report = reports[0]
         if 'body' not in report or report['body'] is None:
             return
-        yield super()._send_impl(build, report)
+        yield super().sendMessage(reports)
 
     @defer.inlineCallbacks
     def createStatus(self,

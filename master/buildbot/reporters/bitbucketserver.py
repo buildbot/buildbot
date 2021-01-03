@@ -139,23 +139,10 @@ class BitbucketServerStatusPush(ReporterBase):
         return self._http.post(STATUS_API_URL.format(sha=sha), json=payload)
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build, self._cached_report)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketServerStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            self._cached_report = reports[0]
-            yield self.send(build)
-        else:
-            yield self._send_impl(build, reports[0])
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
@@ -351,23 +338,10 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         return self._http.post(_url, json=payload)
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build, self._cached_report)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketServerCoreAPIStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            self._cached_report = reports[0]
-            yield self.send(build)
-        else:
-            yield self._send_impl(build, reports[0])
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build, report):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 

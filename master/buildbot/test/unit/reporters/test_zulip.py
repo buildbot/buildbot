@@ -23,8 +23,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, ConfigErrorsMixin,
@@ -170,59 +168,3 @@ class TestZulipStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin, Co
         self.setUpLogging()
         yield self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('401: Error pushing build status to Zulip')
-
-
-class ZulipStatusPushDeprecatedSend(ZulipStatusPush):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.send_called_count = 0
-
-    @defer.inlineCallbacks
-    def send(self, build):
-        self.send_called_count += 1
-        yield super().send(build)
-
-
-class TestZulipStatusPushDeprecatedSend(unittest.TestCase, ReporterTestMixin, LoggingMixin,
-                                        ConfigErrorsMixin, TestReactorMixin):
-
-    def setUp(self):
-        self.setUpTestReactor()
-        self.setup_reporter_test()
-        self.master = fakemaster.make_master(
-            testcase=self, wantData=True, wantDb=True, wantMq=True)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.master.running:
-            yield self.master.stopService()
-
-    @defer.inlineCallbacks
-    def setupZulipStatusPush(self, endpoint="http://example.com", token="123", stream=None):
-        self.sp = ZulipStatusPushDeprecatedSend(
-            endpoint=endpoint, token=token, stream=stream)
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, endpoint, debug=None, verify=None)
-        yield self.sp.setServiceParent(self.master)
-        yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def test_build_started(self):
-        yield self.setupZulipStatusPush(stream="xyz")
-        build = yield self.insert_build_new()
-        self._http.expect(
-            'post',
-            '/api/v1/external/buildbot?api_key=123&stream=xyz',
-            json={
-                "event": 'new',
-                "buildid": 20,
-                "buildername": "Builder0",
-                "url": "http://localhost:8080/#builders/79/builds/0",
-                "project": "testProject",
-                "timestamp": 10000001
-            })
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'new'), build)
-
-        self.assertEqual(self.sp.send_called_count, 1)
