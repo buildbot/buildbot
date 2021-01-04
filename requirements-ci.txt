@@ -24,7 +24,7 @@ flake8==3.8.4
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.2
-idna==2.10
+idna==3.0
 imagesize==1.2.0
 incremental==17.5.0
 ipaddress==1.0.23
