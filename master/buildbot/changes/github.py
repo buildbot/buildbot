@@ -106,6 +106,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
         http_headers = {'User-Agent': 'Buildbot'}
         if token is not None:
+            token = yield self.renderSecrets(token)
             http_headers.update({'Authorization': 'token ' + token})
 
         self._http = yield httpclientservice.HTTPClientService.getService(
