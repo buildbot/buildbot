@@ -20,7 +20,11 @@ from twisted.trial import unittest
 
 from buildbot.changes.github import GitHubPullrequestPoller
 from buildbot.config import ConfigErrors
+from buildbot.process.properties import Properties
+from buildbot.process.properties import Secret
+from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -177,7 +181,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
     def setUp(self):
         self.setUpTestReactor()
         yield self.setUpChangeSource()
+
+        fake_storage_service = FakeSecretStorage()
+
+        secret_service = SecretManager()
+        secret_service.services = [fake_storage_service]
+        yield secret_service.setServiceParent(self.master)
+
         yield self.master.startService()
+
+        fake_storage_service.reconfigService(secretdict={"token": "1234"})
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -193,6 +206,9 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         http_headers = {'User-Agent': 'Buildbot'}
         token = kwargs.get('token', None)
         if token:
+            p = Properties()
+            p.master = self.master
+            token = yield p.render(token)
             http_headers.update({'Authorization': 'token ' + token})
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, headers=http_headers)
@@ -235,6 +251,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
     def test_SimplePR(self):
         yield self.newChangeSource(
             'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"])
+        yield self.simple_pr()
+
+    @defer.inlineCallbacks
+    def test_secret_token(self):
+        yield self.newChangeSource(
+            'defunkt', 'defunkt', token=Secret('token'), github_property_whitelist=["github.*"])
+        yield self.simple_pr()
+
+    @defer.inlineCallbacks
+    def simple_pr(self):
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
