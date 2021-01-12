@@ -69,6 +69,7 @@ require('./common/directives/windowtitle/windowtitle.directive.js');
 require('./common/filters/moment/moment.constant.js');
 require('./common/filters/moment/moment.filter.js');
 require('./common/filters/publicFields.filter.js');
+require('./common/filters/limitStringLength.filter.js');
 require('./common/services/ansicodes/ansicodes.service.js');
 require('./common/services/buildercache/buildercache.service.js');
 require('./common/services/datagrouper/datagrouper.service.js');
