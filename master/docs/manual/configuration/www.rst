@@ -77,6 +77,17 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'avatar_methods': [util.AvatarGitHub()]
         }
 
+    .. py:class:: AvatarGitHub(github_api_endpoint=None, token=None, debug=False, verify=False)
+
+        :param string github_api_endpoint: specify the github api endpoint if you work with GitHub Enterprise
+        :param string token: a GitHub API token to execute all requests to the API authenticated. It is strongly recommended to use a API token since it increases GitHub API rate limits significantly.
+        :param boolean debug: logs every requests and their response
+        :param boolean verify: disable ssl verification for the case you use temporary self signed certificates on a GitHub Enterprise installation
+
+        This class requires `txrequests`_ package to allow interaction with GitHub REST API.
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+
     For use of corporate pictures, you can use LdapUserInfo, which can also acts as an avatar provider.
     See :ref:`Web-Authentication`.
 
