@@ -81,17 +81,20 @@ class AvatarResource(resource.Resource):
     @defer.inlineCallbacks
     def renderAvatar(self, request):
         email = request.args.get(b"email", [b""])[0]
-        size = request.args.get(b"size", 32)
+        size = request.args.get(b"size", [32])[0]
+        try:
+            size = int(size)
+        except ValueError:
+            size = 32
         username = request.args.get(b"username", [None])[0]
-        r = None
-        if self.cache.get(email):
-            r = self.cache[email]
+        cache_key = (email, username, size)
+        if self.cache.get(cache_key):
+            raise self.cache[cache_key]
         for method in self.avatarMethods:
             try:
                 res = yield method.getUserAvatar(email, username, size, self.defaultAvatarFullUrl)
-            except resource.Redirect:
-                if r is not None:
-                    self.cache[email] = r
+            except resource.Redirect as r:
+                self.cache[cache_key] = r
                 raise
             if res is not None:
                 request.setHeader(b'content-type', res[0])

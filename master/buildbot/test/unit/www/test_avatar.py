@@ -22,6 +22,13 @@ from buildbot.www import auth
 from buildbot.www import avatar
 
 
+class TestAvatar(avatar.AvatarBase):
+
+    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+        return defer.succeed((b"image/png", '{!r} {!r} {!r}'.format(
+                                email, size, defaultAvatarUrl).encode('utf-8')))
+
+
 class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
@@ -60,21 +67,34 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, dict(redirected=b'https://avatars.githubusercontent.com/warner'))
 
     @defer.inlineCallbacks
-    def test_custom(self):
-        class CustomAvatar(avatar.AvatarBase):
-
-            def getUserAvatar(self, email, username, size, defaultAvatarUrl):
-                return defer.succeed((b"image/png", email +
-                                      str(size).encode('utf-8') +
-                                      defaultAvatarUrl))
-
+    def test_avatar_call(self):
         master = self.make_master(
-            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[CustomAvatar()])
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()])
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
-        self.assertEqual(res, b"foo32http://a/b/img/nobody.png")
+        self.assertEqual(res, b"b'foo' 32 b'http://a/b/img/nobody.png'")
+
+    @defer.inlineCallbacks
+    def test_custom_size(self):
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()])
+        rsrc = avatar.AvatarResource(master)
+        rsrc.reconfigResource(master.config)
+
+        res = yield self.render_resource(rsrc, b'/?email=foo&size=64')
+        self.assertEqual(res, b"b'foo' 64 b'http://a/b/img/nobody.png'")
+
+    @defer.inlineCallbacks
+    def test_invalid_size(self):
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()])
+        rsrc = avatar.AvatarResource(master)
+        rsrc.reconfigResource(master.config)
+
+        res = yield self.render_resource(rsrc, b'/?email=foo&size=abcd')
+        self.assertEqual(res, b"b'foo' 32 b'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
     def test_custom_not_found(self):
