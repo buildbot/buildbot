@@ -1,0 +1,1 @@
+Added ``MessageFormatterEmpty``, ``MessageFormatterFunction``, ``MessageFormatterMissingWorker``, and ``MessageFormatterRenderable`` to ``buildbot.reporters`` namespace
