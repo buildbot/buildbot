@@ -93,7 +93,7 @@ class HTTPClientService(service.SharedService):
     @defer.inlineCallbacks
     def getService(cls, master, case, *args, **kwargs):
         def assertNotCalled(self, *_args, **_kwargs):
-            case.fail(("HTTPClientService called with *{!r}, **{!r}"
+            case.fail(("HTTPClientService called with *{!r}, **{!r} "
                        "while should be called *{!r} **{!r}").format(
                 _args, _kwargs, args, kwargs))
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
@@ -106,7 +106,7 @@ class HTTPClientService(service.SharedService):
     # tests should ensure this has been called
     checkAvailable = mock.Mock()
 
-    def expect(self, method, ep, params=None, data=None, json=None, code=200,
+    def expect(self, method, ep, params=None, headers=None, data=None, json=None, code=200,
                content=None, content_json=None, files=None):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
@@ -115,7 +115,7 @@ class HTTPClientService(service.SharedService):
             content = jsonmodule.dumps(content_json, default=toJson)
 
         self._expected.append(dict(
-            method=method, ep=ep, params=params, data=data, json=json, code=code,
+            method=method, ep=ep, params=params, headers=headers, data=data, json=json, code=code,
             content=content, files=files))
         return None
 
@@ -123,7 +123,8 @@ class HTTPClientService(service.SharedService):
         self.case.assertEqual(0, len(self._expected),
                               "expected more http requests:\n {!r}".format(self._expected))
 
-    def _doRequest(self, method, ep, params=None, data=None, json=None, files=None, timeout=None):
+    def _doRequest(self, method, ep, params=None, headers=None, data=None, json=None, files=None,
+            timeout=None):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",
@@ -136,20 +137,24 @@ class HTTPClientService(service.SharedService):
         if not self._expected:
             raise AssertionError(
                 "Not expecting a request, while we got: "
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}".format(
-                    method, ep, params, data, json, files))
+                "method={!r}, ep={!r}, params={!r}, headers={!r}, "
+                "data={!r}, json={!r}, files={!r}".format(
+                    method, ep, params, headers, data, json, files))
         expect = self._expected.pop(0)
         # pylint: disable=too-many-boolean-expressions
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
-                expect['data'] != data or expect['json'] != json or expect['files'] != files):
+                expect['headers'] != headers or expect['data'] != data or
+                expect['json'] != json or expect['files'] != files):
             raise AssertionError(
                 "expecting:\n"
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}\n"
+                "method={!r}, ep={!r}, params={!r}, headers={!r}, "
+                "data={!r}, json={!r}, files={!r}\n"
                 "got      :\n"
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}, files={!r}".format(
-                    expect['method'], expect['ep'], expect['params'],
+                "method={!r}, ep={!r}, params={!r}, headers={!r}, "
+                "data={!r}, json={!r}, files={!r}".format(
+                    expect['method'], expect['ep'], expect['params'], expect['headers'],
                     expect['data'], expect['json'], expect['files'],
-                    method, ep, params, data, json, files,
+                    method, ep, params, headers, data, json, files,
                 ))
         if not self.quiet:
             log.debug("{method} {ep} -> {code} {content!r}",
