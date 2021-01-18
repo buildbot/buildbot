@@ -897,6 +897,72 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin,
             jsonrpccode=JSONRPC_CODES['invalid_request'],
             responseCode=403)
 
+    @defer.inlineCallbacks
+    def test_owner_without_email(self):
+        self.master.session.user_info = {
+            "username": "defunkt",
+            "full_name": "Defunkt user",
+        }
+
+        yield self.render_control_resource(self.rsrc, b'/test/13',
+                                           action="testy")
+        self.assertRequest(
+            contentJson={
+                'id': self.UUID,
+                'jsonrpc': '2.0',
+                'result': {
+                    'action': 'testy',
+                    'args': {'owner': 'defunkt'},
+                    'kwargs': {'testid': 13},
+                },
+            },
+            contentType=b'application/json',
+            responseCode=200)
+
+    @defer.inlineCallbacks
+    def test_owner_with_only_full_name(self):
+        self.master.session.user_info = {
+            "full_name": "Defunkt user",
+        }
+
+        yield self.render_control_resource(self.rsrc, b'/test/13',
+                                           action="testy")
+        self.assertRequest(
+            contentJson={
+                'id': self.UUID,
+                'jsonrpc': '2.0',
+                'result': {
+                    'action': 'testy',
+                    'args': {'owner': 'Defunkt user'},
+                    'kwargs': {'testid': 13},
+                },
+            },
+            contentType=b'application/json',
+            responseCode=200)
+
+    @defer.inlineCallbacks
+    def test_owner_with_email(self):
+        self.master.session.user_info = {
+            "email": "defunkt@example.org",
+            "username": "defunkt",
+            "full_name": "Defunkt user",
+        }
+
+        yield self.render_control_resource(self.rsrc, b'/test/13',
+                                           action="testy")
+        self.assertRequest(
+            contentJson={
+                'id': self.UUID,
+                'jsonrpc': '2.0',
+                'result': {
+                    'action': 'testy',
+                    'args': {'owner': 'defunkt@example.org'},
+                    'kwargs': {'testid': 13},
+                },
+            },
+            contentType=b'application/json',
+            responseCode=200)
+
 
 class ContentTypeParser(unittest.TestCase):
 

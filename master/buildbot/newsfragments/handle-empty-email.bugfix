@@ -1,0 +1,1 @@
+If logged in user has an empty email, use its username instead or its full name ultimately
