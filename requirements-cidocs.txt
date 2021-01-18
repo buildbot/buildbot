@@ -4,5 +4,5 @@ sphinx-rtd-theme==0.5.1
 sphinxcontrib-blockdiag==2.0.0
 sphinxcontrib-spelling==7.1.0
 sphinxcontrib-websupport==1.2.4
-Pygments==2.7.3
+Pygments==2.7.4
 towncrier==19.2.0
