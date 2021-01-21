@@ -21,12 +21,12 @@ from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
 
 from buildbot import config
-from buildbot import util
 from buildbot.reporters import utils
 from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.buildset import BuildSetStatusGenerator
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.util import service
+from buildbot.util import tuplematch
 from buildbot.warnings import warn_deprecated
 
 ENCODING = 'utf-8'
@@ -162,7 +162,7 @@ class ReporterBase(service.BuildbotService):
 
     def _does_generator_want_key(self, generator, key):
         for filter in generator.wanted_event_keys:
-            if util.tuplematch.matchTuple(key, filter):
+            if tuplematch.matchTuple(key, filter):
                 return True
         return False
 
