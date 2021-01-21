@@ -58,9 +58,9 @@ class WorkerForBuilderBase(service.Service):
     # is running. We use it to implement the stopBuild method.
     command = None
 
-    # .remoteStep is a ref to the master-side BuildStep object, and is set
+    # .command_ref is a ref to the master-side BuildStep object, and is set
     # when the step is started
-    remoteStep = None
+    command_ref = None
 
     bf = None
 
@@ -115,7 +115,7 @@ class WorkerForBuilderBase(service.Service):
 
     def lostRemoteStep(self, remotestep):
         log.msg("lost remote step")
-        self.remoteStep = None
+        self.command_ref = None
         if self.stopCommandOnShutdown:
             self.stopCommand()
 
@@ -125,7 +125,7 @@ class WorkerForBuilderBase(service.Service):
         """This is invoked before the first step of any new build is run.  It
         doesn't do much, but masters call it so it's still here."""
 
-    def remote_startCommand(self, stepref, stepId, command, args):
+    def remote_startCommand(self, command_ref, stepId, command, args):
         """
         This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
         part of various master-side BuildSteps, to start various commands
@@ -150,8 +150,8 @@ class WorkerForBuilderBase(service.Service):
         self.command = factory(self, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
-        self.remoteStep = stepref
-        self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
+        self.command_ref = command_ref
+        self.command_ref.notifyOnDisconnect(self.lostRemoteStep)
         d = self.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.commandComplete)
@@ -195,10 +195,10 @@ class WorkerForBuilderBase(service.Service):
         # the update[1]=0 comes from the leftover 'updateNum', which the
         # master still expects to receive. Provide it to avoid significant
         # interoperability issues between new workers and old masters.
-        if self.remoteStep:
+        if self.command_ref:
             update = [data, 0]
             updates = [update]
-            d = self.remoteStep.callRemote("update", updates)
+            d = self.command_ref.callRemote("update", updates)
             d.addCallback(self.ackUpdate)
             d.addErrback(self._ackFailed, "WorkerForBuilder.sendUpdate")
 
@@ -228,12 +228,12 @@ class WorkerForBuilderBase(service.Service):
         if not self.running:
             log.msg(" but we weren't running, quitting silently")
             return
-        if self.remoteStep:
-            self.remoteStep.dontNotifyOnDisconnect(self.lostRemoteStep)
-            d = self.remoteStep.callRemote("complete", failure)
+        if self.command_ref:
+            self.command_ref.dontNotifyOnDisconnect(self.lostRemoteStep)
+            d = self.command_ref.callRemote("complete", failure)
             d.addCallback(self.ackComplete)
             d.addErrback(self._ackFailed, "sendComplete")
-            self.remoteStep = None
+            self.command_ref = None
 
 
 class BotBase(service.MultiService):
