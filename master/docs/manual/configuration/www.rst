@@ -184,6 +184,14 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'Workers.showWorkerBuilders': True,
         }
 
+``ws_ping_interval``
+
+    Send websocket pings every ``ws_ping_interval`` seconds.
+    This is useful to avoid websocket timeouts when using reverse proxies or CDNs.
+    If the value is 0, pings are disabled.
+
+    The default is 0.
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.
