@@ -19,9 +19,9 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
-from buildbot import util
 from buildbot.reporters import utils
 from buildbot.util import service
+from buildbot.util import tuplematch
 
 ENCODING = 'utf-8'
 
@@ -75,7 +75,7 @@ class ReporterBase(service.BuildbotService):
 
     def _does_generator_want_key(self, generator, key):
         for filter in generator.wanted_event_keys:
-            if util.tuplematch.matchTuple(key, filter):
+            if tuplematch.matchTuple(key, filter):
                 return True
         return False
 
