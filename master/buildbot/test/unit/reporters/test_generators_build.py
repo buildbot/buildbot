@@ -517,6 +517,24 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         })
 
     @defer.inlineCallbacks
+    def test_is_message_needed_ignores_unspecified_tags(self):
+        build = yield self.insert_build_finished_get_props(SUCCESS)
+
+        # force tags
+        build['builder']['tags'] = ['tag']
+        g = BuildStartEndStatusGenerator(tags=['not_existing_tag'])
+        self.assertFalse(g.is_message_needed_by_props(build))
+
+    @defer.inlineCallbacks
+    def test_is_message_needed_tags(self):
+        build = yield self.insert_build_finished_get_props(SUCCESS)
+
+        # force tags
+        build['builder']['tags'] = ['tag']
+        g = BuildStartEndStatusGenerator(tags=['tag'])
+        self.assertTrue(g.is_message_needed_by_props(build))
+
+    @defer.inlineCallbacks
     def test_build_message_add_logs(self):
         g = yield self.setup_generator(add_logs=True)
         build = yield self.insert_build_finished_get_props(SUCCESS)

@@ -122,3 +122,6 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         report = yield self.build_message(formatter, master, reporter, build['builder']['name'],
                                           [build], build['results'])
         return report
+
+    def _matches_any_tag(self, tags):
+        return self.tags and any(tag for tag in self.tags if tag in tags)
