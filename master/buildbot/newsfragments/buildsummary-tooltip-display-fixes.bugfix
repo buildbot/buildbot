@@ -1,0 +1,3 @@
+For build summary tooltip, truncate very long step names or build status
+strings, enable auto positioning of tooltip, and improve text alignment.
+Also, add build summary tooltip to masters page and builds tables.
