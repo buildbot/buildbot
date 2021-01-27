@@ -84,6 +84,22 @@ class FakeWorker:
         self.workername = workername
 
 
+class FakeLatentWorker(AbstractLatentWorker):
+    builds_may_be_incompatible = True
+
+    def __init__(self, is_compatible_with_build):
+        self.is_compatible_with_build = is_compatible_with_build
+
+    def isCompatibleWithBuild(self, build_props):
+        return defer.succeed(self.is_compatible_with_build)
+
+    def checkConfig(self, name, _, **kwargs):
+        pass
+
+    def reconfigService(self, name, _, **kwargs):
+        pass
+
+
 class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
@@ -337,23 +353,8 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     def test_canStartBuild_with_incompatible_latent_worker(self):
         yield self.makeBuilder()
 
-        class FakeLatentWorker(AbstractLatentWorker):
-            builds_may_be_incompatible = True
-
-            def __init__(self):
-                pass
-
-            def isCompatibleWithBuild(self, build_props):
-                return defer.succeed(False)
-
-            def checkConfig(self, name, _, **kwargs):
-                pass
-
-            def reconfigService(self, name, _, **kwargs):
-                pass
-
         wfb = mock.Mock()
-        wfb.worker = FakeLatentWorker()
+        wfb.worker = FakeLatentWorker(is_compatible_with_build=False)
 
         with mock.patch(
                 'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
