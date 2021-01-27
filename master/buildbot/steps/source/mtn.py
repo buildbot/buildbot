@@ -276,13 +276,13 @@ class Monotone(Source):
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
-        cmd = buildstep.RemoteShellCommand(workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout,
-                                           initialStdin=initialStdin,
-                                           decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(workdir, command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin,
+                                               decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 

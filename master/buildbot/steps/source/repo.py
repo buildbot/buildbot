@@ -24,6 +24,7 @@ from zope.interface import implementer
 from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.steps.source.base import Source
 
@@ -211,10 +212,10 @@ class Repo(Source):
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
             workdir = self.workdir
-        cmd = buildstep.RemoteShellCommand(workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout, **kwargs)
+        cmd = remotecommand.RemoteShellCommand(workdir, command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout, **kwargs)
         self.lastCommand = cmd
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
