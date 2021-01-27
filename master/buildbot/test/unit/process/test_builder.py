@@ -84,6 +84,22 @@ class FakeWorker:
         self.workername = workername
 
 
+class FakeLatentWorker(AbstractLatentWorker):
+    builds_may_be_incompatible = True
+
+    def __init__(self, is_compatible_with_build):
+        self.is_compatible_with_build = is_compatible_with_build
+
+    def isCompatibleWithBuild(self, build_props):
+        return defer.succeed(self.is_compatible_with_build)
+
+    def checkConfig(self, name, _, **kwargs):
+        pass
+
+    def reconfigService(self, name, _, **kwargs):
+        pass
+
+
 class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     def setUp(self):
@@ -337,29 +353,43 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     def test_canStartBuild_with_incompatible_latent_worker(self):
         yield self.makeBuilder()
 
-        class FakeLatentWorker(AbstractLatentWorker):
-            builds_may_be_incompatible = True
-
-            def __init__(self):
-                pass
-
-            def isCompatibleWithBuild(self, build_props):
-                return defer.succeed(False)
-
-            def checkConfig(self, name, _, **kwargs):
-                pass
-
-            def reconfigService(self, name, _, **kwargs):
-                pass
-
         wfb = mock.Mock()
-        wfb.worker = FakeLatentWorker()
+        wfb.worker = FakeLatentWorker(is_compatible_with_build=False)
 
         with mock.patch(
                 'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
                 mock.Mock()):
             startable = yield self.bldr.canStartBuild(wfb, 100)
         self.assertFalse(startable)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_renderable_locks_with_compatible_latent_worker(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[mock.Mock()])
+
+        rendered_locks = [False]
+
+        @renderer
+        def locks_renderer(props):
+            rendered_locks[0] = True
+            return [mock.Mock()]
+
+        self.bldr.config.locks = locks_renderer
+
+        wfb = mock.Mock()
+        wfb.worker = FakeLatentWorker(is_compatible_with_build=True)
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            with mock.patch(
+                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                    mock.Mock()):
+                startable = yield self.bldr.canStartBuild(wfb, 100)
+                self.assertEqual(startable, False)
+        self.assertFalse(startable)
+        self.assertTrue(rendered_locks[0])
 
     @defer.inlineCallbacks
     def test_canStartBuild_enforceChosenWorker(self):
