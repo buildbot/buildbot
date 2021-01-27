@@ -363,6 +363,35 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
         self.assertFalse(startable)
 
     @defer.inlineCallbacks
+    def test_canStartBuild_with_renderable_locks_with_compatible_latent_worker(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[mock.Mock()])
+
+        rendered_locks = [False]
+
+        @renderer
+        def locks_renderer(props):
+            rendered_locks[0] = True
+            return [mock.Mock()]
+
+        self.bldr.config.locks = locks_renderer
+
+        wfb = mock.Mock()
+        wfb.worker = FakeLatentWorker(is_compatible_with_build=True)
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            with mock.patch(
+                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                    mock.Mock()):
+                startable = yield self.bldr.canStartBuild(wfb, 100)
+                self.assertEqual(startable, False)
+        self.assertFalse(startable)
+        self.assertTrue(rendered_locks[0])
+
+    @defer.inlineCallbacks
     def test_canStartBuild_enforceChosenWorker(self):
         """enforceChosenWorker rejects and accepts builds"""
         yield self.makeBuilder()

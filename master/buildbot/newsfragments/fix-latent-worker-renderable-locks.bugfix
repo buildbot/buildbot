@@ -1,0 +1,1 @@
+Fixed crash when using renderable locks with latent workers that may have incompatible builds (:issue:`5757`).
