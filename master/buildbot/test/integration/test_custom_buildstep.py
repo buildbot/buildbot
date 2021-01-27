@@ -31,7 +31,7 @@ from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestLogObserver(buildstep.LogObserver):
+class TestLogObserver(logobserver.LogObserver):
 
     def __init__(self):
         self.observed = []
