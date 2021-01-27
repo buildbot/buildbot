@@ -153,15 +153,21 @@ class OldImportPaths(unittest.TestCase):
         assert Source
 
     def test_buildstep_remotecommand(self):
-        from buildbot.process.buildstep import RemoteCommand, \
-            LoggedRemoteCommand, RemoteShellCommand
-        assert RemoteCommand
-        assert LoggedRemoteCommand
-        assert RemoteShellCommand
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecatedApiWarning)
+            warnings.simplefilter("ignore", DeprecationWarning)
+            from buildbot.process.buildstep import RemoteCommand, \
+                LoggedRemoteCommand, RemoteShellCommand
+            assert RemoteCommand
+            assert LoggedRemoteCommand
+            assert RemoteShellCommand
 
     def test_buildstep_logobserver(self):
-        from buildbot.process.buildstep import LogObserver, \
-            LogLineObserver, OutputProgressObserver
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecatedApiWarning)
+            warnings.simplefilter("ignore", DeprecationWarning)
+            from buildbot.process.buildstep import LogObserver, \
+                LogLineObserver, OutputProgressObserver
         assert LogObserver
         assert LogLineObserver
         assert OutputProgressObserver

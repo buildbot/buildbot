@@ -1,0 +1,7 @@
+Added deprecation messages to the following members of ``buildbot.process.buildstep`` module that have been deprecated in Buildbot 0.8.9:
+ - ``RemoteCommand``
+ - ``LoggedRemoteCommand``
+ - ``RemoteShellCommand``
+ - ``LogObserver``
+ - ``LogLineObserver``
+ - ``OutputProgressObserver``
