@@ -263,7 +263,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # don't unnecessarily setup properties for build
         def setupPropsIfNeeded(props):
             if props is not None:
-                return None
+                return props
             props = Properties()
             Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
                                                         self, workerforbuilder)
