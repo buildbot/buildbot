@@ -21,7 +21,7 @@ from twisted.enterprise import adbapi
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.process.buildstep import LogLineObserver
+from buildbot.process.logobserver import LogLineObserver
 from buildbot.steps.shell import Test
 from buildbot.warnings import warn_deprecated
 
