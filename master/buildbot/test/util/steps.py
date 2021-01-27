@@ -139,9 +139,8 @@ class BuildStepMixin:
             self._next_remote_command_number += 1
             return cmd
 
-        for module in buildstep, real_remotecommand:
-            self.patch(module, 'RemoteCommand', create_fake_remote_command)
-            self.patch(module, 'RemoteShellCommand', create_fake_remote_shell_command)
+        self.patch(real_remotecommand, 'RemoteCommand', create_fake_remote_command)
+        self.patch(real_remotecommand, 'RemoteShellCommand', create_fake_remote_shell_command)
         self.expected_remote_commands = []
         self._expected_remote_commands_popped = 0
 

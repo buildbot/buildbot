@@ -309,9 +309,9 @@ class CVS(Source):
         # if there are sticky dates (from an earlier build with revision),
         # we can't update (unless we remove those tags with cvs update -A)
         myFileWriter.buffer = ""
-        cmd = buildstep.RemoteCommand('uploadFile',
-                                      uploadFileArgs('Entries'),
-                                      ignore_updates=True)
+        cmd = remotecommand.RemoteCommand('uploadFile',
+                                          uploadFileArgs('Entries'),
+                                          ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
             return False
