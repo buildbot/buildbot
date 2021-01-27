@@ -1121,6 +1121,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
 
     from buildbot.plugins import steps, util
+    from buildbot.process import remotecommand
     from buildbot.interfaces import WorkerSetupError
     import stat
 
@@ -1137,7 +1138,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
             if not all(workerver):
                 raise WorkerSetupError('need stat and glob')
 
-            cmd = buildstep.RemoteCommand('stat', {'file': self.dirname})
+            cmd = remotecommand.RemoteCommand('stat', {'file': self.dirname})
 
             d = self.runCommand(cmd)
             d.addCallback(lambda res: self.evaluateStat(cmd))
@@ -1155,7 +1156,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
                 self.finished(util.WARNINGS)
                 return
 
-            cmd = buildstep.RemoteCommand('glob', {'path': self.dirname + '/*.pyc'})
+            cmd = remotecommand.RemoteCommand('glob', {'path': self.dirname + '/*.pyc'})
 
             d = self.runCommand(cmd)
             d.addCallback(lambda res: self.evaluateGlob(cmd))
