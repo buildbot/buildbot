@@ -1,1 +1,0 @@
-Worked around a bug in Python's urllib which caused Python clients not to accept basic authentication headers (:issue:`5743`)
