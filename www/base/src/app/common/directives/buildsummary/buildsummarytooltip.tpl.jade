@@ -23,10 +23,11 @@
           | loading build details...
     ul.list-group
         li.list-group-item(ng-repeat="step in buildsummary.steps"
-                           ng-if="step.number <= 3 || step.number >= buildsummary.steps.length-3")
-            div.text-left(ng-if="buildsummary.steps.length > 7 && step.number === 3")
+                           ng-if="buildsummary.isStepDisplayed(step) && buildsummary.assignDisplayedStepNumber(step)" +
+                                 "&& (step.display_num <= 3 || step.display_num >= buildsummary.getDisplayedStepCount()-3)")
+            div.text-left(ng-if="buildsummary.getDisplayedStepCount() > 7 && step.display_num === 3")
                 span.fa-lg &vellip;
-            div.clearfix(ng-if="buildsummary.steps.length <= 7 || step.number !== 3")
+            div.clearfix(ng-if="buildsummary.getDisplayedStepCount() <= 7 || step.display_num !== 3")
                 span.pull-left
                     span.badge-status(ng-class="results2class(step, 'pulse')")
                         | {{step.number}}

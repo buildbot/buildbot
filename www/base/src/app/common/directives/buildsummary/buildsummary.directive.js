@@ -137,6 +137,17 @@ class _buildsummary {
                 }
             };
 
+            this.assignDisplayedStepNumber = function (step) {
+                if (step.number === 0)
+                    this.display_count = 0
+                if (this.isStepDisplayed(step))
+                    step.display_num = (this.display_count)++;
+                return true;
+            };
+
+            this.getDisplayedStepCount = function () {
+                return self.steps.filter(this.isStepDisplayed).length;
+            };
 
             this.getBuildProperty = function (property) {
                 const hasProperty = self.properties && self.properties.hasOwnProperty(property);
