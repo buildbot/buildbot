@@ -10,6 +10,39 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.10.1`` ( ``2021-01-29`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed reference to ``tuplematch`` in the ``ReporterBase`` class (:issue:`5764`).
+- For build summary tooltip, truncate very long step names or build status
+  strings, enable auto positioning of tooltip, and improve text alignment.
+  Also, add build summary tooltip to masters page and builds tables.
+- Fixed crash when using renderable locks with latent workers that may have incompatible builds (:issue:`5757`).
+- Improved REST API to use username or full name of a logged in user when email is empty.
+- Worked around a bug in Python's urllib which caused Python clients not to accept basic authentication headers (:issue:`5743`)
+- Fixed crash in ``BuildStartEndStatusGenerator`` when tags filter is setup (:issue:`5766`).
+
+Improved Documentation
+----------------------
+
+- Fix services config for IRC in tour.
+
+Deprecations and Removals
+-------------------------
+
+- Added deprecation messages to the following members of ``buildbot.process.buildstep`` module that have been deprecated in Buildbot 0.8.9:
+
+   - ``RemoteCommand``
+   - ``LoggedRemoteCommand``
+   - ``RemoteShellCommand``
+   - ``LogObserver``
+   - ``LogLineObserver``
+   - ``OutputProgressObserver``
+
+
 Buildbot ``2.10.0`` ( ``2021-01-02`` )
 ======================================
 
