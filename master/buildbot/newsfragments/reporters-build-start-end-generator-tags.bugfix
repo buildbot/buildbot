@@ -1,1 +1,0 @@
-Fixed crash in ``BuildStartEndStatusGenerator`` when tags filter is setup (:issue:`5766`).

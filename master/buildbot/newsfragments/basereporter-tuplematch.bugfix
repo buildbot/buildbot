@@ -1,1 +1,0 @@
-Fixed reference to ``tuplematch`` in the ``ReporterBase`` class (:issue:`5764`).
