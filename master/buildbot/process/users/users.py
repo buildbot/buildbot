@@ -25,7 +25,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import flatten
 from buildbot.util import unicode2bytes
 
-srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
+srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr', 'fossil']
 salt_len = 8
 
 
