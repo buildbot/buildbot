@@ -96,7 +96,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def runClockFor(self, _, secs):
-        yield self.reactor.pump([1.0] * secs)
+        yield self.reactor.pump([0] + [1.0] * secs)
 
     def test_loop_loops(self):
         # track when poll() gets called
@@ -203,7 +203,7 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def runClockFor(self, secs):
-        yield self.reactor.pump([1.0] * secs)
+        yield self.reactor.pump([0] + [1.0] * secs)
 
     @defer.inlineCallbacks
     def test_config_negative_interval(self):

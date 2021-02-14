@@ -517,6 +517,8 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
     This decorator replaces the decorated method with a :py:class:`Poller` instance configured to call the decorated method periodically.
     The poller is initially stopped, so periodic calls will not begin until its ``start`` method is called.
     The start polling interval is specified when the poller is started.
+    A random delay may optionally be supplied.
+    This allows to avoid the situation of multiple services with the same interval are executing at exactly the same time.
 
     If the decorated method fails or raises an exception, the Poller logs the error and re-schedules the call for the next interval.
 
@@ -542,10 +544,12 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 
 .. py:class:: Poller
 
-    .. py:method:: start(interval=N, now=False)
+    .. py:method:: start(interval=N, now=False, random_delay_min=0, random_delay_max=0)
 
         :param interval: time, in seconds, between invocations
         :param now: if true, call the decorated method immediately on startup.
+        :param random_delay_min: Minimum random delay to apply to the start time of the decorated method.
+        :param random_delay_min: Maximum random delay to apply to the start time of the decorated method.
 
         Start the poller.
 
@@ -559,7 +563,7 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
     .. py:method:: __call__()
 
         Force a call to the decorated method now.
-        If the decorated method is currently running, another call will begin as soon as it completes.
+        If the decorated method is currently running, another call will begin as soon as it completes unless the poller is currently stopping.
 
 :py:mod:`buildbot.util.maildir`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
