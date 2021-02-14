@@ -17,7 +17,6 @@
 from random import randint
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.python import log
 
 _poller_instances = None
@@ -25,69 +24,113 @@ _poller_instances = None
 
 class Poller:
 
-    __slots__ = ['fn', 'instance', 'loop', 'started', 'running',
-                 'pending', 'stopDeferreds', '_reactor']
-
     def __init__(self, fn, instance, reactor):
         self.fn = fn
         self.instance = instance
-        self.loop = None
-        self.started = False
+
         self.running = False
         self.pending = False
-        self.stopDeferreds = []
+
+        # Invariants:
+        #   - If self._call is not None or self._currently_executing then it is guaranteed that
+        #     self.pending and self._run_complete_deferreds will be handled at some point in the
+        #     future.
+        #   - If self._call is not None then _run will be executed at some point, but it's not being
+        #     executed now.
+        self._currently_executing = False
+        self._call = None
+        self._next_call_time = None  # valid when self._call is not None
+
+        self._start_time = 0
+        self._interval = 0
+        self._random_delay_min = 0
+        self._random_delay_max = 0
+        self._run_complete_deferreds = []
+
         self._reactor = reactor
 
+    def _extra_wait(self):
+        return
+
     @defer.inlineCallbacks
-    def _run(self, random_delay_min=0, random_delay_max=0):
-        self.running = True
-        if random_delay_max:
-            yield task.deferLater(self._reactor, randint(random_delay_min, random_delay_max),
-                                  lambda: None)
+    def _run(self):
+        self._call = None
+        self._currently_executing = True
+
         try:
             yield self.fn(self.instance)
         except Exception as e:
-            log.err(e, 'while running {}'.format(self.fn))
+            log.err(e, 'while executing {}'.format(self.fn))
+        finally:
+            self._currently_executing = False
 
-        self.running = False
-        # loop if there's another pending call
-        if self.pending:
-            self.pending = False
-            yield self._run(random_delay_min, random_delay_max)
+        was_pending = self.pending
+        self.pending = False
+
+        if self.running:
+            self._schedule(force_now=was_pending)
+
+        while self._run_complete_deferreds:
+            self._run_complete_deferreds.pop(0).callback(None)
+
+    def _get_wait_time(self, curr_time, force_now=False, force_initial_now=False):
+        if force_now:
+            return 0
+
+        extra_wait = randint(self._random_delay_min, self._random_delay_max)
+
+        if force_initial_now or self._interval == 0:
+            return extra_wait
+
+        # note that differently from twisted.internet.task.LoopingCall, we don't care about
+        # floating-point precision issues as we don't have the withCount feature.
+        running_time = curr_time - self._start_time
+        return self._interval - (running_time % self._interval) + extra_wait
+
+    def _schedule(self, force_now=False, force_initial_now=False):
+        curr_time = self._reactor.seconds()
+        wait_time = self._get_wait_time(curr_time, force_now=force_now,
+                                        force_initial_now=force_initial_now)
+        next_call_time = curr_time + wait_time
+
+        if self._call is not None:
+            # if there's a call already scheduled then we replace it if the new call would come
+            # earlier
+            if self._next_call_time <= next_call_time:
+                return
+            self._call.cancel()
+
+        self._next_call_time = next_call_time
+        self._call = self._reactor.callLater(wait_time, self._run)
 
     def __call__(self):
-        if self.started:
-            if self.running:
-                self.pending = True
-            else:
-                # terrible hack..
-                old_interval = self.loop.interval
-                self.loop.interval = 0
-                self.loop.reset()
-                self.loop.interval = old_interval
+        if not self.running:
+            return
+        if self._currently_executing:
+            self.pending = True
+        else:
+            self._schedule(force_now=True)
 
     def start(self, interval, now=False, random_delay_min=0, random_delay_max=0):
-        assert not self.started
-        if not self.loop:
-            self.loop = task.LoopingCall(self._run, random_delay_min, random_delay_max)
-            self.loop.clock = self._reactor
-        stopDeferred = self.loop.start(interval, now=now)
+        assert not self.running
+        self._interval = interval
+        self._random_delay_min = random_delay_min
+        self._random_delay_max = random_delay_max
+        self._start_time = self._reactor.seconds()
 
-        @stopDeferred.addCallback
-        def inform(_):
-            self.started = False
-            while self.stopDeferreds:
-                self.stopDeferreds.pop().callback(None)
-        self.started = True
+        self.running = True
+        self._schedule(force_initial_now=now)
 
+    @defer.inlineCallbacks
     def stop(self):
-        if self.loop and self.loop.running:
-            self.loop.stop()
-        if self.started:
+        self.running = False
+        if self._call is not None:
+            self._call.cancel()
+            self._call = None
+        if self._currently_executing:
             d = defer.Deferred()
-            self.stopDeferreds.append(d)
-            return d
-        return defer.succeed(None)
+            self._run_complete_deferreds.append(d)
+            yield d
 
 
 class _Descriptor:
