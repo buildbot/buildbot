@@ -82,7 +82,7 @@ matrix:
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
     # master twisted test
     - python: "3.8"
-      env: TWISTED=10069-rodrigc-encoding SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
 
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
