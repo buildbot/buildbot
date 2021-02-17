@@ -80,6 +80,8 @@ matrix:
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.9"
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
 
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
