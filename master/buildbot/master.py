@@ -337,12 +337,19 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     def stopService(self):
         try:
             yield self.initLock.acquire()
+
+            if self.running:
+                yield self.botmaster.cleanShutdown(quickMode=True, stopReactor=False)
+
+            # Mark master as stopped only after all builds are shut down. Note that masterStopped
+            # would forcibly mark all related build requests, builds, steps, logs, etc. as
+            # complete, so this may make state inconsistent if done while the builds are still
+            # running.
             if self.masterid is not None:
                 yield self.data.updates.masterStopped(
                     name=self.name, masterid=self.masterid)
+
             if self.running:
-                yield self.botmaster.cleanShutdown(
-                    quickMode=True, stopReactor=False)
                 yield super().stopService()
 
             log.msg("BuildMaster is stopped")
