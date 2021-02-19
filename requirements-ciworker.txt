@@ -3,8 +3,8 @@ Automat==20.2.0
 constantly==15.1.0
 funcsigs==1.0.2
 future==0.18.2
-hyperlink==20.0.1
-idna==2.10
+hyperlink==21.0.0
+idna==2.10  # pyup: ignore (conflicts with moto on master)
 incremental==17.5.0
 # pin mock, because 4.x no longer supports Python 3.5
 mock==3.0.5  # pyup: ignore
