@@ -1,0 +1,3 @@
+Improved ``buildbot.util.poll.method`` to react faster to a request to stop:
+ - New pending calls are no longer executed
+ - Calls whose interval but not random delay has already expired are no longer executed.
