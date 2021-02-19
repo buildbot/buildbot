@@ -16,7 +16,7 @@ click==7.1.2
 configparser==4.0.2
 constantly==15.1.0
 cookies==2.2.1
-cryptography==3.3.1
+cryptography==3.3.2
 decorator==4.4.2
 dicttoxml==1.7.4
 docutils==0.16
