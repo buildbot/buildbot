@@ -102,6 +102,8 @@ The GitHub hook has the following parameters:
 ``codebase`` (default `None`)
     The codebase value to include with created changes.
     If the value is a function (or any other callable), it will be called with the GitHub event payload as argument and the function must return the codebase value to use for the event.
+``github_property_whitelist`` (default `[]`)
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``github``. For example ``github.number`` represents the pull request number. Available entries can be looked up in the GitHub API Documentation or by examining the data returned for a pull request by the API.
 ``class`` (default `None`)
     A class to be used for processing incoming payloads.
     If the value is `None` (default), the default class -- :py:class:`buildbot.www.hooks.github.GitHubEventHandler` -- will be used.
