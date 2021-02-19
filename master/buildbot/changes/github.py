@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from datetime import datetime
-from fnmatch import fnmatch
 
 from twisted.internet import defer
 
@@ -24,6 +23,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
+from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.util.state import StateMixin
 
 log = Logger()
@@ -37,27 +37,12 @@ link_urls = {
 }
 
 
-class PullRequestMixin:
-    def extractProperties(self, payload):
-        def flatten(properties, base, info_dict):
-            for k, v in info_dict.items():
-                name = ".".join([base, k])
-                if isinstance(v, dict):
-                    flatten(properties, name, v)
-                elif any([fnmatch(name, expr)
-                          for expr in self.github_property_whitelist]):
-                    properties[name] = v
-
-        properties = {}
-        flatten(properties, "github", payload)
-        return properties
-
-
 class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                               StateMixin, PullRequestMixin):
     compare_attrs = ("owner", "repo", "token", "branches", "pollInterval",
                      "category", "pollAtLaunch", "name")
     db_class_name = 'GitHubPullrequestPoller'
+    property_basename = "github"
 
     def __init__(self, owner, repo, **kwargs):
         name = kwargs.get("name")
@@ -109,6 +94,9 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             token = yield self.renderSecrets(token)
             http_headers.update({'Authorization': 'token ' + token})
 
+        if github_property_whitelist is None:
+            github_property_whitelist = []
+
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, baseURL, headers=http_headers)
 
@@ -116,14 +104,11 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         self.owner = owner
         self.repo = repo
         self.branches = branches
-        self.github_property_whitelist = github_property_whitelist
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.repository_type = link_urls[repository_type]
         self.magic_link = magic_link
-
-        if github_property_whitelist is None:
-            self.github_property_whitelist = []
+        self.external_property_whitelist = github_property_whitelist
 
         if callable(pullrequest_filter):
             self.pullrequest_filter = pullrequest_filter
