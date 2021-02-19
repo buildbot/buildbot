@@ -223,8 +223,7 @@ class PullRequestListRest():
 }
 """ % s
 
-    def getPage(self, url, timeout=None):
-
+    def getPage(self, url, timeout=None, headers=None):
         list_url_re = re.compile(
             r"https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                     self.slug))
@@ -316,14 +315,21 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
         # and return result
         self.getPage_got_url = None
 
-        def fake(url, timeout=None):
+        def fake(url, timeout=None, headers=None):
             self.getPage_got_url = url
             return defer.succeed(result)
         self.patch(client, "getPage", fake)
 
+    def _fakeGetPage403(self, expected_headers):
+
+        def fail_unauthorized(url, timeout=None, headers=None):
+            if headers != expected_headers:
+                raise Error(code=403)
+        self.patch(client, "getPage", fail_unauthorized)
+
     def _fakeGetPage404(self):
 
-        def fail(url, timeout=None):
+        def fail(url, timeout=None, headers=None):
             raise Error(code=404)
         self.patch(client, "getPage", fail)
 
@@ -351,6 +357,34 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             self.assertEqual(str(e), '404 Not Found')
 
     @defer.inlineCallbacks
+    def test_poll_unauthorized_failure(self):
+        expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
+        yield self.attachDefaultChangeSource()
+        # Polling without authorization should result in a 403
+        self._fakeGetPage403(expected_headers)
+        try:
+            yield self.changesource.poll()
+            self.fail('Polling without authorization should result in a 403.')
+        except Exception as e:
+            self.assertEqual(str(e), '403 Forbidden')
+
+    @defer.inlineCallbacks
+    def test_poll_authorized_success(self):
+        auth = ('user', '1234')
+        expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
+        yield self.attachChangeSource(BitbucketPullrequestPoller(
+            owner='owner',
+            slug='slug',
+            auth=auth,
+        ))
+        # Polling with authorization should success
+        self._fakeGetPage403(expected_headers)
+        try:
+            yield self.changesource.poll()
+        except Exception as e:
+            self.assertNotEqual(str(e), '403 Forbidden')
+
+    @defer.inlineCallbacks
     def test_poll_no_pull_requests(self):
         yield self.attachDefaultChangeSource()
         rest = PullRequestListRest(owner="owner", slug="slug", prs=[])
@@ -376,7 +410,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
             'project': '',
-            'properties': {},
+            'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
             'revision': '1111111111111111111111111111111111111111',
             'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
@@ -402,7 +436,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
             'project': '',
-            'properties': {},
+            'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
             'revision': '1111111111111111111111111111111111111111',
             'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
@@ -431,7 +465,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
             'project': '',
-            'properties': {},
+            'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
 
             'revision': '1111111111111111111111111111111111111111',
@@ -453,7 +487,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                     'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
                 'project': '',
-                'properties': {},
+                'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
                 'repository': 'https://bitbucket.org/contributor/slug',
                 'revision': '1111111111111111111111111111111111111111',
                 'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
@@ -470,7 +504,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                     'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
                 'project': '',
-                'properties': {},
+                'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
                 'repository': 'https://bitbucket.org/contributor/slug',
                 'revision': '2222222222222222222222222222222222222222',
                 'revlink': 'https://bitbucket.org/contributor/slug/commits/222222222222',
@@ -516,7 +550,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
             'project': '',
-            'properties': {},
+            'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
             'revision': '1111111111111111111111111111111111111111',
             'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
@@ -545,10 +579,58 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
             'project': '',
-            'properties': {},
+            'properties': {'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1'},
             'repository': 'https://bitbucket.org/contributor/slug',
             'revision': '1111111111111111111111111111111111111111',
             'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': 'bitbucket',
             'when_timestamp': 1396825656,
+        }])
+
+    @defer.inlineCallbacks
+    def test_poll_pull_request_properties(self):
+        yield self.attachChangeSource(BitbucketPullrequestPoller(
+            owner='owner',
+            slug='slug',
+            bitbucket_property_whitelist=["bitbucket.*"],
+        ))
+
+        self.patch(client, "getPage", self.pr_list.getPage)
+
+        yield self.changesource.poll()
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'contributor',
+            'committer': None,
+            'branch': 'default',
+            'category': None,
+            'codebase': None,
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'files': None,
+            'project': '',
+            'properties': {
+                'pullrequesturl': 'https://bitbucket.org/owner/slug/pull-request/1',
+                'bitbucket.author.display_name': 'contributor',
+                'bitbucket.created_on': '2013-10-15T20:38:20.001797+00:00',
+                'bitbucket.description': 'description',
+                'bitbucket.id': 1,
+                'bitbucket.links.html.href': 'https://bitbucket.org/owner/slug/pull-request/1',
+                'bitbucket.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                                             'repositories/owner/slug/pullrequests/1',
+                'bitbucket.merge_commit': None,
+                'bitbucket.source.branch.name': 'default',
+                'bitbucket.source.commit.hash': '111111111111',
+                'bitbucket.source.commit.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                                                           'repositories/contributor/slug/'
+                                                           'commit/111111111111',
+                'bitbucket.source.repository.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                                                               'repositories/contributor/slug',
+                'bitbucket.state': 'OPEN',
+                'bitbucket.title': 'title',
+                'bitbucket.updated_on': '2013-10-15T20:38:20.001797+00:00'
+            },
+            'repository': 'https://bitbucket.org/contributor/slug',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
+            'when_timestamp': 1381869500,
         }])

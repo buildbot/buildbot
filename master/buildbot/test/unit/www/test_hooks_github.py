@@ -456,6 +456,7 @@ gitJsonPayloadFiles = [
 ]
 
 gitPRproperties = {
+    'pullrequesturl': 'https://github.com/defunkt/github/pull/50',
     'github.head.sha': '05c588ba8cd510ecbe112d020f215facb17817a7',
     'github.state': 'open',
     'github.base.repo.full_name': 'defunkt/github',

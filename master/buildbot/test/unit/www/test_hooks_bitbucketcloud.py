@@ -28,6 +28,48 @@ from buildbot.www.hooks.bitbucketcloud import _HEADER_EVENT
 
 _CT_JSON = b'application/json'
 
+bitbucketPRproperties = {
+    'pullrequesturl': 'http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21',
+    'bitbucket.id': '21',
+    'bitbucket.link': 'http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21',
+    'bitbucket.title': 'dot 1496311906',
+    'bitbucket.authorLogin': 'Buildbot',
+    'bitbucket.fromRef.branch.name': 'branch_1496411680',
+    'bitbucket.fromRef.branch.rawNode': 'a87e21f7433d8c16ac7be7413483fbb76c72a8ba',
+    'bitbucket.fromRef.commit.authorTimestamp': 0,
+    'bitbucket.fromRef.commit.date': None,
+    'bitbucket.fromRef.commit.hash': 'a87e21f7433d8c16ac7be7413483fbb76c72a8ba',
+    'bitbucket.fromRef.commit.message': None,
+    'bitbucket.fromRef.repository.fullName': 'CI/py-repo',
+    'bitbucket.fromRef.repository.links.self.href':
+        'http://localhost:7990/projects/CI/repos/py-repo',
+    'bitbucket.fromRef.repository.owner.display_name': 'CI',
+    'bitbucket.fromRef.repository.owner.nickname': 'CI',
+    'bitbucket.fromRef.repository.ownerName': 'CI',
+    'bitbucket.fromRef.repository.project.key': 'CI',
+    'bitbucket.fromRef.repository.project.name': 'Continuous Integration',
+    'bitbucket.fromRef.repository.public': False,
+    'bitbucket.fromRef.repository.scm': 'git',
+    'bitbucket.fromRef.repository.slug': 'py-repo',
+    'bitbucket.toRef.branch.name': 'master',
+    'bitbucket.toRef.branch.rawNode': '7aebbb0089c40fce138a6d0b36d2281ea34f37f5',
+    'bitbucket.toRef.commit.authorTimestamp': 0,
+    'bitbucket.toRef.commit.date': None,
+    'bitbucket.toRef.commit.hash': '7aebbb0089c40fce138a6d0b36d2281ea34f37f5',
+    'bitbucket.toRef.commit.message': None,
+    'bitbucket.toRef.repository.fullName': 'CI/py-repo',
+    'bitbucket.toRef.repository.links.self.href':
+        'http://localhost:7990/projects/CI/repos/py-repo',
+    'bitbucket.toRef.repository.owner.display_name': 'CI',
+    'bitbucket.toRef.repository.owner.nickname': 'CI',
+    'bitbucket.toRef.repository.ownerName': 'CI',
+    'bitbucket.toRef.repository.project.key': 'CI',
+    'bitbucket.toRef.repository.project.name': 'Continuous Integration',
+    'bitbucket.toRef.repository.public': False,
+    'bitbucket.toRef.repository.scm': 'git',
+    'bitbucket.toRef.repository.slug': 'py-repo'
+}
+
 pushJsonPayload = """
 {
     "actor": {
@@ -94,7 +136,7 @@ pullRequestCreatedJsonPayload = """
         "id": "21",
         "title": "dot 1496311906",
         "link": "http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21",
-        "authorLogin": "John Smith",
+        "authorLogin": "Buildbot",
         "fromRef": {
             "repository": {
                 "scm": "git",
@@ -389,7 +431,7 @@ pullRequestFulfilledJsonPayload = """
     },
     "pullrequest": {
         "id": "21",
-        "title": "Branch 1496411680",
+        "title": "dot 1496311906",
         "link": "http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21",
         "authorLogin": "Buildbot",
         "fromRef": {
@@ -647,7 +689,18 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     def setUp(self):
         self.setUpTestReactor()
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucketcloud': {}}, master=fakeMasterForHooks(self))
+            dialects={'bitbucketcloud': {
+                    'bitbucket_property_whitelist': ["bitbucket.*"],
+            }},
+            master=fakeMasterForHooks(self)
+        )
+
+    def assertDictSubset(self, expected_dict, response_dict):
+        expected = {}
+        for key in expected_dict.keys():
+            self.assertIn(key, set(response_dict.keys()))
+            expected[key] = response_dict[key]
+        self.assertDictEqual(expected_dict, expected)
 
     def _checkPush(self, change):
         self.assertEqual(
@@ -697,11 +750,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
                          'CI/repos/py-repo/pull-requests/21')
         self.assertEqual(change['revision'],
                          'a87e21f7433d8c16ac7be7413483fbb76c72a8ba')
-        pr_url = change['properties'].get('pullrequesturl')
-        self.assertNotEqual(pr_url, None)
-        self.assertEqual(
-            pr_url,
-            "http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21")
+        self.assertDictSubset(bitbucketPRproperties, change["properties"])
 
     @defer.inlineCallbacks
     def testHookWithChangeOnPullRequestCreated(self):

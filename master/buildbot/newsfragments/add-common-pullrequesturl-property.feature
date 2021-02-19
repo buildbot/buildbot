@@ -1,0 +1,1 @@
+Added `pullrequesturl` property to the following pollers and change hooks: :py:class:`~buildbot.changes.BitbucketPullrequestPoller`, :py:class:`~buildbot.changes.GitHubPullrequestPoller`, :py:class:`~buildbot.changes.GitHubEventHandler`. This unifies all Bitbucket and GitHub pollers with the shared property interface.
