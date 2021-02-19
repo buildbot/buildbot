@@ -694,6 +694,7 @@ interruptable
 interruptsignal
 intialization
 intranet
+invariants
 io
 ip
 ippolito
@@ -817,6 +818,7 @@ lookahead
 lookup
 lookups
 loopback
+LoopingCall
 loseconnection
 lostremote
 lotem
