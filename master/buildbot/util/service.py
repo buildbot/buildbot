@@ -53,6 +53,8 @@ class ReconfigurableServiceMixin:
 # to catch issues even on twisted < 16
 class AsyncService(service.Service):
 
+    # service.Service.setServiceParent does not wait for neither disownServiceParent nor addService
+    # to complete
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
         if self.parent is not None:
@@ -60,6 +62,13 @@ class AsyncService(service.Service):
         parent = service.IServiceCollection(parent, parent)
         self.parent = parent
         yield self.parent.addService(self)
+
+    # service.Service.disownServiceParent does not wait for removeService to complete before
+    # setting parent to None
+    @defer.inlineCallbacks
+    def disownServiceParent(self):
+        yield self.parent.removeService(self)
+        self.parent = None
 
     # We recurse over the parent services until we find a MasterService
     @property

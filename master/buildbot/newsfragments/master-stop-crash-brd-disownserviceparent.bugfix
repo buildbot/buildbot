@@ -1,0 +1,1 @@
+Fixed a race condition that may result in a crash when build request distributor stops when its activity loop is running.

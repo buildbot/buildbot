@@ -36,6 +36,7 @@ from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
+from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
@@ -82,6 +83,7 @@ class Build(properties.PropertiesMixin):
         self.currentStep = None
         self.workerEnvironment = {}
         self.buildid = None
+        self._buildid_notifier = Notifier()
         self.number = None
         self.executedSteps = []
         self.stepnames = {}
@@ -299,6 +301,7 @@ class Build(properties.PropertiesMixin):
                 builderid=builderid,
                 buildrequestid=brid,
                 workerid=worker.workerid)
+        self._buildid_notifier.notify(self.buildid)
 
         self.stopBuildConsumer = yield self.master.mq.startConsuming(self.controlStopBuild,
                                                                      ("control", "builds",
@@ -753,10 +756,18 @@ class Build(properties.PropertiesMixin):
         builder_id = yield self.getBuilderId()
         return getURLForBuild(self.master, builder_id, self.number)
 
+    @defer.inlineCallbacks
+    def get_buildid(self):
+        if self.buildid is not None:
+            return self.buildid
+        buildid = yield self._buildid_notifier.wait()
+        return buildid
+
+    @defer.inlineCallbacks
     def waitUntilFinished(self):
-        return self.master.mq.waitUntilEvent(
-            ('builds', str(self.buildid), 'finished'),
-            lambda: self.finished)
+        buildid = yield self.get_buildid()
+        yield self.master.mq.waitUntilEvent(('builds', str(buildid), 'finished'),
+                                            lambda: self.finished)
 
     def getWorkerInfo(self):
         return self.workerforbuilder.worker.info
