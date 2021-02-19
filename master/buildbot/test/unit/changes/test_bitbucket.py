@@ -223,8 +223,7 @@ class PullRequestListRest():
 }
 """ % s
 
-    def getPage(self, url, timeout=None):
-
+    def getPage(self, url, timeout=None, headers=None):
         list_url_re = re.compile(
             r"https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                     self.slug))
@@ -316,14 +315,21 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
         # and return result
         self.getPage_got_url = None
 
-        def fake(url, timeout=None):
+        def fake(url, timeout=None, headers=None):
             self.getPage_got_url = url
             return defer.succeed(result)
         self.patch(client, "getPage", fake)
 
+    def _fakeGetPage403(self, expected_headers):
+
+        def fail_unauthorized(url, timeout=None, headers=None):
+            if headers != expected_headers:
+                raise Error(code=403)
+        self.patch(client, "getPage", fail_unauthorized)
+
     def _fakeGetPage404(self):
 
-        def fail(url, timeout=None):
+        def fail(url, timeout=None, headers=None):
             raise Error(code=404)
         self.patch(client, "getPage", fail)
 
@@ -349,6 +355,34 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
                 'Polling a non-existent repository should result in a 404.')
         except Exception as e:
             self.assertEqual(str(e), '404 Not Found')
+
+    @defer.inlineCallbacks
+    def test_poll_unauthorized_failure(self):
+        expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
+        yield self.attachDefaultChangeSource()
+        # Polling without authorization should result in a 403
+        self._fakeGetPage403(expected_headers)
+        try:
+            yield self.changesource.poll()
+            self.fail('Polling without authorization should result in a 403.')
+        except Exception as e:
+            self.assertEqual(str(e), '403 Forbidden')
+
+    @defer.inlineCallbacks
+    def test_poll_authorized_success(self):
+        auth = ('user', '1234')
+        expected_headers = {b'Authorization': b'Basic dXNlcjoxMjM0'}
+        yield self.attachChangeSource(BitbucketPullrequestPoller(
+            owner='owner',
+            slug='slug',
+            auth=auth,
+        ))
+        # Polling with authorization should success
+        self._fakeGetPage403(expected_headers)
+        try:
+            yield self.changesource.poll()
+        except Exception as e:
+            self.assertNotEqual(str(e), '403 Forbidden')
 
     @defer.inlineCallbacks
     def test_poll_no_pull_requests(self):

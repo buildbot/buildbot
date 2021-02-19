@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+import base64
 import json
 import time
 from datetime import datetime
@@ -48,7 +49,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                  project='',
                  pullrequest_filter=True,
                  encoding=_UNSPECIFIED,
-                 pollAtLaunch=False
+                 pollAtLaunch=False,
+                 auth=None,
                  ):
 
         self.owner = owner
@@ -72,6 +74,12 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.project = bytes2unicode(project)
         self.initLock = defer.DeferredLock()
 
+        if auth is not None:
+            encoded_credentials = base64.b64encode(":".join(auth).encode())
+            self.headers = {b"Authorization": b"Basic " + encoded_credentials}
+        else:
+            self.headers = None
+
     def describe(self):
         return "BitbucketPullrequestPoller watching the "\
             "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch)
@@ -89,7 +97,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                 "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch))
         url = "https://bitbucket.org/api/2.0/repositories/{}/{}/pullrequests".format(self.owner,
                                                                                      self.slug)
-        return client.getPage(url, timeout=self.pollInterval)
+        return client.getPage(url, timeout=self.pollInterval, headers=self.headers)
 
     @defer.inlineCallbacks
     def _processChanges(self, page):
@@ -109,7 +117,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                 # compare _short_ hashes to check if the PR has been updated
                 if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
-                    page = yield client.getPage(str(pr['links']['self']['href']))
+                    page = yield client.getPage(str(pr['links']['self']['href']),
+                                                headers=self.headers)
                     pr_json = json.loads(page)
 
                     # filter pull requests by user function
@@ -131,14 +140,18 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     title = pr['title']
                     # parse commit api page
                     page = yield client.getPage(
-                            str(pr['source']['commit']['links']['self']['href']))
+                        str(pr['source']['commit']['links']['self']['href']),
+                        headers=self.headers,
+                    )
                     commit_json = json.loads(page)
                     # use the full-length hash from now on
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
                     # parse repo api page
                     page = yield client.getPage(
-                            str(pr['source']['repository']['links']['self']['href']))
+                        str(pr['source']['repository']['links']['self']['href']),
+                        headers=self.headers,
+                    )
                     repo_json = json.loads(page)
                     repo = repo_json['links']['html']['href']
 

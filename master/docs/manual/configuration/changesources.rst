@@ -1146,6 +1146,10 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 ``slug``
     The name of the Bitbucket repository.
 
+``auth``
+    Authorization data tuple ``(usename, password)`` (optional).
+    If set, it will be used as authorization headers at Bitbucket API.
+
 ``branch``
     A single branch or a list of branches which should be processed.
     If it is ``None`` (the default) all pull requests are used.
