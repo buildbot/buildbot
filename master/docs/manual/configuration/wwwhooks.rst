@@ -282,6 +282,9 @@ The Bitbucket Server hook may have the following optional parameters:
 ``codebase`` (default `None`)
     The codebase value to include with changes or a callable object that will be passed the payload in order to get it.
 
+``bitbucket_property_whitelist`` (default `[]`)
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``. For example ``bitbucket.id`` represents the pull request ID. Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
+
 .. Warning::
     The incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web server can "fake" a request from Bitbucket Server, potentially causing the buildmaster to run arbitrary code
