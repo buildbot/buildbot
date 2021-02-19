@@ -168,6 +168,9 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
         d = self.master.stopService()
 
         self.assertFalse(d.called)
+
+        # master must only send shutdown once builds are completed
+        self.assertTrue(self.master.data.updates.thisMasterActive)
         self.master.botmaster.shutdownDeferred.callback(None)
         self.assertTrue(d.called)
 
