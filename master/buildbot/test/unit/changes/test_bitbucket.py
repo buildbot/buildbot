@@ -586,3 +586,50 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin,
             'src': 'bitbucket',
             'when_timestamp': 1396825656,
         }])
+
+    @defer.inlineCallbacks
+    def test_poll_pull_request_properties(self):
+        yield self.attachChangeSource(BitbucketPullrequestPoller(
+            owner='owner',
+            slug='slug',
+            bitbucket_property_whitelist=["bitbucket.*"],
+        ))
+
+        self.patch(client, "getPage", self.pr_list.getPage)
+
+        yield self.changesource.poll()
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'contributor',
+            'committer': None,
+            'branch': 'default',
+            'category': None,
+            'codebase': None,
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'files': None,
+            'project': '',
+            'properties': {
+                'bitbucket.author.display_name': 'contributor',
+                'bitbucket.created_on': '2013-10-15T20:38:20.001797+00:00',
+                'bitbucket.description': 'description',
+                'bitbucket.id': 1,
+                'bitbucket.links.html.href': 'https://bitbucket.org/owner/slug/pull-request/1',
+                'bitbucket.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                                             'repositories/owner/slug/pullrequests/1',
+                'bitbucket.merge_commit': None,
+                'bitbucket.source.branch.name': 'default',
+                'bitbucket.source.commit.hash': '111111111111',
+                'bitbucket.source.commit.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                                                           'repositories/contributor/slug/'
+                                                           'commit/111111111111',
+                'bitbucket.source.repository.links.self.href': 'https://bitbucket.org/!api/2.0/'
+                                                               'repositories/contributor/slug',
+                'bitbucket.state': 'OPEN',
+                'bitbucket.title': 'title',
+                'bitbucket.updated_on': '2013-10-15T20:38:20.001797+00:00'
+            },
+            'repository': 'https://bitbucket.org/contributor/slug',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
+            'when_timestamp': 1381869500,
+        }])

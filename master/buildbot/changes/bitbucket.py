@@ -28,18 +28,20 @@ from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
+from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.warnings import warn_deprecated
 
 _UNSPECIFIED = object()
 
 
-class BitbucketPullrequestPoller(base.PollingChangeSource):
+class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
 
     compare_attrs = ("owner", "slug", "branch",
                      "pollInterval", "useTimestamps",
                      "category", "project", "pollAtLaunch")
 
     db_class_name = 'BitbucketPullrequestPoller'
+    property_basename = "bitbucket"
 
     def __init__(self, owner, slug,
                  branch=None,
@@ -51,8 +53,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                  encoding=_UNSPECIFIED,
                  pollAtLaunch=False,
                  auth=None,
+                 bitbucket_property_whitelist=None,
                  ):
-
         self.owner = owner
         self.slug = slug
         self.branch = branch
@@ -60,6 +62,9 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                          pollAtLaunch=pollAtLaunch)
         if encoding != _UNSPECIFIED:
             warn_deprecated('2.6.0', 'encoding of BitbucketPullrequestPoller is deprecated.')
+
+        if bitbucket_property_whitelist is None:
+            bitbucket_property_whitelist = []
 
         if hasattr(pullrequest_filter, '__call__'):
             self.pullrequest_filter = pullrequest_filter
@@ -73,6 +78,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
             category) else bytes2unicode(category)
         self.project = bytes2unicode(project)
         self.initLock = defer.DeferredLock()
+        self.external_property_whitelist = bitbucket_property_whitelist
 
         if auth is not None:
             encoded_credentials = base64.b64encode(":".join(auth).encode())
@@ -169,6 +175,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                         category=self.category,
                         project=self.project,
                         repository=bytes2unicode(repo),
+                        properties=self.extractProperties(pr),
                         src='bitbucket',
                     )
 

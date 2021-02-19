@@ -1179,6 +1179,9 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 ``usetimestamps``
     parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
 
+``bitbucket_property_whitelist``
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``. For example ``bitbucket.id`` represents the pull request ID. Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
+
 ``encoding``
     This parameter is deprecated and has no effects.
     Author's name and commit message are always parsed in ``'utf-8'``.
