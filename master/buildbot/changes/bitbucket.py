@@ -175,7 +175,9 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
                         category=self.category,
                         project=self.project,
                         repository=bytes2unicode(repo),
-                        properties=self.extractProperties(pr),
+                        properties={'pullrequesturl': prlink,
+                                    **self.extractProperties(pr),
+                                    },
                         src='bitbucket',
                     )
 

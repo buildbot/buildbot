@@ -158,6 +158,7 @@ _CT_ENCODED = b'application/x-www-form-urlencoded'
 _CT_JSON = b'application/json'
 
 _GH_PARSED_PROPS = {
+    'pullrequesturl': 'https://github.com/buildbot/buildbot/pull/4242',
     'github.head.sha': '4c9a7f03e04e551a5e012064b581577f949dd3a4',
     'github.state': 'open',
     'github.number': 4242,

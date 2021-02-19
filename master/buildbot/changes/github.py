@@ -251,8 +251,6 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
                 committer = committers[0][0] + " <" + committers[0][1] + ">"
 
-                properties = self.extractProperties(pr)
-
                 # emit the change
                 yield self.master.data.updates.addChange(
                     author=author,
@@ -268,7 +266,10 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     project=project,
                     repository=bytes2unicode(repo),
                     files=files,
-                    properties=properties,
+                    properties={
+                        'pullrequesturl': revlink,
+                        **self.extractProperties(pr),
+                    },
                     src='git')
 
     @defer.inlineCallbacks

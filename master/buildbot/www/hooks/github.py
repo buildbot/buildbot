@@ -179,6 +179,7 @@ class GitHubEventHandler(PullRequestMixin):
         comments = payload['pull_request']['body']
         repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
+        revlink = payload['pull_request']['_links']['html']['href']
 
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
@@ -197,6 +198,7 @@ class GitHubEventHandler(PullRequestMixin):
         files = yield self._get_pr_files(repo_full_name, number)
 
         properties = {
+            'pullrequesturl': revlink,
             'event': event,
             'basename': basename,
             **self.extractProperties(payload['pull_request']),
