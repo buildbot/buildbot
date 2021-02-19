@@ -1,0 +1,1 @@
+Fixed a race condition that may result in a deadlock if master is stopped at the same time a build is started.
