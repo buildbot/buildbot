@@ -61,6 +61,12 @@ class NewStyleStep(buildstep.BuildStep):
         pass
 
 
+class CustomActionBuildStep(buildstep.BuildStep):
+    # The caller is expected to set the action attribute on the step
+    def run(self):
+        return self.action()
+
+
 class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
@@ -294,6 +300,20 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertTrue(_owns_lock(stepd, real_lock2))
 
     @defer.inlineCallbacks
+    def test_multiple_cancel(self):
+        step = self.setupStep(CustomActionBuildStep())
+
+        def double_interrupt():
+            step.interrupt('reason1')
+            step.interrupt('reason2')
+            return CANCELLED
+
+        step.action = double_interrupt
+
+        self.expectOutcome(result=CANCELLED)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
     def test_runCommand(self):
         bs = buildstep.BuildStep()
         bs.worker = worker.FakeWorker(master=None)  # master is not used here
@@ -310,6 +330,27 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         yield bs.runCommand(cmd)
         # check that step.cmd is cleared after the command runs
         self.assertEqual(bs.cmd, None)
+
+    @defer.inlineCallbacks
+    def test_run_command_after_interrupt(self):
+        step = self.setupStep(CustomActionBuildStep())
+
+        cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
+
+        def run(*args, **kwargs):
+            raise RuntimeError("Command must not be run when step is interrupted")
+        cmd.run = run
+
+        @defer.inlineCallbacks
+        def interrupt_and_run_command():
+            step.interrupt('reason1')
+            res = yield step.runCommand(cmd)
+            return res
+
+        step.action = interrupt_and_run_command
+
+        self.expectOutcome(result=CANCELLED)
+        yield self.runStep()
 
     @defer.inlineCallbacks
     def test_start_returns_SKIPPED(self):
