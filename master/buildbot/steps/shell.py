@@ -167,7 +167,8 @@ deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
 
 
 class ShellCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
-    # This is a temporary class until old ShellCommand is retired
+    name = 'shell'
+
     def __init__(self, **kwargs):
 
         if self.__class__ is ShellCommandNewStyle:
