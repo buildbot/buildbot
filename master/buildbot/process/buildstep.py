@@ -976,6 +976,9 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     @defer.inlineCallbacks
     def runCommand(self, command):
+        if self.stopped:
+            return CANCELLED
+
         self.cmd = command
         command.worker = self.worker
         try:
