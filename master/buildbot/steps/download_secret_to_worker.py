@@ -46,7 +46,6 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        self._start_deferred = None
         res = yield self.runPopulateSecrets()
         return res
 
@@ -74,6 +73,5 @@ class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        self._start_deferred = None
         res = yield self.runRemoveWorkerFileSecret()
         return res

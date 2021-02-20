@@ -221,7 +221,6 @@ class BuildStepMixin:
             self.step._connectPendingLogObservers()
             return defer.succeed(_log)
         step.addLog = addLog
-        step.addLog_newStyle = addLog
 
         def addHTMLLog(name, html):
             _log = logfile.FakeLogFile(name)

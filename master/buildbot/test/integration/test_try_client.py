@@ -282,8 +282,8 @@ def masterConfig(extra_config):
 
     class MyBuildStep(BuildStep):
 
-        def start(self):
-            self.finished(results.SUCCESS)
+        def run(self):
+            return results.SUCCESS
 
     c['change_source'] = []
     c['schedulers'] = []  # filled in above

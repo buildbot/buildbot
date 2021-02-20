@@ -38,7 +38,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -47,12 +46,6 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
-
-
-class OldStyleStep(buildstep.BuildStep):
-
-    def start(self):
-        pass
 
 
 class NewStyleStep(buildstep.BuildStep):
@@ -73,12 +66,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     class FakeBuildStep(buildstep.BuildStep):
 
-        def start(self):
-            eventually(self.finished, 0)
+        def run(self):
+            d = defer.Deferred()
+            eventually(d.callback, 0)  # FIXME: this uses real reactor instead of fake one
+            return d
 
     class SkippingBuildStep(buildstep.BuildStep):
 
-        def start(self):
+        def run(self):
             return SKIPPED
 
     def setUp(self):
@@ -185,19 +180,19 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertTrue(renderedLocks[0])
 
     def test_compare(self):
-        lbs1 = buildstep.LoggingBuildStep(name="me")
-        lbs2 = buildstep.LoggingBuildStep(name="me")
-        lbs3 = buildstep.LoggingBuildStep(name="me2")
+        lbs1 = buildstep.BuildStep(name="me")
+        lbs2 = buildstep.BuildStep(name="me")
+        lbs3 = buildstep.BuildStep(name="me2")
         self.assertEqual(lbs1, lbs2)
         self.assertNotEqual(lbs1, lbs3)
 
     def test_repr(self):
         self.assertEqual(
-            repr(buildstep.LoggingBuildStep(name="me")),
-            'LoggingBuildStep(name=' + repr("me") + ')')
+            repr(buildstep.BuildStep(name="me")),
+            'BuildStep(name=' + repr("me") + ')')
         self.assertEqual(
-            repr(buildstep.LoggingBuildStep({}, name="me")),
-            'LoggingBuildStep({}, name=' + repr("me") + ')')
+            repr(NewStyleStep(name="me")),
+            'NewStyleStep(name=' + repr("me") + ')')
 
     @defer.inlineCallbacks
     def test_regularLocks(self):
@@ -526,10 +521,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.setStatistic('ba', 0.298)
         self.assertEqual(step.getStatistics(), {'rbi': 13, 'ba': 0.298})
 
-    def test_isNewStyle(self):
-        self.assertFalse(OldStyleStep().isNewStyle())
-        self.assertTrue(NewStyleStep().isNewStyle())
-
     def setup_summary_test(self):
         self.patch(NewStyleStep, 'getCurrentSummary',
                    lambda self: defer.succeed({'step': 'C'}))
@@ -538,7 +529,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = NewStyleStep()
         step.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         step.stepid = 13
-        step.step_status = mock.Mock()
         step.build = fakebuild.FakeBuild()
         return step
 
@@ -597,15 +587,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
-
-    @defer.inlineCallbacks
-    def test_updateSummary_old_style(self):
-        self.setupStep(OldStyleStep())
-        # pylint: disable=unnecessary-lambda
-        self.step.start = lambda: self.step.updateSummary()
-        self.expectOutcome(result=EXCEPTION)
-        yield self.runStep()
-        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
     def checkSummary(self, got, step, build=None):
         self.assertTrue(all(isinstance(k, str) for k in got))
@@ -754,31 +735,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertEqual(res, EXCEPTION)
 
 
-class TestLoggingBuildStep(unittest.TestCase):
-
-    def makeRemoteCommand(self, rc, stdout, stderr=''):
-        cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
-        cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
-        cmd.rc = rc
-        return cmd
-
-    def test_evaluateCommand_success(self):
-        cmd = self.makeRemoteCommand(0, "Log text", "Log text")
-        lbs = buildstep.LoggingBuildStep()
-        status = lbs.evaluateCommand(cmd)
-        self.assertEqual(
-            status, SUCCESS, "evaluateCommand returned %d, should've returned %d" %
-            (status, SUCCESS))
-
-    def test_evaluateCommand_failed(self):
-        cmd = self.makeRemoteCommand(23, "Log text", "")
-        lbs = buildstep.LoggingBuildStep()
-        status = lbs.evaluateCommand(cmd)
-        self.assertEqual(
-            status, FAILURE, "evaluateCommand returned %d, should've returned %d" %
-            (status, FAILURE))
-
-
 class InterfaceTests(interfaces.InterfaceTests):
 
     # ensure that steps.BuildStepMixin creates a convincing facsimile of the
@@ -803,7 +759,6 @@ class InterfaceTests(interfaces.InterfaceTests):
             'alwaysRun',
             'build',
             'worker',
-            'step_status',
             'progress',
             'stopped',
         ]:
@@ -834,29 +789,9 @@ class InterfaceTests(interfaces.InterfaceTests):
         def run(self):
             pass
 
-    def test_signature_start(self):
-        @self.assertArgSpecMatches(self.step.start)
-        def start(self):
-            pass
-
-    def test_signature_finished(self):
-        @self.assertArgSpecMatches(self.step.finished)
-        def finished(self, results):
-            pass
-
-    def test_signature_failed(self):
-        @self.assertArgSpecMatches(self.step.failed)
-        def failed(self, why):
-            pass
-
     def test_signature_interrupt(self):
         @self.assertArgSpecMatches(self.step.interrupt)
         def interrupt(self, reason):
-            pass
-
-    def test_signature_describe(self):
-        @self.assertArgSpecMatches(self.step.describe)
-        def describe(self, done=False):
             pass
 
     def test_signature_setProgress(self):
@@ -1124,11 +1059,6 @@ class TestShellMixin(steps.BuildStepMixin,
                 "invalid ShellMixinExample argument logfiles"):
             mixin.setupShellMixin({'logfiles': None},
                                   prohibitArgs=['logfiles'])
-
-    def test_setupShellMixin_not_new_style(self):
-        self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
-        with self.assertRaises(AssertionError):
-            ShellMixinExample()
 
     def test_constructor_defaults(self):
         class MySubclass(ShellMixinExample):

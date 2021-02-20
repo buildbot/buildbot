@@ -843,8 +843,7 @@ BuildbotNetUsageData can be configured with 4 values:
             'buildbot.steps.source.git.Git': 4,
             '>>buildbot.steps.trigger.Trigger': 2,
             '>>>buildbot.worker.base.Worker': 4,
-            'buildbot.reporters.irc.IRC': 1,
-            '>>>buildbot.process.buildstep.LoggingBuildStep': 2},
+            'buildbot.reporters.irc.IRC': 1},
         'www_plugins': ['buildbot_travis', 'waterfall_view']
         }
 
@@ -857,11 +856,11 @@ BuildbotNetUsageData can be configured with 4 values:
         {
             'builders': [
                 ['buildbot.steps.source.git.Git',
-                 '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                 '>>>buildbot.process.buildstep.BuildStep'],
                 ['buildbot.steps.source.git.Git',
                  '>>buildbot.steps.trigger.Trigger'],
                 ['buildbot.steps.source.git.Git',
-                 '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                 '>>>buildbot.process.buildstep.BuildStep'],
                 ['buildbot.steps.source.git.Git',
                  '>>buildbot.steps.trigger.Trigger']
             ]

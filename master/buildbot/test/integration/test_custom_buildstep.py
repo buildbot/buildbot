@@ -13,11 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import traceback
-
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import failure
 
 from buildbot.config import BuilderConfig
 from buildbot.process import buildstep
@@ -34,49 +31,6 @@ class TestLogObserver(logobserver.LogObserver):
 
     def outReceived(self, txt):
         self.observed.append(txt)
-
-
-class OldStyleCustomBuildStep(buildstep.BuildStep):
-
-    def __init__(self, reactor, arg1, arg2, doFail=False, **kwargs):
-        super().__init__(**kwargs)
-        self.reactor = reactor
-        self.arg1 = arg1
-        self.arg2 = arg2
-        self.doFail = doFail
-
-    def start(self):
-        # don't complete immediately, or synchronously
-        self.reactor.callLater(0, self.doStuff)
-
-    def doStuff(self):
-        try:
-            self.addURL('bookmark', 'http://foo')
-            self.addHTMLLog('compl.html',
-                            "<blink>A very short logfile</blink>\n")
-
-            self.step_status.setText(['text'])
-            self.step_status.setText2(['text2'])
-            self.step_status.setText(['text3'])
-
-            lo = TestLogObserver()
-            self.addLogObserver('foo', lo)
-
-            _log = self.addLog('foo')
-            _log.addStdout('stdout\n')
-            _log.addStdout('\N{SNOWMAN}\n'.encode('utf-8'))
-            _log.addStderr('stderr\n')
-            _log.finish()
-
-            self.addCompleteLog('obs', 'Observer saw %r' % (lo.observed,))
-
-            if self.doFail:
-                self.failed(failure.Failure(RuntimeError('oh noes')))
-            else:
-                self.finished(results.SUCCESS)
-        except Exception:
-            traceback.print_exc()
-            self.failed(failure.Failure())
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
@@ -107,7 +61,7 @@ class BuildStepWithFailingLogObserver(buildstep.BuildStep):
         raise RuntimeError('fail')
 
 
-class FailingCustomStep(buildstep.LoggingBuildStep):
+class FailingCustomStep(buildstep.BuildStep):
 
     flunkOnFailure = True
 
@@ -159,66 +113,6 @@ class RunSteps(RunFakeMasterTestCase):
         # and wait for build completion
         yield d_finished
         yield consumer.stopConsuming()
-
-    @defer.inlineCallbacks
-    def doOldStyleCustomBuildStep(self, builder_id, slowDB=False):
-        # patch out addLog to delay until we're ready
-        newLogDeferreds = []
-        oldNewLog = self.master.data.updates.addLog
-
-        def finishNewLog(self):
-            for d in newLogDeferreds:
-                self.reactor.callLater(0, d.callback, None)
-
-        def delayedNewLog(*args, **kwargs):
-            d = defer.Deferred()
-            d.addCallback(lambda _: oldNewLog(*args, **kwargs))
-            newLogDeferreds.append(d)
-            return d
-        if slowDB:
-            self.patch(self.master.data.updates,
-                       "addLog", delayedNewLog)
-            self.patch(OldStyleCustomBuildStep,
-                       "_run_finished_hook", finishNewLog)
-
-        yield self.do_test_build(builder_id)
-
-        yield self.assertLogs(1, {
-            'compl.html': '<blink>A very short logfile</blink>\n',
-            # this is one of the things that differs independently of
-            # new/old style: encoding of logs and newlines
-            'foo':
-            # 'stdout\n\xe2\x98\x83\nstderr\n',
-            'ostdout\no\N{SNOWMAN}\nestderr\n',
-            'obs':
-            # if slowDB, the observer won't see anything before the end of this
-            # instant step
-            'Observer saw []\n' if slowDB else
-            # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
-            'Observer saw [' + repr('stdout\n') + ", " + repr("\u2603\n") + "]\n"
-        })
-
-    @defer.inlineCallbacks
-    def test_OldStyleCustomBuildStep(self):
-        step = OldStyleCustomBuildStep(self.reactor, arg1=1, arg2=2)
-        builder_id = yield self.create_config_for_step(step)
-        yield self.doOldStyleCustomBuildStep(builder_id, False)
-
-    @defer.inlineCallbacks
-    def test_OldStyleCustomBuildStepSlowDB(self):
-        step = OldStyleCustomBuildStep(self.reactor, arg1=1, arg2=2)
-        builder_id = yield self.create_config_for_step(step)
-        yield self.doOldStyleCustomBuildStep(builder_id, True)
-
-    @defer.inlineCallbacks
-    def test_OldStyleCustomBuildStep_failure(self):
-        step = OldStyleCustomBuildStep(self.reactor, arg1=1, arg2=2, doFail=1)
-        builder_id = yield self.create_config_for_step(step)
-
-        yield self.do_test_build(builder_id)
-
-        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        yield self.assertBuildResults(1, results.EXCEPTION)
 
     @defer.inlineCallbacks
     def test_step_raising_buildstepfailed_in_start(self):
