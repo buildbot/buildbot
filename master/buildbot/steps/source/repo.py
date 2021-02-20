@@ -266,7 +266,6 @@ class Repo(Source):
 
         # starting from here, clobbering will not help
         yield self.doRepoDownloads()
-        self.setStatus(self.lastCommand, 0)
         return results.SUCCESS
 
     @defer.inlineCallbacks
