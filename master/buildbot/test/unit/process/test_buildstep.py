@@ -49,12 +49,6 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import eventually
 
 
-class OldStyleStep(buildstep.BuildStep):
-
-    def start(self):
-        pass
-
-
 class NewStyleStep(buildstep.BuildStep):
 
     def run(self):
@@ -73,12 +67,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     class FakeBuildStep(buildstep.BuildStep):
 
-        def start(self):
-            eventually(self.finished, 0)
+        def run(self):
+            d = defer.Deferred()
+            eventually(d.callback, 0)  # FIXME: this uses real reactor instead of fake one
+            return d
 
     class SkippingBuildStep(buildstep.BuildStep):
 
-        def start(self):
+        def run(self):
             return SKIPPED
 
     def setUp(self):
@@ -526,10 +522,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.setStatistic('ba', 0.298)
         self.assertEqual(step.getStatistics(), {'rbi': 13, 'ba': 0.298})
 
-    def test_isNewStyle(self):
-        self.assertFalse(OldStyleStep().isNewStyle())
-        self.assertTrue(NewStyleStep().isNewStyle())
-
     def setup_summary_test(self):
         self.patch(NewStyleStep, 'getCurrentSummary',
                    lambda self: defer.succeed({'step': 'C'}))
@@ -538,7 +530,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step = NewStyleStep()
         step.master = fakemaster.make_master(self, wantData=True, wantDb=True)
         step.stepid = 13
-        step.step_status = mock.Mock()
         step.build = fakebuild.FakeBuild()
         return step
 
@@ -597,15 +588,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
-
-    @defer.inlineCallbacks
-    def test_updateSummary_old_style(self):
-        self.setupStep(OldStyleStep())
-        # pylint: disable=unnecessary-lambda
-        self.step.start = lambda: self.step.updateSummary()
-        self.expectOutcome(result=EXCEPTION)
-        yield self.runStep()
-        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
     def checkSummary(self, got, step, build=None):
         self.assertTrue(all(isinstance(k, str) for k in got))
@@ -803,7 +785,6 @@ class InterfaceTests(interfaces.InterfaceTests):
             'alwaysRun',
             'build',
             'worker',
-            'step_status',
             'progress',
             'stopped',
         ]:
@@ -832,21 +813,6 @@ class InterfaceTests(interfaces.InterfaceTests):
     def test_signature_run(self):
         @self.assertArgSpecMatches(self.step.run)
         def run(self):
-            pass
-
-    def test_signature_start(self):
-        @self.assertArgSpecMatches(self.step.start)
-        def start(self):
-            pass
-
-    def test_signature_finished(self):
-        @self.assertArgSpecMatches(self.step.finished)
-        def finished(self, results):
-            pass
-
-    def test_signature_failed(self):
-        @self.assertArgSpecMatches(self.step.failed)
-        def failed(self, why):
             pass
 
     def test_signature_interrupt(self):
@@ -1124,11 +1090,6 @@ class TestShellMixin(steps.BuildStepMixin,
                 "invalid ShellMixinExample argument logfiles"):
             mixin.setupShellMixin({'logfiles': None},
                                   prohibitArgs=['logfiles'])
-
-    def test_setupShellMixin_not_new_style(self):
-        self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
-        with self.assertRaises(AssertionError):
-            ShellMixinExample()
 
     def test_constructor_defaults(self):
         class MySubclass(ShellMixinExample):

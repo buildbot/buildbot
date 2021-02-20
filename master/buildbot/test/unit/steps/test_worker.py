@@ -296,7 +296,7 @@ class CompositeUser(buildstep.BuildStep, worker.CompositeStepMixin):
         super().__init__()
 
     @defer.inlineCallbacks
-    def start(self):
+    def run(self):
         yield self.addLogForRemoteCommands('stdio')
         res = yield self.payload(self)
         return FAILURE if res else SUCCESS

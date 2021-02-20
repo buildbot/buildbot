@@ -3556,7 +3556,6 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
         gitStep = self.setupStep(step)
 
-        gitStep._start_deferred = defer.Deferred()
         with self.assertRaisesRegex(WorkerSetupError, msg):
             yield gitStep.run_vc("branch", "revision", "patch")
 
