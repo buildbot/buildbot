@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import traceback
-from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -25,10 +24,7 @@ from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process import results
 from buildbot.process.factory import BuildFactory
-from buildbot.steps import shell
 from buildbot.test.util.integration import RunFakeMasterTestCase
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestLogObserver(logobserver.LogObserver):
@@ -120,47 +116,9 @@ class FailingCustomStep(buildstep.LoggingBuildStep):
         self.exception = exception
 
     @defer.inlineCallbacks
-    def start(self):
+    def run(self):
         yield defer.succeed(None)
         raise self.exception()
-
-
-class OldBuildEPYDoc(shell.ShellCommand):
-
-    command = ['epydoc']
-
-    def runCommand(self, cmd):
-        # we don't have a real worker in this test harness, so fake it
-        _log = cmd.logs['stdio']
-        _log.addStdout('some\noutput\n')
-        return defer.succeed(None)
-
-    def createSummary(self, log):
-        for line in StringIO(log.getText()):
-            # what we do with the line isn't important to the test
-            assert line in ('some\n', 'output\n')
-
-
-class OldPerlModuleTest(shell.ShellCommand):
-
-    command = ['perl']
-
-    def runCommand(self, cmd):
-        # we don't have a real worker in this test harness, so fake it
-        _log = cmd.logs['stdio']
-        _log.addStdout('a\nb\nc\n')
-        return defer.succeed(None)
-
-    def evaluateCommand(self, cmd):
-        # Get stdio, stripping pesky newlines etc.
-        lines = [
-            line.replace('\r\n', '').replace('\r', '').replace('\n', '')
-            for line in self.getLog('stdio').readlines()
-        ]
-        # .. the rest of this method isn't that interesting, as long as the
-        # statement above worked
-        assert lines == ['a', 'b', 'c']
-        return results.SUCCESS
 
 
 class RunSteps(RunFakeMasterTestCase):
@@ -308,25 +266,3 @@ class RunSteps(RunFakeMasterTestCase):
         yield self.assertLogs(1, {
             'xx': 'o\N{CENT SIGN}\n',
         })
-
-    @defer.inlineCallbacks
-    def test_OldBuildEPYDoc(self):
-        # test old-style calls to log.getText, figuring readlines will be ok
-        with assertProducesWarnings(DeprecatedApiWarning, num_warnings=2,
-                                    message_pattern='Subclassing old-style step'):
-            step = OldBuildEPYDoc()
-            builder_id = yield self.create_config_for_step(step)
-
-            yield self.do_test_build(builder_id)
-            yield self.assertBuildResults(1, results.FAILURE)
-
-    @defer.inlineCallbacks
-    def test_OldPerlModuleTest(self):
-        # test old-style calls to self.getLog
-        with assertProducesWarnings(DeprecatedApiWarning, num_warnings=2,
-                                    message_pattern='Subclassing old-style step'):
-            step = OldPerlModuleTest()
-            builder_id = yield self.create_config_for_step(step)
-
-            yield self.do_test_build(builder_id)
-            yield self.assertBuildResults(1, results.SUCCESS)

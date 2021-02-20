@@ -11,13 +11,6 @@
 HTTP Requests
 +++++++++++++
 
-.. note::
-
-    The HTTP steps are being migrated to :ref:`new-style<New-Style-Build-Steps>`.
-    A new-style equivalents are provided as ``HTTPStepNewStyle``, ``GETNewStyle``, ``PUTNewStyle``, ``POSTNewStyle``, ``DELETENewStyle``, ``HEADNewStyle``, ``OPTIONSNewStyle``.
-    This should be inherited by any custom steps until :ref:`Buildbot 3.0 is released<3.0_Upgrading>`.
-    Regular uses without inheritance are not affected.
-
 Using the :bb:step:`HTTPStep` step, it is possible to perform HTTP requests in order to trigger another REST service about the progress of the build.
 
 .. note::

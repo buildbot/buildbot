@@ -7,13 +7,6 @@ Compile
 
 .. index:: Properties; warnings-count
 
-.. note::
-
-    This step is being migrated to :ref:`new-style<New-Style-Build-Steps>`.
-    A new-style equivalent is provided as ``CompileNewStyle``.
-    This should be inherited by any custom steps until :ref:`Buildbot 3.0 is released<3.0_Upgrading>`.
-    Regular uses without inheritance are not affected.
-
 This is meant to handle compiling or building a project written in C.
 The default command is ``make all``.
 When the compilation is finished, the log file is scanned for GCC warning messages, a summary log is created with any problems that were seen, and the step is marked as WARNINGS if any were discovered.

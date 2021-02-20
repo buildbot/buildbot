@@ -22,20 +22,16 @@ from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
-from buildbot.steps.master_oldstyle import MasterShellCommand
 from buildbot.util import deferwaiter
 
-_hush_pyflakes = [
-    MasterShellCommand
-]
-del _hush_pyflakes
 
-
-class MasterShellCommandNewStyle(BuildStep):
+class MasterShellCommand(BuildStep):
 
     """
     Run a shell command locally - on the buildmaster.  The shell command
@@ -181,6 +177,15 @@ class MasterShellCommandNewStyle(BuildStep):
         except error.ProcessExitedAlready:
             pass
         super().interrupt(reason)
+
+
+MasterShellCommandNewStyle = MasterShellCommand
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use MasterShellCommand instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.master",
+    name="MasterShellCommandNewStyle",
+)
 
 
 class SetProperty(BuildStep):
