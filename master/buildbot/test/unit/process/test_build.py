@@ -27,7 +27,6 @@ from buildbot import interfaces
 from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -584,7 +583,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
         real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
 
-        step = LoggingBuildStep(locks=[lock_access])
+        step = BuildStep(locks=[lock_access])
         b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), lock.access('counting'))
@@ -593,7 +592,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         def acquireLocks(res=None):
             gotLocks[0] = True
-            retval = LoggingBuildStep.acquireLocks(step, res)
+            retval = BuildStep.acquireLocks(step, res)
             self.assertTrue(b.currentStep is step)
             b.stopBuild('stop it')
             return retval

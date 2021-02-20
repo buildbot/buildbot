@@ -181,19 +181,19 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertTrue(renderedLocks[0])
 
     def test_compare(self):
-        lbs1 = buildstep.LoggingBuildStep(name="me")
-        lbs2 = buildstep.LoggingBuildStep(name="me")
-        lbs3 = buildstep.LoggingBuildStep(name="me2")
+        lbs1 = buildstep.BuildStep(name="me")
+        lbs2 = buildstep.BuildStep(name="me")
+        lbs3 = buildstep.BuildStep(name="me2")
         self.assertEqual(lbs1, lbs2)
         self.assertNotEqual(lbs1, lbs3)
 
     def test_repr(self):
         self.assertEqual(
-            repr(buildstep.LoggingBuildStep(name="me")),
-            'LoggingBuildStep(name=' + repr("me") + ')')
+            repr(buildstep.BuildStep(name="me")),
+            'BuildStep(name=' + repr("me") + ')')
         self.assertEqual(
-            repr(buildstep.LoggingBuildStep({}, name="me")),
-            'LoggingBuildStep({}, name=' + repr("me") + ')')
+            repr(NewStyleStep(name="me")),
+            'NewStyleStep(name=' + repr("me") + ')')
 
     @defer.inlineCallbacks
     def test_regularLocks(self):

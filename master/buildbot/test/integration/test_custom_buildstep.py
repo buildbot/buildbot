@@ -64,7 +64,7 @@ class BuildStepWithFailingLogObserver(buildstep.BuildStep):
         raise RuntimeError('fail')
 
 
-class FailingCustomStep(buildstep.LoggingBuildStep):
+class FailingCustomStep(buildstep.BuildStep):
 
     flunkOnFailure = True
 
