@@ -332,6 +332,27 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertEqual(bs.cmd, None)
 
     @defer.inlineCallbacks
+    def test_run_command_after_interrupt(self):
+        step = self.setupStep(CustomActionBuildStep())
+
+        cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
+
+        def run(*args, **kwargs):
+            raise RuntimeError("Command must not be run when step is interrupted")
+        cmd.run = run
+
+        @defer.inlineCallbacks
+        def interrupt_and_run_command():
+            step.interrupt('reason1')
+            res = yield step.runCommand(cmd)
+            return res
+
+        step.action = interrupt_and_run_command
+
+        self.expectOutcome(result=CANCELLED)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
     def test_start_returns_SKIPPED(self):
         self.setupStep(self.SkippingBuildStep())
         self.step.finished = mock.Mock()
