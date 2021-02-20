@@ -833,6 +833,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
+        if self.stopped:
+            return
         self.stopped = True
         if self._acquiringLocks:
             for (lock, access, d) in self._acquiringLocks:
@@ -974,6 +976,9 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     @defer.inlineCallbacks
     def runCommand(self, command):
+        if self.stopped:
+            return CANCELLED
+
         self.cmd = command
         command.worker = self.worker
         try:
