@@ -218,36 +218,27 @@ class RemoteCommand(base.RemoteCommandImpl):
             eventually(self._finished, failure)
         return None
 
-    def _unwrap(self, log):
-        from buildbot.process import buildstep
-        if isinstance(log, buildstep.SyncLogFileWrapper):
-            return log.unwrap()
-        return log
-
     @util.deferredLocked('loglock')
-    @defer.inlineCallbacks
     def addStdout(self, data):
         if self.collectStdout:
             self.stdout += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            log_ = yield self._unwrap(self.logs[self.stdioLogName])
-            log_.addStdout(data)
+            self.logs[self.stdioLogName].addStdout(data)
+        return defer.succeed(None)
 
     @util.deferredLocked('loglock')
-    @defer.inlineCallbacks
     def addStderr(self, data):
         if self.collectStderr:
             self.stderr += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            log_ = yield self._unwrap(self.logs[self.stdioLogName])
-            log_.addStderr(data)
+            self.logs[self.stdioLogName].addStderr(data)
+        return defer.succeed(None)
 
     @util.deferredLocked('loglock')
-    @defer.inlineCallbacks
     def addHeader(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            log_ = yield self._unwrap(self.logs[self.stdioLogName])
-            log_.addHeader(data)
+            self.logs[self.stdioLogName].addHeader(data)
+        return defer.succeed(None)
 
     @util.deferredLocked('loglock')
     @defer.inlineCallbacks
@@ -257,13 +248,11 @@ class RemoteCommand(base.RemoteCommandImpl):
             (activateCallBack, closeWhenFinished) = self.delayedLogs[logname]
             del self.delayedLogs[logname]
             loog = yield activateCallBack(self)
-            loog = yield self._unwrap(loog)
             self.logs[logname] = loog
             self._closeWhenFinished[logname] = closeWhenFinished
 
         if logname in self.logs:
-            log_ = yield self._unwrap(self.logs[logname])
-            yield log_.addStdout(data)
+            yield self.logs[logname].addStdout(data)
         else:
             log.msg("{}.addToLog: no such log {}".format(self, logname))
 

@@ -16,12 +16,10 @@
 import inspect
 import re
 import sys
-from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import deprecate
-from twisted.python import failure
 from twisted.python import log
 from twisted.python import util as twutil
 from twisted.python import versions
@@ -158,130 +156,6 @@ def _maybeUnhandled(fn):
     wrap.__wrapped__ = fn
     twutil.mergeFunctionMetadata(fn, wrap)
     return wrap
-
-
-class SyncLogFileWrapper(logobserver.LogObserver):
-
-    # A temporary wrapper around process.log.Log to emulate *synchronous*
-    # writes to the logfile by handling the Deferred from each add* operation
-    # as part of the step's _start_unhandled_deferreds.  This has to handle
-    # the tricky case of adding data to a log *before* addLog has returned!
-    # this also adds the read-only methods such as getText
-
-    # old constants from the status API
-    HEADER = 0
-    STDERR = 1
-    STDOUT = 2
-
-    def __init__(self, step, name, addLogDeferred):
-        self.step = step
-        self.name = name
-        self.delayedOperations = []
-        self.asyncLogfile = None
-        self.chunks = []
-        self.finished = False
-        self.finishDeferreds = []
-
-        self.step._sync_addlog_deferreds.append(addLogDeferred)
-
-        @addLogDeferred.addCallback
-        def gotAsync(log):
-            self.asyncLogfile = log
-            self._catchup()
-            return log
-
-        # run _catchup even if there's an error; it will helpfully generate
-        # a whole bunch more!
-        @addLogDeferred.addErrback
-        def problem(f):
-            self._catchup()
-            return f
-
-    def _catchup(self):
-        if not self.asyncLogfile or not self.delayedOperations:
-            return
-        op = self.delayedOperations.pop(0)
-
-        try:
-            d = defer.maybeDeferred(op)
-        except Exception:
-            d = defer.fail(failure.Failure())
-
-        @d.addBoth
-        def next(x):
-            self._catchup()
-            return x
-        self.step._start_unhandled_deferreds.append(d)
-
-    def _delay(self, op):
-        self.delayedOperations.append(op)
-        if len(self.delayedOperations) == 1:
-            self._catchup()
-
-    def _maybeFinished(self):
-        if self.finished and self.finishDeferreds:
-            pending = self.finishDeferreds
-            self.finishDeferreds = []
-            for d in pending:
-                d.callback(self)
-
-    # write methods
-
-    def addStdout(self, data):
-        data = bytes2unicode(data)
-        self.chunks.append((self.STDOUT, data))
-        self._delay(lambda: self.asyncLogfile.addStdout(data))
-
-    def addStderr(self, data):
-        data = bytes2unicode(data)
-        self.chunks.append((self.STDERR, data))
-        self._delay(lambda: self.asyncLogfile.addStderr(data))
-
-    def addHeader(self, data):
-        data = bytes2unicode(data)
-        self.chunks.append((self.HEADER, data))
-        self._delay(lambda: self.asyncLogfile.addHeader(data))
-
-    def finish(self):
-        self.finished = True
-        self._maybeFinished()
-        # pylint: disable=unnecessary-lambda
-        self._delay(lambda: self.asyncLogfile.finish())
-
-    def unwrap(self):
-        d = defer.Deferred()
-        self._delay(lambda: d.callback(self.asyncLogfile))
-        return d
-
-    # read-only methods
-
-    def getName(self):
-        return self.name
-
-    def getText(self):
-        return "".join(self.getChunks([self.STDOUT, self.STDERR], onlyText=True))
-
-    def readlines(self):
-        alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = StringIO(alltext)
-        return io.readlines()
-
-    def getChunks(self, channels=None, onlyText=False):
-        chunks = self.chunks
-        if channels:
-            channels = set(channels)
-            chunks = ((c, t) for (c, t) in chunks if c in channels)
-        if onlyText:
-            chunks = (t for (c, t) in chunks)
-        return chunks
-
-    def isFinished(self):
-        return self.finished
-
-    def waitUntilFinished(self):
-        d = defer.Deferred()
-        self.finishDeferreds.append(d)
-        self._maybeFinished()
 
 
 class BuildStepStatus:
@@ -751,7 +625,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     def run(self):
         self._start_deferred = defer.Deferred()
         unhandled = self._start_unhandled_deferreds = []
-        self._sync_addlog_deferreds = []
         try:
             # here's where we set things up for backward compatibility for
             # old-style steps, using monkey patches so that new-style steps
@@ -768,14 +641,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.step_status.getStatistic = self.getStatistic
             self.step_status.hasStatistic = self.hasStatistic
 
-            # monkey-patch an addLog that returns an write-only, sync log
-            self.addLog = self.addLog_oldStyle
-            self._logFileWrappers = {}
-
-            # and a getLog that returns a read-only, sync log, captured by
-            # LogObservers installed by addLog_oldStyle
-            self.getLog = self.getLog_oldStyle
-
             # old-style steps shouldn't be calling updateSummary
             def updateSummary():
                 assert 0, 'updateSummary is only valid on new-style steps'
@@ -789,10 +654,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             # hook for tests
             # assert so that it is only run in non optimized mode
             assert self._run_finished_hook() is None
-            # wait until all the sync logs have been actually created before
-            # finishing
-            yield defer.DeferredList(self._sync_addlog_deferreds,
-                                     consumeErrors=True)
             self._start_deferred = None
             unhandled = self._start_unhandled_deferreds
             self.realUpdateSummary()
@@ -892,24 +753,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         def newLog(logid):
             return self._newLog(name, type, logid, logEncoding)
         return d
-    addLog_newStyle = addLog
-
-    def addLog_oldStyle(self, name, type='s', logEncoding=None):
-        # create a logfile instance that acts like old-style status logfiles
-        # begin to create a new-style logfile
-        loog_d = self.addLog_newStyle(name, type, logEncoding)
-        self._start_unhandled_deferreds.append(loog_d)
-        # and wrap the deferred that will eventually fire with that logfile
-        # into a write-only logfile instance
-        wrapper = SyncLogFileWrapper(self, name, loog_d)
-        self._logFileWrappers[name] = wrapper
-        return wrapper
 
     def getLog(self, name):
         return self.logs[name]
-
-    def getLog_oldStyle(self, name):
-        return self._logFileWrappers[name]
 
     @_maybeUnhandled
     @defer.inlineCallbacks
