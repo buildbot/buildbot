@@ -1011,13 +1011,22 @@ For example:
 
 .. code-block:: python
 
-    class MakeTarball(ShellCommand):
-        def start(self):
+    class MakeTarball(buildstep.ShellMixin, buildstep.BuildStep):
+        def __init__(self, **kwargs):
+            kwargs = self.setupShellMixin(kwargs)
+            super().__init__(**kwargs)
+
+        @defer.inlineCallbacks
+        def run(self):
             if self.getProperty("os") == "win":
-                self.setCommand([ ... ]) # windows-only command
+                # windows-only command
+                cmd = yield self.makeRemoteShellCommand(commad=[ ... ])
             else:
-                self.setCommand([ ... ]) # equivalent for other systems
-            super().start()
+                # equivalent for other systems
+                cmd = yield self.makeRemoteShellCommand(commad=[ ... ])
+            yield self.runCommand(cmd)
+            return cmd.results()
+
 
 Remember that properties set in a step may not be available until the next step begins.
 In particular, any :class:`Property` or :class:`Interpolate` instances for the current step are interpolated before the step starts, so they cannot use the value of any properties determined in that step.
@@ -1131,7 +1140,8 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
             super().__init__(**kwargs)
             self.dirname = dirname
 
-        def start(self):
+        @defer.inlineCallbacks
+        def run(self):
             # make sure the worker knows about stat
             workerver = (self.workerVersion('stat'),
                         self.workerVersion('glob'))
@@ -1140,40 +1150,31 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
             cmd = remotecommand.RemoteCommand('stat', {'file': self.dirname})
 
-            d = self.runCommand(cmd)
-            d.addCallback(lambda res: self.evaluateStat(cmd))
-            d.addErrback(self.failed)
-            return d
+            yield self.runCommand(cmd)
 
-        def evaluateStat(self, cmd):
             if cmd.didFail():
-                self.step_status.setText(["File not found."])
-                self.finished(util.FAILURE)
-                return
+                self.description = ["File not found."]
+                return util.FAILURE
+
             s = cmd.updates["stat"][-1]
             if not stat.S_ISDIR(s[stat.ST_MODE]):
-                self.step_status.setText(["'tis not a directory"])
-                self.finished(util.WARNINGS)
-                return
+                self.description = ["'tis not a directory"]
+                return util.WARNINGS
 
             cmd = remotecommand.RemoteCommand('glob', {'path': self.dirname + '/*.pyc'})
 
-            d = self.runCommand(cmd)
-            d.addCallback(lambda res: self.evaluateGlob(cmd))
-            d.addErrback(self.failed)
-            return d
+            yield self.runCommand(cmd)
 
-        def evaluateGlob(self, cmd):
             if cmd.didFail():
-                self.step_status.setText(["Glob failed."])
-                self.finished(util.FAILURE)
-                return
+                self.description = ["Glob failed."]
+                return util.FAILURE
+
             files = cmd.updates["files"][-1]
             if len(files):
-                self.step_status.setText(["Found pycs"]+files)
+                self.description = ["Found pycs"] + files
             else:
-                self.step_status.setText(["No pycs found"])
-            self.finished(util.SUCCESS)
+                self.description = ["No pycs found"]
+            return util.SUCCESS
 
 
 For more information on the available commands, see :doc:`../developer/master-worker`.

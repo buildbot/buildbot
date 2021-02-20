@@ -716,4 +716,3 @@ Exceptions
 
     This exception indicates that the buildstep has failed.
     It is useful as a way to skip all subsequent processing when a step goes wrong.
-    It is handled by :meth:`BuildStep.failed`.
