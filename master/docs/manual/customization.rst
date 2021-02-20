@@ -740,7 +740,7 @@ The whole thing looks like this:
 
 .. code-block:: python
 
-    class Frobnify(LoggingBuildStep):
+    class Frobnify(BuildStep):
         def __init__(self,
                 frob_what="frobee",
                 frob_how_many=None,

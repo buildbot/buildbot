@@ -14,14 +14,12 @@
 # Copyright Buildbot Team Members
 
 import inspect
-import re
 import sys
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import deprecate
 from twisted.python import log
-from twisted.python import util as twutil
 from twisted.python import versions
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.failure import Failure
@@ -51,7 +49,6 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
-from buildbot.process.results import worst_status
 from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
@@ -838,162 +835,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                                       ).format(name, self.__class__.__name__))
 
 
-class LoggingBuildStep(BuildStep):
-
-    progressMetrics = ('output',)
-    logfiles = {}
-
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
-    cmd = None
-
-    renderables = ['logfiles', 'lazylogfiles']
-
-    def __init__(self, logfiles=None, lazylogfiles=False, log_eval_func=None,
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if logfiles is None:
-            logfiles = {}
-        if logfiles and not isinstance(logfiles, dict):
-            config.error(
-                "the ShellCommand 'logfiles' parameter must be a dictionary")
-
-        # merge a class-level 'logfiles' attribute with one passed in as an
-        # argument
-        self.logfiles = self.logfiles.copy()
-        self.logfiles.update(logfiles)
-        self.lazylogfiles = lazylogfiles
-        if log_eval_func and not callable(log_eval_func):
-            config.error(
-                "the 'log_eval_func' parameter must be a callable")
-        self.log_eval_func = log_eval_func
-        self.addLogObserver('stdio', OutputProgressObserver("output"))
-
-    def isNewStyle(self):
-        # LoggingBuildStep subclasses are never new-style
-        return False
-
-    def addLogFile(self, logname, filename):
-        self.logfiles[logname] = filename
-
-    def buildCommandKwargs(self):
-        kwargs = dict()
-        kwargs['logfiles'] = self.logfiles
-        return kwargs
-
-    def startCommand(self, cmd, errorMessages=None):
-        if errorMessages is None:
-            errorMessages = []
-        log.msg("ShellCommand.startCommand(cmd={})".format(cmd))
-        log.msg("  cmd.args = %r" % (cmd.args))
-        self.cmd = cmd  # so we can interrupt it
-
-        # stdio is the first log
-        self.stdio_log = stdio_log = self.addLog("stdio")
-        cmd.useLog(stdio_log, closeWhenFinished=True)
-        for em in errorMessages:
-            stdio_log.addHeader(em)
-            # TODO: consider setting up self.stdio_log earlier, and have the
-            # code that passes in errorMessages instead call
-            # self.stdio_log.addHeader() directly.
-
-        # there might be other logs
-        self.setupLogfiles(cmd, self.logfiles)
-
-        d = self.runCommand(cmd)  # might raise ConnectionLost
-        d.addCallback(lambda res: self.commandComplete(cmd))
-
-        # TODO: when the status.LogFile object no longer exists, then this
-        # method will a synthetic logfile for old-style steps, and to be called
-        # without the `logs` parameter for new-style steps.  Unfortunately,
-        # lots of createSummary methods exist, but don't look at the log, so
-        # it's difficult to optimize when the synthetic logfile is needed.
-        d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
-
-        d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
-
-        @d.addCallback
-        def _gotResults(results):
-            self.setStatus(cmd, results)
-            return results
-        d.addCallback(self.finished)
-        d.addErrback(self.failed)
-
-    def setupLogfiles(self, cmd, logfiles):
-        for logname, remotefilename in logfiles.items():
-            if self.lazylogfiles:
-                # Ask RemoteCommand to watch a logfile, but only add
-                # it when/if we see any data.
-                #
-                # The dummy default argument local_logname is a work-around for
-                # Python name binding; default values are bound by value, but
-                # captured variables in the body are bound by name.
-                def callback(cmd_arg, local_logname=logname):
-                    return self.addLog(local_logname)
-                cmd.useLogDelayed(logname, callback, True)
-            else:
-                # add a LogFile
-                newlog = self.addLog(logname)
-                # and tell the RemoteCommand to feed it
-                cmd.useLog(newlog, True)
-
-    def checkDisconnect(self, f):
-        # this is now handled by self.failed
-        log.msg("WARNING: step %s uses deprecated checkDisconnect method")
-        return f
-
-    def commandComplete(self, cmd):
-        pass
-
-    def createSummary(self, stdio):
-        pass
-
-    def evaluateCommand(self, cmd):
-        # NOTE: log_eval_func is undocumented, and will die with
-        # LoggingBuildStep/ShellCOmmand
-        if self.log_eval_func:
-            # self.step_status probably doesn't have the desired behaviors, but
-            # those were never well-defined..
-            return self.log_eval_func(cmd, self.step_status)
-        return cmd.results()
-
-    # TODO: delete
-    def getText(self, cmd, results):
-        if results == SUCCESS:
-            return self.describe(True)
-        elif results == WARNINGS:
-            return self.describe(True) + ["warnings"]
-        elif results == EXCEPTION:
-            return self.describe(True) + ["exception"]
-        elif results == CANCELLED:
-            return self.describe(True) + ["cancelled"]
-        return self.describe(True) + ["failed"]
-
-    # TODO: delete
-    def getText2(self, cmd, results):
-        return [self.name]
-
-    # TODO: delete
-    def maybeGetText2(self, cmd, results):
-        if results == SUCCESS:
-            # successful steps do not add anything to the build's text
-            pass
-        elif results == WARNINGS:
-            if (self.flunkOnWarnings or self.warnOnWarnings):
-                # we're affecting the overall build, so tell them why
-                return self.getText2(cmd, results)
-        else:
-            if (self.haltOnFailure or self.flunkOnFailure or
-                    self.warnOnFailure):
-                # we're affecting the overall build, so tell them why
-                return self.getText2(cmd, results)
-        return []
-
-    def setStatus(self, cmd, results):
-        self.realUpdateSummary()
-        return defer.succeed(None)
-
-
 class CommandMixin:
 
     @defer.inlineCallbacks
@@ -1174,31 +1015,6 @@ class ShellMixin:
                 summary += ' ({})'.format(Results[self.results])
             return {'step': summary}
         return super().getResultSummary()
-
-# Parses the logs for a list of regexs. Meant to be invoked like:
-# regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
-# self.addStep(ShellCommand,
-#   command=...,
-#   ...,
-#   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
-# )
-# NOTE: log_eval_func is undocumented, and will die with
-# LoggingBuildStep/ShellCOmmand
-
-
-def regex_log_evaluator(cmd, _, regexes):
-    worst = cmd.results()
-    for err, possible_status in regexes:
-        # worst_status returns the worse of the two status' passed to it.
-        # we won't be changing "worst" unless possible_status is worse than it,
-        # so we don't even need to check the log if that's the case
-        if worst_status(worst, possible_status) == possible_status:
-            if isinstance(err, str):
-                err = re.compile(".*{}.*".format(err), re.DOTALL)
-            for l in cmd.logs.values():
-                if err.search(l.getText()):
-                    worst = possible_status
-    return worst
 
 
 _hush_pyflakes = [WithProperties]

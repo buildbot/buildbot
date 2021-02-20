@@ -38,7 +38,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -734,31 +733,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0].getErrorMessage(), 'got exception')
         self.assertEqual(res, EXCEPTION)
-
-
-class TestLoggingBuildStep(unittest.TestCase):
-
-    def makeRemoteCommand(self, rc, stdout, stderr=''):
-        cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
-        cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
-        cmd.rc = rc
-        return cmd
-
-    def test_evaluateCommand_success(self):
-        cmd = self.makeRemoteCommand(0, "Log text", "Log text")
-        lbs = buildstep.LoggingBuildStep()
-        status = lbs.evaluateCommand(cmd)
-        self.assertEqual(
-            status, SUCCESS, "evaluateCommand returned %d, should've returned %d" %
-            (status, SUCCESS))
-
-    def test_evaluateCommand_failed(self):
-        cmd = self.makeRemoteCommand(23, "Log text", "")
-        lbs = buildstep.LoggingBuildStep()
-        status = lbs.evaluateCommand(cmd)
-        self.assertEqual(
-            status, FAILURE, "evaluateCommand returned %d, should've returned %d" %
-            (status, FAILURE))
 
 
 class InterfaceTests(interfaces.InterfaceTests):

@@ -13,11 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import traceback
-
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import failure
 
 from buildbot.config import BuilderConfig
 from buildbot.process import buildstep
