@@ -794,11 +794,6 @@ class InterfaceTests(interfaces.InterfaceTests):
         def interrupt(self, reason):
             pass
 
-    def test_signature_describe(self):
-        @self.assertArgSpecMatches(self.step.describe)
-        def describe(self, done=False):
-            pass
-
     def test_signature_setProgress(self):
         @self.assertArgSpecMatches(self.step.setProgress)
         def setProgress(self, metric, value):

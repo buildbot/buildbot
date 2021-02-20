@@ -232,9 +232,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     _workdir = None
     _waitingForLocks = False
 
-    def _run_finished_hook(self):
-        return None  # override in tests
-
     def __init__(self, **kwargs):
         self.worker = None
 
@@ -412,9 +409,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             buildResult = summary.get('build', None)
             if buildResult and not isinstance(buildResult, str):
                 raise TypeError("build result string must be unicode")
-    # updateSummary gets patched out for old-style steps, so keep a copy we can
-    # call internally for such steps
-    realUpdateSummary = updateSummary
 
     @defer.inlineCallbacks
     def addStep(self):
@@ -472,7 +466,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             yield defer.gatherResults(dl)
             self.rendered = True
             # we describe ourselves only when renderables are interpolated
-            self.realUpdateSummary()
+            self.updateSummary()
 
             # check doStepIf (after rendering)
             if isinstance(self.doStepIf, bool):
@@ -538,8 +532,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
-        self.realUpdateSummary()
-        yield self.realUpdateSummary.stop()
+        self.updateSummary()
+        yield self.updateSummary.stop()
 
         for sub in self._test_result_submitters.values():
             yield sub.finish()
@@ -607,62 +601,12 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._waitingForLocks = False
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
     def run(self):
-        self._start_deferred = defer.Deferred()
-        try:
-            # here's where we set things up for backward compatibility for
-            # old-style steps, using monkey patches so that new-style steps
-            # aren't bothered by any of this equipment
-
-            # monkey-patch self.step_status.{setText,setText2} back into
-            # existence for old steps, signalling an update to the summary
-            self.step_status = BuildStepStatus()
-            self.step_status.setText = lambda text: self.realUpdateSummary()
-            self.step_status.setText2 = lambda text: self.realUpdateSummary()
-
-            # monkey-patch in support for old statistics functions
-            self.step_status.setStatistic = self.setStatistic
-            self.step_status.getStatistic = self.getStatistic
-            self.step_status.hasStatistic = self.hasStatistic
-
-            # old-style steps shouldn't be calling updateSummary
-            def updateSummary():
-                assert 0, 'updateSummary is only valid on new-style steps'
-            self.updateSummary = updateSummary
-
-            results = yield self.start()
-            if results is not None:
-                self._start_deferred.callback(results)
-            results = yield self._start_deferred
-        finally:
-            # hook for tests
-            # assert so that it is only run in non optimized mode
-            assert self._run_finished_hook() is None
-            self._start_deferred = None
-            self.realUpdateSummary()
-
-        return results
-
-    def finished(self, results):
-        assert self._start_deferred, \
-            "finished() can only be called from old steps implementing start()"
-        self._start_deferred.callback(results)
-
-    def failed(self, why):
-        assert self._start_deferred, \
-            "failed() can only be called from old steps implementing start()"
-        self._start_deferred.errback(why)
+        raise NotImplementedError("A custom build step must implement run()")
 
     def isNewStyle(self):
-        # **temporary** method until new-style steps are the only supported style
-        return self.run.__func__ is not BuildStep.run
-
-    def start(self):
-        # New-style classes implement 'run'.
-        # Old-style classes implemented 'start'. Advise them to do 'run'
-        # instead.
-        raise NotImplementedError("your subclass must implement run()")
+        warn_deprecated('3.0.0', 'BuildStep.isNewStyle() always returns True')
+        return True
 
     def interrupt(self, reason):
         if self.stopped:
@@ -813,21 +757,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     def setStatistic(self, name, value):
         self.statistics[name] = value
 
-    def _describe(self, done=False):
-        # old-style steps expect this function to exist
-        assert not self.isNewStyle()
-        return []
-
-    def describe(self, done=False):
-        # old-style steps expect this function to exist
-        assert not self.isNewStyle()
-        desc = self._describe(done)
-        if not desc:
-            return []
-        if self.descriptionSuffix:
-            desc += self.descriptionSuffix
-        return desc
-
     def warn_deprecated_if_oldstyle_subclass(self, name):
         if self.__class__.__name__ != name:
             warn_deprecated('2.9.0', ('Subclassing old-style step {0} in {1} is deprecated, '
@@ -908,8 +837,6 @@ class ShellMixin:
     renderables = _shellMixinArgs
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=None):
-        assert self.isNewStyle(
-        ), "ShellMixin is only compatible with new-style steps"
         constructorArgs = constructorArgs.copy()
 
         if prohibitArgs is None:
