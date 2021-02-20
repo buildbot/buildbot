@@ -833,6 +833,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
+        if self.stopped:
+            return
         self.stopped = True
         if self._acquiringLocks:
             for (lock, access, d) in self._acquiringLocks:

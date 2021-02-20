@@ -61,6 +61,12 @@ class NewStyleStep(buildstep.BuildStep):
         pass
 
 
+class CustomActionBuildStep(buildstep.BuildStep):
+    # The caller is expected to set the action attribute on the step
+    def run(self):
+        return self.action()
+
+
 class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
                     TestReactorMixin,
                     unittest.TestCase):
@@ -292,6 +298,20 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         # Check that step d owns the locks
         self.assertTrue(_owns_lock(stepd, real_lock1))
         self.assertTrue(_owns_lock(stepd, real_lock2))
+
+    @defer.inlineCallbacks
+    def test_multiple_cancel(self):
+        step = self.setupStep(CustomActionBuildStep())
+
+        def double_interrupt():
+            step.interrupt('reason1')
+            step.interrupt('reason2')
+            return CANCELLED
+
+        step.action = double_interrupt
+
+        self.expectOutcome(result=CANCELLED)
+        yield self.runStep()
 
     @defer.inlineCallbacks
     def test_runCommand(self):
