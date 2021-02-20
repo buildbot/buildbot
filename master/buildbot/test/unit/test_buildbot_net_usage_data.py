@@ -81,7 +81,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(data['plugins']['buildbot/worker/base/Worker'], 3)
         self.assertEqual(sorted(data['plugins'].keys()), sorted(
             ['buildbot/schedulers/forcesched/ForceScheduler', 'buildbot/worker/base/Worker',
-             'buildbot/steps/shell_oldstyle/ShellCommand', 'buildbot/config/BuilderConfig']))
+             'buildbot/steps/shell/ShellCommand', 'buildbot/config/BuilderConfig']))
 
     def test_full(self):
         c = self.getBaseConfig()

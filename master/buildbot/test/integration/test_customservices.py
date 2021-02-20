@@ -79,10 +79,10 @@ def masterConfig():
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
     from buildbot.schedulers.forcesched import ForceScheduler
-    from buildbot.steps.shell import ShellCommandNewStyle
+    from buildbot.steps.shell import ShellCommand
     from buildbot.util.service import BuildbotService
 
-    class MyShellCommand(ShellCommandNewStyle):
+    class MyShellCommand(ShellCommand):
 
         def getResultSummary(self):
             service = self.master.service_manager.namedServices['myService']

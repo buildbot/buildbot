@@ -19,10 +19,10 @@ Steps and objects related to rpmlint.
 
 
 from buildbot.steps.package import util as pkgutil
-from buildbot.steps.shell import TestNewStyle
+from buildbot.steps.shell import Test
 
 
-class RpmLint(TestNewStyle):
+class RpmLint(Test):
 
     """
     Rpmlint build step.

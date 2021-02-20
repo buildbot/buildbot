@@ -47,7 +47,7 @@ class TestLog(RunMasterBase):
     @defer.inlineCallbacks
     def test_shellcommand(self):
 
-        class MyStep(steps.ShellCommandNewStyle):
+        class MyStep(steps.ShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
                 r = steps.ShellCommand._newLog(obj, name, type, logid, logEncoding)
