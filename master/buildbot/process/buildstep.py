@@ -147,17 +147,6 @@ class _BuildStepFactory(util.ComparableMixin):
             raise
 
 
-def _maybeUnhandled(fn):
-    def wrap(self, *args, **kwargs):
-        d = fn(self, *args, **kwargs)
-        if self._start_unhandled_deferreds is not None:
-            self._start_unhandled_deferreds.append(d)
-        return d
-    wrap.__wrapped__ = fn
-    twutil.mergeFunctionMetadata(fn, wrap)
-    return wrap
-
-
 class BuildStepStatus:
     # used only for old-style steps
     pass
@@ -624,7 +613,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def run(self):
         self._start_deferred = defer.Deferred()
-        unhandled = self._start_unhandled_deferreds = []
         try:
             # here's where we set things up for backward compatibility for
             # old-style steps, using monkey patches so that new-style steps
@@ -655,21 +643,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             # assert so that it is only run in non optimized mode
             assert self._run_finished_hook() is None
             self._start_deferred = None
-            unhandled = self._start_unhandled_deferreds
             self.realUpdateSummary()
-
-            # Wait for any possibly-unhandled deferreds.  If any fail, change the
-            # result to EXCEPTION and log.
-            while unhandled:
-                self._start_unhandled_deferreds = []
-                unhandled_results = yield defer.DeferredList(unhandled,
-                                                             consumeErrors=True)
-                for success, res in unhandled_results:
-                    if not success:
-                        log.err(
-                            res, "from an asynchronous method executed in an old-style step")
-                        results = EXCEPTION
-                unhandled = self._start_unhandled_deferreds
 
         return results
 
@@ -757,7 +731,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     def getLog(self, name):
         return self.logs[name]
 
-    @_maybeUnhandled
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
         if self.stepid is None:
@@ -768,7 +741,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         yield _log.addContent(text)
         yield _log.finish()
 
-    @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         if self.stepid is None:
@@ -814,7 +786,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 observer.setLog(self.logs[logname])
                 self._pendingLogObservers.remove((logname, observer))
 
-    @_maybeUnhandled
     @defer.inlineCallbacks
     def addURL(self, name, url):
         yield self.master.data.updates.addStepURL(self.stepid, str(name), str(url))
