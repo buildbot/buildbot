@@ -764,6 +764,10 @@ class BuildStep(results.ResultComputingConfigMixin,
                                       ).format(name, self.__class__.__name__))
 
 
+class LoggingBuildStep(BuildStep):
+    pass
+
+
 class CommandMixin:
 
     @defer.inlineCallbacks
