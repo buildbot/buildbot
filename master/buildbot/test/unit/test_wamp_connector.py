@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -25,7 +27,8 @@ from buildbot.wamp import connector
 
 
 class FakeConfig:
-    mq = dict(type='wamp', router_url="wss://foo", realm="bb")
+    def __init__(self, mq_dict):
+        self.mq = mq_dict
 
 
 class FakeService(service.AsyncMultiService):
@@ -59,9 +62,31 @@ class WampConnector(TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
         master = fakemaster.make_master(self)
         self.connector = TestedWampConnector()
+
+        config = FakeConfig({'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"})
+
         yield self.connector.setServiceParent(master)
         yield master.startService()
-        yield self.connector.reconfigServiceWithBuildbotConfig(FakeConfig())
+        yield self.connector.reconfigServiceWithBuildbotConfig(config)
+
+    @defer.inlineCallbacks
+    def test_reconfig_same_config(self):
+        config = FakeConfig({'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"})
+        yield self.connector.reconfigServiceWithBuildbotConfig(config)
+
+    @parameterized.expand([
+        ('type', 'simple'),
+        ('router_url', 'wss://other-foo'),
+        ('realm', 'bb-other'),
+        ('wamp_debug_level', 'info'),
+    ])
+    @defer.inlineCallbacks
+    def test_reconfig_does_not_allow_config_change(self, attr_name, attr_value):
+        mq_dict = {'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"}
+        mq_dict[attr_name] = attr_value
+        with self.assertRaises(ValueError,
+                               msg="Cannot use different wamp settings when reconfiguring"):
+            yield self.connector.reconfigServiceWithBuildbotConfig(FakeConfig(mq_dict))
 
     @defer.inlineCallbacks
     def test_startup(self):
