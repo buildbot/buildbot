@@ -1,0 +1,1 @@
+Fix builtins.TypeError when using LdapUserInfo as avatar provider
