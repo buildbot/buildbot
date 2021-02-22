@@ -105,7 +105,6 @@ class AbstractWorkerForBuilder:
         log.msg("Worker {} attached to {}".format(worker.workername, self.builder_name))
 
         yield self.worker.conn.remotePrint(message="attached")
-        return self
 
     def substantiate_if_needed(self, build):
         return defer.succeed(True)
@@ -186,13 +185,11 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
     @defer.inlineCallbacks
     def attached(self, worker, commands):
-        wfb = yield super().attached(worker, commands)
+        yield super().attached(worker, commands)
 
         # Only set available on non-latent workers, since latent workers
         # only attach while a build is in progress.
         self.state = States.AVAILABLE
-
-        return wfb
 
     def detached(self):
         super().detached()

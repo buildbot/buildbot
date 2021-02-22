@@ -215,7 +215,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.attaching_workers.append(wfb)
 
         try:
-            wfb = yield wfb.attached(worker, commands)
+            yield wfb.attached(worker, commands)
             self.attaching_workers.remove(wfb)
             self.workers.append(wfb)
             return self
