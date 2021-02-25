@@ -241,6 +241,8 @@ debouncer
 debounces
 decodable
 decodeRC
+deduplicated
+deduplication
 deepcopy
 deferreds
 Deferreds

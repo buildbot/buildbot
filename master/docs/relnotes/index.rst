@@ -10,6 +10,110 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.10.1-dev160`` ( ``2021-02-25`` )
+=============================================
+
+Bug fixes
+---------
+
+- Added ``MessageFormatterEmpty``, ``MessageFormatterFunction``, ``MessageFormatterMissingWorker``, and ``MessageFormatterRenderable`` to ``buildbot.reporters`` namespace
+- Avatar caching is now working properly and size argument is now correctly handled
+- Fixed build steps continuing running commands even if when they have been cancelled.
+- Remove display of hidden steps in the build summary tooltip.
+- Fixed a regression in ``GerritChangeSource`` since v2.6.0 that caused only the first event related to a Gerrit change to be reporter as a change to Buildbot (:issue:`5596`).
+  Now such deduplication will be applied only to ``patchset-created`` and ``ref-updated`` events.
+- ``GitHubPullrequestPoller`` now supports secrets in its ``token`` argument (:issue:`4921`)
+- Don't deactivate master as seen by the data API before builds are stopped.
+- Fixed a race condition that may result in a crash when build request distributor stops when its activity loop is running.
+- Fixed a crash when a manual step interruption is happening with master shutdown which tries to stop builds itself.
+- Fixed a race condition that may result in a deadlock if master is stopped at the same time a build is started.
+- Improved ``buildbot.util.poll.method`` to react faster to a request to stop:
+   - New pending calls are no longer executed
+   - Calls whose interval but not random delay has already expired are no longer executed.
+- Plugin database will no longer issue warnings on load, but only when a particular entry is accessed.
+
+Features
+--------
+
+- :py:class:`~buildbot.changes.BitbucketPullrequestPoller`, py:class:`~buildbot.www.BitbucketCloudEventHandler`, py:class:`~buildbot.www.BitbucketServerEventHandler` were enhanced to save PR entries matching provided masks as build properties.
+- :py:class:`~buildbot.changes.BitbucketPullrequestPoller` has been enhanced to optionally authorize Bitbucket API.
+- Added `pullrequesturl` property to the following pollers and change hooks: :py:class:`~buildbot.changes.BitbucketPullrequestPoller`, :py:class:`~buildbot.changes.GitHubPullrequestPoller`, :py:class:`~buildbot.changes.GitHubEventHandler`. This unifies all Bitbucket and GitHub pollers with the shared property interface.
+- AvatarGitHub class has been enhanced to handle avatar based on email requests and take size argument into account
+- A new ``www.ws_ping_interval`` configuration option was added to avoid websocket timeouts when using reverse proxies and CDNs. Fixes :issue:`4078`
+
+Deprecations and Removals
+-------------------------
+
+- ``LoggingBuildStep`` has been removed.
+- ``GET``, ``PUT``, ``POST``, ``DELETE``, ``HEAD``, ``OPTIONS`` steps now use new-style step implementation.
+- ``MasterShellCommand`` step now uses new-style step implementation.
+- ``Configure``, ``Compile``, ``ShellCommand``, ``SetPropertyFromCommand``, ``WarningCountingShellCommand``, ``Test`` steps now use new-style step implementation.
+- Support for old-style steps has been removed.
+- Python 3.5 is no longer supported for running Buildbot master.
+- The deprecated ``HipChatStatusPush`` reporter has been removed.
+- - Removed support for the following deprecated parameters of ``HttpStatusPush`` reporter: ``format_fn``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``, ``user``, ``password``.
+  - Removed support for the following deprecated parameters of ``BitbucketStatusPush`` reporter: ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``.
+  - Removed support for the following deprecated parameters of ``BitbucketServerStatusPush``, ``BitbucketServerCoreAPIStatusPush``, ``GerritVerifyStatusPush``, ``GitHubStatusPush``, ``GitHubCommentPush`` and ``GitLabStatusPush`` reporters: ``startDescription``, ``endDescription``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``.
+  - Removed support for the following deprecated parameters of ``BitbucketServerPRCommentPush``, ``MailNotifier``, ``PushjetNotifier`` and ``PushoverNotifier`` reporters: ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, ``messageFormatterMissingWorker``.
+  - Removed support for the following deprecated parameters of ``MessageFormatter`` report formatter: ``template_name``.
+- The deprecated ``send()`` function that can be overridden by custom reporters has been removed.
+- The deprecated ``buildbot.status`` module has been removed.
+- The deprecated ``MTR`` step has been removed.
+  Contributors are welcome to step in, migrate this step to newer APIs and add a proper test suite to restore this step in Buildbot.
+
+
+Buildbot ``2.10.1-dev160`` ( ``2021-02-25`` )
+=============================================
+
+Bug fixes
+---------
+
+- Added ``MessageFormatterEmpty``, ``MessageFormatterFunction``, ``MessageFormatterMissingWorker``, and ``MessageFormatterRenderable`` to ``buildbot.reporters`` namespace
+- Avatar caching is now working properly and size argument is now correctly handled
+- Fixed build steps continuing running commands even if when they have been cancelled.
+- Remove display of hidden steps in the build summary tooltip.
+- Fixed a regression in ``GerritChangeSource`` since v2.6.0 that caused only the first event related to a Gerrit change to be reporter as a change to Buildbot (:issue:`5596`).
+  Now such deduplication will be applied only to ``patchset-created`` and ``ref-updated`` events.
+- ``GitHubPullrequestPoller`` now supports secrets in its ``token`` argument (:issue:`4921`)
+- Don't deactivate master as seen by the data API before builds are stopped.
+- Fixed a race condition that may result in a crash when build request distributor stops when its activity loop is running.
+- Fixed a crash when a manual step interruption is happening with master shutdown which tries to stop builds itself.
+- Fixed a race condition that may result in a deadlock if master is stopped at the same time a build is started.
+- Improved ``buildbot.util.poll.method`` to react faster to a request to stop:
+   - New pending calls are no longer executed
+   - Calls whose interval but not random delay has already expired are no longer executed.
+- Plugin database will no longer issue warnings on load, but only when a particular entry is accessed.
+
+Features
+--------
+
+- :py:class:`~buildbot.changes.BitbucketPullrequestPoller`, py:class:`~buildbot.www.BitbucketCloudEventHandler`, py:class:`~buildbot.www.BitbucketServerEventHandler` were enhanced to save PR entries matching provided masks as build properties.
+- :py:class:`~buildbot.changes.BitbucketPullrequestPoller` has been enhanced to optionally authorize Bitbucket API.
+- Added `pullrequesturl` property to the following pollers and change hooks: :py:class:`~buildbot.changes.BitbucketPullrequestPoller`, :py:class:`~buildbot.changes.GitHubPullrequestPoller`, :py:class:`~buildbot.changes.GitHubEventHandler`. This unifies all Bitbucket and GitHub pollers with the shared property interface.
+- AvatarGitHub class has been enhanced to handle avatar based on email requests and take size argument into account
+- A new ``www.ws_ping_interval`` configuration option was added to avoid websocket timeouts when using reverse proxies and CDNs. Fixes :issue:`4078`
+
+Deprecations and Removals
+-------------------------
+
+- ``LoggingBuildStep`` has been removed.
+- ``GET``, ``PUT``, ``POST``, ``DELETE``, ``HEAD``, ``OPTIONS`` steps now use new-style step implementation.
+- ``MasterShellCommand`` step now uses new-style step implementation.
+- ``Configure``, ``Compile``, ``ShellCommand``, ``SetPropertyFromCommand``, ``WarningCountingShellCommand``, ``Test`` steps now use new-style step implementation.
+- Support for old-style steps has been removed.
+- Python 3.5 is no longer supported for running Buildbot master.
+- The deprecated ``HipChatStatusPush`` reporter has been removed.
+- - Removed support for the following deprecated parameters of ``HttpStatusPush`` reporter: ``format_fn``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``, ``user``, ``password``.
+  - Removed support for the following deprecated parameters of ``BitbucketStatusPush`` reporter: ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``.
+  - Removed support for the following deprecated parameters of ``BitbucketServerStatusPush``, ``BitbucketServerCoreAPIStatusPush``, ``GerritVerifyStatusPush``, ``GitHubStatusPush``, ``GitHubCommentPush`` and ``GitLabStatusPush`` reporters: ``startDescription``, ``endDescription``, ``builders``, ``wantProperties``, ``wantSteps``, ``wantPreviousBuild``, ``wantLogs``.
+  - Removed support for the following deprecated parameters of ``BitbucketServerPRCommentPush``, ``MailNotifier``, ``PushjetNotifier`` and ``PushoverNotifier`` reporters: ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, ``messageFormatterMissingWorker``.
+  - Removed support for the following deprecated parameters of ``MessageFormatter`` report formatter: ``template_name``.
+- The deprecated ``send()`` function that can be overridden by custom reporters has been removed.
+- The deprecated ``buildbot.status`` module has been removed.
+- The deprecated ``MTR`` step has been removed.
+  Contributors are welcome to step in, migrate this step to newer APIs and add a proper test suite to restore this step in Buildbot.
+
+
 Buildbot ``2.10.1`` ( ``2021-01-29`` )
 ======================================
 

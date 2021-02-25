@@ -200,6 +200,39 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
     @defer.inlineCallbacks
+    def test_duplicate_non_source_events_not_ignored(self):
+        s = self.newChangeSource('somehost', 'someuser',
+                                 handled_events=['patchset-created', 'ref-updated',
+                                                 'change-merged', 'comment-added'])
+        yield s.lineReceived(json.dumps({
+            'type': "comment-added",
+            'change': {
+                'branch': "br",
+                'project': "pr",
+                'number': "4321",
+                'owner': {'name': "Dustin", 'email': "dustin@mozilla.com"},
+                'url': "http://buildbot.net",
+                'subject': "fix 1234"
+            },
+            'patchSet': {'revision': "abcdef", 'number': "12"}
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+
+        yield s.lineReceived(json.dumps({
+            'type': "comment-added",
+            'change': {
+                'branch': "br",
+                'project': "pr",
+                'number': "4321",
+                'owner': {'name': "Dustin", 'email': "dustin@mozilla.com"},
+                'url': "http://buildbot.net",
+                'subject': "fix 1234"
+            },
+            'patchSet': {'revision': "abcdef", 'number': "12"}
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 2)
+
+    @defer.inlineCallbacks
     def test_malformed_events_ignored(self):
         s = self.newChangeSource('somehost', 'someuser')
         # "change" not in event

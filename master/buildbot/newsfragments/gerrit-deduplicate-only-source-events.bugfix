@@ -1,0 +1,2 @@
+Fixed a regression in ``GerritChangeSource`` since v2.6.0 that caused only the first event related to a Gerrit change to be reporter as a change to Buildbot (:issue:`5596`).
+Now such deduplication will be applied only to ``patchset-created`` and ``ref-updated`` events.
