@@ -25,7 +25,9 @@ from buildbot.util import bytes2unicode
 from buildbot.util import flatten
 from buildbot.util import unicode2bytes
 
-srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
+# TODO: fossil comes from a plugin. We should have an API that plugins could use to
+# register allowed user types.
+srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr', 'fossil']
 salt_len = 8
 
 
