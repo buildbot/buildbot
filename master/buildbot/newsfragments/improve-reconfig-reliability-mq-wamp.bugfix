@@ -1,0 +1,1 @@
+Reconfiguration reliability has been improved by not reconfiguring WAMP router if settings have not changed.
