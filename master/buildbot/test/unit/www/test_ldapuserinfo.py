@@ -21,6 +21,9 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.www import WwwTestMixin
+from buildbot.www import avatar
 from buildbot.www import ldapuserinfo
 
 
@@ -152,40 +155,94 @@ class LdapUserInfo(CommonTestCase):
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})
 
+
+class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
+    @defer.inlineCallbacks
+    def setUp(self):
+        CommonTestCase.setUp(self)
+        self.setUpTestReactor()
+
+        master = self.make_master(
+            url='http://a/b/',
+            avatar_methods=[self.userInfoProvider])
+
+        self.rsrc = avatar.AvatarResource(master)
+        self.rsrc.reconfigResource(master.config)
+
+        yield self.master.startService()
+
+    def makeUserInfoProvider(self):
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
+            uri="ldap://uri", bindUser="user", bindPw="pass",
+            accountBase="accbase", groupBase="groupbase",
+            accountPattern="accpattern=%(username)s", groupMemberPattern="groupMemberPattern",
+            accountFullName="accountFullName",
+            accountEmail="accountEmail",
+            groupName="groupName",
+            avatarPattern="avatar=%(email)s",
+            avatarData="picture",
+            accountExtraFields=["myfield"])
+
     @defer.inlineCallbacks
     def _getUserAvatar(self, mimeTypeAndData):
         (mimeType, data) = mimeTypeAndData
         self.makeRawSearchSideEffect([
             [("cn", {"picture": [data]})]])
-        res = yield self.userInfoProvider.getUserAvatar("me", 21, None)
+        res = yield self.render_resource(self.rsrc, b'/?email=me')
         self.assertSearchCalledWith([
-            (('accbase', 'avatar', ['picture']), {}),
+            (('accbase', 'avatar=me', ['picture']), {}),
         ])
         return res
 
     @defer.inlineCallbacks
     def test_getUserAvatarPNG(self):
-        mimeTypeAndData = ('image/png', b'\x89PNG lljklj')
-        res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertEqual(res, mimeTypeAndData)
+        mimeTypeAndData = (b'image/png', b'\x89PNG lljklj')
+        yield self._getUserAvatar(mimeTypeAndData)
+        self.assertRequest(contentType=mimeTypeAndData[0],
+            content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarJPEG(self):
-        mimeTypeAndData = ('image/jpeg', b'\xff\xd8\xff lljklj')
-        res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertEqual(res, mimeTypeAndData)
+        mimeTypeAndData = (b'image/jpeg', b'\xff\xd8\xff lljklj')
+        yield self._getUserAvatar(mimeTypeAndData)
+        self.assertRequest(contentType=mimeTypeAndData[0],
+            content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarGIF(self):
-        mimeTypeAndData = ('image/gif', b'GIF8 lljklj')
-        res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertEqual(res, mimeTypeAndData)
+        mimeTypeAndData = (b'image/gif', b'GIF8 lljklj')
+        yield self._getUserAvatar(mimeTypeAndData)
+        self.assertRequest(contentType=mimeTypeAndData[0],
+            content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarUnknownType(self):
-        mimeTypeAndData = ('', b'unknown image format')
+        mimeTypeAndData = (b'', b'unknown image format')
         res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertIsNone(res)
+        # Unknown format means data won't be sent
+        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+
+    @defer.inlineCallbacks
+    def test_getUsernameAvatar(self):
+        mimeType = b'image/gif'
+        data = b'GIF8 lljklj'
+        self.makeRawSearchSideEffect([
+            [("cn", {"picture": [data]})]])
+        yield self.render_resource(self.rsrc, b'/?username=me')
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern=me', ['picture']), {}),
+        ])
+        self.assertRequest(contentType=mimeType,
+            content=data)
+
+    @defer.inlineCallbacks
+    def test_getUnknownUsernameAvatar(self):
+        self.makeSearchSideEffect([[], [], []])
+        res = yield self.render_resource(self.rsrc, b'/?username=other')
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern=other', ['picture']), {}),
+        ])
+        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
 
 
 class LdapUserInfoNotEscCharsDn(CommonTestCase):
