@@ -126,7 +126,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                 return infos
 
             # needs double quoting of backslashing
-            pattern = self.groupMemberPattern % dict(dn=dn)
+            pattern = self.groupMemberPattern % dict(dn=ldap3.utils.conv.escape_filter_chars(dn))
             res = self.search(c, self.groupBase, pattern,
                               attributes=[self.groupName])
             infos['groups'] = flatten([group_infos['attributes'][self.groupName]
@@ -138,20 +138,28 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
     def findAvatarMime(self, data):
         # http://en.wikipedia.org/wiki/List_of_file_signatures
         if data.startswith(b"\xff\xd8\xff"):
-            return ("image/jpeg", data)
+            return (b"image/jpeg", data)
         if data.startswith(b"\x89PNG"):
-            return ("image/png", data)
+            return (b"image/png", data)
         if data.startswith(b"GIF8"):
-            return ("image/gif", data)
+            return (b"image/gif", data)
         # ignore unknown image format
         return None
 
-    def getUserAvatar(self, user_email, size, defaultAvatarUrl):
-        user_email = bytes2unicode(user_email)
+    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+        if username:
+            username = bytes2unicode(username)
+        if email:
+            email = bytes2unicode(email)
 
         def thd():
             c = self.connectLdap()
-            pattern = self.avatarPattern % dict(email=user_email)
+            if username:
+                pattern = self.accountPattern % dict(username=username)
+            elif email:
+                pattern = self.avatarPattern % dict(email=email)
+            else:
+                return None
             res = self.search(c, self.accountBase, pattern,
                               attributes=[self.avatarData])
             if not res:
