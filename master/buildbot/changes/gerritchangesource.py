@@ -257,7 +257,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         if "submitter" in event:
             author = _gerrit_user_to_author(event["submitter"], author)
 
-        return self.addChange(dict(
+        return self.addChange(event['type'], dict(
             author=author,
             project=ref["project"],
             repository="{}/{}".format(self.gitBaseURL, ref["project"]),
