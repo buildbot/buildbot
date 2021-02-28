@@ -15,6 +15,8 @@
 
 import random
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -620,3 +622,39 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         self.assertEqual(builder_dict['tags'], ['NewTag'])
 
         self.assertIdentical(self.bldr.config, new_builder_config)
+
+    @parameterized.expand([
+        ('only_description', 'New', ['OldTag']),
+        ('only_tags', 'Old', ['NewTag']),
+    ])
+    @defer.inlineCallbacks
+    def test_reconfig_changed(self, name, new_desc, new_tags):
+        yield self.makeBuilder(description="Old", tags=["OldTag"])
+        new_builder_config = config.BuilderConfig(**self.config_args)
+        new_builder_config.description = new_desc
+        new_builder_config.tags = new_tags
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [new_builder_config]
+
+        builder_updates = []
+        self.master.data.updates.updateBuilderInfo = \
+            lambda builderid, desc, tags: builder_updates.append((builderid, desc, tags))
+
+        yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
+        self.assertEqual(builder_updates, [(1, new_desc, new_tags)])
+
+    @defer.inlineCallbacks
+    def test_does_not_reconfig_identical(self):
+        yield self.makeBuilder(description="Old", tags=["OldTag"])
+        new_builder_config = config.BuilderConfig(**self.config_args)
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [new_builder_config]
+
+        builder_updates = []
+        self.master.data.updates.updateBuilderInfo = \
+            lambda builderid, desc, tags: builder_updates.append((builderid, desc, tags))
+
+        yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
+        self.assertEqual(builder_updates, [])
