@@ -168,6 +168,54 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             self.assertEqual(self.expected_change[k], v)
 
     @defer.inlineCallbacks
+    def test_lineReceived_ref_updated(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        yield s.lineReceived(json.dumps({
+            'type': 'ref-updated',
+            'submitter': {
+                'name': 'tester',
+                'email': 'tester@example.com',
+                'username': 'tester'
+            },
+            'refUpdate': {
+                'oldRev': '12341234',
+                'newRev': '56785678',
+                'refName': 'refs/heads/master',
+                'project': 'test'
+            },
+            'eventCreatedOn': 1614528683
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        c = self.master.data.updates.changesAdded[0]
+        self.assertEqual(c, {
+            'files': ['unknown'],
+            'comments': 'Gerrit: patchset(s) merged.',
+            'author': 'tester <tester@example.com>',
+            'committer': None,
+            'revision': '56785678',
+            'when_timestamp': None,
+            'branch': 'refs/heads/master',
+            'category': 'ref-updated',
+            'revlink': '',
+            'properties': {
+                'event.type': 'ref-updated',
+                'event.submitter.name': 'tester',
+                'event.submitter.email':
+                    'tester@example.com',
+                    'event.submitter.username': 'tester',
+                    'event.refUpdate.oldRev': '12341234',
+                    'event.refUpdate.newRev': '56785678',
+                    'event.refUpdate.refName': 'refs/heads/master',
+                    'event.refUpdate.project': 'test',
+                    'event.source': 'GerritChangeSource'
+                },
+            'repository': 'ssh://someuser@somehost:29418/test',
+            'codebase': None,
+            'project': 'test',
+            'src': None
+        })
+
+    @defer.inlineCallbacks
     def test_duplicate_events_ignored(self):
         s = self.newChangeSource('somehost', 'someuser')
         yield s.lineReceived(json.dumps(dict(
