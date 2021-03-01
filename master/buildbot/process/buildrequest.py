@@ -138,7 +138,7 @@ class TempSourceStamp:
             result[patch_attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, (str, int, type(None)))
+            isinstance(val, (str, int, bytes, type(None)))
             for attr, val in result.items()
         ), result
         return result
