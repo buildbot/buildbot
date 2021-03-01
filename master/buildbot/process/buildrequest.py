@@ -98,6 +98,14 @@ class TempSourceStamp:
 
     ATTRS = ('branch', 'revision', 'repository', 'project', 'codebase')
 
+    PATCH_ATTRS = (
+        ('patch_level', 'level'),
+        ('patch_body', 'body'),
+        ('patch_subdir', 'subdir'),
+        ('patch_author', 'author'),
+        ('patch_comment', 'comment')
+    )
+
     def __init__(self, ssdict):
         self._ssdict = ssdict
 
@@ -118,8 +126,6 @@ class TempSourceStamp:
     def asSSDict(self):
         return self._ssdict
 
-    PATCH_ATTRS = ('level', 'body', 'subdir', 'author', 'comment')
-
     def asDict(self):
         # This return value should match the kwargs to
         # SourceStampsConnectorComponent.findSourceStampId
@@ -128,11 +134,11 @@ class TempSourceStamp:
             result[attr] = self._ssdict.get(attr)
 
         patch = self._ssdict.get('patch') or {}
-        for attr in self.PATCH_ATTRS:
-            result['patch_{}'.format(attr)] = patch.get(attr)
+        for patch_attr, attr in self.PATCH_ATTRS:
+            result[patch_attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, (str, int, type(None)))
+            isinstance(val, (str, int, bytes, type(None)))
             for attr, val in result.items()
         ), result
         return result
