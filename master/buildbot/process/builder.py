@@ -98,6 +98,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 tags=builder_config.tags,
                 description=builder_config.description)
 
+        old_config = self.config
         self.config = builder_config
         self.config_version = self.master.config_version
 
@@ -106,12 +107,13 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # build.
         builderid = yield self.getBuilderId()
 
-        self.master.data.updates.updateBuilderInfo(builderid,
-                                                   builder_config.description,
-                                                   builder_config.tags)
+        if self._has_updated_config_info(old_config, builder_config):
+            self.master.data.updates.updateBuilderInfo(builderid,
+                                                       builder_config.description,
+                                                       builder_config.tags)
 
-        self.builder_status.setDescription(builder_config.description)
-        self.builder_status.setTags(builder_config.tags)
+            self.builder_status.setDescription(builder_config.description)
+            self.builder_status.setTags(builder_config.tags)
         self.builder_status.setWorkernames(self.config.workernames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 
@@ -120,6 +122,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
         new_workernames = set(builder_config.workernames)
         self.workers = [w for w in self.workers
                         if w.worker.workername in new_workernames]
+
+    def _has_updated_config_info(self, old_config, new_config):
+        if old_config is None:
+            return True
+        if old_config.description != new_config.description:
+            return True
+        if old_config.tags != new_config.tags:
+            return True
+        return False
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
