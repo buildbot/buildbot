@@ -15,6 +15,8 @@
 
 import random
 
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -46,10 +48,16 @@ class BuilderMixin:
                     **config_kwargs):
         """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
-        config_args = dict(name=name, workername="wrk", builddir="bdir",
-                           workerbuilddir="wbdir", factory=self.factory)
-        config_args.update(config_kwargs)
-        self.builder_config = config.BuilderConfig(**config_args)
+        self.config_args = {
+            'name': name,
+            'workername': 'wrk',
+            'builddir': 'bdir',
+            'workerbuilddir': "wbdir",
+            'factory': self.factory
+        }
+        self.config_args.update(config_kwargs)
+        self.builder_config = config.BuilderConfig(**self.config_args)
+
         self.bldr = builder.Builder(
             self.builder_config.name)
         self.bldr.master = self.master
@@ -598,10 +606,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
-        config_args = dict(name='bldr', workername="wrk", builddir="bdir",
-                           workerbuilddir="wbdir", factory=self.factory,
-                           description='Noe', tags=['OldTag'])
-        new_builder_config = config.BuilderConfig(**config_args)
+        new_builder_config = config.BuilderConfig(**self.config_args)
         new_builder_config.description = "New"
         new_builder_config.tags = ["NewTag"]
 
@@ -617,3 +622,39 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         self.assertEqual(builder_dict['tags'], ['NewTag'])
 
         self.assertIdentical(self.bldr.config, new_builder_config)
+
+    @parameterized.expand([
+        ('only_description', 'New', ['OldTag']),
+        ('only_tags', 'Old', ['NewTag']),
+    ])
+    @defer.inlineCallbacks
+    def test_reconfig_changed(self, name, new_desc, new_tags):
+        yield self.makeBuilder(description="Old", tags=["OldTag"])
+        new_builder_config = config.BuilderConfig(**self.config_args)
+        new_builder_config.description = new_desc
+        new_builder_config.tags = new_tags
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [new_builder_config]
+
+        builder_updates = []
+        self.master.data.updates.updateBuilderInfo = \
+            lambda builderid, desc, tags: builder_updates.append((builderid, desc, tags))
+
+        yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
+        self.assertEqual(builder_updates, [(1, new_desc, new_tags)])
+
+    @defer.inlineCallbacks
+    def test_does_not_reconfig_identical(self):
+        yield self.makeBuilder(description="Old", tags=["OldTag"])
+        new_builder_config = config.BuilderConfig(**self.config_args)
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [new_builder_config]
+
+        builder_updates = []
+        self.master.data.updates.updateBuilderInfo = \
+            lambda builderid, desc, tags: builder_updates.append((builderid, desc, tags))
+
+        yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
+        self.assertEqual(builder_updates, [])
