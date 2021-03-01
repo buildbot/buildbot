@@ -21,7 +21,6 @@
 from buildbot import worker
 from buildbot.changes import p4poller
 from buildbot.changes import svnpoller
-from buildbot.clients import base
 from buildbot.clients import sendchange
 from buildbot.clients import tryclient
 from buildbot.process import subunitlogobserver
@@ -43,7 +42,7 @@ from buildbot.util import eventual
 modules = []  # for the benefit of pyflakes
 modules.extend([worker])
 modules.extend([p4poller, svnpoller])
-modules.extend([base, sendchange, tryclient])
+modules.extend([sendchange, tryclient])
 modules.extend([subunitlogobserver])
 modules.extend([checkconfig, logwatcher, reconfig, runner])
 modules.extend([master, maxq, python, python_twisted, subunit])
