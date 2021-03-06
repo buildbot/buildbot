@@ -376,6 +376,7 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         cmd = [
             "ssh",
+            "-o", "BatchMode=yes",
             "{}@{}".format(self.username, self.gerritserver),
             "-p", str(self.gerritport)
         ]

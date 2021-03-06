@@ -28,7 +28,7 @@ RC_SUCCESS = 0
 
 
 def getSshArgsForKeys(keyPath, knownHostsPath):
-    args = []
+    args = ['-o', 'BatchMode=yes']
     if keyPath is not None:
         args += ['-i', keyPath]
     if knownHostsPath is not None:
