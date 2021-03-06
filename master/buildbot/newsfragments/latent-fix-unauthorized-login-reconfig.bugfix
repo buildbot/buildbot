@@ -1,0 +1,1 @@
+Fixed unauthorized login errors when latent worker with automatic password is reconfigured during substantiation.
