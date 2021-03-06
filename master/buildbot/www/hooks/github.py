@@ -230,13 +230,12 @@ class GitHubEventHandler(PullRequestMixin):
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         '''
-        if not self._token:
-            return 'No message field'
 
         headers = {
-            'Authorization': 'token ' + self._token,
             'User-Agent': 'Buildbot',
         }
+        if self._token:
+            headers['Authorization'] = 'token ' + self._token
 
         url = '/repos/{}/commits/{}'.format(repo, sha)
         http = yield httpclientservice.HTTPClientService.getService(
@@ -258,13 +257,9 @@ class GitHubEventHandler(PullRequestMixin):
             e.g. ``buildbot/buildbot``
         :param number: the pull request number.
         """
-        if not self._token:
-            return []
-
-        headers = {
-            'Authorization': 'token ' + self._token,
-            'User-Agent': 'Buildbot',
-        }
+        headers = {"User-Agent": "Buildbot"}
+        if self._token:
+            headers["Authorization"] = "token " + self._token
 
         url = "/repos/{}/pulls/{}/files".format(repo, number)
         http = yield httpclientservice.HTTPClientService.getService(
