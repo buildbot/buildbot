@@ -1,0 +1,3 @@
+The change in :issue:`5508` broke some GitHub hook configurations because it
+make a code path require a GitHub token to make particular API requests. This
+fixes :issue:`5760`.
