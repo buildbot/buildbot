@@ -19,7 +19,7 @@ env:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - NUM_CPU=700m
   - MEMORY_SIZE=1G
-  - CHROME_BIN=/usr/bin/chromium-browser
+  - CHROME_BIN=/usr/bin/google-chrome
   matrix:
   # include "ci" string into the name of the status that is eventually submitted to Github, so
   # that the codecov.io service would wait until this build is finished before creating report.
