@@ -115,7 +115,7 @@ install:
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
   - step: !ShellCommand
-        command: "pip check"
+        command: "/buildbot/buildbot-job/build/sandbox/bin/pip check"
         warnOnFailure: True
         flunkOnFailure: False
         haltOnFailure: False
