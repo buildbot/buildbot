@@ -26,14 +26,18 @@
 
 from urllib.parse import urlparse
 
-import ldap3
-
 from twisted.internet import threads
 
 from buildbot.util import bytes2unicode
 from buildbot.util import flatten
 from buildbot.www import auth
 from buildbot.www import avatar
+
+try:
+    import ldap3
+except ImportError:
+    import importlib
+    ldap3 = None
 
 
 class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
@@ -50,6 +54,9 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                  avatarPattern=None,
                  avatarData=None,
                  accountExtraFields=None):
+        # Throw import error now that this is being used
+        if not ldap3:
+            importlib.import_module('ldap3')
         self.uri = uri
         self.bindUser = bindUser
         self.bindPw = bindPw

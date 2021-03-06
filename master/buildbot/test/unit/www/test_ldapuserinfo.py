@@ -26,6 +26,11 @@ from buildbot.test.util.www import WwwTestMixin
 from buildbot.www import avatar
 from buildbot.www import ldapuserinfo
 
+try:
+    import ldap3
+except ImportError:
+    ldap3 = None
+
 
 def get_config_parameter(p):
     params = {'DEFAULT_SERVER_ENCODING': 'utf-8'}
@@ -46,6 +51,8 @@ class FakeLdap:
 
 
 class CommonTestCase(unittest.TestCase):
+    if not ldap3:
+        skip = 'ldap3 is required for LdapUserInfo tests'
 
     """Common fixture for all ldapuserinfo tests
 
@@ -306,6 +313,8 @@ class LdapUserInfoNoGroups(CommonTestCase):
 
 
 class Config(unittest.TestCase):
+    if not ldap3:
+        skip = 'ldap3 is required for LdapUserInfo tests'
 
     def test_missing_group_name(self):
         with self.assertRaises(ValueError):
