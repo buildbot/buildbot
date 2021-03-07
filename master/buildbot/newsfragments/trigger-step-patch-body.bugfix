@@ -1,1 +1,0 @@
-Fixed a crash when a trigger step is used in a build with patch body data passed via the try scheduler (:issue:`5165`).
