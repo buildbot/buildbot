@@ -355,7 +355,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = self.newChangeSource(
             'somehost', 'some_choosy_user', debug=True)
 
-        exp_argv = ['ssh', 'some_choosy_user@somehost', '-p', '29418']
+        exp_argv = ['ssh', '-o', 'BatchMode=yes', 'some_choosy_user@somehost', '-p', '29418']
         exp_argv += ['gerrit', 'stream-events']
 
         def spawnProcess(pp, cmd, argv, env):
@@ -405,8 +405,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def test_getFiles(self):
         s = self.newChangeSource('host', 'user', gerritport=2222)
         exp_argv = [
-            'ssh', 'user@host', '-p', '2222', 'gerrit', 'query', '1000',
-            '--format', 'JSON', '--files', '--patch-sets'
+            'ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '2222',
+            'gerrit', 'query', '1000', '--format', 'JSON', '--files', '--patch-sets'
         ]
 
         def getoutput_success(cmd, argv, env):

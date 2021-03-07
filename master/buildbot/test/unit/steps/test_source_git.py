@@ -139,7 +139,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -197,7 +197,7 @@ class TestGit(sourcesteps.SourceStepMixin,
 
         ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+        ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -318,7 +318,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.runStep()
 
-        expected = '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(ssh_key_path)
+        expected = '#!/bin/sh\nssh -o "BatchMode=yes" -i "{0}" "$@"\n'.format(ssh_key_path)
         self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     @parameterized.expand([
@@ -334,7 +334,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}" ' \
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -404,7 +404,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
         ssh_command = \
-            'ssh -i "{0}" ' \
+            'ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -543,9 +543,10 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.runStep()
 
-        expected = '#!/bin/sh\n'\
-                   'ssh -i "{0}" -o "UserKnownHostsFile={1}" "$@"\n'.format(ssh_key_path,
-                                                                            ssh_known_hosts_path)
+        expected = (
+            '#!/bin/sh\n'
+            'ssh -o "BatchMode=yes" -i "{0}" -o "UserKnownHostsFile={1}" "$@"\n'
+        ).format(ssh_key_path, ssh_known_hosts_path)
         self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     def test_mode_full_clean_ssh_host_key_1_7_progress(self):
@@ -635,7 +636,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '/myworkdir/.Builder.workdir.buildbot/ssh-key'
         ssh_known_hosts_path = '/myworkdir/.Builder.workdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}" ' \
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -743,7 +744,7 @@ class TestGit(sourcesteps.SourceStepMixin,
 
         ssh_workdir = '\\wrk\\.Builder.wkdir.buildbot'
         ssh_key_path = '\\wrk\\.Builder.wkdir.buildbot\\ssh-key'
-        ssh_command_config = 'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+        ssh_command_config = 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -802,7 +803,7 @@ class TestGit(sourcesteps.SourceStepMixin,
 
         ssh_workdir = '\\wrk\\.Builder.wkdir.buildbot'
         ssh_key_path = '\\wrk\\.Builder.wkdir.buildbot\\ssh-key'
-        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+        ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1869,7 +1870,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -2574,7 +2575,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_workdir = '/wrk/.Builder.source.buildbot'
         ssh_key_path = '/wrk/.Builder.source.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3683,7 +3684,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3722,7 +3723,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+        ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3810,7 +3811,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}" ' \
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -3860,7 +3861,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
         ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
         ssh_command = \
-            'ssh -i "{0}" ' \
+            'ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 

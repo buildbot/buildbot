@@ -91,9 +91,9 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
     def test_remote_ssh_wake_action_no_keys(self, write_local_file_mock,
                                             temp_dir_mock):
         self.expectCommands(
-            gpo.Expect('ssh', 'remote_host', 'remotebin', 'arg1')
+            gpo.Expect('ssh', '-o', 'BatchMode=yes', 'remote_host', 'remotebin', 'arg1')
             .exit(1),
-            gpo.Expect('ssh', 'remote_host', 'remotebin', 'arg1')
+            gpo.Expect('ssh', '-o', 'BatchMode=yes', 'remote_host', 'remotebin', 'arg1')
             .exit(0),
         )
 
@@ -117,7 +117,7 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
         ssh_known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
 
         self.expectCommands(
-            gpo.Expect('ssh', '-i', ssh_key_path,
+            gpo.Expect('ssh', '-o', 'BatchMode=yes', '-i', ssh_key_path,
                        '-o', 'UserKnownHostsFile={0}'.format(ssh_known_hosts_path),
                        'remote_host', 'remotebin', 'arg1')
             .exit(0),
@@ -159,9 +159,10 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
     def test_remote_ssh_wol_action_no_keys(self, write_local_file_mock,
                                            temp_dir_mock):
         self.expectCommands(
-            gpo.Expect('ssh', 'remote_host', 'wakeonlan', '00:11:22:33:44:55')
+            gpo.Expect(
+                'ssh', '-o', 'BatchMode=yes', 'remote_host', 'wakeonlan', '00:11:22:33:44:55')
             .exit(0),
-            gpo.Expect('ssh', 'remote_host', 'wolbin', '00:11:22:33:44:55')
+            gpo.Expect('ssh', '-o', 'BatchMode=yes', 'remote_host', 'wolbin', '00:11:22:33:44:55')
             .exit(0),
         )
 
@@ -184,9 +185,9 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
     def test_remote_ssh_suspend_action_no_keys(self, write_local_file_mock,
                                                temp_dir_mock):
         self.expectCommands(
-            gpo.Expect('ssh', 'remote_host', 'systemctl', 'suspend')
+            gpo.Expect('ssh', '-o', 'BatchMode=yes', 'remote_host', 'systemctl', 'suspend')
             .exit(0),
-            gpo.Expect('ssh', 'remote_host', 'dosuspend', 'arg1')
+            gpo.Expect('ssh', '-o', 'BatchMode=yes', 'remote_host', 'dosuspend', 'arg1')
             .exit(0),
         )
 
