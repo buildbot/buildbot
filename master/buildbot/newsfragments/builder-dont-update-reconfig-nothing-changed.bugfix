@@ -1,2 +1,0 @@
-Optimized builder reconfiguration when configuration does not change.
-This leads to up to 6 times faster reconfiguration in Buildbot instances with many builders.
