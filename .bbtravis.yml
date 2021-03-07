@@ -19,7 +19,7 @@ env:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - NUM_CPU=700m
   - MEMORY_SIZE=1G
-  - CHROME_BIN=/usr/bin/chromium-browser
+  - CHROME_BIN=/usr/bin/google-chrome
   matrix:
   # include "ci" string into the name of the status that is eventually submitted to Github, so
   # that the codecov.io service would wait until this build is finished before creating report.
@@ -113,7 +113,7 @@ install:
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
   - step: !ShellCommand
-        command: "pip check"
+        command: "/buildbot/buildbot-job/build/sandbox/bin/pip check"
         warnOnFailure: True
         flunkOnFailure: False
         haltOnFailure: False
