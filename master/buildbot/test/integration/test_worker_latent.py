@@ -40,6 +40,7 @@ from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.test.util.misc import TimeoutableTestCase
 from buildbot.test.util.patch_delay import patchForDelay
+from buildbot.worker import manager
 from buildbot.worker.latent import States
 
 
@@ -542,16 +543,26 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertTrue(controller.stopped)
 
     @parameterized.expand([
-        ('without_worker_connecting', False),
-        ('with_worker_connecting', True),
+        ('after_start_instance_no_worker', False, False),
+        ('after_start_instance_with_worker', True, False),
+        ('before_start_instance_no_worker', False, True),
+        ('before_start_instance_with_worker', True, True),
     ])
     @defer.inlineCallbacks
     def test_reconfigservice_during_substantiation_clean_shutdown_after(self, name,
-                                                                        worker_connects):
+                                                                        worker_connects,
+                                                                        before_start_service):
         """
         When stopService is called and a worker is substantiating, we should wait for this
         process to complete.
         """
+        registered_workers = []
+
+        def registration_updates(reg, worker_config, global_config):
+            registered_workers.append((worker_config.workername, worker_config.password))
+
+        self.patch(manager.WorkerRegistration, 'update', registration_updates)
+
         controller, builder_id = yield self.create_single_worker_config()
         controller.auto_connect_worker = worker_connects
         controller.auto_stop(True)
@@ -560,15 +571,21 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.create_build_request([builder_id])
         self.assertTrue(controller.starting)
 
-        yield controller.start_instance(True)
-
         # change some unimportant property of the worker to force configuration
         self.master.config_loader.config_dict['workers'] = [
             ControllableLatentWorker('local', controller, max_builds=3)
         ]
-        yield self.reconfig_master()
+
+        if before_start_service:
+            yield self.reconfig_master()
+            yield controller.start_instance(True)
+        else:
+            yield controller.start_instance(True)
+            yield self.reconfig_master()
 
         yield self.clean_master_shutdown(quick=True)
+
+        self.assertEqual(registered_workers, [('local', 'password_1'), ('local', 'password_1')])
 
     @defer.inlineCallbacks
     def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):
