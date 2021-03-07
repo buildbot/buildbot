@@ -212,7 +212,8 @@ class Properties(util.ComparableMixin):
     # in the log of state strings
     # so we have the renderable record here which secrets are used that we must remove
     def useSecret(self, secret_value, secret_name):
-        self._used_secrets[secret_value] = "<" + secret_name + ">"
+        if secret_value.strip():
+            self._used_secrets[secret_value] = "<" + secret_name + ">"
 
     # This method shall then be called to remove secrets from any text that could be logged
     # somewhere and that could contain secrets
