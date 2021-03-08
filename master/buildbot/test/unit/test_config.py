@@ -480,12 +480,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_changeHorizon_none(self):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
-    def test_load_global_eventHorizon(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   message_pattern=r"`eventHorizon` is deprecated and ignored"):
-            self.do_test_load_global(
-                dict(eventHorizon=10))
-
     def test_load_global_status(self):
         with assertProducesWarning(DeprecatedApiWarning,
                                    message_pattern=r"`status` targets are deprecated and ignored"):

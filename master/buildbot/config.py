@@ -232,7 +232,6 @@ class MasterConfig(util.ComparableMixin):
         "buildbotURL",
         "buildCacheSize",
         "builders",
-        "buildHorizon",
         "caches",
         "change_source",
         "codebaseGenerator",
@@ -245,7 +244,6 @@ class MasterConfig(util.ComparableMixin):
         "logCompressionLimit",
         "logCompressionMethod",
         "logEncoding",
-        "logHorizon",
         "logMaxSize",
         "logMaxTailSize",
         "manhole",
@@ -402,13 +400,6 @@ class MasterConfig(util.ComparableMixin):
                     'Or `opt-in` for more information by setting it to "full".\n',
                     category=ConfigWarning)
         copy_str_or_callable_param('buildbotNetUsageData')
-
-        for horizon in ('logHorizon', 'buildHorizon', 'eventHorizon'):
-            if horizon in config_dict:
-                warn_deprecated(
-                    '0.9.0',
-                    "NOTE: `{}` is deprecated and ignored "
-                    "They are replaced by util.JanitorConfigurator".format(horizon))
 
         if 'status' in config_dict:
             warn_deprecated(
