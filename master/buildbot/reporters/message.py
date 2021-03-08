@@ -14,13 +14,10 @@
 # Copyright Buildbot Team Members
 
 
-import os
-
 import jinja2
 
 from twisted.internet import defer
 
-from buildbot import config
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -30,7 +27,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
-from buildbot.warnings import warn_deprecated
 
 
 def get_detected_status_text(mode, results, previous_results):
@@ -243,43 +239,43 @@ class MessageFormatterRenderable(MessageFormatterBase):
         return body
 
 
+default_body_template = '''\
+The Buildbot has detected a {{ status_detected }} on builder {{ buildername }} while building {{ projects }}.
+Full details are available at:
+    {{ build_url }}
+
+Buildbot URL: {{ buildbot_url }}
+
+Worker for this Build: {{ workername }}
+
+Build Reason: {{ build['properties'].get('reason', ["<unknown>"])[0] }}
+Blamelist: {{ ", ".join(blamelist) }}
+
+{{ summary }}
+
+Sincerely,
+ -The Buildbot
+'''  # noqa pylint: disable=line-too-long
+
+
 class MessageFormatterBaseJinja(MessageFormatterBase):
-    template_filename = 'default_mail.txt'
-
     compare_attrs = ['body_template', 'subject_template', 'template_type']
+    subject_template = None
+    template_type = 'plain'
 
-    def __init__(self, template_dir=None,
-                 template_filename=None, template=None,
-                 subject_filename=None, subject=None,
-                 template_type=None, **kwargs):
-        self.body_template = self.getTemplate(template_filename, template_dir, template)
-        self.subject_template = None
-        if subject_filename or subject:
-            self.subject_template = self.getTemplate(subject_filename, template_dir, subject)
+    def __init__(self, template=None, subject=None, template_type=None, **kwargs):
+        if template is None:
+            template = default_body_template
+
+        self.body_template = jinja2.Template(template)
+
+        if subject is not None:
+            self.subject_template = jinja2.Template(subject)
 
         if template_type is not None:
             self.template_type = template_type
 
         super().__init__(**kwargs)
-
-    def getTemplate(self, filename, dirname, content):
-        if content and (filename or dirname):
-            config.error("Only one of template or template path can be given")
-
-        if content:
-            return jinja2.Template(content)
-
-        if dirname is None:
-            dirname = os.path.join(os.path.dirname(__file__), "templates")
-
-        loader = jinja2.FileSystemLoader(dirname)
-        env = jinja2.Environment(
-            loader=loader, undefined=jinja2.StrictUndefined)
-
-        if filename is None:
-            filename = self.template_filename
-
-        return env.get_template(filename)
 
     def buildAdditionalContext(self, master, ctx):
         pass
@@ -294,19 +290,6 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
 
 class MessageFormatter(MessageFormatterBaseJinja):
-    template_filename = 'default_mail.txt'
-
-    compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
-
-    def __init__(self, **kwargs):
-        if 'template_filename' in kwargs:
-            warn_deprecated('2.10.0',
-                            "template_filename is deprecated, supply the template as text")
-        if 'subject_filename' in kwargs:
-            warn_deprecated('2.10.0',
-                            "subject_filename is deprecated, supply the template as text")
-        super().__init__(**kwargs)
-
     @defer.inlineCallbacks
     def format_message_for_build(self, mode, buildername, build, master, blamelist):
         ctx = create_context_for_build(mode, buildername, build, master, blamelist)
@@ -314,8 +297,27 @@ class MessageFormatter(MessageFormatterBaseJinja):
         return msgdict
 
 
+default_missing_template = '''\
+The Buildbot working for '{{buildbot_title}}' has noticed that the worker named {{worker.name}} went away.
+
+It last disconnected at {{worker.last_connection}}.
+
+{% if 'admin' in worker['workerinfo'] %}
+The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.
+{% endif %}
+
+Sincerely,
+ -The Buildbot
+'''  # noqa pylint: disable=line-too-long
+
+
 class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
     template_filename = 'missing_mail.txt'
+
+    def __init__(self, template=None, **kwargs):
+        if template is None:
+            template = default_missing_template
+        super().__init__(template=template, **kwargs)
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(self, master, worker):
