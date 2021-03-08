@@ -1,1 +1,0 @@
-:py:class:`~buildbot.changes.BitbucketPullrequestPoller` has been enhanced to optionally authorize Bitbucket API.

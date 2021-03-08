@@ -1,1 +1,0 @@
-Removed deprecated support for constructing build steps from class and arguments in ``BuildFactory.addStep()``.

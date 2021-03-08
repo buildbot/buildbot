@@ -1,1 +1,0 @@
-:py:class:`~buildbot.changes.BitbucketPullrequestPoller`, py:class:`~buildbot.www.BitbucketCloudEventHandler`, py:class:`~buildbot.www.BitbucketServerEventHandler` were enhanced to save PR entries matching provided masks as build properties.

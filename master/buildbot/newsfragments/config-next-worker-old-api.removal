@@ -1,1 +1,0 @@
-Removed support for deprecated ``nextWorker`` function signature that accepts two parameters instead of three.
