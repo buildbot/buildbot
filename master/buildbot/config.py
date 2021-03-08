@@ -261,9 +261,6 @@ class MasterConfig(util.ComparableMixin):
         "schedulers",
         "secretsProviders",
         "services",
-        # we had c['status'] = [] for a while in our default master.cfg
-        # so we need to keep it there
-        "status",
         "title",
         "titleURL",
         "user_managers",
@@ -400,12 +397,6 @@ class MasterConfig(util.ComparableMixin):
                     'Or `opt-in` for more information by setting it to "full".\n',
                     category=ConfigWarning)
         copy_str_or_callable_param('buildbotNetUsageData')
-
-        if 'status' in config_dict:
-            warn_deprecated(
-                '0.9.0',
-                "NOTE: `status` targets are deprecated and ignored "
-                "They are replaced by reporters")
 
         copy_int_param('changeHorizon')
         copy_int_param('logCompressionLimit')

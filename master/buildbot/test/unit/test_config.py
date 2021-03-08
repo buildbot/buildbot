@@ -480,12 +480,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_changeHorizon_none(self):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
-    def test_load_global_status(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   message_pattern=r"`status` targets are deprecated and ignored"):
-            self.do_test_load_global(
-                dict(status=[]))
-
     def test_load_global_buildbotNetUsageData(self):
         self.patch(config, "_in_unit_tests", False)
         with assertProducesWarning(
