@@ -27,7 +27,6 @@ from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.util.logger import Logger
-from buildbot.warnings import warn_deprecated
 
 log = Logger()
 
@@ -83,11 +82,6 @@ class HTTPClientService(service.SharedService):
         if self._headers is None:
             self._headers = {}
         self._headers.update(headers)
-
-    @classmethod
-    def getFakeService(cls, master, case, *args, **kwargs):
-        warn_deprecated('2.9.0', 'getFakeService() has been deprecated, use getService()')
-        return cls.getService(master, case, *args, **kwargs)
 
     @classmethod
     @defer.inlineCallbacks

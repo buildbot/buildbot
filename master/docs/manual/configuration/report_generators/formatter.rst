@@ -11,15 +11,6 @@ It formats a message using the Jinja2_ templating language and picks the templat
 
 The constructor of the class takes the following arguments:
 
-``template_dir``
-    The directory that is used to look for the various templates.
-    This argument is deprecated, please supply message templates as ``template`` directly.
-
-``template_filename``
-    This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
-    It defaults to ``default_mail.txt``.
-    This argument is deprecated, please supply message templates as ``template`` directly.
-
 ``template``
     If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.
 
@@ -27,12 +18,8 @@ The constructor of the class takes the following arguments:
     This indicates the type of the generated template.
     Use either 'plain' (the default) or 'html'.
 
-``subject_filename``
-    This is the name of the file in the ``template_dir`` directory that contains the content of the subject of the mail.
-    This argument is deprecated, please supply message templates as ``subject`` directly.
-
 ``subject``
-    Alternatively, this is the content of the subject of the mail as string.
+    The content of the subject of the mail as string.
 
 ``ctx``
     This is an extension of the standard context that will be given to the templates.

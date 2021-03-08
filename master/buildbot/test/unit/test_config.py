@@ -480,18 +480,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_changeHorizon_none(self):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
-    def test_load_global_eventHorizon(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   message_pattern=r"`eventHorizon` is deprecated and ignored"):
-            self.do_test_load_global(
-                dict(eventHorizon=10))
-
-    def test_load_global_status(self):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   message_pattern=r"`status` targets are deprecated and ignored"):
-            self.do_test_load_global(
-                dict(status=[]))
-
     def test_load_global_buildbotNetUsageData(self):
         self.patch(config, "_in_unit_tests", False)
         with assertProducesWarning(
@@ -625,30 +613,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_db(self.filename, dict(db_url='abcd'))
         self.assertResults(db=dict(db_url='abcd'))
 
-    def test_load_db_db_poll_interval(self):
-        # value is ignored, but no error
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
-            self.cfg.load_db(self.filename, dict(db_poll_interval=2))
-        self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite'))
-
     def test_load_db_dict(self):
-        # db_poll_interval value is ignored, but no error
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
-            self.cfg.load_db(self.filename,
-                             dict(db=dict(db_url='abcd', db_poll_interval=10)))
+        self.cfg.load_db(self.filename, {'db': {'db_url': 'abcd'}})
         self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
-            self.cfg.load_db(self.filename,
-                             dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
+        self.cfg.load_db(self.filename, {'db': {'db_url': 'abcd', 'bar': 'bar'}})
         self.assertConfigError(self.errors, "unrecognized keys in")
 
     def test_load_mq_defaults(self):
@@ -1342,15 +1312,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         with self.assertRaisesConfigError("workername must be a string"):
             config.BuilderConfig(name='a', workername=1, factory=self.factory)
 
-    def test_bogus_category(self):
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"builder categories are deprecated and should be replaced with"):
-            with self.assertRaisesConfigError("category must be a string"):
-                config.BuilderConfig(category=13,
-                                     name='a', workernames=['a'],
-                                     factory=self.factory)
-
     def test_tags_must_be_list(self):
         with self.assertRaisesConfigError("tags must be a list"):
             config.BuilderConfig(tags='abc',
@@ -1368,13 +1329,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         with self.assertRaisesConfigError(
                 "builder 'a': tags list contains duplicate tags: abc"):
             config.BuilderConfig(tags=['abc', 'bca', 'abc'],
-                                 name='a', workernames=['a'],
-                                 factory=self.factory)
-
-    def test_tags_no_categories_too(self):
-        with self.assertRaisesConfigError(
-                "categories are deprecated and replaced by tags; you should only specify tags"):
-            config.BuilderConfig(tags=['abc'], category='def',
                                  name='a', workernames=['a'],
                                  factory=self.factory)
 
@@ -1527,14 +1481,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         cfg = config.BuilderConfig(
             name='a b c', workername='a', factory=self.factory,
             nextWorker=f)
-
-        self.assertEqual(cfg.nextWorker, f)
-
-    def test_init_next_worker_positional(self):
-        f = lambda: None
-        with assertNotProducesWarnings(DeprecatedApiWarning):
-            cfg = config.BuilderConfig(
-                'a b c', 'a', None, None, None, self.factory, None, None, f)
 
         self.assertEqual(cfg.nextWorker, f)
 

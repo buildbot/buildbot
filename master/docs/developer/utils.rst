@@ -1341,8 +1341,8 @@ For example, a particular daily scheduler could be configured on multiple master
                     baseurl = 'http://127.0.0.1:8080'
                     self.parent = service.MasterService()
                     self._http = self.successResultOf(
-                        fakehttpclientservice.HTTPClientService.getFakeService(self.parent, self,
-                                                                               baseurl))
+                        fakehttpclientservice.HTTPClientService.getService(self.parent, self,
+                                                                           baseurl))
                     self.tested = myTestedService(baseurl)
 
                     self.successResultOf(self.tested.setServiceParent(self.parent))

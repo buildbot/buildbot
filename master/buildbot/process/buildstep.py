@@ -757,12 +757,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     def setStatistic(self, name, value):
         self.statistics[name] = value
 
-    def warn_deprecated_if_oldstyle_subclass(self, name):
-        if self.__class__.__name__ != name:
-            warn_deprecated('2.9.0', ('Subclassing old-style step {0} in {1} is deprecated, '
-                                      'please migrate to new-style equivalent {0}NewStyle'
-                                      ).format(name, self.__class__.__name__))
-
 
 class CommandMixin:
 

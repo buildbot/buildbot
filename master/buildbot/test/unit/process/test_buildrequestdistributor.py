@@ -770,11 +770,6 @@ class TestMaybeStartBuilds(TestBRDBase):
             self.assertNotEqual(br, None)
         return self.do_test_nextWorker(nextWorker)
 
-    def test_nextWorker_2args_in_signature(self):
-        def nextWorker(builder, lst):
-            return lst[0] if lst else None
-        return self.do_test_nextWorker(nextWorker, exp_choice=0, exp_warning=True)
-
     def test_nextWorker_default(self):
         self.patch(random, 'choice', nth_worker(2))
         return self.do_test_nextWorker(None, exp_choice=2)
