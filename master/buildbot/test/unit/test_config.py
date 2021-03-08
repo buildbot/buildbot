@@ -1342,15 +1342,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         with self.assertRaisesConfigError("workername must be a string"):
             config.BuilderConfig(name='a', workername=1, factory=self.factory)
 
-    def test_bogus_category(self):
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"builder categories are deprecated and should be replaced with"):
-            with self.assertRaisesConfigError("category must be a string"):
-                config.BuilderConfig(category=13,
-                                     name='a', workernames=['a'],
-                                     factory=self.factory)
-
     def test_tags_must_be_list(self):
         with self.assertRaisesConfigError("tags must be a list"):
             config.BuilderConfig(tags='abc',
@@ -1368,13 +1359,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         with self.assertRaisesConfigError(
                 "builder 'a': tags list contains duplicate tags: abc"):
             config.BuilderConfig(tags=['abc', 'bca', 'abc'],
-                                 name='a', workernames=['a'],
-                                 factory=self.factory)
-
-    def test_tags_no_categories_too(self):
-        with self.assertRaisesConfigError(
-                "categories are deprecated and replaced by tags; you should only specify tags"):
-            config.BuilderConfig(tags=['abc'], category='def',
                                  name='a', workernames=['a'],
                                  factory=self.factory)
 
@@ -1527,14 +1511,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         cfg = config.BuilderConfig(
             name='a b c', workername='a', factory=self.factory,
             nextWorker=f)
-
-        self.assertEqual(cfg.nextWorker, f)
-
-    def test_init_next_worker_positional(self):
-        f = lambda: None
-        with assertNotProducesWarnings(DeprecatedApiWarning):
-            cfg = config.BuilderConfig(
-                'a b c', 'a', None, None, None, self.factory, None, None, f)
 
         self.assertEqual(cfg.nextWorker, f)
 

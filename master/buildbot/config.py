@@ -916,7 +916,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
     def __init__(self, name=None, workername=None, workernames=None,
                  builddir=None, workerbuilddir=None, factory=None,
-                 tags=None, category=None,
+                 tags=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
                  canStartBuild=None, defaultProperties=None
@@ -972,17 +972,6 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.workerbuilddir = workerbuilddir
 
         # remainder are optional
-
-        if category and tags:
-            error(("builder '{}': builder categories are deprecated and "
-                   "replaced by tags; you should only specify tags").format(name))
-        if category:
-            warn_deprecated("0.9", ("builder '{}': builder categories are "
-                                    "deprecated and should be replaced with "
-                                    "'tags=[cat]'").format(name))
-            if not isinstance(category, str):
-                error("builder '{}': category must be a string".format(name))
-            tags = [category]
         if tags:
             if not isinstance(tags, list):
                 error("builder '{}': tags must be a list".format(name))
