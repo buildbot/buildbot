@@ -52,6 +52,7 @@ Bug fixes
 - Improved REST API to use username or full name of a logged in user when email is empty.
 - Worked around a bug in Python's urllib which caused Python clients not to accept basic authentication headers (:issue:`5743`)
 - Fixed crash in ``BuildStartEndStatusGenerator`` when tags filter is setup (:issue:`5766`).
+- Added missing ``MessageFormatterEmpty``, ``MessageFormatterFunction``, ``MessageFormatterMissingWorker``, and ``MessageFormatterRenderable`` to ``buildbot.reporters`` namespace
 
 Improved Documentation
 ----------------------
