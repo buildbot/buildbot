@@ -29,7 +29,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.warnings import warn_deprecated
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -268,42 +267,14 @@ class EC2LatentWorker(AbstractLatentWorker):
             block_device_map) if block_device_map else None
 
     def create_block_device_mapping(self, mapping_definitions):
-        if isinstance(mapping_definitions, list):
-            for mapping_definition in mapping_definitions:
-                ebs = mapping_definition.get('Ebs')
-                if ebs:
-                    ebs.setdefault('DeleteOnTermination', True)
-            return mapping_definitions
+        if not isinstance(mapping_definitions, list):
+            config.error("EC2LatentWorker: 'block_device_map' must be a list")
 
-        warn_deprecated(
-            '0.9.0',
-            "Use of dict value to 'block_device_map' of EC2LatentWorker "
-            "constructor is deprecated. Please use a list matching the AWS API "
-            "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html"
-        )
-        return self._convert_deprecated_block_device_mapping(mapping_definitions)
-
-    def _convert_deprecated_block_device_mapping(self, mapping_definitions):
-        new_mapping_definitions = []
-        for dev_name, dev_config in mapping_definitions.items():
-            new_dev_config = {}
-            new_dev_config['DeviceName'] = dev_name
-            if dev_config:
-                new_dev_config['Ebs'] = {}
-                new_dev_config['Ebs']['DeleteOnTermination'] = dev_config.get(
-                    'delete_on_termination', True)
-                new_dev_config['Ebs'][
-                    'Encrypted'] = dev_config.get('encrypted')
-                new_dev_config['Ebs']['Iops'] = dev_config.get('iops')
-                new_dev_config['Ebs'][
-                    'SnapshotId'] = dev_config.get('snapshot_id')
-                new_dev_config['Ebs']['VolumeSize'] = dev_config.get('size')
-                new_dev_config['Ebs'][
-                    'VolumeType'] = dev_config.get('volume_type')
-                new_dev_config['Ebs'] = self._remove_none_opts(
-                    new_dev_config['Ebs'])
-            new_mapping_definitions.append(new_dev_config)
-        return new_mapping_definitions
+        for mapping_definition in mapping_definitions:
+            ebs = mapping_definition.get('Ebs')
+            if ebs:
+                ebs.setdefault('DeleteOnTermination', True)
+        return mapping_definitions
 
     def get_image(self):
         # pylint: disable=too-many-nested-blocks
