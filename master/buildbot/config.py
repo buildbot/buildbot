@@ -239,7 +239,6 @@ class MasterConfig(util.ComparableMixin):
         "changeCacheSize",
         "changeHorizon",
         'db',
-        "db_poll_interval",
         "db_url",
         "logCompressionLimit",
         "logCompressionMethod",
@@ -498,13 +497,10 @@ class MasterConfig(util.ComparableMixin):
 
         if 'db' in config_dict:
             db = config_dict['db']
-            if set(db.keys()) - set(['db_url', 'db_poll_interval']) and throwErrors:
+            if set(db.keys()) - set(['db_url']) and throwErrors:
                 error("unrecognized keys in c['db']")
-            config_dict = db
 
-        if 'db_poll_interval' in config_dict and throwErrors:
-            warn_deprecated(
-                "0.8.7", "db_poll_interval is deprecated and will be ignored")
+            config_dict = db
 
         # we don't attempt to parse db URLs here - the engine strategy will do
         # so.

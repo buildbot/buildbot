@@ -613,30 +613,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_db(self.filename, dict(db_url='abcd'))
         self.assertResults(db=dict(db_url='abcd'))
 
-    def test_load_db_db_poll_interval(self):
-        # value is ignored, but no error
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
-            self.cfg.load_db(self.filename, dict(db_poll_interval=2))
-        self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite'))
-
     def test_load_db_dict(self):
-        # db_poll_interval value is ignored, but no error
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
-            self.cfg.load_db(self.filename,
-                             dict(db=dict(db_url='abcd', db_poll_interval=10)))
+        self.cfg.load_db(self.filename, {'db': {'db_url': 'abcd'}})
         self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
-        with assertProducesWarning(
-                DeprecatedApiWarning,
-                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
-            self.cfg.load_db(self.filename,
-                             dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
+        self.cfg.load_db(self.filename, {'db': {'db_url': 'abcd', 'bar': 'bar'}})
         self.assertConfigError(self.errors, "unrecognized keys in")
 
     def test_load_mq_defaults(self):

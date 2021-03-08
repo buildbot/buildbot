@@ -44,7 +44,7 @@ The format of this parameter is completely documented at http://www.sqlalchemy.o
 
      "driver://[username:password@]host:port/database[?args]"
 
-These parameters can be specified directly in the configuration dictionary, as ``c['db_url']`` and ``c['db_poll_interval']``, although this method is deprecated.
+This parameter can be specified directly in the configuration dictionary, as ``c['db_url']``, although this method is deprecated.
 
 The following sections give additional information for particular database backends:
 
