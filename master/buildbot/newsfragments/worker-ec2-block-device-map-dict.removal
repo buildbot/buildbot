@@ -1,1 +1,0 @@
-Removed deprecated support for ``block_device_map`` argument of EC2LatentWorker being not a list.
