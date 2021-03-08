@@ -14,13 +14,11 @@
 # Copyright Buildbot Team Members
 
 import datetime
-import inspect
 import os
 import re
 import sys
 import traceback
 import warnings
-from types import MethodType
 
 from twisted.python import failure
 from twisted.python import log
@@ -39,7 +37,6 @@ from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.warnings import ConfigWarning
-from buildbot.warnings import warn_deprecated
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -970,16 +967,6 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.nextWorker = nextWorker
         if nextWorker and not callable(nextWorker):
             error('nextWorker must be a callable')
-        # Keeping support of the previous nextWorker API
-        if nextWorker:
-            argCount = self._countFuncArgs(nextWorker)
-            if (argCount == 2 or (isinstance(nextWorker, MethodType) and
-                                  argCount == 3)):
-                warn_deprecated(
-                    "0.9", "nextWorker now takes a "
-                    "3rd argument (build request)")
-                self.nextWorker = lambda x, y, z: nextWorker(
-                    x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
@@ -1026,14 +1013,3 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if self.description:
             rv['description'] = self.description
         return rv
-
-    def _countFuncArgs(self, func):
-        if getattr(inspect, 'signature', None):
-            # Python 3
-            signature = inspect.signature(func)
-            argCount = len(signature.parameters)
-        else:
-            # Python 2
-            argSpec = inspect.getargspec(func)
-            argCount = len(argSpec.args)
-        return argCount
