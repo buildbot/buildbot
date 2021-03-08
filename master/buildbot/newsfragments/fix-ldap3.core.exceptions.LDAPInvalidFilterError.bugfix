@@ -1,1 +1,0 @@
-Fix ldap3.core.exceptions.LDAPInvalidFilterError if LDAP filter string contains characters that needs to be escaped.

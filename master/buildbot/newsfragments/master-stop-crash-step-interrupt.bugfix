@@ -1,1 +1,0 @@
-Fixed a crash when a manual step interruption is happening with master shutdown which tries to stop builds itself.
