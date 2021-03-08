@@ -29,9 +29,6 @@ from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
 from buildbot.util.pullrequest import PullRequestMixin
-from buildbot.warnings import warn_deprecated
-
-_UNSPECIFIED = object()
 
 
 class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
@@ -50,7 +47,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
                  category=None,
                  project='',
                  pullrequest_filter=True,
-                 encoding=_UNSPECIFIED,
                  pollAtLaunch=False,
                  auth=None,
                  bitbucket_property_whitelist=None,
@@ -60,9 +56,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
         self.branch = branch
         super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval,
                          pollAtLaunch=pollAtLaunch)
-        if encoding != _UNSPECIFIED:
-            warn_deprecated('2.6.0', 'encoding of BitbucketPullrequestPoller is deprecated.')
-
         if bitbucket_property_whitelist is None:
             bitbucket_property_whitelist = []
 
