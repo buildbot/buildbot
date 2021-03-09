@@ -369,6 +369,156 @@ github_commit_search_reply = {
     ]
 }
 
+github_commit_search_no_user_reply = {
+    "total_count": 1,
+    "incomplete_results": False,
+    "items": [
+        {
+            "url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                   "commits/1111111111111111111111111111111111111111",
+            "sha": "1111111111111111111111111111111111111111",
+            "node_id":
+                "MDY6Q29tbWl0NDM0MzQzNDM6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEx",
+            "html_url": "https://github.com/defunkt-org/defunkt-repo/"
+                        "commit/1111111111111111111111111111111111111111",
+            "comments_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                            "commits/1111111111111111111111111111111111111111/comments",
+            "commit": {
+                "url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                       "git/commits/1111111111111111111111111111111111111111",
+                "author": {
+                    "date": "2021-01-01T01:01:01.000-01:00",
+                    "name": "Defunkt User",
+                    "email": "defunkt@defunkt.com"
+                },
+                "committer": {
+                    "date": "2021-01-01T01:01:01.000-01:00",
+                    "name": "Defunkt User",
+                    "email": "defunkt@defunkt.com"
+                },
+                "message": "defunkt message",
+                "tree": {
+                    "url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                           "git/trees/2222222222222222222222222222222222222222",
+                    "sha": "2222222222222222222222222222222222222222"
+                },
+                "comment_count": 0
+            },
+            "author": None,
+            "committer": None,
+            "parents": [
+                {
+                    "url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                           "commits/3333333333333333333333333333333333333333",
+                    "html_url": "https://github.com/defunkt-org/defunkt-repo/"
+                                "commit/3333333333333333333333333333333333333333",
+                    "sha": "3333333333333333333333333333333333333333"
+                }
+            ],
+            "repository": {
+                "id": 43434343,
+                "node_id": "MDEwOlJlcG9zaXRvcnk0MzQzNDM0Mw==",
+                "name": "defunkt-repo",
+                "full_name": "defunkt-org/defunkt-repo",
+                "private": False,
+                "owner": {
+                    "login": "defunkt-org",
+                    "id": 44444444,
+                    "node_id": "MDEyOk9yZ2FuaXphdGlvbjQ0NDQ0NDQ0",
+                    "avatar_url": "https://avatars2.githubusercontent.com/u/44444444?v=4",
+                    "gravatar_id": "",
+                    "url": "https://api.github.com/users/defunkt-org",
+                    "html_url": "https://github.com/defunkt-org",
+                    "followers_url": "https://api.github.com/users/defunkt-org/followers",
+                    "following_url": "https://api.github.com/users/defunkt-org/"
+                                     "following{/other_user}",
+                    "gists_url": "https://api.github.com/users/defunkt-org/gists{/gist_id}",
+                    "starred_url": "https://api.github.com/users/defunkt-org/"
+                                   "starred{/owner}{/repo}",
+                    "subscriptions_url": "https://api.github.com/users/defunkt-org/subscriptions",
+                    "organizations_url": "https://api.github.com/users/defunkt-org/orgs",
+                    "repos_url": "https://api.github.com/users/defunkt-org/repos",
+                    "events_url": "https://api.github.com/users/defunkt-org/events{/privacy}",
+                    "received_events_url": "https://api.github.com/users/defunkt-org/"
+                                           "received_events",
+                    "type": "Organization",
+                    "site_admin": False
+                },
+                "html_url": "https://github.com/defunkt-org/defunkt-repo",
+                "description": "defunkt project",
+                "fork": False,
+                "url": "https://api.github.com/repos/defunkt-org/defunkt-repo",
+                "forks_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/forks",
+                "keys_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/keys{/key_id}",
+                "collaborators_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                     "collaborators{/collaborator}",
+                "teams_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/teams",
+                "hooks_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/hooks",
+                "issue_events_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                    "issues/events{/number}",
+                "events_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/events",
+                "assignees_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                 "assignees{/user}",
+                "branches_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "branches{/branch}",
+                "tags_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/tags",
+                "blobs_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                             "git/blobs{/sha}",
+                "git_tags_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "git/tags{/sha}",
+                "git_refs_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "git/refs{/sha}",
+                "trees_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                             "git/trees{/sha}",
+                "statuses_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "statuses/{sha}",
+                "languages_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                 "languages",
+                "stargazers_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                  "stargazers",
+                "contributors_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                    "contributors",
+                "subscribers_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                   "subscribers",
+                "subscription_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                    "subscription",
+                "commits_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                               "commits{/sha}",
+                "git_commits_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                   "git/commits{/sha}",
+                "comments_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "comments{/number}",
+                "issue_comment_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                     "issues/comments{/number}",
+                "contents_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "contents/{+path}",
+                "compare_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                               "compare/{base}...{head}",
+                "merges_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/merges",
+                "archive_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                               "{archive_format}{/ref}",
+                "downloads_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                 "downloads",
+                "issues_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                              "issues{/number}",
+                "pulls_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                             "pulls{/number}",
+                "milestones_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                  "milestones{/number}",
+                "notifications_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                     "notifications{?since,all,participating}",
+                "labels_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                              "labels{/name}",
+                "releases_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                "releases{/id}",
+                "deployments_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
+                                   "deployments"
+            },
+            "score": 1.0
+        }
+    ]
+}
+
 github_commit_search_not_found_reply = {
     "total_count": 0,
     "incomplete_results": False,
@@ -470,6 +620,21 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
         self.assertEqual(res, dict(redirected=b'https://avatars3.githubusercontent.com/'
             b'u/42424242?v=4&s=32'))
+
+    @defer.inlineCallbacks
+    def test_email_commit_no_user(self):
+        email_search_endpoint = '/search/users?q=defunkt%40defunkt.com+in%3Aemail'
+        self._http.expect('get', email_search_endpoint,
+            content_json=github_email_search_not_found_reply,
+            headers={'Accept': 'application/vnd.github.v3+json'})
+        commit_search_endpoint = ('/search/commits?'
+            'per_page=1&q=author-email%3Adefunkt%40defunkt.com&sort=committer-date')
+        self._http.expect('get', commit_search_endpoint,
+            content_json=github_commit_search_no_user_reply,
+            headers={'Accept': 'application/vnd.github.v3+json,'
+                'application/vnd.github.cloak-preview'})
+        res = yield self.render_resource(self.rsrc, b'/?email=defunkt@defunkt.com')
+        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
 
     @defer.inlineCallbacks
     def test_email_not_found(self):
