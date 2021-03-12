@@ -26,7 +26,7 @@ def main():
                 print(pr['number'], pr['title'])
                 f.write(f"#{pr['number']}: {pr['title']}\n")
                 os.system(
-                    "git fetch https://github.com/buildbot/buildbot"
+                    "git fetch https://github.com/buildbot/buildbot "
                     f"refs/pull/{pr['number']}/head")
                 os.system("git cherry-pick FETCH_HEAD")
     os.system("hub pull-request -b buildbot:master -p -F /tmp/hub_pr_message -l dependencies")
