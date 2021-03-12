@@ -380,7 +380,7 @@ setup_args = {
             ('buildbot.process.properties', [
                 'FlattenList', 'Interpolate', 'Property', 'Transform',
                 'WithProperties', 'renderer', 'Secret']),
-            ('buildbot.process.properties', [
+            ('buildbot.process.users.manual', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.reporters.utils', ['URLForBuild']),
