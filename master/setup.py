@@ -228,7 +228,6 @@ setup_args = {
                 'BzrLaunchpadEmailMaildirSource']),
             ('buildbot.changes.bitbucket', ['BitbucketPullrequestPoller']),
             ('buildbot.changes.github', ['GitHubPullrequestPoller']),
-            ('buildbot.changes.bonsaipoller', ['BonsaiPoller']),
             ('buildbot.changes.gerritchangesource', [
                 'GerritChangeSource', 'GerritEventLogPoller']),
             ('buildbot.changes.gitpoller', ['GitPoller']),
@@ -327,6 +326,12 @@ setup_args = {
                 'RemoveDirectory', 'MakeDirectory']),
         ]),
         ('buildbot.reporters', [
+            ('buildbot.reporters.generators.build', [
+                'BuildStatusGenerator',
+                'BuildStartEndStatusGenerator',
+            ]),
+            ('buildbot.reporters.generators.buildset', ['BuildSetStatusGenerator']),
+            ('buildbot.reporters.generators.worker', ['WorkerMissingGenerator']),
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.pushjet', ['PushjetNotifier']),
             ('buildbot.reporters.pushover', ['PushoverNotifier']),
@@ -381,7 +386,7 @@ setup_args = {
             ('buildbot.process.properties', [
                 'FlattenList', 'Interpolate', 'Property', 'Transform',
                 'WithProperties', 'renderer', 'Secret']),
-            ('buildbot.process.properties', [
+            ('buildbot.process.users.manual', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.reporters.utils', ['URLForBuild']),
@@ -397,7 +402,6 @@ setup_args = {
             ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),
-            ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
             ('buildbot.steps.source.repo', [
                 ('repo.DownloadsFromChangeSource',
                  'RepoDownloadsFromChangeSource'),
