@@ -135,7 +135,11 @@ class AvatarGitHub(AvatarBase):
             if data['total_count'] == 0:
                 # Not found
                 return None
-            return data['items'][0]['author']['avatar_url']
+            author = data['items'][0]['author']
+            if author is None:
+                # No Github account found
+                return None
+            return author['avatar_url']
 
         log.msg('Failed searching user by commit: response code {}'.format(res.code))
         return None
