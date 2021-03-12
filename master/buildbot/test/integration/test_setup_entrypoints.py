@@ -17,9 +17,12 @@
 import importlib
 import inspect
 import os
+import pkg_resources
 import warnings
 
+import twisted
 from twisted.trial import unittest
+from twisted.trial.unittest import SkipTest
 
 from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
@@ -67,6 +70,10 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         self.verify_plugins_registered('steps', 'buildbot.steps', IBuildStep)
 
     def test_util(self):
+        # work around Twisted bug 9384.
+        if pkg_resources.parse_version(twisted.__version__) < pkg_resources.parse_version("18.9.0"):
+            raise SkipTest('manhole.py can not be imported on old twisted and new python')
+
         known_not_exported = {
             'buildbot.util._notifier.Notifier',
             'buildbot.util.bbcollections.KeyedSets',
