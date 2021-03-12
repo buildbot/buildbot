@@ -271,6 +271,9 @@ class _Plugins:
         """
         return self._tree.get(name)
 
+    def _get_entry(self, name):
+        return self._tree._get(name)
+
     def __getattr__(self, name):
         try:
             return getattr(self._tree, name)
