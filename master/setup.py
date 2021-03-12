@@ -326,6 +326,12 @@ setup_args = {
                 'RemoveDirectory', 'MakeDirectory']),
         ]),
         ('buildbot.reporters', [
+            ('buildbot.reporters.generators.build', [
+                'BuildStatusGenerator',
+                'BuildStartEndStatusGenerator',
+            ]),
+            ('buildbot.reporters.generators.buildset', ['BuildSetStatusGenerator']),
+            ('buildbot.reporters.generators.worker', ['WorkerMissingGenerator']),
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.pushjet', ['PushjetNotifier']),
             ('buildbot.reporters.pushover', ['PushoverNotifier']),
