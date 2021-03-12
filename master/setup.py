@@ -228,7 +228,6 @@ setup_args = {
                 'BzrLaunchpadEmailMaildirSource']),
             ('buildbot.changes.bitbucket', ['BitbucketPullrequestPoller']),
             ('buildbot.changes.github', ['GitHubPullrequestPoller']),
-            ('buildbot.changes.bonsaipoller', ['BonsaiPoller']),
             ('buildbot.changes.gerritchangesource', [
                 'GerritChangeSource', 'GerritEventLogPoller']),
             ('buildbot.changes.gitpoller', ['GitPoller']),
@@ -397,7 +396,6 @@ setup_args = {
             ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),
-            ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
             ('buildbot.steps.source.repo', [
                 ('repo.DownloadsFromChangeSource',
                  'RepoDownloadsFromChangeSource'),
