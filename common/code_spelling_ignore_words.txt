@@ -394,6 +394,7 @@ dict
 dicts
 dicttype
 diff
+diffinfo
 diffs
 dir
 directoryenterpattern

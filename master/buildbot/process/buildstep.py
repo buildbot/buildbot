@@ -544,7 +544,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setBuildData(self, name, value, source):
         # returns a Deferred that yields nothing
-        yield self.master.data.updates.setBuildData(self.build.buildid, name, value, source)
+        return self.master.data.updates.setBuildData(self.build.buildid, name, value, source)
 
     @defer.inlineCallbacks
     def _cleanup_logs(self):
