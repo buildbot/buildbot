@@ -66,6 +66,7 @@ require('./common/directives/loginbar/loginbar.directive.js');
 require('./common/directives/properties/properties.directive.js');
 require('./common/directives/rawdata/rawdata.directive.js');
 require('./common/directives/windowtitle/windowtitle.directive.js');
+require('./common/filters/encodeURI.filter.js');
 require('./common/filters/moment/moment.constant.js');
 require('./common/filters/moment/moment.filter.js');
 require('./common/filters/publicFields.filter.js');
