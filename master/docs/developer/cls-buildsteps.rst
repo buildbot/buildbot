@@ -336,6 +336,16 @@ BuildStep
     Build steps have statistics, a simple key/value store of data which can later be aggregated over all steps in a build.
     Note that statistics are not preserved after a build is complete.
 
+    .. py:method:: setBuildData(self, name, value, source)
+
+        :param unicode name: the name of the data
+        :param bytestr value: the value of the data as ``bytes``.
+        :parma unicode source: the source of the data
+        :returns: Deferred
+
+    Builds can have transient data attached to them which allows steps to communicate to reporters and among themselves.
+    The data is a byte string, its interpretation depends on the particular step or reporter.
+
     .. py:method:: hasStatistic(stat)
 
         :param string stat: name of the statistic

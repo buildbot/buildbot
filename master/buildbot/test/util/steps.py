@@ -258,6 +258,14 @@ class BuildStepMixin:
                                            duration_ns))
         step.addTestResult = add_test_result
 
+        self._got_build_data = {}
+
+        def set_build_data(name, value, source):
+            self._got_build_data[name] = (value, source)
+            return defer.succeed(None)
+
+        step.setBuildData = set_build_data
+
         # expectations
 
         self.exp_result = None
@@ -270,6 +278,7 @@ class BuildStepMixin:
         self.exp_exception = None
         self._exp_test_result_sets = []
         self._exp_test_results = []
+        self._exp_build_data = {}
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
@@ -312,6 +321,9 @@ class BuildStepMixin:
 
     def expect_log_file_stderr(self, logfile, contents):
         self._exp_logfiles_stderr[logfile] = contents
+
+    def expect_build_data(self, name, value, source):
+        self._exp_build_data[name] = (value, source)
 
     def expectHidden(self, hidden):
         """
@@ -408,6 +420,7 @@ class BuildStepMixin:
 
         self.assertEqual(self._exp_test_result_sets, self._got_test_result_sets)
         self.assertEqual(self._exp_test_results, self._got_test_results)
+        self.assertEqual(self._exp_build_data, self._got_build_data)
 
         # XXX TODO: hidden
         # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
