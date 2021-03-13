@@ -36,15 +36,11 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
     def __init__(self, mode=("failing", "passing", "warnings"),
                  tags=None, builders=None, schedulers=None, branches=None,
                  subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                 add_logs=False, add_patch=False, report_new=False, message_formatter=None,
-                 _want_previous_build=None):
+                 add_logs=False, add_patch=False, report_new=False, message_formatter=None):
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
         self.formatter = message_formatter
         if self.formatter is None:
             self.formatter = MessageFormatter()
-
-        # TODO: private and deprecated, included only to support HttpStatusPushBase
-        self._want_previous_build_override = _want_previous_build
 
         if report_new:
             self.wanted_event_keys = [
@@ -57,8 +53,6 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         _, _, event = key
         is_new = event == 'new'
         want_previous_build = False if is_new else self._want_previous_build()
-        if self._want_previous_build_override is not None:
-            want_previous_build = self._want_previous_build_override
 
         yield utils.getDetailsForBuild(master, build,
                                        wantProperties=self.formatter.wantProperties,
@@ -78,9 +72,6 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
 
     def _want_previous_build(self):
         return "change" in self.mode or "problem" in self.mode
-
-    def _matches_any_tag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
 
 
 @implementer(interfaces.IReportGenerator)
@@ -122,6 +113,3 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         report = yield self.build_message(formatter, master, reporter, build['builder']['name'],
                                           [build], build['results'])
         return report
-
-    def _matches_any_tag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
