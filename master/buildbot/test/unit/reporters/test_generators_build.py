@@ -383,6 +383,20 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         })
 
     @defer.inlineCallbacks
+    def test_generate_finished_non_matching_builder(self):
+        g, build = yield self.setup_generator(builders=['non-matched'])
+        report = yield self.generate(g, ('builds', 123, 'finished'), build)
+
+        self.assertIsNone(report)
+
+    @defer.inlineCallbacks
+    def test_generate_finished_non_matching_result(self):
+        g, build = yield self.setup_generator(mode=('failing',))
+        report = yield self.generate(g, ('builds', 123, 'finished'), build)
+
+        self.assertIsNone(report)
+
+    @defer.inlineCallbacks
     def test_generate_new(self):
         g, build = yield self.setup_generator(results=None, mode=('failing',), report_new=True)
         report = yield self.generate(g, ('builds', 123, 'new'), build)
