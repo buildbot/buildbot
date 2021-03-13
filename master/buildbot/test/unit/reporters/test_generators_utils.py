@@ -55,6 +55,13 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         return BuildStatusGeneratorMixin(mode, tags, builders, schedulers, branches, subject,
                                          add_logs, add_patch)
 
+    def test_generate_name(self):
+        g = self.create_generator(tags=['tag1', 'tag2'], builders=['b1', 'b2'],
+                                  schedulers=['s1', 's2'], branches=['b1', 'b2'])
+        self.assertEqual(g.generate_name(),
+                         'BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_' +
+                         'schedulers_s1+s2_branches_b1+b2failing_passing_warnings')
+
     @parameterized.expand([
         ('tags', 'tag'),
         ('tags', 1),
