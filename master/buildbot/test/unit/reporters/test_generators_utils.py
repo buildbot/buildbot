@@ -78,6 +78,17 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         with self.assertRaisesConfigError('must be a list or None'):
             g.check()
 
+    @parameterized.expand([
+        ('unknown_str', 'unknown', 'not a valid mode'),
+        ('unknown_list', ['unknown'], 'not a valid mode'),
+        ('unknown_list_two', ['unknown', 'failing'], 'not a valid mode'),
+        ('all_in_list', ['all', 'failing'], 'must be passed in as a separate string'),
+    ])
+    def test_tag_check_raises(self, name, mode, expected_exception):
+        g = self.create_generator(mode=mode)
+        with self.assertRaisesConfigError(expected_exception):
+            g.check()
+
     def test_subject_newlines_not_allowed(self):
         g = self.create_generator(subject='subject\nwith\nnewline')
         with self.assertRaisesConfigError('Newlines are not allowed'):
