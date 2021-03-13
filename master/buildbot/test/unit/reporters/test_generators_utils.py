@@ -240,6 +240,19 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
 
     @parameterized.expand([
+        ('bool_true', True, 'step', 'log', True),
+        ('bool_false', False, 'step', 'log', False),
+        ('match_by_log_name', ['log'], 'step', 'log', True),
+        ('no_match_by_log_name', ['not_existing'], 'step', 'log', False),
+        ('match_by_log_step_name', ['step.log'], 'step', 'log', True),
+        ('no_match_by_log_step_name', ['step1.log1'], 'step', 'log', False),
+    ])
+    def test_should_attach_log(self, name, add_logs, log_step_name, log_name, expected_result):
+        g = self.create_generator(add_logs=add_logs)
+        log = {'stepname': log_step_name, 'name': log_name}
+        self.assertEqual(g._should_attach_log(log), expected_result)
+
+    @parameterized.expand([
         ('both_none', None, None, (None, False)),
         ('old_none', None, 'type', ('type', True)),
         ('new_none', 'type', None, ('type', False)),
