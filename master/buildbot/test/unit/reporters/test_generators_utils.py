@@ -231,3 +231,38 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
     def test_is_message_needed_mode_change_ignores_same_result_in_sequence2(self):
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
+
+    @parameterized.expand([
+        ('both_none', None, None, (None, False)),
+        ('old_none', None, 'type', ('type', True)),
+        ('new_none', 'type', None, ('type', False)),
+        ('same', 'type', 'type', ('type', True)),
+        ('different', 'type1', 'type2', ('type1', False)),
+    ])
+    def test_merge_msgtype(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_msgtype(old, new), expected_result)
+
+    @parameterized.expand([
+        ('both_none', None, None, None),
+        ('old_none', None, 'sub', 'sub'),
+        ('new_none', 'sub', None, 'sub'),
+        ('same', 'sub', 'sub', 'sub'),
+        ('different', 'sub1', 'sub2', 'sub1'),
+    ])
+    def test_merge_subject(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_subject(old, new), expected_result)
+
+    @parameterized.expand([
+        ('both_none', None, None, (None, True)),
+        ('old_none', None, 'body', ('body', True)),
+        ('new_none', 'body', None, ('body', True)),
+        ('both_str', 'body1\n', 'body2\n', ('body1\nbody2\n', True)),
+        ('both_list', ['body1'], ['body2'], (['body1', 'body2'], True)),
+        ('both_dict', {'v': 'body1'}, {'v': 'body2'}, ({'v': 'body1'}, False)),
+        ('str_list', ['body1'], 'body2', (['body1'], False)),
+    ])
+    def test_merge_body(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_body(old, new), expected_result)

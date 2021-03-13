@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot import config
 from buildbot import util
@@ -128,6 +129,39 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return False
 
+    def _merge_msgtype(self, msgtype, new_msgtype):
+        if new_msgtype is None:
+            return msgtype, False
+        if msgtype is None:
+            return new_msgtype, True
+        if msgtype != new_msgtype:
+            log.msg(('{}: Incompatible message types for multiple builds ({} and {}). Ignoring'
+                     ).format(self, msgtype, new_msgtype))
+            return msgtype, False
+
+        return msgtype, True
+
+    def _merge_subject(self, subject, new_subject):
+        if subject is None and new_subject is not None:
+            return new_subject
+        return subject
+
+    def _merge_body(self, body, new_body):
+        if body is None:
+            return new_body, True
+        if new_body is None:
+            return body, True
+
+        if isinstance(body, str) and isinstance(new_body, str):
+            return body + new_body, True
+
+        if isinstance(body, list) and isinstance(new_body, list):
+            return body + new_body, True
+
+        log.msg(('{}: Incompatible message body types for multiple builds ({} and {}). Ignoring'
+                 ).format(self, type(body), type(new_body)))
+        return body, False
+
     @defer.inlineCallbacks
     def build_message(self, formatter, master, reporter, name, builds, results):
         # The given builds must refer to builds from a single buildset
@@ -152,18 +186,20 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 logs.extend(build_logs)
 
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
+            users.update(set(blamelist))
+
             buildmsg = yield formatter.format_message_for_build(self.mode, name, build,
                                                                 master, blamelist)
-            users.update(set(blamelist))
-            msgtype = buildmsg['type']
 
-            if body is None:
-                body = buildmsg['body']
-            elif buildmsg['body'] is not None:
-                body = body + buildmsg['body']
+            msgtype, ok = self._merge_msgtype(msgtype, buildmsg['type'])
+            if not ok:
+                continue
 
-            if buildmsg['subject'] is not None:
-                subject = buildmsg['subject']
+            subject = self._merge_subject(subject, buildmsg['subject'])
+
+            body, ok = self._merge_body(body, buildmsg['body'])
+            if not ok:
+                continue
 
         if subject is None and self.subject is not None:
             subject = self.subject % {'result': statusToString(results),
