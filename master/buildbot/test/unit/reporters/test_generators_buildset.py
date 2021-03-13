@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from parameterized import parameterized
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -45,22 +43,6 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         build = yield self.insert_build_finished(results, **kwargs)
         yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
         return build
-
-    @parameterized.expand([
-        ('tags', 'tag'),
-        ('tags', 1),
-        ('builders', 'builder'),
-        ('builders', 1),
-        ('schedulers', 'scheduler'),
-        ('schedulers', 1),
-        ('branches', 'branch'),
-        ('branches', 1),
-    ])
-    def test_list_params_check_raises(self, arg_name, arg_value):
-        kwargs = {arg_name: arg_value}
-        g = BuildSetStatusGenerator(**kwargs)
-        with self.assertRaisesConfigError('must be a list or None'):
-            g.check()
 
     @defer.inlineCallbacks
     def setup_generator(self, results=SUCCESS, message=None, db_args=None, **kwargs):
