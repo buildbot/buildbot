@@ -79,9 +79,6 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
     def _want_previous_build(self):
         return "change" in self.mode or "problem" in self.mode
 
-    def _matches_any_tag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
-
 
 @implementer(interfaces.IReportGenerator)
 class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
@@ -122,6 +119,3 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         report = yield self.build_message(formatter, master, reporter, build['builder']['name'],
                                           [build], build['results'])
         return report
-
-    def _matches_any_tag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
