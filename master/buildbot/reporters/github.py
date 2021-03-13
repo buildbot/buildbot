@@ -125,6 +125,29 @@ class GitHubStatusPush(ReporterBase):
     def is_status_2xx(self, code):
         return code // 100 == 2
 
+    def _extract_issue(self, props):
+        branch = props.getProperty('branch')
+        if branch:
+            m = re.search(r"refs/pull/([0-9]*)/(head|merge)", branch)
+            if m:
+                return m.group(1)
+        return None
+
+    def _extract_github_info(self, sourcestamp):
+        repo_owner = None
+        repo_name = None
+        project = sourcestamp['project']
+        repository = sourcestamp['repository']
+        if project and "/" in project:
+            repo_owner, repo_name = project.split('/')
+        elif repository:
+            giturl = giturlparse(repository)
+            if giturl:
+                repo_owner = giturl.owner
+                repo_name = giturl.repo
+
+        return repo_owner, repo_name
+
     @defer.inlineCallbacks
     def sendMessage(self, reports):
         report = reports[0]
@@ -154,25 +177,10 @@ class GitHubStatusPush(ReporterBase):
         if not sourcestamps:
             return
 
-        for sourcestamp in sourcestamps:
-            issue = None
-            branch = props.getProperty('branch')
-            if branch:
-                m = re.search(r"refs/pull/([0-9]*)/(head|merge)", branch)
-                if m:
-                    issue = m.group(1)
+        issue = self._extract_issue(props)
 
-            repo_owner = None
-            repo_name = None
-            project = sourcestamp['project']
-            repository = sourcestamp['repository']
-            if project and "/" in project:
-                repo_owner, repo_name = project.split('/')
-            elif repository:
-                giturl = giturlparse(repository)
-                if giturl:
-                    repo_owner = giturl.owner
-                    repo_name = giturl.repo
+        for sourcestamp in sourcestamps:
+            repo_owner, repo_name = self._extract_github_info(sourcestamp)
 
             if not repo_owner or not repo_name:
                 log.msg('Skipped status update because required repo information is missing.')

@@ -55,6 +55,13 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         return BuildStatusGeneratorMixin(mode, tags, builders, schedulers, branches, subject,
                                          add_logs, add_patch)
 
+    def test_generate_name(self):
+        g = self.create_generator(tags=['tag1', 'tag2'], builders=['b1', 'b2'],
+                                  schedulers=['s1', 's2'], branches=['b1', 'b2'])
+        self.assertEqual(g.generate_name(),
+                         'BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_' +
+                         'schedulers_s1+s2_branches_b1+b2failing_passing_warnings')
+
     @parameterized.expand([
         ('tags', 'tag'),
         ('tags', 1),
@@ -69,6 +76,17 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         kwargs = {arg_name: arg_value}
         g = self.create_generator(**kwargs)
         with self.assertRaisesConfigError('must be a list or None'):
+            g.check()
+
+    @parameterized.expand([
+        ('unknown_str', 'unknown', 'not a valid mode'),
+        ('unknown_list', ['unknown'], 'not a valid mode'),
+        ('unknown_list_two', ['unknown', 'failing'], 'not a valid mode'),
+        ('all_in_list', ['all', 'failing'], 'must be passed in as a separate string'),
+    ])
+    def test_tag_check_raises(self, name, mode, expected_exception):
+        g = self.create_generator(mode=mode)
+        with self.assertRaisesConfigError(expected_exception):
             g.check()
 
     def test_subject_newlines_not_allowed(self):
@@ -231,3 +249,51 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
 
     def test_is_message_needed_mode_change_ignores_same_result_in_sequence2(self):
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
+
+    @parameterized.expand([
+        ('bool_true', True, 'step', 'log', True),
+        ('bool_false', False, 'step', 'log', False),
+        ('match_by_log_name', ['log'], 'step', 'log', True),
+        ('no_match_by_log_name', ['not_existing'], 'step', 'log', False),
+        ('match_by_log_step_name', ['step.log'], 'step', 'log', True),
+        ('no_match_by_log_step_name', ['step1.log1'], 'step', 'log', False),
+    ])
+    def test_should_attach_log(self, name, add_logs, log_step_name, log_name, expected_result):
+        g = self.create_generator(add_logs=add_logs)
+        log = {'stepname': log_step_name, 'name': log_name}
+        self.assertEqual(g._should_attach_log(log), expected_result)
+
+    @parameterized.expand([
+        ('both_none', None, None, (None, False)),
+        ('old_none', None, 'type', ('type', True)),
+        ('new_none', 'type', None, ('type', False)),
+        ('same', 'type', 'type', ('type', True)),
+        ('different', 'type1', 'type2', ('type1', False)),
+    ])
+    def test_merge_msgtype(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_msgtype(old, new), expected_result)
+
+    @parameterized.expand([
+        ('both_none', None, None, None),
+        ('old_none', None, 'sub', 'sub'),
+        ('new_none', 'sub', None, 'sub'),
+        ('same', 'sub', 'sub', 'sub'),
+        ('different', 'sub1', 'sub2', 'sub1'),
+    ])
+    def test_merge_subject(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_subject(old, new), expected_result)
+
+    @parameterized.expand([
+        ('both_none', None, None, (None, True)),
+        ('old_none', None, 'body', ('body', True)),
+        ('new_none', 'body', None, ('body', True)),
+        ('both_str', 'body1\n', 'body2\n', ('body1\nbody2\n', True)),
+        ('both_list', ['body1'], ['body2'], (['body1', 'body2'], True)),
+        ('both_dict', {'v': 'body1'}, {'v': 'body2'}, ({'v': 'body1'}, False)),
+        ('str_list', ['body1'], 'body2', (['body1'], False)),
+    ])
+    def test_merge_body(self, name, old, new, expected_result):
+        g = self.create_generator()
+        self.assertEqual(g._merge_body(old, new), expected_result)

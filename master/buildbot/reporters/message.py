@@ -164,6 +164,33 @@ class MessageFormatterBase(util.ComparableMixin):
     def render_message_dict(self, master, context):
         """Generate a buildbot reporter message and return a dictionary
            containing the message body, type and subject."""
+
+        ''' This is an informal description of what message dictionaries are expected to be
+            produced. It is an internal API and expected to change even within bugfix releases, if
+            needed.
+
+            The message dictionary contains the 'body', 'type' and 'subject' keys:
+
+              - 'subject' is a string that defines a subject of the message. It's not necessarily
+                used on all reporters. It may be None.
+
+              - 'type' must be 'plain', 'html' or 'json'.
+
+              - 'body' is the content of the message. It may be None. The type of the data depends
+                on the value of the 'type' parameter:
+
+                - 'plain': Must be a string
+
+                - 'html': Must be a string
+
+                - 'json': Must be a non-encoded jsonnable value. The root element must be either
+                  of dictionary, list or string. This must not change during all invocations of
+                  a particular instance of the formatter.
+
+            In case of a report being created for multiple builds (e.g. in the case of a buildset),
+            the values returned by message formatter are concatenated. If this is not possible
+            (e.g. if the body is a dictionary), any subsequent messages are ignored.
+        '''
         yield self.buildAdditionalContext(master, context)
         context.update(self.context)
 
