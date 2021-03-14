@@ -13,6 +13,8 @@ Release Notes
 Buildbot ``3.0.0`` ( ``2021-03-08`` )
 =====================================
 
+This release includes all changes up to Buildbot ``2.10.2``.
+
 Bug fixes
 ---------
 
