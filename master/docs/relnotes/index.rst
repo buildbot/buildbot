@@ -10,6 +10,17 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.10.3`` ( ``2021-03-14`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed special character handling in avatar email URLs.
+- Added missing report generators to the Buildbot plugin database (:issue:`5892`)
+- Fixed non-default mode support in ``BuildSetStatusGenerator``.
+
+
 Buildbot ``2.10.2`` ( ``2021-03-07`` )
 ======================================
 
