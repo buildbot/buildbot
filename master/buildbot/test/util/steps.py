@@ -258,6 +258,14 @@ class BuildStepMixin:
                                            duration_ns))
         step.addTestResult = add_test_result
 
+        self._got_build_data = {}
+
+        def set_build_data(name, value, source):
+            self._got_build_data[name] = (value, source)
+            return defer.succeed(None)
+
+        step.setBuildData = set_build_data
+
         # expectations
 
         self.exp_result = None
@@ -265,10 +273,12 @@ class BuildStepMixin:
         self.exp_properties = {}
         self.exp_missing_properties = []
         self.exp_logfiles = {}
+        self._exp_logfiles_stderr = {}
         self.exp_hidden = False
         self.exp_exception = None
         self._exp_test_result_sets = []
         self._exp_test_results = []
+        self._exp_build_data = {}
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
@@ -308,6 +318,12 @@ class BuildStepMixin:
         Expect a logfile with the given contents
         """
         self.exp_logfiles[logfile] = contents
+
+    def expect_log_file_stderr(self, logfile, contents):
+        self._exp_logfiles_stderr[logfile] = contents
+
+    def expect_build_data(self, name, value, source):
+        self._exp_build_data[name] = (value, source)
 
     def expectHidden(self, hidden):
         """
@@ -380,20 +396,31 @@ class BuildStepMixin:
                     self.properties.getPropertySource(pn), ps,
                     "property {0!r} source has source {1!r}".format(
                         pn, self.properties.getPropertySource(pn)))
+
         for pn in self.exp_missing_properties:
             self.assertFalse(self.properties.hasProperty(pn), "unexpected property '{}'".format(pn))
+
         for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout
             if got != exp:
-                log.msg("Unexpected log output:\n" + got)
-                log.msg("Expected log output:\n" + exp)
-                raise AssertionError("Unexpected log output; see logs")
+                log.msg("Unexpected stdout log output:\n" + got)
+                log.msg("Expected stdout log output:\n" + exp)
+                raise AssertionError("Unexpected stdout log output; see logs")
+
+        for l, exp in self._exp_logfiles_stderr.items():
+            got = self.step.logs[l].stderr
+            if got != exp:
+                log.msg("Unexpected stderr log output:\n" + got)
+                log.msg("Expected stderr log output:\n" + exp)
+                raise AssertionError("Unexpected stderr log output; see logs")
+
         if self.exp_exception:
             self.assertEqual(
                 len(self.flushLoggedErrors(self.exp_exception)), 1)
 
         self.assertEqual(self._exp_test_result_sets, self._got_test_result_sets)
         self.assertEqual(self._exp_test_results, self._got_test_results)
+        self.assertEqual(self._exp_build_data, self._got_build_data)
 
         # XXX TODO: hidden
         # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)

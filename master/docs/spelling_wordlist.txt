@@ -256,6 +256,7 @@ dicts
 didn
 didn
 diff
+diffinfo
 diffs
 dirname
 dirwatcher
