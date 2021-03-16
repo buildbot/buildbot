@@ -166,7 +166,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         bldrid = yield self.getBuilderId()
         completed = yield self.master.data.get(
             ('builders', bldrid, 'buildrequests'),
-            [resultspec.Filter('complete', 'eq', [False])],
+            [resultspec.Filter('complete', 'eq', [True])],
             order=['-complete_at'], limit=1)
         if completed:
             return completed[0]['complete_at']
