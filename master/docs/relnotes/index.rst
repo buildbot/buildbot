@@ -10,6 +10,15 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.10.4`` ( ``2021-03-16`` )
+======================================
+
+Bug fixes
+---------
+
+- Updated Buildbot requirements to specify sqlalchemy 1.4 and newer as not supported yet.
+
+
 Buildbot ``2.10.3`` ( ``2021-03-14`` )
 ======================================
 
