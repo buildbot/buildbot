@@ -51,14 +51,14 @@ properties:
         description: id of the test result set that the test result belongs to.
         type: integer
     test_name?:
-        description: id of the test name
-        type: integer
+        description: the name of the test, if any
+        type: string
     test_code_path?:
         description: the code path associated to test, if any
-        type: integer
+        type: string
     line?:
         description: the number of the line in the code path that produced this result, if any
-        type: integer
+        type: string
     duration_ns?:
         description: the number of nanoseconds it took to perform the test, if available.
         type: integer
