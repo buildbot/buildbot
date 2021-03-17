@@ -9,8 +9,8 @@ Babel==2.9.0
 backports.functools-lru-cache==1.6.1
 blockdiag==2.0.1
 boto==2.49.0
-boto3==1.17.17
-botocore==1.20.17
+boto3==1.17.27
+botocore==1.20.27
 cffi==1.14.5
 click==7.1.2
 configparser==5.0.2
@@ -21,7 +21,7 @@ decorator==4.4.2
 dicttoxml==1.7.4
 docker==4.4.4
 docutils==0.16
-flake8==3.8.4
+flake8==3.9.0
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.2
@@ -40,22 +40,22 @@ markdown2==2.4.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mock==4.0.3
-moto==2.0.0
+moto==2.0.2
 olefile==0.46
 packaging==20.9
 parameterized==0.8.1
 pathlib2==2.3.5
 pbr==5.5.1
 pep8==1.7.1
-Pillow==8.1.0
+Pillow==8.1.2
 pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycodestyle==2.6.0
+pycodestyle==2.7.0
 pycparser==2.20
 pyenchant==3.2.0
-pyflakes==2.2.0
-pypugjs==5.9.8
+pyflakes==2.3.0
+pypugjs==5.9.9
 PyJWT==2.0.1
 pylint==2.6.0;
 pyOpenSSL==20.0.1
@@ -95,4 +95,4 @@ codecov==2.1.11
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==2.10.1
+buildbot-www==3.0.0
