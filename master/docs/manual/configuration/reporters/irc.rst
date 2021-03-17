@@ -203,7 +203,7 @@ Some of the commands currently available:
     ``worker``
         A worker is missing. A notification is also send when the previously reported missing worker connects again.
 
-    By default this command can be executed by anybody. However, consider limiting it with ``authz``, as enabling notifications in huge number of channels or private chats can cause some problems with your buildbot efficiency.
+    By default, this command can be executed by anybody. However, consider limiting it with ``authz``, as enabling notifications in huge number of channels or private chats can cause some problems with your buildbot efficiency.
 
 :samp:`help {COMMAND}`
     Describe a command.

@@ -19,7 +19,7 @@ There are a pair of steps named :bb:step:`FileUpload` and :bb:step:`FileDownload
 :bb:step:`FileUpload` moves a file *up to* the master, while :bb:step:`FileDownload` moves a file *down from* the master.
 
 As an example, let's assume that there is a step which produces an HTML file within the source tree that contains some sort of generated project documentation.
-And let's assume that we run nginx web server on buildmaster host for serving static files.
+And let's assume that we run nginx web server on the buildmaster host for serving static files.
 We want to move this file to the buildmaster, into a :file:`/usr/share/nginx/www/` directory, so it can be visible to developers.
 This file will wind up in the worker-side working directory under the name :file:`docs/reference.html`.
 We want to put it into the master-side :file:`/usr/share/nginx/www/ref.html`, and add a link to the HTML status to the uploaded file.

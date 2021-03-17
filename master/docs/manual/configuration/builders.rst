@@ -11,10 +11,10 @@ Builder Configuration
     :depth: 1
     :local:
 
-The :bb:cfg:`builders` configuration key is a list of objects giving configuration for the Builders.
-For more information on the function of Builders in Buildbot, see :ref:`the Concepts chapter <Concepts-Builder>`.
+The :bb:cfg:`builders` configuration key is a list of objects holding the configuration of the Builders.
+For more information on the Builders' function in Buildbot, see :ref:`the Concepts chapter <Concepts-Builder>`.
 The class definition for the builder configuration is in :file:`buildbot.config`.
-However there is a much simpler way to use it, so in the configuration file, its use looks like:
+However, there is a simpler way to use it and it looks like this:
 
 .. code-block:: python
 
@@ -27,13 +27,13 @@ However there is a much simpler way to use it, so in the configuration file, its
 ``BuilderConfig`` takes the following keyword arguments:
 
 ``name``
-    This specifies the Builder's name, which is used in status reports.
+    The name of the Builder, which is used in status reports.
 
 ``workername``
 
 ``workernames``
     These arguments specify the worker or workers that will be used by this Builder.
-    All workers names must appear in the :bb:cfg:`workers` configuration parameter.
+    All worker names must appear in the :bb:cfg:`workers` configuration parameter.
     Each worker can accommodate multiple builders.
     The ``workernames`` parameter can be a list of names, while ``workername`` can specify only one worker.
 
@@ -51,14 +51,14 @@ Other optional keys may be set on each ``BuilderConfig``:
 
 ``workerbuilddir``
     Specifies the name of a subdirectory (under the worker's configured base directory) in which everything related to this builder will be placed on the worker.
-    This is where checkouts, compiles, and tests are run.
+    This is where checkouts, compilations, and tests are run.
     If not set, defaults to ``builddir``.
     If a worker is connected to multiple builders that share the same ``workerbuilddir``, make sure the worker is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
 
 ``tags``
     If provided, this is a list of strings that identifies tags for the builder.
     Status clients can limit themselves to a subset of the available tags.
-    A common use for this is to add new builders to your setup (for a new module, or for a new worker) that do not work correctly yet and allow you to integrate them with the active builders.
+    A common use for this is to add new builders to your setup (for a new module or a new worker) that do not work correctly yet and allow you to integrate them with the active builders.
     You can tag these new builders with a ``test`` tag, make your main status clients ignore them, and have only private status clients pick them up.
     As soon as they work, you can move them over to the active tag.
 
@@ -85,7 +85,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
 ``locks``
     A list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting a :class:`Build` from this :class:`Builder`.
-    Alternatively this could be a renderable that returns this list depending on properties of related to a build that is just about to be created.
+    Alternatively, this could be a renderable that returns this list depending on properties related to the build that is just about to be created.
     This lets you defer picking the locks to acquire until it is known which :class:`Worker` a build would get assigned to.
     The properties available to the renderable include all properties that are set to the build before its first step excluding the properties that come from the build itself and the ``builddir`` property that comes from worker.
     The ``Locks`` will be released when the build is complete.
@@ -99,7 +99,7 @@ Other optional keys may be set on each ``BuilderConfig``:
     The environment variables will override anything in the worker's environment.
     Variables passed directly to a :class:`ShellCommand` will override variables of the same name passed to the Builder.
 
-    For example, if you have a pool of identical workers it is often easier to manage variables like :envvar:`PATH` from Buildbot rather than manually editing it inside of the workers' environment.
+    For example, if you have a pool of identical workers it is often easier to manage variables like :envvar:`PATH` from Buildbot rather than manually editing them in the workers' environment.
 
     .. code-block:: python
 
@@ -167,7 +167,7 @@ Sourcestamps are compatible if all of the below conditions are met:
 
 * Their codebase, branch, project, and repository attributes match exactly
 * Neither source stamp has a patch (e.g., from a try scheduler)
-* Either both source stamps are associated with changes, or neither are associated with changes but they have matching revisions.
+* Either both source stamps are associated with changes, or neither is associated with changes but they have matching revisions.
 
 .. index:: Builds; priority
 
@@ -176,7 +176,7 @@ Sourcestamps are compatible if all of the below conditions are met:
 Prioritizing Builds
 ~~~~~~~~~~~~~~~~~~~
 
-The :class:`BuilderConfig` parameter ``nextBuild`` can be use to prioritize build requests within a builder.
+The :class:`BuilderConfig` parameter ``nextBuild`` can be used to prioritize build requests within a builder.
 Note that this is orthogonal to :ref:`Prioritizing-Builders`, which controls the order in which builders are called on to start their builds.
 The details of writing such a function are in :ref:`Build-Priority-Functions`.
 
@@ -202,7 +202,7 @@ This method is used by frameworks which store the build config along side the so
 The drawback of this method is that it is difficult to extract statistics for similar builds.
 The standard dashboards are not working well due to the fact that all the builds are on the same builder.
 
-In order to overcome those drawbacks, Buildbot has the concept of virtual builder.
+In order to overcome these drawbacks, Buildbot has the concept of virtual builder.
 If a build has the property ``virtual_builder_name``, it will automatically attach to that builder instead of the original builder.
 That created virtual builder is not attached to any master and is only used for better sorting in the UI and better statistics.
 The original builder and worker configuration is still used for all other build behaviors.

@@ -11,7 +11,7 @@ Build properties are a generalized way to provide configuration information to b
     :depth: 1
     :local:
 
-Some build properties come from external sources and are set before the build begins; others are set during the build, and available for later steps.
+Some build properties come from external sources and are set before the build begins; others are set during the build and are available for later steps.
 The sources for properties are:
 
 :bb:cfg:`global configuration <properties>`
@@ -34,7 +34,7 @@ forced builds
     In particular, source steps set the `got_revision` property.
 
 If the same property is supplied in multiple places, the final appearance takes precedence.
-For example, a property set in a builder configuration will override one supplied by a scheduler.
+For example, a property set in a builder configuration will override the one supplied by the scheduler.
 
 Properties are stored internally in JSON format, so they are limited to basic types of data: numbers, strings, lists, and dictionaries.
 
@@ -83,7 +83,7 @@ The following build properties are set when the build is started, and are availa
     If the build was started from a scheduler, then this property will contain the name of that scheduler.
 
 ``builddir``
-    The absolute path of the base working directory on the worker, of the current builder.
+    The absolute path of the base working directory on the worker of the current builder.
 
 .. index:: single: Properties; builddir
 
@@ -159,7 +159,7 @@ You can specify a default value by passing a ``default`` keyword argument:
                                  util.Property('warnings', default='none')]))
 
 The default value is used when the property doesn't exist, or when the value is something Python regards as ``False``.
-The ``defaultWhenFalse`` argument can be set to ``False`` to force buildbot to use the default argument only if the parameter is not set:
+The ``defaultWhenFalse`` argument can be set to ``False`` to force Buildbot to use the default argument only if the parameter is not set:
 
 .. code-block:: python
 
@@ -209,7 +209,7 @@ The following selectors are supported.
 
 ``src``
     The key is a codebase and source stamp attribute, separated by a colon.
-    Note, it is ``%(src:<codebase>:<ssattr>)s`` syntax, which differs from other selectors.
+    Note, the syntax is ``%(src:<codebase>:<ssattr>)s``, which differs from other selectors.
 
 ``kw``
     The key refers to a keyword argument passed to ``Interpolate``.
@@ -219,14 +219,13 @@ The following selectors are supported.
     The key refers to a secret provided by a provider declared in :bb:cfg:`secretsProviders` .
 
 ``worker``
-    The key refers to a info item provided by :bb:cfg:`workers`.
+    The key refers to an info item provided by :bb:cfg:`workers`.
 
 The following ways of interpreting the value are available.
 
 ``-replacement``
     If the key exists, substitute its value; otherwise, substitute ``replacement``.
-    ``replacement`` may be empty (``%(prop:propname:-)s``).
-    This is the default.
+    ``replacement`` may be empty (default), ``%(prop:propname:-)s``.
 
 ``~replacement``
     Like ``-replacement``, but only substitutes the value of the key if it is something Python regards as ``True``.
@@ -262,7 +261,7 @@ Example:
 
 .. note::
 
-   We use ``%(src::branch)s`` in most of examples, because ``codebase`` is empty by default.
+   We use ``%(src::branch)s`` in most examples, because ``codebase`` is empty by default.
 
 Example:
 
@@ -277,15 +276,21 @@ Example:
         ]))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
-Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables), are given as subsequent arguments:
+Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables) are given as subsequent arguments:
 
 .. code-block:: python
 
-  TODO
+    f.addStep(steps.ShellCommand(
+        command=[
+            'echo',
+            util.Interpolate('%d warnings and %d errors',
+                             util.Property('warnings'),
+                             util.Property('errors'))
+        ]))
 
 .. note::
 
-   Like Python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
+   Like Python, you can use either positional interpolation *or* dictionary-style interpolation, but not both.
    Thus you cannot use a string like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
 .. index:: single: Properties; Renderer
@@ -296,7 +301,7 @@ Renderer
 ++++++++
 
 While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
-The ``renderer`` decorator creates a renderable object whose rendering is obtained by calling the decorated function when the step it's passed to begins.
+The ``renderer`` decorator creates a renderable object whose rendering is obtained by calling the decorated function when the step to which it's passed begins.
 The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.
 For example:
 
@@ -353,7 +358,7 @@ For example:
 
 .. note::
 
-    Config errors with Renderables may not always be caught via checkconfig
+    Config errors with Renderables may not always be caught via checkconfig.
 
 .. index:: single: Properties; Transform
 
@@ -363,7 +368,7 @@ Transform
 +++++++++
 
 ``Transform`` is an alternative to ``renderer``.
-While ``renderer`` is useful for creating new renderables, ``Transform`` is easier to use when you want to transform or combine the renderings of preexisting ones.
+While ``renderer`` is useful for creating new renderables, ``Transform`` is easier to use when you want to transform or combine the renderings of preexisting renderables.
 
 ``Transform`` takes a function and any number of positional and keyword arguments.
 The function must either be a callable object or a renderable producing one.
@@ -389,7 +394,7 @@ This works whether ``my_path`` is an ordinary string or a renderable.
 FlattenList
 +++++++++++
 
-If nested list should be flatten for some renderables, FlattenList could be used.
+If a nested list should be flattened for some renderables, FlattenList can be used.
 For example:
 
 .. code-block:: python
@@ -400,7 +405,7 @@ For example:
         descriptionDone=util.FlattenList([ 'make ', [ 'done' ]])
     ))
 
-``descriptionDone`` would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
+``descriptionDone`` will be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
 This is useful when a list-returning property is used in renderables.
 
 .. note::
@@ -474,7 +479,7 @@ If the options described above are not sufficient, more complex substitutions ca
 
 The :class:`~buildbot.interfaces.IRenderable` interface is simple - objects must provide a `getRenderingFor` method.
 The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return the rendered value or a deferred firing with one.
-Pass instances of the class anywhere other renderables are accepted.
+You can pass instances of the class anywhere other renderables are accepted.
 For example:
 
 .. code-block:: python
@@ -518,7 +523,7 @@ This is equivalent to:
         return time.clock()
     ShellCommand(command=['make', util.Interpolate('TIME=%(kw:now)s', now=now)])
 
-Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a function decorated with :func:`renderer` can be used directly.
+Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you like), whereas a function decorated with :func:`renderer` can be used directly.
 
 
 .. _URLForBuild:
@@ -527,7 +532,7 @@ URL for build
 +++++++++++++
 
 Its common to need to use the URL for the build in a step.
-For this you can use a special custom renderer as following:
+For this, you can use a special custom renderer as following:
 
 .. code-block:: python
 
@@ -542,7 +547,7 @@ Renderable Comparison
 +++++++++++++++++++++
 
 Its common to need to make basic comparison or calculation with properties.
-The :class:`Property` and :class:`Interpolate` objects contain necessary operator overload to make this possible
+The :class:`Property` and :class:`Interpolate` objects contain necessary operator overloads to make this possible.
 
 .. code-block:: python
 
@@ -560,4 +565,4 @@ In previous code, the value of the comparison can only be computed at runtime, s
 
 'in' operator cannot be overloaded, so we add a simple ``in_`` method to :class:`Property` and :class:`Interpolate`.
 
-Currently supported operators are ``, ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``+``, ``-``, ``*``, ``/``, ``//``, ``%``.
+Currently supported operators are ``in_``, ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``+``, ``-``, ``*``, ``/``, ``//``, ``%``.

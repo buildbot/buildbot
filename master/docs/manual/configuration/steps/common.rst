@@ -12,46 +12,46 @@ Others are used to specify which `Locks` (see :ref:`Interlocks`) should be acqui
 Arguments common to all :class:`BuildStep` subclasses:
 
 ``name``
-    the name used to describe the step on the status display.
+    The name used to describe the step on the status display.
     Since 0.9.8, this argument might be renderable.
 
 .. index:: Buildstep Parameter; haltOnFailure
 
 ``haltOnFailure``
-    if ``True``, a ``FAILURE`` of this build step will cause the build to halt immediately.
-    Steps with ``alwaysRun=True`` are still run.
+    If ``True``, a ``FAILURE`` of this build step will cause the build to halt immediately.
+    Any steps with ``alwaysRun=True`` will still be run.
     Generally speaking, ``haltOnFailure`` implies ``flunkOnFailure`` (the default for most :class:`BuildStep`\s).
-    In some cases, particularly series of tests, it makes sense to ``haltOnFailure`` if something fails early on but not ``flunkOnFailure``.
+    In some cases, particularly with a series of tests, it makes sense to ``haltOnFailure`` if something fails early on but not ``flunkOnFailure``.
     This can be achieved with ``haltOnFailure=True``, ``flunkOnFailure=False``.
 
 .. index:: Buildstep Parameter; flunkOnWarnings
 
 ``flunkOnWarnings``
-    when ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the overall build as ``FAILURE``.
+    When ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the overall build as ``FAILURE``.
     The remaining steps will still be executed.
 
 .. index:: Buildstep Parameter; flunkOnFailure
 
 ``flunkOnFailure``
-    when ``True``, a ``FAILURE`` of this build step will mark the overall build as a ``FAILURE``.
+    When ``True``, a ``FAILURE`` of this build step will mark the overall build as a ``FAILURE``.
     The remaining steps will still be executed.
 
 .. index:: Buildstep Parameter; warnOnWarnings
 
 ``warnOnWarnings``
-    when ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the overall build as having ``WARNINGS``.
+    When ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the overall build as having ``WARNINGS``.
     The remaining steps will still be executed.
 
 .. index:: Buildstep Parameter; warnOnFailure
 
 ``warnOnFailure``
-    when ``True``, a ``FAILURE`` of this build step will mark the overall build as having ``WARNINGS``.
+    When ``True``, a ``FAILURE`` of this build step will mark the overall build as having ``WARNINGS``.
     The remaining steps will still be executed.
 
 .. index:: Buildstep Parameter; alwaysRun
 
 ``alwaysRun``
-    if ``True``, this build step will always be run, even if a previous buildstep with ``haltOnFailure=True`` has failed.
+    If ``True``, this build step will always be run, even if a previous buildstep with ``haltOnFailure=True`` has failed.
 
 .. index:: Buildstep Parameter; description
 
@@ -104,8 +104,8 @@ Arguments common to all :class:`BuildStep` subclasses:
 
 ``hideStepIf``
     A step can be optionally hidden from the waterfall and build details web pages.
-    To do this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes two parameters -- the results and the :class:`BuildStep` -- and returns a boolean value.
-    Steps are always shown while they execute, however after the step has finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden.
+    To do this, set the step's ``hideStepIf`` to a boolean value, or a function that takes two parameters (the results and the :class:`BuildStep`) and returns a boolean value.
+    Steps are always shown while they execute; however, after the step has finished, this parameter is evaluated (if it's a function), and if the value is true, the step is hidden.
     For example, in order to hide the step if the step has been skipped:
 
     .. code-block:: python
@@ -115,8 +115,8 @@ Arguments common to all :class:`BuildStep` subclasses:
 .. index:: Buildstep Parameter; locks
 
 ``locks``
-    a list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :py:class:`BuildStep`.
-    Alternatively this could be a renderable that returns this list during build execution.
+    A list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :py:class:`BuildStep`.
+    Alternatively, this could be a renderable that returns this list during build execution.
     This lets you defer picking the locks to acquire until the build step is about to start running.
     The ``Locks`` will be released when the step is complete.
     Note that this is a list of actual :class:`Lock` instances, not names.
@@ -133,9 +133,9 @@ Arguments common to all :class:`BuildStep` subclasses:
 
 ``updateBuildSummaryPolicy``
     The policy to use to propagate the step summary to the build summary.
-    If False, the build summary will never include step summary
-    If True, the build summary will always include step summary
-    If set to a list (e.g. ``[FAILURE, EXCEPTION]``), it will propagate if the step results id is present in that list.
+    If False, the build summary will never include the step summary.
+    If True, the build summary will always include the step summary.
+    If set to a list (e.g. ``[FAILURE, EXCEPTION]``), the step summary will be propagated if the step results id is present in that list.
     If not set or None, the default is computed according to other BuildStep parameters using following algorithm:
 
     .. code-block:: python
@@ -146,4 +146,4 @@ Arguments common to all :class:`BuildStep` subclasses:
         if self.warnOnWarnings or self.flunkOnWarnings:
             self.updateBuildSummaryPolicy.append(WARNINGS)
 
-    Note that in a custom step, if :py:meth:`BuildStep.getResultSummary` is overridden and setting the ``build`` summary, ``updateBuildSummaryPolicy`` is ignored and ``build`` summary will be used regardless.
+    Note that in a custom step, if :py:meth:`BuildStep.getResultSummary` is overridden and sets the ``build`` summary, ``updateBuildSummaryPolicy`` is ignored and the ``build`` summary will be used regardless.

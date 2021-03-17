@@ -28,9 +28,9 @@ To avoid stripping, add ``strip=False``.
 
 The ``property`` argument can be specified as an :ref:`Interpolate` object, allowing the property name to be built from other property values.
 
-Passing ``includeStdout=False`` (default ``True``) stops capture from stdout.
+Passing ``includeStdout=False`` (defaults to ``True``) stops capture from stdout.
 
-Passing ``includeStderr=True`` (default ``False``) allows capture from stderr.
+Passing ``includeStderr=True`` (defaults to ``False``) allows capture from stderr.
 
 The more advanced usage allows you to specify a function to extract properties from the command output.
 Here you can use regular expressions, string interpolation, or whatever you would like.

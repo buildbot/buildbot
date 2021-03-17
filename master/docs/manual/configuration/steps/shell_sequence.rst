@@ -15,15 +15,14 @@ We have two ways to handle that:
 
 * Create three :bb:step:`ShellCommand` instances, but this loads the build UI unnecessarily.
 
-:bb:step:`ShellSequence` is a class to execute not one but a sequence of shell commands during a build.
+:bb:step:`ShellSequence` is a class that executes not one but a sequence of shell commands during a build.
 It takes as argument a renderable, or list of commands which are :class:`~buildbot.steps.shellsequence.ShellArg` objects.
 Each such object represents a shell invocation.
 
 The single :bb:step:`ShellSequence` argument aside from the common parameters is:
 
 ``commands``
-
-A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderable the returns a list of :class:`~buildbot.steps.shellsequence.ShellArg` objects.
+    A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderable that returns a list of :class:`~buildbot.steps.shellsequence.ShellArg` objects.
 
 .. code-block:: python
 
@@ -38,7 +37,7 @@ A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderabl
             util.ShellArg(command=['make', 'install'], logname='make install')
         ]))
 
-All these commands share the same configuration of ``environment``, ``workdir`` and ``pty`` usage that can be setup the same way as in :bb:step:`ShellCommand`.
+All these commands share the same configuration of ``environment``, ``workdir`` and ``pty`` usage that can be set up the same way as in :bb:step:`ShellCommand`.
 
 .. py:class:: buildbot.steps.shellsequence.ShellArg(self, command=None, logname=None, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=False, warnOnWarnings=False, warnOnFailure=False)
 
@@ -64,7 +63,7 @@ The two :bb:step:`ShellSequence` methods below tune the behavior of how the list
 
         Determine whether the command ``oneCmd`` should be executed.
         If ``shouldRunTheCommand`` returns ``False``, the result of the command will be recorded as SKIPPED.
-        The default methods skips all empty strings and empty lists.
+        The default method skips all empty strings and empty lists.
 
     .. py:method:: getFinalState()
 

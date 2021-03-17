@@ -15,9 +15,9 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param identity_file: (optional) Gerrit SSH identity file.
    :param int port: (optional) Gerrit SSH server's port (default: 29418)
    :param reviewCB: (optional) Called each time a build finishes. Build properties are available. Can be a deferred.
-   :param reviewArg: (optional) argument passed to the review callback.
+   :param reviewArg: (optional) Argument passed to the review callback.
 
-                    If :py:func:`reviewCB` callback is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
+                    :: If :py:func:`reviewCB` callback is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
                     It should return a dictionary:
 
                     .. code-block:: python
@@ -40,7 +40,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                        from buildbot.plugins import util
 
    :param startCB: (optional) Called each time a build is started. Build properties are available. Can be a deferred.
-   :param startArg: (optional) argument passed to the start callback.
+   :param startArg: (optional) Argument passed to the start callback.
 
                     If :py:func:`startCB` is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
                     It should return a dictionary:
@@ -59,7 +59,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                        :language: python
 
    :param summaryCB: (optional) Called each time a buildset finishes. Each build in the buildset has properties available. Can be a deferred.
-   :param summaryArg: (optional) argument passed to the summary callback.
+   :param summaryArg: (optional) Argument passed to the summary callback.
 
                       If :py:func:`summaryCB` callback is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
                       The message and labels should be a summary of all the builds within the buildset.
@@ -78,10 +78,10 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                          :pyobject: gerritSummaryCB
                          :language: python
 
-   :param builders: (optional) list of builders to send results for.
+   :param builders: (optional) List of builders to send results for.
                     This method allows to filter results for a specific set of builder.
                     By default, or if builders is None, then no filtering is performed.
-   :param notify: (optional) control who gets notified by Gerrit once the status is posted.
+   :param notify: (optional) Control who gets notified by Gerrit once the status is posted.
                   The possible values for `notify` can be found in your version of the
                   Gerrit documentation for the `gerrit review` command.
 

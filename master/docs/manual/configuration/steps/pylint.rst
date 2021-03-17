@@ -19,5 +19,4 @@ There is no default.
 This step takes the following arguments:
 
 ``store_results``
-   (optional) Boolean, ``true`` if the test results should be stored in the test database.
-   The default value is ``true``.
+   (Optional, defaults to ``True``) If ``True``, the test results will be stored in the test database.

@@ -9,7 +9,7 @@ SetProperties
 
 :bb:step:`SetProperties` takes a dictionary to be turned into build properties.
 
-It is similar to :bb:step:`SetProperty`, and meant to be used with a :ref:`renderer` function or a dictionary of  :ref:`Interpolate` objects which allows the value to be built from other property values:
+It is similar to :bb:step:`SetProperty`, and meant to be used with a :ref:`renderer` function or a dictionary of :ref:`Interpolate` objects which allows the value to be built from other property values:
 
 .. code-block:: python
 

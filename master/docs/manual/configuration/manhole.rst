@@ -6,7 +6,7 @@ Manhole
 -------
 
 Manhole is an interactive Python shell which allows full access to the Buildbot master instance.
-It is probably only useful for buildbot developers.
+It is probably only useful for Buildbot developers.
 
 Using Manhole requires ``cryptography`` and ``pyasn1`` python packages to be installed.
 These are not part of the normal Buildbot dependencies.

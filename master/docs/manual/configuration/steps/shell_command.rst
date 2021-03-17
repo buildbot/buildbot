@@ -29,15 +29,15 @@ However, if you're running a batch file, the error level does not get propagated
 The :bb:step:`ShellCommand` arguments are:
 
 ``command``
-    a list of strings (preferred) or single string (discouraged) which specifies the command to be run.
+    A list of strings (preferred) or single string (discouraged) which specifies the command to be run.
     A list of strings is preferred because it can be used directly as an argv array.
     Using a single string (with embedded spaces) requires the worker to pass the string to :command:`/bin/sh` for interpretation, which raises all sorts of difficult questions about how to escape or interpret shell metacharacters.
 
     If ``command`` contains nested lists (for example, from a properties substitution), then that list will be flattened before it is executed.
 
 ``workdir``
-    All ShellCommands are run by default in the ``workdir``, which defaults to the :file:`build` subdirectory of the worker builder's base directory.
-    The absolute path of the workdir will thus be the worker's basedir (set as an option to ``buildbot-worker create-worker``, :ref:`Creating-a-worker`) plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`) plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
+    All :class:`ShellCommand`\s are run by default in the ``workdir``, which defaults to the :file:`build` subdirectory of the worker builder's base directory.
+    The absolute path of the workdir will thus be the worker's basedir (set as an option to ``buildbot-worker create-worker``, :ref:`Creating-a-worker`), plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`), plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
 
     For example:
 
@@ -49,7 +49,7 @@ The :bb:step:`ShellCommand` arguments are:
                                      workdir="build/tests"))
 
 ``env``
-    a dictionary of environment strings which will be added to the child command's environment.
+    A dictionary of environment strings which will be added to the child command's environment.
     For example, to run tests with a different i18n language setting, you might use:
 
     .. code-block:: python
@@ -71,7 +71,7 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PYTHONPATH': "/home/buildbot/lib/python"}))
 
-    To avoid the need of concatenating path together in the master config file, if the value is a list, it will be joined together using the right platform dependent separator.
+    To avoid the need of concatenating paths together in the master config file, if the value is a list, it will be joined together using the right platform dependent separator.
 
     Those variables support expansion so that if you just want to prepend :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
     Variables that don't exist on the worker will be replaced by ``""``.
@@ -89,22 +89,21 @@ The :bb:step:`ShellCommand` arguments are:
     In particular, numeric properties such as ``buildnumber`` must be substituted using :ref:`Interpolate`.
 
 ``want_stdout``
-    if ``False``, stdout from the child process is discarded rather than being sent to the buildmaster for inclusion in the step's :class:`LogFile`.
+    If ``False``, stdout from the child process is discarded rather than being sent to the buildmaster for inclusion in the step's :class:`LogFile`.
 
 ``want_stderr``
-    like ``want_stdout`` but for :file:`stderr`.
-    Note that commands run through a PTY do not have separate :file:`stdout`/:file:`stderr` streams: both are merged into :file:`stdout`.
+    Like ``want_stdout`` but for :file:`stderr`.
+    Note that commands that run through a PTY do not have separate :file:`stdout`/:file:`stderr` streams, and both are merged into :file:`stdout`.
 
 ``usePTY``
-    Should this command be run in a ``pty``?
-    ``False`` by default.
+    If ``True``, this command will be run in a ``pty`` (defaults to ``False``).
     This option is not available on Windows.
 
     In general, you do not want to use a pseudo-terminal.
     This is *only* useful for running commands that require a terminal - for example, testing a command-line application that will only accept passwords read from a terminal.
     Using a pseudo-terminal brings lots of compatibility problems, and prevents Buildbot from distinguishing the standard error (red) and standard output (black) streams.
 
-    In previous versions, the advantage of using a pseudo-terminal was that ``grandchild`` processes were more likely to be cleaned up if the build was interrupted or times out.
+    In previous versions, the advantage of using a pseudo-terminal was that ``grandchild`` processes were more likely to be cleaned up if the build was interrupted or it timed out.
     This occurred because using a pseudo-terminal incidentally puts the command into its own process group.
 
     As of Buildbot-0.8.4, all commands are placed in process groups, and thus grandchild processes will be cleaned up properly.
@@ -152,31 +151,31 @@ The :bb:step:`ShellCommand` arguments are:
     The default is ``False``.
 
 ``timeout``
-    if the command fails to produce any output for this many seconds, it is assumed to be locked up and will be killed.
+    If the command fails to produce any output for this many seconds, it is assumed to be locked up and will be killed.
     This defaults to 1200 seconds.
     Pass ``None`` to disable.
 
 ``maxTime``
-    if the command takes longer than this many seconds, it will be killed.
+    If the command takes longer than this many seconds, it will be killed.
     This is disabled by default.
 
 ``logEnviron``
-    If this option is ``True`` (the default), then the step's logfile will describe the environment variables on the worker.
-    In situations where the environment is not relevant and is long, it may be easier to set ``logEnviron=False``.
+    If ``True`` (the default), then the step's logfile will describe the environment variables on the worker.
+    In situations where the environment is not relevant and is long, it may be easier to set it to ``False``.
 
 ``interruptSignal``
-    If the command should be interrupted (either by buildmaster or timeout etc.), what signal should be sent to the process, specified by name.
-    By default this is "KILL" (9).
+    This is the signal (specified by name) that should be sent to the process when the command needs to be interrupted (either by the buildmaster, a timeout, etc.).
+    By default, this is "KILL" (9).
     Specify "TERM" (15) to give the process a chance to cleanup.
-    This functionality requires a 0.8.6 worker or newer.
+    This functionality requires a version 0.8.6 worker or newer.
 
 ``sigtermTime``
 
     If set, when interrupting, try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interuptSignal``.
-    If None, ``interruptSignal`` will be fired immediately on interrupt.
+    If None, ``interruptSignal`` will be fired immediately upon interrupt.
 
 ``initialStdin``
-    If the command expects input on stdin, that can be supplied as a string with this parameter.
+    If the command expects input on stdin, the input can be supplied as a string with this parameter.
     This value should not be excessively large, as it is handled as a single string throughout Buildbot -- for example, do not pass the contents of a tarball with this parameter.
 
 ``decodeRC``

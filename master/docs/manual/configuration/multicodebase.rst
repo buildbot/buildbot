@@ -7,9 +7,9 @@ What if an end-product is composed of code from several codebases?
 Changes may arrive from different repositories within the tree-stable-timer period.
 Buildbot will not only use the source-trees that contain changes but also needs the remaining source-trees to build the complete product.
 
-For this reason a :ref:`Scheduler<Concepts-Scheduler>` can be configured to base a build on a set of several source-trees that can (partly) be overridden by the information from incoming :class:`Change`\s.
+For this reason, a :ref:`Scheduler<Concepts-Scheduler>` can be configured to base a build on a set of several source-trees that can (partly) be overridden by the information from incoming :class:`Change`\s.
 
-As described :ref:`above <Source-Stamps>`, the source for each codebase is identified by a source stamp, containing its repository, branch and revision.
+As described in :ref:`Source-Stamps <Source-Stamps>`, the source for each codebase is identified by a source stamp, containing its repository, branch and revision.
 A full build set will specify a source stamp set describing the source to use for each codebase.
 
 Configuring all of this takes a coordinated approach.  A complete multiple repository configuration consists of:
@@ -39,7 +39,7 @@ multiple *source steps* - one for each codebase
 
     .. note::
 
-        Ensure you specify the codebase within your source step's Interpolate() calls (ex. ``http://.../svn/%(src:codebase:branch)s)``.
+        Ensure you specify the codebase within your source step's Interpolate() calls (e.g. ``http://.../svn/%(src:codebase:branch)s``).
         See :ref:`Interpolate` for details.
 
 .. warning::

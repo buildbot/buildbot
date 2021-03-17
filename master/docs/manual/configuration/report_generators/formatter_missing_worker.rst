@@ -35,7 +35,7 @@ The constructor to that class takes the same arguments as MessageFormatter, minu
         :param ctx: the context dictionary to enhance
         :returns: optionally deferred
 
-        default implementation will add ``self.ctx`` into the current template context
+        The default implementation will add ``self.ctx`` into the current template context
 
 
 The default ``ctx`` for the missing worker email is made of:
@@ -53,14 +53,6 @@ The default ``ctx`` for the missing worker email is made of:
         List of emails to be notified for this worker.
 
     ``last_connection``
-        String describing the approximate the time of last connection for this worker.
+        String describing the approximate time of last connection for this worker.
 
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
-
-
-
-
-
-
-
-

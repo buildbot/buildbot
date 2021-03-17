@@ -7,17 +7,17 @@ MailNotifier
 
 .. py:class:: MailNotifier
 
-The Buildbot can send email when builds finish.
+Buildbot can send emails when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
 It is also quite common to send a message to a mailing list (usually named `builds` or similar) about every build.
 
 The :class:`MailNotifier` reporter is used to accomplish this.
-You configure it by specifying who mail should be sent to, under what circumstances mail should be sent, and how to deliver the mail.
-It can be configured to only send out mail for certain builders, and only send messages when the build fails, or when the builder transitions from success to failure.
+You configure it by specifying who should receive mail, under what circumstances mail should be sent, and how to deliver the mail.
+It can be configured to only send out mail for certain builders, and only send them when a build fails or when the builder transitions from success to failure.
 It can also be configured to include various build logs in each message.
 
 If a proper lookup function is configured, the message will be sent to the "interested users" list (:ref:`Doing-Things-With-Users`), which includes all developers who made changes in the build.
-By default, however, Buildbot does not know how to construct an email addressed based on the information from the version control system.
+By default, however, Buildbot does not know how to construct an email address based on the information from the version control system.
 See the ``lookup`` argument, below, for more information.
 
 You can add additional, statically-configured, recipients with the ``extraRecipients`` argument.
@@ -39,7 +39,7 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
     c['services'].append(mn)
 
 To get a simple one-message-per-build (say, for a mailing list), use the following form instead.
-This form does not send mail to individual developers (and thus does not need the ``lookup=`` argument, explained below), instead it only ever sends mail to the `extra recipients` named in the arguments:
+This form does not send mail to individual developers (and thus does not need the ``lookup=`` argument, explained below); instead it only ever sends mail to the `extra recipients` named in the arguments:
 
 .. code-block:: python
 
@@ -75,10 +75,10 @@ If you want to require Transport Layer Security (TLS), then you can also set ``u
 
 .. note::
 
-   If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in the log while using TLS, this can be due *either* to the server not supporting TLS or to a missing `PyOpenSSL`_ package on the BuildMaster system.
+   If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in the log while using TLS, this can be due *either* to the server not supporting TLS or a missing `PyOpenSSL`_ package on the BuildMaster system.
 
-In some cases it is desirable to have different information then what is provided in a standard MailNotifier message.
-For this purpose MailNotifier provides the argument ``messageFormatter`` (an instance of ``MessageFormatter``) which allows for the creation of messages with unique content.
+In some cases, it is desirable to have different information than what is provided in a standard MailNotifier message.
+For this purpose, MailNotifier provides the argument ``messageFormatter`` (an instance of ``MessageFormatter``), which allows for creating messages with unique content.
 
 For example, if only short emails are desired (e.g., for delivery to phones):
 
@@ -95,7 +95,7 @@ For example, if only short emails are desired (e.g., for delivery to phones):
                                 extraRecipients=['listaddr@example.org'],
                                 generators=[generator])
 
-Another example of a function delivering a customized html email is given below:
+Another example of a function delivering a customized HTML email is given below:
 
 .. code-block:: python
 
@@ -107,7 +107,7 @@ Another example of a function delivering a customized html email is given below:
     {% for step in build['steps'] %}
     <p> {{ step['name'] }}: {{ step['results'] }}</p>
     {% endfor %}
-    <p><b> -- The Buildbot</b></p>
+    <p><b> -- Buildbot</b></p>
     '''
 
     generator = reporters.BuildStatusGenerator(
@@ -143,7 +143,7 @@ MailNotifier arguments
     It is a good idea to create a small mailing list and deliver to that, then let subscribers come and go as they please.
 
 ``generators``
-    (list)
+    (list).
     A list of instances of ``IReportGenerator`` which defines the conditions of when the messages will be sent and contents of them.
     See :ref:`Report-Generators` for more information.
 
@@ -159,12 +159,12 @@ MailNotifier arguments
 
 ``useTls``
     (boolean).
-    When this argument is ``True`` (default is ``False``) ``MailNotifier`` requires that STARTTLS encryption is used for the connection with the ``relayhost``.
+    When this argument is ``True`` (default is ``False``), ``MailNotifier`` requires that STARTTLS encryption is used for the connection with the ``relayhost``.
     Authentication is required for STARTTLS so the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
 
 ``useSmtps``
     (boolean).
-    When this argument is ``True`` (default is ``False``) ``MailNotifier`` connects to ``relayhost`` over an encrypted SSL/TLS connection.
+    When this argument is ``True`` (default is ``False``), ``MailNotifier`` connects to ``relayhost`` over an encrypted SSL/TLS connection.
     This configuration is typically used over port 465.
 
 ``smtpUser``
@@ -196,12 +196,12 @@ MailNotifier arguments
 ``extraHeaders``
     (dictionary).
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
-    Both the keys and the values may be a `Interpolate` instance.
+    Both the keys and the values may be an `Interpolate` instance.
 
 ``watchedWorkers``
-    This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
-    The value of ``watchedWorkers`` can also be set to *all* (default) or ``None``. You also need to specify email address to which the notification is sent in the worker configuration.
+    This is a list of names of workers, which should be watched. In case a worker goes missing, a notification is sent.
+    The value of ``watchedWorkers`` can also be set to *all* (default) or ``None``. You also need to specify an email address to which the notification is sent in the worker configuration.
 
 ``dumpMailsToLog``
     If set to ``True``, all completely formatted mails will be dumped to the log before being sent. This can be useful to debug problems with your mail provider.
-    Be sure to only turn this on if you really need it, especially if you attach logs to emails. This can dump sensitive information to logs, and make them very large.
+    Be sure to only turn this on if you really need it, especially if you attach logs to emails. This can dump sensitive information to logs and make them very large.

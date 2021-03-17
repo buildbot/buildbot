@@ -13,7 +13,7 @@ Do not run the buildmaster as ``root``!
 
 You need to choose a directory for the buildmaster, called the ``basedir``.
 This directory will be owned by the buildmaster.
-It will contain configuration, the database, and status information - including logfiles.
+It will contain the configuration, database, and status information - including logfiles.
 On a large buildmaster this directory will see a lot of activity, so it should be on a disk with adequate space and speed.
 
 Once you've picked a directory, use the ``buildbot create-master`` command to create the directory and populate it with startup files:
@@ -66,7 +66,7 @@ You can also type ``buildbot create-master --help`` for an up-to-the-moment summ
 
 .. option:: --log-size
 
-    This is the size in bytes when to rotate the Twisted log files.
+    This is the size in bytes when exceeded to rotate the Twisted log files.
     The default is 10MiB.
 
 .. option:: --log-count

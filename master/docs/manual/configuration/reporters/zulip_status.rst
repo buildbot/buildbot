@@ -14,11 +14,11 @@ ZulipStatusPush
     c['services'].append(zs)
 
 :class:`ZulipStatusPush` sends build status using `The Zulip API <https://zulipchat.com/api/>`_.
-The build status is sent to a user as a private message or in a stream in Zulip,
+The build status is sent to a user as a private message or in a stream in Zulip.
 
 .. py:class:: ZulipStatusPush(endpoint, token, stream=None)
 
-    :param string endpoint: URL of your Zulip server.
+    :param string endpoint: URL of your Zulip server
     :param string token: Private API token
     :param string stream: The stream in which the build status is to be sent. Defaults to None
 

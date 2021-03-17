@@ -7,7 +7,7 @@ GitTag
 
 .. py:class:: buildbot.steps.source.git.GitTag
 
-The :bb:step:`GitTag` build step create a tag in your local `Git <http://git.or.cz/>`_ repository.
+The :bb:step:`GitTag` build step creates a tag in your local `Git <http://git.or.cz/>`_ repository.
 
 The GitTag step takes the following arguments:
 

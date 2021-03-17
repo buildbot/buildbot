@@ -22,7 +22,7 @@ A :class:`Worker` instance is created with a ``workername`` and a ``workerpasswo
 These are the same two values that need to be provided to the worker administrator when they create the worker.
 
 The ``workername`` must be unique, of course.
-The password exists to prevent evildoers from interfering with the Buildbot by inserting their own (broken) workers into the system and thus displacing the real ones.
+The password exists to prevent evildoers from interfering with Buildbot by inserting their own (broken) workers into the system and thus displacing the real ones.
 
 Workers with an unrecognized ``workername`` or a non-matching password will be rejected when they attempt to connect, and a message describing the problem will be written to the log file (see :ref:`Logfiles`).
 
@@ -64,7 +64,7 @@ You may use the ``defaultProperties`` parameter that will only be added to :ref:
                      defaultProperties={'parallel_make': 10}),
    ]
 
-:class:`Worker` collects and exposes ``/etc/os-release`` fields for :ref:<interpolation `Interpolate-DictStyle`>.
+:class:`Worker` collects and exposes ``/etc/os-release`` fields for :ref:`interpolation <Interpolate-DictStyle>`.
 These can be used to determine details about the running operating system, such as distribution and version.
 See https://www.linux.org/docs/man5/os-release.html for details on possible fields.
 Each field is imported with ``os_`` prefix and in lower case. ``os_id``, ``os_id_like``, ``os_version_id`` and ``os_version_codename`` are always set, but can be null.
@@ -122,18 +122,17 @@ This value can be a single email address, or a list of addresses:
                       notify_on_missing='bob@example.com')
     ]
 
-By default, this will send email when the worker has been disconnected for more than one hour.
+By default, this will send an email when the worker has been disconnected for more than one hour.
 Only one email per connection-loss event will be sent.
 To change the timeout, use ``missing_timeout=`` and give it a number of seconds (the default is 3600).
 
-You can have the buildmaster send email to multiple recipients: just provide a list of addresses instead of a single one:
+You can have the buildmaster send an email to multiple recipients by providing a list of addresses instead of a single one:
 
 .. code-block:: python
 
     c['workers'] = [
         worker.Worker('bot-solaris', 'solarispasswd',
-                      notify_on_missing=['bob@example.com',
-                                         'alice@example.org'],
+                      notify_on_missing=['bob@example.com', 'alice@example.org'],
                       missing_timeout=300)  # notify after 5 minutes
     ]
 
@@ -151,8 +150,8 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
     c['reporters'].append(m)
 
     c['workers'] = [
-            worker.Worker('bot-solaris', 'solarispasswd',
-                          notify_on_missing='bob@example.com')
+        worker.Worker('bot-solaris', 'solarispasswd',
+                      notify_on_missing='bob@example.com')
     ]
 
 
@@ -164,16 +163,16 @@ Workers States
 There are some times when a worker misbehaves because of issues with its configuration.
 In those cases, you may want to pause the worker, or maybe completely shut it down.
 
-There are three actions that you may take (in the worker's web page *Actions* dialog)
+There are three actions that you may take (in the worker's web page *Actions* dialog):
 
-- *Pause*: If a worker is paused, it won't accept new builds. The action of pausing a worker will not affect any build ongoing.
+- *Pause*: If a worker is paused, it won't accept new builds. The action of pausing a worker will not affect any ongoing build.
 
 - *Graceful Shutdown*: If a worker is in graceful shutdown mode, it won't accept new builds, but will finish the current builds.
   When all of its build are finished, the :command:`buildbot-worker` process will terminate.
 
-- *Force Shutdown*: If a worker is in force shutdown mode, it will terminate immediately, and the build he was currently doing will be put to retry state.
+- *Force Shutdown*: If a worker is in force shutdown mode, it will terminate immediately, and the build it was currently doing will be put to retry state.
 
-Those actions will put the worker in two states
+Those actions will put the worker in either of two states:
 
 - *paused*: the worker is paused if it is connected but doesn't accept new builds.
 - *graceful*: the worker is graceful if it doesn't accept new builds, and will shutdown when builds are finished.
@@ -183,13 +182,13 @@ A worker might be put to ``paused`` state automatically if buildbot detects a mi
 This is called the *quarantine timer*.
 
 Quarantine timer is an exponential back-off mechanism for workers.
-This avoids a misbehaving worker to eat the build queue by quickly finishing builds in ``EXCEPTION`` state.
-When misbehavior is detected, the timer will pause the worker for 10 second, and then that time will double at each misbehavior detection, until the worker finishes a build.
+This prevents a misbehaving worker from eating the build queue by quickly finishing builds in ``EXCEPTION`` state.
+When misbehavior is detected, the timer will pause the worker for 10 seconds, and then the time will double with each misbehavior detection until the worker finishes a build.
 
 The first case of misbehavior is for a latent worker to not start properly.
 The second case of misbehavior is for a build to end with an ``EXCEPTION`` status.
 
-Worker states are stored in the database, can be queried via :ref:`REST_API` and visible in the UI's workers page.
+Worker states are stored in the database, can be queried via :ref:`REST_API`, and are visible in the UI's workers page.
 
 
 .. index:: Workers; local
@@ -204,7 +203,7 @@ To simplify the maintenance, you may even want to run them in the same process.
 This is what LocalWorker is for.
 Instead of configuring a ``worker.Worker``, you have to configure a ``worker.LocalWorker``.
 As the worker is running on the same process, password is not necessary.
-You can run as many local workers as long as your machine CPU and memory is allowing.
+You can run as many local workers as your machine's CPU and memory allows.
 
 A configuration for two workers would look like:
 
@@ -244,8 +243,8 @@ The following options are available for all latent workers.
 ``build_wait_timeout``
     This option allows you to specify how long a latent worker should wait after a build for another build before it shuts down.
     It defaults to 10 minutes.
-    If this is set to 0 then the worker will be shut down immediately.
-    If it is less than 0 it will be shut down only when shutting down master.
+    If this is set to 0, then the worker will be shut down immediately.
+    If it is less than 0, it will be shut down only when shutting down master.
 
 .. _Supported-Latent-Workers:
 
