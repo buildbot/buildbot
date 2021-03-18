@@ -1,1 +1,0 @@
-Updated Buildbot requirements to specify sqlalchemy 1.4 and newer as not supported yet.
