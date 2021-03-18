@@ -3,8 +3,8 @@
 Concepts
 ========
 
-This chapter defines some of the basic concepts that the Buildbot uses.
-You'll need to understand how the Buildbot sees the world to configure it properly.
+This chapter defines some of the basic concepts that Buildbot uses.
+You'll need to understand how Buildbot sees the world to configure it properly.
 
 .. index: repository
 .. index: codebase
@@ -22,8 +22,8 @@ The following concepts are used within Buildbot to describe source code that is 
 
 Repository
     A repository is a location where files tracked by a version control system reside.
-    Usually it is identified by a URL or a location on a disk.
-    It contains a subset of history of a codebase.
+    Usually, it is identified by a URL or a location on a disk.
+    It contains a subset of the history of a codebase.
 
 Codebase
     A codebase is a collection of related files and their history tracked as a unit by version control systems.
@@ -34,22 +34,22 @@ Codebase
 
 Project
     A project is a set of one or more codebases that together may be built and produce some end artifact.
-    For example, an application may be comprised of two codebases - one for the code and one for the test data the latter of which occupies a lot of space.
+    For example, an application may be comprised of two codebases - one for the code and one for the test data, the latter of which occupies a lot of space.
     Building and testing such an application requires acquiring code from both codebases.
 
 Revision:
-    A revision is an textual identifier used by most version control systems to uniquely specify a particular version of the source code is a particular codebase.
+    A revision is an textual identifier used by most version control systems to uniquely specify a particular version of the source code in a particular codebase.
 
 Source stamp:
     A source stamp is a collection of information needed to identify a particular version of code on a certain codebase.
-    In most version control systems source stamp only stores a revision.
-    On certain version control systems a branch is also required.
+    In most version control systems, source stamps only store a revision.
+    On other version control systems, a branch is also required.
 
 Source stamp set:
     A source stamp set is a set of source stamps to identify a particular version of code on a certain project.
     Like a project is a collection of codebases, a source stamp set is a collection of source stamps, one for each codebase within a project.
 
-In order to build a project Buildbot only needs to know a source stamp set corresponding to that project.
+In order to build a project, Buildbot only needs to know a source stamp set corresponding to that project.
 This source stamp set has a source stamp for each codebase comprising the project.
 In turn, each source stamp has enough information to identify a particular version of the code within the codebase.
 
@@ -62,7 +62,7 @@ Change sources
 --------------
 
 Change sources are user-configurable components that interact with external version control systems and retrieve new code.
-Internally new code is represented as :ref:`Changes <Concept-Change>` which roughly correspond to single commit or changeset.
+Internally, new code is represented as :ref:`Changes <Concept-Change>` which roughly correspond to a single commit or changeset.
 The changes are sent to the schedulers which then decide whether new builds should be created for these new code changes.
 
 The design of Buildbot requires the workers to have their own copies of the source code, thus change sources is an optional component as long as there are no schedulers that create new builds based on new code commit events.
@@ -75,14 +75,14 @@ The design of Buildbot requires the workers to have their own copies of the sour
 Changes
 -------
 
-A :ref:`Change<Change-Attrs>` is an abstract way Buildbot uses to represent a single change to the source files performed by a developer.
-In version control systems that support the notion of atomic check-ins a change represents a changeset or commit.
+A :ref:`Change<Change-Attrs>` is an abstract way Buildbot uses to represent a single change to the source files, performed by a developer.
+In version control systems that support the notion of atomic check-ins, a change represents a changeset or commit.
 
 Changes are used for the :ref:`Change sources<Concepts-Change-Source>` to communicate with :ref:`Schedulers <Concepts-Scheduler>`.
 
 A :class:`Change` comprises the following information:
 
- - the developer that is responsible for the change
+ - the developer who is responsible for the change
 
  - the list of files that the change added, removed or modified
 
@@ -100,7 +100,7 @@ Schedulers
 A scheduler is a component that decides when to start a build.
 The decision could be based on time, on new code being committed or on similar events.
 
-Schedulers are responsible for creating :ref:`Build Requests<Concepts-Build-Request>` which identify a request to start a build on a specific versions of the source code.
+Schedulers are responsible for creating :ref:`Build Requests<Concepts-Build-Request>` which identify a request to start a build on a specific version of the source code.
 
 Each Buildmaster has a set of scheduler objects, each of which gets a copy of every incoming :class:`Change`.
 The Schedulers are responsible for deciding when :class:`Build`\s should be run.
@@ -114,7 +114,7 @@ BuildRequests
 A :class:`BuildRequest` is a request to start a specific build.
 A :class:`BuildRequest` consists of the following information:
 
- - the name of the :class:`Builder` (see below) that will start the build.
+ - the name of the :class:`Builder` (see below) that will perform the build.
 
  - the set of :class:`SourceStamp`\s (see above) that specify the version of the source tree to build and/or test.
 
@@ -155,7 +155,7 @@ The directories on the workers are used as a location where the actual checkout,
 Builds
 ------
 
-A :class:`Build` represents a single compile or test run of a particular version of the source code.
+A :class:`Build` represents a single compile or test run of a particular version of a source code.
 A build is comprised of a series of steps.
 The steps may be arbitrary. For example, for compiled software a build generally consists of the checkout, configure, make, and make check sequence.
 For interpreted projects like Python modules, a build is generally a checkout followed by an invocation of the bundled test suite.
@@ -187,7 +187,7 @@ If multiple workers are available for any given builder, you will have some meas
 In addition, multiple workers will allow multiple simultaneous builds for the same :class:`Builder`, which might be useful if you have a lot of forced or ``try`` builds taking place.
 
 Ideally, each :class:`Worker` that is configured for a builder should be identical.
-Otherwise build or test failures will be dependent on which worker the build is ran and this will complicate investigation of failures.
+Otherwise build or test failures will be dependent on which worker the build is run and this will complicate investigations of failures.
 
 .. _Concepts-Users:
 
@@ -222,7 +222,7 @@ Changes
 +++++++
 
 Incoming Changes all have a ``who`` attribute attached to them that specifies which developer is responsible for that Change.
-When a Change is first rendered, the ``who`` attribute is parsed and added to the database if it doesn't exist or checked against an existing user.
+When a Change is first rendered, the ``who`` attribute is parsed and added to the database, if it doesn't exist, or checked against an existing user.
 The ``who`` attribute is formatted in different ways depending on the version control system that the Change came from.
 
 ``git``
@@ -259,7 +259,7 @@ This process is explained more clearly in :ref:`Email-Addresses`.
 
 Another way to utilize `User Objects` is through `UsersAuth` for web authentication.
 To use `UsersAuth`, you need to set a `bb_username` and `bb_password` via the ``buildbot user`` command line tool to check against.
-The password will be encrypted before storing in the database along with other user attributes.
+The password will be encrypted before it gets stored in the database along with other user attributes.
 
 .. _Doing-Things-With-Users:
 
@@ -268,26 +268,26 @@ Doing Things With Users
 
 Each change has a single user who is responsible for it.
 Most builds have a set of changes: the build generally represents the first time these changes have been built and tested by the Buildbot.
-The build has a *blamelist* that is the union of the users responsible for all the build's changes.
-If the build was created by a :ref:`Try-Schedulers` this list will include the submitter of the try job, if known.
+The build has a *blamelist* that is the union of the users responsible for all of the build's changes.
+If the build was created by a :ref:`Try-Schedulers` this list will include the submitter of the try job if known.
 
 The build provides a list of users who are interested in the build -- the *interested users*.
 Usually this is equal to the blamelist, but may also be expanded, e.g., to include the current build sherrif or a module's maintainer.
 
-If desired, the buildbot can notify the interested users until the problem is resolved.
+If desired, buildbot can notify the interested users until the problem is resolved.
 
 .. _Email-Addresses:
 
 Email Addresses
 ~~~~~~~~~~~~~~~
 
-The :bb:reporter:`MailNotifier` is a status target which can send email about the results of each build.
-It accepts a static list of email addresses to which each message should be delivered, but it can also be configured to send mail to the :class:`Build`\'s Interested Users.
+The :bb:reporter:`MailNotifier` is a status target which can send emails about the results of each build.
+It accepts a static list of email addresses to which each message should be delivered, but it can also be configured to send emails to a :class:`Build`\'s Interested Users.
 To do this, it needs a way to convert User names into email addresses.
 
-For many VC systems, the User Name is actually an account name on the system which hosts the repository.
-As such, turning the name into an email address is a simple matter of appending ``@repositoryhost.com``.
-Some projects use other kinds of mappings (for example the preferred email address may be at ``project.org`` despite the repository host being named ``cvs.project.org``), and some VC systems have full separation between the concept of a user and that of an account on the repository host (like Perforce).
+For many VCSs, the User name is actually an account name on the system which hosts the repository.
+As such, turning the name into an email address is simply a matter of appending ``@repositoryhost.com``.
+Some projects use other kinds of mappings (for example the preferred email address may be at ``project.org``, despite the repository host being named ``cvs.project.org``), and some VCSs have full separation between the concept of a user and that of an account on the repository host (like Perforce).
 Some systems (like Git) put a full contact email address in every change.
 
 To convert these names to addresses, the :class:`MailNotifier` uses an :class:`EmailLookup` object.
@@ -296,13 +296,13 @@ The default :class:`MailNotifier` module provides an :class:`EmailLookup` which 
 To create more complex behaviors (perhaps using an LDAP lookup, or using ``finger`` on a central host to determine a preferred address for the developer), provide a different object as the ``lookup`` argument.
 
 If an EmailLookup object isn't given to the MailNotifier, the MailNotifier will try to find emails through :ref:`User-Objects`.
-This will work the same as if an EmailLookup object was used if every user in the Build's Interested Users list has an email in the database for them.
+If every user in the Build's Interested Users list has an email in the database for them, this will work the same as if an EmailLookup object was used.
 If a user whose change led to a Build doesn't have an email attribute, that user will not receive an email.
-If ``extraRecipients`` is given, those users are still sent mail when the EmailLookup object is not specified.
+If ``extraRecipients`` is given, those users still get an email when the EmailLookup object is not specified.
 
-In the future, when the Problem mechanism has been set up, the Buildbot will need to send mail to arbitrary Users.
+In the future, when the Problem mechanism has been set up, Buildbot will need to send emails to arbitrary Users.
 It will do this by locating a :class:`MailNotifier`\-like object among all the buildmaster's status targets, and asking it to send messages to various Users.
-This means the User-to-address mapping only has to be set up once, in your :class:`MailNotifier`, and every email message the buildbot emits will take advantage of it.
+This means the User-to-address mapping only has to be set up once, in your :class:`MailNotifier`, and every email message buildbot emits will take advantage of it.
 
 .. _IRC-Nicknames:
 
@@ -312,11 +312,11 @@ IRC Nicknames
 Like :class:`MailNotifier`, the :class:`buildbot.reporters.irc.IRC` class provides a status target which can announce the results of each build.
 It also provides an interactive interface by responding to online queries posted in the channel or sent as private messages.
 
-In the future, the buildbot can be configured to map User names to IRC nicknames, to watch for the recent presence of these nicknames, and to deliver build status messages to the interested parties.
+In the future, buildbot can be configured to map User names to IRC nicknames, to watch for the recent presence of these nicknames, and to deliver build status messages to the interested parties.
 Like :class:`MailNotifier` does for email addresses, the :class:`IRC` object will have an :class:`IRCLookup` which is responsible for nicknames.
 The mapping can be set up statically, or it can be updated by online users themselves (by claiming a username with some kind of ``buildbot: i am user warner`` commands).
 
-Once the mapping is established, the rest of the buildbot can ask the :class:`IRC` object to send messages to various users.
+Once the mapping is established, buildbot can then ask the :class:`IRC` object to send messages to various users.
 It can report on the likelihood that the user saw the given message (based upon how long the user has been inactive on the channel), which might prompt the Problem Hassler logic to send them an email message instead.
 
 These operations and authentication of commands issued by particular nicknames will be implemented in :ref:`User-Objects`.
@@ -334,15 +334,15 @@ The properties are represented as a set of key-value pairs.
 Effectively, a single property is a variable that, once set, can be used by subsequent steps in a build to modify their behaviour.
 The value of a property can be a number, a string, a list or a dictionary.
 Lists and dictionaries can contain other lists or dictionaries.
-Thus, the value of a property could be arbitrarily complex structure.
+Thus, the value of a property could be any arbitrarily complex structure.
 
 Properties work pretty much like variables, so they can be used to implement all manner of functionality.
 
-The following are several examples:
+The following are a couple of examples:
 
  - By default, the name of the worker that runs the build is set to the ``workername`` property.
    If there are multiple different workers and the actions of the build depend on the exact worker, some users may decide that it's more convenient to vary the actions depending on the ``workername`` property instead of creating separate builders for each worker.
 
- - In most cases the build does not know the exact code revision that will be tested until it checks out the code.
+ - In most cases, the build does not know the exact code revision that will be tested until it checks out the code.
    This information is only known after a :ref:`source step <Build-Steps>` runs.
    To give this information to the subsequent steps, the source step records the checked out revision into the ``got_revision`` property.

@@ -45,7 +45,8 @@ To add reporter targets, you just append more objects to this list:
                                                      {"channel": "#example2",
                                                       "password": "somesecretpassword"}]))
 
-Most reporter objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
+Most reporter objects take a ``tags=`` argument, which can contain a list of tag names.
+In this case, the reporters will only show status for Builders that contain the named tags.
 
 .. note:: Implementation Note
 

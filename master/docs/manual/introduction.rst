@@ -33,7 +33,7 @@ The usual flow of information is as follows:
 
  - the builds are performed by executing commands on the workers (e.g. ``git clone``, ``make``, ``make check``).
 
- - the workers send back the results of the commands back to the buildmaster
+ - the workers send the results of the commands back to the buildmaster
 
  - buildmaster interprets the results of the commands and marks the builds as successful or failing
 

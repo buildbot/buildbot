@@ -81,4 +81,4 @@ In this case, you will implement following procedure:
 * As an old master is finishing the running builds, it will drop the connections from the workers, who will then reconnect automatically, and by the mean of load balancer will get connected to a new master to run new jobs.
 
 As buildbot nine has been designed to allow such procedure, it has not been implemented in production yet as we know.
-There is probably a new REST api needed in order to graceful shutdown a master, and the details of gracefully dropping the connection to the workers to be sorted out.
+There is probably a new REST API needed in order to gracefully shutdown a master, and the details of gracefully dropping the connection to the workers to be sorted out.

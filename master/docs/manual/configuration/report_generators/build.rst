@@ -8,7 +8,7 @@ BuildStatusGenerator
 .. py:class:: buildbot.reporters.BuildStatusGenerator
 
 This report generator sends a message when a build completes.
-In case a reporter is used to provide a live status notification for both build start and build completion, :ref:`Reportgen-BuildStartEndStatusGenerator` is a better option.
+In case a reporter is used to provide a live status notification for both build start and completion, :ref:`Reportgen-BuildStartEndStatusGenerator` is a better option.
 
 The following parameters are supported:
 
@@ -17,7 +17,7 @@ The following parameters are supported:
     A string to be used as the subject line of the message.
     ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
     ``%(result)s`` will be replaced with the name of the result of the build.
-    ``%(title)s`` and `%(projectName)s`` will be replaced with the title of the Buildbot instance.
+    ``%(title)s`` and ``%(projectName)s`` will be replaced with the title of the Buildbot instance.
 
 ``mode``
     (list of strings or a string, optional).
@@ -27,7 +27,7 @@ The following parameters are supported:
     The possible shortcuts are:
 
     ``all``
-        Send message for all builds.
+        Send message for all cases.
         Equivalent to ``('change', 'failing', 'passing', 'problem', 'warnings', 'exception')``.
 
     ``warnings``
@@ -84,7 +84,7 @@ The following parameters are supported:
     (boolean or a list of strings, optional).
     If ``True``, include all build logs as attachments to the messages.
     These can be quite large.
-    This can also be set to a list of log names, to send a subset of the logs.
+    This can also be set to a list of log names to send a subset of the logs.
     Defaults to ``False``.
 
 ``add_patch``

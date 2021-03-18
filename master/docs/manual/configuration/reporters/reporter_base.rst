@@ -46,7 +46,7 @@ This documents frequently used keys within the dictionaries that are passed to t
  - ``builder_name``:  (string)
     The name of the builder corresponding to the build or buildset that the report describes.
 
- - ``results``: (an instance of an result value from ``buildbot.process.results``)
+ - ``results``: (an instance of a result value from ``buildbot.process.results``)
     The current result of the build.
 
  - ``builds`` (a list of build dictionaries as reported by the data API)

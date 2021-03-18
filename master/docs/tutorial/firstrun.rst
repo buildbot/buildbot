@@ -68,6 +68,8 @@ Creating a master
 The first necessary step is to create a virtualenv for our master.
 We will also use a separate directory to demonstrate the distinction between a master and worker:
 
+On Python 2:
+
 .. code-block:: bash
 
   mkdir -p ~/buildbot-test/master

@@ -27,8 +27,8 @@ and for the worker:
 
     pip install buildbot-worker
 
-When using ``pip`` to install instead of distribution specific package managers, e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants to use.
-It may however be easier to install via distribution specific package mangers but note that they may provide an earlier version than what is available via ``pip``.
+When using ``pip`` to install, instead of distribution specific package managers, e.g. via `apt` or `ports`, it is simpler to choose exactly which version one wants to use.
+It may however be easier to install via distribution specific package managers, but note that they may provide an earlier version than what is available via ``pip``.
 
 If you plan to use TLS or SSL in master configuration (e.g. to fetch resources over HTTPS using ``twisted.web.client``), you need to install Buildbot with ``tls`` extras:
 
@@ -63,18 +63,18 @@ To test this, shift to a different directory (like :file:`/tmp`), and run:
     buildbot-worker --version
 
 If it shows you the versions of Buildbot and Twisted, the install went ok.
-If it says "no such command" or it gets an ``ImportError`` when it tries to load the libraries, then something went wrong.
+If it says "no such command" or gets an ``ImportError`` when it tries to load the libraries, then something went wrong.
 ``pydoc buildbot`` is another useful diagnostic tool.
 
 Windows users will find these files in other places.
-You will need to make sure that Python can find the libraries, and will probably find it convenient to have :command:`buildbot` on your :envvar:`PATH`.
+You will need to make sure that Python can find the libraries, and will probably find it convenient to have :command:`buildbot` in your :envvar:`PATH`.
 
 .. _Installation-in-a-Virtualenv:
 
 Installation in a Virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you cannot or do not wish to install the buildbot into a site-wide location like :file:`/usr` or :file:`/usr/local`, you can also install it into the account's home directory or any other location using a tool like `virtualenv <http://pypi.python.org/pypi/virtualenv>`_.
+If you cannot or do not wish to install buildbot into a site-wide location like :file:`/usr` or :file:`/usr/local`, you can also install it into the account's home directory or any other location using a tool like `virtualenv <http://pypi.python.org/pypi/virtualenv>`_.
 
 .. _Running-Buildbots-Tests-optional:
 
@@ -82,13 +82,13 @@ Running Buildbot's Tests (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you wish, you can run the buildbot unit test suite.
-First, ensure you have the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from PyPI.
+First, ensure that you have the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from PyPI.
 You must not be using a Python wheels packaged version of Buildbot or have specified the bdist_wheel command when building.
 The test suite is not included with the PyPi packaged version.
 This module is not required for ordinary Buildbot operation - only to run the tests.
 Note that this is not the same as the Fedora ``mock`` package!
 
-You can check with
+You can check if you have mock with:
 
 .. code-block:: bash
 

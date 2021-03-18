@@ -98,7 +98,7 @@ Consult the `SQLAlchemy`_ dialect list for a full description.
 The most common choice for MySQL is `mysqlclient`_.
 Any reasonably recent version should suffice.
 
-The most common choice for Postgres is `Psycopg`_
+The most common choice for Postgres is `Psycopg`_.
 Any reasonably recent version should suffice.
 
 .. _SQLAlchemy: http://www.sqlalchemy.org/

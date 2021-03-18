@@ -3,7 +3,7 @@
 Build Factories
 ===============
 
-Each Builder is equipped with a ``build factory``, which defines the steps used to perform that particular type of build.
+Each Builder is equipped with a ``build factory``, which defines the steps used to perform a particular type of build.
 This factory is created in the configuration file, and attached to a Builder through the ``factory`` element of its dictionary.
 
 The steps used by these builds are defined in the next section, :ref:`Build-Steps`.
@@ -87,7 +87,7 @@ Dynamic Build Factories
 ------------------------
 
 In some cases you may not know what commands to run until after you checkout the source tree.
-For those cases you can dynamically add steps during a build from other steps.
+For those cases, you can dynamically add steps during a build from other steps.
 
 The :class:`Build` object provides 2 functions to do this:
 
@@ -99,7 +99,7 @@ The :class:`Build` object provides 2 functions to do this:
 
 Both functions only accept as an argument a list of steps to add to the build.
 
-For example lets say you have a script checked in into your source tree called build.sh.
+For example, let's say you have a script checked in into your source tree called build.sh.
 When this script is called with the argument ``--list-stages`` it outputs a newline separated list of stage names.
 This can be used to generate at runtime a step for each stage in the build.
 Each stage is then run in this example using ``./build.sh --run-stage <stage name>``.
@@ -179,7 +179,7 @@ These tools both encourage a build process which usually looks like this:
     % make check
     # make install
 
-(except of course the Buildbot always skips the ``make install`` part).
+(except, of course, from Buildbot, which always skips the ``make install`` part).
 
 The Buildbot's :class:`buildbot.process.factory.GNUAutoconf` factory is designed to build projects which use GNU autoconf and/or automake.
 The configuration environment variables, the configure flags, and command lines used for the compile and test are all configurable, in general the default values will be suitable.
@@ -245,19 +245,6 @@ BasicBuildFactory
 
 This is a subclass of :class:`GNUAutoconf` which assumes the source is in CVS, and uses ``mode='full'`` and ``method='clobber'``  to always build from a clean working copy.
 
-.. _BasicSVN:
-
-.. index::
-   BasicSVN
-   Build Factory; BasicSVN
-
-BasicSVN
-~~~~~~~~
-
-.. py:class:: buildbot.process.factory.BasicSVN
-
-This class is similar to :class:`QuickBuildFactory`, but uses SVN instead of CVS.
-
 .. _QuickBuildFactory:
 
 .. index::
@@ -279,6 +266,19 @@ Incremental builds will (or at least the ought to) compile as few files as neces
 Therefore it would be misleading to claim to predict how long the build will take.
 
 This class is probably not of use to new projects.
+
+.. _BasicSVN:
+
+.. index::
+   BasicSVN
+   Build Factory; BasicSVN
+
+BasicSVN
+~~~~~~~~
+
+.. py:class:: buildbot.process.factory.BasicSVN
+
+This class is similar to :class:`QuickBuildFactory`, but uses SVN instead of CVS.
 
 .. _Factory-CPAN:
 
@@ -333,7 +333,7 @@ The standard build process looks like:
     % python ./setup.py build
     % python ./setup.py install
 
-Unfortunately, although Python provides a standard unit-test framework named ``unittest``, to the best of my knowledge ``distutils`` does not provide a standardized target to run such unit tests.
+Unfortunately, although Python provides a standard unit-test framework named ``unittest``, to the best of my knowledge, ``distutils`` does not provide a standardized target to run such unit tests.
 (Please let me know if I'm wrong, and I will update this factory.)
 
 The :class:`Distutils` factory provides support for running the build part of this process.
@@ -399,23 +399,23 @@ Arguments:
     The generated build library is frequently architecture-dependent, but may simply be :file:`build/lib` for pure-Python modules.
 
 ``python``
-    which Python executable to use.
+    Which Python executable to use.
     This list will form the start of the `argv` array that will launch trial.
     If you use this, you should set ``trial`` to an explicit path (like :file:`/usr/bin/trial` or :file:`./bin/trial`).
     The parameter defaults to ``None``, which leaves it out entirely (running ``trial args`` instead of ``python ./bin/trial args``).
     Likely values are ``['python']``, ``['python2.2']``, or ``['python', '-Wall']``.
 
 ``trial``
-    provides the name of the :command:`trial` command.
+    Provides the name of the :command:`trial` command.
     It is occasionally useful to use an alternate executable, such as :command:`trial2.2` which might run the tests under an older version of Python.
     Defaults to :command:`trial`.
 
 ``trialMode``
-    a list of arguments to pass to trial, specifically to set the reporting mode.
+    A list of arguments to pass to trial, specifically to set the reporting mode.
     This defaults to ``['--reporter=bwverbose']``, which only works for Twisted-2.1.0 and later.
 
 ``trialArgs``
-    a list of arguments to pass to trial, available to turn on any extra flags you like.
+    A list of arguments to pass to trial, available to turn on any extra flags you like.
     Defaults to ``[]``.
 
 ``tests``
@@ -425,7 +425,7 @@ Arguments:
     You must either set this or ``testChanges``.
 
 ``testChanges``
-    if ``True``, ignore the ``tests`` parameter and instead ask the Build for all the files that make up the Changes going into this build.
+    If ``True``, ignore the ``tests`` parameter and instead ask the Build for all the files that make up the Changes going into this build.
     Pass these filenames to trial and ask it to look for test-case-name tags, running just the tests necessary to cover the changes.
 
 ``recurse``

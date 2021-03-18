@@ -15,10 +15,10 @@ BitbucketServerPRCommentPush
     c['services'].append(ss)
 
 
-:class:`BitbucketServerPRCommentPush`  publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
+:class:`BitbucketServerPRCommentPush` publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
 
 
-.. py:class:: BitbucketServerPRCommentPush(base_url, user, password, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, generators=None):
+.. py:class:: BitbucketServerPRCommentPush(base_url, user, password, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, generators=None)
 
 The following parameters are accepted by this reporter:
 

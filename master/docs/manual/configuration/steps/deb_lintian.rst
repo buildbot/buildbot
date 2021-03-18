@@ -6,7 +6,7 @@ DebLintian
 ++++++++++
 
 The :bb:step:`DebLintian` step checks a build .deb for bugs and policy violations.
-The packages or changes file to test is specified in ``fileloc``
+The packages or changes file to test is specified in ``fileloc``.
 
 .. code-block:: python
 
@@ -18,10 +18,10 @@ This class adds the following arguments:
 
 ``fileloc``
     (Optional, string)
-    Location of the .deb or .changes files to test
+    Location of the .deb or .changes files to test.
 
 ``suppressTags``
     (Optional, list of strings)
-    List of tags to suppress
+    List of tags to suppress.
 
 All other arguments are identical to :bb:step:`ShellCommand`.

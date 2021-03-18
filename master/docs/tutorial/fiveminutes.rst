@@ -7,24 +7,24 @@ Buildbot in 5 minutes - a user-contributed tutorial
 (Ok, maybe 10.)
 
 Buildbot is really an excellent piece of software, however it can be a bit confusing for a newcomer (like me when I first started looking at it).
-Typically, at first sight it looks like a bunch of complicated concepts that make no sense and whose relationships with each other are unclear.
+Typically, at first sight, it looks like a bunch of complicated concepts that make no sense and whose relationships with each other are unclear.
 After some time and some reread, it all slowly starts to be more and more meaningful, until you finally say "oh!" and things start to make sense.
 Once you get there, you realize that the documentation is great, but only if you already know what it's about.
 
 This is what happened to me, at least.
-Here I'm going to (try to) explain things in a way that would have helped me more as a newcomer.
-The approach I'm taking is more or less the reverse of that used by the documentation, that is, I'm going to start from the components that do the actual work (the builders) and go up the chain from there up to change sources.
+Here, I'm going to (try to) explain things in a way that would have helped me more as a newcomer.
+The approach I'm taking is more or less the reverse of that used by the documentation. That is, I'm going to start from the components that do the actual work (the builders) and go up the chain to the change sources.
 I hope purists will forgive this unorthodoxy.
-Here I'm trying to clarify the concepts only, and will not go into the details of each object or property; the documentation explains those quite well.
+Here I'm trying to only clarify the concepts and not go into the details of each object or property; the documentation explains those quite well.
 
 Installation
 ------------
 
 I won't cover the installation; both Buildbot master and worker are available as packages for the major distributions, and in any case the instructions in the official documentation are fine.
-This document will refer to Buildbot 0.8.5 which was current at the time of writing, but hopefully the concepts are not too different in other versions.
-All the code shown is of course python code, and has to be included in the master.cfg master configuration file.
+This document will refer to Buildbot 0.8.5 which was current at the time of writing, but hopefully the concepts are not too different in future versions.
+All the code shown is of course python code, and has to be included in the master.cfg configuration file.
 
-We won't cover the basic things such as how to define the workers, project names, or other administrative information that is contained in that file; for that, again the official documentation is fine.
+We won't cover basic things such as how to define the workers, project names, or other administrative information that is contained in that file; for that, again the official documentation is fine.
 
 Builders: the workhorses
 ------------------------
@@ -41,7 +41,7 @@ Enough talk, let's see an example.
 For this example, we are going to assume that our super software project can be built using a simple ``make all``, and there is another target ``make packages`` that creates rpm, deb and tgz packages of the binaries.
 In the real world things are usually more complex (for example there may be a ``configure`` step, or multiple targets), but the concepts are the same; it will just be a matter of adding more steps to a builder, or creating multiple builders, although sometimes the resulting builders can be quite complex.
 
-So to perform a manual build of our project we would type this from the command line (assuming we are at the root of the local copy of the repository):
+So to perform a manual build of our project, we would type the following on the command line (assuming we are at the root of the local copy of the repository):
 
 .. code-block:: bash
 
@@ -93,7 +93,7 @@ A step can be a shell command object, or a dedicated object that checks out the 
                                       description="make packages")
 
     # step 5: upload packages to central server. This needs passwordless ssh
-    # from the worker to the server (set it up in advance as part of worker setup)
+    # from the worker to the server (set it up in advance as part of the worker setup)
     uploadpackages = steps.ShellCommand(
         name="upload packages",
         description="upload packages",
@@ -114,8 +114,8 @@ A step can be a shell command object, or a dedicated object that checks out the 
                            factory=f_simplebuild)
     ]
 
-So our builder is called ``simplebuild`` and can run on either of ``worker1``, ``worker2`` and ``worker3``.
-If our repository has other branches besides trunk, we could create another one or more builders to build them; in the example, only the checkout step would be different, in that it would need to check out the specific branch.
+So our builder is called ``simplebuild`` and can run on either of ``worker1``, ``worker2`` or ``worker3``.
+If our repository has other branches besides trunk, we could create another one or more builders to build them; in this example, only the checkout step would be different, in that it would need to check out the specific branch.
 Depending on how exactly those branches have to be built, the shell commands may be recycled, or new ones would have to be created if they are different in the branch.
 You get the idea.
 The important thing is that all the builders be named differently and all be added to the ``c['builders']`` value (as can be seen above, it is a list of ``BuilderConfig`` objects).
@@ -129,14 +129,14 @@ Schedulers
 ----------
 
 Now this is all nice and dandy, but who tells the builder (or builders) to run, and when?
-This is the job of the `scheduler`, which is a fancy name for an element that waits for some event to happen, and when it does, based on that information decides whether and when to run a builder (and which one or ones).
+This is the job of the `scheduler` which is a fancy name for an element that waits for some event to happen, and when it does, based on that information, decides whether and when to run a builder (and which one or ones).
 There can be more than one scheduler.
 I'm being purposely vague here because the possibilities are almost endless and highly dependent on the actual setup, build purposes, source repository layout and other elements.
 
 So a scheduler needs to be configured with two main pieces of information: on one hand, which events to react to, and on the other hand, which builder or builders to trigger when those events are detected.
 (It's more complex than that, but if you understand this, you can get the rest of the details from the docs).
 
-A simple type of scheduler may be a periodic scheduler: when a configurable amount of time has passed, run a certain builder (or builders).
+A simple type of scheduler may be a periodic scheduler that runs a certain builder (or builders) when a configurable amount of time has passed.
 In our example, that's how we would trigger a build every hour::
 
     from buildbot.plugins import schedulers
@@ -151,11 +151,11 @@ In our example, that's how we would trigger a build every hour::
 
 That's it.
 Every hour this ``hourly`` scheduler will run the ``simplebuild`` builder.
-If we have more than one builder that we want to run every hour, we can just add them to the ``builderNames`` list when defining the scheduler and they will all be run.
-Or since multiple scheduler are allowed, other schedulers can be defined and added to ``c['schedulers']`` in the same way.
+If we have more than one builder that we want to run every hour, we can just add them to the ``builderNames`` list when defining the scheduler.
+Or since multiple schedulers are allowed, other schedulers can be defined and added to ``c['schedulers']`` in the same way.
 
 Other types of schedulers exist; in particular, there are schedulers that can be more dynamic than the periodic one.
-The typical dynamic scheduler is one that learns about changes in a source repository (generally because some developer checks in some change), and triggers one or more builders in response to those changes.
+The typical dynamic scheduler is one that learns about changes in a source repository (generally because some developer checks in some change) and triggers one or more builders in response to those changes.
 Let's assume for now that the scheduler "magically" learns about changes in the repository (more about this later); here's how we would define it::
 
     from buildbot.plugins import schedulers
@@ -175,7 +175,7 @@ When such changes are detected, and the tree has been quiet for 5 minutes (300 s
 The ``treeStableTimer`` helps in those situations where commits tend to happen in bursts, which would otherwise result in multiple build requests queuing up.
 
 What if we want to act on two branches (say, trunk and 7.2)?
-First we create two builders, one for each branch (see the builders paragraph above), then we create two dynamic schedulers::
+First, we create two builders, one for each branch, and then we create two dynamic schedulers::
 
     from buildbot.plugins import schedulers
 
@@ -195,7 +195,7 @@ First we create two builders, one for each branch (see the builders paragraph ab
     # define the available schedulers
     c['schedulers'] = [trunkchanged, branch72changed]
 
-The syntax of the change filter is VCS-dependent (above is for SVN), but again once the idea is clear, the documentation has all the details.
+The syntax of the change filter is VCS-dependent (above is for SVN), but again, once the idea is clear, the documentation has all the details.
 Another feature of the scheduler is that it can be told which changes, within those it's paying attention to, are important and which are not.
 For example, there may be a documentation directory in the branch the scheduler is watching, but changes under that directory should not trigger a build of the binary.
 This finer filtering is implemented by means of the ``fileIsImportant`` argument to the scheduler (full details in the docs and - alas - in the sources).
@@ -203,15 +203,15 @@ This finer filtering is implemented by means of the ``fileIsImportant`` argument
 Change sources
 --------------
 
-Earlier we said that a dynamic scheduler "magically" learns about changes; the final piece of the puzzle are `change sources`, which are precisely the elements in Buildbot whose task is to detect changes in the repository and communicate them to the schedulers.
-Note that periodic schedulers don't need a change source, since they only depend on elapsed time; dynamic schedulers, on the other hand, do need a change source.
+Earlier, we said that a dynamic scheduler "magically" learns about changes; the final piece of the puzzle is `change sources`, which are precisely the elements in Buildbot whose task is to detect changes in a repository and communicate them to the schedulers.
+Note that periodic schedulers don't need a change source since they only depend on elapsed time; dynamic schedulers, on the other hand, do need a change source.
 
-A change source is generally configured with information about a source repository (which is where changes happen); a change source can watch changes at different levels in the hierarchy of the repository, so for example it is possible to watch the whole repository or a subset of it, or just a single branch.
+A change source is generally configured with information about a source repository (which is where changes happen). A change source can watch changes at different levels in the hierarchy of the repository, so for example, it is possible to watch the whole repository or a subset of it, or just a single branch.
 This determines the extent of the information that is passed down to the schedulers.
 
 There are many ways a change source can learn about changes; it can periodically poll the repository for changes, or the VCS can be configured (for example through hook scripts triggered by commits) to push changes into the change source.
-While these two methods are probably the most common, they are not the only possibilities; it is possible for example to have a change source detect changes by parsing some email sent to a mailing list when a commit happens, and yet other methods exist.
-The manual again has the details.
+While these two methods are probably the most common, they are not the only possibilities. It is possible, for example, to have a change source detect changes by parsing an email sent to a mailing list when a commit happens.
+Yet other methods exist and the manual again has the details.
 
 To complete our example, here's a change source that polls a SVN repository every 2 minutes::
 
@@ -236,8 +236,8 @@ or::
 
 to watch only a specific branch.
 
-To watch another project, you need to create another change source -- and you need to filter changes by project.
-For instance, when you add a change source watching project 'superproject' to the above example, you need to change::
+To watch another project, you need to create another change source, and you need to filter changes by project.
+For instance, when you add a change source watching project 'superproject' to the above example, you need to change the original scheduler from::
 
     trunkchanged = schedulers.SingleBranchScheduler(
         name="trunkchanged",
@@ -253,7 +253,7 @@ to e.g.::
         # ...
         )
 
-else coolproject will be built when there's a change in superproject.
+otherwise, coolproject will be built when there's a change in superproject.
 
 Since we're watching more than one branch, we need a method to tell in which branch the change occurred when we detect one.
 This is what the ``split_file`` argument does, it takes a callable that Buildbot will call to do the job.
@@ -261,7 +261,7 @@ The split_file_branches function, which comes with Buildbot, is designed for exa
 
 And of course this is all SVN-specific, but there are pollers for all the popular VCSs.
 
-But note: if you have many projects, branches, and builders it probably pays to not hardcode all the schedulers and builders in the configuration, but generate them dynamically starting from list of all projects, branches, targets etc. and using loops to generate all possible combinations (or only the needed ones, depending on the specific setup), as explained in the documentation chapter about :doc:`../manual/customization`.
+Note that if you have many projects, branches, and builders, it probably pays not to hardcode all the schedulers and builders in the configuration, but generate them dynamically starting from the list of all projects, branches, targets, etc, and using loops to generate all possible combinations (or only the needed ones, depending on the specific setup), as explained in the documentation chapter about :doc:`../manual/customization`.
 
 Reporters
 ---------
@@ -275,7 +275,7 @@ One thing I've found useful is the ability to pass a domain name as the lookup a
 
     from buildbot.plugins import reporter
 
-    # if jsmith commits a change, mail for the build is sent to jsmith@example.org
+    # if jsmith commits a change, an email for the build is sent to jsmith@example.org
     notifier = reporter.MailNotifier(fromaddr="buildbot@example.org",
                                    sendToInterestedUsers=True,
                                    lookup="example.org")
@@ -288,6 +288,6 @@ Conclusion
 ----------
 
 Please note that this article has just scratched the surface; given the complexity of the task of build automation, the possibilities are almost endless.
-So there's much, much more to say about Buildbot. However, hopefully this is a preparation step before reading the official manual. Had I found an explanation as the one above when I was approaching Buildbot, I'd have had to read the manual just once, rather than multiple times. Hope this can help someone else.
+So there's much much more to say about Buildbot. Hopefully this has been a gentle introduction before reading the official manual. Had I found an explanation as the one above when I was approaching Buildbot, I'd have had to read the manual just once, rather than multiple times. I hope this can help someone else.
 
 (Thanks to Davide Brini for permission to include this tutorial, derived from one he originally posted at http://backreference.org .)

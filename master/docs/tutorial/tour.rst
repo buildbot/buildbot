@@ -38,7 +38,7 @@ You will now see that a successful test run has happened:
 .. image:: _images/runtests-success.png
    :alt: an successful test run happened.
 
-This simple process is essentially is the whole purpose of the Buildbot project.
+This simple process is essentially the whole purpose of the Buildbot project.
 
 The information about what actions are executed for a certain build are defined in things called :ref:`builders <Concepts-Builder>`.
 
@@ -70,9 +70,9 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
   c['title'] = "Hello World CI"
   c['titleURL'] = "https://buildbot.github.io/hello-world/"
 
-If you want, you can change either of these links to anything you want to see what happens when you change them.
+If you want, you can change either of these links to anything you want so that you can see what happens when you change them.
 
-After making a change go into the terminal and type:
+After making a change, go to the terminal and type:
 
 .. code-block:: bash
 
@@ -101,16 +101,16 @@ You will see a handful of lines of output from the master log, much like this:
 
     Reconfiguration appears to have completed successfully.
 
-The important lines are the ones telling you that it is loading the new configuration at the top, and the one at the bottom saying that the update is complete.
+The important lines are the ones telling you that the new configuration is being loaded (at the top) and that the update is complete (at the bottom).
 
-Now, if you go back to `the waterfall page <http://localhost:8010/#/waterfall>`_, you will see that the project's name is whatever you may have changed it to and when you click on the URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
+Now, if you go back to `the waterfall page <http://localhost:8010/#/waterfall>`_, you will see that the project's name is whatever you may have changed it to, and when you click on the URL of the project name at the bottom of the page, it should take you to the link you put in the configuration.
 
 Configuration Errors
 --------------------
 
 It is very common to make a mistake when configuring buildbot, so you might as well see now what happens in that case and what you can do to fix the error.
 
-Open up the config again and introduce a syntax error by removing the first single quote in the two lines you changed, so they read:
+Open up the config again and introduce a syntax error by removing the first single quote in the two lines you changed before, so they read:
 
 ..
     Format a `none` since this is not a valid Python code
@@ -121,7 +121,7 @@ Open up the config again and introduce a syntax error by removing the first sing
   c[titleURL'] = "https://buildbot.github.io/hello-world/"
 
 This creates a Python ``SyntaxError``.
-Now go ahead and reconfig the buildmaster:
+Now go ahead and reconfig the master:
 
 .. code-block:: bash
 
@@ -163,11 +163,11 @@ The message is clear enough, so open the configuration again, fix the error, and
 Enabling the IRC Bot
 --------------------
 
-Buildbot includes an IRC bot that you can tell to join a channel and control to report on the status of buildbot.
+Buildbot includes an IRC bot that you can tell to join a channel to control and report on the status of buildbot.
 
 .. note:: Security Note
 
-    Please note that any user having access to your irc channel or can send the private message to the bot will be able to create or stop builds :bug:`3377`.
+    Please note that any user having access to your IRC channel, or can send a private message to the bot, will be able to create or stop builds :bug:`3377`.
 
 First, start an IRC client of your choice, connect to irc.freenode.net and join an empty channel.
 In this example we will use ``#buildbot-test``, so go join that channel.
@@ -179,7 +179,7 @@ At the end of that section add the lines::
   c['services'].append(reporters.IRC(host="irc.freenode.net", nick="bbtest",
                                      channels=["#buildbot-test"]))
 
-Reconfigure the build master then do:
+The reconfigure the master and type:
 
 .. code-block:: bash
 
@@ -201,13 +201,13 @@ In your IRC channel, type:
 
 to get a list of the commands the bot supports.
 
-Let's tell the bot to notify certain events, to learn which EVENTS we can notify on:
+Let's tell the bot to notify on certain events. To learn on which EVENTS we can notify, type:
 
 .. code-block:: none
 
   bbtest: help notify
 
-Now let's set some event notifications:
+Now, let's set some event notifications:
 
 .. code-block:: irc
 
@@ -232,7 +232,7 @@ The full documentation is available at :bb:reporter:`IRC`.
 Setting Authorized Web Users
 ----------------------------
 
-The default configuration allows everyone to perform any task like creating or stopping builds via the web interface. To restrict this to a user, look for::
+The default configuration allows everyone to perform any task, like creating or stopping builds via the web interface. To restrict this to a user, look for::
 
   c['www'] = dict(port=8010,
                    plugins=dict(waterfall_view={}, console_view={}))

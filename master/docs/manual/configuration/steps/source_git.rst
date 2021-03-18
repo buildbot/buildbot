@@ -11,7 +11,7 @@ The :bb:step:`Git` build step clones or updates a `Git <http://git.or.cz/>`_ rep
 
 .. note::
 
-   The Buildbot supports Git version 1.2.0 and later: earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that the Buildbot uses.
+   Buildbot supports Git version 1.2.0 or later. Earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that Buildbot uses.
 
 .. code-block:: python
 
@@ -28,11 +28,11 @@ The Git step takes the following arguments:
 ``branch`` (optional)
    This specifies the name of the branch or the tag to use when a Build does not provide one of its own.
    If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
-   If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
+   If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and the branch specified in this parameter is used.
 
 ``submodules`` (optional, default: ``False``)
    When initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
-   If ``remoteSubmodules`` is ``True`` then this tells Buildbot to use remote submodules: `Git Remote Submodules <https://git-scm.com/docs/git-submodule#Documentation/git-submodule.txt---remote>`_
+   If ``remoteSubmodules`` is ``True``, then this tells Buildbot to use remote submodules: `Git Remote Submodules <https://git-scm.com/docs/git-submodule#Documentation/git-submodule.txt---remote>`_
 
 ``shallow`` (optional)
    Instructs Git to attempt shallow clones (``--depth 1``).
@@ -53,12 +53,11 @@ The Git step takes the following arguments:
    Its value is True on Git 1.7.2 or later.
 
 ``retryFetch`` (optional, default: ``False``)
-   If true, if the ``git fetch`` fails then Buildbot retries to fetch again instead of failing the entire source checkout.
+   If true, if the ``git fetch`` fails, then Buildbot retries to fetch again instead of failing the entire source checkout.
 
 ``clobberOnFailure`` (optional, default: ``False``)
-   If a fetch or full clone fails we can checkout source removing everything.
-   This way new repository will be cloned.
-   If retry fails it fails the source checkout step.
+   If a fetch or full clone fails, we can retry to checkout the source by removing everything and cloning the repository.
+   If the retry fails, it fails the source checkout step.
 
 ``mode`` (optional, default: ``'incremental'``)
    Specifies whether to clean the build tree or not.
@@ -77,24 +76,24 @@ The Git step takes the following arguments:
    ``clobber``
       It removes the build directory entirely then makes full clone from repo.
       This can be slow as it need to clone whole repository.
-      To make faster clones enable ``shallow`` option.
-      If shallow options is enabled and build request have unknown revision value, then this step fails.
+      To make faster clones enable the ``shallow`` option.
+      If the shallow option is enabled and the build request has unknown revision value, then this step fails.
 
    ``fresh``
-      This remove all other files except those tracked by Git.
-      First it does :command:`git clean -d -f -f -x` then fetch/checkout to a specified revision(if any).
+      This removes all other files except those tracked by Git.
+      First it does :command:`git clean -d -f -f -x`, then fetch/checkout to a specified revision (if any).
       This option is equal to update mode with ``ignore_ignores=True`` in old steps.
 
    ``clean``
-      All the files which are tracked by Git and listed ignore files are not deleted.
-      Remaining all other files will be deleted before fetch/checkout.
+      All the files which are tracked by Git, as well as listed ignore files, are not deleted.
+      All other remaining files will be deleted before the fetch/checkout.
       This is equivalent to :command:`git clean -d -f -f` then fetch.
       This is equivalent to ``ignore_ignores=False`` in old steps.
 
    ``copy``
-      This first checkout source into source directory then copy the ``source`` directory to ``build`` directory then performs the build operation in the copied directory.
-      This way we make fresh builds with very less bandwidth to download source.
-      The behavior of source checkout follows exactly same as incremental.
+      This first checks out source into source directory, then copies the ``source`` directory to ``build`` directory, and then performs the build operation in the copied directory.
+      This way, we make fresh builds with very little bandwidth to download source.
+      The behavior of source checkout follows exactly the same as incremental.
       It performs all the incremental checkout behavior in ``source`` directory.
 
 ``getDescription`` (optional)
@@ -102,7 +101,7 @@ The Git step takes the following arguments:
    The argument should either be a ``bool`` or ``dict``, and will change how `git describe` is called:
 
    * ``getDescription=False``: disables this feature explicitly
-   * ``getDescription=True`` or empty ``dict()``: Run `git describe` with no args
+   * ``getDescription=True`` or empty ``dict()``: runs `git describe` with no args
    * ``getDescription={...}``: a dict with keys named the same as the Git option.
      Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
 
@@ -131,7 +130,7 @@ The Git step takes the following arguments:
 ``sshPrivateKey`` (optional)
    The private key to use when running Git for fetch operations.
    The ssh utility must be in the system path in order to use this option.
-   On Windows only Git distribution that embeds MINGW has been tested (as of July 2017 the official distribution is MINGW-based).
+   On Windows, only Git distribution that embeds MINGW has been tested (as of July 2017, the official distribution is MINGW-based).
    The worker must either have the host in the known hosts file or the host key must be specified via the `sshHostKey` option.
 
 ``sshHostKey`` (optional)

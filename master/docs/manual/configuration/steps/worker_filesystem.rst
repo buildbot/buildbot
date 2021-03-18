@@ -39,12 +39,12 @@ This step requires worker version 0.8.5 or later.
 The CopyDirectory step takes the following arguments:
 
 ``timeout``
-    if the copy command fails to produce any output for this many seconds, it is assumed to be locked up and will be killed.
+    If the copy command fails to produce any output for this many seconds, it is assumed to be locked up and will be killed.
     This defaults to 120 seconds.
     Pass ``None`` to disable.
 
 ``maxTime``
-    if the command takes longer than this many seconds, it will be killed.
+    If the command takes longer than this many seconds, it will be killed.
     This is disabled by default.
 
 .. bb:step:: RemoveDirectory

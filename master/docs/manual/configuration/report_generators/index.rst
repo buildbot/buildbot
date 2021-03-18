@@ -32,7 +32,7 @@ At this moment, only the following reporters support report generators:
  * :bb:reporter:`PushjetNotifier`
  * :bb:reporter:`PushoverNotifier`
 
-Eventually report generator support will be added to the rest of the reporters.
+Eventually, report generator support will be added to the rest of the reporters as well.
 
 .. contents::
     :depth: 2

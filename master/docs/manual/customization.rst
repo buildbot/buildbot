@@ -115,7 +115,7 @@ Buildrequests will all have the same sourcestamp, but probably different propert
 
 .. note::
 
-    In most of the cases, just setting collapseRequests=False for triggered builders will do the trick.
+    In most cases, just setting ``collapseRequests=False`` for triggered builders will do the trick.
 
 In other cases, ``parent_buildid`` from buildset can be used:
 
@@ -173,7 +173,7 @@ A simple ``prioritizeBuilders`` implementation might look like this:
 .. code-block:: python
 
     def prioritizeBuilders(buildmaster, builders):
-        """Prioritize builders.  'finalRelease' builds have the highest
+        """Prioritize builders. 'finalRelease' builds have the highest
         priority, so they should be built before running tests, or
         creating builds."""
         builderPriorities = {
@@ -1210,7 +1210,7 @@ There is a Buildbot plugin which allows to write a server side generated dashboa
 
 - You could use HTTP in order to access Buildbot :ref:`REST_API`, but you can also use the :ref:`Data_API`, via the provided synchronous wrapper.
 
-    .. py:method:: buildbot_api.dataGet(path, filters=None, fields=None, order=None, limit=None, offset=None):
+    .. py:method:: buildbot_api.dataGet(path, filters=None, fields=None, order=None, limit=None, offset=None)
 
         :param tuple path: A tuple of path elements representing the API path to fetch.
             Numbers can be passed as strings or integers.

@@ -37,7 +37,7 @@ The following parameters are supported:
     (boolean or a list of strings, optional).
     If ``True``, include all build logs as attachments to the messages.
     These can be quite large.
-    This can also be set to a list of log names, to send a subset of the logs.
+    This can also be set to a list of log names to send a subset of the logs.
     Defaults to ``False``.
 
 ``add_patch``

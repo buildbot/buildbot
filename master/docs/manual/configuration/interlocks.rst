@@ -23,7 +23,7 @@ The general lock has been modified and extended for use in Buildbot.
 Firstly, the general lock allows an infinite number of readers.
 In Buildbot, we often want to put an upper limit on the number of readers, for example allowing two out of five possible builds at the same time.
 To do this, the lock counts the number of active readers.
-Secondly, the terms *read mode* and *write mode* are confusing in Buildbot context.
+Secondly, the terms *read mode* and *write mode* are confusing in the context of Buildbot.
 They have been replaced by *counting mode* (since the lock counts them) and *exclusive mode*.
 As a result of these changes, locks in Buildbot allow a number of builds (up to some fixed number) in counting mode, or they allow one build in exclusive mode.
 
@@ -37,21 +37,19 @@ Count
 ~~~~~
 
 Often, not all workers are equal.
-To allow for this situation, Buildbot allows to have a separate upper limit on the count for each worker.
-In this way, you can have at most 3 concurrent builds at a fast worker, 2 at a slightly older worker, and 1 at all other workers.
-You can also specify the count during access request. This specifies how many
-units an access consumes from the lock. This way, you can for balance a shared
-resource which workers consume unevenly, for example the amount of memory or
-the number of CPU cores.
+To address this situation, Buildbot allows to have a separate upper limit on the count for each worker.
+In this way, for example, you can have at most 3 concurrent builds at a fast worker, 2 at a slightly older worker, and 1 at all other workers.
+You can also specify the count during an access request. This specifies how many units an access consumes from the lock (in other words, as how many builds a build will count).
+This way, you can balance a shared resource that builders consume unevenly, for example, the amount of memory or the number of CPU cores.
 
 Scope
 ~~~~~
 
 The final thing you can specify when you introduce a new lock is its scope.
-Some constraints are global -- they must be enforced over all workers.
+Some constraints are global and must be enforced on all workers.
 Other constraints are local to each worker.
 A *master lock* is used for the global constraints.
-You can ensure for example that at most one build (of all builds running at all workers) accesses the data base server.
+You can ensure for example that at most one build (of all builds running at all workers) accesses the database server.
 With a *worker lock* you can add a limit local to each worker.
 With such a lock, you can for example enforce an upper limit to the number of active builds at a worker, like above.
 
@@ -59,7 +57,7 @@ Examples
 ~~~~~~~~
 
 Time for a few examples.
-Below a master lock is defined to protect a data base, and a worker lock is created to limit the number of builds at each worker.
+A master lock is defined below to protect a database, and a worker lock is created to limit the number of builds at each worker.
 
 .. code-block:: python
 
@@ -72,16 +70,15 @@ Below a master lock is defined to protect a data base, and a worker lock is crea
 
 :data:`db_lock` is defined to be a master lock.
 The ``database`` string is used for uniquely identifying the lock.
-At the next line, a worker lock called :data:`build_lock` is created.
-It is identified by the ``worker_builds`` string.
-Since the requirements of the lock are a bit more complicated, two optional arguments are also specified.
+At the next line, a worker lock called :data:`build_lock` is created with the name ``worker_builds``.
+Since the requirements of the worker lock are a bit more complicated, two optional arguments are also specified.
 The ``maxCount`` parameter sets the default limit for builds in counting mode to ``1``.
-For the worker called ``'fast'`` however, we want to have at most three builds, and for the worker called ``'new'`` the upper limit is two builds running at the same time.
+For the worker called ``'fast'`` however, we want to have at most three builds, and for the worker called ``'new'``, the upper limit is two builds running at the same time.
 
 The next step is accessing the locks in builds.
-Buildbot allows a lock to be used during an entire build (from beginning to end), or only during a single build step.
-In the latter case, the lock is claimed for use just before the step starts, and released again when the step ends.
-To prevent deadlocks, [#]_ it is not possible to claim or release locks at other times.
+Buildbot allows a lock to be used during an entire build (from beginning to end) or only during a single build step.
+In the latter case, the lock is claimed for use just before the step starts and released again when the step ends.
+To prevent deadlocks [#]_, it is not possible to claim or release locks at other times.
 
 To use locks, you add them with a ``locks`` argument to a build or a step.
 Each use of a lock is either in counting mode (that is, possibly shared with
@@ -95,9 +92,9 @@ access always succeeds. This argument allows to use locks for balancing a
 shared resource that is utilized unevenly.
 
 A build or build step proceeds only when it has acquired all locks.
-If a build or step needs a lot of locks, it may be starved [#]_ by other builds that need fewer locks.
+If a build or step needs many locks, it may be starved [#]_ by other builds requiring fewer locks.
 
-To illustrate use of locks, a few examples.
+To illustrate the use of locks, here are a few examples.
 
 .. code-block:: python
 
@@ -130,15 +127,15 @@ To illustrate use of locks, a few examples.
 
 Here we have four workers :data:`fast`, :data:`new`, :data:`old`, and :data:`other`.
 Each worker performs the same checkout, make, and test build step sequence.
-We want to enforce that at most one test step is executed between all workers due to restrictions with the data base server.
-This is done by adding the ``locks=`` parameter with the third step.
+We want to enforce that at most one test step is executed between all workers due to restrictions with the database server.
+This is done by adding the ``locks=`` parameter to the third step.
 It takes a list of locks with their access mode.
-Alternatively, this can take a renderable that returns an list of locks with their access mode.
+Alternatively, this can take a renderable that returns a list of locks with their access mode.
 
-In this case only the :data:`db_lock` is needed.
+In this case, only the :data:`db_lock` is needed.
 The exclusive access mode is used to ensure there is at most one worker that executes the test step.
 
-In addition to exclusive accessing the data base, we also want workers to stay responsive even under the load of a large number of builds being triggered.
+In addition to exclusive access to the database, we also want workers to stay responsive even under the load of a large number of builds being triggered.
 For this purpose, the worker lock called :data:`build_lock` is defined.
 Since the restraint holds for entire builds, the lock is specified in the builder with ``'locks': [build_lock.access('counting')]``.
 
@@ -149,10 +146,10 @@ The two are equivalent, but the former is preferred.
 
 .. [#]
 
-   Deadlock is the situation where two or more workers each hold a lock in exclusive mode, and in addition want to claim the lock held by the other worker exclusively as well.
-   Since locks allow at most one exclusive user, both workers will wait forever.
+   Deadlock is the situation where two or more workers each hold a lock in exclusive mode, and in addition, they want to claim the lock held by the other worker exclusively as well.
+   Since locks allow at most one exclusive user, both workers would wait forever.
 
 .. [#]
 
-   Starving is the situation that only a few locks are available, and they are immediately grabbed by another build.
+   Starving is the situation where only a few locks are available, and they are immediately grabbed by another build.
    As a result, it may take a long time before all locks needed by the starved build are free at the same time.
