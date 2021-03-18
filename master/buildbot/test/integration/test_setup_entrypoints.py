@@ -23,6 +23,7 @@ import warnings
 import twisted
 from twisted.trial import unittest
 from twisted.trial.unittest import SkipTest
+from zope.interface.verify import verifyClass
 
 from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
@@ -61,13 +62,38 @@ def get_python_module_contents(package_name):
 # new entry points.
 class TestSetupPyEntryPoints(unittest.TestCase):
     def test_changes(self):
-        self.verify_plugins_registered('changes', 'buildbot.changes', IChangeSource)
+        known_not_exported = {
+            'buildbot.changes.gerritchangesource.GerritChangeSourceBase',
+            'buildbot.changes.base.ReconfigurablePollingChangeSource',
+            'buildbot.changes.base.PollingChangeSource',
+            'buildbot.changes.base.ChangeSource',
+        }
+        self.verify_plugins_registered('changes', 'buildbot.changes', IChangeSource,
+                                       known_not_exported)
 
     def test_schedulers(self):
-        self.verify_plugins_registered('schedulers', 'buildbot.schedulers', IScheduler)
+        known_not_exported = {
+            'buildbot.schedulers.basic.BaseBasicScheduler',
+            'buildbot.schedulers.timed.Timed',
+            'buildbot.schedulers.trysched.TryBase',
+            'buildbot.schedulers.base.BaseScheduler',
+            'buildbot.schedulers.timed.NightlyBase',
+            'buildbot.schedulers.basic.Scheduler',
+        }
+        self.verify_plugins_registered('schedulers', 'buildbot.schedulers', IScheduler,
+                                       known_not_exported)
 
     def test_steps(self):
-        self.verify_plugins_registered('steps', 'buildbot.steps', IBuildStep)
+        known_not_exported = {
+            'buildbot.steps.download_secret_to_worker.RemoveWorkerFileSecret',
+            'buildbot.steps.source.base.Source',
+            'buildbot.steps.download_secret_to_worker.DownloadSecretsToWorker',
+            'buildbot.steps.gitdiffinfo.GitDiffInfo',
+            'buildbot.steps.shell.SetProperty',
+            'buildbot.steps.worker.WorkerBuildStep',
+            'buildbot.steps.vstudio.VisualStudio',
+        }
+        self.verify_plugins_registered('steps', 'buildbot.steps', IBuildStep, known_not_exported)
 
     def test_util(self):
         # work around Twisted bug 9384.
@@ -167,7 +193,15 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         get_plugins('webhooks', None, load_now=True)
 
     def test_workers(self):
-        self.verify_plugins_registered('worker', 'buildbot.worker', IWorker)
+        known_not_exported = {
+            'buildbot.worker.upcloud.UpcloudLatentWorker',
+            'buildbot.worker.base.AbstractWorker',
+            'buildbot.worker.latent.AbstractLatentWorker',
+            'buildbot.worker.latent.LocalLatentWorker',
+            'buildbot.worker.marathon.MarathonLatentWorker',
+            'buildbot.worker.docker.DockerBaseWorker',
+        }
+        self.verify_plugins_registered('worker', 'buildbot.worker', IWorker, known_not_exported)
 
     def verify_plugins_registered(self, plugin_type, module_name, interface,
                                   known_not_exported=None):
@@ -186,6 +220,13 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         self.assertEqual(not_exported_classes, set())
         self.assertEqual(known_not_exported - existing_classes, set())
 
+    def class_provides_iface(self, interface, klass):
+        try:
+            verifyClass(interface, klass)
+            return True
+        except Exception:
+            return False
+
     def get_existing_classes(self, module_name, interface):
         existing_modules = get_python_module_contents(module_name)
         existing_classes = set()
@@ -198,7 +239,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
                     if name.startswith('_'):
                         continue
                     if inspect.isclass(obj) and obj.__module__ == existing_module:
-                        if interface is not None and not issubclass(obj, interface):
+                        if interface is not None and not self.class_provides_iface(interface, obj):
                             continue
                         existing_classes.add('{}.{}'.format(existing_module, name))
         return existing_classes
