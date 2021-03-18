@@ -162,6 +162,15 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                  ).format(self, type(body), type(new_body)))
         return body, False
 
+    def _get_patches_for_build(self, build):
+        if not self.add_patch:
+            return []
+
+        ss_list = build['buildset']['sourcestamps']
+
+        return [ss['patch'] for ss in ss_list
+                if 'patch' in ss and ss['patch'] is not None]
+
     @defer.inlineCallbacks
     def build_message(self, formatter, master, reporter, name, builds, results):
         # The given builds must refer to builds from a single buildset
@@ -172,12 +181,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         msgtype = None
         users = set()
         for build in builds:
-            if self.add_patch:
-                ss_list = build['buildset']['sourcestamps']
-
-                for ss in ss_list:
-                    if 'patch' in ss and ss['patch'] is not None:
-                        patches.append(ss['patch'])
+            patches.extend(self._get_patches_for_build(build))
 
             build_logs = yield self._get_logs_for_build(master, build)
             logs.extend(build_logs)
