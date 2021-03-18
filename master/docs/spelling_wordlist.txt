@@ -647,6 +647,7 @@ pyasn
 pyflakes
 Pyflakes
 pyjade
+pylint
 pypi
 pypugjs
 pysqlite
