@@ -206,7 +206,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
 
         self.master.stopService()
 
-        self.assertLogged("reconfig aborted without")
+        self.assertLogged("configuration update aborted without")
         self.assertFalse(self.master.reconfigService.called)
 
     @defer.inlineCallbacks
