@@ -164,7 +164,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
         res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True,
                                                 wantPreviousBuild=True)
         build = res['builds'][0]
-        res = yield formatter.format_message_for_build(mode, "Builder1", build, self.master,
+        res = yield formatter.format_message_for_build(mode, build, self.master,
                                                        ["him@bar", "me@foo"])
         return res
 

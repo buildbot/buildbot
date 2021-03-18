@@ -220,7 +220,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     def test_buildMessage(self):
         mn, build, formatter = yield self.setupBuildMessage(mode=("passing",))
 
-        formatter.format_message_for_build.assert_called_with(('passing',), 'Builder0', build,
+        formatter.format_message_for_build.assert_called_with(('passing',), build,
                                                               self.master, ['me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with(['me@foo'])

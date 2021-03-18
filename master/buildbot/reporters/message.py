@@ -109,7 +109,7 @@ def get_projects_text(source_stamps, master):
     return ', '.join(list(projects))
 
 
-def create_context_for_build(mode, buildername, build, master, blamelist):
+def create_context_for_build(mode, build, master, blamelist):
     buildset = build['buildset']
     ss_list = buildset['sourcestamps']
     results = build['results']
@@ -122,7 +122,7 @@ def create_context_for_build(mode, buildername, build, master, blamelist):
     return {
         'results': build['results'],
         'mode': mode,
-        'buildername': buildername,
+        'buildername': build['builder']['name'],
         'workername': build['properties'].get('workername', ["<unknown>"])[0],
         'buildset': buildset,
         'build': build,
@@ -208,7 +208,7 @@ class MessageFormatterBase(util.ComparableMixin):
 
 
 class MessageFormatterEmpty(MessageFormatterBase):
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+    def format_message_for_build(self, mode, build, master, blamelist):
         return {
             'body': None,
             'type': 'plain',
@@ -224,7 +224,7 @@ class MessageFormatterFunction(MessageFormatterBase):
         self._function = function
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+    def format_message_for_build(self, mode, build, master, blamelist):
         msgdict = yield self.render_message_dict(master, {'build': build})
         return msgdict
 
@@ -245,7 +245,7 @@ class MessageFormatterRenderable(MessageFormatterBase):
         self.subject = subject
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+    def format_message_for_build(self, mode, build, master, blamelist):
         msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
         return msgdict
 
@@ -318,8 +318,8 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
 class MessageFormatter(MessageFormatterBaseJinja):
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
-        ctx = create_context_for_build(mode, buildername, build, master, blamelist)
+    def format_message_for_build(self, mode, build, master, blamelist):
+        ctx = create_context_for_build(mode, build, master, blamelist)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 
