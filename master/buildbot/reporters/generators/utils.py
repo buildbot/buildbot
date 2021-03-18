@@ -210,7 +210,6 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             'body': body,
             'subject': subject,
             'type': msgtype,
-            'builder_name': name,
             'results': results,
             'builds': builds,
             'users': list(users),

@@ -89,7 +89,6 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
-            'builder_name': 'whole buildset',
             'results': SUCCESS,
             'builds': [build],
             'users': [],
