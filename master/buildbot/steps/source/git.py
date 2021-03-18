@@ -332,7 +332,7 @@ class Git(Source, GitStepMixin):
             rev = self.revision
         else:
             rev = 'FETCH_HEAD'
-        command = ['reset', '--hard', rev, '--']
+        command = ['checkout', '-f', rev]
         abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
         res = yield self._dovccmd(command, abandonOnFailure)
 
@@ -424,9 +424,8 @@ class Git(Source, GitStepMixin):
 
         # If revision specified checkout that revision
         if self.revision:
-            res = yield self._dovccmd(['reset', '--hard',
-                                       self.revision, '--'],
-                                      shallowClone)
+            res = yield self._dovccmd(['checkout', '-f', self.revision], shallowClone)
+
         # init and update submodules, recursively. If there's not recursion
         # it will not do it.
         if self.submodules:

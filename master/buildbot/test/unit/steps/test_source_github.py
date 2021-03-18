@@ -53,7 +53,7 @@ class TestGitHub(test_source_git.TestGit):
                                  'refs/pull/1234/merge', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/pull/1234/merge'])
@@ -97,7 +97,7 @@ class TestGitHub(test_source_git.TestGit):
                         command=['git', 'cat-file', '-e', '12345678'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', '12345678', '--'])
+                        command=['git', 'checkout', '-f', '12345678'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/pull/1234/head'])

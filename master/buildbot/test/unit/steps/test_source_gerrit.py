@@ -64,7 +64,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'gerrit_branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'gerrit_branch'])
@@ -110,7 +110,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'refs/changes/34/1234/567', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/changes/34/1234/567'])
@@ -156,7 +156,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'refs/changes/34/1234/567', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'refs/changes/34/1234/567'])
@@ -202,7 +202,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
