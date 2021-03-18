@@ -169,8 +169,7 @@ class MailNotifier(ReporterBase):
         return a
 
     @defer.inlineCallbacks
-    def createEmail(self, msgdict, builderName, title, results, builds=None,
-                    patches=None, logs=None):
+    def createEmail(self, msgdict, title, results, builds=None, patches=None, logs=None):
         text = msgdict['body']
         type = msgdict['type']
         subject = msgdict['subject']
@@ -242,7 +241,6 @@ class MailNotifier(ReporterBase):
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         type = merge_reports_prop_take_first(reports, 'type')
-        builderName = merge_reports_prop_take_first(reports, 'builder_name')
         results = merge_reports_prop(reports, 'results')
         builds = merge_reports_prop(reports, 'builds')
         users = merge_reports_prop(reports, 'users')
@@ -257,8 +255,8 @@ class MailNotifier(ReporterBase):
         if not body.endswith(b"\n\n"):
             msgdict['body'] = body + b'\n\n'
 
-        m = yield self.createEmail(msgdict, builderName, self.master.config.title,
-                                   results, builds, patches, logs)
+        m = yield self.createEmail(msgdict, self.master.config.title, results, builds,
+                                   patches, logs)
 
         # now, who is this message going to?
         if worker is None:
