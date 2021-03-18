@@ -16,20 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
-import sys
-
-import twisted
 from twisted.python import runtime
-from twisted.python import versions
-
-
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2, 7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
 
 
 def skipUnlessPlatformIs(platform):

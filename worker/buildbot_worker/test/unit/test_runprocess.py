@@ -346,7 +346,6 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         self.assertTrue({'rc': 0} in b.updates, b.show())
 
-    @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_startCommand_exception(self):
         b = FakeWorkerForBuilder(self.basedir)
