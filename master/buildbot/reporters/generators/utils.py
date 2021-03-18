@@ -179,11 +179,8 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                     if 'patch' in ss and ss['patch'] is not None:
                         patches.append(ss['patch'])
 
-            if self.add_logs:
-                build_logs = yield self._get_logs_for_build(master, build)
-                if isinstance(self.add_logs, list):
-                    build_logs = [log for log in build_logs if self._should_attach_log(log)]
-                logs.extend(build_logs)
+            build_logs = yield self._get_logs_for_build(master, build)
+            logs.extend(build_logs)
 
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
             users.update(set(blamelist))
@@ -219,14 +216,18 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
     @defer.inlineCallbacks
     def _get_logs_for_build(self, master, build):
+        if not self.add_logs:
+            return []
+
         all_logs = []
         steps = yield master.data.get(('builds', build['buildid'], "steps"))
         for step in steps:
             logs = yield master.data.get(("steps", step['stepid'], 'logs'))
             for l in logs:
                 l['stepname'] = step['name']
-                l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
-                all_logs.append(l)
+                if self._should_attach_log(l):
+                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+                    all_logs.append(l)
         return all_logs
 
     def _verify_build_generator_mode(self, mode):
