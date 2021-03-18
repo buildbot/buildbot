@@ -206,9 +206,13 @@ class MessageFormatterBase(util.ComparableMixin):
     def render_message_subject(self, context):
         return None
 
+    def format_message_for_build(self, master, build, **kwargs):
+        # Known kwargs keys: mode, users
+        raise NotImplementedError
+
 
 class MessageFormatterEmpty(MessageFormatterBase):
-    def format_message_for_build(self, mode, build, master, blamelist):
+    def format_message_for_build(self, master, build, **kwargs):
         return {
             'body': None,
             'type': 'plain',
@@ -224,7 +228,7 @@ class MessageFormatterFunction(MessageFormatterBase):
         self._function = function
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, build, master, blamelist):
+    def format_message_for_build(self, master, build, **kwargs):
         msgdict = yield self.render_message_dict(master, {'build': build})
         return msgdict
 
@@ -245,7 +249,7 @@ class MessageFormatterRenderable(MessageFormatterBase):
         self.subject = subject
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, build, master, blamelist):
+    def format_message_for_build(self, master, build, **kwargs):
         msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
         return msgdict
 
@@ -318,8 +322,8 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
 class MessageFormatter(MessageFormatterBaseJinja):
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, build, master, blamelist):
-        ctx = create_context_for_build(mode, build, master, blamelist)
+    def format_message_for_build(self, master, build, users=None, mode=None):
+        ctx = create_context_for_build(mode, build, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 

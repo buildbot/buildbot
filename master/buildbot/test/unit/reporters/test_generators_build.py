@@ -87,7 +87,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         g, build = yield self.setup_generator(mode=("change",))
         report = yield self.build_message(g, build)
 
-        g.formatter.format_message_for_build.assert_called_with(('change',), build, self.master, [])
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -105,7 +106,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
         g, build = yield self.setup_generator(results=None, mode=("change",))
         report = yield self.build_message(g, build, results=None)
 
-        g.formatter.format_message_for_build.assert_called_with(('change',), build, self.master, [])
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -131,7 +133,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
                                               message=message, mode=("change",))
         report = yield self.build_message(g, build, results=None)
 
-        g.formatter.format_message_for_build.assert_called_with(('change',), build, self.master, [])
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -301,8 +304,9 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         build = yield self.insert_build_finished_get_props(SUCCESS)
         report = yield self.build_message(g, build)
 
-        g.start_formatter.format_message_for_build.assert_called_with(self.all_messages, build,
-                                                                      self.master, [])
+        g.start_formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                      mode=self.all_messages,
+                                                                      users=[])
 
         self.assertEqual(report, {
             'body': 'start body',
@@ -321,8 +325,9 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
         build = yield self.insert_build_new()
         report = yield self.build_message(g, build, results=None)
 
-        g.start_formatter.format_message_for_build.assert_called_with(self.all_messages, build,
-                                                                      self.master, [])
+        g.start_formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                      mode=self.all_messages,
+                                                                      users=[])
 
         self.assertEqual(report, {
             'body': 'start body',

@@ -88,7 +88,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         g, build, _ = yield self.setup_generator(mode=("change",))
         report = yield self.buildset_message(g, [build])
 
-        g.formatter.format_message_for_build.assert_called_with(('change',), build, self.master, [])
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -106,7 +107,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         g, build, _ = yield self.setup_generator(results=None, mode=("change",))
         report = yield self.buildset_message(g, [build], results=None)
 
-        g.formatter.format_message_for_build.assert_called_with(('change',), build, self.master, [])
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
@@ -132,7 +134,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
                                                  message=message, mode=("change",))
         report = yield self.buildset_message(g, [build], results=None)
 
-        g.formatter.format_message_for_build.assert_called_with(('change',), build, self.master, [])
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
 
         self.assertEqual(report, {
             'body': 'body',
