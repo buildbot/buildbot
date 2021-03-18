@@ -38,6 +38,7 @@ class RTypes:
 class DataConnector(service.AsyncService):
 
     submodules = [
+        'buildbot.data.build_data',
         'buildbot.data.builders',
         'buildbot.data.builds',
         'buildbot.data.buildrequests',
