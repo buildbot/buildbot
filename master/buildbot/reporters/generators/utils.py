@@ -172,47 +172,30 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 if 'patch' in ss and ss['patch'] is not None]
 
     @defer.inlineCallbacks
-    def build_message(self, formatter, master, reporter, name, builds, results):
-        # The given builds must refer to builds from a single buildset
-        patches = []
-        logs = []
-        body = None
-        subject = None
-        msgtype = None
-        users = set()
-        for build in builds:
-            patches.extend(self._get_patches_for_build(build))
+    def build_message(self, formatter, master, reporter, build):
+        patches = self._get_patches_for_build(build)
 
-            build_logs = yield self._get_logs_for_build(master, build)
-            logs.extend(build_logs)
+        logs = yield self._get_logs_for_build(master, build)
 
-            blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
-            users.update(set(blamelist))
+        users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
-            buildmsg = yield formatter.format_message_for_build(self.mode, build, master, blamelist)
+        buildmsg = yield formatter.format_message_for_build(self.mode, build, master, users)
 
-            msgtype, ok = self._merge_msgtype(msgtype, buildmsg['type'])
-            if not ok:
-                continue
+        results = build['results']
 
-            subject = self._merge_subject(subject, buildmsg['subject'])
-
-            body, ok = self._merge_body(body, buildmsg['body'])
-            if not ok:
-                continue
-
+        subject = buildmsg['subject']
         if subject is None and self.subject is not None:
             subject = self.subject % {'result': statusToString(results),
                                       'projectName': master.config.title,
                                       'title': master.config.title,
-                                      'builder': name}
+                                      'builder': build['builder']['name']}
 
         return {
-            'body': body,
+            'body': buildmsg['body'],
             'subject': subject,
-            'type': msgtype,
+            'type': buildmsg['type'],
             'results': results,
-            'builds': builds,
+            'builds': [build],
             'users': list(users),
             'patches': patches,
             'logs': logs
