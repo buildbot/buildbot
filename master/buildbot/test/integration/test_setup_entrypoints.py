@@ -88,7 +88,6 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.steps.download_secret_to_worker.RemoveWorkerFileSecret',
             'buildbot.steps.source.base.Source',
             'buildbot.steps.download_secret_to_worker.DownloadSecretsToWorker',
-            'buildbot.steps.gitdiffinfo.GitDiffInfo',
             'buildbot.steps.shell.SetProperty',
             'buildbot.steps.worker.WorkerBuildStep',
             'buildbot.steps.vstudio.VisualStudio',
