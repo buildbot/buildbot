@@ -31,7 +31,7 @@ class Reconfigurator:
 
     rc = 0
 
-    def run(self, basedir, quiet):
+    def run(self, basedir, quiet, timeout=None):
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
             print("Reconfig (through SIGHUP) is not supported on Windows.")
@@ -46,12 +46,12 @@ class Reconfigurator:
         # keep reading twistd.log. Display all messages between "loading
         # configuration from ..." and "configuration update complete" or
         # "I will keep using the previous config file instead.", or until
-        # 10 seconds have elapsed.
+        # `timeout` seconds have elapsed.
 
         self.sent_signal = False
         reactor.callLater(0.2, self.sighup)
 
-        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"), timeout=timeout)
         d = lw.start()
         d.addCallbacks(self.success, self.failure)
         d.addBoth(lambda _: self.rc)
@@ -87,5 +87,14 @@ class Reconfigurator:
 def reconfig(config):
     basedir = config['basedir']
     quiet = config['quiet']
+
+    timeout = config.get('progress_timeout', None)
+    if timeout is not None:
+        try:
+            timeout = float(timeout)
+        except ValueError:
+            print('Progress timeout must be a number')
+            return 1
+
     r = Reconfigurator()
-    return r.run(basedir, quiet)
+    return r.run(basedir, quiet, timeout=timeout)
