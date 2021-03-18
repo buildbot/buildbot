@@ -162,58 +162,41 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                  ).format(self, type(body), type(new_body)))
         return body, False
 
+    def _get_patches_for_build(self, build):
+        if not self.add_patch:
+            return []
+
+        ss_list = build['buildset']['sourcestamps']
+
+        return [ss['patch'] for ss in ss_list
+                if 'patch' in ss and ss['patch'] is not None]
+
     @defer.inlineCallbacks
-    def build_message(self, formatter, master, reporter, name, builds, results):
-        # The given builds must refer to builds from a single buildset
-        patches = []
-        logs = []
-        body = None
-        subject = None
-        msgtype = None
-        users = set()
-        for build in builds:
-            if self.add_patch:
-                ss_list = build['buildset']['sourcestamps']
+    def build_message(self, formatter, master, reporter, build):
+        patches = self._get_patches_for_build(build)
 
-                for ss in ss_list:
-                    if 'patch' in ss and ss['patch'] is not None:
-                        patches.append(ss['patch'])
+        logs = yield self._get_logs_for_build(master, build)
 
-            if self.add_logs:
-                build_logs = yield self._get_logs_for_build(master, build)
-                if isinstance(self.add_logs, list):
-                    build_logs = [log for log in build_logs if self._should_attach_log(log)]
-                logs.extend(build_logs)
+        users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
-            blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
-            users.update(set(blamelist))
+        buildmsg = yield formatter.format_message_for_build(master, build, mode=self.mode,
+                                                            users=users)
 
-            buildmsg = yield formatter.format_message_for_build(self.mode, name, build,
-                                                                master, blamelist)
+        results = build['results']
 
-            msgtype, ok = self._merge_msgtype(msgtype, buildmsg['type'])
-            if not ok:
-                continue
-
-            subject = self._merge_subject(subject, buildmsg['subject'])
-
-            body, ok = self._merge_body(body, buildmsg['body'])
-            if not ok:
-                continue
-
+        subject = buildmsg['subject']
         if subject is None and self.subject is not None:
             subject = self.subject % {'result': statusToString(results),
                                       'projectName': master.config.title,
                                       'title': master.config.title,
-                                      'builder': name}
+                                      'builder': build['builder']['name']}
 
         return {
-            'body': body,
+            'body': buildmsg['body'],
             'subject': subject,
-            'type': msgtype,
-            'builder_name': name,
+            'type': buildmsg['type'],
             'results': results,
-            'builds': builds,
+            'builds': [build],
             'users': list(users),
             'patches': patches,
             'logs': logs
@@ -221,14 +204,18 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
     @defer.inlineCallbacks
     def _get_logs_for_build(self, master, build):
+        if not self.add_logs:
+            return []
+
         all_logs = []
         steps = yield master.data.get(('builds', build['buildid'], "steps"))
         for step in steps:
             logs = yield master.data.get(("steps", step['stepid'], 'logs'))
             for l in logs:
                 l['stepname'] = step['name']
-                l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
-                all_logs.append(l)
+                if self._should_attach_log(l):
+                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+                    all_logs.append(l)
         return all_logs
 
     def _verify_build_generator_mode(self, mode):

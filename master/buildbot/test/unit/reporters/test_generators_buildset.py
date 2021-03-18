@@ -68,12 +68,85 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
         return (g, build, buildset)
 
     @defer.inlineCallbacks
+    def buildset_message(self, g, builds, results=SUCCESS):
+        reporter = Mock()
+        reporter.getResponsibleUsersForBuild.return_value = []
+
+        report = yield g.buildset_message(g.formatter, self.master, reporter, builds, results)
+        return report
+
+    @defer.inlineCallbacks
     def generate(self, g, key, build):
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
         report = yield g.generate(self.master, reporter, key, build)
         return report
+
+    @defer.inlineCallbacks
+    def test_buildset_message_nominal(self):
+        g, build, _ = yield self.setup_generator(mode=("change",))
+        report = yield self.buildset_message(g, [build])
+
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'results': SUCCESS,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_buildset_message_no_result(self):
+        g, build, _ = yield self.setup_generator(results=None, mode=("change",))
+        report = yield self.buildset_message(g, [build], results=None)
+
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'subject',
+            'type': 'text',
+            'results': None,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
+
+    @defer.inlineCallbacks
+    def test_buildset_message_no_result_default_subject(self):
+        subject = 'result: %(result)s builder: %(builder)s title: %(title)s'
+        message = {
+            "body": "body",
+            "type": "text",
+            "subject": None,
+        }
+
+        g, build, _ = yield self.setup_generator(results=None, subject=subject,
+                                                 message=message, mode=("change",))
+        report = yield self.buildset_message(g, [build], results=None)
+
+        g.formatter.format_message_for_build.assert_called_with(self.master, build,
+                                                                mode=('change',), users=[])
+
+        self.assertEqual(report, {
+            'body': 'body',
+            'subject': 'result: not finished builder: whole buildset title: Buildbot',
+            'type': 'text',
+            'results': None,
+            'builds': [build],
+            'users': [],
+            'patches': [],
+            'logs': []
+        })
 
     @defer.inlineCallbacks
     def test_generate_complete(self):
@@ -89,7 +162,6 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
-            'builder_name': 'whole buildset',
             'results': SUCCESS,
             'builds': [build],
             'users': [],

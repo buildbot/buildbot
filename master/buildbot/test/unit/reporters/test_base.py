@@ -89,14 +89,13 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
     def test_buildMessage_nominal(self):
         mn, build, formatter = yield self.setupBuildMessage(mode=("failing",))
 
-        formatter.format_message_for_build.assert_called_with(('failing',), 'Builder0', build,
-                                                              self.master, ['me@foo'])
+        formatter.format_message_for_build.assert_called_with(self.master, build, mode=('failing',),
+                                                              users=['me@foo'])
 
         report = {
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
-            'builder_name': 'Builder0',
             'results': FAILURE,
             'builds': [build],
             'users': ['me@foo'],
