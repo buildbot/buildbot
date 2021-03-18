@@ -1,0 +1,2 @@
+Improved consistency of log messages produced by the reconfig script.
+Note that this output is not part of public API of Buildbot and may change at any time.

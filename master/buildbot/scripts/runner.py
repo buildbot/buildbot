@@ -218,6 +218,11 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
     ]
 
+    optParameters = [
+        ['progress_timeout', None, None,
+         'The amount of time the script waits for messages in the logs that indicate progress.'],
+    ]
+
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
 
