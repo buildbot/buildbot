@@ -613,6 +613,7 @@ gotperspective
 gotrootobject
 gpo
 gracefulshutdown
+graphql
 gravatar
 groupmemberpattern
 gtk
@@ -1092,6 +1093,7 @@ pyparsing
 pypugjs
 pythonpath
 qa
+queriable
 qmail
 quickmode
 quickstart

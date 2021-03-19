@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+import textwrap
+
+import graphql
+
 import mock
 
 from twisted.internet import defer
@@ -153,7 +157,7 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         self.assertIsInstance(match[0], TestEndpoint)
         match = self.data.matcher[('test', '10', 'p2')]
         self.assertIsInstance(match[0], TestEndpoint)
-        match = self.data.matcher[('test',)]
+        match = self.data.matcher[('tests',)]
         self.assertIsInstance(match[0], TestsEndpoint)
         self.assertEqual(match[1], dict())
         match = self.data.matcher[('test', 'foo')]
@@ -220,11 +224,30 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         ep.control.assert_called_once_with('foo!', {'arg': 2},
                                            {'fooid': 10})
 
+    def test_get_graphql_schema(self):
+        # use the test module for basic graphQLSchema generation
+        mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
+        self.data._scanModule(mod)
+        schema = self.data.get_graphql_schema()
+        self.assertEqual(schema, textwrap.dedent("""
+        # custom scalar types for buildbot data model
+        scalar Date   # stored as utc unix timestamp
+        scalar Binary # arbitrary data stored as base85
+        scalar JSON  # arbitrary json stored as string, mainly used for properties values
+        type Query {
+          tests(testid: Int): [Test]!
+        }
+        type Test {
+          testid: Int!
+        }
+        """))
+        schema = graphql.build_schema(schema)
+
 # classes discovered by test_scanModule, above
 
 
 class TestsEndpoint(base.Endpoint):
-    pathPatterns = "/test"
+    pathPatterns = "/tests"
     rootLinkName = 'tests'
 
 
@@ -246,6 +269,8 @@ class TestEndpoint(base.Endpoint):
 
 class TestResourceType(base.ResourceType):
     name = 'test'
+    plural = 'tests'
+
     endpoints = [TestsEndpoint, TestEndpoint, TestsEndpointSubclass]
     keyFields = ('testid', )
 
@@ -256,3 +281,19 @@ class TestResourceType(base.ResourceType):
     @base.updateMethod
     def testUpdate(self):
         return "testUpdate return"
+
+
+class DataConnectorGraphQL(TestReactorMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self)
+        self.data = connector.DataConnector()
+        yield self.data.setServiceParent(self.master)
+
+    def test_get_graphql_schema(self):
+        schema = self.data.get_graphql_schema()
+        # graphql parses the schema and raise an error if it is incorrect
+        # or incoherent (e.g. missing type definition)
+        schema = graphql.build_schema(schema)

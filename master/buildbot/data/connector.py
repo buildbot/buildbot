@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import functools
 import inspect
+import textwrap
 
 from twisted.internet import defer
 from twisted.python import reflect
@@ -21,6 +23,7 @@ from twisted.python import reflect
 from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import resultspec
+from buildbot.data.types import Entity
 from buildbot.util import pathmatch
 from buildbot.util import service
 
@@ -138,6 +141,7 @@ class DataConnector(service.AsyncService):
         rsrc = self.getResourceType(rtype)
         return rsrc.produceEvent(msg, event)
 
+    @functools.lru_cache(1)
     def allEndpoints(self):
         """return the full spec of the connector as a list of dicts
         """
@@ -148,3 +152,56 @@ class DataConnector(service.AsyncService):
                               type=str(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))
         return paths
+
+    @functools.lru_cache(1)
+    def get_graphql_schema(self):
+        """Return the graphQL Schema of the buildbot data model
+        """
+        types = {}
+        schema = textwrap.dedent("""
+        # custom scalar types for buildbot data model
+        scalar Date   # stored as utc unix timestamp
+        scalar Binary # arbitrary data stored as base85
+        scalar JSON  # arbitrary json stored as string, mainly used for properties values
+        """)
+
+        # type dependencies must be added recursively
+        def add_dependent_types(ent):
+            typename = ent.toGraphQLTypeName()
+            if typename not in types and isinstance(ent, Entity):
+                types[typename] = ent
+            for dtyp in ent.graphQLDependentTypes():
+                add_dependent_types(dtyp)
+
+        # root query contain the list of item available directly
+        # mapped against the rootLinks
+        schema += "type Query {\n"
+
+        for rootlink in sorted(v['name'] for v in self.rootLinks):
+            ep = self.matcher[(rootlink,)][0]
+            typ = ep.rtype.entityType
+            typename = typ.toGraphQLTypeName()
+            add_dependent_types(typ)
+            # build the queriable parameters, via keyFields
+            keyfields = []
+            for field in ep.rtype.keyFields:
+                field_type = ep.rtype.entityType.fields[field].toGraphQLTypeName()
+                keyfields.append(f"{field}: {field_type}")
+            keyfields = ", ".join(keyfields)
+            if keyfields:
+                keyfields = f"({keyfields})"
+            schema += f"  {ep.rtype.plural}{keyfields}: [{typename}]!\n"
+
+        schema += "}\n"
+
+        for name, typ in types.items():
+            type_spec = typ.toGraphQL()
+            schema += f"type {name} {{\n"
+            for field in type_spec.get('fields', []):
+                field_type = field['type']
+                if not isinstance(field_type, str):
+                    field_type = field_type['type']
+                schema += f"  {field['name']}: {field_type}\n"
+            schema += "}\n"
+
+        return schema
