@@ -736,7 +736,7 @@ Finally, this example will run only on December 24th:
 Try Schedulers
 ::::::::::::::
 
-This scheduler allows developers to use the :command:`buildbot try` command to trigger builds of code they have not yet committed.
+This scheduler allows developers to use the :bb:cmdline:`buildbot try<try>` command to trigger builds of code they have not yet committed.
 See :bb:cmdline:`try` for complete details.
 
 Two implementations are available: :bb:sched:`Try_Jobdir` and :bb:sched:`Try_Userpass`.

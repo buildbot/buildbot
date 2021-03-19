@@ -1,0 +1,1 @@
+Improved error message when try client cannot create a build due to builder being not configured on master side.
