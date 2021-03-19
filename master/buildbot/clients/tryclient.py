@@ -699,8 +699,6 @@ class Try(pb.Referenceable):
                                     self.project, self.builderNames, self.who, self.comment,
                                     self.config.get('properties', {}))
 
-
-
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
         if self.connect == "ssh":
@@ -851,6 +849,7 @@ class Try(pb.Referenceable):
             self.exitcode = 1
         self.running.callback(self.exitcode)
 
+    @defer.inlineCallbacks
     def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
         # get the names of the configured builders that can
@@ -864,24 +863,20 @@ class Try(pb.Referenceable):
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
             reactor.connectTCP(tryhost, tryport, f)
-            d.addCallback(self._getBuilderNames)
-            return d
+            remote = yield d
+            buildernames = yield remote.callRemote("getAvailableBuilderNames")
+
+            output("The following builders are available for the try scheduler: ")
+            for buildername in buildernames:
+                output(buildername)
+
+            yield remote.broker.transport.loseConnection()
+            return
         if self.connect == "ssh":
             output("Cannot get available builders over ssh.")
             sys.exit(1)
         raise RuntimeError(
             "unknown connecttype '{}', should be 'pb'".format(self.connect))
-
-    def _getBuilderNames(self, remote):
-        d = remote.callRemote("getAvailableBuilderNames")
-        d.addCallback(self._getBuilderNames2)
-        d.addCallback(lambda _: remote.broker.transport.loseConnection())
-        return d
-
-    def _getBuilderNames2(self, buildernames):
-        output("The following builders are available for the try scheduler: ")
-        for buildername in buildernames:
-            output(buildername)
 
     def announce(self, message):
         if not self.quiet:
