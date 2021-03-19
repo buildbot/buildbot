@@ -679,6 +679,7 @@ class Try(pb.Referenceable):
         d = pp.d
         return d
 
+    @defer.inlineCallbacks
     def deliver_job_pb(self):
         user = self.getopt("username")
         passwd = self.getopt("passwd")
@@ -688,8 +689,17 @@ class Try(pb.Referenceable):
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
         reactor.connectTCP(tryhost, tryport, f)
-        d.addCallback(self._deliverJob_pb)
-        return d
+        remote = yield d
+
+        ss = self.sourcestamp
+        output("Delivering job; comment=", self.comment)
+
+        self.buildsetStatus = \
+            yield remote.callRemote("try", ss.branch, ss.revision, ss.patch, ss.repository,
+                                    self.project, self.builderNames, self.who, self.comment,
+                                    self.config.get('properties', {}))
+
+
 
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
@@ -699,27 +709,6 @@ class Try(pb.Referenceable):
             return self.deliver_job_pb()
         raise RuntimeError("unknown connecttype '{}', "
                            "should be 'ssh' or 'pb'".format(self.connect))
-
-    def _deliverJob_pb(self, remote):
-        ss = self.sourcestamp
-        output("Delivering job; comment=", self.comment)
-
-        d = remote.callRemote("try",
-                              ss.branch,
-                              ss.revision,
-                              ss.patch,
-                              ss.repository,
-                              self.project,
-                              self.builderNames,
-                              self.who,
-                              self.comment,
-                              self.config.get('properties', {}))
-        d.addCallback(self._deliverJob_pb2)
-        return d
-
-    def _deliverJob_pb2(self, status):
-        self.buildsetStatus = status
-        return status
 
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
