@@ -80,7 +80,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'ms-viewport', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'ms-viewport'])

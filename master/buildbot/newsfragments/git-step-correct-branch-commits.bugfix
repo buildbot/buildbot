@@ -1,0 +1,2 @@
+Fixed the ``Git`` source step causing last active branch to point to wrong commits.
+This only affected the branch state in the repository, the checked out code was correct.
