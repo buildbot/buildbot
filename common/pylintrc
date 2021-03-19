@@ -86,6 +86,7 @@ disable=
   fixme,
   global-variable-undefined,
   unused-argument,
+  chained-comparison,
   maybe-no-member,
   locally-disabled,
   bad-classmethod-argument,
