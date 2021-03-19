@@ -1,0 +1,1 @@
+Fixed exception when submitting builds via try jobdir client when the branch was not explicitly specified.

@@ -98,7 +98,7 @@ class SourceStampExtractor:
         if not self.repository:
             self.repository = self.treetop
         # TODO: figure out the branch and project too
-        ss = SourceStamp(self.branch, self.baserev, self.patch,
+        ss = SourceStamp(bytes2unicode(self.branch), self.baserev, self.patch,
                          repository=self.repository)
         return ss
 
