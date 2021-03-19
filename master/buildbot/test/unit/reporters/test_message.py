@@ -267,7 +267,8 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
         function.assert_called_with({
             'build': BuildDictLookAlike(extra_keys=['prev_build'],
                                         expected_missing_keys=['parentbuilder', 'buildrequest',
-                                                               'parentbuild'])
+                                                               'parentbuild']),
+            'message': None,
         })
         self.assertEqual(res, {
             'body': {'key': 'value'},
@@ -289,7 +290,8 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
         function.assert_called_with({
             'build': BuildDictLookAlike(extra_keys=['prev_build'],
                                         expected_missing_keys=['parentbuilder', 'buildrequest',
-                                                               'parentbuild'])
+                                                               'parentbuild']),
+            'message': None,
         })
         self.assertEqual(res, {
             'body': {'key': 'value'},
