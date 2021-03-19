@@ -887,29 +887,37 @@ class Try(pb.Referenceable):
         if not self.quiet:
             output(message)
 
-    def run(self, _inTests=False):
-        # we can't do spawnProcess until we're inside reactor.run(), so get
-        # funky
+    @defer.inlineCallbacks
+    def run_impl(self):
         output("using '{}' connect method".format(self.connect))
         self.exitcode = 0
-        d = fireEventually(None)
-        if bool(self.config.get("get-builder-names")):
-            d.addCallback(lambda res: self.getAvailableBuilderNames())
-        else:
-            d.addCallback(lambda res: self.createJob())
-            d.addCallback(lambda res: self.announce("job created"))
-            deliver = self.deliverJob
-            if bool(self.config.get("dryrun")):
-                deliver = self.fakeDeliverJob
-            d.addCallback(lambda res: deliver())
-            d.addCallback(lambda res: self.announce("job has been delivered"))
-            d.addCallback(lambda res: self.getStatus())
-        d.addErrback(self.trapSystemExit)
-        d.addErrback(log.err)
-        if not bool(self.config.get("dryrun")):
-            d.addCallback(self.cleanup)
-        if _inTests:
-            return d
+
+        # we can't do spawnProcess until we're inside reactor.run(), so force asynchronous execution
+        yield fireEventually(None)
+
+        try:
+            if bool(self.config.get("get-builder-names")):
+                yield self.getAvailableBuilderNames()
+            else:
+                yield self.createJob()
+                yield self.announce("job created")
+                if bool(self.config.get("dryrun")):
+                    yield self.fakeDeliverJob()
+                else:
+                    yield self.deliverJob()
+                yield self.announce("job has been delivered")
+                yield self.getStatus()
+
+            if not bool(self.config.get("dryrun")):
+                yield self.cleanup()
+        except SystemExit as e:
+            self.exitcode = e.code
+        except Exception as e:
+            log.err(e)
+            raise
+
+    def run(self):
+        d = self.run_impl()
         d.addCallback(lambda res: reactor.stop())
 
         reactor.run()
