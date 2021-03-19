@@ -328,7 +328,6 @@ class RemoteBuild(pb.Referenceable):
     def remote_subscribe(self, subscriber, interval):
         # subscribe to any new steps..
         def stepChanged(key, msg):
-            log.msg("SC")
             if key[-1] == 'started':
                 return subscriber.callRemote('stepStarted',
                                              self.builderName, self, msg['name'], None)
@@ -352,7 +351,6 @@ class RemoteBuild(pb.Referenceable):
         d = defer.Deferred()
 
         def buildEvent(key, msg):
-            log.msg("BE")
             if key[-1] == 'finished':
                 d.callback(None)
         consumer = yield self.master.mq.startConsuming(
