@@ -635,62 +635,68 @@ class Try(pb.Referenceable):
         d.callback(True)
         return d
 
+    def deliver_job_ssh(self):
+        tryhost = self.getopt("host")
+        tryport = self.getopt("port")
+        tryuser = self.getopt("username")
+        trydir = self.getopt("jobdir")
+        buildbotbin = self.getopt("buildbotbin")
+        ssh_command = self.getopt("ssh")
+        if not ssh_command:
+            ssh_commands = which("ssh")
+            if not ssh_commands:
+                raise RuntimeError("couldn't find ssh executable, make sure "
+                                   "it is available in the PATH")
+
+            argv = [ssh_commands[0]]
+        else:
+            # Split the string on whitespace to allow passing options in
+            # ssh command too, but preserving whitespace inside quotes to
+            # allow using paths with spaces in them which is common under
+            # Windows. And because Windows uses backslashes in paths, we
+            # can't just use shlex.split there as it would interpret them
+            # specially, so do it by hand.
+            if runtime.platformType == 'win32':
+                # Note that regex here matches the arguments, not the
+                # separators, as it's simpler to do it like this. And then we
+                # just need to get all of them together using the slice and
+                # also remove the quotes from those that were quoted.
+                argv = [string.strip(a, '"') for a in
+                        re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
+            else:
+                # Do use standard tokenization logic under POSIX.
+                argv = shlex.split(ssh_command)
+
+        if tryuser:
+            argv += ["-l", tryuser]
+
+        if tryport:
+            argv += ["-p", tryport]
+
+        argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
+        pp = RemoteTryPP(self.jobfile)
+        reactor.spawnProcess(pp, argv[0], argv, os.environ)
+        d = pp.d
+        return d
+
+    def deliver_job_pb(self):
+        user = self.getopt("username")
+        passwd = self.getopt("passwd")
+        master = self.getopt("master")
+        tryhost, tryport = master.split(":")
+        tryport = int(tryport)
+        f = pb.PBClientFactory()
+        d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
+        reactor.connectTCP(tryhost, tryport, f)
+        d.addCallback(self._deliverJob_pb)
+        return d
+
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
         if self.connect == "ssh":
-            tryhost = self.getopt("host")
-            tryport = self.getopt("port")
-            tryuser = self.getopt("username")
-            trydir = self.getopt("jobdir")
-            buildbotbin = self.getopt("buildbotbin")
-            ssh_command = self.getopt("ssh")
-            if not ssh_command:
-                ssh_commands = which("ssh")
-                if not ssh_commands:
-                    raise RuntimeError("couldn't find ssh executable, make sure "
-                                       "it is available in the PATH")
-
-                argv = [ssh_commands[0]]
-            else:
-                # Split the string on whitespace to allow passing options in
-                # ssh command too, but preserving whitespace inside quotes to
-                # allow using paths with spaces in them which is common under
-                # Windows. And because Windows uses backslashes in paths, we
-                # can't just use shlex.split there as it would interpret them
-                # specially, so do it by hand.
-                if runtime.platformType == 'win32':
-                    # Note that regex here matches the arguments, not the
-                    # separators, as it's simpler to do it like this. And then we
-                    # just need to get all of them together using the slice and
-                    # also remove the quotes from those that were quoted.
-                    argv = [string.strip(a, '"') for a in
-                            re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
-                else:
-                    # Do use standard tokenization logic under POSIX.
-                    argv = shlex.split(ssh_command)
-
-            if tryuser:
-                argv += ["-l", tryuser]
-
-            if tryport:
-                argv += ["-p", tryport]
-
-            argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
-            pp = RemoteTryPP(self.jobfile)
-            reactor.spawnProcess(pp, argv[0], argv, os.environ)
-            d = pp.d
-            return d
+            return self.deliver_job_ssh()
         if self.connect == "pb":
-            user = self.getopt("username")
-            passwd = self.getopt("passwd")
-            master = self.getopt("master")
-            tryhost, tryport = master.split(":")
-            tryport = int(tryport)
-            f = pb.PBClientFactory()
-            d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
-            reactor.connectTCP(tryhost, tryport, f)
-            d.addCallback(self._deliverJob_pb)
-            return d
+            return self.deliver_job_pb()
         raise RuntimeError("unknown connecttype '{}', "
                            "should be 'ssh' or 'pb'".format(self.connect))
 
