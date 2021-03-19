@@ -718,7 +718,10 @@ class Try(pb.Referenceable):
             output("waiting for builds with ssh is not supported")
         else:
             self.running = defer.Deferred()
-            assert self.buildsetStatus
+            if not self.buildsetStatus:
+                output("try scheduler on the master does not have the builder configured")
+                return None
+
             self._getStatus_1()  # note that we don't wait for the returned Deferred
             if bool(self.config.get("dryrun")):
                 self.statusDone()
