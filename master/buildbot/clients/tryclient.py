@@ -721,20 +721,17 @@ class Try(pb.Referenceable):
         else:
             self.running = defer.Deferred()
             assert self.buildsetStatus
-            self._getStatus_1()
+            self._getStatus_1()  # note that we don't wait for the returned Deferred
             if bool(self.config.get("dryrun")):
                 self.statusDone()
             return self.running
         return None
 
-    def _getStatus_1(self, res=None):
-        if res:
-            self.buildsetStatus = res
+    @defer.inlineCallbacks
+    def _getStatus_1(self):
         # gather the set of BuildRequests
-        d = self.buildsetStatus.callRemote("getBuildRequests")
-        d.addCallback(self._getStatus_2)
+        brs = yield self.buildsetStatus.callRemote("getBuildRequests")
 
-    def _getStatus_2(self, brs):
         self.builderNames = []
         self.buildRequests = {}
 
@@ -794,6 +791,7 @@ class Try(pb.Referenceable):
     def remote_buildETAUpdate(self, buildername, build, eta):
         self.ETA[buildername] = now() + eta
 
+    @defer.inlineCallbacks
     def _build_finished(self, bs, builderName):
         # we need to collect status from the newly-finished build. We don't
         # remove the build from self.outstanding until we've collected
@@ -801,24 +799,13 @@ class Try(pb.Referenceable):
         self.builds[builderName] = None
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
-        d = bs.callRemote("getResults")
-        d.addCallback(self._build_finished_2, bs, builderName)
-        return d
 
-    def _build_finished_2(self, results, bs, builderName):
-        self.results[builderName][0] = results
-        d = bs.callRemote("getText")
-        d.addCallback(self._build_finished_3, builderName)
-        return d
-
-    def _build_finished_3(self, text, builderName):
-        self.results[builderName][1] = text
+        self.results[builderName][0] = yield bs.callRemote("getResults")
+        self.results[builderName][1] = yield bs.callRemote("getText")
 
         self.outstanding.remove(builderName)
         if not self.outstanding:
-            # all done
-            return self.statusDone()
-        return None
+            self.statusDone()
 
     def printStatus(self):
         try:
