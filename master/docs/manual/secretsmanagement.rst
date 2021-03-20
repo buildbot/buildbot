@@ -168,9 +168,9 @@ Each part of a multipart value can be read like
 
 .. code-block:: python
 
-    url = Interpolate("site url is %(secret: folder1/folde2/folde3/secretname/url)s")
-    pass = Interpolate("your password is %(secret: folder1/folde2/folde3/secretname/pass)s")
-    cert = Interpolate("your cert is %(secret: folder1/folde2/folde3/secretname/ssh-cert)s")
+    url = Interpolate("site url is %(secret:folder1/folde2/folde3/secretname/url)s")
+    pass = Interpolate("your password is %(secret:folder1/folde2/folde3/secretname/pass)s")
+    cert = Interpolate("your cert is %(secret:folder1/folde2/folde3/secretname/ssh-cert)s")
 
 
 .. _SecretInPass:

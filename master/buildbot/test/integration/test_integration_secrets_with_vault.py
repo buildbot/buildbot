@@ -50,6 +50,11 @@ class SecretsConfig(RunMasterBase):
                                    '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
                                    'vault_for_buildbot',
                                    'vault', 'kv', 'put', 'secret/anykey', 'anyvalue=anyword'])
+
+            subprocess.check_call(['docker', 'exec',
+                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
+                                   'vault_for_buildbot',
+                                   'vault', 'kv', 'put', 'secret/key1/key2', 'id=val'])
         except (FileNotFoundError, subprocess.CalledProcessError):
             raise SkipTest("Vault integration needs docker environment to be setup")
 
@@ -81,6 +86,10 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def test_any_key(self):
         yield self.do_secret_test('%(secret:anykey/anyvalue)s', '<anykey/anyvalue>', 'anyword')
+
+    @defer.inlineCallbacks
+    def test_nested_key(self):
+        yield self.do_secret_test('%(secret:key1/key2/id)s', '<key1/key2/id>', 'val')
 
 
 def masterConfig(secret_specifier):
