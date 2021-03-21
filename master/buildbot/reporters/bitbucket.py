@@ -54,6 +54,7 @@ class BitbucketStatusPush(ReporterBase):
     def reconfigService(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
                         debug=None, verify=None, generators=None, **kwargs):
         oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
+        self.base_url = base_url
         self.debug = debug
         self.verify = verify
 
@@ -62,8 +63,7 @@ class BitbucketStatusPush(ReporterBase):
 
         yield super().reconfigService(generators=generators, **kwargs)
 
-        if base_url.endswith('/'):
-            base_url = base_url[:-1]
+        base_url = base_url.rstrip('/')
 
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url,
@@ -80,8 +80,7 @@ class BitbucketStatusPush(ReporterBase):
     def sendMessage(self, reports):
         build = reports[0]['builds'][0]
         results = build['results']
-        oauth_request = yield self.oauthhttp.post("",
-                                                  data=_GET_TOKEN_DATA)
+        oauth_request = yield self.oauthhttp.post("", data=_GET_TOKEN_DATA)
         if oauth_request.code == 200:
             content_json = yield oauth_request.json()
             token = content_json['access_token']
@@ -118,8 +117,7 @@ class BitbucketStatusPush(ReporterBase):
                 log.error("{code}: unable to upload Bitbucket status {content}",
                           code=response.code, content=content)
 
-    @staticmethod
-    def get_owner_and_repo(repourl):
+    def get_owner_and_repo(self, repourl):
         """
         Takes a git repository URL from Bitbucket and tries to determine the owner and repository
         name
@@ -132,19 +130,19 @@ class BitbucketStatusPush(ReporterBase):
         """
         parsed = urlparse(repourl)
 
-        base_parsed = urlparse(_BASE_URL)
+        base_parsed = urlparse(self.base_url)
         if parsed.path.startswith(base_parsed.path):
-            path = parsed.path.replace(base_parsed.path, "")[1:]
+            path = parsed.path.replace(base_parsed.path, "")
         elif parsed.scheme:
-            path = parsed.path[1:]
+            path = parsed.path
         else:
             # we assume git@host:owner/repo.git here
             path = parsed.path.split(':', 1)[-1]
 
+        path = path.lstrip('/')
         if path.endswith('.git'):
             path = path[:-4]
-        while path.endswith('/'):
-            path = path[:-1]
+        path = path.rstrip('/')
 
         parts = path.split('/')
 
