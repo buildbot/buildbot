@@ -51,10 +51,10 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
             self.master, self,
             _OAUTH_URL, auth=('key', 'secret'),
             debug=None, verify=None)
-        self.bsp = bsp = BitbucketStatusPush(
+        self.bsp = BitbucketStatusPush(
             Interpolate('key'), Interpolate('secret'))
-        yield bsp.setServiceParent(self.master)
-        yield bsp.startService()
+        yield self.bsp.setServiceParent(self.master)
+        yield self.bsp.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -186,10 +186,25 @@ class TestBitbucketStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsM
         self.assertLogged('invalid_commit')
 
 
-class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
+class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setUpTestReactor()
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
+                                             wantMq=True)
+
+        self.bsp = BitbucketStatusPush(
+            Interpolate('key'), Interpolate('secret'))
+        yield self.bsp.setServiceParent(self.master)
+        yield self.bsp.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.bsp.stopService()
 
     def parse(self, repourl):
-        return tuple(BitbucketStatusPush.get_owner_and_repo(repourl))
+        return tuple(self.bsp.get_owner_and_repo(repourl))
 
     def test_parse_no_scheme(self):
         self.assertEqual(
@@ -200,10 +215,12 @@ class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
     def test_parse_with_scheme(self):
         self.assertEqual(('user', 'repo'), self.parse(
             'https://bitbucket.com/user/repo.git'))
-        self.assertEqual(
-            ('user', 'repo'), self.parse('https://bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'https://bitbucket.com/user/repo'))
 
         self.assertEqual(('user', 'repo'), self.parse(
             'ssh://git@bitbucket.com/user/repo.git'))
-        self.assertEqual(
-            ('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'ssh://git@bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'https://api.bitbucket.org/2.0/repositories/user/repo'))
