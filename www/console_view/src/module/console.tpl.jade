@@ -33,7 +33,8 @@
                                       uib-tooltip-template="'buildsummarytooltip'"
                                       tooltip-class="buildsummarytooltipstyle"
                                       tooltip-placement="auto left-bottom"
-                                      tooltip-popup-close-delay="100"
+                                      tooltip-popup-delay="400"
+                                      tooltip-popup-close-delay="400"
                                       ng-class="c.results2class(build, 'pulse')"
                                       ng-click='c.selectBuild(build)')
                         | {{ build.number }}
