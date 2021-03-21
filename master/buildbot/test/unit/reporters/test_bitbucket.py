@@ -200,10 +200,12 @@ class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
     def test_parse_with_scheme(self):
         self.assertEqual(('user', 'repo'), self.parse(
             'https://bitbucket.com/user/repo.git'))
-        self.assertEqual(
-            ('user', 'repo'), self.parse('https://bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'https://bitbucket.com/user/repo'))
 
         self.assertEqual(('user', 'repo'), self.parse(
             'ssh://git@bitbucket.com/user/repo.git'))
-        self.assertEqual(
-            ('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'ssh://git@bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'https://api.bitbucket.org/2.0/repositories/user/repo'))

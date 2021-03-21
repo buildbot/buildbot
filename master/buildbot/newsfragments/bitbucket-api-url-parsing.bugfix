@@ -1,0 +1,2 @@
+Fixed parsing of URLs of the form https://api.bitbucket.org/2.0/repositories/OWNER/REPONAME in BitbucketStatusPush.
+These URLs are in the sourcestamps returned by the Bitbucket Cloud hook.

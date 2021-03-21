@@ -124,14 +124,18 @@ class BitbucketStatusPush(ReporterBase):
         Takes a git repository URL from Bitbucket and tries to determine the owner and repository
         name
         :param repourl: Bitbucket git repo in the form of
-                    git@bitbucket.com:OWNER/REPONAME.git
-                    https://bitbucket.com/OWNER/REPONAME.git
-                    ssh://git@bitbucket.com/OWNER/REPONAME.git
+                    git@bitbucket.org:OWNER/REPONAME.git
+                    https://bitbucket.org/OWNER/REPONAME.git
+                    ssh://git@bitbucket.org/OWNER/REPONAME.git
+                    https://api.bitbucket.org/2.0/repositories/OWNER/REPONAME
         :return: owner, repo: The owner of the repository and the repository name
         """
         parsed = urlparse(repourl)
 
-        if parsed.scheme:
+        base_parsed = urlparse(_BASE_URL)
+        if parsed.path.startswith(base_parsed.path):
+            path = parsed.path.replace(base_parsed.path, "")[1:]
+        elif parsed.scheme:
             path = parsed.path[1:]
         else:
             # we assume git@host:owner/repo.git here
