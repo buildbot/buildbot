@@ -60,7 +60,7 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         """
         get the value from vault secret backend
         """
-        parts = entry.split('/', maxsplit=1)
+        parts = entry.rsplit('/', maxsplit=1)
         name = parts[0]
         if len(parts) > 1:
             key = parts[1]
@@ -76,7 +76,7 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         # secret engine. Different versions of the key-value engine are
         # effectively separate secret engines in vault, with the same base HTTP
         # API, but with different paths within it.
-        proj = yield self._http.get('/v1/{0}'.format(path))
+        proj = yield self._http.get(f"/v1/{path}")
         code = yield proj.code
         if code != 200:
             raise KeyError(("The secret {} does not exist in Vault provider: request"
