@@ -20,6 +20,7 @@
                 span(title="{{br.submitted_at | dateformat:'LLL'}}")
                   | {{br.submitted_at | timeago }}
               td
+                span(ng-if="br.properties.owners === undefined") {{br.properties.owner[0]}}
                 span(ng-repeat="owner in br.properties.owners[0]") {{owner}}
               td
       uib-tab(heading="Build times")
