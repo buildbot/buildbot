@@ -201,7 +201,7 @@ class Build(properties.PropertiesMixin):
 
     @staticmethod
     def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
-                                              workerforbuilder):
+                                              workerforbuilder=None):
         # Note that this function does not setup the 'builddir' worker property
         # It's not possible to know it until before the actual worker has
         # attached.
@@ -225,17 +225,21 @@ class Build(properties.PropertiesMixin):
         # get worker properties
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        workerforbuilder.worker.setupProperties(props)
+        if workerforbuilder is not None:
+            workerforbuilder.worker.setupProperties(props)
 
-    def setupOwnProperties(self):
+    @staticmethod
+    def setupBuildProperties(props, requests, sources=None, number=None):
         # now set some properties of our own, corresponding to the
         # build itself
-        props = self.getProperties()
-        props.setProperty("buildnumber", self.number, "Build")
+        props.setProperty("buildnumber", number, "Build")
 
-        if self.sources and len(self.sources) == 1:
+        if sources is None:
+            sources = requests[0].mergeSourceStampsWith(requests[1:])
+
+        if sources and len(sources) == 1:
             # old interface for backwards compatibility
-            source = self.sources[0]
+            source = sources[0]
             props.setProperty("branch", source.branch, "Build")
             props.setProperty("revision", source.revision, "Build")
             props.setProperty("repository", source.repository, "Build")
@@ -314,7 +318,8 @@ class Build(properties.PropertiesMixin):
         self.preparation_step = buildstep.BuildStep(name="worker_preparation")
         self.preparation_step.setBuild(self)
         yield self.preparation_step.addStep()
-        self.setupOwnProperties()
+        Build.setupBuildProperties(self.getProperties(), self.requests,
+                                   self.sources, self.number)
 
         # then narrow WorkerLocks down to the right worker
         self.locks = [(l.getLockForWorker(workerforbuilder.worker.workername),
