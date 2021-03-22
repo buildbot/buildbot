@@ -199,18 +199,20 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         return list(self.builders.values())
 
     @defer.inlineCallbacks
+    def getBuilderById(self, builderid):
+        for builder in self.getBuilders():
+            if builderid == (yield builder.getBuilderId()):
+                return builder
+        return None
+
+    @defer.inlineCallbacks
     def startService(self):
         @defer.inlineCallbacks
         def buildRequestAdded(key, msg):
             builderid = msg['builderid']
-            buildername = None
-            # convert builderid to buildername
-            for builder in self.builders.values():
-                if builderid == (yield builder.getBuilderId()):
-                    buildername = builder.name
-                    break
-            if buildername:
-                self.maybeStartBuildsForBuilder(buildername)
+            builder = yield self.getBuilderById(builderid)
+            if builder is not None:
+                self.maybeStartBuildsForBuilder(builder.name)
 
         # consume both 'new' and 'unclaimed' build requests
         startConsuming = self.master.mq.startConsuming
