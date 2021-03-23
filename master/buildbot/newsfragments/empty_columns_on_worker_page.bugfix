@@ -1,0 +1,1 @@
+Fix workers page doesn't show data for Owners and Worker columns (:issue:`5887`)
