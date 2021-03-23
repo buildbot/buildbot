@@ -329,7 +329,10 @@ setup_args = {
         ('buildbot.reporters', [
             ('buildbot.reporters.generators.build', [
                 'BuildStatusGenerator',
-                'BuildStartEndStatusGenerator',
+                'BuildStartEndStatusGenerator'
+            ]),
+            ('buildbot.reporters.generators.buildrequest', [
+                'BuildRequestGenerator'
             ]),
             ('buildbot.reporters.generators.buildset', ['BuildSetStatusGenerator']),
             ('buildbot.reporters.generators.worker', ['WorkerMissingGenerator']),

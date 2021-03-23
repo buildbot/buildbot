@@ -55,6 +55,38 @@ class ReporterTestMixin:
     def insert_build_new(self, **kwargs):
         return (yield self.insert_build(results=None, **kwargs))
 
+    @defer.inlineCallbacks
+    def insert_buildrequest_new(self, insert_patch=False, **kwargs):
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Builder(id=79, name='Builder0'),
+            fakedb.Builder(id=80, name='Builder1'),
+            fakedb.Buildset(id=98, results=None, reason="testReason1",
+                            parent_buildid=None),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79)
+        ])
+
+        patchid = 99 if insert_patch else None
+
+        self.db.insertTestData([
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+            fakedb.SourceStamp(
+                id=234,
+                branch=self.reporter_test_branch,
+                project=self.reporter_test_project,
+                revision=self.reporter_test_revision,
+                repository=self.reporter_test_repo,
+                codebase=self.reporter_test_codebase,
+                patchid=patchid),
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+                         patch_author='him@foo', patch_comment='foo', subdir='/foo',
+                         patchlevel=3)
+        ])
+        request = yield self.master.data.get(("buildrequests", 11))
+        return request
+
     def insertTestData(self, buildResults, finalResult, insertSS=True,
                        parentPlan=False, insert_patch=False):
         self.db = self.master.db

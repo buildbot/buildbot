@@ -1026,20 +1026,20 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setUpTestReactor()
         self.props = {}
-        r = FakeRequest()
-        r.sources = []
-        r.sources.append(FakeSource())
-        r.sources[0].changes = [FakeChange()]
-        r.sources[0].repository = "http://svn-repo-A"
-        r.sources[0].codebase = "A"
-        r.sources[0].branch = "develop"
-        r.sources[0].revision = "12345"
-        r.sources.append(FakeSource())
-        r.sources[1].changes = [FakeChange()]
-        r.sources[1].repository = "http://svn-repo-B"
-        r.sources[1].codebase = "B"
-        r.sources[1].revision = "34567"
-        self.build = Build([r])
+        self.r = FakeRequest()
+        self.r.sources = []
+        self.r.sources.append(FakeSource())
+        self.r.sources[0].changes = [FakeChange()]
+        self.r.sources[0].repository = "http://svn-repo-A"
+        self.r.sources[0].codebase = "A"
+        self.r.sources[0].branch = "develop"
+        self.r.sources[0].revision = "12345"
+        self.r.sources.append(FakeSource())
+        self.r.sources[1].changes = [FakeChange()]
+        self.r.sources[1].repository = "http://svn-repo-B"
+        self.r.sources[1].codebase = "B"
+        self.r.sources[1].revision = "34567"
+        self.build = Build([self.r])
         self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
@@ -1054,7 +1054,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         self.props[s][n] = v
 
     def test_sourcestamp_properties_not_set(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         self.assertNotIn("codebase", self.props["Build"])
         self.assertNotIn("revision", self.props["Build"])
         self.assertNotIn("branch", self.props["Build"])
@@ -1072,15 +1072,15 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setUpTestReactor()
         self.props = {}
-        r = FakeRequest()
-        r.sources = []
-        r.sources.append(FakeSource())
-        r.sources[0].changes = [FakeChange()]
-        r.sources[0].repository = "http://svn-repo-A"
-        r.sources[0].codebase = "A"
-        r.sources[0].branch = "develop"
-        r.sources[0].revision = "12345"
-        self.build = Build([r])
+        self.r = FakeRequest()
+        self.r.sources = []
+        self.r.sources.append(FakeSource())
+        self.r.sources[0].changes = [FakeChange()]
+        self.r.sources[0].repository = "http://svn-repo-A"
+        self.r.sources[0].codebase = "A"
+        self.r.sources[0].branch = "develop"
+        self.r.sources[0].revision = "12345"
+        self.build = Build([self.r])
         self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
@@ -1095,26 +1095,26 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         self.props[s][n] = v
 
     def test_properties_codebase(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         codebase = self.props["Build"]["codebase"]
         self.assertEqual(codebase, "A")
 
     def test_properties_repository(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         repository = self.props["Build"]["repository"]
         self.assertEqual(repository, "http://svn-repo-A")
 
     def test_properties_revision(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         revision = self.props["Build"]["revision"]
         self.assertEqual(revision, "12345")
 
     def test_properties_branch(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         branch = self.props["Build"]["branch"]
         self.assertEqual(branch, "develop")
 
     def test_property_project(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         project = self.props["Build"]["project"]
         self.assertEqual(project, '')

@@ -30,6 +30,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
 from buildbot.util.giturlparse import giturlparse
@@ -83,8 +84,10 @@ class GitHubStatusPush(ReporterBase):
     def _create_default_generators(self):
         start_formatter = MessageFormatterRenderable('Build started.')
         end_formatter = MessageFormatterRenderable('Build done.')
+        pending_formatter = MessageFormatterRenderable('Build pending.')
 
         return [
+            BuildRequestGenerator(formatter=pending_formatter),
             BuildStartEndStatusGenerator(start_formatter=start_formatter,
                                          end_formatter=end_formatter)
         ]
