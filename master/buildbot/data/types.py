@@ -22,10 +22,15 @@ from buildbot import util
 from buildbot.util import bytes2unicode
 
 
+def capitalize(word):
+    return ''.join(x.capitalize() or '_' for x in word.split('_'))
+
+
 class Type:
 
     name = None
     doc = None
+    graphQLType = "unknown"
 
     @property
     def ramlname(self):
@@ -54,6 +59,15 @@ class Type:
         if self.doc is not None:
             r["doc"] = self.doc
         return r
+
+    def toGraphQL(self):
+        return self.graphQLType
+
+    def toGraphQLTypeName(self):
+        return self.graphQLType
+
+    def graphQLDependentTypes(self):
+        return []
 
 
 class NoneOk(Type):
@@ -87,11 +101,21 @@ class NoneOk(Type):
     def toRaml(self):
         return self.nestedType.toRaml()
 
+    def toGraphQL(self):
+        # remove trailing !
+        if isinstance(self.nestedType, Entity):
+            return capitalize(self.nestedType.name)
+        return self.nestedType.toGraphQL()[:-1]
+
+    def graphQLDependentTypes(self):
+        return [self.nestedType]
+
 
 class Instance(Type):
 
     types = ()
     ramlType = "unknown"
+    graphQLType = "unknown"
 
     @property
     def ramlname(self):
@@ -104,12 +128,16 @@ class Instance(Type):
     def toRaml(self):
         return self.ramlType
 
+    def toGraphQL(self):
+        return self.graphQLType + "!"
+
 
 class Integer(Instance):
 
     name = "integer"
     types = (int,)
     ramlType = "integer"
+    graphQLType = "Int"
 
     def valueFromString(self, arg):
         return int(arg)
@@ -119,6 +147,8 @@ class DateTime(Instance):
 
     name = "datetime"
     types = (datetime.datetime,)
+    ramlType = "date"
+    graphQLType = "Date"  # custom
 
     def valueFromString(self, arg):
         return int(arg)
@@ -135,14 +165,13 @@ class DateTime(Instance):
                 return
         yield "{} ({}) is not a valid timestamp".format(name, object)
 
-    ramlType = "date"
-
 
 class String(Instance):
 
     name = "string"
     types = (str,)
     ramlType = "string"
+    graphQLType = "String"
 
     def valueFromString(self, arg):
         val = util.bytes2unicode(arg)
@@ -154,6 +183,7 @@ class Binary(Instance):
     name = "binary"
     types = (bytes,)
     ramlType = "string"
+    graphQLType = "Binary"  # custom
 
     def valueFromString(self, arg):
         return arg
@@ -164,6 +194,7 @@ class Boolean(Instance):
     name = "boolean"
     types = (bool,)
     ramlType = "boolean"
+    graphQLType = "Boolean"  # custom
 
     def valueFromString(self, arg):
         return util.string2boolean(arg)
@@ -174,6 +205,7 @@ class Identifier(Type):
     name = "identifier"
     identRe = re.compile('^[a-zA-Z_-][a-zA-Z0-9._-]*$')
     ramlType = "string"
+    graphQLType = "String"
 
     def __init__(self, len=None, **kwargs):
         super().__init__(**kwargs)
@@ -234,8 +266,14 @@ class List(Type):
     def toRaml(self):
         return {'type': 'array', 'items': self.of.name}
 
+    def toGraphQL(self):
+        return f"[{self.of.toGraphQLTypeName()}]!"
 
-def maybeNoneOrList(k, v):
+    def graphQLDependentTypes(self):
+        return [self.of]
+
+
+def ramlMaybeNoneOrList(k, v):
     if isinstance(v, NoneOk):
         return k + "?"
     if isinstance(v, List):
@@ -275,55 +313,17 @@ class SourcedProperties(Type):
                         }
                         }}}
 
+    def toGraphQL(self):
+        return "[Property]!"
 
-class Dict(Type):
-    name = "dict"
-
-    @property
-    def ramlname(self):
-        return self.toRaml()
-
-    def __init__(self, **contents):
-        self.contents = contents
-        self.keys = set(contents)
-
-    def validate(self, name, object):
-        if not isinstance(object, dict):
-            yield "{} ({}) is not a dictionary (got type {})".format(name, repr(object),
-                                                                     type(object))
-            return
-
-        gotNames = set(object.keys())
-
-        unexpected = gotNames - self.keys
-        if unexpected:
-            yield "{} has unexpected keys {}".format(name, ", ".join([repr(n) for n in unexpected]))
-
-        missing = self.keys - gotNames
-        if missing:
-            yield "{} is missing keys {}".format(name, ", ".join([repr(n) for n in missing]))
-
-        for k in gotNames & self.keys:
-            f = self.contents[k]
-            for msg in f.validate("{}[{}]".format(name, repr(k)), object[k]):
-                yield msg
-
-    def getSpec(self):
-        return dict(type=self.name,
-                    fields=[dict(name=k,
-                                 type=v.name,
-                                 type_spec=v.getSpec())
-                            for k, v in self.contents.items()
-                            ])
-
-    def toRaml(self):
-        return {'type': "object",
-                'properties': {maybeNoneOrList(k, v): v.ramlname for k, v in self.contents.items()}}
+    def graphQLDependentTypes(self):
+        return [PropertyEntityType("property")]
 
 
 class JsonObject(Type):
     name = "jsonobject"
     ramlname = 'object'
+    graphQLType = "JSON"
 
     def validate(self, name, object):
         if not isinstance(object, dict):
@@ -395,5 +395,24 @@ class Entity(Type):
     def toRaml(self):
         return {'type': "object",
                 'properties': {
-                    maybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
+                    ramlMaybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
                     for k, v in self.fields.items()}}
+
+    def toGraphQL(self):
+        return dict(type=capitalize(self.name),
+                    fields=[dict(name=k,
+                                 type=v.toGraphQL())
+                            for k, v in self.fields.items()
+                            ])
+
+    def toGraphQLTypeName(self):
+        return capitalize(self.name)
+
+    def graphQLDependentTypes(self):
+        return self.fields.values()
+
+
+class PropertyEntityType(Entity):
+    name = String()
+    source = String()
+    value = JsonObject()

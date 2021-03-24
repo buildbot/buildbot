@@ -103,6 +103,15 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
         return [self.db2data(w) for w in workers_dicts]
 
 
+class MasterBuilderEntityType(types.Entity):
+    masterid = types.Integer()
+    builderid = types.Integer()
+
+
+class MasterIdEntityType(types.Entity):
+    masterid = types.Integer()
+
+
 class Worker(base.ResourceType):
 
     name = "worker"
@@ -116,11 +125,8 @@ class Worker(base.ResourceType):
     class EntityType(types.Entity):
         workerid = types.Integer()
         name = types.String()
-        connected_to = types.List(of=types.Dict(
-            masterid=types.Integer()))
-        configured_on = types.List(of=types.Dict(
-            masterid=types.Integer(),
-            builderid=types.Integer()))
+        connected_to = types.List(of=MasterIdEntityType("master_id"))
+        configured_on = types.List(of=MasterBuilderEntityType("master_builder"))
         workerinfo = types.JsonObject()
         paused = types.Boolean()
         graceful = types.Boolean()
