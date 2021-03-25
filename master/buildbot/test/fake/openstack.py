@@ -147,6 +147,7 @@ class Instance():
         self.gets = 0
         self.status = 'BUILD(networking)'
         self.name = 'name'
+        self.metadata = boot_kwargs.get('meta', {})
 
     def delete(self):
         self.servers.delete(self.id)
