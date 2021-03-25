@@ -135,6 +135,20 @@ class Servers():
         if instance_id in self.instances:
             del self.instances[instance_id]
 
+    def findall(self, **kwargs):
+        name = kwargs.get('name', None)
+        if name:
+            return list(filter(lambda item: item.name == name, self.instances.values()))
+        return []
+
+    def find(self, **kwargs):
+        result = self.findall(**kwargs)
+        if len(result) > 0:
+            raise NoUniqueMatch
+        if len(result) == 0:
+            raise NotFound
+        return result[0]
+
 
 # This is returned by Servers.create().
 class Instance():
@@ -161,6 +175,9 @@ class Instance():
 class NotFound(Exception):
     pass
 
+
+class NoUniqueMatch(Exception):
+    pass
 
 # Parts used from keystoneauth1.
 
