@@ -17,9 +17,9 @@ class ChangeBuildsController {
         }
 
         const getBuildsData = function() {
-            let requestUrl = `changes/${changeId}/builds`;
+            let requestUrl = `changes/${changeId}/builds?property=owners&property=workername`;
             if (!buildsFetchLimit == '') {
-                requestUrl = `changes/${changeId}/builds?limit=${buildsFetchLimit}`;
+                requestUrl = `changes/${changeId}/builds?property=owners&property=workername&limit=${buildsFetchLimit}`;
             }
             restService.get(requestUrl).then((data) => {
                 $scope.builds = data.builds;
