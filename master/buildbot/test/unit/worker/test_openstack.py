@@ -14,6 +14,8 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
 
+import hashlib
+
 import mock
 
 from twisted.internet import defer
@@ -55,6 +57,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.build = Properties(image=novaclient.TEST_UUIDS['image'],
                                 flavor=novaclient.TEST_UUIDS['flavor'],
                                 meta_value='value')
+        self.masterhash = hashlib.sha1(b'fake:/master').hexdigest()[:6]
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
