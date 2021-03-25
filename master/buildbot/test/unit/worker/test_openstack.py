@@ -311,7 +311,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(bs.instance.boot_kwargs['meta'], meta_arg)
+        self.assertEquals(bs.instance.metadata, meta_arg)
 
     @defer.inlineCallbacks
     def test_start_instance_check_meta_renderable(self):
@@ -321,7 +321,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(bs.instance.boot_kwargs['meta'], {'some_key': 'value'})
+        self.assertEquals(bs.instance.metadata, {'some_key': 'value'})
 
     @defer.inlineCallbacks
     def test_start_instance_check_nova_args(self):
