@@ -146,8 +146,11 @@ class Instance():
         self.boot_kwargs = boot_kwargs
         self.gets = 0
         self.status = 'BUILD(networking)'
-        self.name = 'name'
         self.metadata = boot_kwargs.get('meta', {})
+        try:
+            self.name = boot_args[0]
+        except IndexError:
+            self.name = 'name'
 
     def delete(self):
         self.servers.delete(self.id)
