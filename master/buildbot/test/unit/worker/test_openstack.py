@@ -305,7 +305,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_check_meta(self):
-        meta_arg = {'some_key': 'some-value'}
+        meta_arg = {'some_key': 'some-value', 'BUILDBOT:instance': self.masterhash}
         bs = yield self.setupWorker('bot', 'pass', meta=meta_arg,
                                     **self.bs_image_args)
         bs._poll_resolution = 0
@@ -321,7 +321,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(bs.instance.metadata, {'some_key': 'value'})
+        self.assertEquals(bs.instance.metadata, {'some_key': 'value',
+                                                 'BUILDBOT:instance': self.masterhash})
 
     @defer.inlineCallbacks
     def test_start_instance_check_nova_args(self):
@@ -367,6 +368,23 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         yield bs.start_instance(build1)
         self.assertFalse((yield bs.isCompatibleWithBuild(build2)))
+
+    @defer.inlineCallbacks
+    def test_stop_instance_cleanup(self):
+        """
+        Test cleaning up leftover instances before starting new.
+        """
+        self.patch(novaclient.Servers, 'fail_to_get', False)
+        self.patch(novaclient.Servers, 'gets_until_disappears', 9)
+        novaclient.Servers().create(['bot', novaclient.TEST_UUIDS['image'],
+                                    novaclient.TEST_UUIDS['flavor']],
+                                    meta={'BUILDBOT:instance': self.masterhash})
+        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+        bs._poll_resolution = 0
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        self.assertTrue(uuid)
+        self.assertEqual(image_uuid, 'image-uuid')
+        self.assertTrue(time_waiting)
 
     @defer.inlineCallbacks
     def test_stop_instance_not_set(self):
