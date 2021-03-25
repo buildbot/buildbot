@@ -51,6 +51,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.patch(openstack, "client", novaclient)
         self.patch(openstack, "loading", novaclient)
         self.patch(openstack, "session", novaclient)
+        self.patch(openstack, "NotFound", novaclient.NotFound)
         self.build = Properties(image=novaclient.TEST_UUIDS['image'],
                                 flavor=novaclient.TEST_UUIDS['flavor'],
                                 meta_value='value')
