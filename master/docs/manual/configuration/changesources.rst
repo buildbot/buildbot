@@ -1428,7 +1428,7 @@ You can use both at the same time to get the advantages of each. They will coord
 The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 
 ``baseURL``
-    The HTTP url where to find Gerrit. If the URL of the events-log endpoint for your server is ``https://example.com/a/plugins/events-log/events/`` then the ``baseURL`` is ``https://example.com/a``. Note that ``/a`` is included.
+    The HTTP url where to find Gerrit. If the URL of the events-log endpoint for your server is ``https://example.com/a/plugins/events-log/events/`` then the ``baseURL`` is ``https://example.com/a``. Ensure that ``/a`` is included.
 
 ``auth``
     A request's authentication configuration.
