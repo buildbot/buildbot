@@ -523,8 +523,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self.results = EXCEPTION
                 hidden = False
 
-        yield self.master.data.updates.finishStep(self.stepid, self.results,
-                                                  hidden)
         # perform final clean ups
         success = yield self._cleanup_logs()
         if not success:
@@ -539,6 +537,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             yield sub.finish()
 
         self.releaseLocks()
+
+        yield self.master.data.updates.finishStep(self.stepid, self.results,
+                                                  hidden)
 
         return self.results
 
