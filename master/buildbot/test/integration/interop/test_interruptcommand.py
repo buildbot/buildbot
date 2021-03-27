@@ -27,7 +27,7 @@ class InterruptCommand(RunMasterBase):
 
     @flaky(bugNumber=4404, onPlatform='win32')
     @defer.inlineCallbacks
-    def test_setProp(self):
+    def test_interrupt(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True)
         self.assertEqual(build['steps'][-1]['results'], CANCELLED)
@@ -39,12 +39,8 @@ class InterruptCommandPb(InterruptCommand):
 
 # master configuration
 
-num_reconfig = 0
-
 
 def masterConfig():
-    global num_reconfig
-    num_reconfig += 1
     c = {}
     from buildbot.plugins import schedulers, steps, util
 
