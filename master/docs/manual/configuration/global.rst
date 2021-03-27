@@ -489,7 +489,7 @@ For example:
   from buildbot import manhole
   c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1",
                                          "admin", "passwd",
-                                         ssh_hostkey_dir="/data/ssh_host_keys/")
+                                         ssh_hostkey_dir="data/ssh_host_keys")
 
 .. bb:cfg:: metrics
 
