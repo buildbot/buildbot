@@ -998,13 +998,12 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands()
 
-        self.expectOutcome(result=EXCEPTION,
-                           state_string="downloading to {0} (exception)".format(
+        self.expectOutcome(result=FAILURE,
+                           state_string="downloading to {0} (failure)".format(
                                os.path.basename(self.destfile)))
-        yield self.runStep()
         self.expectLogfile('stderr',
-                           "File wkdir/srcdir not available at worker")
-        self.assertEqual(len(self.flushLoggedErrors(FileNotFoundError)), 1)
+                           "File 'not existing file' not available at master")
+        yield self.runStep()
 
 
 class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
