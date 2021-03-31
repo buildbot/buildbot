@@ -15,6 +15,7 @@
 # Portions Copyright 2013 Cray Inc.
 
 
+import hashlib
 import math
 import time
 
@@ -24,6 +25,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util import unicode2bytes
 from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker import AbstractLatentWorker
 
@@ -146,6 +148,8 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         self.image = image
         self.meta = meta
         self.nova_args = nova_args if nova_args is not None else {}
+        masterName = unicode2bytes(self.master.name)
+        self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
 
     def _constructClient(self, client_version, auth_args):
         """Return a novaclient from the given args."""
@@ -250,6 +254,15 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         nova_args = yield build.render(self.nova_args)
         meta = yield build.render(self.meta)
 
+        worker_meta = {
+                'BUILDBOT:instance': self.masterhash,
+        }
+
+        if meta is None:
+            meta = worker_meta
+        else:
+            meta.update(worker_meta)
+
         if self.block_devices is not None:
             block_devices = []
             for bd in self.block_devices:
@@ -270,6 +283,10 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
         return res
 
     def _start_instance(self, image_uuid, flavor_uuid, block_devices, nova_args, meta):
+        # ensure existing, potentially duplicated, workers are stopped
+        self._stop_instance(None, True)
+
+        # then try to start new one
         boot_args = [self.workername, image_uuid, flavor_uuid]
         boot_kwargs = dict(
             meta=meta,
@@ -319,28 +336,29 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin,
             self.failed_to_start(instance.id, instance.status)
 
     def stop_instance(self, fast=False):
-        if self.instance is None:
-            # be gentle.  Something may just be trying to alert us that an
-            # instance never attached, and it's because, somehow, we never
-            # started.
-            return defer.succeed(None)
         instance = self.instance
         self.instance = None
         self.resetWorkerPropsOnStop()
         self._stop_instance(instance, fast)
-        return None
 
-    def _stop_instance(self, instance, fast):
+    def _stop_instance(self, instance_param, fast):
+        instances = []
         try:
-            instance = self.novaclient.servers.get(instance.id)
+            if instance_param is None:
+                filter_f = lambda instance: \
+                        instance.metadata.get("BUILDBOT:instance", "") == self.masterhash
+                instances = list(filter(filter_f, self.novaclient.servers.findall(name=self.name)))
+            else:
+                instances = [self.novaclient.servers.get(instance_param.id)]
         except NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('{} {} instance {} ({}) already terminated'.format(self.__class__.__name__,
-                                                                       self.workername, instance.id,
-                                                                       instance.name))
-            return
-        if instance.status not in (DELETED, UNKNOWN):
-            instance.delete()
-            log.msg('{} {} terminating instance {} ({})'.format(self.__class__.__name__,
-                                                                self.workername, instance.id,
-                                                                instance.name))
+                                                                       self.workername,
+                                                                       instance_param.id,
+                                                                       instance_param.name))
+        for instance in instances:
+            if instance.status not in (DELETED, UNKNOWN):
+                instance.delete()
+                log.msg('{} {} terminating instance {} ({})'.format(self.__class__.__name__,
+                                                                    self.workername, instance.id,
+                                                                    instance.name))
