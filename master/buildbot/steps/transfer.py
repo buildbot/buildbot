@@ -460,7 +460,7 @@ class FileDownload(_TransferBuildStep):
         except IOError:
             # if file does not exist, bail out with an error
             yield self.addCompleteLog('stderr', 'File {!r} not available at master'.format(source))
-            raise
+            return FAILURE
 
         fileReader = remotetransfer.FileReader(fp)
 
