@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import hashlib
 from urllib.parse import urlencode
 from urllib.parse import urljoin
@@ -22,13 +23,14 @@ from urllib.parse import urlunparse
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import config
+from buildbot import config
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
+from buildbot.util.config import ConfiguredMixin
 from buildbot.www import resource
 
 
-class AvatarBase(config.ConfiguredMixin):
+class AvatarBase(ConfiguredMixin):
     name = "noavatar"
 
     def getUserAvatar(self, email, username, size, defaultAvatarUrl):
@@ -43,6 +45,8 @@ class AvatarGitHub(AvatarBase):
     def __init__(self,
                  github_api_endpoint=None,
                  token=None,
+                 client_id=None,
+                 client_secret=None,
                  debug=False,
                  verify=False):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
@@ -51,6 +55,15 @@ class AvatarGitHub(AvatarBase):
         if github_api_endpoint is None:
             self.github_api_endpoint = self.DEFAULT_GITHUB_API_URL
         self.token = token
+        self.client_creds = None
+        if bool(client_id) != bool(client_secret):
+            config.error('client_id and client_secret must be both provided or none')
+        if client_id:
+            if token:
+                config.error('client_id and client_secret must not be provided when token is')
+            self.client_creds = base64.b64encode(b':'.join(
+                cred.encode('utf-8') for cred in (client_id, client_secret)
+            )).decode('ascii')
         self.debug = debug
         self.verify = verify
 
@@ -67,6 +80,8 @@ class AvatarGitHub(AvatarBase):
         }
         if self.token:
             headers['Authorization'] = 'token ' + self.token
+        elif self.client_creds:
+            headers['Authorization'] = 'basic ' + self.client_creds
 
         self.client = yield httpclientservice.HTTPClientService.getService(self.master,
             self.github_api_endpoint, headers=headers,
