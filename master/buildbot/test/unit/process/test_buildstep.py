@@ -1086,15 +1086,15 @@ class ShellMixinExample(buildstep.ShellMixin, buildstep.BuildStep):
 
 class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
-    def __init__(self, makeRemoteShellCommandKwargs=None, **kwargs):
-        self.makeRemoteShellCommandKwargs = makeRemoteShellCommandKwargs or {}
+    def __init__(self, make_cmd_kwargs=None, **kwargs):
+        self.make_cmd_kwargs = make_cmd_kwargs or {}
 
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def run(self):
-        cmd = yield self.makeRemoteShellCommand(**self.makeRemoteShellCommandKwargs)
+        cmd = yield self.makeRemoteShellCommand(**self.make_cmd_kwargs)
         yield self.runCommand(cmd)
         return cmd.results()
 
@@ -1244,7 +1244,7 @@ class TestShellMixin(steps.BuildStepMixin,
     def test_example_override_workdir(self):
         # Test that makeRemoteShellCommand(workdir=X) works.
         self.setupStep(SimpleShellCommand(
-            makeRemoteShellCommandKwargs={'workdir': '/alternate'},
+            make_cmd_kwargs={'workdir': '/alternate'},
             command=['foo', properties.Property('bar', 'BAR')]))
         self.expectCommands(
             ExpectShell(workdir='/alternate', command=['foo', 'BAR']) +
