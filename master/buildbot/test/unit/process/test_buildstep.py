@@ -1168,6 +1168,59 @@ class TestShellMixin(steps.BuildStepMixin,
                          'logline\nlogline2\n')
 
     @defer.inlineCallbacks
+    def test_lazy_logfiles_stdout_has_stdout(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg']) +
+            Expect.log('stdio', stdout="some log\n") +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('stdio').stdout, 'some log\n')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_stdout_no_stdout(self):
+        # lazy log files do not apply to stdout
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg']) +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('stdio').stdout, '')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_logfile(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True,
+                                          logfiles={'logname': 'logpath.log'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
+                        logfiles={'logname': 'logpath.log'}) +
+            Expect.log('logname', stdout='logline\nlogline2\n') +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('logname').stdout,
+                         'logline\nlogline2\n')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_no_logfile(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True,
+                                          logfiles={'logname': 'logpath.log'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
+                        logfiles={'logname': 'logpath.log'}) +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        with self.assertRaises(KeyError):
+            self.step.getLog('logname')
+
+    @defer.inlineCallbacks
     def test_env(self):
         self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], env={'BAR': 'BAR'}))
         self.build.builder.config.env = {'FOO': 'FOO'}
