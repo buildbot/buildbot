@@ -1103,9 +1103,9 @@ class TestShellMixin(steps.BuildStepMixin,
                                   prohibitArgs=['logfiles'])
 
     def test_setupShellMixin_not_new_style(self):
-        self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
+        self.patch(SimpleShellCommand, 'isNewStyle', lambda self: False)
         with self.assertRaises(AssertionError):
-            ShellMixinExample()
+            SimpleShellCommand()
 
     def test_constructor_defaults(self):
         class MySubclass(SimpleShellCommand):
@@ -1229,7 +1229,7 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'}) +
             Expect.log('logname', stdout='logline\nlogline2\n') +
-            Expect.log('stdio', stdio="some log\n") +
+            Expect.log('stdio', stdout="some log\n") +
             0,
         )
         self.expectOutcome(result=SUCCESS)
