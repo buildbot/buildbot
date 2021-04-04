@@ -439,6 +439,7 @@ class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMix
         stdio_log = yield self.getLog('stdio')
         yield stdio_log.finish()
 
+    @defer.inlineCallbacks
     def createSummary(self):
         """
         Match log lines against warningPattern.
@@ -449,8 +450,8 @@ class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMix
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
-            self.addCompleteLog("warnings (%d)" % self.warnCount,
-                                "\n".join(self.loggedWarnings) + "\n")
+            yield self.addCompleteLog("warnings (%d)" % self.warnCount,
+                                      "\n".join(self.loggedWarnings) + "\n")
 
         warnings_stat = self.getStatistic('warnings', 0)
         self.setStatistic('warnings', warnings_stat + self.warnCount)
