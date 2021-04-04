@@ -1,1 +1,1 @@
-Fix a race condition in log handling of ``RpmLint`` step resulting in steps crashing occasionally.
+Fix a race condition in log handling of ``RpmLint`` and ``WarningCountingShellCommand`` steps resulting in steps crashing occasionally.
