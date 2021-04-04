@@ -1063,38 +1063,17 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
 
-class ShellMixinExample(buildstep.ShellMixin, buildstep.BuildStep):
-    # note that this is straight out of cls-buildsteps.rst
-
-    def __init__(self, cleanupScript='./cleanup.sh', **kwargs):
-        self.cleanupScript = cleanupScript
-        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-        super().__init__(**kwargs)
-
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand(
-            command=[self.cleanupScript])
-        yield self.runCommand(cmd)
-        if cmd.didFail():
-            cmd = yield self.makeRemoteShellCommand(
-                command=[self.cleanupScript, '--force'],
-                logEnviron=False)
-            yield self.runCommand(cmd)
-        return cmd.results()
-
-
 class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
-    def __init__(self, makeRemoteShellCommandKwargs=None, **kwargs):
-        self.makeRemoteShellCommandKwargs = makeRemoteShellCommandKwargs or {}
+    def __init__(self, make_cmd_kwargs=None, prohibit_args=None, **kwargs):
+        self.make_cmd_kwargs = make_cmd_kwargs or {}
 
-        kwargs = self.setupShellMixin(kwargs)
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=prohibit_args)
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def run(self):
-        cmd = yield self.makeRemoteShellCommand(**self.makeRemoteShellCommandKwargs)
+        cmd = yield self.makeRemoteShellCommand(**self.make_cmd_kwargs)
         yield self.runCommand(cmd)
         return cmd.results()
 
@@ -1113,25 +1092,23 @@ class TestShellMixin(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def test_setupShellMixin_bad_arg(self):
-        mixin = ShellMixinExample()
-        with self.assertRaisesConfigError(
-                "invalid ShellMixinExample argument invarg"):
+        mixin = SimpleShellCommand()
+        with self.assertRaisesConfigError("invalid SimpleShellCommand argument invarg"):
             mixin.setupShellMixin({'invarg': 13})
 
     def test_setupShellMixin_prohibited_arg(self):
-        mixin = ShellMixinExample()
-        with self.assertRaisesConfigError(
-                "invalid ShellMixinExample argument logfiles"):
+        mixin = SimpleShellCommand()
+        with self.assertRaisesConfigError("invalid SimpleShellCommand argument logfiles"):
             mixin.setupShellMixin({'logfiles': None},
                                   prohibitArgs=['logfiles'])
 
     def test_setupShellMixin_not_new_style(self):
-        self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
+        self.patch(SimpleShellCommand, 'isNewStyle', lambda self: False)
         with self.assertRaises(AssertionError):
-            ShellMixinExample()
+            SimpleShellCommand()
 
     def test_constructor_defaults(self):
-        class MySubclass(ShellMixinExample):
+        class MySubclass(SimpleShellCommand):
             timeout = 9999
         # ShellMixin arg
         self.assertEqual(MySubclass().timeout, 9999)
@@ -1145,121 +1122,180 @@ class TestShellMixin(steps.BuildStepMixin,
                          ['charming'])
 
     @defer.inlineCallbacks
-    def test_example(self):
-        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+    def test_prohibit_args(self):
+        self.setupStep(SimpleShellCommand(prohibit_args=['command'],
+                                          make_cmd_kwargs={'command': ['cmd', 'arg']}))
         self.expectCommands(
-            ExpectShell(workdir='build', command=['./cleanup.sh']) +
-            Expect.log('stdio', stderr="didn't go so well\n") +
-            1,
-            ExpectShell(workdir='build', command=['./cleanup.sh', '--force'],
-                        logEnviron=False) +
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_extra_logfile(self):
-        self.setupStep(ShellMixinExample(
-            logfiles={'cleanup': 'cleanup.log'}), wantDefaultWorkdir=False)
+    def test_no_default_workdir(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
         self.expectCommands(
-            ExpectShell(workdir='build', command=['./cleanup.sh'],
-                        logfiles={'cleanup': 'cleanup.log'}) +
-            Expect.log('cleanup', stdout='cleaning\ncleaned\n') +
+            ExpectShell(workdir='build', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
-        self.assertEqual(self.step.getLog('cleanup').stdout,
-                         'cleaning\ncleaned\n')
 
     @defer.inlineCallbacks
-    def test_example_build_workdir(self):
-        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+    def test_build_workdir(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
         self.build.workdir = '/alternate'
         self.expectCommands(
-            ExpectShell(workdir='/alternate', command=['./cleanup.sh']) +
+            ExpectShell(workdir='/alternate', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_build_workdir_callable(self):
-        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+    def test_build_workdir_callable(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
         self.build.workdir = lambda x: '/alternate'
         self.expectCommands(
-            ExpectShell(workdir='/alternate', command=['./cleanup.sh']) +
+            ExpectShell(workdir='/alternate', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_build_workdir_rendereable(self):
-        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
-        self.build.workdir = properties.Property("myproperty")
-        self.properties.setProperty("myproperty", "/myproperty", "test")
-        self.expectCommands(
-            ExpectShell(workdir='/myproperty', command=['./cleanup.sh']) +
-            0,
-        )
-        self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
-
-    @defer.inlineCallbacks
-    def test_example_build_workdir_callable_attribute_error(self):
-        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
-        self.build.workdir = lambda x: x.p  # will raise AttributeError
+    def test_build_workdir_callable_error(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
         self.expectException(buildstep.CallableAttributeError)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_step_workdir(self):
-        self.setupStep(ShellMixinExample(workdir='/alternate'))
-        self.build.workdir = '/overridden'
+    def test_build_workdir_renderable(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
+        self.build.workdir = properties.Property("myproperty")
+        self.properties.setProperty("myproperty", "/myproperty", "test")
         self.expectCommands(
-            ExpectShell(workdir='/alternate', command=['./cleanup.sh']) +
+            ExpectShell(workdir='/myproperty', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_step_renderable_workdir(self):
+    def test_step_workdir(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], workdir='/stepdir'))
+        self.build.workdir = '/builddir'
+        self.expectCommands(
+            ExpectShell(workdir='/stepdir', command=['cmd', 'arg']) +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_step_renderable_workdir(self):
         @renderer
         def rendered_workdir(_):
-            return '/alternate'
+            return '/stepdir'
 
-        self.setupStep(ShellMixinExample(workdir=rendered_workdir))
-        self.build.workdir = '/overridden'
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], workdir=rendered_workdir))
+        self.build.workdir = '/builddir'
         self.expectCommands(
-            ExpectShell(workdir='/alternate', command=['./cleanup.sh']) +
+            ExpectShell(workdir='/stepdir', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_override_workdir(self):
-        # Test that makeRemoteShellCommand(workdir=X) works.
-        self.setupStep(SimpleShellCommand(
-            makeRemoteShellCommandKwargs={'workdir': '/alternate'},
-            command=['foo', properties.Property('bar', 'BAR')]))
+    def test_step_workdir_overridden(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], workdir='/stepdir',
+                                          make_cmd_kwargs={'workdir': '/overridden'}))
+        self.build.workdir = '/builddir'
         self.expectCommands(
-            ExpectShell(workdir='/alternate', command=['foo', 'BAR']) +
+            ExpectShell(workdir='/overridden', command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_env(self):
-        self.setupStep(
-            ShellMixinExample(env={'BAR': 'BAR'}), wantDefaultWorkdir=False)
+    def test_extra_logfile(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'],
+                                          logfiles={'logname': 'logpath.log'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
+                        logfiles={'logname': 'logpath.log'}) +
+            Expect.log('logname', stdout='logline\nlogline2\n') +
+            Expect.log('stdio', stdout="some log\n") +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('logname').stdout,
+                         'logline\nlogline2\n')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_stdout_has_stdout(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg']) +
+            Expect.log('stdio', stdout="some log\n") +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('stdio').stdout, 'some log\n')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_stdout_no_stdout(self):
+        # lazy log files do not apply to stdout
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg']) +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('stdio').stdout, '')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_logfile(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True,
+                                          logfiles={'logname': 'logpath.log'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
+                        logfiles={'logname': 'logpath.log'}) +
+            Expect.log('logname', stdout='logline\nlogline2\n') +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('logname').stdout,
+                         'logline\nlogline2\n')
+
+    @defer.inlineCallbacks
+    def test_lazy_logfiles_no_logfile(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True,
+                                          logfiles={'logname': 'logpath.log'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
+                        logfiles={'logname': 'logpath.log'}) +
+            0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        with self.assertRaises(KeyError):
+            self.step.getLog('logname')
+
+    @defer.inlineCallbacks
+    def test_env(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], env={'BAR': 'BAR'}))
         self.build.builder.config.env = {'FOO': 'FOO'}
         self.expectCommands(
-            ExpectShell(workdir='build', command=['./cleanup.sh'],
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         env={'FOO': 'FOO', 'BAR': 'BAR'})
             + 0,
         )
@@ -1267,11 +1303,12 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_old_worker(self):
-        self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
-                       worker_version={'*': "1.1"}, wantDefaultWorkdir=False)
+    def test_old_worker_args(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], usePTY=False,
+                                          interruptSignal='DIE'),
+                       worker_version={'*': "1.1"})
         self.expectCommands(
-            ExpectShell(workdir='build', command=['./cleanup.sh']) +
+            ExpectShell(workdir='wkdir', command=['cmd', 'arg']) +
             # note missing parameters
             0,
         )
@@ -1282,25 +1319,24 @@ class TestShellMixin(steps.BuildStepMixin,
                          'NOTE: worker does not allow master to specify interruptSignal\n')
 
     @defer.inlineCallbacks
-    def test_example_new_worker(self):
-        self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
-                       worker_version={'*': "3.0"}, wantDefaultWorkdir=False)
+    def test_new_worker_args(self):
+        self.setupStep(SimpleShellCommand(command=['cmd', 'arg'], usePTY=False,
+                                          interruptSignal='DIE'),
+                       worker_version={'*': "3.0"})
         self.expectCommands(
-            ExpectShell(workdir='build', usePTY=False, command=['./cleanup.sh']) +
-            # note missing parameters
+            ExpectShell(workdir='wkdir', usePTY=False, interruptSignal='DIE',
+                        command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
-        self.assertEqual(self.step.getLog('stdio').header,
-                         '')
+        self.assertEqual(self.step.getLog('stdio').header, '')
 
     @defer.inlineCallbacks
     def test_description(self):
-        self.setupStep(SimpleShellCommand(
-            command=['foo', properties.Property('bar', 'BAR')]), wantDefaultWorkdir=False)
+        self.setupStep(SimpleShellCommand(command=['foo', properties.Property('bar', 'BAR')]))
         self.expectCommands(
-            ExpectShell(workdir='build', command=['foo', 'BAR']) +
+            ExpectShell(workdir='wkdir', command=['foo', 'BAR']) +
             0,
         )
         self.expectOutcome(result=SUCCESS, state_string="'foo BAR'")
