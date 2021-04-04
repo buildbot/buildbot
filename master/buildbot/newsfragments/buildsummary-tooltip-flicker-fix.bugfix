@@ -1,0 +1,1 @@
+Fix for :issue:`5930`, reduce flickering of build summary tooltip during mouseover of build numbers.
