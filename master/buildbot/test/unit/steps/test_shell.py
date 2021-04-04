@@ -228,7 +228,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
-            + ExpectShell.log('stdio', stdio='abcdef\n')
+            + ExpectShell.log('stdio', stdout='abcdef\n')
             + 0
         )
         self.expectOutcome(result=WARNINGS,

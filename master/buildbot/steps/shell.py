@@ -182,6 +182,7 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 'maxTime',
                 'sigtermTime',
                 'logfiles',
+                'lazylogfiles',
                 'usePTY',
                 'logEnviron',
                 'collectStdout',
