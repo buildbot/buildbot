@@ -128,6 +128,9 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                     initial_stdin=initialStdin,
                     timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                     usePTY=usePTY, logEnviron=logEnviron)
+
+        if interruptSignal is not None and interruptSignal != 'KILL':
+            args['interruptSignal'] = interruptSignal
         super().__init__("shell", args,
                          collectStdout=collectStdout,
                          collectStderr=collectStderr,
@@ -325,7 +328,7 @@ class ExpectShell(Expect):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1, initialStdin=None,
                  timeout=20 * 60, maxTime=None, logfiles=None,
-                 usePTY=None, logEnviron=True):
+                 usePTY=None, logEnviron=True, interruptSignal=None):
         if env is None:
             env = {}
         if logfiles is None:
@@ -335,6 +338,8 @@ class ExpectShell(Expect):
                     initial_stdin=initialStdin,
                     timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                     usePTY=usePTY, logEnviron=logEnviron)
+        if interruptSignal is not None:
+            args['interruptSignal'] = interruptSignal
         super().__init__("shell", args)
 
     def __repr__(self):

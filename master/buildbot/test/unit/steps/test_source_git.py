@@ -1673,7 +1673,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental', progress=True))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', '--version'])
             + ExpectShell.log('stdio',
                               stdout='git version 1.7.5')
@@ -1684,15 +1684,15 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.git',
                                 logEnviron=True))
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2674,7 +2674,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental'))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', '--version'])
             + ExpectShell.log('stdio',
                               stdout='git version 1.7.5')
@@ -2685,12 +2685,12 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.git',
                                 logEnviron=True))
             + 1,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')

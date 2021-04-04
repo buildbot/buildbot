@@ -1271,8 +1271,8 @@ class TestShellMixin(steps.BuildStepMixin,
                                           interruptSignal='DIE'),
                        worker_version={'*': "3.0"})
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY=False, command=['cmd', 'arg']) +
-            # note missing parameters
+            ExpectShell(workdir='wkdir', usePTY=False, interruptSignal='DIE',
+                        command=['cmd', 'arg']) +
             0,
         )
         self.expectOutcome(result=SUCCESS)
