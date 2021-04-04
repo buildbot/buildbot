@@ -669,8 +669,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self.results = EXCEPTION
                 hidden = False
 
-        yield self.master.data.updates.finishStep(self.stepid, self.results,
-                                                  hidden)
         # perform final clean ups
         success = yield self._cleanup_logs()
         if not success:
@@ -685,6 +683,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             yield sub.finish()
 
         self.releaseLocks()
+
+        yield self.master.data.updates.finishStep(self.stepid, self.results,
+                                                  hidden)
 
         return self.results
 
@@ -832,6 +833,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # instead.
         raise NotImplementedError("your subclass must implement run()")
 
+    @defer.inlineCallbacks
     def interrupt(self, reason):
         if self.stopped:
             return
@@ -842,14 +844,15 @@ class BuildStep(results.ResultComputingConfigMixin,
             self._acquiringLocks = []
 
         if self._waitingForLocks:
-            self.addCompleteLog(
+            yield self.addCompleteLog(
                 'cancelled while waiting for locks', str(reason))
         else:
-            self.addCompleteLog('cancelled', str(reason))
+            yield self.addCompleteLog('cancelled', str(reason))
 
         if self.cmd:
             d = self.cmd.interrupt(reason)
             d.addErrback(log.err, 'while cancelling command')
+            yield d
 
     def releaseLocks(self):
         log.msg("releaseLocks({}): {}".format(self, self.locks))
