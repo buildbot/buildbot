@@ -1159,7 +1159,7 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'}) +
             Expect.log('logname', stdout='logline\nlogline2\n') +
-            Expect.log('stdio', stdio="some log\n") +
+            Expect.log('stdio', stdout="some log\n") +
             0,
         )
         self.expectOutcome(result=SUCCESS)

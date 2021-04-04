@@ -21,7 +21,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shellsequence
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
@@ -76,14 +75,12 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
             arg.validateAttributes()
 
     def testShellArgsAreRendered(self):
-        arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
-                                      logname=WithProperties('make %s', 'project'))
+        arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'))
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST')
-                            + 0 + Expect.log('stdio make BUILDBOT-TEST'))
+        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST') + 0)
         # TODO: need to factor command-summary stuff into a utility method and
         # use it here
         self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
@@ -114,13 +111,12 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testMultipleCommandsAreRun(self):
         arg1 = shellsequence.ShellArg(command='make p1')
-        arg2 = shellsequence.ShellArg(command='deploy p1', logname='deploy')
+        arg2 = shellsequence.ShellArg(command='deploy p1')
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1') + 0,
-                            ExpectShell(workdir='build', command='deploy p1') + 0 +
-                            Expect.log('stdio deploy p1'))
+                            ExpectShell(workdir='build', command='deploy p1') + 0)
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
 
@@ -166,16 +162,13 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         This unit test makes sure that ShellArg instances are rendered anew at
         each new build.
         """
-        arg = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
-                                     logname=WithProperties('make %s', 'project'))
+        arg = shellsequence.ShellArg(command=WithProperties('make %s', 'project'))
         step = shellsequence.ShellSequence(commands=[arg], workdir='build')
 
         # First "build"
         self.setupStep(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
-        self.expectCommands(ExpectShell(workdir='build',
-                            command='make BUILDBOT-TEST-1') + 0 +
-                            Expect.log('stdio make BUILDBOT-TEST-1'))
+        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1') + 0)
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
         self.runStep()
@@ -183,9 +176,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         # Second "build"
         self.setupStep(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
-        self.expectCommands(ExpectShell(workdir='build',
-                            command='make BUILDBOT-TEST-2') + 0 +
-                            Expect.log('stdio make BUILDBOT-TEST-2'))
+        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2') + 0)
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 
