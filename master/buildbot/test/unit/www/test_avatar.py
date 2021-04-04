@@ -16,6 +16,7 @@
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot import config
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
@@ -663,3 +664,56 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 'application/vnd.github.cloak-preview'})
         res = yield self.render_resource(self.rsrc, b'/?email=error@defunkt.com')
         self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+
+
+class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setUpTestReactor()
+
+        avatar_method = avatar.AvatarGitHub(client_id="oauth_id",
+                                            client_secret="oauth_secret")
+        master = self.make_master(url='http://a/b/', auth=auth.NoAuth(),
+                                  avatar_methods=[avatar_method])
+
+        self.rsrc = avatar.AvatarResource(master)
+        self.rsrc.reconfigResource(master.config)
+
+        headers = {
+            'User-Agent': 'Buildbot',
+            # oauth_id:oauth_secret in Base64
+            'Authorization': 'basic b2F1dGhfaWQ6b2F1dGhfc2VjcmV0',
+        }
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            master, self,
+            avatar.AvatarGitHub.DEFAULT_GITHUB_API_URL,
+            headers=headers,
+            debug=False, verify=False)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    def test_incomplete_credentials(self):
+        with self.assertRaises(config.ConfigErrors):
+            avatar.AvatarGitHub(client_id="oauth_id")
+        with self.assertRaises(config.ConfigErrors):
+            avatar.AvatarGitHub(client_secret="oauth_secret")
+
+    def test_token_and_client_credentials(self):
+        with self.assertRaises(config.ConfigErrors):
+            avatar.AvatarGitHub(client_id="oauth_id",
+                                client_secret="oauth_secret",
+                                token="token")
+
+    @defer.inlineCallbacks
+    def test_username(self):
+        username_search_endpoint = '/users/defunkt'
+        self._http.expect('get', username_search_endpoint,
+                          content_json=github_username_search_reply,
+                          headers={'Accept': 'application/vnd.github.v3+json'})
+        res = yield self.render_resource(self.rsrc, b'/?username=defunkt')
+        self.assertEqual(res, {'redirected': b'https://avatars3.githubusercontent.com/'
+            b'u/42424242?v=4&s=32'})
