@@ -178,7 +178,7 @@ class GerritChangeSourceBase(base.ChangeSource):
              self.master.db.sourcestamps.findOrCreateId(**stampdict))
 
         if found_existing and event_type in ("patchset-created", "ref-updated"):
-            if self.debug or True:
+            if self.debug:
                 eventstr = "{}/{} -- {}:{}".format(
                     self.gitBaseURL, chdict["project"], chdict["branch"],
                     chdict["revision"])
