@@ -111,9 +111,9 @@ class Workers {
         }
         if ($stateParams.worker != null) {
             $scope.builds = (builds = data.getBuilds({
-                limit: $scope.numbuilds, workerid: +$stateParams.worker, order: '-started_at'}));
+                limit: $scope.numbuilds, workerid: +$stateParams.worker, order: '-started_at', property: ["owners", "workername"]}));
         } else {
-            builds = data.getBuilds({limit: $scope.numbuilds, order: '-started_at'});
+            builds = data.getBuilds({limit: $scope.numbuilds, order: '-started_at', property: ["owners", "workername"]});
         }
         dataGrouperService.groupBy($scope.workers, builds, 'workerid', 'builds');
         $scope.settings = bbSettingsService.getSettingsGroup("Workers");

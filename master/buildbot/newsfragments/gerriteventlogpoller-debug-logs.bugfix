@@ -1,0 +1,1 @@
+Fixed excessive debug logging in ``GerritEventLogPoller``.
