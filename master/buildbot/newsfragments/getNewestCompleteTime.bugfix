@@ -1,1 +1,0 @@
-Fixed issue with ``getNewestCompleteTime`` which was returning no completed builds, although it could.

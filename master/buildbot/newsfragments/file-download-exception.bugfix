@@ -1,3 +1,0 @@
-Brought back the old (pre v2.9.0) :py:class:`~buildbot.steps.transfer.FileDownload` behavior to act
-more gracefully by returning ``FAILURE`` instead of raising an exception when the file doesn't exist
-on master. This makes use cases such as ``FileDownload(haltOnFailure=False)`` possible again.
