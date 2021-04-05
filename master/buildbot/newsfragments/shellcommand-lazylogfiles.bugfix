@@ -1,1 +1,0 @@
-Re-added support for ``lazylogfiles`` argument of ``ShellCommand`` that was available in old style steps.
