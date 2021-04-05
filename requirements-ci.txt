@@ -6,7 +6,7 @@ attrs==20.3.0
 autobahn==20.6.1  # pyup: ignore  (#5438)
 Automat==20.2.0
 Babel==2.9.0
-backports.functools-lru-cache==1.6.1
+backports.functools-lru-cache==1.6.3
 blockdiag==2.0.1
 boto==2.49.0
 boto3==1.17.27
