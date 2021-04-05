@@ -1,1 +1,0 @@
-`buildstep` `finished` event is not called when the step is truly finished (:issue:`5906`).
