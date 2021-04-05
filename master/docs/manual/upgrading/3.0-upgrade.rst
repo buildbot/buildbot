@@ -14,7 +14,7 @@ The recommended upgrade procedure is as follows:
     If the code does not emit deprecation warnings, it's in a good shape in this regard.
     You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
 
-  - Upgrade to Buildbot 3.0.
+  - Upgrade to the latest Buildbot 3.0.x release.
 
   - Fix all usages of deprecated APIs.
     In this case, the only deprecated APIs are temporary ``*NewStyle`` build step aliases.
