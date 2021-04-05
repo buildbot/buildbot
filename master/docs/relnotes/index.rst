@@ -10,6 +10,58 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.1.0`` ( ``2021-04-05`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed usage of invalid characters in temporary file names by git-related steps (:issue:`5949`)
+- Fixed parsing of URLs of the form https://api.bitbucket.org/2.0/repositories/OWNER/REPONAME in BitbucketStatusPush.
+  These URLs are in the sourcestamps returned by the Bitbucket Cloud hook.
+- Brought back the old (pre v2.9.0) behavior of the ``FileDownload`` step to act
+  more gracefully by returning ``FAILURE`` instead of raising an exception when the file doesn't exist
+  on master. This makes use cases such as ``FileDownload(haltOnFailure=False)`` possible again.
+- Fixed issue with ``getNewestCompleteTime`` which was returning no completed builds, although it could.
+- Fixed the ``Git`` source step causing last active branch to point to wrong commits.
+  This only affected the branch state in the local repository, the checked out code was correct.
+- Improved cleanup of any containers left running by ``OpenstackLatentWorker``.
+- Improved consistency of log messages produced by the reconfig script.
+  Note that this output is not part of public API of Buildbot and may change at any time.
+- Improved error message when try client cannot create a build due to builder being not configured on master side.
+- Fixed exception when submitting builds via try jobdir client when the branch was not explicitly specified.
+- Fixed handling of secrets in nested folders by the vault provider.
+
+Features
+--------
+
+- Implemented report generator for new build requests
+- Allow usage of Basic authentication to access GitHub API when looking for avatars
+- Added support for default Pylint message that was changed in v2.0.
+- Implemented support for configurable timeout in the reconfig script via new ``progress_timeout`` command-line parameter which determines how long it waits between subsequent progress updates in the logs before declaring a timeout.
+- Implemented ``GitDiffInfo`` step that would extract information about what code has been changed in a pull/merge request.
+- Add support ``--submodule`` option for the ``repo init`` command of the Repo source step.
+
+Deprecations and Removals
+-------------------------
+
+- ``MessageFormatter`` will receive the actual builder name instead of ``whole buildset`` when used from ``BuildSetStatusGenerator``.
+
+
+Buildbot ``3.0.3`` ( ``2021-04-05`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed a race condition in log handling of ``RpmLint`` and ``WarningCountingShellCommand`` steps resulting in steps crashing occasionally.
+- Fixed incorrect state string of a finished buildstep being sent via message queue (:issue:`5906`).
+- Reduced flickering of build summary tooltip during mouseover of build numbers (:issue:`5930`).
+- Fixed missing data in Owners and Worker columns in changes and workers pages (:issue:`5888`, :issue:`5887`).
+- Fixed excessive debug logging in ``GerritEventLogPoller``.
+- Fixed regression in pending buildrequests UI where owner is not displayed anymore (:issue:`5940`).
+- Re-added support for ``lazylogfiles`` argument of ``ShellCommand`` that was available in old style steps.
+
 Buildbot ``3.0.2`` ( ``2021-03-16`` )
 =====================================
 

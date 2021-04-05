@@ -1,1 +1,0 @@
-git steps will now ensure that invalid characters are not used in temporary file names (:issue:`5949`)

@@ -1,1 +1,0 @@
-fix regression in pending buildrequests UI where owner is not displayed anymore (:issue:`5940`)
