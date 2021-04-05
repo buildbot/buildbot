@@ -10,6 +10,20 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.0.3`` ( ``2021-04-05`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed a race condition in log handling of ``RpmLint`` and ``WarningCountingShellCommand`` steps resulting in steps crashing occasionally.
+- Fixed incorrect state string of a finished buildstep being sent via message queue (:issue:`5906`).
+- Reduced flickering of build summary tooltip during mouseover of build numbers (:issue:`5930`).
+- Fixed missing data in Owners and Worker columns in changes and workers pages (:issue:`5888`, :issue:`5887`).
+- Fixed excessive debug logging in ``GerritEventLogPoller``.
+- Fixed regression in pending buildrequests UI where owner is not displayed anymore (:issue:`5940`).
+- Re-added support for ``lazylogfiles`` argument of ``ShellCommand`` that was available in old style steps.
+
 Buildbot ``3.0.2`` ( ``2021-03-16`` )
 =====================================
 
