@@ -35,6 +35,7 @@ testData = {
 class TestsEndpoint(base.Endpoint):
     isCollection = True
     pathPatterns = "/test"
+    rootLinkName = 'test'
 
     def get(self, resultSpec, kwargs):
         # results are sorted by ID for test stability
@@ -88,3 +89,20 @@ class Test(base.ResourceType):
         success = types.Boolean()
         tags = types.List(of=types.String())
     entityType = EntityType(name)
+
+
+graphql_schema = """
+# custom scalar types for buildbot data model
+scalar Date   # stored as utc unix timestamp
+scalar Binary # arbitrary data stored as base85
+scalar JSON  # arbitrary json stored as string, mainly used for properties values
+type Query {
+  tests: [Test]!
+}
+type Test {
+  id: Int!
+  info: String!
+  success: Boolean!
+  tags: [String]!
+}
+"""

@@ -22,6 +22,7 @@ from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import service
+from buildbot.test.fake import endpoint
 
 
 class FakeUpdates(service.AsyncService):
@@ -509,3 +510,6 @@ class FakeDataConnector(service.AsyncMultiService):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
         return self.realConnector.control(action, args, path)
+
+    def get_graphql_schema(self):
+        return endpoint.graphql_schema

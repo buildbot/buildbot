@@ -27,6 +27,7 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz
+from buildbot.www import graphql
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
 from buildbot.www.rest import BadRequest
@@ -34,10 +35,11 @@ from buildbot.www.rest import BadRequest
 
 class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
-    maxVersion = 2
+    maxVersion = 3
 
     def setUp(self):
         self.setUpTestReactor()
+        [graphql] # used for import side effect
 
     @defer.inlineCallbacks
     def test_render(self):

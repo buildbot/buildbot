@@ -243,6 +243,15 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         """))
         schema = graphql.build_schema(schema)
 
+
+    def test_get_fake_graphql_schema(self):
+        # use the test module for basic graphQLSchema generation
+        mod = reflect.namedModule('buildbot.test.fake.endpoint')
+        self.data._scanModule(mod)
+        schema = self.data.get_graphql_schema()
+        self.assertEqual(schema, mod.graphql_schema)
+        schema = graphql.build_schema(schema)
+
 # classes discovered by test_scanModule, above
 
 
