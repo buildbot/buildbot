@@ -116,7 +116,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     def runClient(self, config):
         self.clt = tryclient.Try(config)
-        return self.clt.run(_inTests=True)
+        return self.clt.run_impl()
 
     @defer.inlineCallbacks
     def test_userpass_no_wait(self):
@@ -282,8 +282,8 @@ def masterConfig(extra_config):
 
     class MyBuildStep(BuildStep):
 
-        def start(self):
-            self.finished(results.SUCCESS)
+        def run(self):
+            return results.SUCCESS
 
     c['change_source'] = []
     c['schedulers'] = []  # filled in above

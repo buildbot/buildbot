@@ -90,8 +90,8 @@ class ReferenceableProxy(pb.Referenceable):
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
 
-    def __getattr__(self, default=None):
-        return getattr(self.impl, default)
+    def __getattr__(self, name):
+        return getattr(self.impl, name)
 
 
 # Proxy are just ReferenceableProxy to the Impl classes

@@ -1546,10 +1546,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'git version 2.10.0\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git',
-                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
+                       '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
                        'ls-remote', '--refs', self.REPOURL),
             gpo.Expect('git',
-                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
+                       '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
                        'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work'),
@@ -1595,7 +1595,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
-            .env({'GIT_SSH_COMMAND': 'ssh -i "{0}"'.format(key_path)}),
+            .env({'GIT_SSH_COMMAND': 'ssh -o "BatchMode=yes" -i "{0}"'.format(key_path)}),
             gpo.Expect('git', 'rev-parse',
                        'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -1635,10 +1635,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'git version 2.10.0\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git',
-                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
+                       '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
                        'ls-remote', '--refs', self.REPOURL),
             gpo.Expect('git',
-                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
+                       '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
                        'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -1679,13 +1679,13 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git',
                        '-c',
-                       'core.sshCommand=ssh -i "{0}" '
+                       'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
                        '-o "UserKnownHostsFile={1}"'.format(
                                key_path, known_hosts_path),
                        'ls-remote', '--refs', self.REPOURL),
             gpo.Expect('git',
                        '-c',
-                       'core.sshCommand=ssh -i "{0}" '
+                       'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
                        '-o "UserKnownHostsFile={1}"'.format(
                                key_path, known_hosts_path),
                        'fetch', self.REPOURL,
@@ -1747,13 +1747,13 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git',
                        '-c',
-                       'core.sshCommand=ssh -i "{0}" '
+                       'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
                        '-o "UserKnownHostsFile={1}"'.format(
                                key_path, known_hosts_path),
                        'ls-remote', '--refs', self.REPOURL),
             gpo.Expect('git',
                        '-c',
-                       'core.sshCommand=ssh -i "{0}" '
+                       'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
                        '-o "UserKnownHostsFile={1}"'.format(
                                key_path, known_hosts_path),
                        'fetch', self.REPOURL,

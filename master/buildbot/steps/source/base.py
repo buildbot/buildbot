@@ -20,13 +20,12 @@ from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
-from buildbot.process.buildstep import LoggingBuildStep
-from buildbot.status.builder import FAILURE
+from buildbot.process.results import FAILURE
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import bytes2unicode
 
 
-class Source(LoggingBuildStep, CompositeStepMixin):
+class Source(buildstep.BuildStep, CompositeStepMixin):
 
     """This is a base class to generate a source tree in the worker.
     Each version control system has a specialized subclass, and is expected

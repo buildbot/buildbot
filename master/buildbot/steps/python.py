@@ -229,6 +229,8 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
     _msgtypes_re_str = '(?P<errtype>[{}])'.format(''.join(list(_MESSAGES)))
     _default_line_re = re.compile(r'^{}(\d+)?: *\d+(, *\d+)?:.+'.format(_msgtypes_re_str))
+    _default_2_0_0_line_re = \
+        re.compile(r'^(?P<path>[^:]+):(?P<line>\d+):\d+: *{}(\d+)?:.+'.format(_msgtypes_re_str))
     _parseable_line_re = re.compile(
         r'(?P<path>[^:]+):(?P<line>\d+): \[{}(\d+)?(\([a-z-]+\))?[,\]] .+'.format(_msgtypes_re_str))
 
@@ -242,6 +244,14 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
     # returns (message type, path, line) tuple if line has been matched, or None otherwise
     def _match_line(self, line):
+        m = self._default_2_0_0_line_re.match(line)
+        if m:
+            try:
+                line_int = int(m.group('line'))
+            except ValueError:
+                line_int = None
+            return (m.group('errtype'), m.group('path'), line_int)
+
         m = self._parseable_line_re.match(line)
         if m:
             try:

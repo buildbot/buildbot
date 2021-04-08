@@ -167,3 +167,40 @@ class DebugIntegrationLogsMixin:
 
         if 'BBTRACE' in os.environ:
             enable_trace(self)
+
+
+class BuildDictLookAlike:
+
+    """ a class whose instances compares to any build dict that this reporter is supposed to send
+    out"""
+
+    def __init__(self, extra_keys=None, expected_missing_keys=None, **assertions):
+        self.keys = [
+            'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
+            'buildset', 'complete', 'complete_at', 'masterid', 'number',
+            'parentbuild', 'parentbuilder', 'properties', 'results',
+            'started_at', 'state_string', 'url', 'workerid'
+            ]
+        if extra_keys:
+            self.keys.extend(extra_keys)
+        if expected_missing_keys is not None:
+            for key in expected_missing_keys:
+                self.keys.remove(key)
+        self.keys.sort()
+        self.assertions = assertions
+
+    def __eq__(self, b):
+        if sorted(b.keys()) != self.keys:
+            print(set(b.keys()) - set(self.keys))
+            print(set(self.keys) - set(b.keys()))
+            return False
+        for k, v in self.assertions.items():
+            if b[k] != v:
+                return False
+        return True
+
+    def __ne__(self, b):
+        return not (self == b)
+
+    def __repr__(self):
+        return "{ any build }"

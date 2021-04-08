@@ -7,7 +7,7 @@ GitCommit
 
 .. py:class:: buildbot.steps.source.git.GitCommit
 
-The :bb:step:`GitCommit` build step add files and commit modifications in your local `Git <http://git.or.cz/>`_ repository.
+The :bb:step:`GitCommit` build step adds files and commits modifications in your local `Git <http://git.or.cz/>`_ repository.
 
 The GitCommit step takes the following arguments:
 

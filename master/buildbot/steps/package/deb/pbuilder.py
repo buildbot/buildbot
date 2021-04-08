@@ -29,10 +29,10 @@ from buildbot import config
 from buildbot.process import logobserver
 from buildbot.process import remotecommand
 from buildbot.process import results
-from buildbot.steps.shell import WarningCountingShellCommandNewStyle
+from buildbot.steps.shell import WarningCountingShellCommand
 
 
-class DebPbuilder(WarningCountingShellCommandNewStyle):
+class DebPbuilder(WarningCountingShellCommand):
 
     """Build a debian package with pbuilder inside of a chroot."""
     name = "pbuilder"
@@ -46,7 +46,8 @@ class DebPbuilder(WarningCountingShellCommandNewStyle):
 
     architecture = None
     distribution = 'stable'
-    basetgz = "/var/cache/pbuilder/%(distribution)s-%(architecture)s-buildbot.tgz"
+    basetgz = None
+    _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.tgz"
     mirror = "http://cdn.debian.net/debian/"
     extrapackages = []
     keyring = None
@@ -55,6 +56,9 @@ class DebPbuilder(WarningCountingShellCommandNewStyle):
     maxAge = 60 * 60 * 24 * 7
     pbuilder = '/usr/sbin/pbuilder'
     baseOption = '--basetgz'
+
+    renderables = ['architecture', 'distribution', 'basetgz', 'mirror', 'extrapackages', 'keyring',
+                   'components']
 
     def __init__(self,
                  architecture=None,
@@ -65,26 +69,6 @@ class DebPbuilder(WarningCountingShellCommandNewStyle):
                  keyring=None,
                  components=None,
                  **kwargs):
-        """
-        Creates the DebPbuilder object.
-
-        @type architecture: str
-        @param architecture: the name of the architecture to build
-        @type distribution: str
-        @param distribution: the man of the distribution to use
-        @type basetgz: str
-        @param basetgz: the path or  path template of the basetgz
-        @type mirror: str
-        @param mirror: the mirror for building basetgz
-        @type extrapackages: list
-        @param extrapackages: adds packages specified to buildroot
-        @type keyring: str
-        @param keyring: keyring file to use for verification
-        @type components: str
-        @param components: components to use for chroot creation
-        @type kwargs: dict
-        @param kwargs: All further keyword arguments.
-        """
         super().__init__(**kwargs)
 
         if architecture:
@@ -99,29 +83,11 @@ class DebPbuilder(WarningCountingShellCommandNewStyle):
             self.keyring = keyring
         if components:
             self.components = components
-
-        if self.architecture:
-            kwargs['architecture'] = self.architecture
-        else:
-            kwargs['architecture'] = 'local'
-        kwargs['distribution'] = self.distribution
-
         if basetgz:
-            self.basetgz = basetgz % kwargs
-        else:
-            self.basetgz = self.basetgz % kwargs
+            self.basetgz = basetgz
 
         if not self.distribution:
             config.error("You must specify a distribution.")
-
-        self.command = [
-            'pdebuild', '--buildresult', '.', '--pbuilder', self.pbuilder]
-        if self.architecture:
-            self.command += ['--architecture', self.architecture]
-        self.command += ['--', '--buildresult',
-                         '.', self.baseOption, self.basetgz]
-        if self.extrapackages:
-            self.command += ['--extrapackages', " ".join(self.extrapackages)]
 
         self.suppressions.append(
             (None, re.compile(r"\.pbuilderrc does not exist"), None, None))
@@ -131,6 +97,23 @@ class DebPbuilder(WarningCountingShellCommandNewStyle):
 
     @defer.inlineCallbacks
     def run(self):
+        if self.basetgz is None:
+            self.basetgz = self._default_basetgz
+            kwargs = {}
+            if self.architecture:
+                kwargs['architecture'] = self.architecture
+            else:
+                kwargs['architecture'] = 'local'
+            kwargs['distribution'] = self.distribution
+            self.basetgz = self.basetgz.format(**kwargs)
+
+        self.command = ['pdebuild', '--buildresult', '.', '--pbuilder', self.pbuilder]
+        if self.architecture:
+            self.command += ['--architecture', self.architecture]
+        self.command += ['--', '--buildresult', '.', self.baseOption, self.basetgz]
+        if self.extrapackages:
+            self.command += ['--extrapackages', " ".join(self.extrapackages)]
+
         res = yield self.checkBasetgz()
         if res != results.SUCCESS:
             return res
@@ -210,7 +193,7 @@ class DebCowbuilder(DebPbuilder):
     """Build a debian package with cowbuilder inside of a chroot."""
     name = "cowbuilder"
 
-    basetgz = "/var/cache/pbuilder/%(distribution)s-%(architecture)s-buildbot.cow/"
+    _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.cow/"
 
     pbuilder = '/usr/sbin/cowbuilder'
     baseOption = '--basepath'

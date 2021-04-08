@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
+
 import mock
 
 from twisted.internet import defer
@@ -285,6 +287,93 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
         yield self.do_request_collapse(rows, [22], [])
         yield self.do_request_collapse(rows, [21], [20])
+
+
+class TestSourceStamp(unittest.TestCase):
+    def test_asdict_minimal(self):
+        ssdatadict = {
+            'ssid': '123',
+            'branch': None,
+            'revision': None,
+            'patch': None,
+            'repository': 'testrepo',
+            'codebase': 'testcodebase',
+            'project': 'testproject',
+            'created_at': datetime.datetime(2019, 4, 1, 23, 38, 33, 154354),
+        }
+        ss = buildrequest.TempSourceStamp(ssdatadict)
+
+        self.assertEqual(ss.asDict(), {
+            'branch': None,
+            'codebase': 'testcodebase',
+            'patch_author': None,
+            'patch_body': None,
+            'patch_comment': None,
+            'patch_level': None,
+            'patch_subdir': None,
+            'project': 'testproject',
+            'repository': 'testrepo',
+            'revision': None
+        })
+
+    def test_asdict_no_patch(self):
+        ssdatadict = {
+            'ssid': '123',
+            'branch': 'testbranch',
+            'revision': 'testrev',
+            'patch': None,
+            'repository': 'testrepo',
+            'codebase': 'testcodebase',
+            'project': 'testproject',
+            'created_at': datetime.datetime(2019, 4, 1, 23, 38, 33, 154354),
+        }
+        ss = buildrequest.TempSourceStamp(ssdatadict)
+
+        self.assertEqual(ss.asDict(), {
+            'branch': 'testbranch',
+            'codebase': 'testcodebase',
+            'patch_author': None,
+            'patch_body': None,
+            'patch_comment': None,
+            'patch_level': None,
+            'patch_subdir': None,
+            'project': 'testproject',
+            'repository': 'testrepo',
+            'revision': 'testrev',
+        })
+
+    def test_asdict_with_patch(self):
+        ssdatadict = {
+            'ssid': '123',
+            'branch': 'testbranch',
+            'revision': 'testrev',
+            'patch': {
+                'patchid': 1234,
+                'body': b'testbody',
+                'level': 2,
+                'author': 'testauthor',
+                'comment': 'testcomment',
+                'subdir': 'testsubdir',
+            },
+            'repository': 'testrepo',
+            'codebase': 'testcodebase',
+            'project': 'testproject',
+            'created_at': datetime.datetime(2019, 4, 1, 23, 38, 33, 154354),
+        }
+        ss = buildrequest.TempSourceStamp(ssdatadict)
+
+        self.assertEqual(ss.asDict(), {
+            'branch': 'testbranch',
+            'codebase': 'testcodebase',
+            'patch_author': 'testauthor',
+            'patch_body': b'testbody',
+            'patch_comment': 'testcomment',
+            'patch_level': 2,
+            'patch_subdir': 'testsubdir',
+            'project': 'testproject',
+            'repository': 'testrepo',
+            'revision': 'testrev'
+        })
 
 
 class TestBuildRequest(TestReactorMixin, unittest.TestCase):

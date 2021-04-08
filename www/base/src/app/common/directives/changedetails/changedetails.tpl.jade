@@ -2,7 +2,7 @@ div.changedetails(style="width:100%;")
     div(style="width:100%;", ng-click="change.show_details = !change.show_details")
         .change-avatar(ng-if="!compact && change.author_email")
             a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name}}")
-                img(ng-src="avatar?email={{change.author_email}}")
+                img(ng-src="avatar?email={{change.author_email | encodeURI}}")
         a(ng-if="change.revlink", ng-href="{{change.revlink}}", uib-tooltip="{{change.comments}}")
             | {{ change.comments.split("\n")[0] }}
         span(ng-if="!change.revlink", uib-tooltip="{{change.comments}}")

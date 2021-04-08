@@ -90,8 +90,6 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
         # patch out a few other annoying things the master likes to do
         self.patch(monkeypatches, 'patch_all', lambda: None)
         self.patch(signal, 'signal', lambda sig, hdlr: None)
-        # XXX temporary
-        self.patch(master, 'Status', lambda master: mock.Mock())
 
         master.BuildMaster.masterHeartbeatService = mock.Mock()
         self.master = master.BuildMaster(
@@ -168,6 +166,9 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
         d = self.master.stopService()
 
         self.assertFalse(d.called)
+
+        # master must only send shutdown once builds are completed
+        self.assertTrue(self.master.data.updates.thisMasterActive)
         self.master.botmaster.shutdownDeferred.callback(None)
         self.assertTrue(d.called)
 
@@ -205,7 +206,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin,
 
         self.master.stopService()
 
-        self.assertLogged("reconfig aborted without")
+        self.assertLogged("configuration update aborted without")
         self.assertFalse(self.master.reconfigService.called)
 
     @defer.inlineCallbacks

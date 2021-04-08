@@ -14,7 +14,6 @@ The sections contained here document classes that can be used or subclassed.
     cls-build
     cls-worker
     cls-buildfactory
-    cls-buildsetsummarynotifiermixin
     cls-changesources
     cls-remotecommands
     cls-buildsteps

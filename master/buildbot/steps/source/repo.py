@@ -24,6 +24,7 @@ from zope.interface import implementer
 from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.steps.source.base import Source
 
@@ -97,7 +98,7 @@ class Repo(Source):
     name = 'repo'
     renderables = ["manifestURL", "manifestBranch", "manifestFile", "tarball", "jobs",
                    "syncAllBranches", "updateTarballAge", "manifestOverrideUrl",
-                   "repoDownloads", "depth"]
+                   "repoDownloads", "depth", "submodules"]
 
     ref_not_found_re = re.compile(r"fatal: Couldn't find remote ref")
     cherry_pick_error_re = re.compile(r"|".join([r"Automatic cherry-pick failed",
@@ -122,6 +123,7 @@ class Repo(Source):
                  manifestOverrideUrl=None,
                  repoDownloads=None,
                  depth=0,
+                 submodules=False,
                  syncQuietly=False,
                  **kwargs):
         """
@@ -154,6 +156,9 @@ class Repo(Source):
         @param depth: optional depth parameter to repo init.
                           If specified, create a shallow clone with given depth.
 
+        @type submodules: string
+        @param submodules: optional submodules parameter to repo init.
+
         @type syncQuietly: bool.
         @param syncQuietly: true, then suppress verbose output from repo sync.
         """
@@ -169,6 +174,7 @@ class Repo(Source):
             repoDownloads = []
         self.repoDownloads = repoDownloads
         self.depth = depth
+        self.submodules = submodules
         self.syncQuietly = syncQuietly
         super().__init__(**kwargs)
 
@@ -211,10 +217,10 @@ class Repo(Source):
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
             workdir = self.workdir
-        cmd = buildstep.RemoteShellCommand(workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout, **kwargs)
+        cmd = remotecommand.RemoteShellCommand(workdir, command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout, **kwargs)
         self.lastCommand = cmd
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
@@ -265,7 +271,6 @@ class Repo(Source):
 
         # starting from here, clobbering will not help
         yield self.doRepoDownloads()
-        self.setStatus(self.lastCommand, 0)
         return results.SUCCESS
 
     @defer.inlineCallbacks
@@ -282,11 +287,16 @@ class Repo(Source):
             self.willRetryInCaseOfFailure = False
             yield self.doClobberStart()
         yield self.doCleanup()
-        yield self._repoCmd(['init',
-                             '-u', self.manifestURL,
-                             '-b', self.manifestBranch,
-                             '-m', self.manifestFile,
-                             '--depth', str(self.depth)])
+        command = ['init',
+                   '-u', self.manifestURL,
+                   '-b', self.manifestBranch,
+                   '-m', self.manifestFile,
+                   '--depth', str(self.depth)]
+
+        if self.submodules:
+            command.append('--submodules')
+
+        yield self._repoCmd(command)
 
         if self.manifestOverrideUrl:
             msg = "overriding manifest with {}\n".format(self.manifestOverrideUrl)

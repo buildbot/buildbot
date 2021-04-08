@@ -20,6 +20,7 @@ import json
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
+from buildbot.util.pullrequest import PullRequestMixin
 
 GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
@@ -28,7 +29,9 @@ GIT_TAG_REF = "refs/tags/{}"
 _HEADER_EVENT = b'X-Event-Key'
 
 
-class BitbucketServerEventHandler:
+class BitbucketServerEventHandler(PullRequestMixin):
+
+    property_basename = "bitbucket"
 
     def __init__(self, master, options=None):
         if options is None:
@@ -38,6 +41,9 @@ class BitbucketServerEventHandler:
             options = {}
         self.options = options
         self._codebase = self.options.get('codebase', None)
+        self.external_property_whitelist = self.options.get(
+            'bitbucket_property_whitelist', []
+        )
 
     def process(self, request):
         payload = self._get_payload(request)
@@ -149,9 +155,10 @@ class BitbucketServerEventHandler:
         pr_number = int(payload['pullrequest']['id'])
         repo_url = payload['repository']['links']['self'][0]['href']
         repo_url = repo_url.rstrip('browse')
+        revlink = payload['pullrequest']['link']
         change = {
             'revision': payload['pullrequest']['fromRef']['commit']['hash'],
-            'revlink': payload['pullrequest']['link'],
+            'revlink': revlink,
             'repository': repo_url,
             'author': '{} <{}>'.format(payload['actor']['displayName'],
                                        payload['actor']['username']),
@@ -159,7 +166,10 @@ class BitbucketServerEventHandler:
             'branch': refname,
             'project': payload['repository']['project']['name'],
             'category': category,
-            'properties': {'pullrequesturl': payload['pullrequest']['link']}
+            'properties': {
+                'pullrequesturl': revlink,
+                **self.extractProperties(payload['pullrequest']),
+            }
         }
 
         if callable(self._codebase):

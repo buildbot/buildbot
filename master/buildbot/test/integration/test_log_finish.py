@@ -47,7 +47,7 @@ class TestLog(RunMasterBase):
     @defer.inlineCallbacks
     def test_shellcommand(self):
 
-        class MyStep(steps.ShellCommandNewStyle):
+        class MyStep(steps.ShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
                 r = steps.ShellCommand._newLog(obj, name, type, logid, logEncoding)
@@ -73,10 +73,10 @@ class TestLog(RunMasterBase):
     @defer.inlineCallbacks
     def test_mastershellcommand(self):
 
-        class MyStep(steps.MasterShellCommandNewStyle):
+        class MyStep(steps.MasterShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.MasterShellCommandNewStyle._newLog(obj, name, type, logid, logEncoding)
+                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 return self.curr_log
 
@@ -99,10 +99,10 @@ class TestLog(RunMasterBase):
     @defer.inlineCallbacks
     def test_mastershellcommand_issue(self):
 
-        class MyStep(steps.MasterShellCommandNewStyle):
+        class MyStep(steps.MasterShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.MasterShellCommandNewStyle._newLog(obj, name, type, logid, logEncoding)
+                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 self.patch(r, "finish", lambda: defer.fail(RuntimeError('Could not finish')))
                 return self.curr_log

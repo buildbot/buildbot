@@ -179,7 +179,6 @@ buildermasterids
 buildername
 buildernames
 builderremoved
-builderstatus
 buildetaupdate
 buildfactory
 buildfinished
@@ -395,6 +394,7 @@ dict
 dicts
 dicttype
 diff
+diffinfo
 diffs
 dir
 directoryenterpattern
@@ -613,6 +613,7 @@ gotperspective
 gotrootobject
 gpo
 gracefulshutdown
+graphql
 gravatar
 groupmemberpattern
 gtk
@@ -646,7 +647,6 @@ html
 http
 httpclientservice
 https
-ibuilderstatus
 ibuildrequestcontrol
 ibuildrequeststatus
 ibuildsetstatus
@@ -694,6 +694,7 @@ interruptable
 interruptsignal
 intialization
 intranet
+invariants
 io
 ip
 ippolito
@@ -817,6 +818,7 @@ lookahead
 lookup
 lookups
 loopback
+LoopingCall
 loseconnection
 lostremote
 lotem
@@ -1091,6 +1093,7 @@ pyparsing
 pypugjs
 pythonpath
 qa
+queriable
 qmail
 quickmode
 quickstart
@@ -1213,6 +1216,7 @@ rsa
 rsh
 rst
 rstrip
+rtd
 rtype
 rtypes
 runcommand

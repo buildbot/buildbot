@@ -14,18 +14,14 @@
 # Copyright Buildbot Team Members
 
 
-import os
 import weakref
 
 import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implementer
 
 from buildbot import config
-from buildbot import interfaces
-from buildbot.status import build
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedata
@@ -65,90 +61,13 @@ class FakeCaches:
         return FakeCache(name, miss_fn)
 
 
-class FakeStatus(service.BuildbotService):
-
-    name = "status"
-    lastBuilderStatus = None
-
-    def builderAdded(self, name, basedir, tags=None, description=None):
-        bs = FakeBuilderStatus(self.master)
-        self.lastBuilderStatus = bs
-        return bs
-
-    def getBuilderNames(self):
-        return []
-
-    def getWorkerNames(self):
-        return []
-
-    def workerConnected(self, name):
-        pass
-
-    def build_started(self, brid, buildername, build_status):
-        pass
-
-    def getURLForBuild(self, builder_name, build_number):
-        return "URLForBuild/{}/{}".format(builder_name, build_number)
-
-    def getURLForBuildrequest(self, buildrequestid):
-        return "URLForBuildrequest/%d" % (buildrequestid,)
-
-    def subscribe(self, _):
-        pass
-
-    def getTitle(self):
-        return "myBuildbot"
-
-    def getURLForThing(self, _):
-        return "h://thing"
-
-    def getBuildbotURL(self):
-        return "h://bb.me"
-
-
-@implementer(interfaces.IBuilderStatus)
-class FakeBuilderStatus:
+class FakeBuilder:
 
     def __init__(self, master=None, buildername="Builder"):
         if master:
             self.master = master
             self.botmaster = master.botmaster
-            self.basedir = os.path.join(master.basedir, 'bldr')
-        self.lastBuildStatus = None
-        self._tags = None
         self.name = buildername
-
-    def setDescription(self, description):
-        self._description = description
-
-    def getDescription(self):
-        return self._description
-
-    def getTags(self):
-        return self._tags
-
-    def setTags(self, tags):
-        self._tags = tags
-
-    def matchesAnyTag(self, tags):
-        return set(self._tags) & set(tags)
-
-    def setWorkernames(self, names):
-        pass
-
-    def setCacheSize(self, size):
-        pass
-
-    def setBigState(self, state):
-        pass
-
-    def newBuild(self):
-        bld = build.BuildStatus(self, self.master, 3)
-        self.lastBuildStatus = bld
-        return bld
-
-    def buildStarted(self, builderStatus):
-        pass
 
 
 class FakeLogRotation:
@@ -178,8 +97,6 @@ class FakeMaster(service.MasterService):
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
-        self.status = FakeStatus()
-        self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
         self.workers = bworkermanager.FakeWorkerManager()

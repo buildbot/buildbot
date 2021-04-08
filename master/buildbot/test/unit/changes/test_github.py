@@ -20,7 +20,11 @@ from twisted.trial import unittest
 
 from buildbot.changes.github import GitHubPullrequestPoller
 from buildbot.config import ConfigErrors
+from buildbot.process.properties import Properties
+from buildbot.process.properties import Secret
+from buildbot.secrets.manager import SecretManager
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
 
@@ -143,11 +147,18 @@ gitJsonPayloadCommitters = """
 ]
 """
 
+git_json_not_found = """
+{
+  "message": "Not Found",
+  "documentation_url": "https://docs.github.com/rest/reference/pulls#list-pull-requests"
+}
+"""
 
 _CT_ENCODED = b'application/x-www-form-urlencoded'
 _CT_JSON = b'application/json'
 
 _GH_PARSED_PROPS = {
+    'pullrequesturl': 'https://github.com/buildbot/buildbot/pull/4242',
     'github.head.sha': '4c9a7f03e04e551a5e012064b581577f949dd3a4',
     'github.state': 'open',
     'github.number': 4242,
@@ -171,7 +182,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
     def setUp(self):
         self.setUpTestReactor()
         yield self.setUpChangeSource()
+
+        fake_storage_service = FakeSecretStorage()
+
+        secret_service = SecretManager()
+        secret_service.services = [fake_storage_service]
+        yield secret_service.setServiceParent(self.master)
+
         yield self.master.startService()
+
+        fake_storage_service.reconfigService(secretdict={"token": "1234"})
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -187,6 +207,9 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         http_headers = {'User-Agent': 'Buildbot'}
         token = kwargs.get('token', None)
         if token:
+            p = Properties()
+            p.master = self.master
+            token = yield p.render(token)
             http_headers.update({'Authorization': 'token ' + token})
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, headers=http_headers)
@@ -229,6 +252,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
     def test_SimplePR(self):
         yield self.newChangeSource(
             'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"])
+        yield self.simple_pr()
+
+    @defer.inlineCallbacks
+    def test_secret_token(self):
+        yield self.newChangeSource(
+            'defunkt', 'defunkt', token=Secret('token'), github_property_whitelist=["github.*"])
+        yield self.simple_pr()
+
+    @defer.inlineCallbacks
+    def simple_pr(self):
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
@@ -280,6 +313,15 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             ep='/repos/defunkt/defunkt/pulls',
             content_json=json.loads(gitJsonPayloadPullRequests))
 
+        yield self.startChangeSource()
+        yield self.changesource.poll()
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+    @defer.inlineCallbacks
+    def test_http_error(self):
+        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+        self._http.expect(method='get', ep='/repos/defunkt/defunkt/pulls',
+                          content_json=json.loads(git_json_not_found), code=404)
         yield self.startChangeSource()
         yield self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)

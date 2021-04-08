@@ -29,36 +29,34 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class SecretsConfig(RunMasterBase):
-
     def setUp(self):
         try:
-            rv = subprocess.call(['docker', 'pull', 'vault'])
-            if rv != 0:
-                raise FileNotFoundError('docker')
-        except FileNotFoundError as e:
-            raise SkipTest(
-                "Vault integration need docker environment to be setup") from e
+            subprocess.check_call(['docker', 'pull', 'vault'])
 
-        rv = subprocess.call(['docker', 'run', '-d',
-                              '-e', 'SKIP_SETCAP=yes',
-                              '-e', 'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken',
-                              '-e', 'VAULT_TOKEN=my_vaulttoken',
-                              '--name=vault_for_buildbot',
-                              '-p', '8200:8200', 'vault'])
-        self.assertEqual(rv, 0)
-        self.addCleanup(self.remove_container)
+            subprocess.check_call(['docker', 'run', '-d',
+                                   '-e', 'SKIP_SETCAP=yes',
+                                   '-e', 'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken',
+                                   '-e', 'VAULT_TOKEN=my_vaulttoken',
+                                   '--name=vault_for_buildbot',
+                                   '-p', '8200:8200', 'vault'])
+            self.addCleanup(self.remove_container)
 
-        rv = subprocess.call(['docker', 'exec',
-                              '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
-                              'vault_for_buildbot',
-                              'vault', 'kv', 'put', 'secret/key', 'value=word'])
-        self.assertEqual(rv, 0)
+            subprocess.check_call(['docker', 'exec',
+                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
+                                   'vault_for_buildbot',
+                                   'vault', 'kv', 'put', 'secret/key', 'value=word'])
 
-        rv = subprocess.call(['docker', 'exec',
-                              '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
-                              'vault_for_buildbot',
-                              'vault', 'kv', 'put', 'secret/anykey', 'anyvalue=anyword'])
-        self.assertEqual(rv, 0)
+            subprocess.check_call(['docker', 'exec',
+                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
+                                   'vault_for_buildbot',
+                                   'vault', 'kv', 'put', 'secret/anykey', 'anyvalue=anyword'])
+
+            subprocess.check_call(['docker', 'exec',
+                                   '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
+                                   'vault_for_buildbot',
+                                   'vault', 'kv', 'put', 'secret/key1/key2', 'id=val'])
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            raise SkipTest("Vault integration needs docker environment to be setup")
 
     def remove_container(self):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
@@ -88,6 +86,10 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def test_any_key(self):
         yield self.do_secret_test('%(secret:anykey/anyvalue)s', '<anykey/anyvalue>', 'anyword')
+
+    @defer.inlineCallbacks
+    def test_nested_key(self):
+        yield self.do_secret_test('%(secret:key1/key2/id)s', '<key1/key2/id>', 'val')
 
 
 def masterConfig(secret_specifier):

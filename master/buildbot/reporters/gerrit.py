@@ -190,7 +190,7 @@ class GerritStatusPush(service.BuildbotService):
             options = ['-i', self.gerrit_identity_file]
         else:
             options = []
-        return ['ssh'] + options + [
+        return ['ssh', '-o', 'BatchMode=yes'] + options + [
             '@'.join((self.gerrit_username, self.gerrit_server)),
             '-p', str(self.gerrit_port),
             'gerrit'

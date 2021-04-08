@@ -1,0 +1,45 @@
+.panel.panel-default(ng-class="results2class(buildsummary.build)", style="margin-bottom:0px")
+    .panel-heading
+        .flex-row(ng-if="buildsummary.build.started_at")
+            .flex-grow-1
+                span(ng-if="buildsummary.prefix") {{buildsummary.prefix}}#{' '}
+                span
+                    | {{buildsummary.builder.name | limitStringLengthTo:80}}
+                span.badge-status(ng-class="results2class(buildsummary.build)")
+                    | {{buildsummary.build.number}}#{' '}
+                span(ng-if="buildsummary.reason")
+                    | {{"&nbsp;"}} | {{buildsummary.reason}}
+        .flex-row(ng-if="buildsummary.build.started_at")
+            .flex-grow-1
+                span(ng-show="buildsummary.build.complete")
+                    | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
+                span(ng-show="!buildsummary.build.complete")
+                    | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
+                | #{' '}{{buildsummary.build.state_string | limitStringLengthTo:80}}
+                | {{"&nbsp;"}}
+                .label.bb-build-result(ng-class="results2class(buildsummary.build)")
+                    | {{results2text(buildsummary.build)}}
+        .flex-row(ng-if="!buildsummary.build.started_at")
+          | loading build details...
+    ul.list-group
+        li.list-group-item(ng-repeat="step in buildsummary.steps"
+                           ng-if="buildsummary.isStepDisplayed(step) && buildsummary.assignDisplayedStepNumber(step)" +
+                                 "&& (step.display_num <= 3 || step.display_num >= buildsummary.getDisplayedStepCount()-3)")
+            div.text-left(ng-if="buildsummary.getDisplayedStepCount() > 7 && step.display_num === 3")
+                span.fa-lg &vellip;
+            div.clearfix(ng-if="buildsummary.getDisplayedStepCount() <= 7 || step.display_num !== 3")
+                span.pull-left
+                    span.badge-status(ng-class="results2class(step, 'pulse')")
+                        | {{step.number}}
+                    | {{"&nbsp;"}}
+                span.pull-left
+                    | {{step.name | limitStringLengthTo:40}}
+                    span(ng-if="step.buildrequests.length") #{' '} {{step.builds.length}} builds, {{step.buildrequests.length - step.builds.length}} pending builds
+                span
+                    | {{"&nbsp".repeat(10)}}
+                span.pull-right(ng-if="step.started_at")
+                    span(ng-show="step.complete")
+                        | {{ step.duration| durationformat:'LLL' }}
+                    span(ng-show="!step.complete")
+                        | {{ buildsummary.now - step.started_at| durationformat:'LLL' }}
+                    | #{' '}{{step.state_string | limitStringLengthTo:40}}

@@ -43,7 +43,6 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
-from buildbot.status.master import Status
 from buildbot.util import check_functional_environment
 from buildbot.util import service
 from buildbot.util.eventual import eventually
@@ -180,9 +179,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.debug = debug.DebugServices()
         yield self.debug.setServiceParent(self)
 
-        self.status = Status()
-        yield self.status.setServiceParent(self)
-
         self.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self)
         self.secrets_manager.reconfig_priority = 2000
@@ -268,11 +264,13 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
             yield self.mq.setup()
 
+            # the buildbot scripts send the SIGHUP signal to reconfig master
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):
                     eventually(self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
+            # the buildbot scripts send the SIGUSR1 signal to stop master
             if hasattr(signal, "SIGUSR1"):
                 def sigusr1(*args):
                     eventually(self.botmaster.cleanShutdown)
@@ -335,12 +333,19 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     def stopService(self):
         try:
             yield self.initLock.acquire()
+
+            if self.running:
+                yield self.botmaster.cleanShutdown(quickMode=True, stopReactor=False)
+
+            # Mark master as stopped only after all builds are shut down. Note that masterStopped
+            # would forcibly mark all related build requests, builds, steps, logs, etc. as
+            # complete, so this may make state inconsistent if done while the builds are still
+            # running.
             if self.masterid is not None:
                 yield self.data.updates.masterStopped(
                     name=self.name, masterid=self.masterid)
+
             if self.running:
-                yield self.botmaster.cleanShutdown(
-                    quickMode=True, stopReactor=False)
                 yield super().stopService()
 
             log.msg("BuildMaster is stopped")
@@ -360,11 +365,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.reconfig_active = self.reactor.seconds()
         metrics.MetricCountEvent.log("loaded_config", 1)
 
-        # notify every 10 seconds that the reconfig is still going on, although
-        # reconfigs should not take that long!
+        # notify every 10 seconds that the reconfig is still going on, the duration of reconfigs is
+        # longer on larger installations and may take a while.
         self.reconfig_notifier = task.LoopingCall(
-            lambda: log.msg("reconfig is ongoing for {} s".format(self.reactor.seconds() -
-                                                                  self.reconfig_active)))
+            lambda: log.msg("reconfig is ongoing for {:.3f} s".format(self.reactor.seconds() -
+                                                                      self.reconfig_active)))
         self.reconfig_notifier.start(10, now=False)
 
         timer = metrics.Timer("BuildMaster.reconfig")
@@ -386,6 +391,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     @defer.inlineCallbacks
     def doReconfig(self):
         log.msg("beginning configuration update")
+        time_started = self.reactor.seconds()
         changes_made = False
         failed = False
         try:
@@ -414,12 +420,13 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         if failed:
             if changes_made:
-                log.msg("WARNING: reconfig partially applied; master "
-                        "may malfunction")
+                msg = "WARNING: configuration update partially applied; master may malfunction"
             else:
-                log.msg("reconfig aborted without making any changes")
+                msg = "configuration update aborted without making any changes"
         else:
-            log.msg("configuration update complete")
+            msg = "configuration update complete"
+
+        log.msg("{} (took {:.3f} seconds)".format(msg, self.reactor.seconds() - time_started))
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.configured_db_url is None:
@@ -439,12 +446,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     # informational methods
     def allSchedulers(self):
         return list(self.scheduler_manager)
-
-    def getStatus(self):
-        """
-        @rtype: L{buildbot.status.builder.Status}
-        """
-        return self.status
 
     # state maintenance (private)
     def getObjectId(self):

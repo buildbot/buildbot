@@ -212,7 +212,8 @@ class Properties(util.ComparableMixin):
     # in the log of state strings
     # so we have the renderable record here which secrets are used that we must remove
     def useSecret(self, secret_value, secret_name):
-        self._used_secrets[secret_value] = "<" + secret_name + ">"
+        if secret_value.strip():
+            self._used_secrets[secret_value] = "<" + secret_name + ">"
 
     # This method shall then be called to remove secrets from any text that could be logged
     # somewhere and that could contain secrets
@@ -228,10 +229,10 @@ class PropertiesMixin:
 
     """
     A mixin to add L{IProperties} methods to a class which does not implement
-    the interface, but which can be coerced to the interface via an adapter.
+    the full interface, only getProperties() function.
 
     This is useful because L{IProperties} methods are often called on L{Build}
-    and L{BuildStatus} objects without first coercing them.
+    objects without first coercing them.
 
     @ivar set_runtime_properties: the default value for the C{runtime}
     parameter of L{setProperty}.
@@ -240,29 +241,23 @@ class PropertiesMixin:
     set_runtime_properties = False
 
     def getProperty(self, propname, default=None):
-        props = IProperties(self)
-        return props.getProperty(propname, default)
+        return self.getProperties().getProperty(propname, default)
 
     def hasProperty(self, propname):
-        props = IProperties(self)
-        return props.hasProperty(propname)
+        return self.getProperties().hasProperty(propname)
 
     has_key = hasProperty
 
     def setProperty(self, propname, value, source='Unknown', runtime=None):
         # source is not optional in IProperties, but is optional here to avoid
         # breaking user-supplied code that fails to specify a source
-        props = IProperties(self)
+        props = self.getProperties()
         if runtime is None:
             runtime = self.set_runtime_properties
         props.setProperty(propname, value, source, runtime=runtime)
 
-    def getProperties(self):
-        return IProperties(self)
-
     def render(self, value):
-        props = IProperties(self)
-        return props.render(value)
+        return self.getProperties().render(value)
 
 
 @implementer(IRenderable)
@@ -331,7 +326,6 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
     @defer.inlineCallbacks
     def getRenderingFor(self, props):
         v1, v2 = yield props.render((self.v1, self.v2))
-        print(v1, self.cstr, v2)
         return self.comparator(v1, v2)
 
     def __repr__(self):

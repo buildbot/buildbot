@@ -14,13 +14,17 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import types
 
 import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
+
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.www import WwwTestMixin
+from buildbot.www import avatar
+from buildbot.www import ldapuserinfo
 
 
 def get_config_parameter(p):
@@ -31,9 +35,6 @@ def get_config_parameter(p):
 fake_ldap = types.ModuleType('ldap3')
 fake_ldap.SEARCH_SCOPE_WHOLE_SUBTREE = 2
 fake_ldap.get_config_parameter = get_config_parameter
-
-with mock.patch.dict(sys.modules, {'ldap3': fake_ldap}):
-    from buildbot.www import ldapuserinfo
 
 
 class FakeLdap:
@@ -67,7 +68,7 @@ class CommonTestCase(unittest.TestCase):
 
     def _makeSearchSideEffect(self, attribute_type, ret):
         ret = [[{'dn': i[0], attribute_type: i[1]} for i in r]
-             for r in ret]
+               for r in ret]
         self.userInfoProvider.search.side_effect = ret
 
     def makeSearchSideEffect(self, ret):
@@ -102,6 +103,7 @@ class LdapUserInfo(CommonTestCase):
     @defer.inlineCallbacks
     def test_updateUserInfoNoResults(self):
         self.makeSearchSideEffect([[], [], []])
+
         try:
             yield self.userInfoProvider.getUserInfo("me")
         except KeyError as e:
@@ -153,40 +155,127 @@ class LdapUserInfo(CommonTestCase):
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})
 
+
+class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
+    @defer.inlineCallbacks
+    def setUp(self):
+        CommonTestCase.setUp(self)
+        self.setUpTestReactor()
+
+        master = self.make_master(
+            url='http://a/b/',
+            avatar_methods=[self.userInfoProvider])
+
+        self.rsrc = avatar.AvatarResource(master)
+        self.rsrc.reconfigResource(master.config)
+
+        yield self.master.startService()
+
+    def makeUserInfoProvider(self):
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
+            uri="ldap://uri", bindUser="user", bindPw="pass",
+            accountBase="accbase", groupBase="groupbase",
+            accountPattern="accpattern=%(username)s", groupMemberPattern="groupMemberPattern",
+            accountFullName="accountFullName",
+            accountEmail="accountEmail",
+            groupName="groupName",
+            avatarPattern="avatar=%(email)s",
+            avatarData="picture",
+            accountExtraFields=["myfield"])
+
     @defer.inlineCallbacks
     def _getUserAvatar(self, mimeTypeAndData):
         (mimeType, data) = mimeTypeAndData
         self.makeRawSearchSideEffect([
             [("cn", {"picture": [data]})]])
-        res = yield self.userInfoProvider.getUserAvatar("me", 21, None)
+        res = yield self.render_resource(self.rsrc, b'/?email=me')
         self.assertSearchCalledWith([
-            (('accbase', 'avatar', ['picture']), {}),
+            (('accbase', 'avatar=me', ['picture']), {}),
         ])
         return res
 
     @defer.inlineCallbacks
     def test_getUserAvatarPNG(self):
-        mimeTypeAndData = ('image/png', b'\x89PNG lljklj')
-        res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertEqual(res, mimeTypeAndData)
+        mimeTypeAndData = (b'image/png', b'\x89PNG lljklj')
+        yield self._getUserAvatar(mimeTypeAndData)
+        self.assertRequest(contentType=mimeTypeAndData[0],
+            content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarJPEG(self):
-        mimeTypeAndData = ('image/jpeg', b'\xff\xd8\xff lljklj')
-        res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertEqual(res, mimeTypeAndData)
+        mimeTypeAndData = (b'image/jpeg', b'\xff\xd8\xff lljklj')
+        yield self._getUserAvatar(mimeTypeAndData)
+        self.assertRequest(contentType=mimeTypeAndData[0],
+            content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarGIF(self):
-        mimeTypeAndData = ('image/gif', b'GIF8 lljklj')
-        res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertEqual(res, mimeTypeAndData)
+        mimeTypeAndData = (b'image/gif', b'GIF8 lljklj')
+        yield self._getUserAvatar(mimeTypeAndData)
+        self.assertRequest(contentType=mimeTypeAndData[0],
+            content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarUnknownType(self):
-        mimeTypeAndData = ('', b'unknown image format')
+        mimeTypeAndData = (b'', b'unknown image format')
         res = yield self._getUserAvatar(mimeTypeAndData)
-        self.assertIsNone(res)
+        # Unknown format means data won't be sent
+        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+
+    @defer.inlineCallbacks
+    def test_getUsernameAvatar(self):
+        mimeType = b'image/gif'
+        data = b'GIF8 lljklj'
+        self.makeRawSearchSideEffect([
+            [("cn", {"picture": [data]})]])
+        yield self.render_resource(self.rsrc, b'/?username=me')
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern=me', ['picture']), {}),
+        ])
+        self.assertRequest(contentType=mimeType,
+            content=data)
+
+    @defer.inlineCallbacks
+    def test_getUnknownUsernameAvatar(self):
+        self.makeSearchSideEffect([[], [], []])
+        res = yield self.render_resource(self.rsrc, b'/?username=other')
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern=other', ['picture']), {}),
+        ])
+        self.assertEqual(res, dict(redirected=b'img/nobody.png'))
+
+
+class LdapUserInfoNotEscCharsDn(CommonTestCase):
+    def makeUserInfoProvider(self):
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
+            uri="ldap://uri", bindUser="user", bindPw="pass",
+            accountBase="accbase", groupBase="groupbase",
+            accountPattern="accpattern", groupMemberPattern="(member=%(dn)s)",
+            accountFullName="accountFullName",
+            accountEmail="accountEmail",
+            groupName="groupName",
+            avatarPattern="avatar",
+            avatarData="picture")
+
+    @defer.inlineCallbacks
+    def test_getUserInfoGroupsNotEscCharsDn(self):
+        dn = "cn=Lastname, Firstname \28UIDxxx\29,dc=example,dc=org"
+        pattern = self.userInfoProvider.groupMemberPattern % dict(dn=dn)
+        self.makeSearchSideEffect([[(dn, {"accountFullName": "Lastname, Firstname (UIDxxx)",
+                                          "accountEmail": "mee@too"})],
+                                   [("cn", {"groupName": ["group"]}),
+                                    ("cn", {"groupName": ["group2"]})
+                                    ], []])
+        res = yield self.userInfoProvider.getUserInfo("me")
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern',
+              ['accountEmail', 'accountFullName']), {}),
+            (('groupbase', pattern, ['groupName']), {}),
+        ])
+        self.assertEqual(res, {'email': 'mee@too',
+                               'full_name': 'Lastname, Firstname (UIDxxx)',
+                               'groups': ["group", "group2"],
+                               'username': 'me'})
 
 
 class LdapUserInfoNoGroups(CommonTestCase):

@@ -28,7 +28,7 @@ expectedOutputRegex = \
     \*\*\* STEP worker_preparation \*\*\* ==> worker local1 ready \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
         log:stdio \({loglines}\)
-    \*\*\* STEP trigger \*\*\* ==> triggered trigsched \(success\)
+    \*\*\* STEP trigger \*\*\* ==> triggered trigsched, 1 success \(success\)
        url:trigsched #2 \(http://localhost:8080/#buildrequests/2\)
        url:success: build #1 \(http://localhost:8080/#builders/(1|2)/builds/1\)
     \*\*\* STEP shell_1 \*\*\* ==> 'echo world' \(success\)
@@ -42,22 +42,23 @@ expectedOutputRegex = \
 
 class TriggeringMaster(RunMasterBase):
 
+    change = dict(branch="master",
+                  files=["foo.c"],
+                  author="me@foo.com",
+                  committer="me@foo.com",
+                  comments="good stuff",
+                  revision="HEAD",
+                  project="none"
+                  )
+
     @defer.inlineCallbacks
     def test_trigger(self):
         yield self.setupConfig(masterConfig())
 
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      committer="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
         self.assertEqual(
-            build['steps'][2]['state_string'], 'triggered trigsched')
+            build['steps'][2]['state_string'], 'triggered trigsched, 1 success')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         dump = StringIO()
@@ -69,9 +70,20 @@ class TriggeringMaster(RunMasterBase):
         self.assertRegex(dump.getvalue(),
                          expectedOutputRegex.format(loglines=loglines))
 
+    @defer.inlineCallbacks
+    def test_trigger_failure(self):
+        yield self.setupConfig(masterConfig(addFailure=True))
+
+        build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
+
+        self.assertEqual(
+            build['steps'][2]['state_string'], 'triggered trigsched, 2 successes, 1 failure')
+        builds = yield self.master.data.get(("builds",))
+        self.assertEqual(len(builds), 4)
+
 
 # master configuration
-def masterConfig():
+def masterConfig(addFailure=False):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -100,4 +112,11 @@ def masterConfig():
         BuilderConfig(name="build",
                       workernames=["local1"],
                       factory=f2)]
+    if addFailure:
+        f3 = BuildFactory()
+        f3.addStep(steps.ShellCommand(command='false'))
+        c['builders'].append(BuilderConfig(name="build2", workernames=["local1"], factory=f3))
+        c['builders'].append(BuilderConfig(name="build3", workernames=["local1"], factory=f2))
+        c['schedulers'][0] = schedulers.Triggerable(name="trigsched",
+                                                    builderNames=["build", "build2", "build3"])
     return c

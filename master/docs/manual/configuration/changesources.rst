@@ -14,7 +14,7 @@ These change sources fall broadly into two categories: pollers which periodicall
 A :class:`Change` is an abstract way that Buildbot uses to represent changes in any of the Version Control Systems it supports. It contains just enough information needed to acquire specific version of the tree when needed. This usually happens as one of the first steps in a :class:`Build`.
 
 This concept does not map perfectly to every version control system.
-For example, for CVS Buildbot must guess that version updates made to multiple files within a short time represent a single change.
+For example, for CVS, Buildbot must guess that version updates made to multiple files within a short time represent a single change.
 
 :class:`Change`\s can be provided by a variety of :class:`ChangeSource` types, although any given project will typically have only a single :class:`ChangeSource` active.
 
@@ -228,15 +228,15 @@ Many projects publish information about changes to their source tree by sending 
 Each message usually contains a description of the change (who made the change, which files were affected) and sometimes a copy of the diff.
 Humans can subscribe to this list to stay informed about what's happening to the source tree.
 
-The Buildbot can also be subscribed to a `-commits` mailing list, and can trigger builds in response to Changes that it hears about.
+Buildbot can also subscribe to a `-commits` mailing list, and can trigger builds in response to Changes that it hears about.
 The buildmaster admin needs to arrange for these email messages to arrive in a place where the buildmaster can find them, and configure the buildmaster to parse the messages correctly.
 Once that is in place, the email parser will create Change objects and deliver them to the schedulers (see :ref:`Schedulers`) just like any other ChangeSource.
 
 There are two components to setting up an email-based ChangeSource.
 The first is to route the email messages to the buildmaster, which is done by dropping them into a `maildir`.
 The second is to actually parse the messages, which is highly dependent upon the tool that was used to create them.
-Each VC system has a collection of favorite change-emailing tools, and each has a slightly different format, so each has a different parsing function.
-There is a separate ChangeSource variant for each parsing function.
+Each VC system has a collection of favorite change-emailing tools with a slightly different format and its own parsing function.
+Buildbot has a separate ChangeSource variant for each of these parsing functions.
 
 Once you've chosen a maildir location and a parsing function, create the change source and put it in :bb:cfg:`change_source`:
 
@@ -252,16 +252,16 @@ Once you've chosen a maildir location and a parsing function, create the change 
 Subscribing the Buildmaster
 +++++++++++++++++++++++++++
 
-The recommended way to install the Buildbot is to create a dedicated account for the buildmaster.
+The recommended way to install Buildbot is to create a dedicated account for the buildmaster.
 If you do this, the account will probably have a distinct email address (perhaps `buildmaster@example.org`).
 Then just arrange for this account's email to be delivered to a suitable maildir (described in the next section).
 
-If the Buildbot does not have its own account, `extension addresses` can be used to distinguish between email intended for the buildmaster and email intended for the rest of the account.
-In most modern MTAs, the e.g. `foo@example.org` account has control over every email address at example.org which begins with "foo", such that email addressed to `account-foo@example.org` can be delivered to a different destination than `account-bar@example.org`.
+If Buildbot does not have its own account, `extension addresses` can be used to distinguish between emails intended for the buildmaster and emails intended for the rest of the account.
+In most modern MTAs, the e.g. `foo@example.org` account has control over every email address at example.org which begins with "foo", such that emails addressed to `account-foo@example.org` can be delivered to a different destination than `account-bar@example.org`.
 qmail does this by using separate :file:`.qmail` files for the two destinations (:file:`.qmail-foo` and :file:`.qmail-bar`, with :file:`.qmail` controlling the base address and :file:`.qmail-default` controlling all other extensions).
 Other MTAs have similar mechanisms.
 
-Thus you can assign an extension address like `foo-buildmaster@example.org` to the buildmaster, and retain `foo@example.org` for your own use.
+Thus you can assign an extension address like `foo-buildmaster@example.org` to the buildmaster and retain `foo@example.org` for your own use.
 
 .. _Using-Maildirs:
 
@@ -475,13 +475,13 @@ This change is also useful for creating new kinds of change sources that work on
 This ChangeSource always runs on the same TCP port as the workers.
 It shares the same protocol, and in fact shares the same space of "usernames", so you cannot configure a :bb:chsrc:`PBChangeSource` with the same name as a worker.
 
-If you have a publicly accessible worker port, and are using :bb:chsrc:`PBChangeSource`, *you must establish a secure username and password for the change source*.
+If you have a publicly accessible worker port and are using :bb:chsrc:`PBChangeSource`, *you must establish a secure username and password for the change source*.
 If your sendchange credentials are known (e.g., the defaults), then your buildmaster is susceptible to injection of arbitrary changes, which (depending on the build factories) could lead to arbitrary code execution on workers.
 
 The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
 ``port``
-    which port to listen on.
+    Which port to listen on.
     If ``None`` (which is the default), it shares the port used for worker connections.
 
 ``user``
@@ -496,7 +496,7 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 ``prefix``
     The prefix to be found and stripped from filenames delivered over the connection, defaulting to ``None``.
     Any filenames which do not start with this prefix will be removed.
-    If all the filenames in a given Change are removed, the that whole Change will be dropped.
+    If all the filenames in a given Change are removed, then that whole Change will be dropped.
     This string should probably end with a directory separator.
 
     This is useful for changes coming from version control systems that represent branches as parent directories within the repository (like SVN and Perforce).
@@ -600,7 +600,7 @@ It accepts the following arguments:
     Defaults to 600 (10 minutes).
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0.
+    Minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -608,7 +608,7 @@ It accepts the following arguments:
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0.
+    Maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -733,7 +733,7 @@ It can watch a single branch or multiple branches.
     Please be considerate of public SVN repositories by using a large interval when polling them.
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0.
+    Minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -741,7 +741,7 @@ It can watch a single branch or multiple branches.
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0.
+    Maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -849,7 +849,7 @@ The ``BzrPoller`` parameters are:
     Defaults to None, or specify a string, or specify the constants from :contrib-src:`bzr_buildbot.py <master/contrib/bzr_buildbot.py>` ``SHORT`` or ``FULL`` to get the short branch name or full branch address.
 
 ``blame_merge_author``
-    normally, the user that commits the revision is the user that is responsible for the change.
+    Normally, the user that commits the revision is the user that is responsible for the change.
     When run in a pqm (Patch Queue Manager, see https://launchpad.net/pqm) environment, the user that commits is the Patch Queue Manager, and the user that committed the merged, *parent* revision is responsible for the change.
     Set this value to ``True`` if this is pointed against a PQM-managed branch.
 
@@ -872,7 +872,7 @@ The :bb:chsrc:`GitPoller` requires Git-1.7 and later.
 It accepts the following arguments:
 
 ``repourl``
-    the git-url that describes the remote repository, e.g. ``git@example.com:foobaz/myrepo.git`` (see the :command:`git fetch` help for more info on git-url formats)
+    The git-url that describes the remote repository, e.g. ``git@example.com:foobaz/myrepo.git`` (see the :command:`git fetch` help for more info on git-url formats)
 
 ``branches``
     One of the following:
@@ -883,14 +883,14 @@ It accepts the following arguments:
       It should take a remote refspec (such as ``'refs/heads/master'``), and return a boolean indicating whether that branch should be fetched.
 
 ``branch``
-    accepts a single branch name to fetch.
+    Accepts a single branch name to fetch.
     Exists for backwards compatibility with old configurations.
 
 ``pollInterval``
-    interval in seconds between polls, default is 10 minutes
+    Interval in seconds between polls, default is 10 minutes
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0.
+    Minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -898,7 +898,7 @@ It accepts the following arguments:
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0.
+    Maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -908,7 +908,7 @@ It accepts the following arguments:
     True = immediately on launch, False = wait for one pollInterval (default).
 
 ``buildPushesWithNoCommits``
-    Determine if a push on a new branch or update of an already known branch with
+    Determines if a push on a new branch or update of an already known branch with
     already known commits should trigger a build.
     This is useful in case you have build steps depending on the name of the
     branch and you use topic branches for development. When you merge your topic
@@ -916,7 +916,7 @@ It accepts the following arguments:
     (defaults to False).
 
 ``gitbin``
-    path to the Git binary, defaults to just ``'git'``
+    Path to the Git binary, defaults to just ``'git'``
 
 ``category``
     Set the category to be used for the changes produced by the :bb:chsrc:`GitPoller`.
@@ -927,7 +927,7 @@ It accepts the following arguments:
     This will then be set in any changes generated by the ``GitPoller``, and can be used in a Change Filter for triggering particular builders.
 
 ``usetimestamps``
-    parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
+    Parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time, so that recently processed commits appear together in the waterfall page.
 
 ``encoding``
     Set encoding will be used to parse author's name and commit message.
@@ -935,7 +935,7 @@ It accepts the following arguments:
     This will not be applied to file names since Git will translate non-ascii file names to unreadable escape sequences.
 
 ``workdir``
-    the directory where the poller should keep its local repository.
+    The directory where the poller should keep its local repository.
     The default is :samp:`gitpoller_work`.
     If this is a relative path, it will be interpreted relative to the master's basedir.
     Multiple Git pollers can share the same directory.
@@ -992,25 +992,25 @@ If fixed by a later merge, the buildmaster administrator does not have anything 
 The :bb:chsrc:`HgPoller` accepts the following arguments:
 
 ``name``
-    the name of the poller.
+    The name of the poller.
     This must be unique, and defaults to the ``repourl``.
 
 ``repourl``
-    the url that describes the remote repository, e.g. ``http://hg.example.com/projects/myrepo``.
+    The url that describes the remote repository, e.g. ``http://hg.example.com/projects/myrepo``.
     Any url suitable for ``hg pull`` can be specified.
 
 ``bookmarks``
-    a list of the bookmarks to monitor.
+    A list of the bookmarks to monitor.
 
 ``branches``
-    a list of the branches to monitor; defaults to ``['default']``.
+    A list of the branches to monitor; defaults to ``['default']``.
 
 ``branch``
-    the desired branch to pull.
+    The desired branch to pull.
     Exists for backwards compatibility with old configurations.
 
 ``workdir``
-    the directory where the poller should keep its local repository.
+    The directory where the poller should keep its local repository.
     It is mandatory for now, although later releases may provide a meaningful default.
 
     It also serves to identify the poller in the buildmaster internal database.
@@ -1021,10 +1021,10 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     If relative, the ``workdir`` will be interpreted from the master directory.
 
 ``pollInterval``
-    interval in seconds between polls, default is 10 minutes
+    Interval in seconds between polls, default is 10 minutes
 
 ``pollRandomDelayMin``
-    minimum delay in seconds to wait before each poll, default is 0.
+    Minimum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Setting it equal to the maximum delay will effectively delay all polls by a
@@ -1032,7 +1032,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     Must be less than or equal to the maximum delay.
 
 ``pollRandomDelayMax``
-    maximum delay in seconds to wait before each poll, default is 0.
+    Maximum delay in seconds to wait before each poll, default is 0.
     This is useful in case you have a lot of pollers and you want to spread the
     polling load over a period of time.
     Must be less than the poll interval.
@@ -1042,7 +1042,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     True = immediately on launch, False = wait for one pollInterval (default).
 
 ``hgbin``
-    path to the Mercurial binary, defaults to just ``'hg'``
+    Path to the Mercurial binary, defaults to just ``'hg'``.
 
 ``category``
     Set the category to be used for the changes produced by the :bb:chsrc:`HgPoller`.
@@ -1053,7 +1053,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     This will then be set in any changes generated by the ``HgPoller``, and can be used in a Change Filter for triggering particular builders.
 
 ``usetimestamps``
-    parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
+    Parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time, so that recently processed commits appear together in the waterfall page.
 
 ``encoding``
     Set encoding will be used to parse author's name and commit message.
@@ -1146,6 +1146,10 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 ``slug``
     The name of the Bitbucket repository.
 
+``auth``
+    Authorization data tuple ``(usename, password)`` (optional).
+    If set, it will be used as authorization headers at Bitbucket API.
+
 ``branch``
     A single branch or a list of branches which should be processed.
     If it is ``None`` (the default) all pull requests are used.
@@ -1158,22 +1162,25 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
     ``True`` = immediately on launch, ``False`` = wait for one ``pollInterval`` (default).
 
 ``category``
-    Set the category to be used for the changes produced by the :bb:chsrc:`BitbucketPullrequestPoller`.
+    Set the category to be used by the :bb:chsrc:`BitbucketPullrequestPoller`.
     This will then be set in any changes generated by the :bb:chsrc:`BitbucketPullrequestPoller`, and can be used in a Change Filter for triggering particular builders.
 
 ``project``
-    Set the name of the project to be used for the :bb:chsrc:`BitbucketPullrequestPoller`.
+    Set the name of the project to be used by the :bb:chsrc:`BitbucketPullrequestPoller`.
     This will then be set in any changes generated by the ``BitbucketPullrequestPoller``, and can be used in a Change Filter for triggering particular builders.
 
 ``pullrequest_filter``
     A callable which takes one parameter, the decoded Python object of the pull request JSON.
-    If the it returns ``False`` the pull request is ignored.
+    If it returns ``False``, the pull request is ignored.
     It can be used to define custom filters based on the content of the pull request.
     See the Bitbucket documentation for more information about the format of the response.
-    By default the filter always returns ``True``.
+    By default, the filter always returns ``True``.
 
 ``usetimestamps``
-    parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
+    Parse each revision's commit timestamp (default is ``True``), or ignore it in favor of the current time, so that recently processed commits appear together in the waterfall page.
+
+``bitbucket_property_whitelist``
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``. For example ``bitbucket.id`` represents the pull request ID. Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
 
 ``encoding``
     This parameter is deprecated and has no effects.
@@ -1234,23 +1241,26 @@ The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH 
 
 Note that the Gerrit event stream is stateless and any events that occur while buildbot is not connected to Gerrit will be lost. See :bb:chsrc:`GerritEventLogPoller` for a stateful change source.
 
+The ``patchset-created`` and ``ref-updated`` events will be deduplicated, that is, if multiple events related to the same revision are received, only the first will be acted upon.
+This allows ``GerritChangeSource`` to be used together with :bb:chsrc:`GerritEventLogPoller`.
+
 The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
 ``gerritserver``
-    the dns or ip that host the Gerrit ssh server
+    The dns or ip that host the Gerrit ssh server
 
 ``gerritport``
-    the port of the Gerrit ssh server
+    The port of the Gerrit ssh server
 
 ``username``
-    the username to use to connect to Gerrit
+    The username to use to connect to Gerrit
 
 ``identity_file``
-    ssh identity file to for authentication (optional).
+    Ssh identity file to for authentication (optional).
     Pay attention to the `ssh passphrase`
 
 ``handled_events``
-    event to be handled (optional).
+    Event to be handled (optional).
     By default processes `patchset-created` and `ref-updated`
 
 ``get_files``
@@ -1418,27 +1428,27 @@ You can use both at the same time to get the advantages of each. They will coord
 The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 
 ``baseURL``
-    the HTTP url where to find Gerrit. If the URL of the events-log endpoint for your server is ``https://example.com/a/plugins/events-log/events/`` then the ``baseURL`` is ``https://example.com/a``. Note that ``/a`` is included.
+    The HTTP url where to find Gerrit. If the URL of the events-log endpoint for your server is ``https://example.com/a/plugins/events-log/events/`` then the ``baseURL`` is ``https://example.com/a``. Ensure that ``/a`` is included.
 
 ``auth``
-    a requests authentication configuration.
-    if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
-    if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+    A request's authentication configuration.
+    If Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``.
+    If Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
     However, note that usage of ``requests.auth.HTTPDigestAuth`` is incompatible with ``treq``.
 
 ``handled_events``
-    event to be handled (optional).
-    By default processes `patchset-created` and `ref-updated`
+    Event to be handled (optional).
+    By default processes `patchset-created` and `ref-updated`.
 
 ``pollInterval``
-    interval in seconds between polls, default is 30 seconds
+    Interval in seconds between polls (default is 30 sec).
 
 ``pollAtLaunch``
     Determines when the first poll occurs.
     True = immediately on launch (default), False = wait for one pollInterval.
 
 ``gitBaseURL``
-    The git URL where Gerrit is accessible via git+ssh protocol
+    The git URL where Gerrit is accessible via git+ssh protocol.
 
 ``get_files``
     Populate the `files` attribute of emitted changes (default `False`).
@@ -1457,7 +1467,7 @@ GerritChangeFilter
 .. py:class:: buildbot.changes.gerritchangesource.GerritChangeFilter
 
 :class:`GerritChangeFilter` is a ready to use :class:`ChangeFilter` you can pass to :bb:sched:`AnyBranchScheduler` in order to filter changes, to create pre-commit builders or post-commit schedulers.
-It has the same api as :ref:`Change Filter <Change-Filters>`, except it has additional `eventtype` set of filter (can as well be specified as value, list, regular expression or callable)
+It has the same api as :ref:`Change Filter <Change-Filters>`, except it has additional `eventtype` set of filter (can as well be specified as value, list, regular expression, or callable).
 
 An example is following:
 
@@ -1500,7 +1510,7 @@ Changes
 .. py:class:: buildbot.changes.changes.Change
 
 A :class:`Change` is an abstract way Buildbot uses to represent a single change to the source files performed by a developer.
-In version control systems that support the notion of atomic check-ins a change represents a changeset or commit.
+In version control systems that support the notion of atomic check-ins, a change represents a changeset or commit.
 Instances of :class:`Change` have the following attributes.
 
 .. _Change-Attr-Who:
@@ -1522,7 +1532,7 @@ Files
 ~~~~~
 
 It also has a list of :attr:`files`, which are just the tree-relative filenames of any files that were added, deleted, or modified for this :class:`Change`.
-These filenames are used by the :func:`fileIsImportant` function (in the scheduler) to decide whether it is worth triggering a new build or not, e.g. the function could use the following function to only run a build if a C file were checked in:
+These filenames are checked by the :func:`fileIsImportant` function of a scheduler to decide whether it should trigger a new build or not. For example, the scheduler could use the following function to only run a build if a C file was checked in:
 
 .. code-block:: python
 

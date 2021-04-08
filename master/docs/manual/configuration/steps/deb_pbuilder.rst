@@ -6,9 +6,9 @@ DebPbuilder
 +++++++++++
 
 The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built by :command:`pbuilder`.
-It populates the chroot with a basic system and the packages listed as build requirement.
+It populates the chroot with a basic system and the packages listed as build requirements.
 The type of the chroot to build is specified with the ``distribution``, ``distribution`` and ``mirror`` parameter.
-To use pbuilder your Buildbot user must have the right to run :command:`pbuilder` as root using :command:`sudo`.
+To use pbuilder, your Buildbot user must have the right to run :command:`pbuilder` as root using :command:`sudo`.
 
 .. code-block:: python
 

@@ -16,11 +16,11 @@ This step runs ``cppcheck``, analyse its output, and set the outcome in :ref:`Pr
 This class adds the following arguments:
 
 ``binary``
-    (Optional, default to ``cppcheck``)
+    (Optional, defaults to ``cppcheck``)
     Use this if you need to give the full path to the cppcheck binary or if your binary is called differently.
 
 ``source``
-    (Optional, default to ``['.']``)
+    (Optional, defaults to ``['.']``)
     This is the list of paths for the sources to be checked by this step.
 
 ``enable``

@@ -18,11 +18,12 @@ from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process import buildstep
+from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 
 
-class MaxQObserver(buildstep.LogLineObserver):
+class MaxQObserver(logobserver.LogLineObserver):
 
     def __init__(self):
         super().__init__()

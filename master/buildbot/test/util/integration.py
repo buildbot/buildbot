@@ -95,14 +95,18 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         self.assertFalse(self.master.running, "master is still running!")
 
     @defer.inlineCallbacks
-    def getMaster(self, config_dict):
+    def setup_master(self, config_dict):
         self.master = yield getMaster(self, self.reactor, config_dict)
-        return self.master
 
     @defer.inlineCallbacks
-    def reconfigMaster(self, config_dict):
-        self.master.config_loader.config_dict = config_dict
+    def reconfig_master(self, config_dict=None):
+        if config_dict is not None:
+            self.master.config_loader.config_dict = config_dict
         yield self.master.doReconfig()
+
+    @defer.inlineCallbacks
+    def clean_master_shutdown(self, quick=False):
+        yield self.master.botmaster.cleanShutdown(quickMode=quick, stopReactor=False)
 
     def createLocalWorker(self, name, **kwargs):
         workdir = FilePath(self.mktemp())
@@ -133,9 +137,9 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         self.assertEqual(got_logs, exp_logs)
 
     @defer.inlineCallbacks
-    def createBuildrequest(self, master, builder_ids, properties=None):
+    def create_build_request(self, builder_ids, properties=None):
         properties = properties.asDict() if properties is not None else None
-        ret = yield master.data.updates.addBuildset(
+        ret = yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[

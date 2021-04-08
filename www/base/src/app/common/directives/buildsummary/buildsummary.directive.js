@@ -26,7 +26,12 @@ class Buildsummary {
                 parentrelationship: '=?'
             },
             bindToController: true,
-            template: require('./buildsummary.tpl.jade'),
+            template: function (element, attrs) {
+                          if (attrs.type === "tooltip")
+                              return require('./buildsummarytooltip.tpl.jade');
+                          else
+                              return require('./buildsummary.tpl.jade');
+                      },
             compile: RecursionHelper.compile,
             controller: '_buildsummaryController',
             controllerAs: 'buildsummary'
@@ -132,6 +137,17 @@ class _buildsummary {
                 }
             };
 
+            this.assignDisplayedStepNumber = function (step) {
+                if (step.number === 0)
+                    this.display_count = 0
+                if (this.isStepDisplayed(step))
+                    step.display_num = (this.display_count)++;
+                return true;
+            };
+
+            this.getDisplayedStepCount = function () {
+                return self.steps.filter(this.isStepDisplayed).length;
+            };
 
             this.getBuildProperty = function (property) {
                 const hasProperty = self.properties && self.properties.hasOwnProperty(property);

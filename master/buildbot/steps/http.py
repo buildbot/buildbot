@@ -14,21 +14,14 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 
 from buildbot import config
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
-from buildbot.steps.http_oldstyle import DELETE
-from buildbot.steps.http_oldstyle import GET
-from buildbot.steps.http_oldstyle import HEAD
-from buildbot.steps.http_oldstyle import OPTIONS
-from buildbot.steps.http_oldstyle import POST
-from buildbot.steps.http_oldstyle import PUT
-from buildbot.steps.http_oldstyle import HTTPStep
-from buildbot.steps.http_oldstyle import closeSession
-from buildbot.steps.http_oldstyle import getSession
-from buildbot.steps.http_oldstyle import setSession
 
 # use the 'requests' lib: https://requests.readthedocs.io/en/master/
 try:
@@ -37,24 +30,40 @@ try:
 except ImportError:
     txrequests = None
 
-_hush_pyflakes = [
-    DELETE,
-    GET,
-    HEAD,
-    HTTPStep,
-    OPTIONS,
-    POST,
-    PUT,
-    closeSession,
-    getSession,
-    setSession,
-]
-del _hush_pyflakes
 
-# TODO: move session singleton handling back to this module from http_oldstyle
+# This step uses a global Session object, which encapsulates a thread pool as
+# well as state such as cookies and authentication.  This state may pose
+# problems for users, where one step may get a cookie that is subsequently used
+# by another step in a different build.
+
+_session = None
 
 
-class HTTPStepNewStyle(BuildStep):
+def getSession():
+    global _session
+    if _session is None:
+        _session = txrequests.Session()
+        reactor.addSystemEventTrigger("before", "shutdown", closeSession)
+    return _session
+
+
+def setSession(session):
+    global _session
+    _session = session
+
+
+def closeSession():
+    global _session
+    if _session is not None:
+        _session.close()
+        _session = None
+
+
+def _headerSet(headers):
+    return frozenset(map(lambda x: x.casefold(), headers))
+
+
+class HTTPStep(BuildStep):
 
     name = 'HTTPStep'
     description = 'Requesting'
@@ -66,7 +75,9 @@ class HTTPStepNewStyle(BuildStep):
     renderables = requestsParams + ["method", "url"]
     session = None
 
-    def __init__(self, url, method, **kwargs):
+    def __init__(self, url, method,
+                 hide_request_headers=None, hide_response_headers=None,
+                 **kwargs):
         if txrequests is None:
             config.error(
                 "Need to install txrequest to use this step:\n\n pip install txrequests")
@@ -76,6 +87,9 @@ class HTTPStepNewStyle(BuildStep):
 
         self.method = method
         self.url = url
+
+        self.hide_request_headers = _headerSet(hide_request_headers or [])
+        self.hide_response_headers = _headerSet(hide_response_headers or [])
 
         for param in self.requestsParams:
             setattr(self, param, kwargs.pop(param, None))
@@ -104,10 +118,8 @@ class HTTPStepNewStyle(BuildStep):
         yield log.addHeader('Performing {} request to {}\n'.format(self.method, self.url))
         if self.params:
             yield log.addHeader('Parameters:\n')
-            params = requestkwargs.get("params", {})
-            if params:
-                params = sorted(params.items(), key=lambda x: x[0])
-                requestkwargs['params'] = params
+            params = sorted(self.params.items(), key=lambda x: x[0])
+            requestkwargs['params'] = params
             for k, v in params:
                 yield log.addHeader('\t{}: {}\n'.format(k, v))
         data = requestkwargs.get("data", None)
@@ -144,8 +156,10 @@ class HTTPStepNewStyle(BuildStep):
     @defer.inlineCallbacks
     def log_response(self, log, response):
 
-        yield log.addHeader('Request Header:\n')
+        yield log.addHeader('Request Headers:\n')
         for k, v in response.request.headers.items():
+            if k.casefold() in self.hide_request_headers:
+                v = '<HIDDEN>'
             yield log.addHeader('\t{}: {}\n'.format(k, v))
 
         yield log.addStdout('URL: {}\n'.format(response.url))
@@ -155,8 +169,10 @@ class HTTPStepNewStyle(BuildStep):
         else:
             yield log.addStderr('Status: {}\n'.format(response.status_code))
 
-        yield log.addHeader('Response Header:\n')
+        yield log.addHeader('Response Headers:\n')
         for k, v in response.headers.items():
+            if k.casefold() in self.hide_response_headers:
+                v = '<HIDDEN>'
             yield log.addHeader('\t{}: {}\n'.format(k, v))
 
         yield log.addStdout(' ------ Content ------\n{}'.format(response.text))
@@ -164,37 +180,100 @@ class HTTPStepNewStyle(BuildStep):
         yield content_log.addStdout(response.text)
 
 
-class POSTNewStyle(HTTPStepNewStyle):
+HTTPStepNewStyle = HTTPStep
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use HTTPStep instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="HTTPStepNewStyle",
+)
+
+
+class POST(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='POST', **kwargs)
 
 
-class GETNewStyle(HTTPStepNewStyle):
+POSTNewStyle = POST
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use POST instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="POSTNewStyle",
+)
+
+
+class GET(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='GET', **kwargs)
 
 
-class PUTNewStyle(HTTPStepNewStyle):
+GETNewStyle = GET
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use GET instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="GETNewStyle",
+)
+
+
+class PUT(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='PUT', **kwargs)
 
 
-class DELETENewStyle(HTTPStepNewStyle):
+PUTNewStyle = PUT
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use PUT instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="PUTNewStyle",
+)
+
+
+class DELETE(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='DELETE', **kwargs)
 
 
-class HEADNewStyle(HTTPStepNewStyle):
+DELETENewStyle = DELETE
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use DELETE instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="DELETENewStyle",
+)
+
+
+class HEAD(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='HEAD', **kwargs)
 
 
-class OPTIONSNewStyle(HTTPStepNewStyle):
+HEADNewStyle = HEAD
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use HEAD instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="HEADNewStyle",
+)
+
+
+class OPTIONS(HTTPStep):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, method='OPTIONS', **kwargs)
+
+
+OPTIONSNewStyle = OPTIONS
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use OPTIONS instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.http",
+    name="OPTIONSNewStyle",
+)

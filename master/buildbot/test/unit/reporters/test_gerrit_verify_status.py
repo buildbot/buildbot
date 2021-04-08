@@ -15,40 +15,38 @@
 
 import datetime
 
-from mock import Mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.reporters.gerrit_verify_status import GerritVerifyStatusPush
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.unit.changes.test_gerritchangesource import TestGerritChangeSource
 from buildbot.test.util import logging
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestGerritVerifyStatusPush(TestReactorMixin,
-                                 ReporterTestMixin,
+class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErrorsMixin,
                                  logging.LoggingMixin,
                                  unittest.TestCase):
-
-    TEST_PROPS = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
+        self.setup_reporter_test()
+        self.reporter_test_props = {
+            'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]
+        }
+
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -62,7 +60,6 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
             self.master, self, "gerrit", auth=('log', 'pass'),
             debug=None, verify=None)
         self.sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def tearDown(self):
@@ -120,9 +117,13 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_custom_description(self):
-        yield self.createGerritStatus(
-            startDescription=Interpolate("started %(prop:buildername)s"),
-            endDescription=Interpolate("finished %(prop:buildername)s"))
+        start_formatter = MessageFormatterRenderable(Interpolate("started %(prop:buildername)s"))
+        end_formatter = MessageFormatterRenderable(Interpolate("finished %(prop:buildername)s"))
+
+        generator = BuildStartEndStatusGenerator(start_formatter=start_formatter,
+                                                 end_formatter=end_formatter)
+
+        yield self.createGerritStatus(generators=[generator])
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -375,102 +376,3 @@ class TestGerritVerifyStatusPush(TestReactorMixin,
         self.assertEqual(changes, [
             {'change_id': '4321', 'revision_id': '12'}
         ])
-
-
-class GerritVerifyStatusPushDeprecatedSend(GerritVerifyStatusPush):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.send_called_count = 0
-
-    @defer.inlineCallbacks
-    def send(self, build):
-        self.send_called_count += 1
-        yield super().send(build)
-
-
-class TestGerritVerifyStatusPushDeprecatedSend(TestReactorMixin, ReporterTestMixin,
-                                               logging.LoggingMixin, unittest.TestCase):
-
-    TEST_PROPS = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        self.setUpTestReactor()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
-
-        yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def createGerritStatus(self, **kwargs):
-        auth = kwargs.pop('auth', ('log', Interpolate('pass')))
-
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, "gerrit", auth=('log', 'pass'),
-            debug=None, verify=None)
-        self.sp = GerritVerifyStatusPushDeprecatedSend("gerrit", auth=auth, **kwargs)
-        self.sp.sessionFactory = Mock(return_value=Mock())
-        yield self.sp.setServiceParent(self.master)
-
-    def tearDown(self):
-        return self.master.stopService()
-
-    @defer.inlineCallbacks
-    def test_basic(self):
-        yield self.createGerritStatus()
-        build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            method='post',
-            ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
-                'comment': 'Build started.',
-                'abstain': False,
-                'name': 'Builder0',
-                'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
-                'value': 0,
-                'duration': 'pending'
-            })
-        self._http.expect(
-            method='post',
-            ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
-                'comment': 'Build done.',
-                'abstain': False,
-                'name': 'Builder0',
-                'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
-                'value': 1,
-                'duration': '2h 1m 4s'
-            })
-        self._http.expect(
-            method='post',
-            ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
-                'comment': 'Build done.',
-                'abstain': False,
-                'name': 'Builder0',
-                'reporter': 'buildbot',
-                'url': 'http://localhost:8080/#builders/79/builds/0',
-                'value': -1,
-                'duration': '2h 1m 4s'
-            })
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'new'), build)
-        build['complete'] = True
-        build['complete_at'] = build['started_at'] + \
-            datetime.timedelta(hours=2, minutes=1, seconds=4)
-        build['results'] = SUCCESS
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        build['results'] = FAILURE
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-
-        self.assertEqual(self.sp.send_called_count, 3)

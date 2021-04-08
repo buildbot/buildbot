@@ -168,6 +168,54 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             self.assertEqual(self.expected_change[k], v)
 
     @defer.inlineCallbacks
+    def test_lineReceived_ref_updated(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        yield s.lineReceived(json.dumps({
+            'type': 'ref-updated',
+            'submitter': {
+                'name': 'tester',
+                'email': 'tester@example.com',
+                'username': 'tester'
+            },
+            'refUpdate': {
+                'oldRev': '12341234',
+                'newRev': '56785678',
+                'refName': 'refs/heads/master',
+                'project': 'test'
+            },
+            'eventCreatedOn': 1614528683
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        c = self.master.data.updates.changesAdded[0]
+        self.assertEqual(c, {
+            'files': ['unknown'],
+            'comments': 'Gerrit: patchset(s) merged.',
+            'author': 'tester <tester@example.com>',
+            'committer': None,
+            'revision': '56785678',
+            'when_timestamp': None,
+            'branch': 'refs/heads/master',
+            'category': 'ref-updated',
+            'revlink': '',
+            'properties': {
+                'event.type': 'ref-updated',
+                'event.submitter.name': 'tester',
+                'event.submitter.email':
+                    'tester@example.com',
+                    'event.submitter.username': 'tester',
+                    'event.refUpdate.oldRev': '12341234',
+                    'event.refUpdate.newRev': '56785678',
+                    'event.refUpdate.refName': 'refs/heads/master',
+                    'event.refUpdate.project': 'test',
+                    'event.source': 'GerritChangeSource'
+                },
+            'repository': 'ssh://someuser@somehost:29418/test',
+            'codebase': None,
+            'project': 'test',
+            'src': None
+        })
+
+    @defer.inlineCallbacks
     def test_duplicate_events_ignored(self):
         s = self.newChangeSource('somehost', 'someuser')
         yield s.lineReceived(json.dumps(dict(
@@ -198,6 +246,39 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             patchSet=dict(revision="abcdef", number="12")
         )))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+
+    @defer.inlineCallbacks
+    def test_duplicate_non_source_events_not_ignored(self):
+        s = self.newChangeSource('somehost', 'someuser',
+                                 handled_events=['patchset-created', 'ref-updated',
+                                                 'change-merged', 'comment-added'])
+        yield s.lineReceived(json.dumps({
+            'type': "comment-added",
+            'change': {
+                'branch': "br",
+                'project': "pr",
+                'number': "4321",
+                'owner': {'name': "Dustin", 'email': "dustin@mozilla.com"},
+                'url': "http://buildbot.net",
+                'subject': "fix 1234"
+            },
+            'patchSet': {'revision': "abcdef", 'number': "12"}
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+
+        yield s.lineReceived(json.dumps({
+            'type': "comment-added",
+            'change': {
+                'branch': "br",
+                'project': "pr",
+                'number': "4321",
+                'owner': {'name': "Dustin", 'email': "dustin@mozilla.com"},
+                'url': "http://buildbot.net",
+                'subject': "fix 1234"
+            },
+            'patchSet': {'revision': "abcdef", 'number': "12"}
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 2)
 
     @defer.inlineCallbacks
     def test_malformed_events_ignored(self):
@@ -274,7 +355,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = self.newChangeSource(
             'somehost', 'some_choosy_user', debug=True)
 
-        exp_argv = ['ssh', 'some_choosy_user@somehost', '-p', '29418']
+        exp_argv = ['ssh', '-o', 'BatchMode=yes', 'some_choosy_user@somehost', '-p', '29418']
         exp_argv += ['gerrit', 'stream-events']
 
         def spawnProcess(pp, cmd, argv, env):
@@ -324,8 +405,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def test_getFiles(self):
         s = self.newChangeSource('host', 'user', gerritport=2222)
         exp_argv = [
-            'ssh', 'user@host', '-p', '2222', 'gerrit', 'query', '1000',
-            '--format', 'JSON', '--files', '--patch-sets'
+            'ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '2222',
+            'gerrit', 'query', '1000', '--format', 'JSON', '--files', '--patch-sets'
         ]
 
         def getoutput_success(cmd, argv, env):

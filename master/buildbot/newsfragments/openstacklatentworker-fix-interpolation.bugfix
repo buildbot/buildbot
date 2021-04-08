@@ -1,2 +1,0 @@
-Fixed :py:class:`OpenstackLatentWorker` to use correct method when listing images.
-Updated :py:class:`OpenstackLatentWorker` to support renderable ``flavor``, ``nova_args`` and ``meta``.

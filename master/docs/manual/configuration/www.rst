@@ -15,7 +15,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
     It might be an integer or any string accepted by `serverFromString <https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.html#serverFromString>`_ (ex: "tcp:8010:interface=127.0.0.1" to listen on another interface).
     Note that SSL is not supported.
     To host Buildbot with SSL, use an HTTP proxy such as lighttpd, nginx, or Apache.
-    If this is ``None``, the default, then the master will not implement a web server.
+    If this is ``None`` (the default), then the master will not implement a web server.
 
 ``json_cache_seconds``
     The number of seconds into the future at which an HTTP API response should expire.
@@ -28,7 +28,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
 ``plugins``
     This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
     These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-waterfall-view``.
-    See :ref:`UI-Plugins`
+    See :ref:`UI-Plugins`.
     For example:
 
     .. code-block:: python
@@ -38,7 +38,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
         }
 
 ``default_page``
-    Configure the default landing page of the web server, for example to forward directly to another plugin, for example:
+    Configure the default landing page of the web server, for example, to forward directly to another plugin. For example:
 
     .. code-block:: python
 
@@ -61,7 +61,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
 ``avatar_methods``
     List of methods that can be used to get avatar pictures to use for the web server.
-    By default, buildbot uses Gravatar to get images associated with each users, if you want to disable this you can just specify empty list:
+    By default, Buildbot uses Gravatar to get images associated with each users, if you want to disable this you can just specify empty list:
 
     .. code-block:: python
 
@@ -77,27 +77,40 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'avatar_methods': [util.AvatarGitHub()]
         }
 
-    For use of corporate pictures, you can use LdapUserInfo, which can also acts as an avatar provider.
+    .. py:class:: AvatarGitHub(github_api_endpoint=None, token=None, debug=False, verify=False)
+
+        :param string github_api_endpoint: specify the github api endpoint if you work with GitHub Enterprise
+        :param string token: a GitHub API token to execute all requests to the API authenticated. It is strongly recommended to use a API token since it increases GitHub API rate limits significantly
+        :param string client_id: a GitHub OAuth client ID to use with client secret to execute all requests to the API authenticated in place of token
+        :param string client_secret: a GitHub OAuth client secret to use with client ID above
+        :param boolean debug: logs every requests and their response
+        :param boolean verify: disable ssl verification for the case you use temporary self signed certificates on a GitHub Enterprise installation
+
+        This class requires `txrequests`_ package to allow interaction with GitHub REST API.
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+
+    For use of corporate pictures, you can use LdapUserInfo, which can also act as an avatar provider.
     See :ref:`Web-Authentication`.
 
 ``logfileName``
-    Filename used for http access logs, relative to the master directory.
+    Filename used for HTTP access logs, relative to the master directory.
     If set to ``None`` or the empty string, the content of the logs will land in the main :file:`twisted.log` log file.
-    (Default to ``http.log``)
+    (Defaults to ``http.log``)
 
 ``logRotateLength``
     The amount of bytes after which the :file:`http.log` file will be rotated.
-    (Default to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
+    (Defaults to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
 
 ``maxRotatedFiles``
     The amount of log files that will be kept when rotating
-    (Default to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
+    (Defaults to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
 
 ``versions``
     Custom component versions that you'd like to display on the About page.
-    Buildbot will automatically prepend the versions of Python, twisted and buildbot itself to the list.
+    Buildbot will automatically prepend the versions of Python, twisted and Buildbot itself to the list.
 
-    ``versions`` should be a list of tuples. for example:
+    ``versions`` should be a list of tuples. For example:
 
     .. code-block:: python
 
@@ -114,13 +127,13 @@ This server is configured with the ``www`` configuration key, which specifies a 
 ``custom_templates_dir``
     This directory will be parsed for custom angularJS templates to replace the one of the original website templates.
     You can use this to slightly customize buildbot look for your project, but to add any logic, you will need to create a full-blown plugin.
-    if the directory string is relative, it will be joined to the master's basedir.
-    Buildbot uses the jade file format natively (which has been renamed to 'pug' in the nodejs ecosystem), but you can also use html format if you prefer.
+    If the directory string is relative, it will be joined to the master's basedir.
+    Buildbot uses the jade file format natively (which has been renamed to 'pug' in the nodejs ecosystem), but you can also use HTML format if you prefer.
 
-    Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override templates with the same name in the UI.
+    Either ``*.jade`` files or ``*.html`` files can be used to override templates with the same name in the UI.
     On the regular nodejs UI build system, we use nodejs's pug module to compile jade into html.
     For custom_templates, we use the pypugjs interpreter to parse the jade templates, before sending them to the UI.
-    ``pip install pypugjs`` is be required to use jade templates.
+    ``pip install pypugjs`` is required to use jade templates.
     You can also override plugin's directives, but they have to be in another directory, corresponding to the plugin's name in its ``package.json``.
     For example:
 
@@ -136,8 +149,8 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
     Known differences between nodejs's pug and pyjade:
 
-        * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
-          This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
+        * quotes in attributes are not quoted (https://github.com/syrusakbary/pyjade/issues/132).
+          This means you should use double quotes for attributes, e.g.: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
 
         * pypugjs may have some differences but it is a maintained fork of pyjade. https://github.com/kakulukia/pypugjs
 
@@ -162,9 +175,9 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
     Settings in the settings page are stored per browser.
     This configuration parameter allows to override the default settings for all your users.
-    If a user already have changed a value from the default, this will have no effect to him/her.
+    If a user already has changed a value from the default, this will have no effect to them.
     The settings page in the UI will tell you what to insert in your master.cfg to reproduce the configuration you have in your own browser.
-    Example use:
+    For example:
 
     .. code-block:: python
 
@@ -172,6 +185,12 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'Builders.buildFetchLimit': 500,
             'Workers.showWorkerBuilders': True,
         }
+
+``ws_ping_interval``
+
+    Send websocket pings every ``ws_ping_interval`` seconds.
+    This is useful to avoid websocket timeouts when using reverse proxies or CDNs.
+    If the value is 0 (the default), pings are disabled.
 
 .. note::
 
@@ -190,7 +209,7 @@ UI plugins
 Waterfall View
 ++++++++++++++
 
-Waterfall shows the whole buildbot activity in vertical time line.
+Waterfall shows the whole Buildbot activity in a vertical time line.
 Builds are represented with boxes whose height vary according to their duration.
 Builds are sorted by builders in the horizontal axes, which allows you to see how builders are scheduled together.
 
@@ -215,14 +234,14 @@ Builds are sorted by builders in the horizontal axes, which allows you to see ho
     This is the reason why Waterfall does not display the steps details anymore.
     However nothing is impossible.
     We could make a specific REST api available to generate all the data needed for waterfall on the server.
-    Please step-in if you want to help improve Waterfall view.
+    Please step-in if you want to help improve the Waterfall view.
 
 .. _ConsoleView:
 
 Console View
 ++++++++++++++
 
-Console view shows the whole buildbot activity arranged by changes as discovered by :ref:`Change-Sources` vertically and builders horizontally.
+Console view shows the whole Buildbot activity arranged by changes as discovered by :ref:`Change-Sources` vertically and builders horizontally.
 If a builder has no build in the current time range, it will not be displayed.
 If no change is available for a build, then it will generate a fake change according to the ``got_revision`` property.
 
@@ -253,7 +272,7 @@ In order to keep the UI usable, you have to keep your tags short!
 Grid View
 +++++++++
 
-Grid view shows the whole buildbot activity arranged by builders vertically and changes horizontally.
+Grid view shows the whole Buildbot activity arranged by builders vertically and changes horizontally.
 It is equivalent to Buildbot Eight's grid view.
 
 By default, changes on all branches are displayed but only one branch may be filtered by the user.
@@ -290,7 +309,7 @@ PNG generation is based on the CAIRO_ SVG engine, it requires a bit more CPU to 
       }
 
 You can the access your builder's badges using urls like ``http://<buildbotURL>/badges/<buildername>.svg``.
-The default templates are very much configurable via the following options.
+The default templates are very much configurable via the following options:
 
 .. code-block:: python
 
@@ -325,14 +344,14 @@ Those options can be configured either using the plugin configuration:
           'plugins': {'badges': {"left_color": "#222"}}
       }
 
-Or via the URL arguments like ``http://<buildbotURL>/badges/<buildername>.svg?left_color=222``.
+or via the URL arguments like ``http://<buildbotURL>/badges/<buildername>.svg?left_color=222``.
 Custom templates can also be specified in a ``template`` directory nearby the ``master.cfg``.
 
 The badgeio template
 ^^^^^^^^^^^^^^^^^^^^
 
 A badges template was developed to standardize upon a consistent "look and feel" across the usage of
-multiple CI/CD solutions; eg: use of Buildbot, Codecov.io, and Travis-CI. An example is shown below.
+multiple CI/CD solutions, e.g.: use of Buildbot, Codecov.io, and Travis-CI. An example is shown below.
 
 .. image:: ../_images/badges-badgeio.png
 
@@ -391,7 +410,7 @@ The available classes are described here:
 
 .. py:class:: buildbot.www.auth.NoAuth()
 
-    This class is the default authentication plugin, which disables authentication
+    This class is the default authentication plugin, which disables authentication.
 
 .. py:class:: buildbot.www.auth.UserPasswordAuth(users)
 
@@ -447,9 +466,9 @@ The available classes are described here:
 
     This class implements an authentication with Google_ single sign-on.
     You can look at the Google_ oauth2 documentation on how to register your Buildbot instance to the Google systems.
-    The developer console will give you the two parameters you have to give to ``GoogleAuth``
+    The developer console will give you the two parameters you have to give to ``GoogleAuth``.
 
-    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` URL as the allowed redirect URI.
 
     Example:
 
@@ -461,7 +480,7 @@ The available classes are described here:
             'auth': util.GoogleAuth("clientid", "clientsecret"),
         }
 
-    in order to use this module, you need to install the Python ``requests`` module
+    In order to use this module, you need to install the Python ``requests`` module:
 
     .. code-block:: bash
 
@@ -473,9 +492,9 @@ The available classes are described here:
 
     :param clientId: The client ID of your buildbot application
     :param clientSecret: The client secret of your buildbot application
-    :param serverURL: The server URL if this is a GitHub Enterprise server.
+    :param serverURL: The server URL if this is a GitHub Enterprise server
     :param apiVersion: The GitHub API version to use. One of ``3`` or ``4``
-                       (V3/REST or V4/GraphQL). Default=3.
+                       (V3/REST or V4/GraphQL). Defaults to 3.
     :param getTeamsMembership: When ``True`` fetch all team memberships for each of the
                                organizations the user belongs to. The teams will be included in the
                                user's groups as ``org-name/team-name``.
@@ -553,7 +572,7 @@ The available classes are described here:
     This class implements an authentication with GitLab_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
 
-    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` URL as the allowed redirect URI.
 
     Example:
 
@@ -581,7 +600,7 @@ The available classes are described here:
     This class implements an authentication with Bitbucket_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
 
-    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` URL as the allowed redirect URI.
 
     Example:
 
@@ -605,7 +624,7 @@ The available classes are described here:
 
     :param header: header to use to get the username (defaults to ``REMOTE_USER``)
     :param headerRegex: regular expression to get the username from header value (defaults to ``"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")``\.
-                        Note that your at least need to specify a ``?P<username>`` regular expression named group.
+                        Note that you at least need to specify a ``?P<username>`` regular expression named group.
     :param userInfoProvider: user info provider; see :ref:`User-Information`
 
     If the Buildbot UI is served through a reverse proxy that supports HTTP-based authentication (like apache or lighttpd), it's possible to to tell Buildbot to trust the web server and get the username from th request headers.
@@ -624,7 +643,7 @@ The available classes are described here:
             'auth': util.RemoteUserAuth(),
         }
 
-    A corresponding Apache configuration example
+    A corresponding Apache configuration example:
 
     .. code-block:: none
 
@@ -682,7 +701,7 @@ Currently only one provider is available:
                                This must contain the ``%(username)s`` string, which is replaced by the searched username
         :param accountFullName: the name of the field in account ldap database where the full user name is to be found.
         :param accountEmail: the name of the field in account ldap database where the user email is to be found.
-        :param groupBase: the base dn of the groups database.
+        :param groupBase: the base dn of the groups database
         :param groupMemberPattern: the pattern for searching in the group database.
                                    This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
         :param groupName: the name of the field in groups ldap database where the group name is to be found.
@@ -690,7 +709,7 @@ Currently only one provider is available:
                               This must contain the ``%(email)s`` string, which is replaced by the searched email
         :param avatarData: the name of the field in groups ldap database where the avatar picture is to be found.
                            This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
-        :param accountExtraFields: extra fields to extracts for use with the authorization policies.
+        :param accountExtraFields: extra fields to extracts for use with the authorization policies
 
         If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
 
@@ -748,7 +767,7 @@ In the case of oauth2 authentications, you have to pass the userInfoProvider as 
 Reverse Proxy Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is usually better to put buildbot behind a reverse proxy in production.
+It is usually better to put Buildbot behind a reverse proxy in production.
 
 * Provides automatic gzip compression
 * Provides SSL support with a widely used implementation
@@ -854,7 +873,7 @@ Authorization rules
 ~~~~~~~~~~~~~~~~~~~
 
 The authorization framework in Buildbot is very generic and flexible.
-Drawback is that it is not very obvious for newcomers.
+The drawback is that it is not very obvious for newcomers.
 The 'simple' example will however allow you to easily start by implementing an admins-have-all-rights setup.
 
 Please carefully read the following documentation to understand how to setup authorization in Buildbot.
@@ -886,7 +905,7 @@ It allows or denies access to the REST APIs according to rules.
     For example, there is the ``owner`` role, which can be given to a user for a build that he is at the origin, so that he can stop or rebuild only builds of his own.
 
 - Endpoint matchers associate role requirements to REST API endpoints.
-  The default policy is allow in case no matcher matches (see below why)
+  The default policy is allow in case no matcher matches (see below why).
 
 - Role matchers associate authenticated users to roles.
 
@@ -912,7 +931,7 @@ Authz Configuration
     :param allowRules: List of :py:class:`EndpointMatcherBase` processed in order for each endpoint grant request.
     :param roleMatcher: List of RoleMatchers
     :param stringsMatcher: Selects algorithm used to make strings comparison (used to compare roles and builder names).
-       can be :py:class:`util.fnmatchStrMatcher` or :py:class:`util.reStrMatcher` from ``from buildbot.plugins import util``
+       Can be :py:class:`util.fnmatchStrMatcher` or :py:class:`util.reStrMatcher` from ``from buildbot.plugins import util``
 
     :py:class:`Authz` needs to be configured in ``c['www']['authz']``
 
@@ -964,28 +983,28 @@ In this case, you can look at the source code for detailed examples on how to wr
 
 .. py:class:: buildbot.www.authz.endpointmatchers.ForceBuildEndpointMatcher(builder, role)
 
-    :param builder: name of the builder.
+    :param builder: Name of the builder.
     :param role: The role needed to get access to such endpoints.
 
     ForceBuildEndpointMatcher grants right to force builds.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.StopBuildEndpointMatcher(builder, role)
 
-    :param builder: name of the builder.
+    :param builder: Name of the builder.
     :param role: The role needed to get access to such endpoints.
 
     StopBuildEndpointMatcher grants rights to stop builds.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.RebuildBuildEndpointMatcher(builder, role)
 
-    :param builder: name of the builder.
+    :param builder: Name of the builder.
     :param role: The role needed to get access to such endpoints.
 
     RebuildBuildEndpointMatcher grants rights to rebuild builds.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.EnableSchedulerEndpointMatcher(builder, role)
 
-    :param builder: name of the builder.
+    :param builder: Name of the builder.
     :param role: The role needed to get access to such endpoints.
 
     EnableSchedulerEndpointMatcher grants rights to enable and disable schedulers via the UI.
@@ -998,7 +1017,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 
 .. py:class:: buildbot.www.authz.roles.RolesFromGroups(groupPrefix)
 
-    :param groupPrefix: prefix to remove from each group
+    :param groupPrefix: Prefix to remove from each group
 
     RolesFromGroups grants roles from the groups of the user.
     If a user has group ``buildbot-admin``, and groupPrefix is ``buildbot-``, then user will be granted the role 'admin'
@@ -1013,7 +1032,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 
 .. py:class:: buildbot.www.authz.roles.RolesFromEmails(roledict)
 
-    :param roledict: dictionary with key=role, and value=list of email strings
+    :param roledict: Dictionary with key=role, and value=list of email strings
 
     RolesFromEmails grants roles to users according to the hardcoded emails.
 
@@ -1027,7 +1046,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 
 .. py:class:: buildbot.www.authz.roles.RolesFromDomain(roledict)
 
-    :param roledict: dictionary with key=role, and value=list of domain strings
+    :param roledict: Dictionary with key=role, and value=list of domain strings
 
     RolesFromDomain grants roles to users according to their email domains.
     If a user tried to login with email ``foo@gmail.com``, then user will be granted the role 'admins'.
@@ -1042,7 +1061,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 
 .. py:class:: buildbot.www.authz.roles.RolesFromOwner(roledict)
 
-    :param roledict: dictionary with key=role, and value=list of email strings
+    :param roledict: Dictionary with key=role, and value=list of email strings
 
     RolesFromOwner grants a given role when property owner matches the email of the user
 
@@ -1056,8 +1075,8 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 
 .. py:class:: buildbot.www.authz.roles.RolesFromUsername(roles, usernames)
 
-    :param roles: roles to assign when the username matches.
-    :param usernames: list of usernames that have the roles.
+    :param roles: Roles to assign when the username matches.
+    :param usernames: List of usernames that have the roles.
 
     RolesFromUsername grants the given roles when the ``username`` property is within the list of usernames.
 

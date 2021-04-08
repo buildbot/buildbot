@@ -14,7 +14,7 @@ The recommended upgrade procedure is as follows:
     If the code does not emit deprecation warnings, it's in a good shape in this regard.
     You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
 
-  - Upgrade to Buildbot 3.0.
+  - Upgrade to the latest Buildbot 3.0.x release.
 
   - Fix all usages of deprecated APIs.
     In this case, the only deprecated APIs are temporary ``*NewStyle`` build step aliases.
@@ -68,7 +68,7 @@ Reporters and report generators
 -------------------------------
 
 Buildbot 2.9 introduced report generators as the preferred way of configuring the conditions of when a message is sent by a reporter and contents of the messages.
-The old parameters have been deprecated in Buildbot 2.9 and removed in Buildbot 3.0.
+The old parameters have been gradually deprecated in Buildbot 2.9 and Buildbot 2.10 and removed in Buildbot 3.0.
 
 The following describes the procedure of upgrading reporters.
 
@@ -146,11 +146,71 @@ The following arguments have been removed:
 * ``buildSetSummary``. Defines whether the *status generator* will be instance of :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
 
 * ``messageFormatter``. Replacement is ``message_formatter`` parameter of the *status generator*.
-  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``DefaultMessageFormatter(template_type='html', template_filename='default_notification.txt')``.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatter(template_type='html', template=<default text>)``.
 
 * ``watchedWorkers``. Replacement is ``workers`` parameter of the *missing worker generator*.
   If the value was ``None``, then there's no *missing worker generator* and the value of ``messageFormatterMissingWorker`` is ignored.
 
 * ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
-  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template_filename='missing_notification.txt')``.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template=<default text>)``.
 
+BitbucketServerCoreAPIStatusPush, BitbucketServerStatusPush, GerritVerifyStatusPush, GitHubStatusPush, GitHubCommentPush, GitLabStatusPush
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStartEndStatusGenerator`.
+
+The following arguments have been removed:
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when information on previous build is needed.
+
+* ``startDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``start_formatter`` parameter to the *status generator*.
+
+* ``endDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``end_formatter`` parameter to the *status generator*.
+
+HttpStatusPush
+^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStatusGenerator`.
+
+The following arguments have been removed:
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the *status generator*.
+
+* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when information on previous build is needed.
+
+* ``format_fn``. Replacement is a message formatter of type ``MessageFormatterFunction`` passed as the ``message_formatter`` parameter to the *status generator*.
+  The ``MessageFormatterFunction`` should be passed a callable function as the ``function`` parameter.
+  This ``function`` parameter has a different signature than ``format_fn``.
+  ``format_fn`` was previously passed a build dictionary directly as the first argument.
+  ``function`` will be passed a dictionary, which contains a ``build`` key which will contain the build dictionary as the value.
+
+BitbucketStatusPush
+^^^^^^^^^^^^^^^^^^^
+
+The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStartEndStatusGenerator`.
+
+The following arguments have been removed:
+
+* ``builders``. Replacement is ``builders`` parameter of the *status generator*.
+
+* ``wantProperties``, ``wantSteps``, ``wantLogs`` and ``wantPreviousBuild`` were previously accepted, but they do not affect the behavior of the reporter.
+
+Template files in message formatters
+------------------------------------
+
+Paths to template files that are passed to message formatters for rendering are no longer supported.
+Please read the templates in the configuration file and pass strings instead.

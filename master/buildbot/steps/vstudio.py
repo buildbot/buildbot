@@ -23,7 +23,7 @@ from twisted.internet import defer
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
-from buildbot.process.buildstep import LogLineObserver
+from buildbot.process.logobserver import LogLineObserver
 
 
 class MSLogLineObserver(LogLineObserver):

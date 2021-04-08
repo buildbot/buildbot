@@ -86,7 +86,10 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
     def __init__(self):
         super().__init__()
-        self.app = self.router_url = None
+        self.app = None
+        self.router_url = None
+        self.realm = None
+        self.wamp_debug_level = None
         self.serviceDeferred = defer.Deferred()
         self.service = None
 
@@ -126,27 +129,39 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if new_config.mq.get('type', 'simple') != "wamp":
+            if self.app is not None:
+                raise ValueError("Cannot use different wamp settings when reconfiguring")
             return
+
         wamp = new_config.mq
         log.msg("Starting wamp with config: %r", wamp)
         router_url = wamp.get('router_url', None)
+        realm = bytes2unicode(wamp.get('realm', 'buildbot'))
+        wamp_debug_level = wamp.get('wamp_debug_level', 'error')
 
-        # This is not a good idea to allow people to switch the router via reconfig
-        # how would we continue the current transactions ?
-        # how would we tell the workers to switch router ?
-        if self.app is not None and self.router_url != router_url:
-            raise ValueError(
-                "Cannot use different wamp router url when reconfiguring")
+        # MQ router can be reconfigured only once. Changes to configuration are not supported.
+        # We can't switch realm nor the URL as that would leave transactions in inconsistent state.
+        # Implementing reconfiguration just for wamp_debug_level does not seem like a good
+        # investment.
+        if self.app is not None:
+            if self.router_url != router_url or self.realm != realm or \
+                    self.wamp_debug_level != wamp_debug_level:
+                raise ValueError("Cannot use different wamp settings when reconfiguring")
+            return
+
         if router_url is None:
             return
+
         self.router_url = router_url
+        self.realm = realm
+        self.wamp_debug_level = wamp_debug_level
+
         self.app = self.serviceClass(
             url=self.router_url,
             extra=dict(master=self.master, parent=self),
-            realm=bytes2unicode(wamp.get('realm', 'buildbot')),
+            realm=realm,
             make=make
         )
-        wamp_debug_level = wamp.get('wamp_debug_level', 'error')
         txaio.set_global_log_level(wamp_debug_level)
         yield self.app.setServiceParent(self)
         yield super().reconfigServiceWithBuildbotConfig(new_config)

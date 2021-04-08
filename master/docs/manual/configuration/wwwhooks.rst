@@ -4,12 +4,12 @@
 Change Hooks
 ~~~~~~~~~~~~
 
-The ``/change_hook`` url is a magic URL which will accept HTTP requests and translate them into changes for buildbot.
+The ``/change_hook`` URL is a magic URL which will accept HTTP requests and translate them into changes for Buildbot.
 Implementations (such as a trivial json-based endpoint and a GitHub implementation) can be found in :src:`master/buildbot/www/hooks`.
-The format of the url is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the hooks directory.
-Change_hook is disabled by default and each DIALECT has to be enabled separately, for security reasons
+The format of the URL is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the hooks directory.
+``change_hook`` is disabled by default and each DIALECT has to be enabled separately, for security reasons.
 
-An example www configuration line which enables change_hook and two DIALECTS:
+An example ``www`` configuration line which enables change_hook and two DIALECTS:
 
 .. code-block:: python
 
@@ -21,7 +21,7 @@ An example www configuration line which enables change_hook and two DIALECTS:
         },
     )
 
-Within the ``www`` config dictionary arguments, the ``change_hook`` key enables/disables the module and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
+Within the ``www`` config dictionary arguments, the ``change_hook`` key enables/disables the module, and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
 The :contrib-src:`master/contrib/post_build_request.py` script allows for the submission of an arbitrary change request.
 Run :command:`post_build_request.py --help` for more information.
@@ -32,15 +32,15 @@ The ``base`` dialect must be enabled for this to work.
 Change Hooks Auth
 +++++++++++++++++
 
-By default change hook URL is not protected.
+By default, the change hook URL is not protected.
 Some hooks implement their own authentication method.
-Other requires the generic method to be secured.
+Others require the generic method to be secured.
 
-To protect URL against unauthorized access you may use ``change_hook_auth`` option.
+To protect URL against unauthorized access, you may use ``change_hook_auth`` option.
 
 .. note::
 
-    This method uses ``HTTP BasicAuth``, it implies the use of SSL via :ref:`Reverse_Proxy_Config` in order to be fully secured.
+    This method uses ``HTTP BasicAuth``. It implies the use of SSL via :ref:`Reverse_Proxy_Config` in order to be fully secured.
 
 .. code-block:: python
 
@@ -49,7 +49,7 @@ To protect URL against unauthorized access you may use ``change_hook_auth`` opti
           change_hook_auth=[strcred.makeChecker("file:changehook.passwd")],
     )
 
-create a file ``changehook.passwd`` with content:
+Create a file ``changehook.passwd`` with content:
 
 .. code-block:: none
 
@@ -57,6 +57,10 @@ create a file ``changehook.passwd`` with content:
 
 ``change_hook_auth`` should be a list of :py:class:`ICredentialsChecker`.
 See the details of available options in `Twisted documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_.
+
+.. note::
+
+    In the case of the ``"file:changehook.passwd"`` description in makeChecker, Buildbot ``checkconfig`` might give you a warning "not a valid file: changehook.passwd". To resolve this, you need specify the full path to the file, ``f"file:{os.path.join(basedir, 'changehook.passwd')}"``.
 
 .. bb:chsrc:: Mercurial
 
@@ -89,7 +93,7 @@ GitHub hook
 .. note::
 
    There is a standalone HTTP server available for receiving GitHub notifications as well: :contrib-src:`master/contrib/github_buildbot.py`.
-   This script may be useful in cases where you cannot expose the WebStatus for public consumption. Alternatively, you can setup a reverse proxy :ref:`Reverse_Proxy_Config`
+   This script may be useful in cases where you cannot expose the WebStatus for public consumption. Alternatively, you can setup a reverse proxy :ref:`Reverse_Proxy_Config`.
 
 The GitHub hook has the following parameters:
 
@@ -102,6 +106,8 @@ The GitHub hook has the following parameters:
 ``codebase`` (default `None`)
     The codebase value to include with created changes.
     If the value is a function (or any other callable), it will be called with the GitHub event payload as argument and the function must return the codebase value to use for the event.
+``github_property_whitelist`` (default `[]`)
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``github``. For example ``github.number`` represents the pull request number. Available entries can be looked up in the GitHub API Documentation or by examining the data returned for a pull request by the API.
 ``class`` (default `None`)
     A class to be used for processing incoming payloads.
     If the value is `None` (default), the default class -- :py:class:`buildbot.www.hooks.github.GitHubEventHandler` -- will be used.
@@ -127,15 +133,15 @@ The GitHub hook has the following parameters:
     If you want to disable the skip checking, please set it to ``[]``.
 
 ``github_api_endpoint`` (default ``https://api.github.com``)
-    If you have a self-host GitHub Enterprise installation, please set
-    this url properly.
+    If you have a self-host GitHub Enterprise installation, please set this URL properly.
 
 ``token``
-    If your GitHub or GitHub Enterprise instance does not allow anonymous communication, you need to provide an access token.  Instructions can be found here <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>
+    If your GitHub or GitHub Enterprise instance does not allow anonymous communication, you need to provide an access token.
+    Instructions can be found here <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>
 
 ``pullrequest_ref`` (default ``merge``)
-    Remote ref to test if a pull request is sent to the endpoint. See the GitHub developer manual
-    for possible values for pull requests. (e.g. ``head``)
+    Remote ref to test if a pull request is sent to the endpoint.
+    See the GitHub developer manual for possible values for pull requests. (e.g. ``head``)
 
 
 The simplest way to use GitHub hook is as follows:
@@ -187,7 +193,7 @@ Github hook creates 3 kinds of changes, distinguishable by their ``category`` fi
     Use ``util.ChangeFilter(category='tag', repository="http://github.com/<org>/<project>")``
 
 - ``'pull'``: This change is from a pull-request creation or update.
-    Use ``util.ChangeFilter(category='pull', repository="http://github.com/<org>/<project>")``
+    Use ``util.ChangeFilter(category='pull', repository="http://github.com/<org>/<project>")``.
     In this case, the :bb:step:`GitHub` step must be used instead of the standard :bb:step:`Git` in order to be able to pull GitHub's magic refs.
     With this method, the :bb:step:`GitHub` step will always checkout the branch merged with latest master.
     This allows to test the result of the merge instead of just the source branch.
@@ -211,7 +217,7 @@ Then change the the ``Payload URL`` of your GitHub webhook to ``https://user:pas
 BitBucket hook
 ++++++++++++++
 
-The BitBucket hook is as simple as GitHub one and it takes no options.
+The BitBucket hook is as simple as the GitHub one and takes no options.
 
 .. code-block:: python
 
@@ -219,8 +225,8 @@ The BitBucket hook is as simple as GitHub one and it takes no options.
         change_hook_dialects={'bitbucket': True},
     )
 
-When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
+When this is set up, you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
+For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
 
 Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :contrib-src:`master/contrib/bitbucket_buildbot.py`.
@@ -246,7 +252,7 @@ Bitbucket Cloud hook
         change_hook_dialects={'bitbucketcloud': {}},
     )
 
-When this is setup you should add a webhook pointing to ``/change_hook/bitbucketcloud`` relative to the root of the web status.
+When this is set up, you should add a webhook pointing to ``/change_hook/bitbucketcloud`` relative to the root of the web status.
 
 According to the type of the event, the change category is set to ``push``, ``pull-created``, ``pull-rejected``, ``pull-updated``, ``pull-fulfilled`` or ``ref-deleted``.
 
@@ -255,9 +261,12 @@ The Bitbucket Cloud hook may have the following optional parameters:
 ``codebase`` (default `None`)
     The codebase value to include with changes or a callable object that will be passed the payload in order to get it.
 
+``bitbucket_property_whitelist`` (default `[]`)
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``. For example ``bitbucket.id`` represents the pull request ID. Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
+
 .. Warning::
     The incoming HTTP requests for this hook are not authenticated by default.
-    Anyone who can access the web server can "fake" a request from Bitbucket Cloud, potentially causing the buildmaster to run arbitrary code
+    Anyone who can access the web server can "fake" a request from Bitbucket Cloud, potentially causing the buildmaster to run arbitrary code.
 
 
 Bitbucket Server hook
@@ -270,7 +279,7 @@ Bitbucket Server hook
         change_hook_dialects={'bitbucketserver': {}},
     )
 
-When this is setup you should add a webhook pointing to ``/change_hook/bitbucketserver`` relative to the root of the web status.
+When this is set up, you should add a webhook pointing to ``/change_hook/bitbucketserver`` relative to the root of the web status.
 
 According to the type of the event, the change category is set to ``push``, ``pull-created``, ``pull-rejected``, ``pull-updated``, ``pull-fulfilled`` or ``ref-deleted``.
 
@@ -279,9 +288,12 @@ The Bitbucket Server hook may have the following optional parameters:
 ``codebase`` (default `None`)
     The codebase value to include with changes or a callable object that will be passed the payload in order to get it.
 
+``bitbucket_property_whitelist`` (default `[]`)
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``bitbucket``. For example ``bitbucket.id`` represents the pull request ID. Available entries can be looked up in the BitBucket API Documentation or by examining the data returned for a pull request by the API.
+
 .. Warning::
     The incoming HTTP requests for this hook are not authenticated by default.
-    Anyone who can access the web server can "fake" a request from Bitbucket Server, potentially causing the buildmaster to run arbitrary code
+    Anyone who can access the web server can "fake" a request from Bitbucket Server, potentially causing the buildmaster to run arbitrary code.
 
 .. Note::
     This hook requires the `bitbucket-webhooks` plugin (see https://marketplace.atlassian.com/plugins/nl.topicus.bitbucket.bitbucket-webhooks/server/overview).
@@ -355,7 +367,7 @@ The GitLab hook has the following parameters:
 ``secret`` (default `None`)
     Secret token to use to validate payloads.
 
-When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
+When this is set up, you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
 For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitLab to ``http://builds.example.com/change_hook/gitlab``.
 The project and/or codebase can also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
 These parameters will be passed along to the scheduler.
@@ -397,8 +409,8 @@ The Gitorious hook is as simple as GitHub one and it also takes no options.
         change_hook_dialects={'gitorious': True},
     )
 
-When this is setup you should add a `POST` service pointing to ``/change_hook/gitorious`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point Gitorious to ``http://builds.example.com/change_hook/gitorious``.
+When this is set up, you should add a `POST` service pointing to ``/change_hook/gitorious`` relative to the root of the web status.
+For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point Gitorious to ``http://builds.example.com/change_hook/gitorious``.
 
 .. warning::
 
@@ -419,8 +431,8 @@ Custom Hooks
 ++++++++++++
 
 Custom hooks are supported via the :ref:`Plugins` mechanism.
-You can subclass any of the available hook handler class available in :py:mod:`buildbot.www.hooks` and register it in the plugin system, via a custom python module.
-For convenience, you ca also use the generic option ``custom_class`` e.g:
+You can subclass any of the available hook handler classes available in :py:mod:`buildbot.www.hooks` and register it in the plugin system via a custom python module.
+For convenience, you can also use the generic option ``custom_class``, e.g.:
 
 .. code-block:: python
 

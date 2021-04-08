@@ -28,7 +28,17 @@ from buildbot.www import change_hook
 
 class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
 
-    class Subclass(base.PollingChangeSource):
+    # New sources should derive from ReconfigurablePollingChangeSource,
+    # but older sources will be using PollingChangeSource.
+    # Both must work.
+    class Subclass(base.ReconfigurablePollingChangeSource):
+        pollInterval = None
+        called = False
+
+        def poll(self):
+            self.called = True
+
+    class OldstyleSubclass(base.PollingChangeSource):
         pollInterval = None
         called = False
 
@@ -39,7 +49,8 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
 
     @defer.inlineCallbacks
-    def setUpRequest(self, args, options=True, activate=True):
+    def setUpRequest(self, args, options=True, activate=True,
+                     poller_cls=Subclass):
         self.request = FakeRequest(args=args)
         self.request.uri = b"/change_hook/poller"
         self.request.method = b"GET"
@@ -52,10 +63,10 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
             dialects={'poller': options}, master=master)
         master.change_svc = ChangeManager()
         yield master.change_svc.setServiceParent(master)
-        self.changesrc = self.Subclass(21, name=b'example')
+        self.changesrc = poller_cls(21, name=b'example')
         yield self.changesrc.setServiceParent(master.change_svc)
 
-        self.otherpoller = self.Subclass(22, name=b"otherpoller")
+        self.otherpoller = poller_cls(22, name=b"otherpoller")
         yield self.otherpoller.setServiceParent(master.change_svc)
 
         anotherchangesrc = base.ChangeSource(name=b'notapoller')
@@ -119,6 +130,14 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_allowlist_all(self):
         yield self.setUpRequest({}, options={b"allowed": [b"example"]})
+        self.assertEqual(self.request.written, b"no change found")
+        self.assertEqual(self.changesrc.called, True)
+        self.assertEqual(self.otherpoller.called, False)
+
+    @defer.inlineCallbacks
+    def test_trigger_old_poller(self):
+        yield self.setUpRequest({b"poller": [b"example"]},
+                                poller_cls=self.OldstyleSubclass)
         self.assertEqual(self.request.written, b"no change found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, False)

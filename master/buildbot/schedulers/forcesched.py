@@ -300,7 +300,7 @@ class InheritBuildParameter(ChoiceStringParameter):
     compatible_builds = None
 
     def getChoices(self, master, scheduler, buildername):
-        return self.compatible_builds(master.status, buildername)
+        return self.compatible_builds(master, buildername)
 
     def getFromKwargs(self, kwargs):
         raise ValidationError(
@@ -311,21 +311,27 @@ class InheritBuildParameter(ChoiceStringParameter):
         split_arg = arg.split(" ")[0].split("/")
         if len(split_arg) != 2:
             raise ValidationError("bad build: {}".format(arg))
-        builder, num = split_arg
-        builder_status = master.status.getBuilder(builder)
-        if not builder_status:
-            raise ValidationError("unknown builder: {} in {}".format(builder, arg))
-        b = builder_status.getBuild(int(num))
-        if not b:
-            raise ValidationError("unknown build: {} in {}".format(num, arg))
+        builder_name, build_num = split_arg
+
+        builder_dict = master.data.get(('builders', builder_name))
+        if builder_dict is None:
+            raise ValidationError("unknown builder: {} in {}".format(builder_name, arg))
+
+        build_dict = master.data.get(('builders', builder_name, 'builds', build_num),
+                                     fields=['properties'])
+        if build_dict is None:
+            raise ValidationError("unknown build: {} in {}".format(builder_name, arg))
+
         props = {self.name: (arg.split(" ")[0])}
-        for name, value, source in b.getProperties().asList():
+        for name, (value, source) in build_dict['properties']:
             if source == "Force Build Form":
                 if name == "owner":
                     name = "orig_owner"
                 props[name] = value
         properties.update(props)
-        changes.extend(b.changes)
+        # FIXME: this does not do what we expect, but updateFromKwargs is not used either.
+        # This needs revisiting when the build parameters are fixed:
+        # changes.extend(b.changes)
 
 
 class WorkerChoiceParameter(ChoiceStringParameter):
@@ -353,14 +359,16 @@ class WorkerChoiceParameter(ChoiceStringParameter):
             return
         super().updateFromKwargs(kwargs=kwargs, **unused)
 
+    @defer.inlineCallbacks
     def getChoices(self, master, scheduler, buildername):
         if buildername is None:
             # this is the "Force All Builds" page
-            workernames = master.status.getWorkerNames()
+            workers = yield self.master.data.get(('workers',))
         else:
-            builderStatus = master.status.getBuilder(buildername)
-            workernames = [worker.getName()
-                           for worker in builderStatus.getWorkers()]
+            builder = yield self.master.data.get(('builders', buildername))
+            workers = yield self.master.data.get(('builders', builder['builderid'], 'workers'))
+
+        workernames = [worker['name'] for worker in workers]
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames

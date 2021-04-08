@@ -16,6 +16,8 @@
 Unit tests for the plugin framework
 """
 
+import warnings
+
 import mock
 
 from twisted.trial import unittest
@@ -24,6 +26,7 @@ from zope.interface import implementer
 import buildbot.plugins.db
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
+from buildbot.test.util.warnings import assertProducesWarning
 
 # buildbot.plugins.db needs to be imported for patching, however just 'db' is
 # much shorter for using in tests
@@ -36,13 +39,14 @@ class FakeEntry:
     An entry suitable for unit tests
     """
 
-    def __init__(self, name, project_name, version, fail_require, value):
+    def __init__(self, name, project_name, version, fail_require, value, warnings=[]):
         self._name = name
         self._dist = mock.Mock(spec_set=['project_name', 'version'])
         self._dist.project_name = project_name
         self._dist.version = version
         self._fail_require = fail_require
         self._value = value
+        self._warnings = warnings
 
     @property
     def name(self):
@@ -65,6 +69,8 @@ class FakeEntry:
         """
         handle loading
         """
+        for w in self._warnings:
+            warnings.warn(w, DeprecationWarning)
         return self._value
 
 
@@ -107,6 +113,12 @@ _FAKE_ENTRIES = {
                   ClassWithInterface),
         FakeEntry('deep.path', 'non-existent', 'irrelevant', False,
                   ClassWithInterface)
+    ],
+    'buildbot.interface_warnings': [
+        FakeEntry('good', 'non-existent', 'irrelevant', False,
+                  ClassWithInterface, warnings=['test warning']),
+        FakeEntry('deep.path', 'non-existent', 'irrelevant', False,
+                  ClassWithInterface, warnings=['test warning'])
     ],
     'buildbot.interface_failed': [
         FakeEntry('good', 'non-existent', 'irrelevant', True,
@@ -206,6 +218,22 @@ class TestBuildbotPlugins(unittest.TestCase):
         greeter = result_get('yes')
         self.assertEqual('yes', greeter.hello())
         self.assertEqual('no', greeter.hello('no'))
+
+    def test_interface_warnings(self):
+        # we should not get no warnings when not trying to access the plugin
+        plugins = db.get_plugins('interface_warnings', interface=ITestInterface)
+        self.assertTrue('good' in plugins.names)
+        self.assertTrue('deep.path' in plugins.names)
+
+        # we should get warning when trying to access the plugin
+        with assertProducesWarning(DeprecationWarning, "test warning"):
+            _ = plugins.get('good')
+        with assertProducesWarning(DeprecationWarning, "test warning"):
+            _ = plugins.good
+        with assertProducesWarning(DeprecationWarning, "test warning"):
+            _ = plugins.get('deep.path')
+        with assertProducesWarning(DeprecationWarning, "test warning"):
+            _ = plugins.deep.path
 
     def test_interface_provided_deps_failed(self):
         plugins = db.get_plugins('interface_failed', interface=ITestInterface,

@@ -216,6 +216,7 @@ class FakeUpdates(service.AsyncService):
         self.builderNames = builderNames
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, tags):
         yield self.master.db.builders.updateBuilderInfo(builderid, description, tags)
 

@@ -336,6 +336,16 @@ BuildStep
     Build steps have statistics, a simple key/value store of data which can later be aggregated over all steps in a build.
     Note that statistics are not preserved after a build is complete.
 
+    .. py:method:: setBuildData(self, name, value, source)
+
+        :param unicode name: the name of the data
+        :param bytestr value: the value of the data as ``bytes``.
+        :parma unicode source: the source of the data
+        :returns: Deferred
+
+    Builds can have transient data attached to them which allows steps to communicate to reporters and among themselves.
+    The data is a byte string, its interpretation depends on the particular step or reporter.
+
     .. py:method:: hasStatistic(stat)
 
         :param string stat: name of the statistic
@@ -505,88 +515,6 @@ BuildStep
         Add a link to the given ``url``, with the given ``name`` to displays of this step.
         This allows a step to provide links to data that is not available in the log files.
 
-LoggingBuildStep
-----------------
-
-.. py:class:: LoggingBuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
-
-    The remaining arguments are passed to the :class:`BuildStep` constructor.
-
-    .. warning::
-
-        Subclasses of this class are always old-style steps.
-        As such, this class will be removed after Buildbot-0.9.0.
-        Instead, subclass :class:`~buildbot.process.buildstep.BuildStep` and mix in :class:`~buildbot.process.buildstep.ShellMixin` to get similar behavior.
-
-    This subclass of :class:`BuildStep` is designed to help its subclasses run remote commands that produce standard I/O logfiles.
-    It:
-
-    * tracks progress using the length of the stdout logfile
-    * provides hooks for summarizing and evaluating the command's result
-    * supports lazy logfiles
-    * handles the mechanics of starting, interrupting, and finishing remote commands
-    * detects lost workers and finishes with a status of
-      :data:`~buildbot.process.results.RETRY`
-
-    .. py:attribute:: logfiles
-
-        The logfiles to track, as described for :bb:step:`ShellCommand`.
-        The contents of the class-level ``logfiles`` attribute are combined with those passed to the constructor, so subclasses may add log files with a class attribute::
-
-            class MyStep(LoggingBuildStep):
-                logfiles = dict(debug='debug.log')
-
-        Note that lazy logfiles cannot be specified using this method; they must be provided as constructor arguments.
-
-    .. py:method:: setupLogsRunCommandAndProcessResults(cmd, stdioLog=None, closeLogWhenFinished=True, errorMessages=None, logfiles=None, lazylogfiles=False):
-
-        :param command: the :class:`~buildbot.process.remotecommand.RemoteCommand`
-            instance to start
-        :param stdioLog: an optional :class:`~buildbot.process.log.Log` object where the
-            stdout of the command will be stored.
-        :param closeLogWhenFinished: a boolean
-        :param logfiles: optional dictionary see :bb:step:`ShellCommand`
-        :param lazylogfiles: optional boolean see :bb:step:`ShellCommand`
-
-        :returns: step result from :mod:`buildbot.process.results`
-
-        .. note::
-
-           This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged.
-           It will be removed, and its use is deprecated.
-
-         Handle all of the mechanics of running the given command.
-         This sets up all required logfiles, and calls the utility hooks described below.
-
-         Subclasses should use that method if they want to launch multiple commands in a single step.
-         One could use that method, like for example ::
-
-            @defer.inlineCallbacks
-            def run(self):
-                cmd = RemoteCommand(...)
-                res = yield self.setupLogRunCommandAndProcessResults(cmd)
-                if res == results.SUCCESS:
-                     cmd = RemoteCommand(...)
-                     res = yield self.setupLogRunCommandAndProcessResults(cmd)
-                return res
-
-    To refine the status output, override one or more of the following methods.
-    The :class:`LoggingBuildStep` implementations are stubs, so there is no need to call the parent method.
-
-    .. py:method:: commandComplete(command)
-
-        :param command: the just-completed remote command
-
-        This is a general-purpose hook method for subclasses.
-        It will be called after the remote command has finished, but before any of the other hook functions are called.
-
-    .. py:method:: evaluateCommand(command)
-
-        :param command: the just-completed remote command
-        :returns: step result from :mod:`buildbot.process.results`
-
-        This hook should decide what result the step should have.
-
 CommandMixin
 ------------
 
@@ -716,4 +644,3 @@ Exceptions
 
     This exception indicates that the buildstep has failed.
     It is useful as a way to skip all subsequent processing when a step goes wrong.
-    It is handled by :meth:`BuildStep.failed`.

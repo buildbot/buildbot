@@ -35,7 +35,6 @@ class MockStateObserver(logobserver.LogLineObserver):
                 self.step.descriptionSuffix = ["[{}]".format(m.group(1))]
             else:
                 self.step.descriptionSuffix = None
-            self.step.step_status.setText(self.step.describe(False))
 
 
 class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):

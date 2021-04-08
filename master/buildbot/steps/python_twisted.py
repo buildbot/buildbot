@@ -432,7 +432,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                     stream, line = yield
 
 
-class RemovePYCs(shell.ShellCommandNewStyle):
+class RemovePYCs(shell.ShellCommand):
     name = "remove_pyc"
     command = ['find', '.', '-name', "'*.pyc'", '-exec', 'rm', '{}', ';']
     description = "removing .pyc files"

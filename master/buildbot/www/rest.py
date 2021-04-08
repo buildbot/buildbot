@@ -231,7 +231,10 @@ class V2RootResource(resource.Resource):
             if 'anonymous' in userinfos and userinfos['anonymous']:
                 owner = "anonymous"
             else:
-                owner = userinfos['email']
+                for field in ('email', 'username', 'full_name'):
+                    owner = userinfos.get(field, None)
+                    if owner:
+                        break
             params['owner'] = owner
 
             result = yield ep.control(method, params, kwargs)

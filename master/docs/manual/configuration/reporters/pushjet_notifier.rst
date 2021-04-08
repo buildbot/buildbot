@@ -26,17 +26,3 @@ The following parameters are accepted by this class:
 
 ``base_url``
     Base URL for custom Pushjet instances. Defaults to https://api.pushjet.io.
-
-Additionally, the following deprecated parameters are supported.
-They work in the same way as in the ``MailNotifier``, see :bb:reporter:`MailNotifier` for their documentation.
-
- * ``subject``
- * ``mode``
- * ``builders``
- * ``tags``
- * ``schedulers``
- * ``branches``
- * ``buildSetSummary``
- * ``messageFormatter``
- * ``watchedWorkers`` (differently from ``MailNotifier``, the default is ``None``)
- * ``messageFormatterMissingWorker``

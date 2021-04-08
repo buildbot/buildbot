@@ -23,6 +23,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
@@ -233,12 +234,12 @@ class P4(Source):
         if self.debug:
             log.msg("P4:_dovccmd():workdir->{}".format(self.workdir))
 
-        cmd = buildstep.RemoteShellCommand(self.workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout,
-                                           initialStdin=initialStdin,)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin,)
         cmd.useLog(self.stdio_log, False)
         if self.debug:
             log.msg("Starting p4 command : p4 {}".format(" ".join(command)))
@@ -351,11 +352,11 @@ class P4(Source):
     def parseGotRevision(self):
         command = self._buildVCCommand(['changes', '-m1', '#have'])
 
-        cmd = buildstep.RemoteShellCommand(self.workdir, command,
-                                           env=self.env,
-                                           timeout=self.timeout,
-                                           logEnviron=self.logEnviron,
-                                           collectStdout=True)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, command,
+                                               env=self.env,
+                                               timeout=self.timeout,
+                                               logEnviron=self.logEnviron,
+                                               collectStdout=True)
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -389,9 +390,9 @@ class P4(Source):
 
     @defer.inlineCallbacks
     def checkP4(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, [self.p4bin, '-V'],
-                                           env=self.env,
-                                           logEnviron=self.logEnviron)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, [self.p4bin, '-V'],
+                                               env=self.env,
+                                               logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         return cmd.rc == 0

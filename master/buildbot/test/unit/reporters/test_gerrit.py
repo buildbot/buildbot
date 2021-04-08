@@ -142,6 +142,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -214,8 +215,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
+        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
+                                                   self.reporter_test_revision,
                                                    result)
 
     @defer.inlineCallbacks
@@ -228,8 +229,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
+        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
+                                                   self.reporter_test_revision,
                                                    result)
 
     @defer.inlineCallbacks
@@ -243,8 +244,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore),
                                   (GERRIT_LABEL_REVIEWED, 0))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
+        gsp.sendCodeReview.assert_called_once_with(self.reporter_test_project,
+                                                   self.reporter_test_revision,
                                                    result)
 
     @defer.inlineCallbacks
@@ -256,14 +257,14 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         without_identity = yield self.setupGerritStatusPush(**kwargs)
 
         expected1 = [
-            'ssh', 'buildbot@example.com', '-p', '29418', 'gerrit', 'foo']
+            'ssh', '-o', 'BatchMode=yes', 'buildbot@example.com', '-p', '29418', 'gerrit', 'foo']
         self.assertEqual(expected1, without_identity._gerritCmd('foo'))
         yield without_identity.disownServiceParent()
         with_identity = yield self.setupGerritStatusPush(
             identity_file='/path/to/id_rsa', **kwargs)
         expected2 = [
-            'ssh', '-i', '/path/to/id_rsa', 'buildbot@example.com', '-p', '29418',
-            'gerrit', 'foo',
+            'ssh', '-o', 'BatchMode=yes', '-i', '/path/to/id_rsa', 'buildbot@example.com',
+            '-p', '29418', 'gerrit', 'foo',
         ]
         self.assertEqual(expected2, with_identity._gerritCmd('foo'))
 
@@ -361,12 +362,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
-        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
                                  (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
-                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
+                 call(self.reporter_test_project, self.reporter_test_revision, result)]
         gsp.sendCodeReview.assert_has_calls(calls)
 
     # same goes for check_single_build and check_single_build_legacy
@@ -377,12 +378,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                                startCB=sampleStartCBDeferred)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
-        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
                                  (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
-                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
+                 call(self.reporter_test_project, self.reporter_test_revision, result)]
         gsp.sendCodeReview.assert_has_calls(calls)
 
     @defer.inlineCallbacks
@@ -392,13 +393,13 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
 
         msg = yield self.run_fake_single_build(gsp, buildResult, expWarning=True)
 
-        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+        start = makeReviewResult(str({'name': self.reporter_test_builder_name}),
                                  (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore),
                                   (GERRIT_LABEL_REVIEWED, 0))
-        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
-                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        calls = [call(self.reporter_test_project, self.reporter_test_revision, start),
+                 call(self.reporter_test_project, self.reporter_test_revision, result)]
         gsp.sendCodeReview.assert_has_calls(calls)
 
     def test_buildComplete_success_sends_review(self):
@@ -454,15 +455,18 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
         yield gsp.sendCodeReview("project", "revision",
                                 {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
-            'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'], env=None)
+            'ssh',
+            ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'version'],
+            env=None)
         gsp.processVersion(parse_version("2.6"), lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview("project", "revision",
                                 {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
-            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
-             '--project project', "--message 'bla'", '--label Verified=1', 'revision'], env=None)
+            ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
+             '--project project', "--message 'bla'", '--label Verified=1', 'revision'],
+            env=None)
 
         # <=2.5 uses other syntax
         gsp.processVersion(parse_version("2.4"), lambda: None)
@@ -471,8 +475,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                  {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
-            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
-             "--message 'bla'", '--verified 1', 'revision'], env=None)
+            ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
+            '--project project', "--message 'bla'", '--verified 1', 'revision'],
+            env=None)
 
         # now test the notify argument, even though _gerrit_notify
         # is private, work around that
@@ -483,7 +488,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                  {'message': 'bla', 'labels': {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
-            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
+            ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
              '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1',
              'revision'],
             env=None)
@@ -495,8 +500,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                  {'message': 'bla', 'labels': {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
-            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
-            '--notify OWNER', "--message 'bla'", '--verified 1', 'revision'],
+            ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
+            '--project project', '--notify OWNER', "--message 'bla'", '--verified 1', 'revision'],
             env=None)
 
         gsp.processVersion(parse_version("2.13"), lambda: None)
@@ -505,14 +510,14 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
                                  {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
-            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
+            ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'review',
              '--project project', '--tag autogenerated:buildbot', '--notify OWNER',
              "--message 'bla'", '--label Verified=1', 'revision'], env=None)
 
     @defer.inlineCallbacks
     def test_callWithVersion_bytes_output(self):
         gsp = yield self.setupGerritStatusPushSimple()
-        exp_argv = ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version']
+        exp_argv = ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'version']
 
         def spawnProcess(pp, cmd, argv, env):
             self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])

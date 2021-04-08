@@ -25,11 +25,11 @@ from dateutil.parser import parse as dateparse
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.changes.github import PullRequestMixin
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
+from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-GitHub-Event'
@@ -41,6 +41,8 @@ DEFAULT_GITHUB_API_URL = 'https://api.github.com'
 
 class GitHubEventHandler(PullRequestMixin):
 
+    property_basename = "github"
+
     def __init__(self, secret, strict,
                  codebase=None,
                  github_property_whitelist=None,
@@ -51,17 +53,17 @@ class GitHubEventHandler(PullRequestMixin):
                  token=None,
                  debug=False,
                  verify=False):
+        if github_property_whitelist is None:
+            github_property_whitelist = []
         self._secret = secret
         self._strict = strict
         self._token = token
         self._codebase = codebase
+        self.external_property_whitelist = github_property_whitelist
         self.pullrequest_ref = pullrequest_ref
-        self.github_property_whitelist = github_property_whitelist
         self.skips = skips
         self.github_api_endpoint = github_api_endpoint
         self.master = master
-        if github_property_whitelist is None:
-            self.github_property_whitelist = []
         if skips is None:
             self.skips = DEFAULT_SKIPS_PATTERN
         if github_api_endpoint is None:
@@ -177,6 +179,7 @@ class GitHubEventHandler(PullRequestMixin):
         comments = payload['pull_request']['body']
         repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
+        revlink = payload['pull_request']['_links']['html']['href']
 
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
@@ -194,9 +197,12 @@ class GitHubEventHandler(PullRequestMixin):
 
         files = yield self._get_pr_files(repo_full_name, number)
 
-        properties = self.extractProperties(payload['pull_request'])
-        properties.update({'event': event})
-        properties.update({'basename': basename})
+        properties = {
+            'pullrequesturl': revlink,
+            'event': event,
+            'basename': basename,
+            **self.extractProperties(payload['pull_request']),
+        }
         change = {
             'revision': payload['pull_request']['head']['sha'],
             'when_timestamp': dateparse(payload['pull_request']['created_at']),
@@ -230,13 +236,12 @@ class GitHubEventHandler(PullRequestMixin):
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         '''
-        if not self._token:
-            return 'No message field'
 
         headers = {
-            'Authorization': 'token ' + self._token,
             'User-Agent': 'Buildbot',
         }
+        if self._token:
+            headers['Authorization'] = 'token ' + self._token
 
         url = '/repos/{}/commits/{}'.format(repo, sha)
         http = yield httpclientservice.HTTPClientService.getService(
@@ -258,13 +263,9 @@ class GitHubEventHandler(PullRequestMixin):
             e.g. ``buildbot/buildbot``
         :param number: the pull request number.
         """
-        if not self._token:
-            return []
-
-        headers = {
-            'Authorization': 'token ' + self._token,
-            'User-Agent': 'Buildbot',
-        }
+        headers = {"User-Agent": "Buildbot"}
+        if self._token:
+            headers["Authorization"] = "token " + self._token
 
         url = "/repos/{}/pulls/{}/files".format(repo, number)
         http = yield httpclientservice.HTTPClientService.getService(

@@ -14,14 +14,12 @@
 # Copyright Buildbot Team Members
 
 
-import os
-
 import jinja2
 
 from twisted.internet import defer
 
-from buildbot import config
 from buildbot import util
+from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -29,7 +27,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
-from buildbot.warnings import warn_deprecated
 
 
 def get_detected_status_text(mode, results, previous_results):
@@ -112,7 +109,7 @@ def get_projects_text(source_stamps, master):
     return ', '.join(list(projects))
 
 
-def create_context_for_build(mode, buildername, build, master, blamelist):
+def create_context_for_build(mode, build, master, blamelist):
     buildset = build['buildset']
     ss_list = buildset['sourcestamps']
     results = build['results']
@@ -125,7 +122,7 @@ def create_context_for_build(mode, buildername, build, master, blamelist):
     return {
         'results': build['results'],
         'mode': mode,
-        'buildername': buildername,
+        'buildername': build['builder']['name'],
         'workername': build['properties'].get('workername', ["<unknown>"])[0],
         'buildset': buildset,
         'build': build,
@@ -167,13 +164,40 @@ class MessageFormatterBase(util.ComparableMixin):
     def render_message_dict(self, master, context):
         """Generate a buildbot reporter message and return a dictionary
            containing the message body, type and subject."""
+
+        ''' This is an informal description of what message dictionaries are expected to be
+            produced. It is an internal API and expected to change even within bugfix releases, if
+            needed.
+
+            The message dictionary contains the 'body', 'type' and 'subject' keys:
+
+              - 'subject' is a string that defines a subject of the message. It's not necessarily
+                used on all reporters. It may be None.
+
+              - 'type' must be 'plain', 'html' or 'json'.
+
+              - 'body' is the content of the message. It may be None. The type of the data depends
+                on the value of the 'type' parameter:
+
+                - 'plain': Must be a string
+
+                - 'html': Must be a string
+
+                - 'json': Must be a non-encoded jsonnable value. The root element must be either
+                  of dictionary, list or string. This must not change during all invocations of
+                  a particular instance of the formatter.
+
+            In case of a report being created for multiple builds (e.g. in the case of a buildset),
+            the values returned by message formatter are concatenated. If this is not possible
+            (e.g. if the body is a dictionary), any subsequent messages are ignored.
+        '''
         yield self.buildAdditionalContext(master, context)
         context.update(self.context)
 
         return {
-            'body': self.render_message_body(context),
+            'body': (yield self.render_message_body(context)),
             'type': self.template_type,
-            'subject': self.render_message_subject(context)
+            'subject': (yield self.render_message_subject(context))
         }
 
     def render_message_body(self, context):
@@ -182,9 +206,13 @@ class MessageFormatterBase(util.ComparableMixin):
     def render_message_subject(self, context):
         return None
 
+    def format_message_for_build(self, master, build, **kwargs):
+        # Known kwargs keys: mode, users
+        raise NotImplementedError
+
 
 class MessageFormatterEmpty(MessageFormatterBase):
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+    def format_message_for_build(self, master, build, **kwargs):
         return {
             'body': None,
             'type': 'plain',
@@ -192,63 +220,93 @@ class MessageFormatterEmpty(MessageFormatterBase):
         }
 
 
-class DeprecatedMessageFormatterBuildJson(MessageFormatterBase):
+class MessageFormatterFunction(MessageFormatterBase):
 
-    template_type = 'json'
-
-    def __init__(self, format_fn, **kwargs):
+    def __init__(self, function, template_type, **kwargs):
         super().__init__(**kwargs)
-        self.format_fn = format_fn
+        self.template_type = template_type
+        self._function = function
 
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
+    def format_message_for_build(self, master, build, **kwargs):
         msgdict = yield self.render_message_dict(master, {'build': build})
         return msgdict
 
     def render_message_body(self, context):
-        return self.format_fn(context['build'])
+        return self._function(context)
 
     def render_message_subject(self, context):
         return None
 
 
+class MessageFormatterRenderable(MessageFormatterBase):
+
+    template_type = 'plain'
+
+    def __init__(self, template, subject=None):
+        super().__init__()
+        self.template = template
+        self.subject = subject
+
+    @defer.inlineCallbacks
+    def format_message_for_build(self, master, build, **kwargs):
+        msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
+        return msgdict
+
+    @defer.inlineCallbacks
+    def render_message_body(self, context):
+        props = Properties.fromDict(context['build']['properties'])
+        props.master = context['master']
+
+        body = yield props.render(self.template)
+        return body
+
+    @defer.inlineCallbacks
+    def render_message_subject(self, context):
+        props = Properties.fromDict(context['build']['properties'])
+        props.master = context['master']
+
+        body = yield props.render(self.subject)
+        return body
+
+
+default_body_template = '''\
+The Buildbot has detected a {{ status_detected }} on builder {{ buildername }} while building {{ projects }}.
+Full details are available at:
+    {{ build_url }}
+
+Buildbot URL: {{ buildbot_url }}
+
+Worker for this Build: {{ workername }}
+
+Build Reason: {{ build['properties'].get('reason', ["<unknown>"])[0] }}
+Blamelist: {{ ", ".join(blamelist) }}
+
+{{ summary }}
+
+Sincerely,
+ -The Buildbot
+'''  # noqa pylint: disable=line-too-long
+
+
 class MessageFormatterBaseJinja(MessageFormatterBase):
-    template_filename = 'default_mail.txt'
-
     compare_attrs = ['body_template', 'subject_template', 'template_type']
+    subject_template = None
+    template_type = 'plain'
 
-    def __init__(self, template_dir=None,
-                 template_filename=None, template=None,
-                 subject_filename=None, subject=None,
-                 template_type=None, **kwargs):
-        self.body_template = self.getTemplate(template_filename, template_dir, template)
-        self.subject_template = None
-        if subject_filename or subject:
-            self.subject_template = self.getTemplate(subject_filename, template_dir, subject)
+    def __init__(self, template=None, subject=None, template_type=None, **kwargs):
+        if template is None:
+            template = default_body_template
+
+        self.body_template = jinja2.Template(template)
+
+        if subject is not None:
+            self.subject_template = jinja2.Template(subject)
 
         if template_type is not None:
             self.template_type = template_type
 
         super().__init__(**kwargs)
-
-    def getTemplate(self, filename, dirname, content):
-        if content and (filename or dirname):
-            config.error("Only one of template or template path can be given")
-
-        if content:
-            return jinja2.Template(content)
-
-        if dirname is None:
-            dirname = os.path.join(os.path.dirname(__file__), "templates")
-
-        loader = jinja2.FileSystemLoader(dirname)
-        env = jinja2.Environment(
-            loader=loader, undefined=jinja2.StrictUndefined)
-
-        if filename is None:
-            filename = self.template_filename
-
-        return env.get_template(filename)
 
     def buildAdditionalContext(self, master, ctx):
         pass
@@ -263,26 +321,34 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
 
 class MessageFormatter(MessageFormatterBaseJinja):
-    template_filename = 'default_mail.txt'
-
-    compare_attrs = ['wantProperties', 'wantSteps', 'wantLogs']
-
-    def __init__(self, template_name=None, **kwargs):
-
-        if template_name is not None:
-            warn_deprecated('0.9.1', "template_name is deprecated, use template_filename")
-            kwargs['template_filename'] = template_name
-        super().__init__(**kwargs)
-
     @defer.inlineCallbacks
-    def format_message_for_build(self, mode, buildername, build, master, blamelist):
-        ctx = create_context_for_build(mode, buildername, build, master, blamelist)
+    def format_message_for_build(self, master, build, users=None, mode=None):
+        ctx = create_context_for_build(mode, build, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 
 
+default_missing_template = '''\
+The Buildbot working for '{{buildbot_title}}' has noticed that the worker named {{worker.name}} went away.
+
+It last disconnected at {{worker.last_connection}}.
+
+{% if 'admin' in worker['workerinfo'] %}
+The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.
+{% endif %}
+
+Sincerely,
+ -The Buildbot
+'''  # noqa pylint: disable=line-too-long
+
+
 class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
     template_filename = 'missing_mail.txt'
+
+    def __init__(self, template=None, **kwargs):
+        if template is None:
+            template = default_missing_template
+        super().__init__(template=template, **kwargs)
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(self, master, worker):

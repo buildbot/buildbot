@@ -60,7 +60,6 @@ class WorkerMissingGenerator(util.ComparableMixin):
             'body': body,
             'subject': subject,
             'type': msg['type'],
-            'builder_name': None,
             'results': None,
             'builds': None,
             'users': worker['notify'],

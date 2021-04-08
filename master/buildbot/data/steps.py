@@ -91,6 +91,11 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         return results
 
 
+class UrlEntityType(types.Entity):
+    name = types.String()
+    url = types.String()
+
+
 class Step(base.ResourceType):
 
     name = "step"
@@ -113,10 +118,7 @@ class Step(base.ResourceType):
         results = types.NoneOk(types.Integer())
         state_string = types.String()
         urls = types.List(
-            of=types.Dict(
-                name=types.String(),
-                url=types.String()
-            ))
+            of=UrlEntityType("Url"))
         hidden = types.Boolean()
     entityType = EntityType(name)
 

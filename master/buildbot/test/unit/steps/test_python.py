@@ -270,7 +270,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
-    def test_regex_text_131(self):
+    def test_regex_text_1_3_1(self):
         # at least pylint 1.3.1 prints out space padded column offsets when
         # using text format
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
@@ -286,6 +286,56 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    @parameterized.expand([
+        ('no_results', True),
+        ('with_results', False)
+    ])
+    def test_regex_text_2_0_0(self, name, store_results):
+        # pylint 2.0.0 changed default format to include file path
+        self.setupStep(python.PyLint(command=['pylint'], store_results=store_results))
+
+        stdout = (
+            'test.py:9:4: W0311: Bad indentation. Found 6 spaces, expected 4 (bad-indentation)\n' +
+            'test.py:1:0: C0114: Missing module docstring (missing-module-docstring)\n'
+        )
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'])
+            + ExpectShell.log('stdio', stdout=stdout)
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           state_string='pylint convention=1 warning=1 (warnings)')
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        if store_results:
+            self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
+            self.expectTestResults([
+                (1000, 'test.py:9:4: W0311: Bad indentation. Found 6 spaces, expected 4 ' +
+                       '(bad-indentation)',
+                 None, 'test.py', 9, None),
+                (1000, 'test.py:1:0: C0114: Missing module docstring (missing-module-docstring)',
+                 None, 'test.py', 1, None),
+            ])
+        return self.runStep()
+
+    def test_regex_text_2_0_0_invalid_line(self):
+        self.setupStep(python.PyLint(command=['pylint'], store_results=False))
+
+        stdout = (
+            'test.py:abc:0: C0114: Missing module docstring (missing-module-docstring)\n'
+        )
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'])
+            + ExpectShell.log('stdio', stdout=stdout)
+            + python.PyLint.RC_CONVENTION)
+        self.expectOutcome(result=SUCCESS, state_string='pylint')
+        self.expectProperty('pylint-warning', 0)
+        self.expectProperty('pylint-convention', 0)
+        self.expectProperty('pylint-total', 0)
         return self.runStep()
 
     def test_regex_text_ids(self):
@@ -363,7 +413,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
-    def test_regex_parseable_131(self):
+    def test_regex_parseable_1_3_1(self):
         """ In pylint 1.3.1, output parseable is deprecated, but looks like
         that, this is also the new recommended format string:
             --msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}

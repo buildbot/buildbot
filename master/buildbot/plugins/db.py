@@ -16,6 +16,7 @@
 # pylint: disable=C0111
 
 import traceback
+import warnings
 from pkg_resources import iter_entry_points
 
 from zope.interface import Invalid
@@ -35,10 +36,14 @@ class _PluginEntry:
         self._entry = entry
         self._value = None
         self._loader = loader
+        self._load_warnings = []
 
     def load(self):
         if self._value is None:
-            self._value = self._loader(self._entry)
+            with warnings.catch_warnings(record=True) as all_warnings:
+                warnings.simplefilter("always")
+                self._value = self._loader(self._entry)
+                self._load_warnings = list(all_warnings)
 
     @property
     def group(self):
@@ -59,6 +64,8 @@ class _PluginEntry:
     @property
     def value(self):
         self.load()
+        for w in self._load_warnings:
+            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
         return self._value
 
 
@@ -263,6 +270,9 @@ class _Plugins:
         get an instance of the plugin with the given name
         """
         return self._tree.get(name)
+
+    def _get_entry(self, name):
+        return self._tree._get(name)
 
     def __getattr__(self, name):
         try:

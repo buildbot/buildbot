@@ -7,7 +7,27 @@
  */
 class Builders {
     constructor($scope, $log, dataService, resultsService, bbSettingsService, $stateParams,
-        $location, dataGrouperService, $rootScope, $filter) {
+        $location, dataGrouperService, $rootScope, $filter,
+        glBreadcrumbService, glTopbarContextualActionsService) {
+        const breadcrumb = [{
+                caption: "Builders",
+                sref: "builders"
+            }
+        ];
+        const setupGl = function () {
+            glBreadcrumbService.setBreadcrumb(breadcrumb);
+            glTopbarContextualActionsService.setContextualActions([]);
+        };
+        $scope.$on('$stateChangeSuccess', setupGl);
+        setupGl();
+
+        // Clear breadcrumb and contextual action buttons on destroy
+        const clearGl = function () {
+            glBreadcrumbService.setBreadcrumb([]);
+            glTopbarContextualActionsService.setContextualActions([]);
+        };
+        $scope.$on('$destroy', clearGl);
+
         // make resultsService utilities available in the template
         _.mixin($scope, resultsService);
         $scope.connected2class = function(worker) {
@@ -173,4 +193,4 @@ class Builders {
 }
 
 angular.module('app')
-.controller('buildersController', ['$scope', '$log', 'dataService', 'resultsService', 'bbSettingsService', '$stateParams', '$location', 'dataGrouperService', '$rootScope', '$filter', Builders]);
+.controller('buildersController', ['$scope', '$log', 'dataService', 'resultsService', 'bbSettingsService', '$stateParams', '$location', 'dataGrouperService', '$rootScope', '$filter', 'glBreadcrumbService', 'glTopbarContextualActionsService', Builders]);

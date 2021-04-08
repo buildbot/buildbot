@@ -163,7 +163,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         return func(properties, event)
 
     @defer.inlineCallbacks
-    def addChange(self, chdict):
+    def addChange(self, event_type, chdict):
         stampdict = {
             "branch": chdict["branch"],
             "revision": chdict["revision"],
@@ -177,8 +177,8 @@ class GerritChangeSourceBase(base.ChangeSource):
         stampid, found_existing = yield(
              self.master.db.sourcestamps.findOrCreateId(**stampdict))
 
-        if found_existing:
-            if self.debug or True:
+        if found_existing and event_type in ("patchset-created", "ref-updated"):
+            if self.debug:
                 eventstr = "{}/{} -- {}:{}".format(
                     self.gitBaseURL, chdict["project"], chdict["branch"],
                     chdict["revision"])
@@ -236,7 +236,7 @@ class GerritChangeSourceBase(base.ChangeSource):
                 patchset=event["patchSet"]["number"]
             )
 
-        yield self.addChange({
+        yield self.addChange(event['type'], {
             'author': _gerrit_user_to_author(event_change["owner"]),
             'project': util.bytes2unicode(event_change["project"]),
             'repository': "{}/{}".format(
@@ -257,7 +257,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         if "submitter" in event:
             author = _gerrit_user_to_author(event["submitter"], author)
 
-        return self.addChange(dict(
+        return self.addChange(event['type'], dict(
             author=author,
             project=ref["project"],
             repository="{}/{}".format(self.gitBaseURL, ref["project"]),
@@ -376,6 +376,7 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         cmd = [
             "ssh",
+            "-o", "BatchMode=yes",
             "{}@{}".format(self.username, self.gerritserver),
             "-p", str(self.gerritport)
         ]

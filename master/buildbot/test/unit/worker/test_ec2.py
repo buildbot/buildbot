@@ -20,7 +20,6 @@ from twisted.trial import unittest
 
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 try:
@@ -208,64 +207,6 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].id, instance_id)
         self.assertIsNone(instances[0].tags)
         self.assertEqual(instances[0].id, bs.properties.getProperty('instance'))
-
-    @mock_ec2
-    def test_start_instance_volumes_deprecated(self):
-        c, r = self.botoSetup()
-        block_device_map_arg = {
-            "/dev/xvdb": {
-                "volume_type": "io1",
-                "iops": 10,
-                "size": 20,
-            },
-            "/dev/xvdc": {
-                "volume_type": "gp2",
-                "size": 30,
-                "delete_on_termination": False
-            }
-        }
-        block_device_map_res = [
-                {
-                    'DeviceName': "/dev/xvdb",
-                    'Ebs': {
-                        "VolumeType": "io1",
-                        "Iops": 10,
-                        "VolumeSize": 20,
-                        "DeleteOnTermination": True,
-                        }
-                    },
-                {
-                    'DeviceName': "/dev/xvdc",
-                    'Ebs': {
-                        "VolumeType": "gp2",
-                        "VolumeSize": 30,
-                        "DeleteOnTermination": False,
-                        }
-                    },
-                ]
-
-        amis = list(r.images.all())
-        with assertProducesWarnings(
-                DeprecatedApiWarning,
-                messages_patterns=[
-                    r"Use of dict value to 'block_device_map' of EC2LatentWorker "
-                    r"constructor is deprecated. Please use a list matching the AWS API"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     keypair_name="latent_buildbot_worker",
-                                     security_name='latent_buildbot_worker',
-                                     ami=amis[0].id,
-                                     block_device_map=block_device_map_arg
-                                     )
-        # moto does not currently map volumes properly.  below ensures
-        # that my conversion code properly composes it, including
-        # delete_on_termination default.
-        self.assertEqual(sorted(block_device_map_res,
-                                key=lambda x: x['DeviceName']),
-                         sorted(bs.block_device_map,
-                                key=lambda x: x['DeviceName']))
 
     @mock_ec2
     def test_start_instance_volumes(self):

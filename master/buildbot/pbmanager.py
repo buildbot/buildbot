@@ -76,7 +76,6 @@ class PBManager(service.AsyncMultiService):
         disp.unregister(registration.username)
         registration.username = None
         if not disp.users:
-            disp = self.dispatchers[registration.portstr]
             del self.dispatchers[registration.portstr]
             yield disp.disownServiceParent()
 

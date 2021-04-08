@@ -22,10 +22,11 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
-from buildbot.util import flatten
 from buildbot.util import unicode2bytes
 
-srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
+# TODO: fossil comes from a plugin. We should have an API that plugins could use to
+# register allowed user types.
+srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr', 'fossil']
 salt_len = 8
 
 
@@ -95,60 +96,6 @@ def getUserContact(master, contact_types, uid):
     """
     d = master.db.users.getUser(uid)
     d.addCallback(_extractContact, contact_types, uid)
-    return d
-
-
-def _filter(contacts):
-    def notNone(c):
-        return c is not None
-    return filter(notNone, contacts)
-
-
-def getUsersContacts(master, contact_types, uids):
-    d = defer.gatherResults(
-        [getUserContact(master, contact_types, uid) for uid in uids])
-    d.addCallback(_filter)
-    return d
-
-
-def getChangeContacts(master, change, contact_types):
-    d = master.db.changes.getChangeUids(change.number)
-    d.addCallback(lambda uids: getUsersContacts(master, contact_types, uids))
-    return d
-
-
-def getSourceStampContacts(master, ss, contact_types):
-    dl = [getChangeContacts(master, change, contact_types)
-          for change in ss.changes]
-    if False and ss.patch_info:
-        d = master.db.users.getUserByUsername(ss.patch_into[0])
-        d.addCallback(_extractContact, contact_types, ss.patch_info[0])
-        d.addCallback(lambda contact: filter(None, [contact]))
-        dl.append(d)
-    d = defer.gatherResults(dl)
-    d.addCallback(flatten)
-    return d
-
-
-def getBuildContacts(master, build, contact_types):
-    dl = []
-    ss_list = build.getSourceStamps()
-    for ss in ss_list:
-        dl.append(getSourceStampContacts(master, ss, contact_types))
-    d = defer.gatherResults(dl)
-    d.addCallback(flatten)
-
-    @d.addCallback
-    def addOwners(recipients):
-        dl = []
-        for owner in build.getInterestedUsers():
-            d = master.db.users.getUserByUsername(owner)
-            d.addCallback(_extractContact, contact_types, owner)
-            dl.append(d)
-        d = defer.gatherResults(dl)
-        d.addCallback(_filter)
-        d.addCallback(lambda owners: recipients + owners)
-        return d
     return d
 
 

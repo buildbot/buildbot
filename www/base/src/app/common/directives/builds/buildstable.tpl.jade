@@ -15,10 +15,17 @@
           td(ng-show="builders") {{ builders.get(build.builderid).name }}
           td
             a.bb-buildid-link(ui-sref="build({builder:build.builderid, build:build.number})")
-              span.badge-status(ng-class="results2class(build, 'pulse')")
-                  span.badge-inactive
-                    | {{build.number}}
-                  span.badge-active {{results2text(build)}}
+              script(type="text/ng-template" id="buildsummarytooltip")
+                buildsummary(buildid="build.buildid" type="tooltip")
+              span.badge-status(uib-tooltip-template="'buildsummarytooltip'"
+                                tooltip-class="buildsummarytooltipstyle"
+                                tooltip-placement="auto left-bottom"
+                                tooltip-popup-delay="400"
+                                tooltip-popup-close-delay="400"
+                                ng-class="results2class(build, 'pulse')")
+                span.badge-inactive
+                  | {{build.number}}
+                span.badge-active {{results2text(build)}}
           td
             span(title="{{build.started_at | dateformat:'LLL'}}")
               | {{build.started_at | timeago }}

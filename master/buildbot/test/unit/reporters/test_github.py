@@ -13,12 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from mock import Mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -28,22 +25,22 @@ from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
-class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
+class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin,
                            ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = 'buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
+
+        self.setup_reporter_test()
+        # project must be in the form <owner>/<project>
+        self.reporter_test_project = 'buildbot/buildbot'
+
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -56,7 +53,6 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
             },
             debug=None, verify=None)
         self.sp = self.createService()
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def createService(self):
@@ -88,6 +84,8 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
+        build['complete'] = False
+        build['results'] = None
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
@@ -222,16 +220,16 @@ class TestGitHubStatusPush(TestReactorMixin, unittest.TestCase,
 
 class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
                               ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = 'buildbot'
-    TEST_REPO = 'https://github.com/buildbot1/buildbot1.git'
 
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
 
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
+        self.setup_reporter_test()
+        # project must be in the form <owner>/<project>
+        self.reporter_test_project = 'buildbot'
+        self.reporter_test_repo = 'https://github.com/buildbot1/buildbot1.git'
+
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -244,7 +242,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
             },
             debug=None, verify=None)
         self.sp = self.createService()
-        self.sp.sessionFactory = Mock(return_value=Mock())
         yield self.sp.setServiceParent(self.master)
 
     def createService(self):
@@ -255,7 +252,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_ssh(self):
-        self.TEST_REPO = 'git@github.com:buildbot2/buildbot2.git'
+        self.reporter_test_repo = 'git@github.com:buildbot2/buildbot2.git'
 
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
@@ -316,86 +313,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase,
         yield self.sp._got_event(('builds', 20, 'finished'), build)
 
 
-class GitHubStatusPushDeprecatedSend(GitHubStatusPush):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.send_called_count = 0
-
-    @defer.inlineCallbacks
-    def send(self, build):
-        self.send_called_count += 1
-        yield super().send(build)
-
-
-class TestGitHubStatusPushDeprecatedSend(TestReactorMixin, unittest.TestCase,
-                                         ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = 'buildbot/buildbot'
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        self.setUpTestReactor()
-        # ignore config error if txrequests is not installed
-        self.patch(config, '_errors', Mock())
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
-
-        yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            HOSTED_BASE_URL, headers={
-                'Authorization': 'token XXYYZZ',
-                'User-Agent': 'Buildbot'
-            },
-            debug=None, verify=None)
-        self.sp = self.createService()
-        self.sp.sessionFactory = Mock(return_value=Mock())
-        yield self.sp.setServiceParent(self.master)
-
-    def createService(self):
-        return GitHubStatusPushDeprecatedSend(Interpolate('XXYYZZ'))
-
-    def tearDown(self):
-        return self.master.stopService()
-
-    @defer.inlineCallbacks
-    def test_basic(self):
-        build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build started.', 'context': 'buildbot/Builder0'})
-        self._http.expect(
-            'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
-        self._http.expect(
-            'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'failure',
-                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
-
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'new'), build)
-        build['complete'] = True
-        build['results'] = SUCCESS
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        build['results'] = FAILURE
-        with assertProducesWarnings(DeprecatedApiWarning,
-                                    message_pattern='send\\(\\) in reporters has been deprecated'):
-            yield self.sp._got_event(('builds', 20, 'finished'), build)
-        self.assertEqual(self.sp.send_called_count, 3)
-
-
 class TestGitHubCommentPush(TestGitHubStatusPush):
 
     def createService(self):
@@ -428,6 +345,28 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build['results'] = FAILURE
+        yield self.sp._got_event(('builds', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
+    def test_basic_branch_head(self):
+        self.reporter_test_props['branch'] = 'refs/pull/13/head'
+        build = yield self.insert_build_new()
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/issues/13/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/issues/13/comments',
+            json={'body': 'Build done.'})
+
+        build['complete'] = False
+        yield self.sp._got_event(('builds', 20, 'new'), build)
+        build['complete'] = True
+        build['results'] = SUCCESS
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)

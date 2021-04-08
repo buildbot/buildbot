@@ -7,6 +7,13 @@ SetPropertyFromCommand
 
 .. py:class:: buildbot.steps.shell.SetPropertyFromCommand
 
+.. note::
+
+    This step is being migrated to :ref:`new-style<New-Style-Build-Steps>`.
+    A new-style equivalent is provided as ``SetPropertyFromCommand``.
+    This should be inherited by any custom steps until :ref:`Buildbot 3.0 is released<3.0_Upgrading>`.
+    Regular uses without inheritance are not affected.
+
 This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the output of the command into a property.
 It is usually used like this:
 
@@ -21,9 +28,9 @@ To avoid stripping, add ``strip=False``.
 
 The ``property`` argument can be specified as an :ref:`Interpolate` object, allowing the property name to be built from other property values.
 
-Passing ``includeStdout=False`` (default ``True``) stops capture from stdout.
+Passing ``includeStdout=False`` (defaults to ``True``) stops capture from stdout.
 
-Passing ``includeStderr=True`` (default ``False``) allows capture from stderr.
+Passing ``includeStderr=True`` (defaults to ``False``) allows capture from stderr.
 
 The more advanced usage allows you to specify a function to extract properties from the command output.
 Here you can use regular expressions, string interpolation, or whatever you would like.

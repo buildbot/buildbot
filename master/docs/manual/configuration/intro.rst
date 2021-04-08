@@ -1,7 +1,7 @@
 Configuring Buildbot
 ====================
 
-The Buildbot's behavior is defined by the *config file*, which normally lives in the :file:`master.cfg` file in the buildmaster's base directory (but this can be changed with an option to the :command:`buildbot create-master` command).
+Buildbot's behavior is defined by the *config file*, which normally lives in the :file:`master.cfg` file in the buildmaster's base directory (but this can be changed with an option to the :command:`buildbot create-master` command).
 This file completely specifies which :class:`Builder`\s are to be run, which workers they should use, how :class:`Change`\s should be tracked, and where the status information is to be sent.
 The buildmaster's :file:`buildbot.tac` file names the base directory; everything else comes from the config file.
 
@@ -16,13 +16,13 @@ Config File Format
 ------------------
 
 The config file is, fundamentally, just a piece of Python code which defines a dictionary named ``BuildmasterConfig``, with a number of keys that are treated specially.
-You don't need to know Python to do basic configuration, though, you can just copy the syntax of the sample file.
-If you *are* comfortable writing Python code, however, you can use all the power of a full programming language to achieve more complicated configurations.
+You don't need to know Python to do the basic configuration, though; you can just copy the sample file's syntax.
+If you *are* comfortable writing Python code, however, you can use all the power of a full programming language to build more complicated configurations.
 
 .. index: BuildMaster Config
 
 The ``BuildmasterConfig`` name is the only one which matters: all other names defined during the execution of the file are discarded.
-When parsing the config file, the Buildmaster generally compares the old configuration with the new one and performs the minimum set of actions necessary to bring the Buildbot up to date: :class:`Builder`\s which are not changed are left untouched, and :class:`Builder`\s which are modified get to keep their old event history.
+When parsing the config file, the Buildmaster generally compares the old configuration with the new one and performs the minimum set of actions necessary to bring Buildbot up to date: :class:`Builder`\s which are not changed are left untouched, and :class:`Builder`\s which are modified get to keep their old event history.
 
 The beginning of the :file:`master.cfg` file typically starts with something like:
 
@@ -43,10 +43,10 @@ For the configurations described in this section, a detailed knowledge of Python
 Python comments start with a hash character ``#``, tuples are defined with ``(parenthesis, pairs)``, and lists (arrays) are defined with ``[square, brackets]``.
 Tuples and lists are mostly interchangeable.
 Dictionaries (data structures which map *keys* to *values*) are defined with curly braces: ``{'key1': value1, 'key2': value2}``.
-Function calls (and object instantiation) can use named parameters, like ``steps.ShellCommand(command=["trial", "hello"])``.
+Function calls (and object instantiations) can use named parameters, like ``steps.ShellCommand(command=["trial", "hello"])``.
 
 The config file starts with a series of ``import`` statements, which make various kinds of :class:`Step`\s and :class:`Status` targets available for later use.
-The main ``BuildmasterConfig`` dictionary is created, then it is populated with a variety of keys, described section-by-section in subsequent chapters.
+The main ``BuildmasterConfig`` dictionary is created, and then it is populated with a variety of keys, described section-by-section in the subsequent chapters.
 
 .. _Predefined-Config-File-Symbols:
 
@@ -146,7 +146,7 @@ If you are on the system hosting the buildmaster, you can send a ``SIGHUP`` sign
     buildbot reconfig BASEDIR
 
 This command will show you all of the lines from :file:`twistd.log` that relate to the reconfiguration.
-If there are any problems during the config-file reload, they will be displayed in these lines.
+If there are any problems during the config-file reload, they will be displayed in the output.
 
 When reloading the config file, the buildmaster will endeavor to change as little as possible about the running system.
 For example, although old status targets may be shut down and new ones started up, any status targets that were not changed since the last time the config file was read will be left running and untouched.

@@ -36,7 +36,7 @@
             ul.list-group
                 li.list-group-item(ng-repeat="(author, email) in responsibles")
                     .change-avatar
-                        img(ng-src="avatar?email={{email}}")
+                        img(ng-src="avatar?email={{email | encodeURI}}")
                     a(ng-href="mailto:{{email}}")
                         | {{ author }}
           uib-tab(heading="Changes")

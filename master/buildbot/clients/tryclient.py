@@ -98,7 +98,7 @@ class SourceStampExtractor:
         if not self.repository:
             self.repository = self.treetop
         # TODO: figure out the branch and project too
-        ss = SourceStamp(self.branch, self.baserev, self.patch,
+        ss = SourceStamp(bytes2unicode(self.branch), self.baserev, self.patch,
                          repository=self.repository)
         return ss
 
@@ -635,85 +635,78 @@ class Try(pb.Referenceable):
         d.callback(True)
         return d
 
-    def deliverJob(self):
-        # returns a Deferred that fires when the job has been delivered
-        if self.connect == "ssh":
-            tryhost = self.getopt("host")
-            tryport = self.getopt("port")
-            tryuser = self.getopt("username")
-            trydir = self.getopt("jobdir")
-            buildbotbin = self.getopt("buildbotbin")
-            ssh_command = self.getopt("ssh")
-            if not ssh_command:
-                ssh_commands = which("ssh")
-                if not ssh_commands:
-                    raise RuntimeError("couldn't find ssh executable, make sure "
-                                       "it is available in the PATH")
+    def deliver_job_ssh(self):
+        tryhost = self.getopt("host")
+        tryport = self.getopt("port")
+        tryuser = self.getopt("username")
+        trydir = self.getopt("jobdir")
+        buildbotbin = self.getopt("buildbotbin")
+        ssh_command = self.getopt("ssh")
+        if not ssh_command:
+            ssh_commands = which("ssh")
+            if not ssh_commands:
+                raise RuntimeError("couldn't find ssh executable, make sure "
+                                   "it is available in the PATH")
 
-                argv = [ssh_commands[0]]
+            argv = [ssh_commands[0]]
+        else:
+            # Split the string on whitespace to allow passing options in
+            # ssh command too, but preserving whitespace inside quotes to
+            # allow using paths with spaces in them which is common under
+            # Windows. And because Windows uses backslashes in paths, we
+            # can't just use shlex.split there as it would interpret them
+            # specially, so do it by hand.
+            if runtime.platformType == 'win32':
+                # Note that regex here matches the arguments, not the
+                # separators, as it's simpler to do it like this. And then we
+                # just need to get all of them together using the slice and
+                # also remove the quotes from those that were quoted.
+                argv = [string.strip(a, '"') for a in
+                        re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
             else:
-                # Split the string on whitespace to allow passing options in
-                # ssh command too, but preserving whitespace inside quotes to
-                # allow using paths with spaces in them which is common under
-                # Windows. And because Windows uses backslashes in paths, we
-                # can't just use shlex.split there as it would interpret them
-                # specially, so do it by hand.
-                if runtime.platformType == 'win32':
-                    # Note that regex here matches the arguments, not the
-                    # separators, as it's simpler to do it like this. And then we
-                    # just need to get all of them together using the slice and
-                    # also remove the quotes from those that were quoted.
-                    argv = [string.strip(a, '"') for a in
-                            re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
-                else:
-                    # Do use standard tokenization logic under POSIX.
-                    argv = shlex.split(ssh_command)
+                # Do use standard tokenization logic under POSIX.
+                argv = shlex.split(ssh_command)
 
-            if tryuser:
-                argv += ["-l", tryuser]
+        if tryuser:
+            argv += ["-l", tryuser]
 
-            if tryport:
-                argv += ["-p", tryport]
+        if tryport:
+            argv += ["-p", tryport]
 
-            argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
-            pp = RemoteTryPP(self.jobfile)
-            reactor.spawnProcess(pp, argv[0], argv, os.environ)
-            d = pp.d
-            return d
-        if self.connect == "pb":
-            user = self.getopt("username")
-            passwd = self.getopt("passwd")
-            master = self.getopt("master")
-            tryhost, tryport = master.split(":")
-            tryport = int(tryport)
-            f = pb.PBClientFactory()
-            d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
-            reactor.connectTCP(tryhost, tryport, f)
-            d.addCallback(self._deliverJob_pb)
-            return d
-        raise RuntimeError("unknown connecttype '{}', "
-                           "should be 'ssh' or 'pb'".format(self.connect))
+        argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
+        pp = RemoteTryPP(self.jobfile)
+        reactor.spawnProcess(pp, argv[0], argv, os.environ)
+        d = pp.d
+        return d
 
-    def _deliverJob_pb(self, remote):
+    @defer.inlineCallbacks
+    def deliver_job_pb(self):
+        user = self.getopt("username")
+        passwd = self.getopt("passwd")
+        master = self.getopt("master")
+        tryhost, tryport = master.split(":")
+        tryport = int(tryport)
+        f = pb.PBClientFactory()
+        d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
+        reactor.connectTCP(tryhost, tryport, f)
+        remote = yield d
+
         ss = self.sourcestamp
         output("Delivering job; comment=", self.comment)
 
-        d = remote.callRemote("try",
-                              ss.branch,
-                              ss.revision,
-                              ss.patch,
-                              ss.repository,
-                              self.project,
-                              self.builderNames,
-                              self.who,
-                              self.comment,
-                              self.config.get('properties', {}))
-        d.addCallback(self._deliverJob_pb2)
-        return d
+        self.buildsetStatus = \
+            yield remote.callRemote("try", ss.branch, ss.revision, ss.patch, ss.repository,
+                                    self.project, self.builderNames, self.who, self.comment,
+                                    self.config.get('properties', {}))
 
-    def _deliverJob_pb2(self, status):
-        self.buildsetStatus = status
-        return status
+    def deliverJob(self):
+        # returns a Deferred that fires when the job has been delivered
+        if self.connect == "ssh":
+            return self.deliver_job_ssh()
+        if self.connect == "pb":
+            return self.deliver_job_pb()
+        raise RuntimeError("unknown connecttype '{}', "
+                           "should be 'ssh' or 'pb'".format(self.connect))
 
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
@@ -725,21 +718,21 @@ class Try(pb.Referenceable):
             output("waiting for builds with ssh is not supported")
         else:
             self.running = defer.Deferred()
-            assert self.buildsetStatus
-            self._getStatus_1()
+            if not self.buildsetStatus:
+                output("try scheduler on the master does not have the builder configured")
+                return None
+
+            self._getStatus_1()  # note that we don't wait for the returned Deferred
             if bool(self.config.get("dryrun")):
                 self.statusDone()
             return self.running
         return None
 
-    def _getStatus_1(self, res=None):
-        if res:
-            self.buildsetStatus = res
+    @defer.inlineCallbacks
+    def _getStatus_1(self):
         # gather the set of BuildRequests
-        d = self.buildsetStatus.callRemote("getBuildRequests")
-        d.addCallback(self._getStatus_2)
+        brs = yield self.buildsetStatus.callRemote("getBuildRequests")
 
-    def _getStatus_2(self, brs):
         self.builderNames = []
         self.buildRequests = {}
 
@@ -799,6 +792,7 @@ class Try(pb.Referenceable):
     def remote_buildETAUpdate(self, buildername, build, eta):
         self.ETA[buildername] = now() + eta
 
+    @defer.inlineCallbacks
     def _build_finished(self, bs, builderName):
         # we need to collect status from the newly-finished build. We don't
         # remove the build from self.outstanding until we've collected
@@ -806,24 +800,13 @@ class Try(pb.Referenceable):
         self.builds[builderName] = None
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
-        d = bs.callRemote("getResults")
-        d.addCallback(self._build_finished_2, bs, builderName)
-        return d
 
-    def _build_finished_2(self, results, bs, builderName):
-        self.results[builderName][0] = results
-        d = bs.callRemote("getText")
-        d.addCallback(self._build_finished_3, builderName)
-        return d
-
-    def _build_finished_3(self, text, builderName):
-        self.results[builderName][1] = text
+        self.results[builderName][0] = yield bs.callRemote("getResults")
+        self.results[builderName][1] = yield bs.callRemote("getText")
 
         self.outstanding.remove(builderName)
         if not self.outstanding:
-            # all done
-            return self.statusDone()
-        return None
+            self.statusDone()
 
     def printStatus(self):
         try:
@@ -869,6 +852,7 @@ class Try(pb.Referenceable):
             self.exitcode = 1
         self.running.callback(self.exitcode)
 
+    @defer.inlineCallbacks
     def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
         # get the names of the configured builders that can
@@ -882,52 +866,56 @@ class Try(pb.Referenceable):
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
             reactor.connectTCP(tryhost, tryport, f)
-            d.addCallback(self._getBuilderNames)
-            return d
+            remote = yield d
+            buildernames = yield remote.callRemote("getAvailableBuilderNames")
+
+            output("The following builders are available for the try scheduler: ")
+            for buildername in buildernames:
+                output(buildername)
+
+            yield remote.broker.transport.loseConnection()
+            return
         if self.connect == "ssh":
             output("Cannot get available builders over ssh.")
             sys.exit(1)
         raise RuntimeError(
             "unknown connecttype '{}', should be 'pb'".format(self.connect))
 
-    def _getBuilderNames(self, remote):
-        d = remote.callRemote("getAvailableBuilderNames")
-        d.addCallback(self._getBuilderNames2)
-        d.addCallback(lambda _: remote.broker.transport.loseConnection())
-        return d
-
-    def _getBuilderNames2(self, buildernames):
-        output("The following builders are available for the try scheduler: ")
-        for buildername in buildernames:
-            output(buildername)
-
     def announce(self, message):
         if not self.quiet:
             output(message)
 
-    def run(self, _inTests=False):
-        # we can't do spawnProcess until we're inside reactor.run(), so get
-        # funky
+    @defer.inlineCallbacks
+    def run_impl(self):
         output("using '{}' connect method".format(self.connect))
         self.exitcode = 0
-        d = fireEventually(None)
-        if bool(self.config.get("get-builder-names")):
-            d.addCallback(lambda res: self.getAvailableBuilderNames())
-        else:
-            d.addCallback(lambda res: self.createJob())
-            d.addCallback(lambda res: self.announce("job created"))
-            deliver = self.deliverJob
-            if bool(self.config.get("dryrun")):
-                deliver = self.fakeDeliverJob
-            d.addCallback(lambda res: deliver())
-            d.addCallback(lambda res: self.announce("job has been delivered"))
-            d.addCallback(lambda res: self.getStatus())
-        d.addErrback(self.trapSystemExit)
-        d.addErrback(log.err)
-        if not bool(self.config.get("dryrun")):
-            d.addCallback(self.cleanup)
-        if _inTests:
-            return d
+
+        # we can't do spawnProcess until we're inside reactor.run(), so force asynchronous execution
+        yield fireEventually(None)
+
+        try:
+            if bool(self.config.get("get-builder-names")):
+                yield self.getAvailableBuilderNames()
+            else:
+                yield self.createJob()
+                yield self.announce("job created")
+                if bool(self.config.get("dryrun")):
+                    yield self.fakeDeliverJob()
+                else:
+                    yield self.deliverJob()
+                yield self.announce("job has been delivered")
+                yield self.getStatus()
+
+            if not bool(self.config.get("dryrun")):
+                yield self.cleanup()
+        except SystemExit as e:
+            self.exitcode = e.code
+        except Exception as e:
+            log.err(e)
+            raise
+
+    def run(self):
+        d = self.run_impl()
         d.addCallback(lambda res: reactor.stop())
 
         reactor.run()

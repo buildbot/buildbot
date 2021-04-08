@@ -33,8 +33,10 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
-from buildbot.reporters.notifier import ENCODING
-from buildbot.reporters.notifier import NotifierBase
+from buildbot.reporters.base import ENCODING
+from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.worker import WorkerMissingGenerator
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
@@ -83,36 +85,21 @@ class Domain(util.ComparableMixin):
 
 
 @implementer(interfaces.IEmailSender)
-class MailNotifier(NotifierBase):
+class MailNotifier(ReporterBase):
     secrets = ["smtpUser", "smtpPassword"]
 
-    def checkConfig(self, fromaddr, mode=("failing", "passing", "warnings"),
-                    tags=None, builders=None, addLogs=False,
-                    relayhost="localhost", buildSetSummary=False,
-                    subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                    lookup=None, extraRecipients=None,
-                    sendToInterestedUsers=True,
-                    messageFormatter=None, extraHeaders=None,
-                    addPatch=True, useTls=False, useSmtps=False,
+    def checkConfig(self, fromaddr, relayhost="localhost", lookup=None, extraRecipients=None,
+                    sendToInterestedUsers=True, extraHeaders=None, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    schedulers=None, branches=None,
-                    watchedWorkers='all', messageFormatterMissingWorker=None,
-                    dumpMailsToLog=False,
-                    generators=None):
+                    dumpMailsToLog=False, generators=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
 
-        super().checkConfig(
-            mode=mode, tags=tags, builders=builders,
-            buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
-            subject=subject, addLogs=addLogs, addPatch=addPatch,
-            schedulers=schedulers, branches=branches,
-            watchedWorkers=watchedWorkers,
-            messageFormatterMissingWorker=messageFormatterMissingWorker,
-            generators=generators,
-            _has_old_arg_names={'addPatch': addPatch is False,
-                                'watchedWorkers': watchedWorkers != 'all'})
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -137,26 +124,16 @@ class MailNotifier(NotifierBase):
             ssl.ensureHasSSL(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, fromaddr, mode=("failing", "passing", "warnings"),
-                        tags=None, builders=None, addLogs=False,
-                        relayhost="localhost", buildSetSummary=False,
-                        subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                        lookup=None, extraRecipients=None,
-                        sendToInterestedUsers=True,
-                        messageFormatter=None, extraHeaders=None,
-                        addPatch=True, useTls=False, useSmtps=False,
+    def reconfigService(self, fromaddr, relayhost="localhost", lookup=None, extraRecipients=None,
+                        sendToInterestedUsers=True, extraHeaders=None, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        schedulers=None, branches=None,
-                        watchedWorkers='all', messageFormatterMissingWorker=None,
                         dumpMailsToLog=False, generators=None):
-        yield super().reconfigService(
-            mode=mode, tags=tags, builders=builders,
-            buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
-            subject=subject, addLogs=addLogs, addPatch=addPatch,
-            schedulers=schedulers, branches=branches,
-            watchedWorkers=watchedWorkers,
-            messageFormatterMissingWorker=messageFormatterMissingWorker,
-            generators=generators)
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators)
+
         if extraRecipients is None:
             extraRecipients = []
         self.extraRecipients = extraRecipients
@@ -175,6 +152,12 @@ class MailNotifier(NotifierBase):
         self.smtpPort = smtpPort
         self.dumpMailsToLog = dumpMailsToLog
 
+    def _create_default_generators(self):
+        return [
+            BuildStatusGenerator(add_patch=True),
+            WorkerMissingGenerator(workers='all'),
+        ]
+
     def patch_to_attachment(self, patch, index):
         # patches are specifically converted to unicode before entering the db
         a = MIMEText(patch['body'].encode(ENCODING), _charset=ENCODING)
@@ -186,8 +169,7 @@ class MailNotifier(NotifierBase):
         return a
 
     @defer.inlineCallbacks
-    def createEmail(self, msgdict, builderName, title, results, builds=None,
-                    patches=None, logs=None):
+    def createEmail(self, msgdict, title, results, builds=None, patches=None, logs=None):
         text = msgdict['body']
         type = msgdict['type']
         subject = msgdict['subject']
@@ -259,7 +241,6 @@ class MailNotifier(NotifierBase):
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         type = merge_reports_prop_take_first(reports, 'type')
-        builderName = merge_reports_prop_take_first(reports, 'builder_name')
         results = merge_reports_prop(reports, 'results')
         builds = merge_reports_prop(reports, 'builds')
         users = merge_reports_prop(reports, 'users')
@@ -274,8 +255,8 @@ class MailNotifier(NotifierBase):
         if not body.endswith(b"\n\n"):
             msgdict['body'] = body + b'\n\n'
 
-        m = yield self.createEmail(msgdict, builderName, self.master.config.title,
-                                   results, builds, patches, logs)
+        m = yield self.createEmail(msgdict, self.master.config.title, results, builds,
+                                   patches, logs)
 
         # now, who is this message going to?
         if worker is None:

@@ -19,6 +19,7 @@ import time
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import pbuilder
@@ -122,6 +123,28 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
+    def test_architecture_renderable(self):
+        self.setupStep(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))
+        self.expectCommands(
+            Expect(
+                'stat', {'file': '/var/cache/pbuilder/stable-amd64-buildbot.tgz'})
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['sudo', '/usr/sbin/pbuilder', '--create',
+                                 '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz',
+                                 '--distribution', 'stable',
+                                 '--mirror', 'http://cdn.debian.net/debian/',
+                                 '--architecture', 'amd64'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['pdebuild', '--buildresult', '.',
+                                 '--pbuilder', '/usr/sbin/pbuilder',
+                                 '--architecture', 'amd64', '--', '--buildresult', '.',
+                                 '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz'])
+            + 0)
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
     def test_distribution(self):
         self.setupStep(pbuilder.DebPbuilder(distribution='woody'))
         self.expectCommands(
@@ -143,8 +166,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_basetgz(self):
-        self.setupStep(pbuilder.DebPbuilder(
-            basetgz='/buildbot/%(distribution)s-%(architecture)s.tgz'))
+        self.setupStep(pbuilder.DebPbuilder(basetgz='/buildbot/stable-local.tgz'))
         self.expectCommands(
             Expect('stat', {'file': '/buildbot/stable-local.tgz'})
             + 1,

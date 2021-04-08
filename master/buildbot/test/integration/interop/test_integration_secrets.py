@@ -33,6 +33,8 @@ class FakeSecretReporter(HttpStatusPush):
 
 class SecretsConfig(RunMasterBase):
 
+    # Note that the secret name must be long enough so that it does not crash with random directory
+    # or file names in the build dictionary.
     @parameterized.expand([
         ('with_interpolation', True),
         ('plain_command', False),
@@ -57,7 +59,7 @@ class SecretsConfig(RunMasterBase):
         self.assertTrue(res)
         # at this point, build contains all the log and steps info that is in the db
         # we check that our secret is not in there!
-        self.assertNotIn("bar", repr(build))
+        self.assertNotIn("secretvalue", repr(build))
         self.assertTrue(c['services'][0].reported)
 
     @parameterized.expand([
@@ -98,14 +100,16 @@ def masterConfig(use_interpolation):
             name="force",
             builderNames=["testy"])]
 
-    c['secretsProviders'] = [FakeSecretStorage(
-        secretdict={"foo": "bar", "something": "more", 'httppasswd': 'myhttppasswd'})]
+    c['secretsProviders'] = [FakeSecretStorage(secretdict={"foo": "secretvalue",
+                                                           "something": "more",
+                                                           'httppasswd': 'myhttppasswd'})]
     f = BuildFactory()
 
     if use_interpolation:
         if os.name == "posix":
             # on posix we can also check whether the password was passed to the command
-            command = Interpolate('echo %(secret:foo)s | sed "s/bar/The password was there/"')
+            command = Interpolate('echo %(secret:foo)s | ' +
+                                  'sed "s/secretvalue/The password was there/"')
         else:
             command = Interpolate('echo %(secret:foo)s')
     else:

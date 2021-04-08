@@ -27,7 +27,6 @@ from buildbot import interfaces
 from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -39,7 +38,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
-from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.util.misc import TestReactorMixin
 
 
@@ -197,7 +195,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
-        self.workerforbuilder.prepare = lambda _: True
+        self.workerforbuilder.substantiate_if_needed = lambda _: True
         self.workerforbuilder.ping = lambda: True
 
         self.build.setBuilder(self.builder)
@@ -214,7 +212,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
 
@@ -230,46 +228,46 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return defer.Deferred()
         step.startStep = startStep
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, CANCELLED)
 
         self.assertIn('stop it', step.interrupted)
 
-    def testBuildRetryWhenWorkerPrepareReturnFalse(self):
+    def test_build_retry_when_worker_substantiate_returns_false(self):
         b = self.build
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        self.workerforbuilder.prepare = lambda _: False
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        self.workerforbuilder.substantiate_if_needed = lambda _: False
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, RETRY)
         self.assertWorkerPreparationFailure('error while worker_prepare')
 
-    def testBuildCancelledWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
+    def test_build_cancelled_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
         d = defer.Deferred()
-        self.workerforbuilder.prepare = lambda _: d
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        self.workerforbuilder.substantiate_if_needed = lambda _: d
+        b.startBuild(self.workerforbuilder)
         b.stopBuild('Cancel Build', CANCELLED)
         d.callback(False)
         self.assertEqual(b.results, CANCELLED)
         self.assertWorkerPreparationFailure('error while worker_prepare')
 
-    def testBuildRetryWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
+    def test_build_retry_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
         d = defer.Deferred()
-        self.workerforbuilder.prepare = lambda _: d
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        self.workerforbuilder.substantiate_if_needed = lambda _: d
+        b.startBuild(self.workerforbuilder)
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
         self.assertEqual(b.results, RETRY)
@@ -310,7 +308,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step2.startStep = startStep2
         step1.stepDone = lambda: False
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, CANCELLED)
         self.assertIn('stop it', step1.interrupted)
@@ -330,7 +328,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         step1.startStep = startStep
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, EXCEPTION)
         self.flushLoggedErrors(TestException)
@@ -392,7 +390,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         b = self.build
 
-        b.build_status = Mock()
         b.builder.config.workerbuilddir = 'test'
         self.workerforbuilder.worker.worker_basedir = "/srv/buildbot/worker"
         self.workerforbuilder.worker.path_module = posixpath
@@ -429,7 +426,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
         self.assertEqual(claimCount[0], 1)
@@ -448,7 +445,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         eWorker.worker = self.worker
         cWorker.worker = self.worker
-        eWorker.prepare = cWorker.prepare = lambda _: True
+        eWorker.substantiate_if_needed = cWorker.substantiate_if_needed = lambda _: True
         eWorker.ping = cWorker.ping = lambda: True
 
         lock = WorkerLock('lock', 2)
@@ -474,8 +471,8 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         eBuild.setStepFactories([FakeStepFactory(step)])
         cBuild.setStepFactories([FakeStepFactory(step)])
 
-        e = eBuild.startBuild(FakeBuildStatus(), eWorker)
-        c = cBuild.startBuild(FakeBuildStatus(), cWorker)
+        e = eBuild.startBuild(eWorker)
+        c = cBuild.startBuild(cWorker)
         d = defer.DeferredList([e, c])
 
         realLock.release(fakeBuild, fakeBuildAccess)
@@ -509,7 +506,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         real_lock.claim(Mock(), lock.access('counting'))
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(claimCount[0], 1)
         self.assertTrue(b.currentStep is None)
@@ -540,7 +537,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return retval
         b.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
@@ -570,13 +567,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return retval
         b.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, RETRY)
-        self.build.build_status.setText.assert_called_with(
-            ["retry", "lost", "connection"])
-        self.build.build_status.setResults.assert_called_with(RETRY)
 
     @defer.inlineCallbacks
     def testStopBuildWaitingForStepLocks(self):
@@ -589,7 +583,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         real_workerlock = yield b.builder.botmaster.getLockByID(lock, 0)
         real_lock = real_workerlock.getLockForWorker(self.workerforbuilder.worker.workername)
 
-        step = LoggingBuildStep(locks=[lock_access])
+        step = BuildStep(locks=[lock_access])
         b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), lock.access('counting'))
@@ -598,13 +592,13 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         def acquireLocks(res=None):
             gotLocks[0] = True
-            retval = LoggingBuildStep.acquireLocks(step, res)
+            retval = BuildStep.acquireLocks(step, res)
             self.assertTrue(b.currentStep is step)
             b.stopBuild('stop it')
             return retval
         step.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(gotLocks, [True])
         self.assertEqual(b.results, CANCELLED)
@@ -765,7 +759,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         step = FakeBuildStep()
         b.setStepFactories([FakeStepFactory(step)])
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
 
         # remove duplicates, note that set() can't be used as properties contain complex
@@ -800,7 +794,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "d", "e", "c"]
         executed_names = [s.name for s in b.executedSteps]
@@ -820,7 +814,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "d", "e"]
         executed_names = [s.name for s in b.executedSteps]
@@ -833,7 +827,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps = self.create_fake_steps(["clone", "command", "clean"])
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["clone", "command", "clean"]
         executed_names = [s.name for s in b.executedSteps]
@@ -845,7 +839,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps = self.create_fake_steps(["stage", "stage", "stage"])
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["stage", "stage_1", "stage_2"]
         executed_names = [s.name for s in b.executedSteps]
@@ -864,7 +858,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "c_1", "c_2"]
         executed_names = [s.name for s in b.executedSteps]
@@ -904,7 +898,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return observer.asDict()['counters'].get('active_builds', 0)
         self.assertEqual(get_active_builds(), 0)
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.assertEqual(get_active_builds(), 1)
 
@@ -929,7 +923,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             return observer.asDict()['counters'].get('active_builds', 0)
         self.assertEqual(get_active_builds(), 0)
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.startBuild(self.workerforbuilder)
 
         self.flushLoggedErrors(TestException)
 
@@ -1032,24 +1026,23 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setUpTestReactor()
         self.props = {}
-        r = FakeRequest()
-        r.sources = []
-        r.sources.append(FakeSource())
-        r.sources[0].changes = [FakeChange()]
-        r.sources[0].repository = "http://svn-repo-A"
-        r.sources[0].codebase = "A"
-        r.sources[0].branch = "develop"
-        r.sources[0].revision = "12345"
-        r.sources.append(FakeSource())
-        r.sources[1].changes = [FakeChange()]
-        r.sources[1].repository = "http://svn-repo-B"
-        r.sources[1].codebase = "B"
-        r.sources[1].revision = "34567"
-        self.build = Build([r])
+        self.r = FakeRequest()
+        self.r.sources = []
+        self.r.sources.append(FakeSource())
+        self.r.sources[0].changes = [FakeChange()]
+        self.r.sources[0].repository = "http://svn-repo-A"
+        self.r.sources[0].codebase = "A"
+        self.r.sources[0].branch = "develop"
+        self.r.sources[0].revision = "12345"
+        self.r.sources.append(FakeSource())
+        self.r.sources[1].changes = [FakeChange()]
+        self.r.sources[1].repository = "http://svn-repo-B"
+        self.r.sources[1].codebase = "B"
+        self.r.sources[1].revision = "34567"
+        self.build = Build([self.r])
         self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
-        self.build.build_status = FakeBuildStatus()
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
 
@@ -1061,7 +1054,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         self.props[s][n] = v
 
     def test_sourcestamp_properties_not_set(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         self.assertNotIn("codebase", self.props["Build"])
         self.assertNotIn("revision", self.props["Build"])
         self.assertNotIn("branch", self.props["Build"])
@@ -1079,19 +1072,18 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setUpTestReactor()
         self.props = {}
-        r = FakeRequest()
-        r.sources = []
-        r.sources.append(FakeSource())
-        r.sources[0].changes = [FakeChange()]
-        r.sources[0].repository = "http://svn-repo-A"
-        r.sources[0].codebase = "A"
-        r.sources[0].branch = "develop"
-        r.sources[0].revision = "12345"
-        self.build = Build([r])
+        self.r = FakeRequest()
+        self.r.sources = []
+        self.r.sources.append(FakeSource())
+        self.r.sources[0].changes = [FakeChange()]
+        self.r.sources[0].repository = "http://svn-repo-A"
+        self.r.sources[0].codebase = "A"
+        self.r.sources[0].branch = "develop"
+        self.r.sources[0].revision = "12345"
+        self.build = Build([self.r])
         self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
         self.build.setBuilder(self.builder)
-        self.build.build_status = FakeBuildStatus()
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
 
@@ -1103,92 +1095,26 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         self.props[s][n] = v
 
     def test_properties_codebase(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         codebase = self.props["Build"]["codebase"]
         self.assertEqual(codebase, "A")
 
     def test_properties_repository(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         repository = self.props["Build"]["repository"]
         self.assertEqual(repository, "http://svn-repo-A")
 
     def test_properties_revision(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         revision = self.props["Build"]["revision"]
         self.assertEqual(revision, "12345")
 
     def test_properties_branch(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         branch = self.props["Build"]["branch"]
         self.assertEqual(branch, "develop")
 
     def test_property_project(self):
-        self.build.setupOwnProperties()
+        Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         project = self.props["Build"]["project"]
         self.assertEqual(project, '')
-
-
-class TestBuildProperties(TestReactorMixin, unittest.TestCase):
-
-    """
-    Test that a Build has the necessary L{IProperties} methods, and that they
-    properly delegate to the C{build_status} attribute - so really just a test
-    of the L{IProperties} adapter.
-    """
-
-    def setUp(self):
-        self.setUpTestReactor()
-
-        @implementer(interfaces.IProperties)
-        class FakeProperties(Mock):
-            pass
-        FakeProperties.render = Mock(side_effect=lambda x: x)
-        FakeProperties.asList = Mock(side_effect=lambda: [])
-
-        class FakeBuildStatus(Mock):
-            pass
-        r = FakeRequest()
-        r.sources = [FakeSource()]
-        r.sources[0].changes = [FakeChange()]
-        r.sources[0].revision = "12345"
-        self.master = fakemaster.make_master(self, wantData=True)
-        self.worker = worker.FakeWorker(self.master)
-        self.worker.attached(None)
-        self.workerforbuilder = Mock(name='workerforbuilder')
-        self.workerforbuilder.worker = self.worker
-        self.build = Build([r])
-        self.build.setStepFactories([])
-        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
-        self.build.setBuilder(self.builder)
-        self.properties = self.build.properties = FakeProperties()
-        self.build_status = FakeBuildStatus()
-        self.build.startBuild(self.build_status, self.workerforbuilder)
-
-    def test_getProperty(self):
-        self.build.getProperty('x')
-        self.properties.getProperty.assert_called_with('x', None)
-
-    def test_getProperty_default(self):
-        self.build.getProperty('x', 'nox')
-        self.properties.getProperty.assert_called_with('x', 'nox')
-
-    def test_setProperty(self):
-        self.build.setProperty('n', 'v', 's')
-        self.properties.setProperty.assert_called_with('n', 'v', 's',
-                                                       runtime=True)
-
-    def test_hasProperty(self):
-        self.properties.hasProperty.return_value = True
-        self.assertTrue(self.build.hasProperty('p'))
-        self.properties.hasProperty.assert_called_with('p')
-
-    def test_has_key(self):
-        self.properties.has_key.return_value = True
-        # getattr because pep8 doesn't like calls to has_key
-        self.assertTrue(getattr(self.build, 'has_key')('p'))
-        # has_key calls through to hasProperty
-        self.properties.hasProperty.assert_called_with('p')
-
-    def test_render(self):
-        self.build.render("xyz")
-        self.properties.render.assert_called_with("xyz")

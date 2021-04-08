@@ -66,16 +66,17 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     with _recordWarnings(filter_category, warns):
         yield
 
-    if num_warnings is not None:
-        assert len(warns) == num_warnings, \
-            "Number of occurred warnings is not correct. " \
-            "Expected {num} warnings, received {num_received}:\n" \
-            "{warns}".format(
-                num=num_warnings,
-                num_received=len(warns),
-                warns="\n".join(map(str, warns)))
+    if num_warnings is None:
+        num_warnings = 1
 
-    num_warnings = len(warns)
+    assert len(warns) == num_warnings, \
+        "Number of occurred warnings is not correct. " \
+        "Expected {num} warnings, received {num_received}:\n" \
+        "{warns}".format(
+            num=num_warnings,
+            num_received=len(warns),
+            warns="\n".join(map(str, warns)))
+
     if messages_patterns is None and message_pattern is not None:
         messages_patterns = [message_pattern] * num_warnings
 

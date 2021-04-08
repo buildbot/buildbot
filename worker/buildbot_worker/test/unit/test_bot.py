@@ -37,7 +37,6 @@ from buildbot_worker.commands.base import Command
 from buildbot_worker.test.fake.remote import FakeRemote
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
-from buildbot_worker.test.util import compat
 
 
 class TestBot(unittest.TestCase):
@@ -404,7 +403,6 @@ class TestBotFactory(unittest.TestCase):
         clock.pump((1 for _ in range(150)))
         self.assertEqual(calls, [35, 70])
 
-    @compat.usesFlushLoggedErrors
     def test_timers_exception(self):
         clock = self.bf._reactor = task.Clock()
 

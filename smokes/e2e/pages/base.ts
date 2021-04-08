@@ -12,7 +12,7 @@ export class BasePage {
     constructor() {}
 
     async logOut() {
-        await element(By.css('.avatar img')).click();
+        await element(By.css('.navbar-right a.dropdown-toggle')).click();
         await element(By.linkText('Logout')).click();
         const anonymousButton = element.all(By.css('.dropdown')).first();
         expect(await anonymousButton.getText()).toContain("Anonymous");

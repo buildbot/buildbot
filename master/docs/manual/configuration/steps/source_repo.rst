@@ -47,6 +47,10 @@ The Repo step takes the following arguments:
     A depth of 1 is useful for shallow clones.
     This can save considerable disk space on very large projects.
 
+``submodules``
+    (optional, defaults to ``False``): sync any submodules associated with the manifest repo.
+    Corresponds to the ``--submodules`` argument to the :command:`repo init` command.
+
 ``updateTarballAge``
     (optional, defaults to "one week"): renderable to control the policy of updating of the tarball given properties.
     Returns: max age of tarball in seconds, or ``None``, if we want to skip tarball update.

@@ -24,6 +24,9 @@ exports.config = {
             'args': [
                 '--headless',
                 '--window-size=1200,1024',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--no-sandbox',
                 '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/56.0.2924.87"',
             ]
         }

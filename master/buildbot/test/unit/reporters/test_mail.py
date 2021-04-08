@@ -15,7 +15,6 @@
 
 import base64
 import copy
-import sys
 from email import charset
 
 from mock import Mock
@@ -30,7 +29,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import mail
 from buildbot.reporters import utils
 from buildbot.reporters.generators.build import BuildStatusGenerator
-from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
@@ -40,19 +38,13 @@ from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
 
-py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
-                                    and sys.version_info[1] >= 7)
-
 
 class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
                        unittest.TestCase, ReporterTestMixin):
 
-    if not ESMTPSenderFactory:
-        skip = ("twisted-mail unavailable, "
-                "see: https://twistedmatrix.com/trac/ticket/8770")
-
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
                                              wantMq=True)
 
@@ -76,7 +68,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
 
         msgdict = create_msgdict(funnyChars)
         mn = yield self.setupMailNotifier('from@example.org')
-        m = yield mn.createEmail(msgdict, 'builder-name', 'project-name', SUCCESS, [build])
+        m = yield mn.createEmail(msgdict, 'project-name', SUCCESS, [build])
 
         cte_lines = [l for l in m.as_string().split("\n")
                      if l.startswith('Content-Transfer-Encoding:')]
@@ -122,8 +114,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         build = yield self.insert_build_finished(SUCCESS)
         msgdict = create_msgdict()
         mn = yield self.setupMailNotifier('from@example.org')
-        m = yield mn.createEmail(msgdict, 'builder-n\u00E5me', 'project-n\u00E5me',
-                                 SUCCESS, [build])
+        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build])
 
         try:
             m.as_string()
@@ -138,8 +129,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupMailNotifier('from@example.org',
                                           extraHeaders=dict(hhh=properties.Property('hhh')))
         # add some Unicode to detect encoding problems
-        m = yield mn.createEmail(msgdict, 'builder-n\u00E5me', 'project-n\u00E5me',
-                                 SUCCESS, [build])
+        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build])
 
         txt = m.as_string()
         # note that the headers *are* rendered
@@ -154,8 +144,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         builds[1]['builder']['name'] = 'builder2'
         msgdict = create_msgdict()
         mn = yield self.setupMailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
-        m = yield mn.createEmail(msgdict, 'builder-n\u00E5me', 'project-n\u00E5me',
-                                 SUCCESS, builds)
+        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, builds)
 
         txt = m.as_string()
         # note that the headers are *not* rendered
@@ -174,9 +163,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
         mn = yield self.setupMailNotifier('from@example.org',
                                           generators=[BuildStatusGenerator(add_logs=True)])
 
-        m = yield mn.createEmail(msgdict, 'builder-n\u00E5me',
-                                 'project-n\u00E5me', SUCCESS,
-                                 [build], patches, logs)
+        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build], patches, logs)
 
         try:
             s = m.as_string()
@@ -228,8 +215,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     def test_buildMessage(self):
         mn, build, formatter = yield self.setupBuildMessage(mode=("passing",))
 
-        formatter.format_message_for_build.assert_called_with(('passing',), 'Builder0', build,
-                                                              self.master, ['me@foo'])
+        formatter.format_message_for_build.assert_called_with(self.master, build, mode=('passing',),
+                                                              users=['me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with(['me@foo'])
         mn.processRecipients.assert_called_with('<recipients>', '<email>')

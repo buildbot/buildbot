@@ -44,12 +44,8 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.tearDownScheduler()
 
     def makeScheduler(self, **kwargs):
-        sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                                     self.OBJECTID, self.SCHEDULERID)
-        # Try will return a remote version of master.status, so give it
-        # something to return
-        sched.master.status = mock.Mock()
-        return sched
+        return self.attachScheduler(trysched.Try_Userpass(**kwargs),
+                                    self.OBJECTID, self.SCHEDULERID)
 
     def test_filterBuilderList_ok(self):
         sched = trysched.TryBase(
@@ -695,14 +691,10 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin,
         self.tearDownScheduler()
 
     def makeScheduler(self, **kwargs):
-        sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                                     self.OBJECTID, self.SCHEDULERID,
-                                     overrideBuildsetMethods=True,
-                                     createBuilderDB=True)
-        # Try will return a remote version of master.status, so give it
-        # something to return
-        sched.master.status = mock.Mock()
-        return sched
+        return self.attachScheduler(trysched.Try_Userpass(**kwargs),
+                                    self.OBJECTID, self.SCHEDULERID,
+                                    overrideBuildsetMethods=True,
+                                    createBuilderDB=True)
 
     @defer.inlineCallbacks
     def call_perspective_try(self, *args, **kwargs):

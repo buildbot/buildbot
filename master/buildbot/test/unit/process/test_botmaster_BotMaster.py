@@ -45,8 +45,6 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
     def makeFakeBuild(self, waitedFor=False):
         self.fake_builder = builder = mock.Mock()
-        build_status = mock.Mock()
-        builder.builder_status.getCurrentBuilds.return_value = [build_status]
         self.build_deferred = defer.Deferred()
 
         request = mock.Mock()

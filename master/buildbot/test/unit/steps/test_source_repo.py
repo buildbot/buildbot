@@ -117,8 +117,10 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             + 0,
         )
 
-    def expectRepoSync(self, which_fail=-1, breakatfail=False, depth=0,
+    def expectRepoSync(self, which_fail=-1, breakatfail=False, depth=0, initoptions=None,
                        syncoptions=None, override_commands=None):
+        if initoptions is None:
+            initoptions = []
         if syncoptions is None:
             syncoptions = ["-c"]
         if override_commands is None:
@@ -129,7 +131,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
                     'bash', '-c', self.step._getCleanupCommand()]),
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                         '-b', 'mb', '-m', 'mf', '--depth', str(depth)])
+                         '-b', 'mb', '-m', 'mf', '--depth', str(depth)] + initoptions)
         ] + override_commands + [
             self.ExpectShell(command=['repo', 'sync', '--force-sync'] + syncoptions),
             self.ExpectShell(
@@ -152,6 +154,13 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.mySetupStep(repoDownloads=None, depth=2)
         self.expectClobber()
         self.expectRepoSync(depth=2)
+        return self.myRunStep()
+
+    def test_basic_submodule(self):
+        """basic first time repo sync with submodule"""
+        self.mySetupStep(repoDownloads=None, submodules=True)
+        self.expectClobber()
+        self.expectRepoSync(initoptions=["--submodules"])
         return self.myRunStep()
 
     def test_update(self):

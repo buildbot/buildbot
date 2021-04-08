@@ -14,7 +14,7 @@ This is possible, in a limited fashion, with the :bb:step:`MasterShellCommand` s
 This step operates similarly to a regular :bb:step:`ShellCommand`, but executes on the master, instead of the worker.
 To be clear, the enclosing :class:`Build` object must still have a worker object, just as for any other step -- only, in this step, the worker does not do anything.
 
-In this example, the step renames a tarball based on the day of the week.
+In the following example, the step renames a tarball based on the day of the week.
 
 .. code-block:: python
 
@@ -47,7 +47,7 @@ Note that environment values must be strings (or lists that are turned into stri
 In particular, numeric properties such as ``buildnumber`` must be substituted using :ref:`Interpolate`.
 
 ``workdir``
-   (optional) The directory from which the command will be ran.
+   (optional) The directory from which the command will be run.
 
 ``interruptSignal``
-   (optional) Signal to use to end the process, if the step is interrupted.
+   (optional) Signal to use to end the process if the step is interrupted.

@@ -16,7 +16,6 @@
 
 import os
 import sys
-import textwrap
 
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -127,37 +126,9 @@ def launch(config):
             pidfile.write("{0}".format(proc.pid))
 
 
-def py2Warning(config):
-    if sys.version[0] == '2' and not config['quiet']:
-        print(textwrap.dedent("""\
-        WARNING: You are running Buildbot with Python 2.7.x !
-        -----------------------------------------------------
-
-        Python 2 is going unmaintained as soon as 2020: https://pythonclock.org/
-
-        To prepare for that transition, we recommend upgrading your buildmaster to run on
-        Python 3.6 now! Buildbot open source project is as well deprecating running buildmaster
-        on Python 2 for better maintainability.
-
-        Buildbot 2.0 going to be released in February 2019 will remove support for Python < 3.5
-        https://github.com/buildbot/buildbot/issues/4439
-
-        On most installations, switching to Python 3 can be accomplished by running the 2to3 tool
-        over the master.cfg file.
-
-        https://docs.python.org/3.7/library/2to3.html
-
-        Note that the above applies only for the buildmaster.
-        Workers will still support running under Python 2.7.
-        Additionally, the buildmaster still supports workers using old versions of Buildbot.
-        """))
-
-
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         return 1
-
-    py2Warning(config)
 
     if config['nodaemon']:
         launchNoDaemon(config)

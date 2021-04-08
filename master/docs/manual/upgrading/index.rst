@@ -6,15 +6,13 @@ Upgrading
 This section describes the process of upgrading the master and workers from old versions of Buildbot.
 
 The users of the Buildbot project will be warned about backwards-incompatible changes by warnings produced by the code.
-Additionally, all backwards-incompatible changes will be done at a major version change (e.g. 1.x to 2.0)
+Additionally, all backwards-incompatible changes will be done at a major version change (e.g. 1.x to 2.0).
 Minor version change (e.g. 2.3 to 2.4) will only introduce backwards-incompatible changes only if they affect small part of the users and are absolutely necessary.
 Direct upgrades between more than two major releases (e.g. 1.x to 3.x) are not supported.
 
-The versions of the master and the workers do not need to match, so it's possible to upgrade them
-separately.
+The versions of the master and the workers do not need to match, so it's possible to upgrade them separately.
 
-Usually there are no actions needed to upgrade a worker except to install a new version of the code
-and restart it.
+Usually there are no actions needed to upgrade a worker except to install a new version of the code and restart it.
 
 Usually the process of upgrading the master is as simple as running the following command:
 

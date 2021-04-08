@@ -27,6 +27,7 @@ from twisted.python.failure import Failure
 from buildbot.data import resultspec
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
+from buildbot.util import deferwaiter
 from buildbot.util import epoch2datetime
 from buildbot.util import service
 
@@ -295,7 +296,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         self.activity_lock = defer.DeferredLock()
         self.active = False
 
-        self._pendingMSBOCalls = []
+        self._deferwaiter = deferwaiter.DeferWaiter()
         self._activity_loop_deferred = None
 
     @defer.inlineCallbacks
@@ -310,8 +311,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # they don't get interrupted in mid-stride.  This tends to be
         # particularly painful because it can occur when a generator is gc'd.
         # TEST-TODO: this behavior is not asserted in any way.
-        if self._pendingMSBOCalls:
-            yield defer.DeferredList(self._pendingMSBOCalls)
+        yield self._deferwaiter.wait()
 
     @defer.inlineCallbacks
     def maybeStartBuildsOn(self, new_builders):
@@ -326,15 +326,10 @@ class BuildRequestDistributor(service.AsyncMultiService):
         if not self.running:
             return
 
-        d = self._maybeStartBuildsOn(new_builders)
-        self._pendingMSBOCalls.append(d)
-
         try:
-            yield d
+            yield self._deferwaiter.add(self._maybeStartBuildsOn(new_builders))
         except Exception as e:  # pragma: no cover
             log.err(e, "while starting builds on {0}".format(new_builders))
-        finally:
-            self._pendingMSBOCalls.remove(d)
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):

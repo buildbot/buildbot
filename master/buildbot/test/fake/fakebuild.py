@@ -17,53 +17,12 @@ import posixpath
 
 import mock
 
-from twisted.python import components
-
 from buildbot import config
-from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.process import workerforbuilder
 from buildbot.test.fake import fakemaster
 from buildbot.worker import base
-
-
-class FakeBuildStatus(properties.PropertiesMixin):
-
-    def __init__(self):
-        self.properties = properties.Properties()
-
-    def getInterestedUsers(self):
-        return []
-
-    def setWorkername(self, _):
-        pass
-
-    def setSourceStamps(self, _):
-        pass
-
-    def setReason(self, _):
-        pass
-
-    def setBlamelist(self, _):
-        pass
-
-    def buildStarted(self, _):
-        return True
-
-    setText = mock.Mock()
-    setText2 = mock.Mock()
-    setResults = mock.Mock()
-
-    def buildFinished(self):
-        pass
-
-    getBuilder = mock.Mock()
-
-
-components.registerAdapter(
-    lambda build_status: build_status.properties,
-    FakeBuildStatus, interfaces.IProperties)
 
 
 class FakeWorkerStatus(properties.PropertiesMixin):
@@ -77,12 +36,11 @@ class FakeWorkerStatus(properties.PropertiesMixin):
 class FakeBuild(properties.PropertiesMixin):
 
     def __init__(self, props=None, master=None):
-        self.build_status = FakeBuildStatus()
-        self.builder = fakemaster.FakeBuilderStatus(master)
+        self.builder = fakemaster.FakeBuilder(master)
         self.workerforbuilder = mock.Mock(
             spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
-        self.workerforbuilder.worker.worker_status = FakeWorkerStatus("mock")
+        self.workerforbuilder.worker.info = properties.Properties()
         self.builder.config = config.BuilderConfig(
             name='bldr',
             workernames=['a'],
@@ -97,10 +55,12 @@ class FakeBuild(properties.PropertiesMixin):
         if props is None:
             props = properties.Properties()
         props.build = self
-        self.build_status.properties = props
         self.properties = props
         self.master = None
         self.config_version = 0
+
+    def getProperties(self):
+        return self.properties
 
     def getSourceStamp(self, codebase):
         if codebase in self.sources:
@@ -126,15 +86,10 @@ class FakeBuild(properties.PropertiesMixin):
         return self.builder
 
     def getWorkerInfo(self):
-        return self.workerforbuilder.worker.worker_status.info
+        return self.workerforbuilder.worker.info
 
     def setUniqueStepName(self, step):
         pass
-
-
-components.registerAdapter(
-    lambda build: build.build_status.properties,
-    FakeBuild, interfaces.IProperties)
 
 
 class FakeBuildForRendering:

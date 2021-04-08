@@ -25,7 +25,6 @@ from buildbot import config
 from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
-from buildbot.status.worker import WorkerStatus
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import service
@@ -100,7 +99,7 @@ class AbstractWorker(service.BuildbotService):
         self.manager = None
         self.workerid = None
 
-        self.worker_status = WorkerStatus(name)
+        self.info = Properties()
         self.worker_commands = None
         self.workerforbuilders = {}
         self.max_builds = max_builds
@@ -224,16 +223,14 @@ class AbstractWorker(service.BuildbotService):
         if not info:
             return
 
-        self.worker_status.setAdmin(info.get("admin"))
-        self.worker_status.setHost(info.get("host"))
-        self.worker_status.setAccessURI(info.get("access_uri", None))
-        self.worker_status.setVersion(info.get("version", "(unknown)"))
+        # set defaults
+        self.info.setProperty("version", "(unknown)", "Worker")
 
         # store everything as Properties
         for k, v in info.items():
             if k in ('environ', 'worker_commands'):
                 continue
-            self.worker_status.info.setProperty(k, v, "Worker")
+            self.info.setProperty(k, v, "Worker")
 
     @defer.inlineCallbacks
     def _getWorkerInfo(self):
@@ -434,8 +431,6 @@ class AbstractWorker(service.BuildbotService):
         self.conn = conn
         self._old_builder_list = None  # clear builder list before proceed
 
-        self.worker_status.setConnected(True)
-
         self._applyWorkerInfo(conn.info)
         self.worker_commands = conn.info.get("worker_commands", {})
         self.worker_environ = conn.info.get("environ", {})
@@ -473,7 +468,6 @@ class AbstractWorker(service.BuildbotService):
     def messageReceivedFromWorker(self):
         now = time.time()
         self.lastMessageReceived = now
-        self.worker_status.setLastMessageReceived(now)
 
     def setupProperties(self, props):
         for name in self.properties.properties:
@@ -505,7 +499,6 @@ class AbstractWorker(service.BuildbotService):
         yield self.conn.waitShutdown()
         self.conn = None
         self._old_builder_list = []
-        self.worker_status.setConnected(False)
         log.msg("Worker.detached({})".format(self.name))
         self.releaseLocks()
         yield self.master.data.updates.workerDisconnected(

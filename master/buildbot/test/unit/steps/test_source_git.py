@@ -79,7 +79,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -118,7 +118,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -136,10 +136,10 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -174,7 +174,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -195,9 +195,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -232,7 +232,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH_COMMAND': ssh_command})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -254,9 +254,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
 
         # A place to store what gets read
         read = []
@@ -302,7 +302,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH': ssh_wrapper_path})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -318,7 +318,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.runStep()
 
-        expected = '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(ssh_key_path)
+        expected = '#!/bin/sh\nssh -o "BatchMode=yes" -i "{0}" "$@"\n'.format(ssh_key_path)
         self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     @parameterized.expand([
@@ -330,11 +330,11 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey', **class_params))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}" ' \
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -378,7 +378,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -400,11 +400,11 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
         ssh_command = \
-            'ssh -i "{0}" ' \
+            'ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -448,7 +448,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH_COMMAND': ssh_command})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -471,10 +471,10 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
 
         # A place to store what gets read
         read = []
@@ -527,7 +527,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH': ssh_wrapper_path})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -543,9 +543,10 @@ class TestGit(sourcesteps.SourceStepMixin,
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         yield self.runStep()
 
-        expected = '#!/bin/sh\n'\
-                   'ssh -i "{0}" -o "UserKnownHostsFile={1}" "$@"\n'.format(ssh_key_path,
-                                                                            ssh_known_hosts_path)
+        expected = (
+            '#!/bin/sh\n'
+            'ssh -o "BatchMode=yes" -i "{0}" -o "UserKnownHostsFile={1}" "$@"\n'
+        ).format(ssh_key_path, ssh_known_hosts_path)
         self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     def test_mode_full_clean_ssh_host_key_1_7_progress(self):
@@ -554,10 +555,10 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey', progress=True))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -606,7 +607,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH': ssh_wrapper_path})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -631,11 +632,11 @@ class TestGit(sourcesteps.SourceStepMixin,
         workdir = '/myworkdir/workdir'
         self.build.workdir = workdir
 
-        ssh_workdir = '/myworkdir/.Builder.workdir.buildbot'
-        ssh_key_path = '/myworkdir/.Builder.workdir.buildbot/ssh-key'
-        ssh_known_hosts_path = '/myworkdir/.Builder.workdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/myworkdir/.bldr.workdir.buildbot'
+        ssh_key_path = '/myworkdir/.bldr.workdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/myworkdir/.bldr.workdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}" ' \
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -679,7 +680,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir=workdir,
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir=workdir,
                         command=['git', 'rev-parse', 'HEAD'])
@@ -722,7 +723,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -741,9 +742,9 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
 
-        ssh_workdir = '\\wrk\\.Builder.wkdir.buildbot'
-        ssh_key_path = '\\wrk\\.Builder.wkdir.buildbot\\ssh-key'
-        ssh_command_config = 'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+        ssh_workdir = '\\wrk\\.bldr.wkdir.buildbot'
+        ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
+        ssh_command_config = 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -778,7 +779,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -800,9 +801,9 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
 
-        ssh_workdir = '\\wrk\\.Builder.wkdir.buildbot'
-        ssh_key_path = '\\wrk\\.Builder.wkdir.buildbot\\ssh-key'
-        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+        ssh_workdir = '\\wrk\\.bldr.wkdir.buildbot'
+        ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
+        ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -837,7 +838,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH_COMMAND': ssh_command})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -859,9 +860,9 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
 
-        ssh_workdir = '\\wrk\\.Builder.wkdir.buildbot'
-        ssh_key_path = '\\wrk\\.Builder.wkdir.buildbot\\ssh-key'
-        ssh_wrapper_path = '\\wrk\\.Builder.wkdir.buildbot\\ssh-wrapper.sh'
+        ssh_workdir = '\\wrk\\.bldr.wkdir.buildbot'
+        ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
+        ssh_wrapper_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-wrapper.sh'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -903,7 +904,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'GIT_SSH': ssh_wrapper_path})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -950,7 +951,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -995,7 +996,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
@@ -1062,7 +1063,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
@@ -1124,7 +1125,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
@@ -1176,7 +1177,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'test-branch'])
@@ -1254,7 +1255,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + ExpectShell.log('stdio',
                               stderr="fatal: Could not parse object "
                               "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
@@ -1411,7 +1412,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'sync'])
@@ -1431,6 +1432,94 @@ class TestGit(sourcesteps.SourceStepMixin,
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_submodule_remotes(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', submodules=True, progress=True,
+                           remoteSubmodules=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-f', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD', '--progress'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'sync'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'update', '--init', '--recursive', '--remote'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'foreach', '--recursive',
+                                 'git clean -f -f -d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clobber_submodule_remotes(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', submodules=True, progress=True,
+                           remoteSubmodules=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.', '--progress'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'update', '--init', '--recursive', '--remote'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -1563,7 +1652,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'test-branch'])
@@ -1585,7 +1674,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental', progress=True))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', '--version'])
             + ExpectShell.log('stdio',
                               stdout='git version 1.7.5')
@@ -1596,15 +1685,15 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.git',
                                 logEnviron=True))
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'fetch', '-f', '-t',
                                  'http://github.com/buildbot/buildbot.git',
                                  'HEAD', '--progress'])
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -1639,7 +1728,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1676,7 +1765,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1755,7 +1844,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'test-branch'])
@@ -1778,10 +1867,10 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental', branch='test-branch',
                            sshPrivateKey='ssh-key', progress=True))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1813,7 +1902,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'test-branch'])
@@ -1858,7 +1947,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1934,7 +2023,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'cat-file', '-e', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
+                        command=['git', 'checkout', '-f', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1975,7 +2064,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
+                        command=['git', 'checkout', '-f', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2014,7 +2103,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'sync'])
@@ -2066,7 +2155,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'sync'])
@@ -2120,7 +2209,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'sync'])
@@ -2273,7 +2362,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
@@ -2281,7 +2370,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2318,7 +2407,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-f', '-t',
@@ -2326,7 +2415,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-B', 'test-branch'])
@@ -2366,7 +2455,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2412,7 +2501,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'test-branch', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -2462,7 +2551,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
                              'logEnviron': True, 'timeout': 1200})
@@ -2483,10 +2572,10 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='copy', sshPrivateKey='sshkey'))
 
-        ssh_workdir = '/wrk/.Builder.source.buildbot'
-        ssh_key_path = '/wrk/.Builder.source.buildbot/ssh-key'
+        ssh_workdir = '/wrk/.bldr.source.buildbot'
+        ssh_key_path = '/wrk/.bldr.source.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -2521,7 +2610,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
                              'logEnviron': True, 'timeout': 1200})
@@ -2586,7 +2675,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental'))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', '--version'])
             + ExpectShell.log('stdio',
                               stdout='git version 1.7.5')
@@ -2597,12 +2686,12 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.git',
                                 logEnviron=True))
             + 1,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2639,7 +2728,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '.', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
+                        command=['git', 'checkout', '-f', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2677,7 +2766,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '.', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
+                        command=['git', 'checkout', '-f', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2755,7 +2844,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  '.', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
+                        command=['git', 'checkout', '-f', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2888,7 +2977,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -2930,7 +3019,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'],
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'],
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2974,7 +3063,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'],
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'],
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3049,7 +3138,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -3101,7 +3190,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+                        command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -3436,8 +3525,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                           'HEAD', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=prefix + ['reset', '--hard',
-                                          'FETCH_HEAD', '--'])
+                        command=prefix + ['checkout', '-f', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=prefix + ['rev-parse', 'HEAD'])
@@ -3468,7 +3556,6 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
         gitStep = self.setupStep(step)
 
-        gitStep._start_deferred = defer.Deferred()
         with self.assertRaisesRegex(WorkerSetupError, msg):
             yield gitStep.run_vc("branch", "revision", "patch")
 
@@ -3593,10 +3680,10 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3633,9 +3720,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3672,9 +3759,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3719,11 +3806,11 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}" ' \
+            'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -3769,11 +3856,11 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
         ssh_command = \
-            'ssh -i "{0}" ' \
+            'ssh -o "BatchMode=yes" -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
@@ -3819,10 +3906,10 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = '/wrk/.Builder.wkdir.buildbot'
-        ssh_key_path = '/wrk/.Builder.wkdir.buildbot/ssh-key'
-        ssh_wrapper_path = '/wrk/.Builder.wkdir.buildbot/ssh-wrapper.sh'
-        ssh_known_hosts_path = '/wrk/.Builder.wkdir.buildbot/ssh-known-hosts'
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',

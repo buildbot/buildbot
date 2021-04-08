@@ -26,15 +26,16 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.reporters import http
+from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
-from buildbot.warnings import warn_deprecated
 
 log = Logger()
 
 
-class GerritVerifyStatusPush(http.HttpStatusPushBase):
+class GerritVerifyStatusPush(ReporterBase):
     name = "GerritVerifyStatusPush"
     # overridable constants
     RESULTS_TABLE = {
@@ -48,29 +49,29 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     }
     DEFAULT_RESULT = -1
 
-    def checkConfig(self, baseURL, auth, startDescription=None, endDescription=None,
-                    verification_name=None, abstain=False, category=None, reporter=None,
-                    verbose=False, wantProperties=True, **kwargs):
-        super().checkConfig(wantProperties=wantProperties,
-                            _has_old_arg_names={
-                                'wantProperties': wantProperties is not True
-                            }, **kwargs)
+    def checkConfig(self, baseURL, auth, verification_name=None, abstain=False, category=None,
+                    reporter=None, verbose=False, debug=None, verify=None, generators=None,
+                    **kwargs):
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self,
-                        baseURL,
-                        auth,
-                        startDescription=None,
-                        endDescription=None,
-                        verification_name=None,
-                        abstain=False,
-                        category=None,
-                        reporter=None,
-                        verbose=False,
-                        wantProperties=True,
+    def reconfigService(self, baseURL, auth, verification_name=None, abstain=False, category=None,
+                        reporter=None, verbose=False, debug=None, verify=None, generators=None,
                         **kwargs):
         auth = yield self.renderSecrets(auth)
-        yield super().reconfigService(wantProperties=wantProperties, **kwargs)
+        self.debug = debug
+        self.verify = verify
+        self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators, **kwargs)
 
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
@@ -84,9 +85,16 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         self._reporter = reporter or "buildbot"
         self._abstain = abstain
         self._category = category
-        self._startDescription = startDescription or 'Build started.'
-        self._endDescription = endDescription or 'Build done.'
         self._verbose = verbose
+
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
+
+        return [
+            BuildStartEndStatusGenerator(start_formatter=start_formatter,
+                                         end_formatter=end_formatter)
+        ]
 
     def createStatus(self,
                      change_id,
@@ -200,32 +208,21 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         return []
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not GerritVerifyStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            yield self.send(build)
-        else:
-            yield self._send_impl(build)
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build):
         props = Properties.fromDict(build['properties'])
+        props.master = self.master
+
+        comment = report.get('body', None)
+
         if build['complete']:
             value = self.RESULTS_TABLE.get(build['results'],
                                            self.DEFAULT_RESULT)
-            comment = yield props.render(self._endDescription)
-            duration = self.formatDuration(build['complete_at'] - build[
-                'started_at'])
+            duration = self.formatDuration(build['complete_at'] - build['started_at'])
         else:
             value = 0
-            comment = yield props.render(self._startDescription)
             duration = 'pending'
 
         name = yield props.render(self._verification_name)

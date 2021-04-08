@@ -1,1 +1,0 @@
-Use only python3 for buildbot worker docker image

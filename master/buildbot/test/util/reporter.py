@@ -21,23 +21,24 @@ from buildbot.test import fakedb
 
 class ReporterTestMixin:
 
-    TEST_PROJECT = 'testProject'
-    TEST_REPO = 'https://example.org/repo'
-    TEST_REVISION = 'd34db33fd43db33f'
-    TEST_BRANCH = "master"
-    TEST_CODEBASE = 'cbgerrit'
-    TEST_CHANGE_ID = 'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
-    TEST_BUILDER_NAME = 'Builder0'
-    TEST_PROPS = {
-        'Stash_branch': 'refs/changes/34/1234/1',
-        'project': TEST_PROJECT,
-        'got_revision': TEST_REVISION,
-        'revision': TEST_REVISION,
-        'event.change.id': TEST_CHANGE_ID,
-        'event.change.project': TEST_PROJECT,
-        'branch': 'refs/pull/34/merge',
-    }
-    THING_URL = 'http://thing.example.com'
+    def setup_reporter_test(self):
+        self.reporter_test_project = 'testProject'
+        self.reporter_test_repo = 'https://example.org/repo'
+        self.reporter_test_revision = 'd34db33fd43db33f'
+        self.reporter_test_branch = "master"
+        self.reporter_test_codebase = 'cbgerrit'
+        self.reporter_test_change_id = 'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
+        self.reporter_test_builder_name = 'Builder0'
+        self.reporter_test_props = {
+            'Stash_branch': 'refs/changes/34/1234/1',
+            'project': self.reporter_test_project,
+            'got_revision': self.reporter_test_revision,
+            'revision': self.reporter_test_revision,
+            'event.change.id': self.reporter_test_change_id,
+            'event.change.project': self.reporter_test_project,
+            'branch': 'refs/pull/34/merge',
+        }
+        self.reporter_test_thing_url = 'http://thing.example.com'
 
     @defer.inlineCallbacks
     def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
@@ -54,6 +55,38 @@ class ReporterTestMixin:
     def insert_build_new(self, **kwargs):
         return (yield self.insert_build(results=None, **kwargs))
 
+    @defer.inlineCallbacks
+    def insert_buildrequest_new(self, insert_patch=False, **kwargs):
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Builder(id=79, name='Builder0'),
+            fakedb.Builder(id=80, name='Builder1'),
+            fakedb.Buildset(id=98, results=None, reason="testReason1",
+                            parent_buildid=None),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79)
+        ])
+
+        patchid = 99 if insert_patch else None
+
+        self.db.insertTestData([
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+            fakedb.SourceStamp(
+                id=234,
+                branch=self.reporter_test_branch,
+                project=self.reporter_test_project,
+                revision=self.reporter_test_revision,
+                repository=self.reporter_test_repo,
+                codebase=self.reporter_test_codebase,
+                patchid=patchid),
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+                         patch_author='him@foo', patch_comment='foo', subdir='/foo',
+                         patchlevel=3)
+        ])
+        request = yield self.master.data.get(("buildrequests", 11))
+        return request
+
     def insertTestData(self, buildResults, finalResult, insertSS=True,
                        parentPlan=False, insert_patch=False):
         self.db = self.master.db
@@ -64,9 +97,10 @@ class ReporterTestMixin:
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1",
                             parent_buildid=19 if parentPlan else None),
-            fakedb.Change(changeid=13, branch=self.TEST_BRANCH, revision='9283', author='me@foo',
-                          repository=self.TEST_REPO, codebase=self.TEST_CODEBASE,
-                          project='world-domination', sourcestampid=234),
+            fakedb.Change(changeid=13, branch=self.reporter_test_branch, revision='9283',
+                          author='me@foo', repository=self.reporter_test_repo,
+                          codebase=self.reporter_test_codebase, project='world-domination',
+                          sourcestampid=234),
         ])
 
         if parentPlan:
@@ -86,11 +120,11 @@ class ReporterTestMixin:
                 fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
                 fakedb.SourceStamp(
                     id=234,
-                    branch=self.TEST_BRANCH,
-                    project=self.TEST_PROJECT,
-                    revision=self.TEST_REVISION,
-                    repository=self.TEST_REPO,
-                    codebase=self.TEST_CODEBASE,
+                    branch=self.reporter_test_branch,
+                    project=self.reporter_test_project,
+                    revision=self.reporter_test_revision,
+                    repository=self.reporter_test_repo,
+                    codebase=self.reporter_test_codebase,
                     patchid=patchid),
                 fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                              patch_author='him@foo', patch_comment='foo', subdir='/foo',
@@ -121,7 +155,7 @@ class ReporterTestMixin:
                     buildid=20 + i, name="buildnumber", value="{}".format(i)),
                 fakedb.BuildProperty(buildid=20 + i, name="scheduler", value="checkin"),
             ])
-            for k, v in self.TEST_PROPS.items():
+            for k, v in self.reporter_test_props.items():
                 self.db.insertTestData([
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                 ])

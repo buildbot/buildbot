@@ -88,6 +88,20 @@ def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
 
 
 @defer.inlineCallbacks
+def get_details_for_buildrequest(master, buildrequest, build):
+    buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
+    builder = yield master.data.get(("builders", buildrequest['builderid']))
+
+    build['buildrequest'] = buildrequest
+    build['buildset'] = buildset
+    build['builderid'] = buildrequest['builderid']
+    build['builder'] = builder
+    build['url'] = getURLForBuildrequest(master, buildrequest['buildrequestid'])
+    build['results'] = None
+    build['complete'] = False
+
+
+@defer.inlineCallbacks
 def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantSteps=False,
                         wantPreviousBuild=False, wantLogs=False):
 
@@ -201,6 +215,11 @@ def getURLForBuild(master, builderid, build_number):
     return prefix + "#builders/%d/builds/%d" % (
         builderid,
         build_number)
+
+
+def getURLForBuildrequest(master, buildrequestid):
+    prefix = master.config.buildbotURL
+    return "{}#buildrequests/{}".format(prefix, buildrequestid)
 
 
 @renderer

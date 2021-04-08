@@ -15,10 +15,10 @@ BitbucketServerPRCommentPush
     c['services'].append(ss)
 
 
-:class:`BitbucketServerPRCommentPush`  publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
+:class:`BitbucketServerPRCommentPush` publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
 
 
-.. py:class:: BitbucketServerPRCommentPush(base_url, user, password, messageFormatter=None, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, builders=None, schedulers=None, branches=None, buildSetSummary=False, generators=None):
+.. py:class:: BitbucketServerPRCommentPush(base_url, user, password, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, generators=None)
 
 The following parameters are accepted by this reporter:
 
@@ -51,20 +51,6 @@ The following parameters are accepted by this reporter:
     (boolean, defaults to ``None``)
     If ``False``, disables SSL verification for the case you use temporary self signed certificates.
     Default enables SSL verification.
-
-Additionally, the following deprecated parameters are supported.
-They work in the same way as in the ``MailNotifier``, see above for their documentation.
-
- * ``subject``
- * ``mode``
- * ``builders``
- * ``tags``
- * ``schedulers``
- * ``branches``
- * ``buildSetSummary``
- * ``messageFormatter``
- * ``watchedWorkers`` (differently from ``MailNotifier``, the default is ``None``)
- * ``messageFormatterMissingWorker``
 
 .. Note::
     This reporter depends on the Bitbucket server hook to get the pull request url.

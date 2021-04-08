@@ -11,25 +11,15 @@ It formats a message using the Jinja2_ templating language and picks the templat
 
 The constructor of the class takes the following arguments:
 
-``template_dir``
-    The directory that is used to look for the various templates.
-
-``template_filename``
-    This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
-    It defaults to ``default_mail.txt``.
-
 ``template``
-    If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.
+    If set, this parameter indicates the content of the template used to generate the body of the mail as string.
 
 ``template_type``
     This indicates the type of the generated template.
     Use either 'plain' (the default) or 'html'.
 
-``subject_filename``
-    This is the name of the file in the ``template_dir`` directory that contains the content of the subject of the mail.
-
 ``subject``
-    Alternatively, this is the content of the subject of the mail as string.
+    The content of the subject of the mail as string.
 
 ``ctx``
     This is an extension of the standard context that will be given to the templates.
@@ -51,14 +41,15 @@ The constructor of the class takes the following arguments:
 
 ``wantSteps``
     This parameter (defaults to False) will extend the content of the given ``build`` object with information about the steps of the build.
-    Use it only when necessary as this increases the overhead in term of CPU and memory on the master.
+    Use it only when necessary as this increases the overhead in terms of CPU and memory on the master.
 
 ``wantLogs``
-    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the full Logs of each steps from the build.
+    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the full logs of each steps from the build.
     This requires ``wantSteps`` to be True.
-    Use it only when mandatory as this increases the overhead in term of CPU and memory on the master greatly.
+    Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
 
 Context
+~~~~~~~
 
 The context that is given to the template consists of the following data:
 

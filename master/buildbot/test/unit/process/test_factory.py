@@ -25,8 +25,6 @@ from buildbot.process.factory import BuildFactory
 from buildbot.process.factory import GNUAutoconf
 from buildbot.process.factory import s
 from buildbot.steps.shell import Configure
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBuildFactory(unittest.TestCase):
@@ -53,28 +51,6 @@ class TestBuildFactory(unittest.TestCase):
         # check if the 'right' node added in the factory
         self.assertEqual(self.factory.steps[-1],
                          _BuildStepFactory(BuildStep, name=string))
-
-    def test_addStep_deprecated_withArguments(self):
-        """
-        Passing keyword arguments to L{BuildFactory.addStep} is deprecated,
-        but pass the arguments to the first argument, to construct a step.
-        """
-        with assertProducesWarning(DeprecatedApiWarning):
-            self.factory.addStep(BuildStep, name='test')
-
-        self.assertEqual(self.factory.steps[-1],
-                         _BuildStepFactory(BuildStep, name='test'))
-
-    def test_addStep_deprecated(self):
-        """
-        Passing keyword arguments to L{BuildFactory.addStep} is deprecated,
-        but pass the arguments to the first argument, to construct a step.
-        """
-        with assertProducesWarning(DeprecatedApiWarning):
-            self.factory.addStep(BuildStep)
-
-        self.assertEqual(self.factory.steps[-1],
-                         _BuildStepFactory(BuildStep))
 
     def test_s(self):
         """

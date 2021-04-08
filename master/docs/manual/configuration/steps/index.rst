@@ -24,6 +24,7 @@ Build Steps
     gitcommit
     gittag
     gitpush
+    git_diffinfo
     shell_command
     shell_sequence
     compile
@@ -35,7 +36,6 @@ Build Steps
     test
     treesize
     perl_module_test
-    mtr
     subunit_shell_command
     hlint
     maxq
@@ -63,7 +63,7 @@ Build Steps
     deb_pbuilder
     deb_lintian
 
-:class:`BuildStep`\s are usually specified in the buildmaster's configuration file, in a list that goes into the :class:`BuildFactory`.
+:class:`BuildStep`\s are usually specified in the buildmaster's configuration file, in a list that given to a :class:`BuildFactory`.
 The :class:`BuildStep` instances in this list are used as templates to construct new independent copies for each build (so that state can be kept on the :class:`BuildStep` in one build without affecting a later build).
 Each :class:`BuildFactory` can be created with a list of steps, or the factory can be created empty and then steps added to it using the :meth:`addStep` method:
 
@@ -86,7 +86,7 @@ The basic behavior for a :class:`BuildStep` is to:
 * finish with a status described by one of four values defined in :mod:`buildbot.process.results`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
 * provide a list of short strings to describe the step
 
-The rest of this section describes all the standard :class:`BuildStep` objects available for use in a :class:`Build`, and the parameters which can be used to control each.
+The rest of this section describes all the standard :class:`BuildStep` objects available for use in a :class:`Build`, and the parameters that can be used to control each.
 A full list of build steps is available in the :bb:index:`step`.
 
 .. contents::
@@ -121,6 +121,7 @@ The following build steps are available:
     * :ref:`Step-GitCommit`
     * :ref:`Step-GitTag`
     * :ref:`Step-GitPush`
+    * :ref:`Step-GitDiffInfo`
 
 * **ShellCommand steps** - used to perform various shell-based operations
 
@@ -135,7 +136,6 @@ The following build steps are available:
     * :ref:`Step-Test`
     * :ref:`Step-TreeSize`
     * :ref:`Step-PerlModuleTest`
-    * :ref:`Step-MTR`
     * :ref:`Step-SubunitShellCommand`
     * :ref:`Step-HLint`
     * :ref:`Step-MaxQ`

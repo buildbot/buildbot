@@ -21,8 +21,8 @@ The *mind* is the worker bot instance (class :class:`buildbot_worker.pb.BotPb`).
 
 On the master side, the realm is implemented by
 :class:`buildbot.pbmanager.Dispatcher`, which examines the username of incoming
-avatar requests.  There are special cases for ``change``, ``debug``, and
-``statusClient``, which are not discussed here.  For all other usernames,
+avatar requests.  There are special cases for ``change`` and ``debug``, which are not discussed here.
+For all other usernames,
 the botmaster is consulted, and if a worker with that name is configured, its
 :class:`buildbot.worker.Worker` instance is returned as the perspective.
 

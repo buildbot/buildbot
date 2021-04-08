@@ -30,23 +30,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import worst_status
-from buildbot.steps.shell_oldstyle import Compile
-from buildbot.steps.shell_oldstyle import Configure
-from buildbot.steps.shell_oldstyle import SetPropertyFromCommand
-from buildbot.steps.shell_oldstyle import ShellCommand
-from buildbot.steps.shell_oldstyle import Test
-from buildbot.steps.shell_oldstyle import WarningCountingShellCommand
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import join_list
 
 _hush_pyflakes = [
     WithProperties,
-    Configure,
-    Compile,
-    ShellCommand,
-    SetPropertyFromCommand,
-    Test,
-    WarningCountingShellCommand,
 ]
 del _hush_pyflakes
 
@@ -90,7 +78,7 @@ class TreeSize(buildstep.ShellMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-class SetPropertyFromCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
+class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
     name = "setproperty"
     renderables = ['property']
 
@@ -160,19 +148,29 @@ class SetPropertyFromCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
         return SUCCESS
 
 
+SetPropertyFromCommandNewStyle = SetPropertyFromCommand
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use SetPropertyFromCommand instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.shell",
+    name="SetPropertyFromCommandNewStyle",
+)
+
+
 SetProperty = SetPropertyFromCommand
 deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
                           "It has been renamed to SetPropertyFromCommand",
                           "buildbot.steps.shell", "SetProperty")
 
 
-class ShellCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
-    # This is a temporary class until old ShellCommand is retired
+class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
+    name = 'shell'
+
     def __init__(self, **kwargs):
 
-        if self.__class__ is ShellCommandNewStyle:
+        if self.__class__ is ShellCommand:
             if 'command' not in kwargs:
-                config.error("ShellCommandNewStyle's `command' argument is not specified")
+                config.error("ShellCommand's `command' argument is not specified")
 
             # check validity of arguments being passed to RemoteShellCommand
             valid_rsc_args = [
@@ -184,6 +182,7 @@ class ShellCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
                 'maxTime',
                 'sigtermTime',
                 'logfiles',
+                'lazylogfiles',
                 'usePTY',
                 'logEnviron',
                 'collectStdout',
@@ -201,7 +200,7 @@ class ShellCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
                     invalid_args.append(arg)
 
             if invalid_args:
-                config.error("Invalid argument(s) passed to ShellCommandNewStyle: " +
+                config.error("Invalid argument(s) passed to ShellCommand: " +
                              ', '.join(invalid_args))
 
         kwargs = self.setupShellMixin(kwargs)
@@ -214,7 +213,16 @@ class ShellCommandNewStyle(buildstep.ShellMixin, buildstep.BuildStep):
         return cmd.results()
 
 
-class ConfigureNewStyle(ShellCommandNewStyle):
+ShellCommandNewStyle = ShellCommand
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use ShellCommand instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.shell",
+    name="ShellCommandNewStyle",
+)
+
+
+class Configure(ShellCommand):
     name = "configure"
     haltOnFailure = 1
     flunkOnFailure = 1
@@ -223,8 +231,16 @@ class ConfigureNewStyle(ShellCommandNewStyle):
     command = ["./configure"]
 
 
-class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMixin,
-                                          buildstep.BuildStep):
+ConfigureNewStyle = Configure
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use Configure instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.shell",
+    name="ConfigureNewStyle",
+)
+
+
+class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buildstep.BuildStep):
     renderables = [
         'suppressionFile',
         'suppressionList',
@@ -269,13 +285,11 @@ class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMix
             self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
         self.maxWarnCount = maxWarnCount
 
-        if self.__class__ is WarningCountingShellCommandNewStyle and \
-                not kwargs.get('command'):
-            # WarningCountingShellCommandNewStyle class is directly instantiated.
+        if self.__class__ is WarningCountingShellCommand and not kwargs.get('command'):
+            # WarningCountingShellCommand class is directly instantiated.
             # Explicitly check that command is set to prevent runtime error
             # later.
-            config.error("WarningCountingShellCommandNewStyle's `command' argument "
-                         "is not specified")
+            config.error("WarningCountingShellCommand's 'command' argument is not specified")
 
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
@@ -439,6 +453,7 @@ class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMix
         stdio_log = yield self.getLog('stdio')
         yield stdio_log.finish()
 
+    @defer.inlineCallbacks
     def createSummary(self):
         """
         Match log lines against warningPattern.
@@ -449,8 +464,8 @@ class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMix
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
-            self.addCompleteLog("warnings (%d)" % self.warnCount,
-                                "\n".join(self.loggedWarnings) + "\n")
+            yield self.addCompleteLog("warnings (%d)" % self.warnCount,
+                                      "\n".join(self.loggedWarnings) + "\n")
 
         warnings_stat = self.getStatistic('warnings', 0)
         self.setStatistic('warnings', warnings_stat + self.warnCount)
@@ -468,7 +483,16 @@ class WarningCountingShellCommandNewStyle(buildstep.ShellMixin, CompositeStepMix
         return result
 
 
-class CompileNewStyle(WarningCountingShellCommandNewStyle):
+WarningCountingShellCommandNewStyle = WarningCountingShellCommand
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use WarningCountingShellCommand instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.shell",
+    name="WarningCountingShellCommandNewStyle",
+)
+
+
+class Compile(WarningCountingShellCommand):
 
     name = "compile"
     haltOnFailure = 1
@@ -478,7 +502,16 @@ class CompileNewStyle(WarningCountingShellCommandNewStyle):
     command = ["make", "all"]
 
 
-class TestNewStyle(WarningCountingShellCommandNewStyle):
+CompileNewStyle = Compile
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use Compile instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.shell",
+    name="CompileNewStyle",
+)
+
+
+class Test(WarningCountingShellCommand):
 
     name = "test"
     warnOnFailure = 1
@@ -529,6 +562,15 @@ class TestNewStyle(WarningCountingShellCommandNewStyle):
         return super().getResultSummary()
 
 
+TestNewStyle = Test
+deprecatedModuleAttribute(
+    Version("buildbot", 3, 0, 0),
+    message="Use Test instead. This step will be removed in Buildbot 3.2.",
+    moduleName="buildbot.steps.shell",
+    name="TestNewStyle",
+)
+
+
 class PerlModuleTestObserver(logobserver.LogLineObserver):
 
     def __init__(self, warningPattern):
@@ -576,7 +618,7 @@ class PerlModuleTestObserver(logobserver.LogLineObserver):
                 self.total = int(mo.group(1))
 
 
-class PerlModuleTest(TestNewStyle):
+class PerlModuleTest(Test):
     command = ["prove", "--lib", "lib", "-r", "t"]
     total = 0
 

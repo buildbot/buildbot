@@ -24,12 +24,13 @@ from buildbot.plugins import util
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
-from buildbot.reporters import http
-from buildbot.reporters import notifier
+from buildbot.reporters.base import ReporterBase
+from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
-from buildbot.warnings import warn_deprecated
 
 from .utils import merge_reports_prop
 
@@ -44,29 +45,45 @@ HTTP_PROCESSED = 204
 HTTP_CREATED = 201
 
 
-class BitbucketServerStatusPush(http.HttpStatusPushBase):
+class BitbucketServerStatusPush(ReporterBase):
     name = "BitbucketServerStatusPush"
 
-    def checkConfig(self, base_url, user, password, key=None, statusName=None,
-                    startDescription=None, endDescription=None, verbose=False,
-                    **kwargs):
-        super().checkConfig(wantProperties=True, _has_old_arg_names={'wantProperties': False},
-                            **kwargs)
+    def checkConfig(self, base_url, user, password, key=None, statusName=None, verbose=False,
+                    debug=None, verify=None, generators=None, **kwargs):
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, key=None,
-                        statusName=None, startDescription=None,
-                        endDescription=None, verbose=False, **kwargs):
+    def reconfigService(self, base_url, user, password, key=None, statusName=None, verbose=False,
+                        debug=None, verify=None, generators=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield super().reconfigService(wantProperties=True, **kwargs)
+        self.debug = debug
+        self.verify = verify
+        self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators, **kwargs)
+
         self.key = key or Interpolate('%(prop:buildername)s')
         self.context = statusName
-        self.endDescription = endDescription or 'Build done.'
-        self.startDescription = startDescription or 'Build started.'
-        self.verbose = verbose
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password),
             debug=self.debug, verify=self.verify)
+
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
+
+        return [
+            BuildStartEndStatusGenerator(start_formatter=start_formatter,
+                                         end_formatter=end_formatter)
+        ]
 
     def createStatus(self, sha, state, url, key, description=None, context=None):
         payload = {
@@ -83,35 +100,22 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
         return self._http.post(STATUS_API_URL.format(sha=sha), json=payload)
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketServerStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            yield self.send(build)
-        else:
-            yield self._send_impl(build)
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
+
+        description = report.get('body', None)
 
         results = build['results']
         if build['complete']:
             state = SUCCESSFUL if results == SUCCESS else FAILED
-            description = self.endDescription
         else:
             state = INPROGRESS
-            description = self.startDescription
 
         key = yield props.render(self.key)
-        description = yield props.render(description) if description else None
         context = yield props.render(self.context) if self.context else None
 
         sourcestamps = build['buildset']['sourcestamps']
@@ -151,41 +155,50 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                     ))
 
 
-class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
+class BitbucketServerCoreAPIStatusPush(ReporterBase):
     name = "BitbucketServerCoreAPIStatusPush"
     secrets = ["token", "auth"]
 
     def checkConfig(self, base_url, token=None, auth=None,
-                    statusName=None, statusSuffix=None, startDescription=None,
-                    endDescription=None, key=None, parentName=None,
+                    statusName=None, statusSuffix=None, key=None, parentName=None,
                     buildNumber=None, ref=None, duration=None,
-                    testResults=None, verbose=False, debug=None,
-                    verify=None, **kwargs):
+                    testResults=None, verbose=False, debug=None, verify=None, generators=None,
+                    **kwargs):
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
+
         if not base_url:
             config.error("Parameter base_url has to be given")
         if token is not None and auth is not None:
             config.error("Only one authentication method can be given "
                          "(token or auth)")
-        super().checkConfig(wantProperties=True, _has_old_arg_names={'wantProperties': False},
-                            **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, base_url, token=None, auth=None,
-                        statusName=None, statusSuffix=None, startDescription=None,
-                        endDescription=None, key=None, parentName=None,
+                        statusName=None, statusSuffix=None, key=None, parentName=None,
                         buildNumber=None, ref=None, duration=None,
-                        testResults=None, verbose=False, debug=None,
-                        verify=None, **kwargs):
-        yield super().reconfigService(wantProperties=True, **kwargs)
+                        testResults=None, verbose=False, debug=None, verify=None, generators=None,
+                        **kwargs):
         self.status_name = statusName
         self.status_suffix = statusSuffix
-        self.start_description = startDescription or 'Build started.'
-        self.end_description = endDescription or 'Build done.'
         self.key = key or Interpolate('%(prop:buildername)s')
         self.parent_name = parentName
         self.build_number = buildNumber or Interpolate('%(prop:buildnumber)s')
         self.ref = ref
         self.duration = duration
+
+        self.debug = debug
+        self.verify = verify
+        self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators, **kwargs)
 
         if testResults:
             self.test_results = testResults
@@ -204,13 +217,21 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                 return None
             self.test_results = r_testresults
 
-        self.verbose = verbose
         headers = {}
         if token:
             headers["Authorization"] = "Bearer {}".format(token)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=auth, headers=headers, debug=debug,
             verify=verify)
+
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
+
+        return [
+            BuildStartEndStatusGenerator(start_formatter=start_formatter,
+                                         end_formatter=end_formatter)
+        ]
 
     def createStatus(self, proj_key, repo_slug, sha, state, url, key, parent,
                      build_number, ref, description, name, duration,
@@ -238,30 +259,19 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
         return self._http.post(_url, json=payload)
 
     @defer.inlineCallbacks
-    def send(self, build):
-        # the only case when this function is called is when the user derives this class, overrides
-        # send() and calls super().send(build) from there.
-        yield self._send_impl(build)
-
-    @defer.inlineCallbacks
     def sendMessage(self, reports):
+        report = reports[0]
         build = reports[0]['builds'][0]
-        if self.send.__func__ is not BitbucketServerCoreAPIStatusPush.send:
-            warn_deprecated('2.9.0', 'send() in reporters has been deprecated. Use sendMessage()')
-            yield self.send(build)
-        else:
-            yield self._send_impl(build)
 
-    @defer.inlineCallbacks
-    def _send_impl(self, build):
         props = Properties.fromDict(build['properties'])
         props.master = self.master
+
+        description = report.get('body', None)
 
         duration = None
         test_results = None
         if build['complete']:
             state = SUCCESSFUL if build['results'] == SUCCESS else FAILED
-            description = yield props.render(self.end_description)
             if self.duration:
                 duration = yield props.render(self.duration)
             else:
@@ -271,7 +281,6 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                 test_results = yield props.render(self.test_results)
         else:
             state = INPROGRESS
-            description = yield props.render(self.start_description)
             duration = None
 
         parent_name = (build['parentbuilder'] or {}).get('name')
@@ -369,42 +378,34 @@ class BitbucketServerCoreAPIStatusPush(http.HttpStatusPushBase):
                     ))
 
 
-class BitbucketServerPRCommentPush(notifier.NotifierBase):
+class BitbucketServerPRCommentPush(ReporterBase):
     name = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, messageFormatter=None,
-                        verbose=False, debug=None, verify=None, **kwargs):
+    def reconfigService(self, base_url, user, password,
+                        verbose=False, debug=None, verify=None, generators=None, **kwargs):
         user, password = yield self.renderSecrets(user, password)
-        yield super().reconfigService(
-            messageFormatter=messageFormatter, watchedWorkers=None,
-            messageFormatterMissingWorker=None, subject='', addLogs=False,
-            addPatch=False, **kwargs)
         self.verbose = verbose
+
+        if generators is None:
+            generators = self._create_default_generators()
+
+        yield super().reconfigService(generators=generators, **kwargs)
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password),
             debug=debug, verify=verify)
 
-    def checkConfig(self, base_url, user, password, messageFormatter=None,
-                    verbose=False, debug=None, verify=None, **kwargs):
+    def checkConfig(self, base_url, user, password,
+                    verbose=False, debug=None, verify=None, generators=None, **kwargs):
 
-        super().checkConfig(messageFormatter=messageFormatter,
-                            watchedWorkers=None,
-                            messageFormatterMissingWorker=None,
-                            subject='',
-                            addLogs=False,
-                            addPatch=False,
-                            _has_old_arg_names={'subject': False},
-                            **kwargs)
+        if generators is None:
+            generators = self._create_default_generators()
 
-    def isMessageNeeded(self, build):
-        if 'pullrequesturl' in build['properties']:
-            return super().isMessageNeeded(build)
-        return False
+        super().checkConfig(generators=generators, **kwargs)
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
-    def workerMissing(self, key, worker):
-        # a comment is always associated to a change
-        pass
+    def _create_default_generators(self):
+        return [BuildStatusGenerator()]
 
     def sendComment(self, pr_url, text):
         path = urlparse(unicode2bytes(pr_url)).path

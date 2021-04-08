@@ -133,7 +133,7 @@ This parameter takes a field name to sort on, optionally prefixed with ``-`` to 
 The parameter can appear multiple times, and will be sorted lexically with the fields arranged in the given order.
 For example:
 
-* ``http://build.example.org/api/v2/buildrequest?order=builderid&order=buildrequestid``
+* ``http://build.example.org/api/v2/buildrequests?order=builderid&order=buildrequestid``
 
 Pagination
 ..........
@@ -144,8 +144,8 @@ The limit is the maximum number of results to return.
 Some resource types may impose a maximum on the limit parameter; be sure to check the resulting links to determine whether further data is available.
 For example:
 
-* ``http://build.example.org/api/v2/buildrequest?order=builderid&limit=10``
-* ``http://build.example.org/api/v2/buildrequest?order=builderid&offset=20&limit=10``
+* ``http://build.example.org/api/v2/buildrequests?order=builderid&limit=10``
+* ``http://build.example.org/api/v2/buildrequests?order=builderid&offset=20&limit=10``
 
 Controlling
 ~~~~~~~~~~~

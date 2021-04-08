@@ -23,12 +23,13 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
+from buildbot.util import bytes2unicode
 
 RC_SUCCESS = 0
 
 
 def getSshArgsForKeys(keyPath, knownHostsPath):
-    args = []
+    args = ['-o', 'BatchMode=yes']
     if keyPath is not None:
         args += ['-i', keyPath]
     if knownHostsPath is not None:
@@ -150,13 +151,15 @@ class GitStepMixin(GitMixin):
         # destination directory being non-empty. We have to use separate
         # temporary directory for that data to ensure the confidentiality of it.
         # So instead of
-        # '{path}/{to}/{workdir}/.buildbot-ssh-key' we put the key at
-        # '{path}/{to}/.{builder_name}.{workdir}.buildbot/ssh-key'.
+        # '{path}/{to}/{workerbuilddir}/{workdir}/.buildbot-ssh-key'
+        # we put the key in
+        # '{path}/{to}/.{workerbuilddir}.{workdir}.buildbot/ssh-key'.
 
         # basename and dirname interpret the last element being empty for paths
         # ending with a slash
         path_module = self.build.path_module
 
+        workerbuilddir = bytes2unicode(self.build.builder.config.workerbuilddir)
         workdir = self._getSshDataWorkDir().rstrip('/\\')
 
         if path_module.isabs(workdir):
@@ -165,7 +168,7 @@ class GitStepMixin(GitMixin):
             parent_path = path_module.join(self.worker.worker_basedir,
                                            path_module.dirname(workdir))
 
-        basename = '.{0}.{1}.buildbot'.format(self.build.builder.name,
+        basename = '.{0}.{1}.buildbot'.format(workerbuilddir,
                                               path_module.basename(workdir))
         return path_module.join(parent_path, basename)
 

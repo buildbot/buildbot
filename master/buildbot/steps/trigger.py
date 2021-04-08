@@ -25,8 +25,11 @@ from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
+from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
+from buildbot.reporters.utils import getURLForBuild
+from buildbot.reporters.utils import getURLForBuildrequest
 
 
 class Trigger(BuildStep):
@@ -107,6 +110,7 @@ class Trigger(BuildStep):
         self.brids = []
         self.triggeredNames = None
         self.waitForFinishDeferred = None
+        self._result_list = []
         super().__init__(**kwargs)
 
     def interrupt(self, reason):
@@ -230,10 +234,24 @@ class Trigger(BuildStep):
                             builderDict = yield self.master.data.get(("builders", builderid))
                             builderNames[builderid] = builderDict["name"]
                         num = build['number']
-                        url = self.master.status.getURLForBuild(builderid, num)
+                        url = getURLForBuild(self.master, builderid, num)
                         yield self.addURL("{}: {} #{}".format(statusToString(build["results"]),
                                                               builderNames[builderid], num),
                                           url)
+
+    @defer.inlineCallbacks
+    def _add_results(self, brid):
+        @defer.inlineCallbacks
+        def _is_buildrequest_complete(brid):
+            buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
+            return buildrequest['complete']
+
+        event = ('buildrequests', str(brid), 'complete')
+        yield self.master.mq.waitUntilEvent(event, lambda: _is_buildrequest_complete(brid))
+        builds = yield self.master.db.builds.getBuilds(buildrequestid=brid)
+        for build in builds:
+            self._result_list.append(build["results"])
+        self.updateSummary()
 
     @defer.inlineCallbacks
     def run(self):
@@ -295,8 +313,11 @@ class Trigger(BuildStep):
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from
                 # the beginning
-                url = self.master.status.getURLForBuildrequest(brid)
+                url = getURLForBuildrequest(self.master, brid)
                 yield self.addURL("{} #{}".format(sch.name, brid), url)
+                # No yield since we let this happen as the builds complete
+                self._add_results(brid)
+
             dl.append(resultsDeferred)
             triggeredNames.append(sch.name)
             if self.ended:
@@ -330,4 +351,11 @@ class Trigger(BuildStep):
     def getCurrentSummary(self):
         if not self.triggeredNames:
             return {'step': 'running'}
-        return {'step': 'triggered {}'.format(', '.join(self.triggeredNames))}
+        summary = ""
+        if self._result_list:
+            for status in ALL_RESULTS:
+                count = self._result_list.count(status)
+                if count:
+                    summary = summary + ", {} {}".format(self._result_list.count(status),
+                                                     statusToString(status, count))
+        return {'step': 'triggered {}{}'.format(', '.join(self.triggeredNames), summary)}

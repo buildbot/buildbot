@@ -11,7 +11,7 @@ Requirements
 Buildbot steps might need secrets to execute their actions.
 Secrets are used to execute commands or to create authenticated network connections.
 Secrets may be a SSH key, a password, or a file content like a wgetrc file or a public SSH key.
-To preserve confidentiality, the secrets values must not be printed or logged in the twisted or steps logs.
+To preserve confidentiality, the secret values must not be printed or logged in the twisted or step logs.
 Secrets must not be stored in the Buildbot configuration (master.cfg), as the source code is usually shared in SCM like git.
 
 How to use Buildbot Secret Management
@@ -23,10 +23,10 @@ Secrets and providers
 Buildbot implements several providers for secrets retrieval:
 
 - File system based: secrets are written in a file.
-  This is a simple solution for example when secrets are managed by config management system like Ansible Vault.
+  This is a simple solution for example when secrets are managed by a config management system like Ansible Vault.
 
 - Third party backend based: secrets are stored by a specialized software.
-  These solution are usually more secured.
+  These solutions are usually more secure.
 
 Secrets providers are configured if needed in the master configuration.
 Multiple providers can be configured at once.
@@ -39,7 +39,7 @@ How to use secrets in Buildbot
 Secret can be used in Buildbot via the :class:`~IRenderable` mechanism.
 Two :class:`~IRenderable` actually implement secrets.
 :ref:`Interpolate` can be used if you need to mix secrets and other interpolation in the same argument.
-:ref:`Interpolate` can be used if your secret is directly used as a component argument.
+:ref:`Secret` can be used if your secret is directly used as a component argument.
 
 .. _Secret:
 
@@ -59,7 +59,7 @@ The following example shows a basic usage of secrets in Buildbot.
 
     from buildbot.plugins import secrets, util
     # First we declare that the secrets are stored in a directory of the filesystem
-    # each file contain one secret identified by the filename
+    # each file contains one secret identified by the filename
     c['secretsProviders'] = [secrets.SecretInAFile(dirname="/path/toSecretsFiles")]
 
     # then in a buildfactory:
@@ -85,7 +85,7 @@ See their individual documentation for details.
 .. code-block:: python
 
     # First we declare that the secrets are stored in a directory of the filesystem
-    # each file contain one secret identified by the filename
+    # each file contains one secret identified by the filename
     c['secretsProviders'] = [secrets.SecretInAFile(dirname="/path/toSecretsFiles")]
 
     # then for a reporter:
@@ -131,7 +131,7 @@ HashiCorpVaultSecretProvider
 
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
-At the moment Buildbot supports KV v1 and v2 backends via the apiVersion argument.
+At the moment, Buildbot supports KV v1 and v2 backends via the apiVersion argument.
 
 Buildbot's Vault authentication/authorisation is via a token.
 The "Initial Root Token", generated on Vault initialization, can be used but has ‘root’ authorization.
@@ -141,14 +141,14 @@ In the master configuration, the Vault provider is instantiated through the Buil
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
-The secret identifiers that need to be passed to e.g. :ref:`Interpolate` accept one of the following
+The secret identifiers that need to be passed to, e.g. :ref:`Interpolate`, accept one of the following
 formats:
 
  - ``key``: The provider will fetch the secret with name ``key`` and return the value of ``value`` attribute stored therein.
 
  - ``key/attr``: The provider will fetch the secret with name ``key`` and return the value of ``attr`` attribute stored therein.
 
-Vault stores secrets in form of key value pairs.
+Vault stores secrets in form of key-value pairs.
 
 - Simple keys
 
@@ -168,9 +168,9 @@ Each part of a multipart value can be read like
 
 .. code-block:: python
 
-    url = Interpolate("site url is %(secret: folder1/folde2/folde3/secretname/url)s")
-    pass = Interpolate("your password is %(secret: folder1/folde2/folde3/secretname/pass)s")
-    cert = Interpolate("your cert is %(secret: folder1/folde2/folde3/secretname/ssh-cert)s")
+    url = Interpolate("site url is %(secret:folder1/folde2/folde3/secretname/url)s")
+    pass = Interpolate("your password is %(secret:folder1/folde2/folde3/secretname/pass)s")
+    cert = Interpolate("your cert is %(secret:folder1/folde2/folde3/secretname/ssh-cert)s")
 
 
 .. _SecretInPass:
@@ -211,6 +211,7 @@ The files will be automatically deleted at the end of the build.
         f = BuildFactory()
         with f.withSecrets(secrets_list):
             f.addStep(step_definition)
+
  or
 
 .. code-block:: python
@@ -218,7 +219,7 @@ The files will be automatically deleted at the end of the build.
         f = BuildFactory()
         f.addSteps([list_of_step_definitions], withSecrets=[secrets_list])
 
-In both cases the secrets_list is a list of tuple (secret path, secret value).
+In both cases the secrets_list is a list of (secret path, secret value) tuples.
 
 .. code-block:: python
 
@@ -268,7 +269,7 @@ Writing secrets
 ```````````````
 
 By default the official docker instance of Vault is initialized with a mount path of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
-Currently Buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
+Currently, Buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
 Provision is made to set a top level path via the "secretsmount" argument: defaults to "secret".
 To add a new secret:
 

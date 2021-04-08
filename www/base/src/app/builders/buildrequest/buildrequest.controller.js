@@ -61,6 +61,13 @@ class BuildrequestController {
         };
         $scope.$watch('buildrequest.complete', refreshContextMenu);
 
+        // Clear breadcrumb and contextual action buttons on destroy
+        const clearGl = function () {
+            glBreadcrumbService.setBreadcrumb([]);
+            glTopbarContextualActionsService.setContextualActions([]);
+        };
+        $scope.$on('$destroy', clearGl);
+
         const data = dataService.open().closeOnDestroy($scope);
         data.getBuildrequests($stateParams.buildrequest).onNew = function(buildrequest) {
             $scope.buildrequest = buildrequest;

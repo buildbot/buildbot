@@ -68,4 +68,60 @@ describe('buildsummary controller', function() {
         expect(buildsummary.isStepDisplayed({results:results.FAILURE})).toBe(true);
         buildsummary.toggleDetails();
     });
+
+    it('should provide correct isStepDisplayed when details = EVERYTHING and when details = NONE', function() {
+        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")($scope);
+        $scope.$apply();
+        const { buildsummary } = element.isolateScope();
+        // details = EVERYTHING
+        expect(buildsummary.isStepDisplayed({hidden: true})).toBe(false);
+        expect(buildsummary.isStepDisplayed({hidden: false})).toBe(true);
+        buildsummary.toggleDetails(); // set details = NONE
+        expect(buildsummary.isStepDisplayed({hidden: false, results:results.FAILURE})).toBe(false);
+    });
+
+    it('should provide correct getDisplayedStepCount', function() {
+        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")($scope);
+        $scope.$apply();
+        const { buildsummary } = element.isolateScope();
+        buildsummary.steps = [{hidden: false}, {hidden: false}];
+        expect(buildsummary.getDisplayedStepCount()).toEqual(2);
+
+        buildsummary.steps = [{hidden: true}, {hidden: true}];
+        expect(buildsummary.getDisplayedStepCount()).toEqual(0);
+
+        buildsummary.steps = [{hidden: true}, {hidden: false}];
+        expect(buildsummary.getDisplayedStepCount()).toEqual(1);
+    });
+
+    it('assignDisplayedStepNumber should assign correct step display number', function() {
+        const element = $compile("<buildsummary buildid='buildid'></buildsummary>")($scope);
+        $scope.$apply();
+        const { buildsummary } = element.isolateScope();
+        var step;
+        step = {number: 0, hidden: true, display_num: null};
+        expect(buildsummary.assignDisplayedStepNumber(step)).toBe(true);
+        expect(step.display_num).toEqual(null);
+
+        step = {number: 1, hidden: false, display_num: null};
+        expect(buildsummary.assignDisplayedStepNumber(step)).toBe(true);
+        expect(step.display_num).toEqual(0);
+
+        step = {number: 2, hidden: false, display_num: null};
+        expect(buildsummary.assignDisplayedStepNumber(step)).toBe(true);
+        expect(step.display_num).toEqual(1);
+
+        step = {number: 3, hidden: false, display_num: null};
+        expect(buildsummary.assignDisplayedStepNumber(step)).toBe(true);
+        expect(step.display_num).toEqual(2);
+
+        // reset display_num to zero whenever step.number = 0
+        step = {number: 0, hidden: false, display_num: null};
+        expect(buildsummary.assignDisplayedStepNumber(step)).toBe(true);
+        expect(step.display_num).toEqual(0);
+
+        step = {number: 1, hidden: false, display_num: null};
+        expect(buildsummary.assignDisplayedStepNumber(step)).toBe(true);
+        expect(step.display_num).toEqual(1);
+    });
 });

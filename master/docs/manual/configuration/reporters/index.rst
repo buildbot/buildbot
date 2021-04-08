@@ -9,7 +9,7 @@ Reporters
     :hidden:
     :maxdepth: 2
 
-    notifier_base
+    reporter_base
     bitbucket_server_core_api_status
     bitbucket_server_pr_comment_push
     bitbucket_server_status
@@ -19,7 +19,6 @@ Reporters
     github_comment
     github_status
     gitlab_status
-    hipchat_status
     http_status
     irc
     mail_notifier
@@ -46,7 +45,8 @@ To add reporter targets, you just append more objects to this list:
                                                      {"channel": "#example2",
                                                       "password": "somesecretpassword"}]))
 
-Most reporter objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
+Most reporter objects take a ``tags=`` argument, which can contain a list of tag names.
+In this case, the reporters will only show status for Builders that contain the named tags.
 
 .. note:: Implementation Note
 
@@ -63,7 +63,6 @@ The following reporters are available:
  * :bb:reporter:`GitHubCommentPush`
  * :bb:reporter:`GitHubStatusPush`
  * :bb:reporter:`GitLabStatusPush`
- * :bb:reporter:`HipchatStatusPush`
  * :bb:reporter:`HttpStatusPush`
  * :bb:reporter:`IRC`
  * :bb:reporter:`MailNotifier`
@@ -72,4 +71,4 @@ The following reporters are available:
  * :bb:reporter:`TelegramBot`
  * :bb:reporter:`ZulipStatusPush`
 
-Most of the report generators derive from :class:`NotifierBase` which implements basic reporter management functionality.
+Most of the report generators derive from :class:`ReporterBase` which implements basic reporter management functionality.
