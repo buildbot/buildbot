@@ -39,7 +39,7 @@ class V3RootResource(resource.Resource):
         if self.gql_config is not None:
             try:
                 import graphql
-            except ImportError:
+            except ImportError:  # pragma: no cover
                 raise ImportError(
                     "graphql is enabled but 'graphql-core' is not installed"
                 )
@@ -78,7 +78,20 @@ class V3RootResource(resource.Resource):
 
         # graphql accepts its query either in post data or get query
         if request.method == b"POST":
-            query = request.content.read()
+            content_type = request.getHeader(b"content-type")
+            if content_type == b"application/graphql":
+                query = request.content.read().decode()
+            elif content_type == b"application/json":
+                json_query = json.load(request.content)
+                query = json_query.pop('query')
+                if json_query:
+                    fields = " ".join(json_query.keys())
+                    raise Error(400, b"json request unsupported fields: " + fields.encode())
+            elif content_type is None:
+                raise Error(400, b"no content-type")
+            else:
+                raise Error(400, b"unsupported content-type: " + content_type)
+
         elif request.method in (b"GET"):
             if b"query" not in request.args:
                 raise Error(400, b"GET request must contain a 'query' parameter")
@@ -88,5 +101,6 @@ class V3RootResource(resource.Resource):
 
         res = yield self.renderQuery(query)
         return res
+
 
 RestRootResource.addApiVersion(3, V3RootResource)

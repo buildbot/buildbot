@@ -20,9 +20,9 @@ from twisted.python import failure
 
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.test.fake import endpoint
 from buildbot.test.util import validation
 from buildbot.util import service
-from buildbot.test.fake import endpoint
 
 
 class FakeUpdates(service.AsyncService):

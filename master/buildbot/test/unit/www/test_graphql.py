@@ -61,6 +61,7 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, b"/", method=b"PATCH")
         self.assertSimpleError("invalid HTTP method", 400)
 
+    # https://graphql.org/learn/serving-over-http/#get-request
     @defer.inlineCallbacks
     def test_get_query(self):
         yield self.render_resource(
@@ -68,6 +69,76 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             b"/?query={tests{id}}",
         )
         # TODO verify results
+        self.assertRequest(responseCode=200)
+
+    @defer.inlineCallbacks
+    def test_get_noquery(self):
+        yield self.render_resource(
+            self.rsrc,
+            b"/",
+        )
+        # TODO verify results
+        self.assertSimpleError("GET request must contain a 'query' parameter", 400)
+
+    # https://graphql.org/learn/serving-over-http/#post-request
+    @defer.inlineCallbacks
+    def test_post_query_graphql_content(self):
+        yield self.render_resource(
+            self.rsrc,
+            method=b"POST",
+            content=b"{tests{id}}",
+            content_type=b"application/graphql"
+        )
+        # TODO verify results
+        self.assertRequest(responseCode=200)
+
+    @defer.inlineCallbacks
+    def test_post_query_json_content(self):
+        query = {
+            "query": "{tests{id}}"
+        }
+        yield self.render_resource(
+            self.rsrc,
+            method=b"POST",
+            content=json.dumps(query).encode(),
+            content_type=b"application/json"
+        )
+        # TODO verify results
+        self.assertRequest(responseCode=200)
+
+    @defer.inlineCallbacks
+    def test_post_query_json_content_operationName(self):
+        query = {
+            "query": "query foo {tests{id}} query bar {tests{name}}",
+            "operationName": "fsoo"
+        }
+        yield self.render_resource(
+            self.rsrc,
+            method=b"POST",
+            content=json.dumps(query).encode(),
+            content_type=b"application/json"
+        )
+        self.assertSimpleError("json request unsupported fields: operationName", 400)
+
+    @defer.inlineCallbacks
+    def test_post_query_json_badcontent_type(self):
+
+        yield self.render_resource(
+            self.rsrc,
+            method=b"POST",
+            content=b"foo",
+            content_type=b"application/foo"
+        )
+        self.assertSimpleError("unsupported content-type: application/foo", 400)
+
+    @defer.inlineCallbacks
+    def test_post_query_json_nocontent_type(self):
+
+        yield self.render_resource(
+            self.rsrc,
+            method=b"POST"
+        )
+        self.assertSimpleError("no content-type", 400)
 
     @defer.inlineCallbacks
     def test_get_bad_query(self):
