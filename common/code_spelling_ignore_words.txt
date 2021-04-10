@@ -377,6 +377,7 @@ de
 debian
 debounce
 debounced
+debouncer
 debouncing
 decoderc
 deepcopy
@@ -617,6 +618,7 @@ gotchange
 gotperspective
 gotrootobject
 gpo
+gql
 gracefulshutdown
 graphql
 gravatar
@@ -1395,6 +1397,7 @@ suboption
 suboptions
 subprocess
 subprocesses
+subprotocol
 subquery
 substring
 subunit

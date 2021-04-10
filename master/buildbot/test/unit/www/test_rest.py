@@ -436,9 +436,9 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
 
     @defer.inlineCallbacks
     def test_api_collection_invalid_filter_value(self):
-        yield self.render_resource(self.rsrc, b'/test?id__lt=fifteen')
+        yield self.render_resource(self.rsrc, b'/test?testid__lt=fifteen')
         self.assertRequest(
-            contentJson=dict(error="invalid filter value for id__lt"),
+            contentJson=dict(error="invalid filter value for testid__lt"),
             contentType=b'text/plain; charset=utf-8',
             responseCode=400)
 
@@ -518,13 +518,13 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
 
     @defer.inlineCallbacks
     def test_api_collection_order_on_unselected(self):
-        yield self.render_resource(self.rsrc, b'/test?field=id&order=info')
+        yield self.render_resource(self.rsrc, b'/test?field=testid&order=info')
         self.assertRestError(message="cannot order on un-selected fields",
                              responseCode=400)
 
     @defer.inlineCallbacks
     def test_api_collection_filter_on_unselected(self):
-        yield self.render_resource(self.rsrc, b'/test?field=id&info__gt=xx')
+        yield self.render_resource(self.rsrc, b'/test?field=testid&info__gt=xx')
         self.assertRestError(message="cannot filter on un-selected fields",
                              responseCode=400)
 
@@ -533,8 +533,9 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin,
         yield self.render_resource(self.rsrc, b'/test?success=false&limit=2')
         # note that the limit/offset and total are *after* the filter
         self.assertRestCollection(typeName='tests',
-                                  items=sorted([v for v in endpoint.testData.values()
-                                                if not v['success']], key=lambda v: v['id'])[:2],
+                                  items=sorted(
+                                      [v for v in endpoint.testData.values()
+                                       if not v['success']], key=lambda v: v['testid'])[:2],
                                   total=3)
 
     @defer.inlineCallbacks

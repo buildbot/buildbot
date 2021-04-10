@@ -40,6 +40,7 @@ from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
 from buildbot.www import config as wwwconfig
+from buildbot.www import graphql
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
@@ -297,6 +298,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # /api
         root.putChild(b'api', rest.RestRootResource(self.master))
+        [graphql]  # import is made for side effects
 
         # /ws
         root.putChild(b'ws', ws.WsResource(self.master))

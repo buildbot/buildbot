@@ -24,7 +24,7 @@ from twisted.python import threadpool
 from twisted.trial.unittest import TestCase
 
 import buildbot
-from buildbot.asyncio import TwistedLoop
+from buildbot.asyncio import AsyncIOLoopWithTwisted
 from buildbot.process.buildstep import BuildStep
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
@@ -93,7 +93,7 @@ class TestReactorMixin:
         self.addCleanup(self.reactor.stop)
 
         if use_asyncio:
-            self.asyncio_loop = TwistedLoop(self.reactor)
+            self.asyncio_loop = AsyncIOLoopWithTwisted(self.reactor)
             asyncio.set_event_loop(self.asyncio_loop)
             self.asyncio_loop.start()
 

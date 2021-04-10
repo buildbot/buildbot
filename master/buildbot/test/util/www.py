@@ -134,8 +134,8 @@ class RequiresWwwMixin:
 class WwwTestMixin(RequiresWwwMixin):
     UUID = str(uuid1())
 
-    def make_master(self, url=None, **kwargs):
-        master = fakemaster.make_master(self, wantData=True)
+    def make_master(self, wantGraphql=False, url=None, **kwargs):
+        master = fakemaster.make_master(self, wantData=True, wantGraphql=wantGraphql)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
         master.www.getUserInfos = lambda _: getattr(
