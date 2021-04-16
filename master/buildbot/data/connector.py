@@ -177,6 +177,8 @@ class DataConnector(service.AsyncService):
         # mapped against the rootLinks
         schema += "type Query {\n"
 
+        operators = set(resultspec.Filter.singular_operators)
+        operators.update(resultspec.Filter.plural_operators)
         for rootlink in sorted(v['name'] for v in self.rootLinks):
             ep = self.matcher[(rootlink,)][0]
             typ = ep.rtype.entityType
@@ -184,10 +186,14 @@ class DataConnector(service.AsyncService):
             add_dependent_types(typ)
             # build the queriable parameters, via keyFields
             keyfields = []
-            for field in ep.rtype.keyFields:
-                field_type = ep.rtype.entityType.fields[field].toGraphQLTypeName()
-                keyfields.append(f"{field}: {field_type}")
-            keyfields = ", ".join(keyfields)
+            for field in sorted(ep.rtype.entityType.fields.keys()):
+                field_type = ep.rtype.entityType.fields[field]
+                field_type_gql = field_type.toGraphQLTypeName()
+                keyfields.append(f"{field}: {field_type_gql}")
+                for op in sorted(operators):
+                    keyfields.append(f"{field}__{op}: {field_type_gql}")
+
+            keyfields = ",\n   ".join(keyfields)
             if keyfields:
                 keyfields = f"({keyfields})"
             schema += f"  {ep.rtype.plural}{keyfields}: [{typename}]!\n"

@@ -112,7 +112,7 @@ class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
 
 
 class DataConnector(TestReactorMixin, unittest.TestCase):
-
+    maxDiff=None
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
@@ -235,7 +235,14 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         scalar Binary # arbitrary data stored as base85
         scalar JSON  # arbitrary json stored as string, mainly used for properties values
         type Query {
-          tests(testid: Int): [Test]!
+          tests(testid: Int,
+           testid__contains: Int,
+           testid__eq: Int,
+           testid__ge: Int,
+           testid__gt: Int,
+           testid__le: Int,
+           testid__lt: Int,
+           testid__ne: Int): [Test]!
         }
         type Test {
           testid: Int!

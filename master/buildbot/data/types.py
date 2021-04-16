@@ -269,6 +269,9 @@ class List(Type):
     def toGraphQL(self):
         return f"[{self.of.toGraphQLTypeName()}]!"
 
+    def toGraphQLTypeName(self):
+        return f"[{self.of.toGraphQLTypeName()}]"
+
     def graphQLDependentTypes(self):
         return [self.of]
 
