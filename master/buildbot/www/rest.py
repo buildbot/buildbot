@@ -26,16 +26,11 @@ from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.data import exceptions
-from buildbot.data import resultspec
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
-
-
-class BadRequest(Exception):
-    pass
 
 
 class BadJsonRpc2(Exception):
@@ -143,7 +138,7 @@ class V2RootResource(resource.Resource):
             writeError(msg or b"invalid control action", errcode=501,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
-        except BadRequest as e:
+        except exceptions.InvalidQueryParameter as e:
             msg = unicode2bytes(e.args[0])
             writeError(msg or b"invalid request", errcode=400,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
@@ -251,99 +246,10 @@ class V2RootResource(resource.Resource):
                 data = unicode2bytes(data)
                 request.write(data)
 
-    # JSONAPI support
     def decodeResultSpec(self, request, endpoint):
-        reqArgs = request.args
-
-        def checkFields(fields, negOk=False):
-            for field in fields:
-                k = bytes2unicode(field)
-                if k[0] == '-' and negOk:
-                    k = k[1:]
-                if k not in entityType.fieldNames:
-                    raise BadRequest("no such field '{}'".format(k))
-
+        args = request.args
         entityType = endpoint.rtype.entityType
-        limit = offset = order = fields = None
-        filters, properties = [], []
-        for arg in reqArgs:
-            argStr = bytes2unicode(arg)
-            if arg == b'order':
-                order = tuple([bytes2unicode(o) for o in reqArgs[arg]])
-                checkFields(order, True)
-            elif arg == b'field':
-                fields = reqArgs[arg]
-                checkFields(fields, False)
-            elif arg == b'limit':
-                try:
-                    limit = int(reqArgs[arg][0])
-                except Exception as e:
-                    raise BadRequest('invalid limit') from e
-            elif arg == b'offset':
-                try:
-                    offset = int(reqArgs[arg][0])
-                except Exception as e:
-                    raise BadRequest('invalid offset') from e
-            elif arg == b'property':
-                try:
-                    props = []
-                    for v in reqArgs[arg]:
-                        if not isinstance(v, (bytes, str)):
-                            raise TypeError(
-                                "Invalid type {} for {}".format(type(v), v))
-                        props.append(bytes2unicode(v))
-                except Exception as e:
-                    raise BadRequest(
-                        'invalid property value for {}'.format(arg)) from e
-                properties.append(resultspec.Property(arg, 'eq', props))
-            elif argStr in entityType.fieldNames:
-                field = entityType.fields[argStr]
-                try:
-                    values = [field.valueFromString(v) for v in reqArgs[arg]]
-                except Exception as e:
-                    raise BadRequest(
-                        'invalid filter value for {}'.format(argStr)) from e
-
-                filters.append(resultspec.Filter(argStr, 'eq', values))
-            elif '__' in argStr:
-                field, op = argStr.rsplit('__', 1)
-                args = reqArgs[arg]
-                operators = (resultspec.Filter.singular_operators
-                             if len(args) == 1
-                             else resultspec.Filter.plural_operators)
-                if op in operators and field in entityType.fieldNames:
-                    fieldType = entityType.fields[field]
-                    try:
-                        values = [fieldType.valueFromString(v)
-                                  for v in reqArgs[arg]]
-                    except Exception as e:
-                        raise BadRequest(
-                            'invalid filter value for {}'.format(argStr)) from e
-                    filters.append(resultspec.Filter(field, op, values))
-            else:
-                raise BadRequest(
-                    "unrecognized query parameter '{}'".format(argStr))
-
-        # if ordering or filtering is on a field that's not in fields, bail out
-        if fields:
-            fields = [bytes2unicode(f) for f in fields]
-            fieldsSet = set(fields)
-            if order and {o.lstrip('-') for o in order} - fieldsSet:
-                raise BadRequest("cannot order on un-selected fields")
-            for filter in filters:
-                if filter.field not in fieldsSet:
-                    raise BadRequest("cannot filter on un-selected fields")
-
-        # build the result spec
-        rspec = resultspec.ResultSpec(fields=fields, limit=limit, offset=offset,
-                                      order=order, filters=filters, properties=properties)
-
-        # for singular endpoints, only allow fields
-        if not endpoint.isCollection:
-            if rspec.filters:
-                raise BadRequest("this is not a collection")
-
-        return rspec
+        return self.master.data.resultspec_from_jsonapi(args, entityType, endpoint.isCollection)
 
     def encodeRaw(self, data, request):
         request.setHeader(b"content-type",

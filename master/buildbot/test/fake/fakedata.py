@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.python import failure
 
 from buildbot.data import connector
+from buildbot.data import resultspec
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.fake import endpoint
 from buildbot.test.util import validation
@@ -487,6 +488,7 @@ class FakeDataConnector(service.AsyncMultiService):
         self.realConnector = connector.DataConnector()
         self.realConnector.setServiceParent(self)
         self.rtypes = self.realConnector.rtypes
+        self.plural_rtypes = self.realConnector.plural_rtypes
 
     def _scanModule(self, mod):
         return self.realConnector._scanModule(mod)
@@ -506,6 +508,13 @@ class FakeDataConnector(service.AsyncMultiService):
         return self.realConnector.get(path, filters=filters, fields=fields,
                                       order=order, limit=limit, offset=offset)
 
+    def get_with_resultspec(self, path, rspec):
+        if not isinstance(path, tuple):
+            raise TypeError('path must be a tuple')
+        if not isinstance(rspec, resultspec.ResultSpec):
+            raise TypeError('rspec must be ResultSpec')
+        return self.realConnector.get_with_resultspec(path, rspec)
+
     def control(self, action, args, path):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
@@ -513,3 +522,6 @@ class FakeDataConnector(service.AsyncMultiService):
 
     def get_graphql_schema(self):
         return endpoint.graphql_schema
+
+    def resultspec_from_jsonapi(self, args, entityType, is_collection):
+        return self.realConnector.resultspec_from_jsonapi(args, entityType, is_collection)

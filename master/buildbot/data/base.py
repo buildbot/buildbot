@@ -90,7 +90,7 @@ class Endpoint:
         return action_method(args, kwargs)
 
     def __repr__(self):
-        return "endpoint for " + self.pathPatterns
+        return "endpoint for " + ",".join(self.pathPatterns.split())
 
 
 class BuildNestingMixin:

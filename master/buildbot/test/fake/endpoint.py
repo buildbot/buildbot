@@ -34,8 +34,11 @@ testData = {
 
 class TestsEndpoint(base.Endpoint):
     isCollection = True
-    pathPatterns = "/test"
-    rootLinkName = 'test'
+    pathPatterns = """
+    /tests
+    /test
+    """
+    rootLinkName = 'tests'
 
     def get(self, resultSpec, kwargs):
         # results are sorted by ID for test stability
@@ -65,7 +68,10 @@ class FailEndpoint(base.Endpoint):
 
 class TestEndpoint(base.Endpoint):
     isCollection = False
-    pathPatterns = "/test/n:testid"
+    pathPatterns = """
+    /tests/n:testid
+    /test/n:testid
+    """
 
     def get(self, resultSpec, kwargs):
         if kwargs['testid'] == 0:
