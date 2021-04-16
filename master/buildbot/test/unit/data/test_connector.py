@@ -112,7 +112,7 @@ class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
 
 
 class DataConnector(TestReactorMixin, unittest.TestCase):
-    maxDiff=None
+
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
@@ -242,7 +242,11 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
            testid__gt: Int,
            testid__le: Int,
            testid__lt: Int,
-           testid__ne: Int): [Test]!
+           testid__ne: Int,
+           order: String,
+           limit: Int,
+           offset: Int): [Test]!
+          test(testid: Int): Test
         }
         type Test {
           testid: Int!

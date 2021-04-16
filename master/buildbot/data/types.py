@@ -69,6 +69,9 @@ class Type:
     def graphQLDependentTypes(self):
         return []
 
+    def getGraphQLInputType(self):
+        return self.toGraphQLTypeName()
+
 
 class NoneOk(Type):
 
@@ -109,6 +112,9 @@ class NoneOk(Type):
 
     def graphQLDependentTypes(self):
         return [self.nestedType]
+
+    def getGraphQLInputType(self):
+        return self.nestedType.getGraphQLInputType()
 
 
 class Instance(Type):
@@ -275,6 +281,9 @@ class List(Type):
     def graphQLDependentTypes(self):
         return [self.of]
 
+    def getGraphQLInputType(self):
+        return self.of.getGraphQLInputType()
+
 
 def ramlMaybeNoneOrList(k, v):
     if isinstance(v, NoneOk):
@@ -321,6 +330,9 @@ class SourcedProperties(Type):
 
     def graphQLDependentTypes(self):
         return [PropertyEntityType("property")]
+
+    def getGraphQLInputType(self):
+        return None
 
 
 class JsonObject(Type):
@@ -413,6 +425,11 @@ class Entity(Type):
 
     def graphQLDependentTypes(self):
         return self.fields.values()
+
+    def getGraphQLInputType(self):
+        # for now, complex types are not query able
+        # in the future, we may want to declare (and implement) graphql input types
+        return None
 
 
 class PropertyEntityType(Entity):

@@ -177,6 +177,12 @@ class DataConnector(service.AsyncService):
         # mapped against the rootLinks
         schema += "type Query {\n"
 
+        def format_query_fields(query_fields):
+            query_fields = ",\n   ".join(query_fields)
+            if query_fields:
+                query_fields = f"({query_fields})"
+            return query_fields
+
         operators = set(resultspec.Filter.singular_operators)
         operators.update(resultspec.Filter.plural_operators)
         for rootlink in sorted(v['name'] for v in self.rootLinks):
@@ -184,19 +190,32 @@ class DataConnector(service.AsyncService):
             typ = ep.rtype.entityType
             typename = typ.toGraphQLTypeName()
             add_dependent_types(typ)
+            query_fields = []
+            # build the queriable parameters, via query_fields
+            for field in sorted(ep.rtype.entityType.fields.keys()):
+                field_type = ep.rtype.entityType.fields[field]
+                field_type_gql = field_type.getGraphQLInputType()
+                if field_type_gql is None:
+                    continue
+                query_fields.append(f"{field}: {field_type_gql}")
+                for op in sorted(operators):
+                    query_fields.append(f"{field}__{op}: {field_type_gql}")
+
+            query_fields.extend([
+                "order: String",
+                "limit: Int",
+                "offset: Int"]
+            )
+            schema += f"  {ep.rtype.plural}{format_query_fields(query_fields)}: [{typename}]!\n"
+
             # build the queriable parameters, via keyFields
             keyfields = []
-            for field in sorted(ep.rtype.entityType.fields.keys()):
+            for field in sorted(ep.rtype.keyFields):
                 field_type = ep.rtype.entityType.fields[field]
                 field_type_gql = field_type.toGraphQLTypeName()
                 keyfields.append(f"{field}: {field_type_gql}")
-                for op in sorted(operators):
-                    keyfields.append(f"{field}__{op}: {field_type_gql}")
 
-            keyfields = ",\n   ".join(keyfields)
-            if keyfields:
-                keyfields = f"({keyfields})"
-            schema += f"  {ep.rtype.plural}{keyfields}: [{typename}]!\n"
+            schema += f"  {ep.rtype.name}{format_query_fields(keyfields)}: {typename}\n"
 
         schema += "}\n"
 
@@ -209,5 +228,4 @@ class DataConnector(service.AsyncService):
                     field_type = field_type['type']
                 schema += f"  {field['name']}: {field_type}\n"
             schema += "}\n"
-
         return schema
