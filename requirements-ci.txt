@@ -16,7 +16,7 @@ click==7.1.2
 configparser==5.0.2
 constantly==15.1.0
 cookies==2.2.1
-cryptography==3.4.6
+cryptography==3.4.7
 decorator==4.4.2
 dicttoxml==1.7.4
 docker==4.4.4
