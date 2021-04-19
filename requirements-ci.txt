@@ -79,7 +79,7 @@ sqlparse==0.4.1
 Tempita==0.5.2
 termcolor==1.1.0
 toml==0.10.2
-towncrier==19.2.0
+towncrier==21.3.0
 treq==20.9.0
 Twisted==21.2.0
 txaio==21.2.1
