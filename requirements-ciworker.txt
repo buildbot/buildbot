@@ -14,5 +14,5 @@ PyHamcrest==1.9.0  # pyup: ignore
 six==1.15.0
 Twisted==21.2.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.0"  # pyup: ignore
-zope.interface==5.2.0
+zope.interface==5.4.0
 -e worker
