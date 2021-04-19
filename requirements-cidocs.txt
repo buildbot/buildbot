@@ -5,4 +5,4 @@ sphinxcontrib-blockdiag==2.0.0
 sphinxcontrib-spelling==7.1.0
 sphinxcontrib-websupport==1.2.4
 Pygments==2.8.1
-towncrier==19.2.0
+towncrier==21.3.0
