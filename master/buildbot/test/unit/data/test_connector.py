@@ -16,8 +16,6 @@
 
 import textwrap
 
-import graphql
-
 import mock
 
 from twisted.internet import defer
@@ -32,6 +30,11 @@ from buildbot.data import types
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 from buildbot.test.util.misc import TestReactorMixin
+
+try:
+    import graphql
+except ImportError:
+    graphql = None
 
 
 class Tests(interfaces.InterfaceTests):
@@ -225,6 +228,9 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
                                            {'fooid': 10})
 
     def test_get_graphql_schema(self):
+        if not graphql:
+            raise unittest.SkipTest('Test requires graphql')
+
         # use the test module for basic graphQLSchema generation
         mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
         self.data._scanModule(mod)
@@ -255,6 +261,9 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         schema = graphql.build_schema(schema)
 
     def test_get_fake_graphql_schema(self):
+        if not graphql:
+            raise unittest.SkipTest('Test requires graphql')
+
         # use the test module for basic graphQLSchema generation
         mod = reflect.namedModule('buildbot.test.fake.endpoint')
         self.data._scanModule(mod)
@@ -312,6 +321,9 @@ class DataConnectorGraphQL(TestReactorMixin, unittest.TestCase):
         yield self.data.setServiceParent(self.master)
 
     def test_get_graphql_schema(self):
+        if not graphql:
+            raise unittest.SkipTest('Test requires graphql')
+
         schema = self.data.get_graphql_schema()
         # graphql parses the schema and raise an error if it is incorrect
         # or incoherent (e.g. missing type definition)

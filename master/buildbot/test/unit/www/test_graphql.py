@@ -26,8 +26,16 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 from buildbot.www import graphql
 
+try:
+    import graphql as graphql_core
+except ImportError:
+    graphql_core = None
+
 
 class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    if not graphql_core:
+        skip = 'graphql is required for V3RootResource tests'
+
     def setUp(self):
         self.setUpTestReactor()
         self.master = self.make_master(url="http://server/path/")
@@ -159,6 +167,9 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    if not graphql_core:
+        skip = 'graphql is required for V3RootResource tests'
+
     def setUp(self):
         self.setUpTestReactor()
         self.master = self.make_master(url="http://server/path/")
