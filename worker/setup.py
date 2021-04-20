@@ -39,6 +39,8 @@ except ImportError:
     from distutils.command.sdist import sdist
     from distutils.core import setup
 
+BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
+
 
 class our_install_data(install_data):
 
@@ -110,11 +112,12 @@ setup_args = {
         "buildbot_worker.commands",
         "buildbot_worker.scripts",
         "buildbot_worker.monkeypatches",
+    ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 40% of the archive)
         "buildbot_worker.test",
         "buildbot_worker.test.fake",
         "buildbot_worker.test.unit",
         "buildbot_worker.test.util",
-    ],
+    ]),
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot_worker", [])],
