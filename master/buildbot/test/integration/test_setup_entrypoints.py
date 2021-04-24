@@ -135,6 +135,8 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.protocol.LineBuffer',
             'buildbot.util.protocol.LineProcessProtocol',
             'buildbot.util.pullrequest.PullRequestMixin',
+            'buildbot.util.queue.ConnectableThreadQueue',
+            'buildbot.util.queue.UndoableQueue',
             'buildbot.util.raml.RamlLoader',
             'buildbot.util.raml.RamlSpec',
             'buildbot.util.sautils.InsertFromSelect',
