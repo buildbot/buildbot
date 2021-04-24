@@ -75,7 +75,8 @@ class TestConnectableThreadQueue(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_single_item_called(self):
-        def work(*args, **kwargs):
+        def work(conn, *args, **kwargs):
+            self.assertIs(conn, self.queue.conn)
             self.assertEqual(args, ('arg',))
             self.assertEqual(kwargs, {'kwarg': 'kwvalue'})
             return 'work_result'
@@ -87,7 +88,7 @@ class TestConnectableThreadQueue(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_single_item_called_exception(self):
-        def work():
+        def work(conn):
             raise TestException()
 
         with self.assertRaises(TestException):
@@ -97,10 +98,10 @@ class TestConnectableThreadQueue(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_exception_does_not_break_further_work(self):
-        def work_exception():
+        def work_exception(conn):
             raise TestException()
 
-        def work_success():
+        def work_success(conn):
             return 'work_result'
 
         with self.assertRaises(TestException):
@@ -113,10 +114,10 @@ class TestConnectableThreadQueue(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_single_item_called_disconnect(self):
-        def work():
+        def work(conn):
             pass
 
-        yield self.queue.execute_in_thread(work,)
+        yield self.queue.execute_in_thread(work)
 
         self.queue.close_connection()
 
@@ -128,7 +129,7 @@ class TestConnectableThreadQueue(unittest.TestCase):
     def test_many_items_called_in_order(self):
         self.expected_work_index = 0
 
-        def work(work_index):
+        def work(conn, work_index):
             self.assertEqual(self.expected_work_index, work_index)
             self.expected_work_index = work_index + 1
             return work_index

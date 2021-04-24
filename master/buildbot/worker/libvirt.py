@@ -64,16 +64,16 @@ class Domain:
         self.domain = domain
 
     def name(self):
-        return queue.execute_in_thread(self.domain.name)
+        return queue.execute_in_thread(lambda conn: self.domain.name())
 
     def create(self):
-        return queue.execute_in_thread(self.domain.create)
+        return queue.execute_in_thread(lambda conn: self.domain.create())
 
     def shutdown(self):
-        return queue.execute_in_thread(self.domain.shutdown)
+        return queue.execute_in_thread(lambda conn: self.domain.shutdown())
 
     def destroy(self):
-        return queue.execute_in_thread(self.domain.destroy)
+        return queue.execute_in_thread(lambda conn: self.domain.destroy())
 
 
 class Connection:
@@ -91,22 +91,22 @@ class Connection:
     @defer.inlineCallbacks
     def lookupByName(self, name):
         """ I lookup an existing predefined domain """
-        res = yield queue.execute_in_thread(self.connection.lookupByName, name)
+        res = yield queue.execute_in_thread(lambda conn: self.connection.lookupByName(name))
         return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
-        res = yield queue.execute_in_thread(self.connection.createXML, xml, 0)
+        res = yield queue.execute_in_thread(lambda conn: self.connection.createXML(xml, 0))
         return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def all(self):
         domains = []
-        domain_ids = yield queue.execute_in_thread(self.connection.listDomainsID)
+        domain_ids = yield queue.execute_in_thread(lambda conn: self.connection.listDomainsID())
 
         for did in domain_ids:
-            domain = yield queue.execute_in_thread(self.connection.lookupByID, did)
+            domain = yield queue.execute_in_thread(lambda conn: self.connection.lookupByID(did))
             domains.append(self.DomainClass(self, domain))
 
         return domains

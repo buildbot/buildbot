@@ -34,11 +34,14 @@ class _TerminateRequest:
 class ConnectableThreadQueue(threading.Thread):
     """
     This provides worker thread that is processing work given via execute_in_thread() method.
-    The return value of the function passed to execute_in_thread() is returned via Deferred.
+    The return value of the function submitted to execute_in_thread() is returned via Deferred.
     All work is performed in a "connection", which is established in create_connection() which
     is intended to be overridden by user. The user is expected to return an opaque connection
     object from create_connection(). create_connection() must not throw exceptions.
     The connection is from the user-side closed by calling close_connection().
+
+    The connection is passed as the first argument to the functions submitted to
+    execute_in_thread().
 
     When the thread is joined, it will execute all currently pending items and call
     on_close_connection() if needed to close the connection. Any work submitted after join() is
@@ -96,7 +99,7 @@ class ConnectableThreadQueue(threading.Thread):
                 continue
 
             try:
-                result = next_operation(*args, **kwargs)
+                result = next_operation(self._conn, *args, **kwargs)
                 reactor.callFromThread(result_d.callback, result)
             except Exception as e:
                 reactor.callFromThread(result_d.errback, e)
