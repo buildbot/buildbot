@@ -13,15 +13,17 @@
 #
 # Portions Copyright Buildbot Team Members
 
+import queue
 import threading
-from queue import Queue
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
+from buildbot.util import backoff
 
-class UndoableQueue(Queue):
+
+class UndoableQueue(queue.Queue):
     def unget(self, x):
         with self.mutex:
             self.queue.appendleft(x)
@@ -47,9 +49,15 @@ class ConnectableThreadQueue(threading.Thread):
     on_close_connection() if needed to close the connection. Any work submitted after join() is
     called will be ignored.
     """
-    def __init__(self):
+    def __init__(self, connect_backoff_start_seconds=1, connect_backoff_multiplier=1.1,
+                 connect_backoff_max_wait_seconds=3600):
         self._queue = UndoableQueue()
         self._conn = None
+        self._backoff_engine = \
+            backoff.ExponentialBackoffEngineSync(start_seconds=connect_backoff_start_seconds,
+                                                 multiplier=connect_backoff_multiplier,
+                                                 max_wait_seconds=connect_backoff_max_wait_seconds)
+
         super().__init__(daemon=True)
         self.connecting = False
         self.start()
@@ -79,6 +87,32 @@ class ConnectableThreadQueue(threading.Thread):
         # override to create a new connection
         raise NotImplementedError()
 
+    def _handle_backoff(self, msg):
+        # returns True if termination has been requested
+        log.err(msg)
+        try:
+            self._backoff_engine.wait_on_failure()
+        except backoff.BackoffTimeoutExceededError:
+            self._backoff_engine.on_success()  # reset the timers
+            if self._drain_queue_with_exception(backoff.BackoffTimeoutExceededError(msg)):
+                return True
+        return False
+
+    def _drain_queue_with_exception(self, e):
+        # returns True if termination has been requested
+        try:
+            while True:
+                result_d, next_operation, args, kwargs = self._queue.get(block=False)
+                if isinstance(next_operation, _TerminateRequest):
+                    self._queue.task_done()
+                    reactor.callFromThread(result_d.callback, None)
+                    return True
+                else:
+                    self._queue.task_done()
+                    reactor.callFromThread(result_d.errback, e)
+        except queue.Empty:
+            return False
+
     def run(self):
         while True:
             result_d, next_operation, args, kwargs = self._queue.get()
@@ -93,11 +127,18 @@ class ConnectableThreadQueue(threading.Thread):
                 self._queue.unget((result_d, next_operation, args, kwargs))
                 try:
                     self._conn = self.create_connection()
-                except Exception as e:
-                    log.err(e, "Exception received from ConnectableThreadQueue.create_connection()")
-                self.connecting = False
-                continue
+                    self.connecting = False
 
+                    if self._conn is not None:
+                        self._backoff_engine.on_success()
+                    elif self._handle_backoff('Did not receive connection'):
+                        break
+
+                except Exception as e:
+                    self.connecting = False
+                    if self._handle_backoff('Exception received: {}'.format(e)):
+                        break
+                continue
             try:
                 result = next_operation(self._conn, *args, **kwargs)
                 reactor.callFromThread(result_d.callback, result)

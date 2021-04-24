@@ -13,9 +13,12 @@
 #
 # Portions Copyright Buildbot Team Members
 
+import threading
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.util.backoff import BackoffTimeoutExceededError
 from buildbot.util.queue import ConnectableThreadQueue
 
 
@@ -24,8 +27,8 @@ class FakeConnection:
 
 
 class TestableConnectableThreadQueue(ConnectableThreadQueue):
-    def __init__(self, case):
-        super().__init__()
+    def __init__(self, case, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.case = case
         self.create_connection_called_count = 0
         self.close_connection_called_count = 0
@@ -57,7 +60,9 @@ class TestException(Exception):
 class TestConnectableThreadQueue(unittest.TestCase):
 
     def setUp(self):
-        self.queue = TestableConnectableThreadQueue(self)
+        self.queue = TestableConnectableThreadQueue(self, connect_backoff_start_seconds=0,
+                                                    connect_backoff_multiplier=0,
+                                                    connect_backoff_max_wait_seconds=0)
 
     def tearDown(self):
         self.join_queue()
@@ -140,3 +145,102 @@ class TestConnectableThreadQueue(unittest.TestCase):
             self.assertEqual((yield d), i)
 
         self.join_queue(1)
+
+
+class FailingConnectableThreadQueue(ConnectableThreadQueue):
+    def __init__(self, case, lock, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.case = case
+        self.lock = lock
+        self.create_connection_called_count = 0
+
+    def on_close_connection(self, conn):
+        raise AssertionError("on_close_connection should not have been called")
+
+    def close_connection(self):
+        raise AssertionError("close_connection should not have been called")
+
+    def _drain_queue_with_exception(self, e):
+        with self.lock:
+            return super()._drain_queue_with_exception(e)
+
+
+class ThrowingConnectableThreadQueue(FailingConnectableThreadQueue):
+    def create_connection(self):
+        with self.lock:
+            self.create_connection_called_count += 1
+            self.case.assertTrue(self.connecting)
+            raise TestException()
+
+
+class NoneReturningConnectableThreadQueue(FailingConnectableThreadQueue):
+    def create_connection(self):
+        with self.lock:
+            self.create_connection_called_count += 1
+            self.case.assertTrue(self.connecting)
+            return None
+
+
+class ConnectionErrorTests:
+
+    def setUp(self):
+        self.lock = threading.Lock()
+        self.queue = self.QueueClass(self, self.lock,
+                                     connect_backoff_start_seconds=0.001,
+                                     connect_backoff_multiplier=1,
+                                     connect_backoff_max_wait_seconds=0.0039)
+
+    def tearDown(self):
+        self.queue.join(timeout=1)
+        if self.queue.is_alive():
+            raise AssertionError('Thread is still alive')
+
+    @defer.inlineCallbacks
+    def test_resets_after_reject(self):
+        def work(conn):
+            raise AssertionError('work should not be executed')
+
+        with self.lock:
+            d = self.queue.execute_in_thread(work)
+
+        with self.assertRaises(BackoffTimeoutExceededError):
+            yield d
+
+        self.assertEqual(self.queue.create_connection_called_count, 5)
+
+        with self.lock:
+            d = self.queue.execute_in_thread(work)
+
+        with self.assertRaises(BackoffTimeoutExceededError):
+            yield d
+
+        self.assertEqual(self.queue.create_connection_called_count, 10)
+        self.flushLoggedErrors(TestException)
+
+    @defer.inlineCallbacks
+    def test_multiple_work_rejected(self):
+        def work(conn):
+            raise AssertionError('work should not be executed')
+
+        with self.lock:
+            d1 = self.queue.execute_in_thread(work)
+            d2 = self.queue.execute_in_thread(work)
+            d3 = self.queue.execute_in_thread(work)
+
+        with self.assertRaises(BackoffTimeoutExceededError):
+            yield d1
+        with self.assertRaises(BackoffTimeoutExceededError):
+            yield d2
+        with self.assertRaises(BackoffTimeoutExceededError):
+            yield d3
+
+        self.assertEqual(self.queue.create_connection_called_count, 5)
+        self.flushLoggedErrors(TestException)
+
+
+class TestConnectionErrorThrow(ConnectionErrorTests, unittest.TestCase):
+    QueueClass = ThrowingConnectableThreadQueue
+
+
+class TestConnectionErrorReturnNone(ConnectionErrorTests, unittest.TestCase):
+    QueueClass = NoneReturningConnectableThreadQueue
