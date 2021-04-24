@@ -151,19 +151,7 @@ class LibVirtWorker(AbstractLatentWorker):
                 break
 
         self.ready = True
-        return None
-
-    def canStartBuild(self):
-        if not self.ready:
-            log.msg("Not accepting builds as existing domains not iterated")
-            return False
-
-        if self.domain and not self.isConnected():
-            log.msg(
-                "Not accepting builds as existing domain but worker not connected")
-            return False
-
-        return super().canStartBuild()
+        self._find_existing_deferred = None
 
     @defer.inlineCallbacks
     def _prepare_base_image(self):
@@ -208,6 +196,12 @@ class LibVirtWorker(AbstractLatentWorker):
         """
         if self.domain is not None:
             log.msg("Cannot start_instance '{}' as already active".format(self.workername))
+            return False
+
+        if self._find_existing_deferred is not None:
+            yield self._find_existing_deferred
+        if not self.ready:
+            log.msg("{}: Cannot start_instance as the worker is still not ready".format(self))
             return False
 
         yield self._prepare_base_image()
