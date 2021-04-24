@@ -101,6 +101,10 @@ class TestSetupPyEntryPoints(unittest.TestCase):
 
         known_not_exported = {
             'buildbot.util._notifier.Notifier',
+            'buildbot.util.backoff.ExponentialBackoffEngineAsync',
+            'buildbot.util.backoff.ExponentialBackoffEngineSync',
+            'buildbot.util.backoff.BackoffTimeoutExceededError',
+            'buildbot.util.backoff.ExponentialBackoffEngine',
             'buildbot.util.bbcollections.KeyedSets',
             'buildbot.util.codebase.AbsoluteSourceStampsMixin',
             'buildbot.util.config.ConfiguredMixin',
