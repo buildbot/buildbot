@@ -714,14 +714,28 @@ class MasterConfig(util.ComparableMixin):
         if 'www' not in config_dict:
             return
         www_cfg = config_dict['www']
-        allowed = {'port', 'debug', 'json_cache_seconds',
-                   'rest_minimum_version', 'allowed_origins', 'jsonp',
-                   'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
-                   'logRotateLength', 'maxRotatedFiles', 'versions',
-                   'change_hook_dialects', 'change_hook_auth',
-                   'default_page',
-                   'custom_templates_dir', 'cookie_expiration_time',
-                   'ui_default_config'}
+        allowed = {
+            'allowed_origins',
+            'auth',
+            'authz',
+            'avatar_methods',
+            'change_hook_auth',
+            'change_hook_dialects',
+            'cookie_expiration_time',
+            'custom_templates_dir',
+            'debug',
+            'default_page',
+            'json_cache_seconds',
+            'jsonp',
+            'logRotateLength',
+            'logfileName',
+            'maxRotatedFiles',
+            'plugins',
+            'port',
+            'rest_minimum_version',
+            'ui_default_config',
+            'versions',
+        }
         unknown = set(list(www_cfg)) - allowed
 
         if unknown:
