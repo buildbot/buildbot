@@ -82,6 +82,7 @@ class Test(base.ResourceType):
     name = "test"
     plural = "tests"
     endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint, RawTestsEndpoint]
+    keyFields = ["id"]
 
     class EntityType(types.Entity):
         id = types.Integer()
@@ -97,7 +98,42 @@ scalar Date   # stored as utc unix timestamp
 scalar Binary # arbitrary data stored as base85
 scalar JSON  # arbitrary json stored as string, mainly used for properties values
 type Query {
-  tests: [Test]!
+  tests(id: Int,
+   id__contains: Int,
+   id__eq: Int,
+   id__ge: Int,
+   id__gt: Int,
+   id__le: Int,
+   id__lt: Int,
+   id__ne: Int,
+   info: String,
+   info__contains: String,
+   info__eq: String,
+   info__ge: String,
+   info__gt: String,
+   info__le: String,
+   info__lt: String,
+   info__ne: String,
+   success: Boolean,
+   success__contains: Boolean,
+   success__eq: Boolean,
+   success__ge: Boolean,
+   success__gt: Boolean,
+   success__le: Boolean,
+   success__lt: Boolean,
+   success__ne: Boolean,
+   tags: String,
+   tags__contains: String,
+   tags__eq: String,
+   tags__ge: String,
+   tags__gt: String,
+   tags__le: String,
+   tags__lt: String,
+   tags__ne: String,
+   order: String,
+   limit: Int,
+   offset: Int): [Test]!
+  test(id: Int): Test
 }
 type Test {
   id: Int!
