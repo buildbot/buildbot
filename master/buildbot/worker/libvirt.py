@@ -165,13 +165,14 @@ class LibVirtWorker(AbstractLatentWorker):
 
         return super().canStartBuild()
 
+    @defer.inlineCallbacks
     def _prepare_base_image(self):
         """
         I am a private method for creating (possibly cheap) copies of a
         base_image for start_instance to boot.
         """
         if not self.base_image:
-            return defer.succeed(True)
+            return
 
         if self.cheap_copy:
             clone_cmd = "qemu-img"
@@ -187,19 +188,12 @@ class LibVirtWorker(AbstractLatentWorker):
 
         log.msg("Cloning base image: {} {}'".format(clone_cmd, clone_args))
 
-        d = utils.getProcessValue(clone_cmd, clone_args.split())
-
-        def _log_result(res):
-            log.msg("Cloning exit code was: %d" % res)
-            return res
-
-        def _log_error(err):
-            log.err("Cloning failed: {}".format(err))
-            return err
-
-        d.addCallbacks(_log_result, _log_error)
-
-        return d
+        try:
+            rc = yield utils.getProcessValue(clone_cmd, clone_args.split())
+            log.msg("Cloning exit code was: {}".format(rc))
+        except Exception as e:
+            log.err("Cloning failed: {}".format(e))
+            raise
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -233,6 +227,7 @@ class LibVirtWorker(AbstractLatentWorker):
 
         return True
 
+    @defer.inlineCallbacks
     def stop_instance(self, fast=False):
         """
         I attempt to stop a running VM.
@@ -250,23 +245,25 @@ class LibVirtWorker(AbstractLatentWorker):
         log.msg("Attempting to stop '{}'".format(self.workername))
         if self.domain is None:
             log.msg("I don't think that domain is even running, aborting")
-            return defer.succeed(None)
+            return
 
         domain = self.domain
         self.domain = None
 
         if self.graceful_shutdown and not fast:
             log.msg("Graceful shutdown chosen for {}".format(self.workername))
-            d = domain.shutdown()
-            d.addErrback(_destroy_domain, domain)
+            try:
+                yield domain.shutdown()
+            except Exception as e:
+                log.msg('Graceful shutdown failed ({}). Force destroying domain {}'.format(
+                    e, self.workername))
+                # Don't re-throw to stop propagating shutdown error if destroy was successful.
+                yield domain.destroy()
+
         else:
-            d = domain.destroy()
+            yield domain.destroy()
 
         if self.base_image:
-            @d.addBoth
-            def _remove_image(res):
-                log.msg('Removing base image {} for {}'.format(self.image, self.workername))
-                os.remove(self.image)
-                return res
-
-        return d
+            log.msg('Removing base image {} for {}'.format(self.image, self.workername))
+            os.remove(self.image)
+        return
