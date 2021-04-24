@@ -735,6 +735,7 @@ class MasterConfig(util.ComparableMixin):
             'rest_minimum_version',
             'ui_default_config',
             'versions',
+            'ws_ping_interval',
         }
         unknown = set(list(www_cfg)) - allowed
 
