@@ -1,0 +1,1 @@
+Fixed error when attempting to specify ``ws_ping_interval`` configuration option (:issue:`5991`).
