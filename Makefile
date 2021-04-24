@@ -119,10 +119,8 @@ $(VENV_NAME):
 
 # helper for virtualenv creation
 virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
-	$(PIP) install -e pkg \
-		-e 'master[tls,test,docs]' \
-		-e 'worker[test]' \
-		buildbot_www packaging towncrier
+	$(PIP) install -r requirements-minimal.txt \
+		packaging towncrier
 	@echo now you can type following command  to activate your virtualenv
 	@echo . $(VENV_NAME)/bin/activate
 

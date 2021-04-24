@@ -22,8 +22,15 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
+try:
+    import unidiff
+except ImportError:
+    unidiff = None
+
 
 class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
+    if not unidiff:
+        skip = 'unidiff is required for GitDiffInfo tests'
 
     def setUp(self):
         self.setUpTestReactor()

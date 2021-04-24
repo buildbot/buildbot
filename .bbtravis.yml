@@ -83,6 +83,9 @@ matrix:
     - python: "3.9"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
+    - python: "3.9"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=minimal_install
+
     - python: "3.8"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
@@ -94,8 +97,10 @@ matrix:
 # Dependencies installation commands
 install:
   - pip install -U pip
-  - condition: TESTS not in ("smokes", "trial_worker")
+  - condition: TESTS not in ("minimal_install", "smokes", "trial_worker")
     cmd: pip install -r requirements-ci.txt
+  - condition: TESTS == "minimal_install"
+    cmd: pip install -r requirements-minimal.txt
   - condition: TESTS == "trial_worker"
     cmd: pip install -r requirements-ciworker.txt
   - condition: TESTS == "docs"
@@ -149,7 +154,7 @@ script:
     cmd: make frontend_tests_headless
 
   - title: master and worker tests
-    condition: TESTS == "trial"
+    condition: TESTS in ("minimal_install", "trial")
     cmd: trial  --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   - title: interop tests

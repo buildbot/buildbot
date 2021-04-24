@@ -1,0 +1,5 @@
+# Requirements list for minimal local development testing
+-e master[tls,test,docs]
+-e worker[test]
+-e pkg
+buildbot_www
