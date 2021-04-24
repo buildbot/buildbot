@@ -14,16 +14,16 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
 
-
 import os
 
 from twisted.internet import defer
 from twisted.internet import utils
-from twisted.python import failure
 from twisted.python import log
 
 from buildbot import config
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util.queue import ConnectableThreadQueue
+from buildbot.warnings import warn_deprecated
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -32,96 +32,109 @@ except ImportError:
     libvirt = None
 
 
-class _DummyConnection:
-    pass
+def handle_connect_close(conn, reason, opaque):
+    opaque.close_connection()
 
 
-class WorkQueue(ConnectableThreadQueue):
-    """
-    I am a class that turns parallel access into serial access.
+class ThreadWithQueue(ConnectableThreadQueue):
+    def __init__(self, pool, uri, *args, **kwargs):
+        self.pool = pool  # currently used only for testing
+        self.uri = uri
+        super().__init__(*args, **kwargs)
 
-    I exist because we want to run libvirt access in threads as we don't
-    trust calls not to block, but under load libvirt doesn't seem to like
-    this kind of threaded use.
-    """
+    def on_close_connection(self, conn):
+        self.close_connection()
+
+    def close_connection(self):
+        conn = self.conn
+        super().close_connection()
+        conn.close()
+
+    def libvirt_open(self):
+        return libvirt.open(self.uri)
 
     def create_connection(self):
-        return _DummyConnection()
+        try:
+            log.msg("Connecting to {}".format(self.uri))
+            conn = self.libvirt_open()
+            conn.registerCloseCallback(handle_connect_close, self)
+            log.msg("Connected to {}".format(self.uri))
+            return conn
+        except Exception as e:
+            log.err("Error connecting to {}: {}, will retry later".format(self.uri, e))
+            return None
+
+
+class ServerThreadPool:
+    ThreadClass = ThreadWithQueue
+
+    def __init__(self):
+        self.threads = {}
+
+    def do(self, uri, func, *args, **kwargs):
+        # returns a Deferred
+        if uri not in self.threads:
+            self.threads[uri] = self.ThreadClass(self, uri)
+
+        def logging_func(conn, *args, **kwargs):
+            try:
+                return func(conn, *args, **kwargs)
+            except Exception as e:
+                log.err("libvirt: Exception on {}: {}".format(uri, str(e)))
+                raise
+
+        return self.threads[uri].execute_in_thread(logging_func, *args, **kwargs)
+
+    def is_connected(self, uri):
+        if uri in self.threads:
+            return self.threads[uri].conn is not None
+        return False
+
+    def is_connecting(self, uri):
+        if uri in self.threads:
+            return self.threads[uri].connecting
+        return False
+
+    @defer.inlineCallbacks
+    def get_or_create_connection(self, uri):
+        if uri not in self.threads:
+            yield self.do(uri, lambda: None)
+        return self.threads[uri].conn
+
+    def reset_connection(self, uri):
+        if uri in self.threads:
+            self.threads[uri].close_connection()
+        else:
+            log.err('libvirt.ServerThreadPool: Unknown connection {}'.format(uri))
 
 
 # A module is effectively a singleton class, so this is OK
-queue = WorkQueue()
-
-
-class Domain:
-
-    """
-    I am a wrapper around a libvirt Domain object
-    """
-
-    def __init__(self, connection, domain):
-        self.connection = connection
-        self.domain = domain
-
-    def name(self):
-        return queue.execute_in_thread(lambda conn: self.domain.name())
-
-    def create(self):
-        return queue.execute_in_thread(lambda conn: self.domain.create())
-
-    def shutdown(self):
-        return queue.execute_in_thread(lambda conn: self.domain.shutdown())
-
-    def destroy(self):
-        return queue.execute_in_thread(lambda conn: self.domain.destroy())
+threadpool = ServerThreadPool()
 
 
 class Connection:
-
-    """
-    I am a wrapper around a libvirt Connection object.
-    """
-
-    DomainClass = Domain
-
     def __init__(self, uri):
         self.uri = uri
-        self.connection = libvirt.open(uri)
-
-    @defer.inlineCallbacks
-    def lookupByName(self, name):
-        """ I lookup an existing predefined domain """
-        res = yield queue.execute_in_thread(lambda conn: self.connection.lookupByName(name))
-        return self.DomainClass(self, res)
-
-    @defer.inlineCallbacks
-    def create(self, xml):
-        """ I take libvirt XML and start a new VM """
-        res = yield queue.execute_in_thread(lambda conn: self.connection.createXML(xml, 0))
-        return self.DomainClass(self, res)
-
-    @defer.inlineCallbacks
-    def all(self):
-        domains = []
-        domain_ids = yield queue.execute_in_thread(lambda conn: self.connection.listDomainsID())
-
-        for did in domain_ids:
-            domain = yield queue.execute_in_thread(lambda conn: self.connection.lookupByID(did))
-            domains.append(self.DomainClass(self, domain))
-
-        return domains
 
 
 class LibVirtWorker(AbstractLatentWorker):
+    pool = threadpool
 
-    def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
-                 **kwargs):
+    def __init__(self, name, password, connection=None, hd_image=None, base_image=None,
+                 uri="system:///", xml=None, **kwargs):
         super().__init__(name, password, **kwargs)
         if not libvirt:
             config.error(
                 "The python module 'libvirt' is needed to use a LibVirtWorker")
 
-        self.connection = connection
+        if connection is not None:
+            warn_deprecated('3.2.0', 'LibVirtWorker connection argument has been deprecated: ' +
+                            'please use uri')
+            if uri != "system:///":
+                config.error('connection and uri arguments cannot be used together')
+            uri = connection.uri
+
+        self.uri = uri
         self.image = hd_image
         self.base_image = base_image
         self.xml = xml
@@ -129,29 +142,29 @@ class LibVirtWorker(AbstractLatentWorker):
         self.cheap_copy = True
         self.graceful_shutdown = False
 
-        self.domain = None
-
-        self.ready = False
-        self._find_existing_deferred = self._find_existing_instance()
+    def _pool_do(self, func):
+        return self.pool.do(self.uri, func)
 
     @defer.inlineCallbacks
-    def _find_existing_instance(self):
-        """
-        I find existing VMs that are already running that might be orphaned instances of this
-        worker.
-        """
-        if not self.connection:
-            return None
+    def _get_domain(self):
+        try:
+            domain = yield self._pool_do(lambda conn: conn.lookupByName(self.workername))
+            return domain
+        except libvirt.libvirtError as e:
+            log.err('LibVirtWorker: got error when accessing domain: {}'.format(e))
+            try:
+                self.pool.reset_connection(self.uri)
+            except Exception as e1:
+                log.err('LibVirtWorker: got error when resetting connection: {}'.format(e1))
+            raise e
 
-        domains = yield self.connection.all()
-        for d in domains:
-            name = yield d.name()
-            if name.startswith(self.workername):
-                self.domain = d
-                break
-
-        self.ready = True
-        self._find_existing_deferred = None
+    @defer.inlineCallbacks
+    def _get_domain_id(self):
+        domain = yield self._get_domain()
+        if domain is None:
+            return -1
+        domain_id = yield self._pool_do(lambda conn: domain.ID())
+        return domain_id
 
     @defer.inlineCallbacks
     def _prepare_base_image(self):
@@ -194,30 +207,28 @@ class LibVirtWorker(AbstractLatentWorker):
         If i'm not given libvirt domain definition XML, I will look for my name
         in the list of defined virtual machines and start that.
         """
-        if self.domain is not None:
-            log.msg("Cannot start_instance '{}' as already active".format(self.workername))
-            return False
 
-        if self._find_existing_deferred is not None:
-            yield self._find_existing_deferred
-        if not self.ready:
-            log.msg("{}: Cannot start_instance as the worker is still not ready".format(self))
-            return False
+        try:
+            domain_id = yield self._get_domain_id()
+            if domain_id != -1:
+                raise LatentWorkerFailedToSubstantiate(
+                    "{}: Cannot start_instance as it's already active".format(self))
+        except Exception as e:
+            raise LatentWorkerFailedToSubstantiate(
+                '{}: Got error while retrieving domain ID: {}'.format(self, e))
 
         yield self._prepare_base_image()
 
         try:
             if self.xml:
-                self.domain = yield self.connection.create(self.xml)
+                yield self._pool_do(lambda conn: conn.createXML(self.xml, 0))
             else:
-                self.domain = yield self.connection.lookupByName(self.workername)
-                yield self.domain.create()
-        except Exception:
-            log.err(failure.Failure(),
-                    ("Cannot start a VM ({}), failing gracefully and triggering"
-                     "a new build check").format(self.workername))
-            self.domain = None
-            return False
+                domain = yield self._get_domain()
+                yield self._pool_do(lambda conn: domain.create())
+
+        except Exception as e:
+            raise LatentWorkerFailedToSubstantiate(
+                '{}: Got error while starting VM: {}'.format(self, e))
 
         return True
 
@@ -229,35 +240,27 @@ class LibVirtWorker(AbstractLatentWorker):
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
-        @defer.inlineCallbacks
-        def _destroy_domain(res, domain):
-            log.msg('Graceful shutdown failed. Force destroying domain {}'.format(self.workername))
-            # Don't return res to stop propagating shutdown error if destroy
-            # was successful.
-            yield domain.destroy()
 
-        log.msg("Attempting to stop '{}'".format(self.workername))
-        if self.domain is None:
-            log.msg("I don't think that domain is even running, aborting")
+        domain_id = yield self._get_domain_id()
+        if domain_id == -1:
+            log.msg("{}: Domain is unexpectedly not running".format(self))
             return
 
-        domain = self.domain
-        self.domain = None
+        domain = yield self._get_domain()
 
         if self.graceful_shutdown and not fast:
             log.msg("Graceful shutdown chosen for {}".format(self.workername))
             try:
-                yield domain.shutdown()
+                yield self._pool_do(lambda conn: domain.shutdown())
             except Exception as e:
-                log.msg('Graceful shutdown failed ({}). Force destroying domain {}'.format(
-                    e, self.workername))
+                log.msg('{}: Graceful shutdown failed ({}). Force destroying domain'.format(
+                    self, e))
                 # Don't re-throw to stop propagating shutdown error if destroy was successful.
-                yield domain.destroy()
+                yield self._pool_do(lambda conn: domain.destroy())
 
         else:
-            yield domain.destroy()
+            yield self._pool_do(lambda conn: domain.destroy())
 
         if self.base_image:
-            log.msg('Removing base image {} for {}'.format(self.image, self.workername))
+            log.msg('{}: Removing image {}'.format(self, self.image))
             os.remove(self.image)
-        return
