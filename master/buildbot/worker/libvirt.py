@@ -18,13 +18,12 @@
 import os
 
 from twisted.internet import defer
-from twisted.internet import threads
 from twisted.internet import utils
 from twisted.python import failure
 from twisted.python import log
 
 from buildbot import config
-from buildbot.util.eventual import eventually
+from buildbot.util.queue import ConnectableThreadQueue
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -33,8 +32,11 @@ except ImportError:
     libvirt = None
 
 
-class WorkQueue:
+class _DummyConnection:
+    pass
 
+
+class WorkQueue(ConnectableThreadQueue):
     """
     I am a class that turns parallel access into serial access.
 
@@ -43,51 +45,8 @@ class WorkQueue:
     this kind of threaded use.
     """
 
-    def __init__(self):
-        self.queue = []
-
-    def _process(self):
-        log.msg("Looking to start a piece of work now...")
-
-        # Is there anything to do?
-        if not self.queue:
-            log.msg("_process called when there is no work")
-            return
-
-        # Peek at the top of the stack - get a function to call and
-        # a deferred to fire when its all over
-        d, next_operation, args, kwargs = self.queue[0]
-
-        # Start doing some work - expects a deferred
-        try:
-            d2 = next_operation(*args, **kwargs)
-        except Exception:
-            d2 = defer.fail()
-
-        # Whenever a piece of work is done, whether it worked or not
-        # call this to schedule the next piece of work
-        @d2.addBoth
-        def _work_done(res):
-            log.msg("Completed a piece of work")
-            self.queue.pop(0)
-            if self.queue:
-                log.msg("Preparing next piece of work")
-                eventually(self._process)
-            return res
-
-        # When the work is done, trigger d
-        d2.chainDeferred(d)
-
-    def execute(self, cb, *args, **kwargs):
-        kickstart_processing = not self.queue
-        d = defer.Deferred()
-        self.queue.append((d, cb, args, kwargs))
-        if kickstart_processing:
-            self._process()
-        return d
-
-    def executeInThread(self, cb, *args, **kwargs):
-        return self.execute(threads.deferToThread, cb, *args, **kwargs)
+    def create_connection(self):
+        return _DummyConnection()
 
 
 # A module is effectively a singleton class, so this is OK
@@ -105,16 +64,16 @@ class Domain:
         self.domain = domain
 
     def name(self):
-        return queue.executeInThread(self.domain.name)
+        return queue.execute_in_thread(self.domain.name)
 
     def create(self):
-        return queue.executeInThread(self.domain.create)
+        return queue.execute_in_thread(self.domain.create)
 
     def shutdown(self):
-        return queue.executeInThread(self.domain.shutdown)
+        return queue.execute_in_thread(self.domain.shutdown)
 
     def destroy(self):
-        return queue.executeInThread(self.domain.destroy)
+        return queue.execute_in_thread(self.domain.destroy)
 
 
 class Connection:
@@ -132,22 +91,22 @@ class Connection:
     @defer.inlineCallbacks
     def lookupByName(self, name):
         """ I lookup an existing predefined domain """
-        res = yield queue.executeInThread(self.connection.lookupByName, name)
+        res = yield queue.execute_in_thread(self.connection.lookupByName, name)
         return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
-        res = yield queue.executeInThread(self.connection.createXML, xml, 0)
+        res = yield queue.execute_in_thread(self.connection.createXML, xml, 0)
         return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def all(self):
         domains = []
-        domain_ids = yield queue.executeInThread(self.connection.listDomainsID)
+        domain_ids = yield queue.execute_in_thread(self.connection.listDomainsID)
 
         for did in domain_ids:
-            domain = yield queue.executeInThread(self.connection.lookupByID, did)
+            domain = yield queue.execute_in_thread(self.connection.lookupByID, did)
             domains.append(self.DomainClass(self, domain))
 
         return domains

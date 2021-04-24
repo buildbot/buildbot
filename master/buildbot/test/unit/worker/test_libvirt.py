@@ -22,9 +22,11 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.test.fake import libvirt
-from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import eventual
 from buildbot.worker import libvirt as libvirtworker
+
+
+class TestException(Exception):
+    pass
 
 
 class TestLibVirtWorker(unittest.TestCase):
@@ -138,7 +140,7 @@ class TestLibVirtWorker(unittest.TestCase):
                                        fast=False,
                                        expected_destroy=True,
                                        expected_shutdown=True,
-                                       shutdown_side_effect=Exception)
+                                       shutdown_side_effect=TestException)
 
     @defer.inlineCallbacks
     def test_start_instance(self):
@@ -224,137 +226,3 @@ class TestLibVirtWorker(unittest.TestCase):
         isconnected.return_value = True
         self.patch(bs, "isConnected", isconnected)
         self.assertEqual(bs.canStartBuild(), True)
-
-
-class TestWorkQueue(TestReactorMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpTestReactor()
-
-    def tearDown(self):
-        return eventual.flushEventualQueue()
-
-    def delayed_success(self):
-        def work():
-            d = defer.Deferred()
-            self.reactor.callLater(0, d.callback, True)
-            return d
-        return work
-
-    def delayed_errback(self):
-        def work():
-            d = defer.Deferred()
-            self.reactor.callLater(0, d.errback,
-                                   failure.Failure(
-                                       RuntimeError("Test failure")))
-            return d
-        return work
-
-    def expect_errback(self, d):
-        @d.addCallback
-        def shouldnt_get_called(f):
-            self.assertEqual(True, False)
-
-        @d.addErrback
-        def errback(f):
-            """ log.msg("errback called?") """
-
-        return d
-
-    @defer.inlineCallbacks
-    def test_handle_exceptions(self):
-        queue = libvirtworker.WorkQueue()
-
-        def work():
-            raise ValueError
-        yield self.expect_errback(queue.execute(work))
-
-    @defer.inlineCallbacks
-    def test_handle_immediate_errback(self):
-        queue = libvirtworker.WorkQueue()
-
-        def work():
-            return defer.fail(RuntimeError("Sad times"))
-        yield self.expect_errback(queue.execute(work))
-
-    @defer.inlineCallbacks
-    def test_handle_delayed_errback(self):
-        queue = libvirtworker.WorkQueue()
-        work = self.delayed_errback()
-        yield self.expect_errback(queue.execute(work))
-
-    @defer.inlineCallbacks
-    def test_handle_immediate_success(self):
-        queue = libvirtworker.WorkQueue()
-
-        def work():
-            return defer.succeed(True)
-        yield queue.execute(work)
-
-    @defer.inlineCallbacks
-    def test_handle_delayed_success(self):
-        queue = libvirtworker.WorkQueue()
-        work = self.delayed_success()
-        yield queue.execute(work)
-
-    @defer.inlineCallbacks
-    def test_single_pow_fires(self):
-        queue = libvirtworker.WorkQueue()
-        yield queue.execute(self.delayed_success())
-
-    @defer.inlineCallbacks
-    def test_single_pow_errors_gracefully(self):
-        queue = libvirtworker.WorkQueue()
-        d = queue.execute(self.delayed_errback())
-        yield self.expect_errback(d)
-
-    @defer.inlineCallbacks
-    def test_fail_doesnt_break_further_work(self):
-        queue = libvirtworker.WorkQueue()
-        yield self.expect_errback(queue.execute(self.delayed_errback()))
-        yield queue.execute(self.delayed_success())
-
-    @defer.inlineCallbacks
-    def test_second_pow_fires(self):
-        queue = libvirtworker.WorkQueue()
-        yield queue.execute(self.delayed_success())
-        yield queue.execute(self.delayed_success())
-
-    @defer.inlineCallbacks
-    def test_work(self):
-        queue = libvirtworker.WorkQueue()
-
-        # We want these deferreds to fire in order
-        flags = {1: False, 2: False, 3: False}
-
-        # When first deferred fires, flags[2] and flags[3] should still be false
-        # flags[1] shouldn't already be set, either
-        @defer.inlineCallbacks
-        def d1():
-            yield queue.execute(self.delayed_success())
-            self.assertEqual(flags[1], False)
-            flags[1] = True
-            self.assertEqual(flags[2], False)
-            self.assertEqual(flags[3], False)
-
-        # When second deferred fires, only flags[3] should be set
-        # flags[2] should definitely be False
-        @defer.inlineCallbacks
-        def d2():
-            yield queue.execute(self.delayed_success())
-            self.assertFalse(flags[2])
-            flags[2] = True
-            self.assertTrue(flags[1])
-            self.assertFalse(flags[3])
-
-        # When third deferred fires, only flags[3] should be unset
-        @defer.inlineCallbacks
-        def d3():
-            yield queue.execute(self.delayed_success())
-
-            self.assertFalse(flags[3])
-            flags[3] = True
-            self.assertTrue(flags[1])
-            self.assertTrue(flags[2])
-
-        yield defer.DeferredList([d1(), d2(), d3()], fireOnOneErrback=True)
