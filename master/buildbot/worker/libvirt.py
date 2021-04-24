@@ -15,6 +15,7 @@
 # Portions Copyright 2010 Isotoma Limited
 
 import os
+import socket
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -119,9 +120,12 @@ class Connection:
 
 class LibVirtWorker(AbstractLatentWorker):
     pool = threadpool
+    metadata = '<auth username="{}" password="{}" master="{}"/>'
+    ns = 'http://buildbot.net/'
+    metakey = 'buildbot'
 
     def __init__(self, name, password, connection=None, hd_image=None, base_image=None,
-                 uri="system:///", xml=None, **kwargs):
+                 uri="system:///", xml=None, masterFQDN=None, **kwargs):
         super().__init__(name, password, **kwargs)
         if not libvirt:
             config.error(
@@ -138,6 +142,10 @@ class LibVirtWorker(AbstractLatentWorker):
         self.image = hd_image
         self.base_image = base_image
         self.xml = xml
+        if masterFQDN:
+            self.masterFQDN = masterFQDN
+        else:
+            self.masterFQDN = socket.getfqdn()
 
         self.cheap_copy = True
         self.graceful_shutdown = False
@@ -224,6 +232,13 @@ class LibVirtWorker(AbstractLatentWorker):
                 yield self._pool_do(lambda conn: conn.createXML(self.xml, 0))
             else:
                 domain = yield self._get_domain()
+                yield self._pool_do(lambda conn: domain.setMetadata(
+                    libvirt.VIR_DOMAIN_METADATA_ELEMENT,
+                    self.metadata.format(self.workername, self.password, self.masterFQDN),
+                    self.metakey,
+                    self.ns,
+                    libvirt.VIR_DOMAIN_AFFECT_CONFIG))
+
                 yield self._pool_do(lambda conn: domain.create())
 
         except Exception as e:

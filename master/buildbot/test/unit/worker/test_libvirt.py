@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import socket
+
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
@@ -276,3 +280,29 @@ class TestLibVirtWorker(unittest.TestCase):
         started = yield bs.start_instance(mock.Mock())
 
         self.assertEqual(started, True)
+
+    @parameterized.expand([
+        ('set_fqdn', {'masterFQDN': 'somefqdn'}, 'somefqdn'),
+        ('auto_fqdn', {}, socket.getfqdn()),
+    ])
+    @defer.inlineCallbacks
+    def test_start_instance_existing_domain(self, name, kwargs, expect_fqdn):
+        conn = self.add_fake_conn('fake:///conn')
+        domain = conn.fake_add('bot', -1)
+
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
+                                **kwargs)
+
+        prep = mock.Mock()
+        prep.side_effect = lambda: defer.succeed(0)
+        self.patch(bs, "_prepare_base_image", prep)
+
+        started = yield bs.start_instance(mock.Mock())
+
+        self.assertEqual(started, True)
+        self.assertEqual(domain.metadata, {
+            'buildbot': (libvirtfake.VIR_DOMAIN_METADATA_ELEMENT,
+                         'http://buildbot.net/',
+                         '<auth username="bot" password="p" master="{}"/>'.format(expect_fqdn),
+                         libvirtfake.VIR_DOMAIN_AFFECT_CONFIG)
+        })

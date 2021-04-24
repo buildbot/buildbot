@@ -21,6 +21,7 @@ class Domain:
         self._name = name
         self.running = False
         self.libvirt_id = libvirt_id
+        self.metadata = {}
 
     def ID(self):
         return self.libvirt_id
@@ -39,7 +40,7 @@ class Domain:
         del self.conn[self._name]
 
     def setMetadata(self, type, metadata, key, uri, flags):
-        pass
+        self.metadata[key] = (type, uri, metadata, flags)
 
 
 class Connection:
@@ -82,6 +83,10 @@ class Connection:
 
 def open(uri):
     raise NotImplementedError('this must be patched in tests')
+
+
+VIR_DOMAIN_AFFECT_CONFIG = 2
+VIR_DOMAIN_METADATA_ELEMENT = 2
 
 
 class libvirtError(Exception):
