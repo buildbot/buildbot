@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import asyncio
 import os
 import sys
 from io import StringIO
@@ -23,6 +24,7 @@ from twisted.python import threadpool
 from twisted.trial.unittest import TestCase
 
 import buildbot
+from buildbot.asyncio import TwistedLoop
 from buildbot.process.buildstep import BuildStep
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
@@ -73,7 +75,8 @@ class TestReactorMixin:
     Mix this in to get TestReactor as self.reactor which is correctly cleaned up
     at the end
     """
-    def setUpTestReactor(self):
+    def setUpTestReactor(self, use_asyncio=False):
+
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
         _setReactor(self.reactor)
@@ -88,6 +91,17 @@ class TestReactorMixin:
         # that are run during reactor.stop() may use eventually() themselves.
         self.addCleanup(_setReactor, None)
         self.addCleanup(self.reactor.stop)
+
+        if use_asyncio:
+            self.asyncio_loop = TwistedLoop(self.reactor)
+            asyncio.set_event_loop(self.asyncio_loop)
+            self.asyncio_loop.start()
+
+            def stop():
+                self.asyncio_loop.stop()
+                self.asyncio_loop.close()
+                asyncio.set_event_loop(None)
+            self.addCleanup(stop)
 
 
 class TimeoutableTestCase(TestCase):
