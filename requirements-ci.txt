@@ -3,7 +3,7 @@ appdirs==1.4.4
 asn1crypto==1.4.0
 astroid==2.4.2;
 attrs==20.3.0
-autobahn==20.6.1  # pyup: ignore  (#5438)
+autobahn==20.12.3
 Automat==20.2.0
 Babel==2.9.0
 backports.functools-lru-cache==1.6.1
