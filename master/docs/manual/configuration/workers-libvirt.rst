@@ -79,9 +79,9 @@ That copy will be thrown away every time a build is complete.
     from buildbot.plugins import worker, util
     c['workers'] = [
         worker.LibVirtWorker('minion1', 'sekrit',
-                             util.Connection("qemu:///session"),
-                             '/home/buildbot/images/minion1',
-                             '/home/buildbot/images/base_image')
+                             uri="qemu:///session",
+                             hd_image='/home/buildbot/images/minion1',
+                             base_image='/home/buildbot/images/base_image')
     ]
 
 You can use virt-manager to define ``minion1`` with the correct hardware.
@@ -96,7 +96,7 @@ If you don't, buildbot won't be able to find a VM to start.
     A password for the buildbot to login to the master with.
 
 ``connection``
-    :class:`Connection` instance wrapping connection to libvirt.
+    :class:`Connection` instance wrapping connection to libvirt. (deprecated, use ``uri``).
 
 ``hd_image``
     The path to a libvirt disk image, normally in qcow2 format when using KVM.
@@ -105,11 +105,28 @@ If you don't, buildbot won't be able to find a VM to start.
     If given a base image, buildbot will clone it every time it starts a VM.
     This means you always have a clean environment to do your build in.
 
+``uri``
+    The URI of the connection to libvirt.
+
+``masterFQDN``
+    (optional, defaults to ``socket.getfqdn()``)
+    Address of the master the worker should connect to.
+    Use if you master machine does not have proper fqdn.
+    This value is passed to the libvirt image via domain metadata.
+
 ``xml``
     If a VM isn't predefined in virt-manager, then you can instead provide XML like that used with ``virsh define``.
     The VM will be created automatically when needed, and destroyed when not needed any longer.
     
 .. note:: The ``hd_image`` and ``base_image`` must be on same machine with buildbot master.
+
+Connection to master
+--------------------
+
+If ``xml`` configuration key is not provided, then Buildbot will set libvirt metadata for the domain.
+It will contain the following XML element: ``<auth username="..." password="..." master="..."/>``.
+Here ``username``, ``password`` and ``master`` are the name of the worker, password to use for connection and the FQDN of the master.
+The libvirt metadata will be placed in the XML namespace ``buildbot=http://buildbot.net/``.
 
 Configuring Master to use libvirt on remote server
 ---------------------------------------------------

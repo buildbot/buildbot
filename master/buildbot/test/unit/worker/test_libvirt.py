@@ -13,61 +13,111 @@
 #
 # Copyright Buildbot Team Members
 
+import socket
+
+from parameterized import parameterized
+
 import mock
 
 from twisted.internet import defer
 from twisted.internet import utils
-from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot import config
-from buildbot.test.fake import libvirt
-from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import eventual
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.test.fake import libvirt as libvirtfake
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 from buildbot.worker import libvirt as libvirtworker
 
 
+# The libvirt module has a singleton threadpool within the module which we can't use in tests as
+# this makes it impossible to run them concurrently. To work around this we introduce a per-test
+# threadpool and access it through a class instance
+class TestThreadWithQueue(libvirtworker.ThreadWithQueue):
+    def __init__(self, pool, uri):
+        super().__init__(pool, uri, connect_backoff_start_seconds=0, connect_backoff_multiplier=0,
+                         connect_backoff_max_wait_seconds=0)
+
+    def libvirt_open(self):
+        return self.pool.case.libvirt_open(self.uri)
+
+
+class TestServerThreadPool(libvirtworker.ServerThreadPool):
+    ThreadClass = TestThreadWithQueue
+
+    def __init__(self, case):
+        super().__init__()
+        self.case = case
+
+
+class TestLibvirtWorker(libvirtworker.LibVirtWorker):
+    def __init__(self, case, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.case = case
+        self.pool = case.threadpool
+
+
+class TestException(Exception):
+    pass
+
+
 class TestLibVirtWorker(unittest.TestCase):
-
-    class ConcreteWorker(libvirtworker.LibVirtWorker):
-        pass
-
     def setUp(self):
-        self.patch(libvirtworker, "libvirt", libvirt)
-        self.conn = libvirtworker.Connection("test://")
-        self.lvconn = self.conn.connection
+        self.connections = {}
+        self.patch(libvirtworker, "libvirt", libvirtfake)
+        self.threadpool = TestServerThreadPool(self)
+
+    def libvirt_open(self, uri):
+        if uri not in self.connections:
+            raise Exception('Could not find test connection')
+        return self.connections[uri]
+
+    def add_fake_conn(self, uri):
+        conn = libvirtfake.Connection(uri)
+        self.connections[uri] = conn
+        return conn
+
+    def create_worker(self, *args, **kwargs):
+        return TestLibvirtWorker(self, *args, **kwargs)
+
+    def raise_libvirt_error(self):
+        # Helper method to be used from lambdas as they don't accept statements
+        raise libvirtfake.libvirtError()
 
     def test_constructor_nolibvirt(self):
         self.patch(libvirtworker, "libvirt", None)
         with self.assertRaises(config.ConfigErrors):
-            self.ConcreteWorker('bot', 'pass', None, 'path', 'path')
+            self.create_worker('bot', 'pass', None, 'path', 'path')
+
+    def test_deprecated_connection(self):
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern='connection argument has been deprecated'):
+            self.create_worker('bot', 'pass', libvirtworker.Connection('test'), 'path', 'path')
+
+    def test_deprecated_connection_and_uri(self):
+        with self.assertRaises(config.ConfigErrors):
+            with assertProducesWarnings(DeprecatedApiWarning,
+                                        message_pattern='connection argument has been deprecated'):
+                self.create_worker('bot', 'pass', libvirtworker.Connection('test'), 'path', 'path',
+                                   uri='custom')
 
     @defer.inlineCallbacks
-    def test_constructor_minimal(self):
-        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'path', 'otherpath')
-        yield bs._find_existing_deferred
-        self.assertEqual(bs.workername, 'bot')
-        self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.connection, self.conn)
-        self.assertEqual(bs.image, 'path')
-        self.assertEqual(bs.base_image, 'otherpath')
+    def test_get_domain_id(self):
+        conn = self.add_fake_conn('fake:///conn')
+        conn.fake_add('bot', 14)
 
-    @defer.inlineCallbacks
-    def test_find_existing(self):
-        d = self.lvconn.fake_add("bot")
+        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o', uri='fake:///conn')
 
-        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', 'o')
-        yield bs._find_existing_deferred
-
-        self.assertEqual(bs.domain.domain, d)
+        id = yield bs._get_domain_id()
+        self.assertEqual(id, 14)
 
     @defer.inlineCallbacks
     def test_prepare_base_image_none(self):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
-        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', None)
-        yield bs._find_existing_deferred
+        bs = self.create_worker('bot', 'pass', hd_image='p', base_image=None)
         yield bs._prepare_base_image()
 
         self.assertEqual(utils.getProcessValue.call_count, 0)
@@ -77,46 +127,42 @@ class TestLibVirtWorker(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
-        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', 'o')
-        yield bs._find_existing_deferred
+        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
         yield bs._prepare_base_image()
 
-        utils.getProcessValue.assert_called_with(
-            "qemu-img", ["create", "-b", "o", "-f", "qcow2", "p"])
+        utils.getProcessValue.assert_called_with("qemu-img",
+                                                 ["create", "-b", "o", "-f", "qcow2", "p"])
 
     @defer.inlineCallbacks
     def test_prepare_base_image_full(self):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
-        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', 'o')
-        yield bs._find_existing_deferred
+        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
         bs.cheap_copy = False
         yield bs._prepare_base_image()
 
-        utils.getProcessValue.assert_called_with(
-            "cp", ["o", "p"])
+        utils.getProcessValue.assert_called_with("cp", ["o", "p"])
 
     @defer.inlineCallbacks
     def _test_stop_instance(self, graceful, fast, expected_destroy,
                             expected_shutdown, shutdown_side_effect=None):
-        bs = self.ConcreteWorker('name', 'p', self.conn,
-                                 mock.sentinel.hd_image, 'o', xml='<xml/>')
-        bs.graceful_shutdown = graceful
-        domain_mock = mock.Mock()
-        if shutdown_side_effect:
-            domain_mock.shutdown.side_effect = shutdown_side_effect
-        bs.domain = libvirtworker.Domain(mock.sentinel.connection, domain_mock)
+        domain = mock.Mock()
+        domain.ID.side_effect = lambda: 14
+        domain.shutdown.side_effect = shutdown_side_effect
 
+        conn = self.add_fake_conn('fake:///conn')
+        conn.fake_add_domain('name', domain)
+
+        bs = self.create_worker('name', 'p', hd_image='p', base_image='o',
+                                uri='fake:///conn', xml='<xml/>')
+        bs.graceful_shutdown = graceful
         with mock.patch('os.remove') as remove_mock:
             yield bs.stop_instance(fast=fast)
 
-        self.assertIsNone(bs.domain)
-
-        self.assertEqual(int(expected_destroy), domain_mock.destroy.call_count)
-        self.assertEqual(int(expected_shutdown),
-                         domain_mock.shutdown.call_count)
-        remove_mock.assert_called_once_with(mock.sentinel.hd_image)
+        self.assertEqual(int(expected_destroy), domain.destroy.call_count)
+        self.assertEqual(int(expected_shutdown), domain.shutdown.call_count)
+        remove_mock.assert_called_once_with('p')
 
     @defer.inlineCallbacks
     def test_stop_instance_destroy(self):
@@ -138,223 +184,125 @@ class TestLibVirtWorker(unittest.TestCase):
                                        fast=False,
                                        expected_destroy=True,
                                        expected_shutdown=True,
-                                       shutdown_side_effect=Exception)
+                                       shutdown_side_effect=TestException)
 
     @defer.inlineCallbacks
-    def test_start_instance(self):
-        bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o',
-                                 xml='<xml/>')
+    def test_start_instance_connection_fails(self):
+        bs = self.create_worker('b', 'p', hd_image='p', base_image='o', uri='unknown')
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        yield bs._find_existing_deferred
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'Did not receive connection'):
+            yield bs.start_instance(mock.Mock())
+
+        self.assertFalse(prep.called)
+
+    @defer.inlineCallbacks
+    def test_start_instance_already_active(self):
+        conn = self.add_fake_conn('fake:///conn')
+        conn.fake_add('bot', 14)
+
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
+                                xml='<xml/>')
+
+        prep = mock.Mock()
+        self.patch(bs, "_prepare_base_image", prep)
+
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'it\'s already active'):
+            yield bs.start_instance(mock.Mock())
+
+        self.assertFalse(prep.called)
+
+    @defer.inlineCallbacks
+    def test_start_instance_domain_id_error(self):
+        conn = self.add_fake_conn('fake:///conn')
+        domain = conn.fake_add('bot', 14)
+        domain.ID = self.raise_libvirt_error
+
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
+                                xml='<xml/>')
+
+        prep = mock.Mock()
+        self.patch(bs, "_prepare_base_image", prep)
+
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'while retrieving domain ID'):
+            yield bs.start_instance(mock.Mock())
+
+        self.assertFalse(prep.called)
+
+    @defer.inlineCallbacks
+    def test_start_instance_connection_create_fails(self):
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', xml='<xml/>',
+                                uri='fake:///conn')
+
+        conn = self.add_fake_conn('fake:///conn')
+        conn.createXML = lambda _, __: self.raise_libvirt_error()
+
+        prep = mock.Mock()
+        prep.side_effect = lambda: defer.succeed(0)
+        self.patch(bs, "_prepare_base_image", prep)
+
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'error while starting VM'):
+            yield bs.start_instance(mock.Mock())
+
+        self.assertTrue(prep.called)
+
+    @defer.inlineCallbacks
+    def test_start_instance_domain_create_fails(self):
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn')
+
+        conn = self.add_fake_conn('fake:///conn')
+        domain = conn.fake_add('bot', -1)
+        domain.create = self.raise_libvirt_error
+
+        prep = mock.Mock()
+        prep.side_effect = lambda: defer.succeed(0)
+        self.patch(bs, "_prepare_base_image", prep)
+
+        with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'error while starting VM'):
+            yield bs.start_instance(mock.Mock())
+
+        self.assertTrue(prep.called)
+
+    @defer.inlineCallbacks
+    def test_start_instance_xml(self):
+        self.add_fake_conn('fake:///conn')
+
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
+                                xml='<xml/>')
+
+        prep = mock.Mock()
+        prep.side_effect = lambda: defer.succeed(0)
+        self.patch(bs, "_prepare_base_image", prep)
+
         started = yield bs.start_instance(mock.Mock())
 
         self.assertEqual(started, True)
 
+    @parameterized.expand([
+        ('set_fqdn', {'masterFQDN': 'somefqdn'}, 'somefqdn'),
+        ('auto_fqdn', {}, socket.getfqdn()),
+    ])
     @defer.inlineCallbacks
-    def test_start_instance_create_fails(self):
-        bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o',
-                                 xml='<xml/>')
+    def test_start_instance_existing_domain(self, name, kwargs, expect_fqdn):
+        conn = self.add_fake_conn('fake:///conn')
+        domain = conn.fake_add('bot', -1)
+
+        bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn',
+                                **kwargs)
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        create = mock.Mock()
-        create.side_effect = lambda self: defer.fail(
-            failure.Failure(RuntimeError('oh noes')))
-        self.patch(libvirtworker.Connection, 'create', create)
-
-        yield bs._find_existing_deferred
         started = yield bs.start_instance(mock.Mock())
 
-        self.assertEqual(bs.domain, None)
-        self.assertEqual(started, False)
-        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-
-    @defer.inlineCallbacks
-    def setup_canStartBuild(self):
-        bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o')
-        yield bs._find_existing_deferred
-
-        bs.parent = mock.Mock()
-        bs.config_version = 0
-        bs.parent.master.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
-        bs.updateLocks()
-
-        return bs
-
-    @defer.inlineCallbacks
-    def test_canStartBuild(self):
-        bs = yield self.setup_canStartBuild()
-        self.assertEqual(bs.canStartBuild(), True)
-
-    @defer.inlineCallbacks
-    def test_canStartBuild_notready(self):
-        """
-        If a LibVirtWorker hasn't finished scanning for existing VMs then we shouldn't
-        start builds on it as it might create a 2nd VM when we want to reuse the existing
-        one.
-        """
-        bs = yield self.setup_canStartBuild()
-        bs.ready = False
-        self.assertEqual(bs.canStartBuild(), False)
-
-    @defer.inlineCallbacks
-    def test_canStartBuild_domain_and_not_connected(self):
-        """
-        If we've found that the VM this worker would instance already exists but hasn't
-        connected then we shouldn't start builds or we'll end up with a dupe.
-        """
-        bs = yield self.setup_canStartBuild()
-        bs.domain = mock.Mock()
-        self.assertEqual(bs.canStartBuild(), False)
-
-    @defer.inlineCallbacks
-    def test_canStartBuild_domain_and_connected(self):
-        """
-        If we've found an existing VM and it is connected then we should start builds
-        """
-        bs = yield self.setup_canStartBuild()
-        bs.domain = mock.Mock()
-        isconnected = mock.Mock()
-        isconnected.return_value = True
-        self.patch(bs, "isConnected", isconnected)
-        self.assertEqual(bs.canStartBuild(), True)
-
-
-class TestWorkQueue(TestReactorMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpTestReactor()
-
-    def tearDown(self):
-        return eventual.flushEventualQueue()
-
-    def delayed_success(self):
-        def work():
-            d = defer.Deferred()
-            self.reactor.callLater(0, d.callback, True)
-            return d
-        return work
-
-    def delayed_errback(self):
-        def work():
-            d = defer.Deferred()
-            self.reactor.callLater(0, d.errback,
-                                   failure.Failure(
-                                       RuntimeError("Test failure")))
-            return d
-        return work
-
-    def expect_errback(self, d):
-        @d.addCallback
-        def shouldnt_get_called(f):
-            self.assertEqual(True, False)
-
-        @d.addErrback
-        def errback(f):
-            """ log.msg("errback called?") """
-
-        return d
-
-    @defer.inlineCallbacks
-    def test_handle_exceptions(self):
-        queue = libvirtworker.WorkQueue()
-
-        def work():
-            raise ValueError
-        yield self.expect_errback(queue.execute(work))
-
-    @defer.inlineCallbacks
-    def test_handle_immediate_errback(self):
-        queue = libvirtworker.WorkQueue()
-
-        def work():
-            return defer.fail(RuntimeError("Sad times"))
-        yield self.expect_errback(queue.execute(work))
-
-    @defer.inlineCallbacks
-    def test_handle_delayed_errback(self):
-        queue = libvirtworker.WorkQueue()
-        work = self.delayed_errback()
-        yield self.expect_errback(queue.execute(work))
-
-    @defer.inlineCallbacks
-    def test_handle_immediate_success(self):
-        queue = libvirtworker.WorkQueue()
-
-        def work():
-            return defer.succeed(True)
-        yield queue.execute(work)
-
-    @defer.inlineCallbacks
-    def test_handle_delayed_success(self):
-        queue = libvirtworker.WorkQueue()
-        work = self.delayed_success()
-        yield queue.execute(work)
-
-    @defer.inlineCallbacks
-    def test_single_pow_fires(self):
-        queue = libvirtworker.WorkQueue()
-        yield queue.execute(self.delayed_success())
-
-    @defer.inlineCallbacks
-    def test_single_pow_errors_gracefully(self):
-        queue = libvirtworker.WorkQueue()
-        d = queue.execute(self.delayed_errback())
-        yield self.expect_errback(d)
-
-    @defer.inlineCallbacks
-    def test_fail_doesnt_break_further_work(self):
-        queue = libvirtworker.WorkQueue()
-        yield self.expect_errback(queue.execute(self.delayed_errback()))
-        yield queue.execute(self.delayed_success())
-
-    @defer.inlineCallbacks
-    def test_second_pow_fires(self):
-        queue = libvirtworker.WorkQueue()
-        yield queue.execute(self.delayed_success())
-        yield queue.execute(self.delayed_success())
-
-    @defer.inlineCallbacks
-    def test_work(self):
-        queue = libvirtworker.WorkQueue()
-
-        # We want these deferreds to fire in order
-        flags = {1: False, 2: False, 3: False}
-
-        # When first deferred fires, flags[2] and flags[3] should still be false
-        # flags[1] shouldn't already be set, either
-        @defer.inlineCallbacks
-        def d1():
-            yield queue.execute(self.delayed_success())
-            self.assertEqual(flags[1], False)
-            flags[1] = True
-            self.assertEqual(flags[2], False)
-            self.assertEqual(flags[3], False)
-
-        # When second deferred fires, only flags[3] should be set
-        # flags[2] should definitely be False
-        @defer.inlineCallbacks
-        def d2():
-            yield queue.execute(self.delayed_success())
-            self.assertFalse(flags[2])
-            flags[2] = True
-            self.assertTrue(flags[1])
-            self.assertFalse(flags[3])
-
-        # When third deferred fires, only flags[3] should be unset
-        @defer.inlineCallbacks
-        def d3():
-            yield queue.execute(self.delayed_success())
-
-            self.assertFalse(flags[3])
-            flags[3] = True
-            self.assertTrue(flags[1])
-            self.assertTrue(flags[2])
-
-        yield defer.DeferredList([d1(), d2(), d3()], fireOnOneErrback=True)
+        self.assertEqual(started, True)
+        self.assertEqual(domain.metadata, {
+            'buildbot': (libvirtfake.VIR_DOMAIN_METADATA_ELEMENT,
+                         'http://buildbot.net/',
+                         '<auth username="bot" password="p" master="{}"/>'.format(expect_fqdn),
+                         libvirtfake.VIR_DOMAIN_AFFECT_CONFIG)
+        })
