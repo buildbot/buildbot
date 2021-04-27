@@ -270,13 +270,9 @@ setup_args = {
             ('buildbot.steps.cppcheck', ['Cppcheck']),
             ('buildbot.steps.gitdiffinfo', ['GitDiffInfo']),
             ('buildbot.steps.http', [
-                'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
-                'OPTIONS',
-                'HTTPStepNewStyle', 'POSTNewStyle', 'GETNewStyle', 'PUTNewStyle', 'DELETENewStyle',
-                'HEADNewStyle', 'OPTIONSNewStyle']),
+                'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']),
             ('buildbot.steps.master', [
-                'MasterShellCommand', 'MasterShellCommandNewStyle',
-                'SetProperty', 'SetProperties', 'LogRenderable', "Assert"]),
+                'MasterShellCommand', 'SetProperty', 'SetProperties', 'LogRenderable', "Assert"]),
             ('buildbot.steps.maxq', ['MaxQ']),
             ('buildbot.steps.mswin', ['Robocopy']),
             ('buildbot.steps.package.deb.lintian', ['DebLintian']),
@@ -292,12 +288,8 @@ setup_args = {
             ('buildbot.steps.python_twisted', [
                 'HLint', 'Trial', 'RemovePYCs']),
             ('buildbot.steps.shell', [
-                'ShellCommand', 'ShellCommandNewStyle', 'TreeSize',
-                'SetPropertyFromCommand', 'SetPropertyFromCommandNewStyle',
-                'Configure', 'ConfigureNewStyle',
-                'WarningCountingShellCommand', 'WarningCountingShellCommandNewStyle',
-                'Compile', 'CompileNewStyle',
-                'Test', 'TestNewStyle', 'PerlModuleTest']),
+                'ShellCommand', 'TreeSize', 'SetPropertyFromCommand', 'Configure',
+                'WarningCountingShellCommand', 'Compile', 'Test', 'PerlModuleTest']),
             ('buildbot.steps.shellsequence', ['ShellSequence']),
             ('buildbot.steps.source.bzr', ['Bzr']),
             ('buildbot.steps.source.cvs', ['CVS']),

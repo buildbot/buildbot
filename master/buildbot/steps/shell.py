@@ -148,15 +148,6 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         return SUCCESS
 
 
-SetPropertyFromCommandNewStyle = SetPropertyFromCommand
-deprecatedModuleAttribute(
-    Version("buildbot", 3, 0, 0),
-    message="Use SetPropertyFromCommand instead. This step will be removed in Buildbot 3.2.",
-    moduleName="buildbot.steps.shell",
-    name="SetPropertyFromCommandNewStyle",
-)
-
-
 SetProperty = SetPropertyFromCommand
 deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
                           "It has been renamed to SetPropertyFromCommand",
@@ -213,15 +204,6 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         return cmd.results()
 
 
-ShellCommandNewStyle = ShellCommand
-deprecatedModuleAttribute(
-    Version("buildbot", 3, 0, 0),
-    message="Use ShellCommand instead. This step will be removed in Buildbot 3.2.",
-    moduleName="buildbot.steps.shell",
-    name="ShellCommandNewStyle",
-)
-
-
 class Configure(ShellCommand):
     name = "configure"
     haltOnFailure = 1
@@ -229,15 +211,6 @@ class Configure(ShellCommand):
     description = "configuring"
     descriptionDone = "configure"
     command = ["./configure"]
-
-
-ConfigureNewStyle = Configure
-deprecatedModuleAttribute(
-    Version("buildbot", 3, 0, 0),
-    message="Use Configure instead. This step will be removed in Buildbot 3.2.",
-    moduleName="buildbot.steps.shell",
-    name="ConfigureNewStyle",
-)
 
 
 class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buildstep.BuildStep):
@@ -483,15 +456,6 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         return result
 
 
-WarningCountingShellCommandNewStyle = WarningCountingShellCommand
-deprecatedModuleAttribute(
-    Version("buildbot", 3, 0, 0),
-    message="Use WarningCountingShellCommand instead. This step will be removed in Buildbot 3.2.",
-    moduleName="buildbot.steps.shell",
-    name="WarningCountingShellCommandNewStyle",
-)
-
-
 class Compile(WarningCountingShellCommand):
 
     name = "compile"
@@ -500,15 +464,6 @@ class Compile(WarningCountingShellCommand):
     description = ["compiling"]
     descriptionDone = ["compile"]
     command = ["make", "all"]
-
-
-CompileNewStyle = Compile
-deprecatedModuleAttribute(
-    Version("buildbot", 3, 0, 0),
-    message="Use Compile instead. This step will be removed in Buildbot 3.2.",
-    moduleName="buildbot.steps.shell",
-    name="CompileNewStyle",
-)
 
 
 class Test(WarningCountingShellCommand):
@@ -560,15 +515,6 @@ class Test(WarningCountingShellCommand):
                 return {'step': summary}
 
         return super().getResultSummary()
-
-
-TestNewStyle = Test
-deprecatedModuleAttribute(
-    Version("buildbot", 3, 0, 0),
-    message="Use Test instead. This step will be removed in Buildbot 3.2.",
-    moduleName="buildbot.steps.shell",
-    name="TestNewStyle",
-)
 
 
 class PerlModuleTestObserver(logobserver.LogLineObserver):
