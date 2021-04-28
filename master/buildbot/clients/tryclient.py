@@ -578,7 +578,7 @@ class Try(pb.Referenceable):
             if difffile == "-":
                 diff = sys.stdin.read()
             else:
-                with open(difffile, "r") as f:
+                with open(difffile, "rb") as f:
                     diff = f.read()
             if not diff:
                 diff = None

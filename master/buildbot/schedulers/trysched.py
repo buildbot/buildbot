@@ -393,7 +393,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         branch = bytes2unicode(branch)
         revision = bytes2unicode(revision)
-        patch = patch[0], bytes2unicode(patch[1])
+        patch = patch[0], patch[1]
         repository = bytes2unicode(repository)
         project = bytes2unicode(project)
         who = bytes2unicode(who)
