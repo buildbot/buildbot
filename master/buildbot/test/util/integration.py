@@ -184,7 +184,7 @@ class RunMasterBase(unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, config_dict, startWorker=True):
+    def setupConfig(self, config_dict, startWorker=True, **worker_kwargs):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
@@ -229,11 +229,11 @@ class RunMasterBase(unittest.TestCase):
             if sandboxed_worker_path is None:
                 self.w = Worker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    False)
+                    False, **worker_kwargs)
             else:
                 self.w = SandboxedWorker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                    sandboxed_worker_path)
+                    sandboxed_worker_path, **worker_kwargs)
                 self.addCleanup(self.w.shutdownWorker)
 
         elif self.proto == 'null':

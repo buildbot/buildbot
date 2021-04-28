@@ -491,6 +491,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         "maxdelay": 2,
         "numcpus": None,
         "maxretries": None,
+        "proxy-connection-string": None,
 
         # arguments
         "host": "masterhost",
@@ -625,6 +626,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
             maxRetries=options["maxretries"],
             useTls=options["use-tls"],
             delete_leftover_dirs=options["delete-leftover-dirs"],
+            proxy_connection_string=options["proxy-connection-string"],
             )
 
         # check that Worker instance attached to application
