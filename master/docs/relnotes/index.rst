@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.1.1`` ( ``2021-04-28`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix missing VERSION file in buildbot_worker wheel package (:issue:`5948`, :issue:`4464`).
+- Fixed error when attempting to specify ``ws_ping_interval`` configuration option (:issue:`5991`).
+
+
 Buildbot ``3.1.0`` ( ``2021-04-05`` )
 =====================================
 

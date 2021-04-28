@@ -1,1 +1,0 @@
-Fix missing VERSION file in buildbot_worker wheel package. :bug:`5948`, :bug:`4464`
