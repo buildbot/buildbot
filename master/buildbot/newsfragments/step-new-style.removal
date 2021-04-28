@@ -1,0 +1,2 @@
+The ``*NewStyle`` build step aliases have been removed.
+Please use equivalent steps without the ``NewStyle`` suffix in the name.
