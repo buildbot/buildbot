@@ -33,6 +33,7 @@ class Log:
 
         self.subPoint = util.subscription.SubscriptionPoint("%r log" % (name,))
         self.subscriptions = {}
+        self._finishing = False
         self.finished = False
         self.finishWaiters = []
         self._had_errors = False
@@ -97,7 +98,9 @@ class Log:
 
     @defer.inlineCallbacks
     def finish(self):
+        assert not self._finishing, "Did you maybe forget to yield the method?"
         assert not self.finished
+        self._finishing = True
 
         def fToRun():
             self.finished = True
@@ -119,6 +122,7 @@ class Log:
         d = self.master.data.updates.compressLog(self.logid)
         d.addErrback(
             log.err, "while compressing log %d (ignored)" % self.logid)
+        self._finishing = False
 
 
 class PlainLog(Log):
