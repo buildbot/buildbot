@@ -21,7 +21,7 @@ decorator==5.0.7
 dicttoxml==1.7.4
 docker==5.0.0
 docutils==0.17.1
-flake8==3.9.0
+flake8==3.9.1
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.2
