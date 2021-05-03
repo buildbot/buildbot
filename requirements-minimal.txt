@@ -2,4 +2,4 @@
 -e master[tls,test,docs]
 -e worker[test]
 -e pkg
-buildbot_www
+buildbot_www==3.1.1
