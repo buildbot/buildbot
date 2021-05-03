@@ -41,7 +41,7 @@ markdown2==2.4.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mock==4.0.3
-moto==2.0.2
+moto==2.0.6
 olefile==0.46
 packaging==20.9
 parameterized==0.8.1
