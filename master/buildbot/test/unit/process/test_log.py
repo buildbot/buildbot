@@ -182,6 +182,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         })
 
     @defer.inlineCallbacks
+    def test_unyielded_finish(self):
+        _log = yield self.makeLog('s')
+        _log.finish()
+        with self.assertRaises(AssertionError):
+            yield _log.finish()
+
+    @defer.inlineCallbacks
     def test_isFinished(self):
         _log = yield self.makeLog('s')
         self.assertFalse(_log.isFinished())
