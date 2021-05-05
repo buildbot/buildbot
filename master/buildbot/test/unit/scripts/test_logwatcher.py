@@ -131,8 +131,8 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
     @defer.inlineCallbacks
     def test_matches_lines(self):
         lines_and_expected = [
-            (b'reconfig aborted without making any changes', ReconfigError()),
-            (b'WARNING: reconfig partially applied; master may malfunction',
+            (b'configuration update aborted without making any changes', ReconfigError()),
+            (b'WARNING: configuration update partially applied; master may malfunction',
              ReconfigError()),
             (b'Server Shut Down', ReconfigError()),
             (b'BuildMaster startup failed', BuildmasterStartupError()),

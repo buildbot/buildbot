@@ -183,7 +183,8 @@ class LogWatcher(LineOnlyLongLineReceiver):
 
         if b"message from master: attached" in line:
             return self.finished("worker")
-        if b"reconfig aborted" in line or b'reconfig partially applied' in line:
+        if b"configuration update aborted" in line or \
+                b'configuration update partially applied' in line:
             return self.finished(Failure(ReconfigError()))
         if b"Server Shut Down" in line:
             return self.finished(Failure(ReconfigError()))
