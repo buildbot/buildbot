@@ -16,14 +16,12 @@
 from urllib.parse import urlparse
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
-
-log = Logger()
 
 # Magic words understood by Butbucket REST API
 BITBUCKET_INPROGRESS = 'INPROGRESS'
@@ -78,44 +76,43 @@ class BitbucketStatusPush(ReporterBase):
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
-        build = reports[0]['builds'][0]
-        results = build['results']
-        oauth_request = yield self.oauthhttp.post("", data=_GET_TOKEN_DATA)
-        if oauth_request.code == 200:
-            content_json = yield oauth_request.json()
-            token = content_json['access_token']
-        else:
-            content = yield oauth_request.content()
-            log.error("{code}: unable to authenticate to Bitbucket {content}",
-                      code=oauth_request.code, content=content)
+        request = yield self.oauthhttp.post("", data=_GET_TOKEN_DATA)
+        if request.code != 200:
+            content = yield request.content()
+            log.msg(f"{request.code}: unable to authenticate to Bitbucket {content}")
             return
+        token = (yield request.json())['access_token']
+        self._http.updateHeaders({'Authorization': f'Bearer {token}'})
 
+        build = reports[0]['builds'][0]
         if build['complete']:
-            status = BITBUCKET_SUCCESSFUL if results == SUCCESS else BITBUCKET_FAILED
+            status = BITBUCKET_SUCCESSFUL if build['results'] == SUCCESS else BITBUCKET_FAILED
         else:
             status = BITBUCKET_INPROGRESS
 
-        for sourcestamp in build['buildset']['sourcestamps']:
-            sha = sourcestamp['revision']
-            body = {
-                'state': status,
-                'key': build['builder']['name'],
-                'name': build['builder']['name'],
-                'url': build['url']
-            }
+        body = {
+            'state': status,
+            'key': build['builder']['name'],
+            'name': build['builder']['name'],
+            'url': build['url']
+        }
 
+        for sourcestamp in build['buildset']['sourcestamps']:
+            if not sourcestamp['repository']:
+                log.msg(f"Empty repository URL for Bitbucket status {body}")
+                continue
             owner, repo = self.get_owner_and_repo(sourcestamp['repository'])
 
-            self._http.updateHeaders({'Authorization': 'Bearer ' + token})
+            endpoint = (owner, repo, 'commit', sourcestamp['revision'], 'statuses', 'build')
+            bitbucket_uri = f"/{'/'.join(endpoint)}"
 
-            bitbucket_uri = '/' + \
-                '/'.join([owner, repo, 'commit', sha, 'statuses', 'build'])
+            if self.debug:
+                log.msg(f"Bitbucket status {bitbucket_uri} {body}")
 
             response = yield self._http.post(bitbucket_uri, json=body)
             if response.code != 200 and response.code != 201:
                 content = yield response.content()
-                log.error("{code}: unable to upload Bitbucket status {content}",
-                          code=response.code, content=content)
+                log.msg(f"{response.code}: unable to upload Bitbucket status {content}")
 
     def get_owner_and_repo(self, repourl):
         """
