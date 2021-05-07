@@ -18,9 +18,12 @@ from urllib.parse import urlparse
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.process.properties import Properties
+from buildbot.process.properties import Property
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.message import MessageFormatter
 from buildbot.util import httpclientservice
 
 # Magic words understood by Butbucket REST API
@@ -39,8 +42,8 @@ class BitbucketStatusPush(ReporterBase):
     name = "BitbucketStatusPush"
 
     def checkConfig(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
-                    debug=None, verify=None, generators=None,
-                    **kwargs):
+                    debug=None, verify=None, status_key=None, status_name=None,
+                    generators=None, **kwargs):
 
         if generators is None:
             generators = self._create_default_generators()
@@ -50,11 +53,14 @@ class BitbucketStatusPush(ReporterBase):
 
     @defer.inlineCallbacks
     def reconfigService(self, oauth_key, oauth_secret, base_url=_BASE_URL, oauth_url=_OAUTH_URL,
-                        debug=None, verify=None, generators=None, **kwargs):
+                        debug=None, verify=None, status_key=None, status_name=None,
+                        generators=None, **kwargs):
         oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
         self.base_url = base_url
         self.debug = debug
         self.verify = verify
+        self.status_key = status_key or Property('buildername')
+        self.status_name = status_name or Property('buildername')
 
         if generators is None:
             generators = self._create_default_generators()
@@ -72,7 +78,12 @@ class BitbucketStatusPush(ReporterBase):
             debug=self.debug, verify=self.verify)
 
     def _create_default_generators(self):
-        return [BuildStartEndStatusGenerator()]
+        return [
+            BuildStartEndStatusGenerator(
+                start_formatter=MessageFormatter(subject=""),
+                end_formatter=MessageFormatter(subject="")
+            )
+        ]
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
@@ -90,10 +101,14 @@ class BitbucketStatusPush(ReporterBase):
         else:
             status = BITBUCKET_INPROGRESS
 
+        props = Properties.fromDict(build['properties'])
+        props.master = self.master
+
         body = {
             'state': status,
-            'key': build['builder']['name'],
-            'name': build['builder']['name'],
+            'key': (yield props.render(self.status_key)),
+            'name': (yield props.render(self.status_name)),
+            'description': reports[0]['subject'],
             'url': build['url']
         }
 
