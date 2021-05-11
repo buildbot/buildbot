@@ -17,13 +17,13 @@ import os
 import time
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
+from buildbot.util import runprocess
 from buildbot.util.state import StateMixin
 
 
@@ -118,84 +118,85 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             return workdir
         return os.path.join(self.master.basedir, workdir)
 
+    @defer.inlineCallbacks
     def _getRevDetails(self, rev):
         """Return a deferred for (date, author, files, comments) of given rev.
 
         Deferred will be in error if rev is unknown.
         """
-        args = ['log', '-r', rev, os.linesep.join((
+        command = [
+            self.hgbin, 'log', '-r', rev, os.linesep.join((
             '--template={date|hgdate}',
             '{author}',
             "{files % '{file}" + os.pathsep + "'}",
             '{desc|strip}'))]
+
         # Mercurial fails with status 255 if rev is unknown
-        d = utils.getProcessOutput(self.hgbin, args, path=self._absWorkdir(),
-                                   env=os.environ, errortoo=False)
+        rc, output = yield runprocess.run_process(self.master.reactor,
+                                                  command, workdir=self._absWorkdir(),
+                                                  env=os.environ, collect_stderr=False,
+                                                  stderr_is_error=True)
+        if rc != 0:
+            msg = '{}: got error {} when getting details for revision {}'.format(self, rc, rev)
+            raise Exception(msg)
 
-        @d.addCallback
-        def process(output):
-            # all file names are on one line
-            output = output.decode(self.encoding, "replace")
-            date, author, files, comments = output.split(
-                os.linesep, 3)
+        # all file names are on one line
+        output = output.decode(self.encoding, "replace")
+        date, author, files, comments = output.split(os.linesep, 3)
 
-            if not self.usetimestamps:
-                stamp = None
-            else:
-                try:
-                    stamp = float(date.split()[0])
-                except Exception:
-                    log.msg('hgpoller: caught exception converting output %r '
-                            'to timestamp' % date)
-                    raise
-            return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
-        return d
+        if not self.usetimestamps:
+            stamp = None
+        else:
+            try:
+                stamp = float(date.split()[0])
+            except Exception:
+                log.msg('hgpoller: caught exception converting output %r '
+                        'to timestamp' % date)
+                raise
+        return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
 
     def _isRepositoryReady(self):
         """Easy to patch in tests."""
         return os.path.exists(os.path.join(self._absWorkdir(), '.hg'))
 
+    @defer.inlineCallbacks
     def _initRepository(self):
         """Have mercurial init the workdir as a repository (hg init) if needed.
 
         hg init will also create all needed intermediate directories.
         """
         if self._isRepositoryReady():
-            return defer.succeed(None)
+            return
         log.msg('hgpoller: initializing working dir from {}'.format(self.repourl))
-        d = utils.getProcessOutputAndValue(self.hgbin,
-                                           ['init', self._absWorkdir()],
-                                           env=os.environ)
-        d.addCallback(self._convertNonZeroToFailure)
-        d.addErrback(self._stopOnFailure)
-        d.addCallback(lambda _: log.msg(
-            "hgpoller: finished initializing working dir %r" % self.workdir))
-        return d
 
+        rc = yield runprocess.run_process(self.master.reactor,
+                                          [self.hgbin, 'init', self._absWorkdir()],
+                                          env=os.environ, collect_stdout=False,
+                                          collect_stderr=False)
+
+        if rc != 0:
+            self._stopOnFailure()
+            raise EnvironmentError('{}: repository init failed with exit code {}'.format(self, rc))
+
+        log.msg("hgpoller: finished initializing working dir {}".format(self.workdir))
+
+    @defer.inlineCallbacks
     def _getChanges(self):
         self.lastPoll = time.time()
 
-        d = self._initRepository()
-        d.addCallback(lambda _: log.msg("hgpoller: polling hg repo at {}".format(self.repourl)))
+        yield self._initRepository()
+        log.msg("{}: polling hg repo at {}".format(self, self.repourl))
 
-        # get a deferred object that performs the fetch
-        args = ['pull']
+        command = [self.hgbin, 'pull']
         for name in self.branches:
-            args += ['-b', name]
+            command += ['-b', name]
         for name in self.bookmarks:
-            args += ['-B', name]
-        args += [self.repourl]
+            command += ['-B', name]
+        command += [self.repourl]
 
-        # This command always produces data on stderr, but we actually do not
-        # care about the stderr or stdout from this command.
-        # We set errortoo=True to avoid an errback from the deferred.
-        # The callback which will be added to this
-        # deferred will not use the response.
-        d.addCallback(lambda _: utils.getProcessOutput(
-            self.hgbin, args, path=self._absWorkdir(),
-            env=os.environ, errortoo=True))
-
-        return d
+        yield runprocess.run_process(self.master.reactor, command, workdir=self._absWorkdir(),
+                                     env=os.environ, collect_stdout=False,
+                                     collect_stderr=False)
 
     def _getCurrentRev(self, branch='default'):
         """Return a deferred for current numeric rev in state db.
@@ -209,6 +210,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.lastRev[branch] = str(rev)
         return self.setState('lastRev', self.lastRev)
 
+    @defer.inlineCallbacks
     def _getHead(self, branch):
         """Return a deferred for branch head revision or None.
 
@@ -217,33 +219,32 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         (if really buildbotting a branch that does not have any changeset
         yet, one shouldn't be surprised to get errors)
         """
-        d = utils.getProcessOutput(self.hgbin,
-                                   ['heads', branch,
-                                       '--template={rev}' + os.linesep],
-                                   path=self._absWorkdir(), env=os.environ, errortoo=False)
 
-        @d.addErrback
-        def no_head_err(exc):
-            log.err("hgpoller: could not find revision %r in repository %r" % (
-                branch, self.repourl))
+        rc, stdout = yield runprocess.run_process(self.master.reactor,
+                                                  [self.hgbin, 'heads', branch,
+                                                   '--template={rev}' + os.linesep],
+                                                  workdir=self._absWorkdir(), env=os.environ,
+                                                  collect_stderr=False, stderr_is_error=True)
 
-        @d.addCallback
-        def results(heads):
-            if not heads:
-                return None
+        if rc != 0:
+            log.err("{}: could not find revision {} in repository {}".format(self, branch,
+                                                                             self.repourl))
+            return None
 
-            if len(heads.split()) > 1:
-                log.err(("hgpoller: caught several heads in branch %r "
-                         "from repository %r. Staying at previous revision"
-                         "You should wait until the situation is normal again "
-                         "due to a merge or directly strip if remote repo "
-                         "gets stripped later.") % (branch, self.repourl))
-                return None
+        if not stdout:
+            return None
 
-            # in case of whole reconstruction, are we sure that we'll get the
-            # same node -> rev assignations ?
-            return heads.strip().decode(self.encoding)
-        return d
+        if len(stdout.split()) > 1:
+            log.err(("{}: caught several heads in branch {} "
+                     "from repository {}. Staying at previous revision"
+                     "You should wait until the situation is normal again "
+                     "due to a merge or directly strip if remote repo "
+                     "gets stripped later.").format(self, branch, self.repourl))
+            return None
+
+        # in case of whole reconstruction, are we sure that we'll get the
+        # same node -> rev assignations ?
+        return stdout.strip().decode(self.encoding)
 
     @defer.inlineCallbacks
     def _processChanges(self, unused_output):
@@ -264,11 +265,18 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def _getRevNodeList(self, revset):
-        revListArgs = ['log', '-r', revset, r'--template={rev}:{node}\n']
-        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                                               path=self._absWorkdir(), env=os.environ,
-                                               errortoo=False)
-        results = results.decode(self.encoding)
+
+        rc, stdout = yield runprocess.run_process(self.master.reactor,
+                                                  [self.hgbin, 'log', '-r', revset,
+                                                   r'--template={rev}:{node}\n'],
+                                                  workdir=self._absWorkdir(), env=os.environ,
+                                                  collect_stdout=True, collect_stderr=False,
+                                                  stderr_is_error=True)
+
+        if rc != 0:
+            raise EnvironmentError('{}: could not get rev node list: {}'.format(self, rc))
+
+        results = stdout.decode(self.encoding)
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
         defer.returnValue(revNodeList)
@@ -324,13 +332,6 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         # eat the failure to continue along the deferred chain - we still want
         # to catch up
         return None
-
-    def _convertNonZeroToFailure(self, res):
-        "utility method to handle the result of getProcessOutputAndValue"
-        (stdout, stderr, code) = res
-        if code != 0:
-            raise EnvironmentError('command failed with exit code {}: {}'.format(code, stderr))
-        return (stdout, stderr, code)
 
     def _stopOnFailure(self, f):
         "utility method to stop the service when a failure occurs"
