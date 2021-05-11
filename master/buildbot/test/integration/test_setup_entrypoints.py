@@ -139,6 +139,8 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.queue.UndoableQueue',
             'buildbot.util.raml.RamlLoader',
             'buildbot.util.raml.RamlSpec',
+            'buildbot.util.runprocess.RunProcessPP',
+            'buildbot.util.runprocess.RunProcess',
             'buildbot.util.sautils.InsertFromSelect',
             'buildbot.util.service.AsyncMultiService',
             'buildbot.util.service.AsyncService',
