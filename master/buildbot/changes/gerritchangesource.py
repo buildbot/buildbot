@@ -19,7 +19,6 @@ import json
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.internet import utils
 from twisted.python import log
 
 from buildbot import config
@@ -28,6 +27,7 @@ from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
+from buildbot.util import runprocess
 from buildbot.util.protocol import LineProcessProtocol
 
 
@@ -405,7 +405,11 @@ class GerritChangeSource(GerritChangeSourceBase):
             log.msg("querying gerrit for changed files in change {}/{}: {}".format(change, patchset,
                                                                                    cmd))
 
-        out = yield utils.getProcessOutput(cmd[0], cmd[1:], env=None)
+        rc, out = yield runprocess.run_process(self.master.reactor, cmd, env=None,
+                                               collect_stderr=False)
+        if rc != 0:
+            return ["unknown"]
+
         out = out.splitlines()[0]
         res = json.loads(bytes2unicode(out))
 
