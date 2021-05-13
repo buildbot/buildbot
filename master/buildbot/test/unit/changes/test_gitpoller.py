@@ -248,11 +248,11 @@ class TestGitPoller(TestGitPollerBase):
 
     @defer.inlineCallbacks
     def test_poll_initial_poller_not_running(self):
-        self.expectCommands(
-            gpo.Expect('git', '--version')
+        self.expect_commands(
+            ExpectMaster(['git', '--version'])
             .stdout(b'git version 1.7.5\n'),
-            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
-            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            ExpectMaster(['git', 'init', '--bare', 'gitpoller-work']),
+            ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
         )
@@ -260,7 +260,7 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.doPoll.running = False
         yield self.poller.poll()
 
-        self.assertAllCommandsRan()
+        self.assert_all_commands_ran()
         self.assertEqual(self.poller.lastRev, {})
 
     def test_poll_failInit(self):
