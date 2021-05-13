@@ -18,7 +18,6 @@ import os
 
 from twisted.trial import unittest
 
-from buildbot.test.util.decorators import flaky
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -403,7 +402,6 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertEqual(image.id, ami.id)
 
-    @flaky(issueNumber=3936)
     @mock_ec2
     def test_get_image_owners(self):
         c, r = self.botoSetup('latent_buildbot_slave')
