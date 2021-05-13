@@ -1275,6 +1275,7 @@ setupsite
 setupsourcestep
 setupstep
 setuptools
+sg
 sha
 shellcommand
 shlex
