@@ -20,15 +20,16 @@ from twisted.trial import unittest
 
 from buildbot.changes import hgpoller
 from buildbot.test.util import changesource
-from buildbot.test.util import gpo
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 LINESEP_BYTES = os.linesep.encode("ascii")
 PATHSEP_BYTES = os.pathsep.encode("ascii")
 
 
-class TestHgPollerBase(gpo.GetProcessOutputMixin,
+class TestHgPollerBase(MasterRunProcessMixin,
                        changesource.ChangeSourceMixin,
                        TestReactorMixin,
                        unittest.TestCase):
@@ -39,11 +40,11 @@ class TestHgPollerBase(gpo.GetProcessOutputMixin,
     @defer.inlineCallbacks
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_master_run_process()
 
         # To test that environment variables get propagated to subprocesses
         # (See #2116)
         os.environ[ENVIRON_2116_KEY] = 'TRUE'
-        self.setUpGetProcessOutput()
         yield self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
         self.remote_hgweb = 'http://example.com/foo/baz/rev/{}'
@@ -75,16 +76,17 @@ class TestHgPollerBranches(TestHgPollerBase):
 
     @defer.inlineCallbacks
     def test_poll_initial(self):
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-b', 'one', '-b', 'two',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"73591"),
-            gpo.Expect(
-                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"22341"),
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            .workdir('/some/dir')
+            .stdout(b"73591"),
+
+            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            .workdir('/some/dir')
+            .stdout(b"22341"),
         )
 
         # do the poll
@@ -101,34 +103,32 @@ class TestHgPollerBranches(TestHgPollerBase):
         # normal operation. There's a previous revision, we get a new one.
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-b', 'one', '-b', 'two',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'6' + LINESEP_BYTES),
-            gpo.Expect('hg', 'log', '-r', '4::6',
-                       '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                        b'4:1aaa5',
-                        b'6:784bd',
-                    ])),
-            gpo.Expect('hg', 'log', '-r', '784bd',
-                       '--template={date|hgdate}' + os.linesep +
-                       '{author}' + os.linesep +
-                       "{files % '{file}" +
-                       os.pathsep + "'}" +
-                       os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                b'1273258009.0 -7200',
-                b'Joe Test <joetest@example.org>',
-                b'file1 file2',
-                b'Comment',
-                b''])),
-            gpo.Expect(
-                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'3' + LINESEP_BYTES),
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-b', 'one', '-b', 'two', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b'6' + LINESEP_BYTES),
+
+            ExpectMaster(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'6:784bd'])),
+
+            ExpectMaster(['hg', 'log', '-r', '784bd',
+                          '--template={date|hgdate}' + os.linesep +
+                          '{author}' + os.linesep +
+                          "{files % '{file}" +
+                          os.pathsep + "'}" +
+                          os.linesep + '{desc|strip}'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
+                                        b'Joe Test <joetest@example.org>',
+                                        b'file1 file2',
+                                        b'Comment',
+                                        b''])),
+
+            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b'3' + LINESEP_BYTES),
         )
 
         yield self.poller._setCurrentRev(3, 'two')
@@ -149,16 +149,15 @@ class TestHgPollerBookmarks(TestHgPollerBase):
 
     @defer.inlineCallbacks
     def test_poll_initial(self):
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-B', 'one', '-B', 'two',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"73591"),
-            gpo.Expect(
-                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"22341"),
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b"73591"),
+
+            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b"22341"),
         )
 
         # do the poll
@@ -175,34 +174,29 @@ class TestHgPollerBookmarks(TestHgPollerBase):
         # normal operation. There's a previous revision, we get a new one.
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-B', 'one', '-B', 'two',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'one', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'6' + LINESEP_BYTES),
-            gpo.Expect('hg', 'log', '-r', '4::6',
-                       '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                        b'4:1aaa5',
-                        b'6:784bd',
-                    ])),
-            gpo.Expect('hg', 'log', '-r', '784bd',
-                       '--template={date|hgdate}' + os.linesep +
-                       '{author}' + os.linesep +
-                       "{files % '{file}" +
-                       os.pathsep + "'}" +
-                       os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                b'1273258009.0 -7200',
-                b'Joe Test <joetest@example.org>',
-                b'file1 file2',
-                b'Comment',
-                b''])),
-            gpo.Expect(
-                'hg', 'heads', 'two', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'3' + LINESEP_BYTES),
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-B', 'one', '-B', 'two', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'one', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b'6' + LINESEP_BYTES),
+
+            ExpectMaster(['hg', 'log', '-r', '4::6', '--template={rev}:{node}\\n'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'6:784bd', ])),
+
+            ExpectMaster(['hg', 'log', '-r', '784bd',
+                          '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
+                          "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
+                                        b'Joe Test <joetest@example.org>',
+                                        b'file1 file2',
+                                        b'Comment',
+                                        b''])),
+
+            ExpectMaster(['hg', 'heads', 'two', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b'3' + LINESEP_BYTES),
         )
 
         yield self.poller._setCurrentRev(3, 'two')
@@ -258,15 +252,16 @@ class TestHgPoller(TestHgPollerBase):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
         expected_env = {ENVIRON_2116_KEY: 'TRUE'}
-        self.addGetProcessOutputExpectEnv(expected_env)
-        self.expectCommands(
-            gpo.Expect('hg', 'init', '/some/dir'),
-            gpo.Expect('hg', 'pull', '-b', 'default',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b"73591"),
+        self.add_run_process_expect_env(expected_env)
+        self.expect_commands(
+            ExpectMaster(['hg', 'init', '/some/dir']),
+
+            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            .workdir('/some/dir')
+            .stdout(b"73591"),
         )
 
         # do the poll
@@ -282,13 +277,13 @@ class TestHgPoller(TestHgPollerBase):
         # If there are several heads on the named branch, the poller mustn't
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-b', 'default',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            .workdir('/some/dir')
+            .stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
         )
 
         yield self.poller._setCurrentRev(3)
@@ -300,31 +295,27 @@ class TestHgPoller(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-b', 'default',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
-            gpo.Expect('hg', 'log', '-r', '4::5',
-                       '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                        b'4:1aaa5',
-                        b'5:784bd',
-                    ])),
-            gpo.Expect('hg', 'log', '-r', '784bd',
-                       '--template={date|hgdate}' + os.linesep +
-                       '{author}' + os.linesep +
-                       "{files % '{file}" +
-                       os.pathsep + "'}" +
-                       os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                b'1273258009.0 -7200',
-                b'Joe Test <joetest@example.org>',
-                b'file1 file2',
-                b'Comment for rev 5',
-                b''])),
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            .workdir('/some/dir')
+            .stdout(b'5' + LINESEP_BYTES),
+
+            ExpectMaster(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'4:1aaa5', b'5:784bd'])),
+
+            ExpectMaster(['hg', 'log', '-r', '784bd',
+                          '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
+                          "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
+                                        b'Joe Test <joetest@example.org>',
+                                        b'file1 file2',
+                                        b'Comment for rev 5',
+                                        b''])),
         )
 
         yield self.poller._setCurrentRev(4)
@@ -340,33 +331,30 @@ class TestHgPoller(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_force_push(self):
         #  There's a previous revision, but not linked with new rev
-        self.expectCommands(
-            gpo.Expect('hg', 'pull', '-b', 'default',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect(
-                'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
-            gpo.Expect('hg', 'log', '-r', '4::5',
-                       '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(b""),
-            gpo.Expect('hg', 'log', '-r', '5',
-                       '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                        b'5:784bd',
-                    ])),
-            gpo.Expect('hg', 'log', '-r', '784bd',
-                       '--template={date|hgdate}' + os.linesep +
-                       '{author}' + os.linesep +
-                       "{files % '{file}" +
-                       os.pathsep + "'}" +
-                       os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(LINESEP_BYTES.join([
-                b'1273258009.0 -7200',
-                b'Joe Test <joetest@example.org>',
-                b'file1 file2',
-                b'Comment for rev 5',
-                b''])),
+        self.expect_commands(
+            ExpectMaster(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz'])
+            .workdir('/some/dir'),
+
+            ExpectMaster(['hg', 'heads', 'default', '--template={rev}' + os.linesep])
+            .workdir('/some/dir').stdout(b'5' + LINESEP_BYTES),
+
+            ExpectMaster(['hg', 'log', '-r', '4::5', '--template={rev}:{node}\\n'])
+            .workdir('/some/dir')
+            .stdout(b""),
+
+            ExpectMaster(['hg', 'log', '-r', '5', '--template={rev}:{node}\\n'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'5:784bd'])),
+
+            ExpectMaster(['hg', 'log', '-r', '784bd',
+                          '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep +
+                          "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}'])
+            .workdir('/some/dir')
+            .stdout(LINESEP_BYTES.join([b'1273258009.0 -7200',
+                                        b'Joe Test <joetest@example.org>',
+                                        b'file1 file2',
+                                        b'Comment for rev 5',
+                                        b''])),
         )
 
         yield self.poller._setCurrentRev(4)

@@ -21,12 +21,12 @@ import xml.dom.minidom
 from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.python import log
 
 from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
+from buildbot.util import runprocess
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
@@ -193,62 +193,65 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         d.addErrback(log.err, 'SVNPoller: Error in  while polling')
         return d
 
-    def getProcessOutput(self, args):
-        # this exists so we can override it during the unit tests
-        d = utils.getProcessOutput(self.svnbin, args, self.environ)
-        return d
-
+    @defer.inlineCallbacks
     def get_prefix(self):
-        args = ["info", "--xml", "--non-interactive", self.repourl]
+        command = [self.svnbin, "info", "--xml", "--non-interactive", self.repourl]
         if self.svnuser:
-            args.append("--username={}".format(self.svnuser))
+            command.append("--username={}".format(self.svnuser))
         if self.svnpasswd is not None:
-            args.append("--password={}".format(self.svnpasswd))
+            command.append("--password={}".format(self.svnpasswd))
         if self.extra_args:
-            args.extend(self.extra_args)
-        d = self.getProcessOutput(args)
+            command.extend(self.extra_args)
+        rc, output = yield runprocess.run_process(self.master.reactor, command, env=self.environ,
+                                                  collect_stderr=False, stderr_is_error=True)
 
-        @d.addCallback
-        def determine_prefix(output):
-            try:
-                doc = xml.dom.minidom.parseString(output)
-            except xml.parsers.expat.ExpatError:
-                log.msg("SVNPoller: SVNPoller.get_prefix: ExpatError in '{}'".format(output))
-                raise
-            rootnodes = doc.getElementsByTagName("root")
-            if not rootnodes:
-                # this happens if the URL we gave was already the root. In this
-                # case, our prefix is empty.
-                self._prefix = ""
-                return self._prefix
-            rootnode = rootnodes[0]
-            root = "".join([c.data for c in rootnode.childNodes])
-            # root will be a unicode string
-            if not self.repourl.startswith(root):
-                log.msg(format="Got root %(root)r from `svn info`, but it is "
-                               "not a prefix of the configured repourl",
-                        repourl=self.repourl, root=root)
-                raise RuntimeError("Configured repourl doesn't match svn root")
-            prefix = self.repourl[len(root):]
-            if prefix.startswith("/"):
-                prefix = prefix[1:]
-            log.msg("SVNPoller: repourl={}, root={}, so prefix={}".format(self.repourl, root,
-                                                                          prefix))
-            return prefix
-        return d
+        if rc != 0:
+            raise EnvironmentError('{}: Got error when retrieving svn prefix'.format(self))
 
+        try:
+            doc = xml.dom.minidom.parseString(output)
+        except xml.parsers.expat.ExpatError:
+            log.msg("SVNPoller: SVNPoller.get_prefix: ExpatError in '{}'".format(output))
+            raise
+        rootnodes = doc.getElementsByTagName("root")
+        if not rootnodes:
+            # this happens if the URL we gave was already the root. In this
+            # case, our prefix is empty.
+            self._prefix = ""
+            return self._prefix
+        rootnode = rootnodes[0]
+        root = "".join([c.data for c in rootnode.childNodes])
+        # root will be a unicode string
+        if not self.repourl.startswith(root):
+            log.msg(format="Got root %(root)r from `svn info`, but it is "
+                           "not a prefix of the configured repourl",
+                    repourl=self.repourl, root=root)
+            raise RuntimeError("Configured repourl doesn't match svn root")
+        prefix = self.repourl[len(root):]
+        if prefix.startswith("/"):
+            prefix = prefix[1:]
+        log.msg("SVNPoller: repourl={}, root={}, so prefix={}".format(self.repourl, root,
+                                                                      prefix))
+        return prefix
+
+    @defer.inlineCallbacks
     def get_logs(self, _):
-        args = []
-        args.extend(["log", "--xml", "--verbose", "--non-interactive"])
+        command = [self.svnbin, "log", "--xml", "--verbose", "--non-interactive"]
         if self.svnuser:
-            args.extend(["--username={}".format(self.svnuser)])
+            command.extend(["--username={}".format(self.svnuser)])
         if self.svnpasswd is not None:
-            args.extend(["--password={}".format(self.svnpasswd)])
+            command.extend(["--password={}".format(self.svnpasswd)])
         if self.extra_args:
-            args.extend(self.extra_args)
-        args.extend(["--limit=%d" % (self.histmax), self.repourl])
-        d = self.getProcessOutput(args)
-        return d
+            command.extend(self.extra_args)
+        command.extend(["--limit=%d" % (self.histmax), self.repourl])
+
+        rc, output = yield runprocess.run_process(self.master.reactor, command, env=self.environ,
+                                                  collect_stderr=False, stderr_is_error=True)
+
+        if rc != 0:
+            raise EnvironmentError('{}: Got error when retrieving svn logs'.format(self))
+
+        return output
 
     def parse_logs(self, output):
         # parse the XML output, return a list of <logentry> nodes

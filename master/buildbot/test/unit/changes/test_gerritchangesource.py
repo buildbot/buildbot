@@ -20,7 +20,6 @@ import types
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
-from twisted.internet import utils
 from twisted.python import failure
 from twisted.trial import unittest
 
@@ -30,6 +29,8 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 
 class TestGerritHelpers(unittest.TestCase):
@@ -86,12 +87,13 @@ class TestGerritHelpers(unittest.TestCase):
                          }, "gerrit"))
 
 
-class TestGerritChangeSource(changesource.ChangeSourceMixin,
+class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMixin,
                              TestReactorMixin,
                              unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
+        self.setup_master_run_process()
         return self.setUpChangeSource()
 
     def tearDown(self):
@@ -409,33 +411,37 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             'gerrit', 'query', '1000', '--format', 'JSON', '--files', '--patch-sets'
         ]
 
-        def getoutput_success(cmd, argv, env):
-            self.assertEqual([cmd, argv], [exp_argv[0], exp_argv[1:]])
-            return self.query_files_success
+        self.expect_commands(
+            ExpectMaster(exp_argv)
+            .stdout(self.query_files_success),
+            ExpectMaster(exp_argv)
+            .stdout(self.query_files_failure)
+        )
 
-        def getoutput_failure(cmd, argv, env):
-            return self.query_files_failure
-
-        self.patch(utils, 'getProcessOutput', getoutput_success)
         res = yield s.getFiles(1000, 13)
         self.assertEqual(set(res), {'/COMMIT_MSG', 'file1', 'file2'})
 
-        self.patch(utils, 'getProcessOutput', getoutput_failure)
         res = yield s.getFiles(1000, 13)
         self.assertEqual(res, ['unknown'])
 
+        self.assert_all_commands_ran()
+
     @defer.inlineCallbacks
     def test_getFilesFromEvent(self):
+        self.expect_commands(
+            ExpectMaster(['ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '29418', 'gerrit',
+                          'query', '4321', '--format', 'JSON', '--files', '--patch-sets'])
+            .stdout(self.query_files_success)
+        )
+
         s = self.newChangeSource('host', 'user', get_files=True,
                                  handled_events=["change-merged"])
-
-        def getoutput(cmd, argv, env):
-            return self.query_files_success
-        self.patch(utils, 'getProcessOutput', getoutput)
 
         yield s.lineReceived(json.dumps(self.change_merged_event))
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(set(c['files']), {'/COMMIT_MSG', 'file1', 'file2'})
+
+        self.assert_all_commands_ran()
 
 
 class TestGerritEventLogPoller(changesource.ChangeSourceMixin,

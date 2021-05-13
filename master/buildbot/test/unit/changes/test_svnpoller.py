@@ -23,8 +23,9 @@ from twisted.trial import unittest
 from buildbot.changes import svnpoller
 from buildbot.process.properties import Interpolate
 from buildbot.test.util import changesource
-from buildbot.test.util import gpo
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -250,14 +251,14 @@ def split_file(path):
     raise RuntimeError("there shouldn't be any files like %r" % path)
 
 
-class TestSVNPoller(gpo.GetProcessOutputMixin,
+class TestSVNPoller(MasterRunProcessMixin,
                     changesource.ChangeSourceMixin,
                     TestReactorMixin,
                     unittest.TestCase):
 
     def setUp(self):
         self.setUpTestReactor()
-        self.setUpGetProcessOutput()
+        self.setup_master_run_process()
         return self.setUpChangeSource()
 
     def tearDown(self):
@@ -267,10 +268,6 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = svnpoller.SVNPoller(*args, **kwargs)
         self.attachChangeSource(s)
         return s
-
-    def add_svn_command_result(self, command, result):
-        self.expectCommands(
-            gpo.Expect('svn', command).stdout(result))
 
     # tests
     def test_describe(self):
@@ -292,12 +289,14 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
     @defer.inlineCallbacks
     def do_test_get_prefix(self, base, output, expected):
         s = self.attachSVNPoller(base)
-        self.expectCommands(
-            gpo.Expect('svn', 'info', '--xml', '--non-interactive', base).stdout(output))
+        self.expect_commands(
+            ExpectMaster(['svn', 'info', '--xml', '--non-interactive', base])
+            .stdout(output)
+        )
         prefix = yield s.get_prefix()
 
         self.assertEqual(prefix, expected)
-        self.assertAllCommandsRan()
+        self.assert_all_commands_ran()
 
     def test_get_prefix_1(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -406,7 +405,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 '--username=dustin']
         if password is not None:
             args.append('--password=' + password)
-        return gpo.Expect(*args)
+        return ExpectMaster(args)
 
     def makeLogExpect(self, password='bbrocks'):
         args = ['svn', 'log', '--xml', '--verbose', '--non-interactive',
@@ -414,7 +413,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         if password is not None:
             args.append('--password=' + password)
         args.extend(['--limit=100', sample_base])
-        return gpo.Expect(*args)
+        return ExpectMaster(args)
 
     def test_create_changes_overridden_project(self):
         def custom_split_file(path):
@@ -454,7 +453,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
 
-        self.expectCommands(
+        self.expect_commands(
             self.makeInfoExpect().stdout(sample_info_output),
             self.makeLogExpect().stdout(make_changes_output(1)),
             self.makeLogExpect().stdout(make_changes_output(1)),
@@ -534,13 +533,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             'when_timestamp': None,
         }])
         self.assertEqual(s.last_change, 4)
-        self.assertAllCommandsRan()
+        self.assert_all_commands_ran()
 
     def test_poll_empty_password(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='')
 
-        self.expectCommands(
+        self.expect_commands(
             self.makeInfoExpect(password="").stdout(sample_info_output),
             self.makeLogExpect(password="").stdout(make_changes_output(1)),
             self.makeLogExpect(password="").stdout(make_changes_output(1)),
@@ -553,7 +552,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin')
 
-        self.expectCommands(
+        self.expect_commands(
             self.makeInfoExpect(password=None).stdout(sample_info_output),
             self.makeLogExpect(password=None).stdout(make_changes_output(1)),
             self.makeLogExpect(password=None).stdout(make_changes_output(1)),
@@ -566,7 +565,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd=Interpolate('pa$$'))
 
-        self.expectCommands(
+        self.expect_commands(
             self.makeInfoExpect(password='pa$$').stdout(sample_info_output),
             self.makeLogExpect(password='pa$$').stdout(make_changes_output(1)),
             self.makeLogExpect(password='pa$$').stdout(make_changes_output(1)),
@@ -580,13 +579,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
 
-        self.expectCommands(
+        self.expect_commands(
             self.makeInfoExpect().stderr(b"error"))
         yield s.poll()
 
         # should have logged the RuntimeError, but not errback'd from poll
-        self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
-        self.assertAllCommandsRan()
+        self.assertEqual(len(self.flushLoggedErrors(EnvironmentError)), 1)
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_poll_get_logs_exception(self):
@@ -594,13 +593,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                                  svnuser='dustin', svnpasswd='bbrocks')
         s._prefix = "abc"  # skip the get_prefix stuff
 
-        self.expectCommands(
+        self.expect_commands(
             self.makeLogExpect().stderr(b"some error"))
         yield s.poll()
 
         # should have logged the RuntimeError, but not errback'd from poll
-        self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
-        self.assertAllCommandsRan()
+        self.assertEqual(len(self.flushLoggedErrors(EnvironmentError)), 1)
+        self.assert_all_commands_ran()
 
     def test_cachepath_empty(self):
         cachepath = os.path.abspath('revcache')

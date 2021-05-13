@@ -19,13 +19,13 @@ import stat
 from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
+from buildbot.util import runprocess
 from buildbot.util.git import GitMixin
 from buildbot.util.git import getSshKnownHostsContents
 from buildbot.util.misc import writeLocalFile
@@ -439,9 +439,9 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
         full_args += [command] + args
 
-        res = yield utils.getProcessOutputAndValue(self.gitbin,
-            full_args, path=path, env=full_env)
-        (stdout, stderr, code) = res
+        res = yield runprocess.run_process(self.master.reactor, [self.gitbin] + full_args, path,
+                                           env=full_env)
+        (code, stdout, stderr) = res
         stdout = bytes2unicode(stdout, self.encoding)
         stderr = bytes2unicode(stderr, self.encoding)
         if code != 0:
