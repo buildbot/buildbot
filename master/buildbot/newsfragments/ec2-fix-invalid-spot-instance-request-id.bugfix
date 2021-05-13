@@ -1,0 +1,2 @@
+Fixed occasional ``InvalidSpotInstanceRequestID.NotFound`` errors when using spot instances on EC2.
+This may lead to Buildbot launching zombie instances and not shutting them down.
