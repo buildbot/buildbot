@@ -19,6 +19,7 @@ import textwrap
 
 import mock
 
+from autobahn.wamp.exception import TransportLost
 from autobahn.wamp.types import SubscribeOptions
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -44,8 +45,23 @@ class ComparableSubscribeOptions(SubscribeOptions):
     __repr__ = SubscribeOptions.__str__
 
 
+class FakeSubscription:
+    def __init__(self):
+        self.exception_on_unsubscribe = None
+
+    def unsubscribe(self):
+        if self.exception_on_unsubscribe is not None:
+            raise self.exception_on_unsubscribe()
+
+
+class TestException(Exception):
+    pass
+
+
 class FakeWampConnector:
     # a fake wamp connector with only one queue
+    def __init__(self):
+        self.subscriptions = []
 
     def topic_match(self, topic):
         topic = topic.split(".")
@@ -63,6 +79,10 @@ class FakeWampConnector:
         self.topic = topic
         # we record the qref_cb
         self.qref_cb = callback
+
+        subs = FakeSubscription()
+        self.subscriptions.append(subs)
+        return subs
 
     def publish(self, topic, data, options=None):
         # make sure the topic is compatible with what was subscribed
@@ -146,6 +166,28 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
         self.assertEqual(self.master.wamp.last_data, 'foo')
+
+    @defer.inlineCallbacks
+    def test_unsubscribe_ignores_transport_lost(self):
+        callback = mock.Mock()
+        consumer = yield self.mq.startConsuming(callback, ('a', 'b'))
+
+        self.assertEqual(len(self.master.wamp.subscriptions), 1)
+        self.master.wamp.subscriptions[0].exception_on_unsubscribe = TransportLost
+
+        yield consumer.stopConsuming()
+
+    @defer.inlineCallbacks
+    def test_unsubscribe_logs_exceptions(self):
+        callback = mock.Mock()
+        consumer = yield self.mq.startConsuming(callback, ('a', 'b'))
+
+        self.assertEqual(len(self.master.wamp.subscriptions), 1)
+        self.master.wamp.subscriptions[0].exception_on_unsubscribe = TestException
+
+        yield consumer.stopConsuming()
+
+        self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
 
     @defer.inlineCallbacks
     def test_forward_data_wildcard(self):
