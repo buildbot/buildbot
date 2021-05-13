@@ -97,24 +97,6 @@ class RunSteps(RunFakeMasterTestCase):
         return builder_id
 
     @defer.inlineCallbacks
-    def do_test_build(self, builder_id):
-
-        # setup waiting for build to finish
-        d_finished = defer.Deferred()
-
-        def on_finished(_, __):
-            if not d_finished.called:
-                d_finished.callback(None)
-        consumer = yield self.master.mq.startConsuming(on_finished, ('builds', None, 'finished'))
-
-        # start the builder
-        yield self.create_build_request([builder_id])
-
-        # and wait for build completion
-        yield d_finished
-        yield consumer.stopConsuming()
-
-    @defer.inlineCallbacks
     def test_step_raising_buildstepfailed_in_start(self):
         builder_id = yield self.create_config_for_step(FailingCustomStep())
 

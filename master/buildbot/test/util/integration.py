@@ -153,6 +153,29 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         )
         return ret
 
+    @defer.inlineCallbacks
+    def do_test_build_by_name(self, builder_name):
+        builder_id = yield self.master.data.updates.findBuilderId(builder_name)
+        yield self.do_test_build(builder_id)
+
+    @defer.inlineCallbacks
+    def do_test_build(self, builder_id):
+
+        # setup waiting for build to finish
+        d_finished = defer.Deferred()
+
+        def on_finished(_, __):
+            if not d_finished.called:
+                d_finished.callback(None)
+        consumer = yield self.master.mq.startConsuming(on_finished, ('builds', None, 'finished'))
+
+        # start the builder
+        yield self.create_build_request([builder_id])
+
+        # and wait for build completion
+        yield d_finished
+        yield consumer.stopConsuming()
+
 
 class RunMasterBase(unittest.TestCase):
     proto = "null"
