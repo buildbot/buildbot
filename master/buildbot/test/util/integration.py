@@ -154,6 +154,11 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         return ret
 
     @defer.inlineCallbacks
+    def do_test_build_by_name(self, builder_name):
+        builder_id = yield self.master.data.updates.findBuilderId(builder_name)
+        yield self.do_test_build(builder_id)
+
+    @defer.inlineCallbacks
     def do_test_build(self, builder_id):
 
         # setup waiting for build to finish
