@@ -177,6 +177,11 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         url = urlquote(self.repourl, '').replace('~', '%7E')
         return "refs/buildbot/{}/{}".format(url, self._removeHeads(branch))
 
+    def poll_should_exit(self):
+        # A single gitpoller loop may take a while on a loaded master, which would block
+        # reconfiguration, so we try to exit early.
+        return not self.doPoll.running
+
     @defer.inlineCallbacks
     def poll(self):
         yield self._checkGitFeatures()
@@ -189,6 +194,10 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
         branches = self.branches if self.branches else []
         remote_refs = yield self._getBranches()
+
+        if self.poll_should_exit():
+            return
+
         if branches is True or callable(branches):
             if callable(self.branches):
                 branches = [b for b in remote_refs if self.branches(b)]
@@ -214,6 +223,11 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         log.msg('gitpoller: processing changes from "{}"'.format(self.repourl))
         for branch in branches:
             try:
+                if self.poll_should_exit():  # pragma: no cover
+                    # Note that we still want to update the last known revisions for the branches
+                    # we did process
+                    break
+
                 rev = yield self._dovccmd(
                     'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
                 revs[branch] = bytes2unicode(rev, self.encoding)

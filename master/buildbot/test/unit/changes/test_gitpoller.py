@@ -259,6 +259,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -271,6 +272,23 @@ class TestGitPoller(TestGitPollerBase):
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
 
+    @defer.inlineCallbacks
+    def test_poll_initial_poller_not_running(self):
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
+        )
+
+        self.poller.doPoll.running = False
+        yield self.poller.poll()
+
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {})
+
     def test_poll_failInit(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -279,6 +297,7 @@ class TestGitPoller(TestGitPollerBase):
             .exit(1),
         )
 
+        self.poller.doPoll.running = True
         d = self.assertFailure(self.poller.poll(), EnvironmentError)
 
         d.addCallback(lambda _: self.assertAllCommandsRan())
@@ -296,6 +315,7 @@ class TestGitPoller(TestGitPollerBase):
             .exit(1),
         )
 
+        self.poller.doPoll.running = True
         d = self.assertFailure(self.poller.poll(), EnvironmentError)
         d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
@@ -318,6 +338,7 @@ class TestGitPoller(TestGitPollerBase):
             .exit(1),
         )
 
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -353,6 +374,8 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'
         }
+
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -383,6 +406,7 @@ class TestGitPoller(TestGitPollerBase):
             .exit(128),
         )
 
+        self.poller.doPoll.running = True
         d = self.poller.poll()
         d.addCallback(lambda _: self.assertAllCommandsRan())
         self.assertLogged("command.*on repourl.*failed.*exit code 128.*")
@@ -422,6 +446,8 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         }
+
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -458,6 +484,7 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['master', 'release', 'not_on_remote']
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -539,6 +566,7 @@ class TestGitPoller(TestGitPollerBase):
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -630,7 +658,7 @@ class TestGitPoller(TestGitPollerBase):
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
 
         }
-
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -696,6 +724,7 @@ class TestGitPoller(TestGitPollerBase):
         }
 
         self.poller.buildPushesWithNoCommits = True
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -778,6 +807,7 @@ class TestGitPoller(TestGitPollerBase):
         }
 
         self.poller.buildPushesWithNoCommits = True
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -858,6 +888,7 @@ class TestGitPoller(TestGitPollerBase):
         }
 
         self.poller.buildPushesWithNoCommits = True
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -936,6 +967,7 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -996,6 +1028,7 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1075,6 +1108,7 @@ class TestGitPoller(TestGitPollerBase):
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1174,6 +1208,7 @@ class TestGitPoller(TestGitPollerBase):
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1272,6 +1307,7 @@ class TestGitPoller(TestGitPollerBase):
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/pull/410/head': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1352,6 +1388,7 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         # check the results
@@ -1457,6 +1494,7 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         }
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1559,6 +1597,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1602,6 +1641,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1645,6 +1685,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .exit(1),
         )
 
+        self.poller.doPoll.running = True
         yield self.assertFailure(self.poller.poll(), EnvironmentError)
 
         self.assertAllCommandsRan()
@@ -1697,6 +1738,7 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1765,6 +1807,7 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
+        self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
