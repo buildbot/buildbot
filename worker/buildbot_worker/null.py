@@ -36,8 +36,5 @@ class LocalWorker(WorkerBase):
         res = yield master.workers.newConnection(conn, self.name)
         if res:
             yield self.parent.attached(conn)
-
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self.parent.detached()
-        yield WorkerBase.stopService(self)
+            # detached() will be called automatically on connection disconnection which is
+            # invoked from the master side when the AbstarctWorker.stopService() is called.
