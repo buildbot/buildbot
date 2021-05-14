@@ -107,7 +107,8 @@ class WorkerManager(MeasuredBuildbotServiceManager):
             old_conn = self.connections[workerName]
             try:
                 yield misc.cancelAfter(self.PING_TIMEOUT,
-                                       old_conn.remotePrint("master got a duplicate connection"))
+                                       old_conn.remotePrint("master got a duplicate connection"),
+                                       self.master.reactor)
                 # if we get here then old connection is still alive, and new
                 # should be rejected
                 raise RuntimeError("rejecting duplicate worker")
