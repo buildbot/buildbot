@@ -37,6 +37,7 @@ class FakeWorker:
     def __init__(self, master):
         self.master = master
         self.conn = fakeprotocol.FakeConnection(self)
+        self.info = properties.Properties()
         self.properties = properties.Properties()
         self.defaultProperties = properties.Properties()
         self.workerid = 383
