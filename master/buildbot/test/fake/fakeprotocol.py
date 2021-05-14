@@ -16,28 +16,15 @@
 
 from twisted.internet import defer
 
-from buildbot.util import subscription
 from buildbot.worker.protocols import base
 
 
-class FakeTrivialConnection:
+class FakeTrivialConnection(base.Connection):
 
     info = {}
 
     def __init__(self):
-        self._disconnectSubs = subscription.SubscriptionPoint("disconnections from Fake")
-
-    def waitShutdown(self):
-        return defer.succeed(None)
-
-    def notifyOnDisconnect(self, cb):
-        return self._disconnectSubs.subscribe(cb)
-
-    def waitForNotifyDisconnectedDelivered(self):
-        return self._disconnectSubs.waitForDeliveriesToFinish()
-
-    def notifyDisconnected(self):
-        self._disconnectSubs.deliver()
+        super().__init__("Fake")
 
     def loseConnection(self):
         self.notifyDisconnected()
