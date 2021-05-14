@@ -48,8 +48,8 @@ class FakeTrivialConnection:
 
 class FakeConnection(base.Connection):
 
-    def __init__(self, master, worker):
-        super().__init__(master, worker)
+    def __init__(self, worker):
+        super().__init__(worker.workername)
         self._connected = True
         self.remoteCalls = []
         self.builders = {}  # { name : isBusy }

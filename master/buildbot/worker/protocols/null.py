@@ -69,6 +69,10 @@ class Connection(base.Connection):
     proxies = {base.FileWriterImpl: FileWriterProxy,
                base.FileReaderImpl: FileReaderProxy}
 
+    def __init__(self, worker):
+        super().__init__(worker.workername)
+        self.worker = worker
+
     def loseConnection(self):
         self.notifyDisconnected()
 

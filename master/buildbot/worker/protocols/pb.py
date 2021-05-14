@@ -132,7 +132,9 @@ class Connection(base.Connection, pb.Avatar):
     info = None
 
     def __init__(self, master, worker, mind):
-        super().__init__(master, worker)
+        super().__init__(worker.workername)
+        self.master = master
+        self.worker = worker
         self.mind = mind
         self._keepalive_waiter = deferwaiter.DeferWaiter()
         self._keepalive_action_handler = \

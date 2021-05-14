@@ -126,7 +126,7 @@ class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
         yield self.workers.setServiceParent(self.master)
         self.master.workers = self.workers
         yield self.wrk.setServiceParent(self.master.workers)
-        self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
+        self.conn = fakeprotocol.FakeConnection(self.wrk)
         yield self.wrk.attached(self.conn)
 
 
@@ -139,7 +139,7 @@ class FakeWorkerItfc(TestReactorMixin, unittest.TestCase,
         self.wrk = worker.FakeWorker(self.master)
 
     def callAttached(self):
-        self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
+        self.conn = fakeprotocol.FakeConnection(self.wrk)
         return self.wrk.attached(self.conn)
 
 
@@ -161,7 +161,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         if configured:
             yield worker.setServiceParent(self.workers)
         if attached:
-            worker.conn = fakeprotocol.FakeConnection(self.master, worker)
+            worker.conn = fakeprotocol.FakeConnection(worker)
         return worker
 
     @defer.inlineCallbacks
@@ -512,7 +512,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         ENVIRON = {}
         COMMANDS = {'cmd1': '1', 'cmd2': '1'}
 
-        conn = fakeprotocol.FakeConnection(worker.master, worker)
+        conn = fakeprotocol.FakeConnection(worker)
         conn.info = {
             'admin': 'TheAdmin',
             'host': 'TheHost',
@@ -545,7 +545,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield worker.startService()
         yield worker.reconfigServiceWithSibling(worker)
 
-        conn = fakeprotocol.FakeConnection(worker.master, worker)
+        conn = fakeprotocol.FakeConnection(worker)
         conn.info = {}
         yield worker.attached(conn)
 
@@ -565,7 +565,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         worker = yield self.createWorker()
         yield worker.startService()
 
-        conn = fakeprotocol.FakeConnection(worker.master, worker)
+        conn = fakeprotocol.FakeConnection(worker)
         conn.info = {
             'admin': 'TheAdmin',
             'host': 'TheHost',

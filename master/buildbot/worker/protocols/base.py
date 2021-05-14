@@ -26,10 +26,7 @@ class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 class Connection:
     proxies = {}
 
-    def __init__(self, master, worker):
-        self.master = master
-        self.worker = worker
-        name = worker.workername
+    def __init__(self, name):
         self._disconnectSubs = subscription.SubscriptionPoint("disconnections from {}".format(name))
 
     # This method replace all Impl args by their Proxy protocol implementation

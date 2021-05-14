@@ -30,7 +30,7 @@ class LocalWorker(WorkerBase):
 
         yield WorkerBase.startService(self)
         self.workername = self.name
-        conn = Connection(self.parent, self)
+        conn = Connection(self)
         # I don't have a master property, but my parent has.
         master = self.parent.master
         res = yield master.workers.newConnection(conn, self.name)

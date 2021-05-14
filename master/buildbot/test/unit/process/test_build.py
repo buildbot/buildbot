@@ -191,7 +191,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.worker.attached(None)
         self.builder = FakeBuilder(self.master)
         self.build = Build([r])
-        self.build.conn = fakeprotocol.FakeConnection(self.master, self.worker)
+        self.build.conn = fakeprotocol.FakeConnection(self.worker)
 
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
