@@ -155,6 +155,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         self.worker = worker_class(name, self, **kwargs)
         self.remote_worker = None
 
+    @defer.inlineCallbacks
     def connect_worker(self):
         if self.remote_worker is not None:
             return
@@ -163,7 +164,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        self.remote_worker.setServiceParent(self.worker)
+        yield self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self):
         super().disconnect_worker()

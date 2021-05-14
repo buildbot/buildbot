@@ -93,16 +93,18 @@ class LatentController(SeverWorkerConnectionMixin):
         if self.auto_start_flag and self.state == States.STARTING:
             self.start_instance(True)
 
+    @defer.inlineCallbacks
     def start_instance(self, result):
-        self.do_start_instance(result)
+        yield self.do_start_instance(result)
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
 
+    @defer.inlineCallbacks
     def do_start_instance(self, result):
         assert self.state == States.STARTING
         self.state = States.STARTED
         if self.auto_connect_worker and result is True:
-            self.connect_worker()
+            yield self.connect_worker()
 
     @defer.inlineCallbacks
     def auto_stop(self, result):
@@ -124,6 +126,7 @@ class LatentController(SeverWorkerConnectionMixin):
         if self.auto_disconnect_worker:
             yield self.disconnect_worker()
 
+    @defer.inlineCallbacks
     def connect_worker(self):
         if self.remote_worker is not None:
             return
@@ -132,7 +135,7 @@ class LatentController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        self.remote_worker.setServiceParent(self.worker)
+        yield self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self):
         super().disconnect_worker()
