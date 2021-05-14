@@ -138,10 +138,10 @@ class AbstractWorker(service.BuildbotService):
         self.conn = None
 
         # during disconnection self.conn will be set to None before all disconnection notifications
-        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to
+        # are delivered. During that period _pending_conn_shutdown_notifier will be set to
         # a notifier and allows interested users to wait until all disconnection notifications are
         # delivered.
-        self._pending_disconnection_delivery_notifier = None
+        self._pending_conn_shutdown_notifier = None
 
         self._old_builder_list = None
         self._configured_builderid_list = None
@@ -479,11 +479,11 @@ class AbstractWorker(service.BuildbotService):
                     name, self.defaultProperties.getProperty(name), "Worker")
 
     @defer.inlineCallbacks
-    def _handle_disconnection_delivery_notifier(self):
-        self._pending_disconnection_delivery_notifier = Notifier()
-        yield self.conn.waitForNotifyDisconnectedDelivered()
-        self._pending_disconnection_delivery_notifier.notify(None)
-        self._pending_disconnection_delivery_notifier = None
+    def _handle_conn_shutdown_notifier(self):
+        self._pending_conn_shutdown_notifier = Notifier()
+        yield self.conn.waitShutdown()
+        self._pending_conn_shutdown_notifier.notify(None)
+        self._pending_conn_shutdown_notifier = None
 
     @defer.inlineCallbacks
     def detached(self):
@@ -494,9 +494,8 @@ class AbstractWorker(service.BuildbotService):
 
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
 
-        self._handle_disconnection_delivery_notifier()
+        self._handle_conn_shutdown_notifier()
 
-        yield self.conn.waitShutdown()
         self.conn = None
         self._old_builder_list = []
         log.msg("Worker.detached({})".format(self.name))
@@ -541,9 +540,9 @@ class AbstractWorker(service.BuildbotService):
                 eventually(d.callback, None)
             conn.notifyOnDisconnect(_disconnected)
             yield d
-            yield conn.waitForNotifyDisconnectedDelivered()
-        elif self._pending_disconnection_delivery_notifier is not None:
-            yield self._pending_disconnection_delivery_notifier.wait()
+            yield conn.waitShutdown()
+        elif self._pending_conn_shutdown_notifier is not None:
+            yield self._pending_conn_shutdown_notifier.wait()
 
     @defer.inlineCallbacks
     def _disconnect(self, conn):

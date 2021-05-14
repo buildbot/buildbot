@@ -146,6 +146,7 @@ class Connection(base.Connection, pb.Avatar):
     @defer.inlineCallbacks
     def attached(self, mind):
         self.startKeepaliveTimer()
+        self.notifyOnDisconnect(self._stop_keepalive_timer)
         # pbmanager calls perspective.attached; pass this along to the
         # worker
         yield self.worker.attached(self)
@@ -159,7 +160,7 @@ class Connection(base.Connection, pb.Avatar):
 
     # disconnection handling
     @defer.inlineCallbacks
-    def waitShutdown(self):
+    def _stop_keepalive_timer(self):
         self.stopKeepaliveTimer()
         yield self._keepalive_waiter.wait()
 

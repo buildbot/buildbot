@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-
 from buildbot.util import service
 from buildbot.util import subscription
 
@@ -41,13 +39,10 @@ class Connection:
     # disconnection handling
 
     def waitShutdown(self):
-        return defer.succeed(None)
+        return self._disconnectSubs.waitForDeliveriesToFinish()
 
     def notifyOnDisconnect(self, cb):
         return self._disconnectSubs.subscribe(cb)
-
-    def waitForNotifyDisconnectedDelivered(self):
-        return self._disconnectSubs.waitForDeliveriesToFinish()
 
     def notifyDisconnected(self):
         self._disconnectSubs.deliver()
