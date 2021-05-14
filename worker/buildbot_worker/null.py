@@ -26,19 +26,15 @@ class LocalWorker(WorkerBase):
     @defer.inlineCallbacks
     def startService(self):
         # importing here to avoid dependency on buildbot master package
-        # requires buildot version >= 0.9.0b5
         from buildbot.worker.protocols.null import Connection
 
         yield WorkerBase.startService(self)
         self.workername = self.name
-        conn = Connection(self.parent, self)
+        conn = Connection(self)
         # I don't have a master property, but my parent has.
         master = self.parent.master
         res = yield master.workers.newConnection(conn, self.name)
         if res:
             yield self.parent.attached(conn)
-
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self.parent.detached()
-        yield WorkerBase.stopService(self)
+            # detached() will be called automatically on connection disconnection which is
+            # invoked from the master side when the AbstarctWorker.stopService() is called.

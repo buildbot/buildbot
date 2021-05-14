@@ -21,6 +21,7 @@ from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
 from buildbot.test.fake.worker import SeverWorkerConnectionMixin
+from buildbot.test.fake.worker import disconnect_master_side_worker
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -93,16 +94,18 @@ class LatentController(SeverWorkerConnectionMixin):
         if self.auto_start_flag and self.state == States.STARTING:
             self.start_instance(True)
 
+    @defer.inlineCallbacks
     def start_instance(self, result):
-        self.do_start_instance(result)
+        yield self.do_start_instance(result)
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
 
+    @defer.inlineCallbacks
     def do_start_instance(self, result):
         assert self.state == States.STARTING
         self.state = States.STARTED
         if self.auto_connect_worker and result is True:
-            self.connect_worker()
+            yield self.connect_worker()
 
     @defer.inlineCallbacks
     def auto_stop(self, result):
@@ -124,6 +127,7 @@ class LatentController(SeverWorkerConnectionMixin):
         if self.auto_disconnect_worker:
             yield self.disconnect_worker()
 
+    @defer.inlineCallbacks
     def connect_worker(self):
         if self.remote_worker is not None:
             return
@@ -132,20 +136,19 @@ class LatentController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        self.remote_worker.setServiceParent(self.worker)
+        yield self.remote_worker.setServiceParent(self.worker)
 
+    @defer.inlineCallbacks
     def disconnect_worker(self):
-        super().disconnect_worker()
+        yield super().disconnect_worker()
         if self.remote_worker is None:
-            return None
-        self.worker.conn, conn = None, self.worker.conn
+            return
+
         self.remote_worker, worker = None, self.remote_worker
 
-        # LocalWorker does actually disconnect, so we must force disconnection
-        # via detached. Note that the worker may have already detached
-        if conn is not None:
-            conn.loseConnection()
-        return worker.disownServiceParent()
+        disconnect_master_side_worker(self.worker)
+
+        yield worker.disownServiceParent()
 
     def setup_kind(self, build):
         if build:

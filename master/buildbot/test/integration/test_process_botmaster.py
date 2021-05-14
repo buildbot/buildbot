@@ -45,7 +45,7 @@ class Tests(RunFakeMasterTestCase):
         yield self.setup_master(config_dict)
         builder_id = yield self.master.data.updates.findBuilderId('testy')
 
-        controller.connect_worker()
+        yield controller.connect_worker()
         controller.sever_connection()
         yield self.create_build_request([builder_id])
 

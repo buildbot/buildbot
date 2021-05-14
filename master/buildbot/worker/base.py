@@ -28,7 +28,6 @@ from buildbot.process.properties import Properties
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import service
-from buildbot.util.eventual import eventually
 
 
 @implementer(IWorker)
@@ -138,10 +137,10 @@ class AbstractWorker(service.BuildbotService):
         self.conn = None
 
         # during disconnection self.conn will be set to None before all disconnection notifications
-        # are delivered. During that period _pending_disconnection_delivery_notifier will be set to
+        # are delivered. During that period _pending_conn_shutdown_notifier will be set to
         # a notifier and allows interested users to wait until all disconnection notifications are
         # delivered.
-        self._pending_disconnection_delivery_notifier = None
+        self._pending_conn_shutdown_notifier = None
 
         self._old_builder_list = None
         self._configured_builderid_list = None
@@ -437,7 +436,8 @@ class AbstractWorker(service.BuildbotService):
         self.worker_basedir = conn.info.get("basedir", None)
         self.worker_system = conn.info.get("system", None)
 
-        self.conn.notifyOnDisconnect(self.detached)
+        # The _detach_sub member is only ever used from tests.
+        self._detached_sub = self.conn.notifyOnDisconnect(self.detached)
 
         workerinfo = {
             'admin': conn.info.get('admin'),
@@ -479,25 +479,23 @@ class AbstractWorker(service.BuildbotService):
                     name, self.defaultProperties.getProperty(name), "Worker")
 
     @defer.inlineCallbacks
-    def _handle_disconnection_delivery_notifier(self):
-        self._pending_disconnection_delivery_notifier = Notifier()
-        yield self.conn.waitForNotifyDisconnectedDelivered()
-        self._pending_disconnection_delivery_notifier.notify(None)
-        self._pending_disconnection_delivery_notifier = None
+    def _handle_conn_shutdown_notifier(self, conn):
+        self._pending_conn_shutdown_notifier = Notifier()
+        yield conn.waitShutdown()
+        self._pending_conn_shutdown_notifier.notify(None)
+        self._pending_conn_shutdown_notifier = None
 
     @defer.inlineCallbacks
     def detached(self):
-        # protect against race conditions in conn disconnect path and someone
-        # calling detached directly. At the moment the null worker does that.
-        if self.conn is None:
-            return
+        conn = self.conn
+        self.conn = None
+        self._handle_conn_shutdown_notifier(conn)
+
+        # Note that _pending_conn_shutdown_notifier will not be fired until detached()
+        # is complete.
 
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
 
-        self._handle_disconnection_delivery_notifier()
-
-        yield self.conn.waitShutdown()
-        self.conn = None
         self._old_builder_list = []
         log.msg("Worker.detached({})".format(self.name))
         self.releaseLocks()
@@ -535,15 +533,10 @@ class AbstractWorker(service.BuildbotService):
     @defer.inlineCallbacks
     def _waitForCompleteShutdownImpl(self, conn):
         if conn:
-            d = defer.Deferred()
-
-            def _disconnected():
-                eventually(d.callback, None)
-            conn.notifyOnDisconnect(_disconnected)
-            yield d
-            yield conn.waitForNotifyDisconnectedDelivered()
-        elif self._pending_disconnection_delivery_notifier is not None:
-            yield self._pending_disconnection_delivery_notifier.wait()
+            yield conn.wait_shutdown_started()
+            yield conn.waitShutdown()
+        elif self._pending_conn_shutdown_notifier is not None:
+            yield self._pending_conn_shutdown_notifier.wait()
 
     @defer.inlineCallbacks
     def _disconnect(self, conn):

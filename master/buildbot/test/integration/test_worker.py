@@ -111,7 +111,7 @@ class Tests(RunFakeMasterTestCase):
         # The worker fails to substantiate.
         controller.start_instance(True)
 
-        controller.connect_worker()
+        yield controller.connect_worker()
 
         self.assertEqual(len(started_builds), 1)
         yield controller.auto_stop(True)

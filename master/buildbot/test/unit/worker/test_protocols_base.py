@@ -41,9 +41,8 @@ class TestFakeConnection(protocols.ConnectionInterfaceTest,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self)
         self.worker = mock.Mock()
-        self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
+        self.conn = fakeprotocol.FakeConnection(self.worker)
 
 
 class TestConnection(protocols.ConnectionInterfaceTest,
@@ -51,13 +50,8 @@ class TestConnection(protocols.ConnectionInterfaceTest,
 
     def setUp(self):
         self.setUpTestReactor()
-        self.master = fakemaster.make_master(self)
         self.worker = mock.Mock()
-        self.conn = base.Connection(self.master, self.worker)
-
-    def test_constructor(self):
-        self.assertEqual(self.conn.master, self.master)
-        self.assertEqual(self.conn.worker, self.worker)
+        self.conn = base.Connection(self.worker.workername)
 
     def test_notify(self):
         cb = mock.Mock()

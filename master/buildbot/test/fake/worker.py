@@ -36,7 +36,7 @@ class FakeWorker:
 
     def __init__(self, master):
         self.master = master
-        self.conn = fakeprotocol.FakeConnection(master, self)
+        self.conn = fakeprotocol.FakeConnection(self)
         self.properties = properties.Properties()
         self.defaultProperties = properties.Properties()
         self.workerid = 383
@@ -74,6 +74,20 @@ class FakeWorker:
 
     def resetQuarantine(self):
         pass
+
+
+@defer.inlineCallbacks
+def disconnect_master_side_worker(worker):
+    # Force disconnection because the LocalWorker does not disconnect itself. Note that
+    # the worker may have already been disconnected by something else (e.g. if it's not
+    # responding). We need to call detached() explicitly because the order in which
+    # disconnection subscriptions are invoked is unspecified.
+    if worker.conn is not None:
+        worker._detached_sub.unsubscribe()
+        conn = worker.conn
+        yield worker.detached()
+        conn.loseConnection()
+    yield worker.waitForCompleteShutdown()
 
 
 class SeverWorkerConnectionMixin:
@@ -155,6 +169,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         self.worker = worker_class(name, self, **kwargs)
         self.remote_worker = None
 
+    @defer.inlineCallbacks
     def connect_worker(self):
         if self.remote_worker is not None:
             return
@@ -163,16 +178,14 @@ class WorkerController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        self.remote_worker.setServiceParent(self.worker)
+        yield self.remote_worker.setServiceParent(self.worker)
 
+    @defer.inlineCallbacks
     def disconnect_worker(self):
-        super().disconnect_worker()
+        yield super().disconnect_worker()
         if self.remote_worker is None:
-            return None
-        self.worker.conn, conn = None, self.worker.conn
-        # LocalWorker does actually disconnect, so we must force disconnection
-        # via detached
-        conn.notifyDisconnected()
-        ret = self.remote_worker.disownServiceParent()
-        self.remote_worker = None
-        return ret
+            return
+
+        self.remote_worker, worker = None, self.remote_worker
+        disconnect_master_side_worker(self.worker)
+        yield worker.disownServiceParent()
