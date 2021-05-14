@@ -137,10 +137,11 @@ class LatentController(SeverWorkerConnectionMixin):
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
         yield self.remote_worker.setServiceParent(self.worker)
 
+    @defer.inlineCallbacks
     def disconnect_worker(self):
-        super().disconnect_worker()
+        yield super().disconnect_worker()
         if self.remote_worker is None:
-            return None
+            return
         self.worker.conn, conn = None, self.worker.conn
         self.remote_worker, worker = None, self.remote_worker
 
@@ -148,7 +149,7 @@ class LatentController(SeverWorkerConnectionMixin):
         # via detached. Note that the worker may have already detached
         if conn is not None:
             conn.loseConnection()
-        return worker.disownServiceParent()
+        yield worker.disownServiceParent()
 
     def setup_kind(self, build):
         if build:

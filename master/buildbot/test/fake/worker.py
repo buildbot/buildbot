@@ -166,14 +166,15 @@ class WorkerController(SeverWorkerConnectionMixin):
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
         yield self.remote_worker.setServiceParent(self.worker)
 
+    @defer.inlineCallbacks
     def disconnect_worker(self):
-        super().disconnect_worker()
+        yield super().disconnect_worker()
         if self.remote_worker is None:
-            return None
+            return
         self.worker.conn, conn = None, self.worker.conn
         # LocalWorker does actually disconnect, so we must force disconnection
         # via detached
         conn.notifyDisconnected()
-        ret = self.remote_worker.disownServiceParent()
+        d = self.remote_worker.disownServiceParent()
         self.remote_worker = None
-        return ret
+        yield d
