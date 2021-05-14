@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.util import service
 from buildbot.util import subscription
+from buildbot.util.eventual import eventually
 
 
 class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -36,7 +39,13 @@ class Connection:
                     v = proxyclass(v)
             newargs[k] = v
         return newargs
+
     # disconnection handling
+
+    def wait_shutdown_started(self):
+        d = defer.Deferred()
+        self.notifyOnDisconnect(lambda: eventually(d.callback, None))
+        return d
 
     def waitShutdown(self):
         return self._disconnectSubs.waitForDeliveriesToFinish()

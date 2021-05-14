@@ -28,7 +28,6 @@ from buildbot.process.properties import Properties
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import service
-from buildbot.util.eventual import eventually
 
 
 @implementer(IWorker)
@@ -534,12 +533,7 @@ class AbstractWorker(service.BuildbotService):
     @defer.inlineCallbacks
     def _waitForCompleteShutdownImpl(self, conn):
         if conn:
-            d = defer.Deferred()
-
-            def _disconnected():
-                eventually(d.callback, None)
-            conn.notifyOnDisconnect(_disconnected)
-            yield d
+            yield conn.wait_shutdown_started()
             yield conn.waitShutdown()
         elif self._pending_conn_shutdown_notifier is not None:
             yield self._pending_conn_shutdown_notifier.wait()
