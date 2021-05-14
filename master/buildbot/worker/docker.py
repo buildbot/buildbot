@@ -135,7 +135,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                     tls=None, followStartupLogs=False, masterFQDN=None,
                     hostconfig=None, autopull=False, alwaysPull=False,
                     custom_context=False, encoding='gzip', buildargs=None,
-                    **kwargs):
+                    hostname=None, **kwargs):
 
         super().checkConfig(name, password, image, masterFQDN, **kwargs)
 
@@ -166,7 +166,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
                         version=None, tls=None, followStartupLogs=False,
                         masterFQDN=None, hostconfig=None, autopull=False,
                         alwaysPull=False, custom_context=False,
-                        encoding='gzip', buildargs=None, **kwargs):
+                        encoding='gzip', buildargs=None,
+                        hostname=None, **kwargs):
 
         yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
@@ -186,6 +187,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             self.client_args['version'] = version
         if tls is not None:
             self.client_args['tls'] = tls
+        self.hostname = hostname
 
     def _thd_parse_volumes(self, volumes):
         volume_list = []
@@ -213,18 +215,18 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
     def renderWorkerProps(self, build):
         return build.render((self.image, self.dockerfile,
                              self.volumes, self.custom_context,
-                             self.encoding, self.buildargs))
+                             self.encoding, self.buildargs, self.hostname))
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        image, dockerfile, volumes, custom_context, encoding, buildargs = \
+        image, dockerfile, volumes, custom_context, encoding, buildargs, hostname = \
             yield self.renderWorkerPropsOnStart(build)
 
         res = yield threads.deferToThread(self._thd_start_instance, image,
                                           dockerfile, volumes, custom_context,
-                                          encoding, buildargs)
+                                          encoding, buildargs, hostname)
         defer.returnValue(res)
 
     def _image_exists(self, client, name):
@@ -238,7 +240,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         return False
 
     def _thd_start_instance(self, image, dockerfile, volumes,
-                            custom_context, encoding, buildargs):
+                            custom_context, encoding, buildargs, hostname):
         docker_client = self._getDockerClient()
         container_name = self.getContainerName()
         # cleanup the old instances
@@ -301,7 +303,8 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
             name=self.getContainerName(),
             volumes=volumes,
             environment=self.createEnvironment(),
-            host_config=host_conf
+            host_config=host_conf,
+            hostname=hostname
         )
 
         if instance.get('Id') is None:

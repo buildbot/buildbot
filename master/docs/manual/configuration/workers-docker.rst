@@ -249,6 +249,10 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 	(optional if ``custom_context`` is True)
 	Dictionary, passes information for the docker to build its environment. Eg. {'DISTRO':'ubuntu', 'RELEASE':'11.11'}. Defaults to None.
 
+``hostname``
+        (optional)
+        This will set container's hostname.
+
 Setting up Volumes
 ..................
 

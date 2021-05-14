@@ -390,6 +390,13 @@ class TestDockerLatentWorker(unittest.TestCase, TestReactorMixin):
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
 
+    @defer.inlineCallbacks
+    def test_constructor_hostname(self):
+        bs = yield self.setupWorker(
+            'bot', 'pass', 'http://localhost:2375',
+            image="myworker_image", hostname="myworker_hostname")
+        self.assertEqual(bs.hostname, 'myworker_hostname')
+
 
 class testDockerPyStreamLogs(unittest.TestCase):
 
