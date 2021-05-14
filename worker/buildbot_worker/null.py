@@ -26,7 +26,6 @@ class LocalWorker(WorkerBase):
     @defer.inlineCallbacks
     def startService(self):
         # importing here to avoid dependency on buildbot master package
-        # requires buildot version >= 0.9.0b5
         from buildbot.worker.protocols.null import Connection
 
         yield WorkerBase.startService(self)
