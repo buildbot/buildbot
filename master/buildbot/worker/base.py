@@ -436,7 +436,8 @@ class AbstractWorker(service.BuildbotService):
         self.worker_basedir = conn.info.get("basedir", None)
         self.worker_system = conn.info.get("system", None)
 
-        self.conn.notifyOnDisconnect(self.detached)
+        # The _detach_sub member is only ever used from tests.
+        self._detached_sub = self.conn.notifyOnDisconnect(self.detached)
 
         workerinfo = {
             'admin': conn.info.get('admin'),
@@ -486,11 +487,6 @@ class AbstractWorker(service.BuildbotService):
 
     @defer.inlineCallbacks
     def detached(self):
-        # protect against race conditions in conn disconnect path and someone
-        # calling detached directly. At the moment the null worker does that.
-        if self.conn is None:
-            return
-
         conn = self.conn
         self.conn = None
         self._handle_conn_shutdown_notifier(conn)

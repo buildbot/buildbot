@@ -76,6 +76,20 @@ class FakeWorker:
         pass
 
 
+@defer.inlineCallbacks
+def disconnect_master_side_worker(worker):
+    # Force disconnection because the LocalWorker does not disconnect itself. Note that
+    # the worker may have already been disconnected by something else (e.g. if it's not
+    # responding). We need to call detached() explicitly because the order in which
+    # disconnection subscriptions are invoked is unspecified.
+    if worker.conn is not None:
+        worker._detached_sub.unsubscribe()
+        conn = worker.conn
+        yield worker.detached()
+        conn.loseConnection()
+    yield worker.waitForCompleteShutdown()
+
+
 class SeverWorkerConnectionMixin:
 
     _connection_severed = False
@@ -171,10 +185,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         yield super().disconnect_worker()
         if self.remote_worker is None:
             return
-        self.worker.conn, conn = None, self.worker.conn
-        # LocalWorker does actually disconnect, so we must force disconnection
-        # via detached
-        conn.notifyDisconnected()
-        d = self.remote_worker.disownServiceParent()
-        self.remote_worker = None
-        yield d
+
+        self.remote_worker, worker = None, self.remote_worker
+        disconnect_master_side_worker(self.worker)
+        yield worker.disownServiceParent()
