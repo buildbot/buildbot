@@ -478,9 +478,9 @@ class AbstractWorker(service.BuildbotService):
                     name, self.defaultProperties.getProperty(name), "Worker")
 
     @defer.inlineCallbacks
-    def _handle_conn_shutdown_notifier(self):
+    def _handle_conn_shutdown_notifier(self, conn):
         self._pending_conn_shutdown_notifier = Notifier()
-        yield self.conn.waitShutdown()
+        yield conn.waitShutdown()
         self._pending_conn_shutdown_notifier.notify(None)
         self._pending_conn_shutdown_notifier = None
 
@@ -491,11 +491,15 @@ class AbstractWorker(service.BuildbotService):
         if self.conn is None:
             return
 
+        conn = self.conn
+        self.conn = None
+        self._handle_conn_shutdown_notifier(conn)
+
+        # Note that _pending_conn_shutdown_notifier will not be fired until detached()
+        # is complete.
+
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
 
-        self._handle_conn_shutdown_notifier()
-
-        self.conn = None
         self._old_builder_list = []
         log.msg("Worker.detached({})".format(self.name))
         self.releaseLocks()
