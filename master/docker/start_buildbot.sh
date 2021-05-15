@@ -4,6 +4,8 @@
 
 # we download the config from an arbitrary curl accessible tar.gz file (which github can generate for us)
 
+export PATH="/buildbot_venv/bin:$PATH"
+
 B=$(pwd)
 
 if [ -z "$BUILDBOT_CONFIG_URL" ]

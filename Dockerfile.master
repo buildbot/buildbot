@@ -97,8 +97,9 @@ RUN \
 COPY --from=buildbot-build /wheels /wheels
 
 # install pip dependencies
-RUN pip3 install --upgrade pip setuptools && \
-    cd /wheels && pip3 install $(ls -1 | grep -v 'buildbot-worker') && \
+RUN virtualenv --python=python3 /buildbot_venv && \
+    /buildbot_venv/bin/pip3 install --upgrade pip setuptools && \
+    cd /wheels && /buildbot_venv/bin/pip3 install $(ls -1 | grep -v 'buildbot-worker') && \
     rm -r /root/.cache /wheels
 
 COPY master/docker/buildbot.tac /usr/src/buildbot/buildbot.tac

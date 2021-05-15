@@ -278,6 +278,7 @@ docstrings
 doesn
 dom
 downloadFile
+dpkg
 dropdown
 dumpMailsToLog
 durations
