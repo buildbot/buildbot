@@ -200,15 +200,21 @@ class BuildJsCommand(distutils.cmd.Command):
             return
         package = self.distribution.packages[0]
         if os.path.exists("webpack.config.js"):
-            yarn_version = check_output("yarn --version")
-            assert yarn_version != "", "need nodejs and yarn installed in current PATH"
-            yarn_bin = check_output("yarn bin").strip()
 
-            commands = []
+            yarn_program = None
+            for program in ["yarnpkg", "yarn"]:
+                yarn_version = check_output([program, "--version"])
+                if yarn_version != "":
+                    yarn_program = program
 
-            commands.append(['yarn', 'install', '--pure-lockfile'])
+            assert yarn_version is not None, "need nodejs and yarn installed in current PATH"
 
-            commands.append(['yarn', 'run', 'build'])
+            yarn_bin = check_output([yarn_program, "bin"]).strip()
+
+            commands = [
+                [yarn_program, 'install', '--pure-lockfile'],
+                [yarn_program, 'run', 'build'],
+            ]
 
             shell = bool(os.name == 'nt')
 

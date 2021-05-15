@@ -9,6 +9,7 @@ VENV_NAME := .venv$(VENV_PY_VERSION)
 PIP ?= $(ROOT_DIR)/$(VENV_NAME)/bin/pip
 PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/bin/python
 VENV_PY_VERSION ?= python3
+YARN := $(shell which yarnpkg || which yarn)
 
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
@@ -60,21 +61,21 @@ flake8:
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
 	$(PIP) install mock wheel buildbot
-	cd www/build_common; yarn install --pure-lockfile
+	cd www/build_common; $(YARN) install --pure-lockfile
 	for i in $(WWW_DEP_PKGS); \
-		do (cd $$i; yarn install --pure-lockfile; yarn run build); done
+		do (cd $$i; $(YARN) install --pure-lockfile; $(YARN) run build); done
 
 frontend_tests: frontend_deps
 	for i in $(WWW_PKGS); \
-		do (cd $$i; yarn install --pure-lockfile); done
+		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
-		do (cd $$i; yarn run build-dev || exit 1; yarn run test || exit 1) || exit 1; done
+		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test || exit 1) || exit 1; done
 
 frontend_tests_headless: frontend_deps
 	for i in $(WWW_PKGS); \
-		do (cd $$i; yarn install --pure-lockfile); done
+		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
-		do (cd $$i; yarn run build-dev || exit 1; yarn run test --browsers BBChromeHeadless || exit 1) || exit 1; done
+		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test --browsers BBChromeHeadless || exit 1) || exit 1; done
 
 # rebuild front-end from source
 frontend: frontend_deps
@@ -92,7 +93,7 @@ frontend_install_tests: frontend_deps
 # upgrade FE dependencies
 frontend_yarn_upgrade:
 	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS); \
-		do (cd $$i; echo $$i; rm -rf yarn.lock; yarn install || echo $$i failed); done
+		do (cd $$i; echo $$i; rm -rf yarn.lock; $(YARN) install || echo $$i failed); done
 
 # install git hooks for validating patches at commit time
 hooks:
