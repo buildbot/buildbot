@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # startup script for purely stateless master
 
