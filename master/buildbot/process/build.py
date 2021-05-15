@@ -197,7 +197,7 @@ class Build(properties.PropertiesMixin):
         return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)
 
     def getWorkerName(self):
-        return self.workerforbuilder.worker.workername
+        return self.workername
 
     @staticmethod
     def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
@@ -260,6 +260,7 @@ class Build(properties.PropertiesMixin):
     def setupWorkerForBuilder(self, workerforbuilder):
         self.path_module = workerforbuilder.worker.path_module
         self.workername = workerforbuilder.worker.workername
+        self.worker_info = workerforbuilder.worker.info
 
     @defer.inlineCallbacks
     def getBuilderId(self):
@@ -294,6 +295,11 @@ class Build(properties.PropertiesMixin):
 
         worker = workerforbuilder.worker
 
+        # Cache the worker information as variables instead of accessing via worker, as the worker
+        # will disappear during disconnection and some of these properties may still be needed.
+        self.workername = worker.workername
+        self.worker_info = worker.info
+
         log.msg("{}.startBuild".format(self))
 
         # TODO: this will go away when build collapsing is implemented; until
@@ -322,7 +328,7 @@ class Build(properties.PropertiesMixin):
                                    self.sources, self.number)
 
         # then narrow WorkerLocks down to the right worker
-        self.locks = [(l.getLockForWorker(workerforbuilder.worker.workername),
+        self.locks = [(l.getLockForWorker(self.workername),
                        a)
                       for l, a in self.locks]
         metrics.MetricCountEvent.log('active_builds', 1)
@@ -775,4 +781,4 @@ class Build(properties.PropertiesMixin):
                                             lambda: self.finished)
 
     def getWorkerInfo(self):
-        return self.workerforbuilder.worker.info
+        return self.worker_info
