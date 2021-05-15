@@ -73,8 +73,6 @@ MAINTAINER  Buildbot maintainers
 # that everything is rebuilt
 ENV         security_updates_as_of 2021-04-28
 
-COPY . /usr/src/buildbot
-
 RUN \
     apt-get update && \
     apt-get -y upgrade && \
@@ -103,5 +101,8 @@ RUN pip3 install --upgrade pip setuptools && \
     cd /wheels && pip3 install $(ls -1 | grep -v 'buildbot-worker') && \
     rm -r /root/.cache /wheels
 
+COPY master/docker/buildbot.tac /usr/src/buildbot/buildbot.tac
+COPY master/docker/start_buildbot.sh /usr/src/buildbot/start_buildbot.sh
+
 WORKDIR /buildbot
-CMD ["dumb-init", "/usr/src/buildbot/docker/start_buildbot.sh"]
+CMD ["dumb-init", "/usr/src/buildbot/start_buildbot.sh"]

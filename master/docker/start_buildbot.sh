@@ -43,7 +43,7 @@ fi
 # copy the default buildbot.tac if not provided by the config
 if [ ! -f "$B/buildbot.tac" ]
 then
-    cp /usr/src/buildbot/docker/buildbot.tac "$B"
+    cp /usr/src/buildbot/buildbot.tac "$B"
 fi
 # Fixed buildbot master not start error in docker
 rm -f "$B/twistd.pid"
