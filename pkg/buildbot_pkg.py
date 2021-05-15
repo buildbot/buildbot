@@ -199,7 +199,7 @@ class BuildJsCommand(distutils.cmd.Command):
         if self.already_run:
             return
         package = self.distribution.packages[0]
-        if os.path.exists("gulpfile.js") or os.path.exists("webpack.config.js"):
+        if os.path.exists("webpack.config.js"):
             yarn_version = check_output("yarn --version")
             assert yarn_version != "", "need nodejs and yarn installed in current PATH"
             yarn_bin = check_output("yarn bin").strip()
@@ -208,10 +208,7 @@ class BuildJsCommand(distutils.cmd.Command):
 
             commands.append(['yarn', 'install', '--pure-lockfile'])
 
-            if os.path.exists("gulpfile.js"):
-                commands.append([os.path.join(yarn_bin, "gulp"), 'prod', '--notests'])
-            elif os.path.exists("webpack.config.js"):
-                commands.append(['yarn', 'run', 'build'])
+            commands.append(['yarn', 'run', 'build'])
 
             shell = bool(os.name == 'nt')
 
