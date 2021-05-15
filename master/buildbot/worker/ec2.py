@@ -447,6 +447,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 bid_price = self.max_spot_price
         log.msg('%s %s requesting spot instance with price %0.4f' %
                 (self.__class__.__name__, self.workername, bid_price))
+
         reservations = self.ec2.meta.client.request_spot_instances(
             SpotPrice=str(bid_price),
             LaunchSpecification=self._remove_none_opts(
@@ -466,7 +467,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 )
             )
         )
-        request, success = self._wait_for_request(
+        request, success = self._thd_wait_for_request(
             reservations['SpotInstanceRequests'][0])
         if not success:
             raise LatentWorkerFailedToSubstantiate()
@@ -510,24 +511,36 @@ class EC2LatentWorker(AbstractLatentWorker):
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
 
-    def _wait_for_request(self, reservation):
+    def _thd_wait_for_request(self, reservation):
         duration = 0
         interval = self._poll_resolution
-        requests = self.ec2.meta.client.describe_spot_instance_requests(
-            SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']])
-        request = requests['SpotInstanceRequests'][0]
-        request_status = request['Status']['Code']
-        while request_status in SPOT_REQUEST_PENDING_STATES:
+
+        while True:
+            # Sometimes it can take a second or so for the spot request to be
+            # ready.  If it isn't ready, you will get a "Spot instance request
+            # ID 'sir-abcd1234' does not exist" exception.
+            try:
+                requests = self.ec2.meta.client.describe_spot_instance_requests(
+                    SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']])
+            except ClientError as e:
+                if 'InvalidSpotInstanceRequestID.NotFound' in str(e):
+                    requests = None
+                else:
+                    raise
+
+            if requests is not None:
+                request = requests['SpotInstanceRequests'][0]
+                request_status = request['Status']['Code']
+                if request_status not in SPOT_REQUEST_PENDING_STATES:
+                    break
+
             time.sleep(interval)
             duration += interval
-            if duration % 60 == 0:
-                log.msg('{} {} has waited {} minutes for spot request {}'.format(
-                        self.__class__.__name__, self.workername, duration // 60,
-                        request['SpotInstanceRequestId']))
-            requests = self.ec2.meta.client.describe_spot_instance_requests(
-                SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']])
-            request = requests['SpotInstanceRequests'][0]
-            request_status = request['Status']['Code']
+            if duration % 10 == 0:
+                log.msg('{} {} has waited {} seconds for spot request {}'.format(
+                        self.__class__.__name__, self.workername, duration,
+                        reservation['SpotInstanceRequestId']))
+
         if request_status == FULFILLED:
             minutes = duration // 60
             seconds = duration % 60
