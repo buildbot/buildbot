@@ -13,12 +13,12 @@ Users connector
     The more complicated task is to recognize each user across multiple
     interfaces with Buildbot.  For example, a user may be identified as
     'djmitche' in Subversion, 'dustin@v.igoro.us' in Git, and 'dustin' on IRC.
-    To support this functionality, each user as a set of attributes, keyed by
+    To support this functionality, each user has a set of attributes, keyed by
     type.  The :py:meth:`findUserByAttr` method uses these attributes to match users,
     adding a new user if no matching user is found.
 
     Users are identified canonically by *uid*, and are represented by *usdicts* (user
-    dictionaries) with keys
+    dictionaries) with the following keys:
 
     * ``uid``
     * ``identifier`` (display name for the user)
@@ -73,7 +73,7 @@ Users connector
         :returns: list of partial usdicts via Deferred
 
         Get the entire list of users.  User attributes are not included, so the
-        results are not full userdicts.
+        results are not full usdicts.
 
     .. py:method:: updateUser(uid=None, identifier=None, bb_username=None, bb_password=None, attr_type=None, attr_data=None)
 

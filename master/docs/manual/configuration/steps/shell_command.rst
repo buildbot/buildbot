@@ -170,7 +170,6 @@ The :bb:step:`ShellCommand` arguments are:
     This functionality requires a version 0.8.6 worker or newer.
 
 ``sigtermTime``
-
     If set, when interrupting, try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interuptSignal``.
     If None, ``interruptSignal`` will be fired immediately upon interrupt.
 

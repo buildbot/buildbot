@@ -75,7 +75,7 @@ Schedulers connector
 
         Return the scheduler ID for the scheduler with this name.
         If such a scheduler is already in the database, this returns the ID.
-        If not, the scheduler is added to the database and its ID returned.
+        If not, the scheduler is added to the database and its ID is returned.
 
     .. py:method:: setSchedulerMaster(schedulerid, masterid)
 

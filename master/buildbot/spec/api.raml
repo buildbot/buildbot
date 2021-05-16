@@ -79,7 +79,7 @@ types:
     /{builderid_or_buildername}:
         uriParameters:
             builderid_or_buildername:
-                type: number | identifier
+                type: number|identifier
                 description: the ID or name of the builder
         description: This path selects a builder by builderid
         get:
@@ -105,7 +105,7 @@ types:
                     build_number:
                         type: number
                         description: the number of the build within the builder
-                description: This path selects a specific build by builderid, buildnumber
+                description: This path selects a specific build by builderid and buildnumber
                 get:
                     is:
                     - bbget: {bbtype: build}
@@ -140,8 +140,8 @@ types:
                         uriParameters:
                             build_data_name:
                                 type: string
-                                description: The name of build data
-                        description: This path selects a build data with specific name.
+                                description: the name of build data
+                        description: This path selects a build data with specific name
                         get:
                             is:
                             - bbget: {bbtype: build_data}
@@ -164,7 +164,7 @@ types:
                         - bbget: {bbtype: sourcedproperties}
 
                 /steps:
-                    description: This path selects all steps for the given build.
+                    description: This path selects all steps for the given build
                     get:
                         is:
                         - bbget: {bbtype: step}
@@ -173,7 +173,7 @@ types:
                             step_name:
                                 type: identifier
                                 description: the slug name of the step
-                        description: This path selects a specific step for the given build.
+                        description: This path selects a specific step for the given build
                         get:
                             is:
                             - bbget: {bbtype: step}
@@ -219,7 +219,7 @@ types:
                             is:
                             - bbget: {bbtype: step}
                         /logs:
-                            description: This path selects all log of a a specific step
+                            description: This path selects all log of a specific step
                             get:
                                 is:
                                 - bbget: {bbtype: log}
@@ -228,7 +228,7 @@ types:
                                     log_slug:
                                         type: identifier
                                         description: the slug name of the log
-                                description: This path selects one log of a a specific step
+                                description: This path selects one log of a specific step
                                 get:
                                     is:
                                     - bbget: {bbtype: log}
@@ -439,8 +439,8 @@ types:
                 uriParameters:
                     build_data_name:
                         type: string
-                        description: The name of build data
-                description: This path selects a build data with specific name.
+                        description: the name of build data
+                description: This path selects a build data with specific name
                 get:
                     is:
                     - bbget: {bbtype: build_data}
@@ -459,7 +459,7 @@ types:
             /{step_number_or_name}:
                 uriParameters:
                     step_number_or_name:
-                        type: identifier | number
+                        type: identifier|number
                         description: the name or number of the step
                 description: |
                     This path selects one step of a build
@@ -507,12 +507,12 @@ types:
                 - bbget: {bbtype: test_result_set}
 
 /buildsets:
-    description: this path selects all buildsets
+    description: This path selects all buildsets
     get:
         is:
         - bbget: {bbtype: buildset}
     /{bsid}:
-        description: this path selects a buildset by id
+        description: This path selects a buildset by id
         uriParameters:
             bsid:
                 type: identifier
@@ -523,20 +523,20 @@ types:
         /properties:
             description: |
                 This path selects all properties of a buildset.
-                Buildset properties is part of the initial properties of a build.
+                Buildset properties are part of the initial properties of a build.
             get:
                 is:
                 - bbget: {bbtype: sourcedproperties}
 /workers:
-    description: this path selects all workers
+    description: This path selects all workers
     get:
         is:
         - bbget: {bbtype: worker}
     /{name_or_id}:
-        description: this path selects worker by name or id
+        description: This path selects a worker by name or id
         uriParameters:
             name_or_id:
-                type: identifier | number
+                type: number|identifier
                 description: the name or id of a worker
         get:
             is:
@@ -551,7 +551,7 @@ types:
         is:
         - bbget: {bbtype: change}
     /{changeid}:
-        description: this path selects one change by id
+        description: This path selects one change by id
         uriParameters:
             changeid:
                 type: number
@@ -562,7 +562,7 @@ types:
 
 /changesources:
     description: |
-        This path selects all changesource.
+        This path selects all changesource
     get:
         is:
         - bbget: {bbtype: changesource}
@@ -572,20 +572,20 @@ types:
                 type: number
                 description: the id of a changesource
         description: |
-            This path selects one changesource given its id.
+            This path selects one changesource given its id
         get:
             is:
             - bbget: {bbtype: changesource}
 /forceschedulers:
     description: |
-        This path selects all forceschedulers.
+        This path selects all forceschedulers
     get:
         is:
         - bbget: {bbtype: forcescheduler}
 
     /{schedulername}:
         description: |
-            This path selects all changesource.
+            This path selects all changesource
         uriParameters:
             schedulername:
                 type: identifier
@@ -662,7 +662,7 @@ types:
                         is:
                         - bbget: {bbtype: worker}
                     /{name}:
-                        description: This path selects one workers by name for a given builder and a given master
+                        description: This path selects one worker by name for a given builder and a given master
                         uriParameters:
                             name:
                                 type: identifier
@@ -671,7 +671,7 @@ types:
                             is:
                             - bbget: {bbtype: worker}
                     /{workerid}:
-                        description: This path selects one workers by name for a given builder and a given master
+                        description: This path selects one worker by name for a given builder and a given master
                         uriParameters:
                             workerid:
                                 type: number
@@ -767,7 +767,7 @@ types:
                 type: number
                 description: the id of the step
         /logs:
-            description: This path selects all logs for the given step.
+            description: This path selects all logs for the given step
             get:
                 is:
                 - bbget: {bbtype: log}

@@ -7,9 +7,9 @@ Authentication
 
     This class is the base class for all authentication methods.
     All authentications are not done at the same level, so several optional methods are available.
-    This class implements default implementation.
+    This class implements a default implementation.
     The login session is stored via twisted's ``request.getSession()``, and detailed used information is stored in ``request.getSession().user_info``.
-    The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
+    The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``).
 
     .. py:attribute:: userInfoProvider
 
@@ -49,17 +49,17 @@ Authentication
         :param request: the request object
 
         Separate entrypoint for getting user information.
-        This is a mean to call self.userInfoProvider if provided.
+        This is a means to call self.userInfoProvider if provided.
 
 .. py:class:: UserInfoProviderBase
 
-    Class that can be used, to get more info for the user like groups, in a separate database.
+    Class that can be used, to get more info for the user, like groups, from a separate database.
 
     .. py:method:: getUserInfo(username)
 
-    returns the user infos, from the username used for login (via deferred)
+        :returns: the user info for the username used for login, via a Deferred
 
-    returns a :py:class:`dict` with following keys:
+        Returns a :py:class:`dict` with following keys:
 
         * ``email``: email address of the user
         * ``full_name``: Full name of the user, like "Homer Simpson"
@@ -69,29 +69,29 @@ Authentication
 
 .. py:class:: OAuth2Auth
 
-    OAuth2Auth implements oauth2 2 phases authentication.
-    With this method ``/auth/login`` is called twice.
-    Once without argument.
-    It should return the URL the browser has to redirect in order to perform oauth2 authentication, and authorization.
-    Then the oauth2 provider will redirect to ``/auth/login?code=???``, and buildbot web server will verify the code using the oauth2 provider.
+    OAuth2Auth implements oauth2 two-factor authentication.
+    With this method, ``/auth/login`` is called twice.
+    The first time (without argument), it should return the URL the browser has to redirect to in order to perform oauth2 authentication and authorization.
+    Then the oauth2 provider will redirect to ``/auth/login?code=???`` and the Buildbot web server will verify the code using the oauth2 provider.
 
     Typical login process is:
 
-    * UI calls the ``/auth/login`` api, and redirect the browser to the returned oauth2 provider url
-    * oauth2 provider shows a web page with a form for the user to authenticate, and ask the user the permission for buildbot to access its account.
+    * UI calls the ``/auth/login`` API and redirects the browser to the returned oauth2 provider URL
+    * oauth2 provider shows a web page with a form for the user to authenticate, and asks the user for permission for Buildbot to access their account
     * oauth2 provider redirects the browser to ``/auth/login?code=???``
     * OAuth2Auth module verifies the code, and get the user's additional information
-    * buildbot UI is reloaded, with the user authenticated.
+    * Buildbot UI is reloaded, with the user authenticated
 
-    This implementation is using requests_
-    subclasses must override following class attributes:
-    * ``name`` Name of the oauth plugin
-    * ``faIcon`` font awesome class to use for login button logo
-    * ``resourceEndpoint`` URI of the resource where the authentication token is used
-    * ``authUri`` URI the browser is pointed to to let the user enter creds
-    * ``tokenUri`` URI to verify the browser code and get auth token
-    * ``authUriAdditionalParams`` Additional parameters for the authUri
-    * ``tokenUriAdditionalParams`` Additional parameters for the tokenUri
+    This implementation is using requests_.
+    Subclasses must override the following class attributes:
+
+    * ``name``: Name of the oauth plugin
+    * ``faIcon``: Font awesome class to use for login button logo
+    * ``resourceEndpoint``: URI of the resource where the authentication token is used
+    * ``authUri``: URI the browser is pointed to to let the user enter creds
+    * ``tokenUri``: URI to verify the browser code and get auth token
+    * ``authUriAdditionalParams``: Additional parameters for the authUri
+    * ``tokenUriAdditionalParams``: Additional parameters for the tokenUri
 
     .. py:method:: getUserInfoFromOAuthClient(self, c)
 

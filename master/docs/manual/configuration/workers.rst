@@ -51,7 +51,7 @@ For example:
 
     c['workers'] = [
         worker.Worker('bot-solaris', 'solarispasswd',
-                      properties={ 'os':'solaris' }),
+                      properties={'os': 'solaris'}),
     ]
 
 :class:`Worker` properties have priority over other sources (:class:`Builder`, :class:`Scheduler`, etc.).

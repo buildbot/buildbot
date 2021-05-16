@@ -1,35 +1,25 @@
 Secrets
 -------
 
-.. code-block:: python
-
-  class SecretDetails(object):
-      """
-      ...
-      """
-
-      def __init__(self, source, key, value):
-
-A ``secretDetails`` is a python object initialized with a provider name, a key and a value.
+A Secret is defined by a key associated with a value, returned from a provider.
+Secrets returned by providers are stored in a ``SecretDetails`` object.
+A ``SecretDetails`` object is initialized with a provider name, a key and a value.
 Each parameter is an object property.
 
 .. code-block:: python
 
-  secretdetail = SecretDetails("SourceProvider", "myKey", "myValue")
-  print(secretdetail.source)
+  secret = SecretDetails("SourceProvider", "myKey", "myValue")
+  print(secret.source)
   "SourceProvider"
-  print(secretdetail.key)
+  print(secret.key)
   "myKey"
-  print(secretdetail.value)
+  print(secret.value)
   "myValue"
-
-A Secret is defined by a key associated to a value, returned from a provider.
-Secrets returned by providers are stored in a ``secretDetails`` object.
 
 Secrets manager
 ---------------
 
-The manager is a Buildbot service manager.
+The secrets manager is a Buildbot service manager.
 
 .. code-block:: python
 
@@ -66,7 +56,7 @@ Vault provider
 
 In the master configuration, the provider is instantiated through a Buildbot service secret manager with the Vault token and the Vault server address.
 Vault secrets provider accesses the Vault backend asking the key wanted by Buildbot and returns the contained text value.
-SecretInVAult provider allows Buildbot to read secrets in the Vault.
+SecretInVault provider allows Buildbot to read secrets in the Vault.
 Currently only v1 and v2 of the Key-Value backends are supported.
 
 Interpolate secret
@@ -99,7 +89,7 @@ The function ``cleanupTextFromSecrets`` defined in the class Properties helps to
     print("the example value is:%s" % (cleantext))
     >> the example value is: <foo>
 
-Secret is rendered and it is recorded in a dictionary, named ``_used_secrets``, where the key is the secret value and the value the secret key.
+The secret is rendered and is recorded in a dictionary, named ``_used_secrets``, where the key is the secret value and the value the secret key.
 Therefore anywhere logs are written having content with secrets, the secrets are replaced by the value from ``_used_secrets``.
 
 How to use a secret in a BuildbotService
@@ -116,8 +106,8 @@ Secrets are used like renderables in a service and are rendered during the confi
 ``secrets`` is a list containing all the secret keys that can be used as class attributes.
 When the service is loaded during the Buildbot reconfigService function, secrets are rendered and the values are updated.
 Everywhere the variable with the secret name (`foo` or `other` in the example) is used, the class attribute value is replaced by the secret value.
-This is similar to the "renderable" annotation, but will only works for BuildbotServices, and will only interpolate secrets.
-Others renderables can still be held in the service as attributes, and rendered dynamically at a later time.
+This is similar to the "renderable" annotation, but will only work for BuildbotServices, and will only interpolate secrets.
+Other renderables can still be held in the service as attributes and rendered dynamically at a later time.
 
   .. code-block:: python
 

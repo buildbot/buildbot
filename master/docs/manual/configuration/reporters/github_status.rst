@@ -12,9 +12,9 @@ GitHubStatusPush
     context = Interpolate("bb/%(prop:buildername)s")
     c['services'].append(reporters.GitHubStatusPush(token='githubAPIToken', context=context))
 
-:class:`GitHubStatusPush` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
+:class:`GitHubStatusPush` publishes a build status using the `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
-It requires `txrequests`_ package to allow interaction with GitHub REST API.
+It requires `txrequests`_ package to allow interaction with the GitHub REST API.
 
 It requires a GitHub API token in order to operate.
 

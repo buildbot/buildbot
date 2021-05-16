@@ -1,5 +1,5 @@
 #%RAML 1.0 DataType
-displayName: Test result set
+displayName: test_result_set
 description: |
     This resource represents a test result set.
     A test result set consists of a number of related test results.
@@ -21,19 +21,19 @@ description: |
 
         .. py:method:: addTestResultSet(builderid, buildid, stepid, description, category, value_unit)
 
-            :param integer builderid: The ID of the builder for which the test result set is to be created.
-            :param integer buildid: The ID of the build for which the test result set is to be created.
-            :param integer stepid: The ID of the step for which the test result set is to be created.
-            :param description: Description of the test result set.
-            :param category: The category of the test result set.
-            :param value_unit: Defines the unit of the values stored in the test results.
+            :param integer builderid: The ID of the builder for which the test result set is to be created
+            :param integer buildid: The ID of the build for which the test result set is to be created
+            :param integer stepid: The ID of the step for which the test result set is to be created
+            :param description: Description of the test result set
+            :param category: The category of the test result set
+            :param value_unit: Defines the unit of the values stored in the test results
 
             Creates a new test result set.
             Returns the ID of the new test result set.
 
         .. py:method:: completeTestResultSet(test_result_setid, tests_passed=None, tests_failed=None):
 
-            :param integer test_result_setid: The ID of the test result set to complete.
+            :param integer test_result_setid: The ID of the test result set to complete
             :param integer tests_passed: The number of passed tests, if known
             :param integer tests_failed: The number of failed tests, if known
 
@@ -44,16 +44,16 @@ description: |
 
 properties:
     test_result_setid:
-        description: the unique ID of this test result set.
+        description: the unique ID of this test result set
         type: integer
     builderid:
-        description: id of the builder for this test result set.
+        description: id of the builder for this test result set
         type: integer
     buildid:
-        description: id of the build for this test result set.
+        description: id of the build for this test result set
         type: integer
     stepid:
-        description: id of the step for this test result set.
+        description: id of the step for this test result set
         type: integer
     description:
         description: |

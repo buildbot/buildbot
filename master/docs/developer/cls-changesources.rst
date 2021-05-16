@@ -31,5 +31,5 @@ PollingChangeSource
 
 .. py:class:: PollingChangeSource
 
-    This is a legacy class for polling change sources not yet ported to the :py:class::`BuildbotService` component lifecycle.
+    This is a legacy class for polling change sources not yet ported to the :py:class:`BuildbotService` component lifecycle.
     Do not use for new code.

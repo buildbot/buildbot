@@ -624,12 +624,12 @@ The available classes are described here:
 
     :param header: header to use to get the username (defaults to ``REMOTE_USER``)
     :param headerRegex: regular expression to get the username from header value (defaults to ``"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")``\.
-                        Note that you at least need to specify a ``?P<username>`` regular expression named group.
+                        Note that you need at least to specify a ``?P<username>`` regular expression named group.
     :param userInfoProvider: user info provider; see :ref:`User-Information`
 
-    If the Buildbot UI is served through a reverse proxy that supports HTTP-based authentication (like apache or lighttpd), it's possible to to tell Buildbot to trust the web server and get the username from th request headers.
+    If the Buildbot UI is served through a reverse proxy that supports HTTP-based authentication (like apache or lighttpd), it's possible to tell Buildbot to trust the web server and get the username from the request headers.
 
-    Administrator must make sure that it's impossible to get access to Buildbot using other way than through frontend.
+    The administrator must make sure that it's impossible to get access to Buildbot in any way other than through the frontend.
     Usually this means that Buildbot should listen for incoming connections only on localhost (or on some firewall-protected port).
     The reverse proxy must require HTTP authentication to access Buildbot pages (using any source for credentials, such as htpasswd, PAM, LDAP, Kerberos).
 
@@ -683,7 +683,7 @@ User Information
 For authentication mechanisms which cannot provide complete information about a user, Buildbot needs another way to get user data.
 This is useful both for authentication (to fetch more data about the logged-in user) and for avatars (to fetch data about other users).
 
-This extra information is provided by, appropriately enough, user info providers.
+This extra information is provided, appropriately enough, by user info providers.
 These can be passed to :py:class:`~buildbot.www.auth.RemoteUserAuth` and as an element of ``avatar_methods``.
 
 This can also be passed to oauth2 authentication plugins.
@@ -942,16 +942,16 @@ Endpoint matchers are responsible for creating rules to match REST endpoints, an
 Endpoint matchers are processed in the order they are configured.
 The first rule matching an endpoint will prevent further rules from being checked.
 To continue checking other rules when the result is `deny`, set `defaultDeny=False`.
-If no endpoint matcher matches, then the access is granted.
+If no endpoint matcher matches, then access is granted.
 
 One can implement the default deny policy by putting an :py:class:`AnyEndpointMatcher` with nonexistent role in the end of the list.
 Please note that this will deny all REST apis, and most of the UI do not implement proper access denied message in case of such error.
 
-The following sequence is implemented by each EndpointMatcher class.
+The following sequence is implemented by each EndpointMatcher class:
 
 - Check whether the requested endpoint is supported by this matcher
-- Get necessary info from data api, and decides whether it matches.
-- Look if the users has the required role.
+- Get necessary info from data API and decide whether it matches
+- Look if the user has the required role
 
 Several endpoints matchers are currently implemented.
 If you need a very complex setup, you may need to implement your own endpoint matchers.
@@ -962,7 +962,7 @@ In this case, you can look at the source code for detailed examples on how to wr
     :param role: The role which grants access to this endpoint.
         List of roles is not supported, but a ``fnmatch`` expression can be provided to match several roles.
 
-    :param defaultDeny: The role matcher algorithm will stop if this value is true, and if the endpoint matched.
+    :param defaultDeny: The role matcher algorithm will stop if this value is true and the endpoint matched.
 
     This is the base endpoint matcher.
     Its arguments are inherited by all the other endpoint matchers.
@@ -971,13 +971,13 @@ In this case, you can look at the source code for detailed examples on how to wr
 
     :param role: The role which grants access to any endpoint.
 
-    AnyEndpointMatcher grants all rights to people with given role (usually "admins")
+    AnyEndpointMatcher grants all rights to people with given role (usually "admins").
 
 .. py:class:: buildbot.www.authz.endpointmatchers.AnyControlEndpointMatcher(role)
 
     :param role: The role which grants access to any control endpoint.
 
-    AnyControlEndpointMatcher grants control rights to people with given role (usually "admins")
+    AnyControlEndpointMatcher grants control rights to people with given role (usually "admins").
     This endpoint matcher matches current and future control endpoints.
     You need to add this in the end of your configuration to make sure it is future proof.
 
@@ -1049,7 +1049,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
     :param roledict: Dictionary with key=role, and value=list of domain strings
 
     RolesFromDomain grants roles to users according to their email domains.
-    If a user tried to login with email ``foo@gmail.com``, then user will be granted the role 'admins'.
+    If a user tried to login with email ``foo@gmail.com``, then the user will be granted the role 'admins'.
 
     ex:
 

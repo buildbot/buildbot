@@ -46,15 +46,13 @@ described in :ref:`developer-Reconfiguration`.
         The URL of this buildmaster, for use in constructing WebStatus URLs;
         from :bb:cfg:`buildbotURL`.
 
-
     .. py:attribute:: logCompressionLimit
 
         The current log compression limit, from :bb:cfg:`logCompressionLimit`.
 
     .. py:attribute:: logCompressionMethod
 
-        The current log compression method, from
-        :bb:cfg:`logCompressionMethod`.
+        The current log compression method, from :bb:cfg:`logCompressionMethod`.
 
     .. py:attribute:: logMaxSize
 
@@ -62,7 +60,7 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: logMaxTailSize
 
-        The current log maximum size, from :bb:cfg:`logMaxTailSize`.
+        The current log tail maximum size, from :bb:cfg:`logMaxTailSize`.
 
     .. py:attribute:: logEncoding
 
@@ -87,24 +85,21 @@ described in :ref:`developer-Reconfiguration`.
 
         A callable, or None, used to determine the codebase from an incoming
         :py:class:`~buildbot.changes.changes.Change`,
-        from :bb:cfg:`codebaseGenerator`
+        from :bb:cfg:`codebaseGenerator`.
 
     .. py:attribute:: protocols
 
-        The per-protocol port specification for worker connections.
-        Based on :bb:cfg:`protocols`.
+        The per-protocol port specification for worker connections; based on :bb:cfg:`protocols`.
 
     .. py:attribute:: multiMaster
 
-        If true, then this master is part of a cluster; based on
-        :bb:cfg:`multiMaster`.
+        If true, then this master is part of a cluster; based on :bb:cfg:`multiMaster`.
 
     .. py:attribute:: manhole
 
         The manhole instance to use, or None; from :bb:cfg:`manhole`.
 
-    The remaining attributes contain compound configuration structures, usually
-    dictionaries:
+    The remaining attributes contain compound configuration structures, usually as dictionaries:
 
     .. py:attribute:: validation
 
@@ -150,7 +145,6 @@ described in :ref:`developer-Reconfiguration`.
         The list of :py:class:`IChangeSource` providers from
         :bb:cfg:`change_source`.
 
-
     .. py:attribute:: user_managers
 
         The list of user managers providers from :bb:cfg:`user_managers`.
@@ -162,12 +156,12 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: services
 
-        The list of additional plugin services
+        The list of additional plugin services.
 
     .. py:classmethod:: loadFromDict(config_dict, filename)
 
-        :param dict config_dict: The dictionary containing the configuration to load.
-        :param string filename: The filename to use when reporting errors.
+        :param dict config_dict: The dictionary containing the configuration to load
+        :param string filename: The filename to use when reporting errors
         :returns: new :py:class:`MasterConfig` instance
 
         Load the configuration from the given dictionary.
@@ -183,8 +177,7 @@ using the following class:
         :param string basedir: directory to which config is relative
         :param string filename: the configuration file to load
 
-        The filename is treated as relative to the basedir, if it is not
-        absolute.
+        The filename is treated as relative to basedir if it is not absolute.
 
     .. py:method:: loadConfig(basedir, filename)
 
@@ -203,18 +196,16 @@ using the following class:
 
     Load the configuration dictionary in the given file.
 
-    The filename is treated as relative to the basedir, if it is not
-    absolute.
+    The filename is treated as relative to basedir if it is not absolute.
 
 Builder Configuration
 ---------------------
 
 .. py:class:: BuilderConfig([keyword args])
 
-    This class parameterizes configuration of builders; see
-    :ref:`Builder-Configuration` for its arguments.  The constructor checks for
-    errors and applies defaults, and sets the properties described here.  Most
-    are simply copied from the constructor argument of the same name.
+    This class parameterizes configuration of builders; see :ref:`Builder-Configuration` for its arguments.
+    The constructor checks for errors, applies defaults, and sets the properties described here.
+    Most are simply copied from the constructor argument of the same name.
 
     Users may subclass this class to add defaults, for example.
 
@@ -278,20 +269,18 @@ Builder Configuration
 Error Handling
 --------------
 
-If any errors are encountered while loading the configuration :py:func:`buildbot.config.error`
-should be called. This can occur both in the configuration-loading code,
-and in the constructors of any objects that are instantiated in the
-configuration - change sources, workers, schedulers, build steps, and so on.
+If any errors are encountered while loading the configuration, :py:func:`buildbot.config.error` should be called.
+This can occur both in the configuration-loading code, and in the constructors of any objects that are instantiated in the configuration - change sources, workers, schedulers, build steps, and so on.
 
 .. py:function:: error(error)
 
     :param error: error to report
     :raises: :py:exc:`ConfigErrors` if called at build-time
 
-    This function reports a configuration error. If a config file is being loaded,
-    then the function merely records the error, and allows the rest of the configuration
-    to be loaded. At any other time, it raises :py:exc:`ConfigErrors`.  This is done
-    so all config errors can be reported, rather than just the first.
+    This function reports a configuration error.
+    If a config file is being loaded, then the function merely records the error, and allows the rest of the configuration to be loaded.
+    At any other time, it raises :py:exc:`ConfigErrors`.
+    This is done so that all config errors can be reported, rather than just the first one.
 
 .. py:exception:: ConfigErrors([errors])
 
@@ -320,11 +309,11 @@ This is accomplished automatically by converting various pieces of the master co
 
 The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to convert any object into a JSON-able dictionary.
 
-.. class:: buildbot.interfaces.IConfigured
+.. py:class:: buildbot.interfaces.IConfigured
 
     Providers of this interface provide a method to get their configuration as a dictionary:
 
-   .. method:: getConfigDict()
+    .. py:method:: getConfigDict()
 
         :returns: object
 
@@ -339,13 +328,9 @@ The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to c
 .. py:class:: buildbot.util.ConfiguredMixin
 
     This class is a basic implementation of :py:class:`~buildbot.interfaces.IConfigured`.
-    Its :py:meth:`getConfigDict` method simply returns the instance's ``name`` attribute.
+    Its :py:meth:`getConfigDict` method simply returns the instance's ``name`` attribute (all objects configured must have the ``name`` attribute).
 
-    .. py:attribute:: name
-
-        Each object configured must have a ``name`` attribute.
-
-    .. py:method:: getConfigDict(self)
+    .. py:method:: getConfigDict()
 
         :returns: object
 
@@ -389,7 +374,7 @@ Reconfigurable Services
 .......................
 
 Instances which need to be notified of a change in configuration should be
-implemented as Twisted services, and mix in the
+implemented as Twisted services and mix in the
 :py:class:`ReconfigurableServiceMixin` class, overriding the
 :py:meth:`~ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig` method.
 
@@ -407,7 +392,7 @@ implemented as Twisted services, and mix in the
         This method will be called automatically after a service is started.
 
         It is generally too late at this point to roll back the
-        reconfiguration, so if possible any errors should be detected in the
+        reconfiguration, so if possible, any errors should be detected in the
         :py:class:`MasterConfig` implementation.  Errors are handled as best as
         possible and communicated back to the top level invocation, but such
         errors may leave the master in an inconsistent state.
@@ -425,7 +410,6 @@ implemented as Twisted services, and mix in the
         Child services are reconfigured in order of decreasing priority.  The
         default priority is 128, so a service that must be reconfigured before
         others should be given a higher priority.
-
 
 Change Sources
 ..............
@@ -452,25 +436,17 @@ values for its parameters, then it must inherit
 :py:class:`ReconfigurableServiceMixin` to support the case where the global
 values change.
 
-
 Schedulers
 ..........
 
-Schedulers have names, so Buildbot can determine whether a scheduler has been
-added, removed, or changed during a reconfig.  Old schedulers will be stopped,
-new schedulers will be started, and both new and existing schedulers will see a
-call to :py:meth:`~ReconfigurableServiceMixin.reconfigService`, if such a
-method exists.  For backward compatibility, schedulers which do not support
-reconfiguration will be stopped, and the new scheduler started, when their
-configuration changes.
+Schedulers have names, so Buildbot can determine whether a scheduler has been added, removed, or changed during a reconfig.
+Old schedulers will be stopped, new schedulers will be started, and both new and existing schedulers will see a call to :py:meth:`~ReconfigurableServiceMixin.reconfigService`, if such a method exists.
+For backward compatibility, schedulers that do not support reconfiguration will be stopped, and a new scheduler will be started when their configuration changes.
 
-If, during a reconfiguration, a new and old scheduler's fully qualified class
-names differ, then the old class will be stopped and the new class started.
+During a reconfiguration, if a new and old scheduler's fully qualified class names differ, then the old class will be stopped, and the new class will be started.
 This supports the case when a user changes, for example, a :bb:sched:`Nightly` scheduler to a :bb:sched:`Periodic` scheduler without changing the name.
 
-Because Buildbot uses :py:class:`~buildbot.schedulers.base.BaseScheduler`
-instances directly in the configuration file, a reconfigured scheduler must
-extract its new configuration information from another instance of itself.
+Because Buildbot uses :py:class:`~buildbot.schedulers.base.BaseScheduler` instances directly in the configuration file, a reconfigured scheduler must extract its new configuration information from another instance of itself.
 
 Custom Subclasses
 ~~~~~~~~~~~~~~~~~
@@ -495,28 +471,22 @@ scheduler (with the new name and class) to be started.
 Workers
 .......
 
-Similar to schedulers, workers are specified by name, so new and old
-configurations are first compared by name, and any workers to be added or
-removed are noted.  Workers for which the fully-qualified class name has changed
-are also added and removed.  All workers have their
-:py:meth:`~ReconfigurableServiceMixin.reconfigService` method called.
+Similar to schedulers, workers are specified by name, so new and old configurations are first compared by name, and any workers to be added or
+removed are noted.
+Workers for which the fully-qualified class name has changed are also added and removed.
+All workers have their :py:meth:`~ReconfigurableServiceMixin.reconfigService` method called.
 
-This method takes care of the basic worker attributes, including changing the PB
-registration if necessary.  Any subclasses that add configuration parameters
-should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and
-update those parameters.  As with Schedulers, because the
-:py:class:`~buildbot.worker.AbstractWorker` instance is given directly
-in the configuration, on reconfig instances must extract the configuration from
-a new instance.
+This method takes care of the basic worker attributes, including changing the PB registration if necessary.
+Any subclasses that add configuration parameters should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and update those parameters.
+As with schedulers, because the :py:class:`~buildbot.worker.AbstractWorker` instance is given directly in the configuration, a reconfigured worker instance must extract its new configuration from another instance of itself.
 
 User Managers
 .............
 
-Since user managers are rarely used, and their purpose is unclear, they are
-always stopped and re-started on every reconfig.  This may change in figure
-versions.
+Since user managers are rarely used, and their purpose is unclear, they are always stopped and re-started on every reconfig.
+This may change in future versions.
 
 Status Receivers
 ................
 
-At every reconfig, all status listeners are stopped and new versions started.
+At every reconfig, all status listeners are stopped, and new versions are started.

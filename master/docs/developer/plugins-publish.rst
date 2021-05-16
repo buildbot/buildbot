@@ -18,7 +18,7 @@ If you do not know what a Python package is, these two tutorials will get you go
 * `Python Packaging User Guide <https://packaging.python.org/en/latest/>`__
 * `The Hitchhiker’s Guide to Packaging <https://the-hitchhikers-guide-to-packaging.readthedocs.org/en/latest/>`__
 
-The former is more recent and, while it addresses everything that you need to know about Python packages, is still work in progress.
+The former is more recent and, while it addresses everything that you need to know about Python packages, it's still work in progress.
 The latter is a bit dated, though it was the most complete guide for quite some time available for Python developers looking to package their software.
 
 You may also want to check the `sample project <https://github.com/pypa/sampleproject>`_, which exemplifies the best Python packaging practices.
@@ -68,7 +68,7 @@ After the :src:`setup.py <master/setup.py>` file is updated, you can build and i
 
 (depending on your particular setup, you might not need to use :command:`sudo`).
 
-After that the plugin should be available for Buildbot and you can use it in your :file:`master.cfg` as:
+After that, the plugin should be available for Buildbot and you can use it in your :file:`master.cfg` as:
 
 .. code-block:: python
 
@@ -79,7 +79,7 @@ After that the plugin should be available for Buildbot and you can use it in you
 Publish the package
 ===================
 
-This is the last step before the plugin is available to others.
+This is the last step before the plugin becomes available to others.
 
 Once again, there is a number of options available for you:
 

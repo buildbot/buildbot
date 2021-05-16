@@ -1,7 +1,7 @@
 Buildbot's Test Suite
 =====================
 
-Buildbot's master tests are under ``buildbot.test``, ``buildbot-worker`` package tests are under ``buildbot_worker.test``.
+Buildbot's master tests are under ``buildbot.test`` and ``buildbot-worker`` package tests are under ``buildbot_worker.test``.
 Tests for the workers are similar to the master, although in some cases helpful functionality on the master is not re-implemented on the worker.
 
 Quick-Start
@@ -20,7 +20,7 @@ Following is a quick shell session to put you on the right track.
     make virtualenv
     . .venv/bin/activate
 
-    # now we run the test suite
+    # now run the test suite
     trial buildbot
 
     # find all tests that talk about mail
@@ -42,19 +42,14 @@ Tests are divided into a few suites:
   * Interface tests are a special type of unit tests, and are found in the same directory and often the same file.
     In many cases, Buildbot has multiple implementations of the same interface -- at least one "real" implementation and a fake implementation used in unit testing.
     The interface tests ensure that these implementations all meet the same standards.
-    This ensures consistency between implementations, and also ensures that the unit tests are testing against realistic fakes.
+    This ensures consistency between implementations, and also ensures that the unit tests are tested against realistic fakes.
 
-* Integration tests (``buildbot.test.integration``) - these test combinations
-  of multiple units.  Of necessity, integration tests are incomplete - they
-  cannot test every condition; difficult to maintain - they tend to be complex
-  and touch a lot of code; and slow - they usually require considerable setup
-  and execute a lot of code.  As such, use of integration tests is limited to a
-  few, broad tests to act as a failsafe for the unit and interface tests.
+* Integration tests (``buildbot.test.integration``) - these test combinations of multiple units.
+  Of necessity, integration tests are incomplete - they cannot test every condition; difficult to maintain - they tend to be complex and touch a lot of code; and slow - they usually require considerable setup and execute a lot of code.
+  As such, use of integration tests is limited to a few broad tests that act as a failsafe for the unit and interface tests.
 
-* Regression tests (``buildbot.test.regressions``) - these test to prevent
-  re-occurrence of historical bugs.  In most cases, a regression is better
-  tested by a test in the other suites, or unlike to recur, so this suite tends
-  to be small.
+* Regression tests (``buildbot.test.regressions``) - these tests are used to prevent re-occurrence of historical bugs.
+  In most cases, a regression is better tested by a test in the other suites, or is unlikely to recur, so this suite tends to be small.
 
 * Fuzz tests (``buildbot.test.fuzz``) - these tests run for a long time and
   apply randomization to try to reproduce rare or unusual failures.  The
@@ -64,51 +59,45 @@ Tests are divided into a few suites:
 Unit Tests
 ~~~~~~~~~~
 
-Every code module should have corresponding unit tests.  This is not currently
-true of Buildbot, due to a large body of legacy code, but is a goal of the
-project.  All new code must meet this requirement.
+Every code module should have corresponding unit tests.
+This is not currently true of Buildbot, due to a large body of legacy code, but is a goal of the project.
+All new code must meet this requirement.
 
-Unit test modules are be named after the package or class they test, replacing
-``.`` with ``_`` and omitting the ``buildbot_``. For example,
-:src:`test_schedulers_timed_Periodic.py <master/buildbot/test/unit/test_schedulers_timed_Periodic.py>`
-tests the :class:`Periodic` class in
-:src:`master/buildbot/schedulers/timed.py`. Modules with only one class, or a few
-trivial classes, can be tested in a single test module. For more complex
-situations, prefer to use multiple test modules.
+Unit test modules follow the source file hierarchy (omitting the root ``buildbot`` directory) and are named after the package or class they test (replacing ``.`` with ``_``).
+For example, :src:`test_timed_Periodic.py <master/buildbot/test/unit/schedulers/test_timed_Periodic.py>` tests the :class:`Periodic` class in :src:`master/buildbot/schedulers/timed.py`.
+Modules with only one class, or a few trivial classes, can be tested in a single test module.
+For more complex situations, prefer to use multiple test modules.
 
-Unit tests using renderables require special handling. The following example
-shows how the same test would be written with the 'param' parameter and with the
-same parameter as a renderable.::
+Unit tests using renderables require special handling.
+The following example shows how the same test would be written with the 'param' parameter as a plain argument and with the same parameter as a renderable::
 
     def test_param(self):
         f = self.ConcreteClass(param='val')
         self.assertEqual(f.param, 'val')
 
-When the parameter is renderable, you need to instantiate the Class before you
-can you renderables::
+When the parameter is renderable, you need to instantiate the class before you can test the renderables::
 
     def setUp(self):
-        self.build = Properties(paramVal='val')
+        self.build = Properties(param='val')
 
     @defer.inlineCallbacks
     def test_param_renderable(self):
-        f = self.ConcreteClass(param=Interpolate('%(kw:rendered_val)s',
-                               rendered_val=Property('paramVal'))
+        f = self.ConcreteClass(
+            param=Interpolate('%(kw:rendered_val)s',
+                              rendered_val=Property('param')))
         yield f.start_instance(self.build)
         self.assertEqual(f.param, 'val')
 
 Interface Tests
 ~~~~~~~~~~~~~~~
 
-Interface tests exist to verify that multiple implementations of an interface
-meet the same requirements.  Note that the name 'interface' should not be
-confused with the sparse use of Zope Interfaces in the Buildbot code -- in this
-context, an interface is any boundary between testable units.
+Interface tests exist to verify that multiple implementations of an interface meet the same requirements.
+Note that the name 'interface' should not be confused with the sparse use of Zope Interfaces in the Buildbot code -- in this context, an interface is any boundary between testable units.
 
-Ideally, all interfaces, both public and private, should be tested.  Certainly,
-any *public* interfaces need interface tests.
+Ideally, all interfaces, both public and private, should be tested.
+Certainly, any *public* interfaces need interface tests.
 
-Interface tests are most often found in files named for the "real" implementation, e.g., :src:`test_db_changes.py <master/buildbot/test/unit/test_db_changes.py>`.
+Interface tests are most often found in files named for the "real" implementation, e.g., :src:`test_changes.py <master/buildbot/test/unit/db/test_changes.py>`.
 When there is ambiguity, test modules should be named after the interface they are testing.
 Interface tests have the following form::
 
@@ -155,7 +144,18 @@ At the bottom of the test module, a subclass is created for each implementation,
         def someSetupMethod(self):
             pass # ...
 
-For implementations which require optional software, such as an AMQP server, this is the appropriate place to signal that tests should be skipped when their prerequisites are not available.
+For implementations which require optional software, such as an AMQP server, this is the appropriate place to signal that tests should be skipped when their prerequisites are not available::
+
+    from twisted.trial import unittest
+
+    class TestRealThing(unittest.TestCase, RealTests):
+
+        def someSetupMethod(self):
+            try:
+                import foo
+            except ImportError:
+                raise unittest.SkipTest("foo not found")
+
 
 Integration Tests
 ~~~~~~~~~~~~~~~~~
@@ -233,7 +233,7 @@ These are validated from elsewhere in the codebase with calls to
  * ``verifyDbDict(testcase, type, value)``,
  * ``verifyData(testcase, type, options, value)``,
  * ``verifyMessage(testcase, routingKey, message)``, and
- * ``verifyType(testcase, name, value, validator)``.
+ * ``verifyType(testcase, name, value, validator)``,
 
 respectively.
 The ``testcase`` argument is used to fail the test case if the validation does not succeed.
@@ -314,9 +314,9 @@ The underlying validator should be a ``MessageValidator``. ::
 Good Tests
 ----------
 
-Bad tests are worse than no tests at all, since they waste developers' time
-wondering "was that a spurious failure?" or "what the heck is this test trying
-to do?"  Buildbot needs good tests.  So what makes a good test?
+Bad tests are worse than no tests at all.
+Since they waste developers' time wondering "was that a spurious failure?" or "what the heck is this test trying to do?", Buildbot needs good tests.
+So what makes a test good?
 
 .. _Tests-Independent-of-Time:
 
@@ -389,7 +389,7 @@ a requirement for Buildbot's tests.
 Small Tests
 ~~~~~~~~~~~
 
-The shorter each test is, the better. Test as little code as possible in each test.
+The shorter a test is, the better. Test as little code as possible in each test.
 
 It is fine, and in fact encouraged, to write the code under test in such a way
 as to facilitate this. As an illustrative example, if you are testing a new

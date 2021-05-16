@@ -3,11 +3,11 @@
 Metrics
 =======
 
-New in buildbot 0.8.4 is support for tracking various performance metrics inside the buildbot master process.
-Currently these are logged periodically according to the ``log_interval`` configuration setting of the :bb:cfg:`metrics` configuration.
+New in Buildbot 0.8.4 is support for tracking various performance metrics inside the buildbot master process.
+Currently, these are logged periodically according to the ``log_interval`` configuration setting of the :bb:cfg:`metrics` configuration.
 
 The metrics subsystem is implemented in :mod:`buildbot.process.metrics`.
-It makes use of twisted's logging system to pass metrics data from all over buildbot's code to a central :class:`MetricsLogObserver` object, which is available at ``BuildMaster.metrics`` or via ``Status.getMetrics()``.
+It makes use of twisted's logging system to pass metrics data from all over Buildbot's code to a central :class:`MetricsLogObserver` object, which is available at ``BuildMaster.metrics`` or via ``Status.getMetrics()``.
 
 Metric Events
 -------------
@@ -113,7 +113,7 @@ Metric Helpers
 
 :func:`timeMethod(name)`
     A function decorator that measures how long a function takes to execute.
-    Note that many functions in buildbot return deferreds, so may return before all the work they set up has completed.
+    Note that many functions in Buildbot return deferreds, so may return before all the work they set up has completed.
     Using an explicit :class:`Timer` is better in this case.
 
     ::

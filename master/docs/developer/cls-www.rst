@@ -32,7 +32,7 @@ Resources
         Reconfigure this resource.
 
     It's surprisingly difficult to render a Twisted Web resource asynchronously.
-    This method makes it quite a bit easier:
+    This next method makes it quite a bit easier.
 
     .. py:method:: asyncRenderHelper(request, callable, writeError=None)
 

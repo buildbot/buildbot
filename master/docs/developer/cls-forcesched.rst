@@ -9,7 +9,7 @@ The force scheduler has a symbiotic relationship with the web application, so it
 Parameters
 ~~~~~~~~~~
 
-The force scheduler comes with a fleet of parameter classes.
+The force scheduler comes with a set of parameter classes.
 This section contains information to help users or developers who are interested in adding new parameter types or hacking the existing types.
 
 .. py:module:: buildbot.schedulers.forceshed
@@ -36,7 +36,7 @@ This section contains information to help users or developers who are interested
         :param master: the :py:class:`~buildbot.master.BuildMaster` instance
         :param properties: a dictionary of properties
         :param changes: a list of changeids that will be used to build the SourceStamp for the forced builds
-        :param sourcestamps: the SourceStamp dictionary that will be passed to the build; some parameters modify sourcestamps rather than properties.
+        :param sourcestamps: the SourceStamp dictionary that will be passed to the build; some parameters modify sourcestamps rather than properties
         :param collector: a :py:class:`buildbot.schedulers.forcesched.ValidationErrorCollector` object, which is used by nestedParameter to collect errors from its childs
         :param kwargs: a dictionary of the posted values
 
@@ -51,7 +51,7 @@ This section contains information to help users or developers who are interested
 
            The name of the parameter.
            This corresponds to the name of the property that your parameter will set.
-           This name is also used internally as identifier for http POST arguments
+           This name is also used internally as identifier for HTTP POST arguments.
 
     .. py:attribute:: label
 
@@ -71,10 +71,9 @@ This section contains information to help users or developers who are interested
            It is used by the angular application to find which angular directive to use for showing the form widget.
            The available values are visible in :src:`www/base/src/app/common/directives/forcefields/forcefields.directive.js`.
 
-           Examples of how to create a custom parameter widgets are available in the buildbot source code in directories:
+           Examples of how to create a custom parameter widgets are available in the Buildbot source code in directories:
 
            * :src:`www/codeparameter`
-
            * :src:`www/nestedexample`
 
     .. py:attribute:: default
@@ -84,11 +83,11 @@ This section contains information to help users or developers who are interested
 
     .. py:attribute:: required
 
-           If true, an error will be shown to user if there is no input in this field
+           If true, an error will be shown to user if there is no input in this field.
 
     .. py:attribute:: multiple
 
-           If true, this parameter represents a list of values (e.g. list of tests to run)
+           If true, this parameter represents a list of values (e.g. list of tests to run).
 
     .. py:attribute:: regex
 
@@ -97,11 +96,13 @@ This section contains information to help users or developers who are interested
 
     .. py:method:: parse_from_args(l)
 
-       return the list of object corresponding to the list or string passed default function will just call :py:func:`parse_from_arg` with the first argument
+           Return the list of property values corresponding to the list of strings passed by the user.
+           The default function will just call :py:func:`parse_from_arg` on every argument.
 
     .. py:method:: parse_from_arg(s)
 
-       return the  object corresponding to the string passed default function will just return the unmodified string
+           Return the property value corresponding to the string passed by the user.
+           The default function will simply return the input argument.
 
 
 Nested Parameters
@@ -119,7 +120,7 @@ This allows, for example, each of the 'branch' fields to have a unique name in t
 The `NestedParameter` handles adding this extra bit to the name to each of the children.
 When the `kwarg` dictionary is posted back, this class also converts the flat POST dictionary into a richer structure that represents the nested structure.
 
-As illustration, if the nested parameter has the name 'foo', and has children 'bar1' and 'bar2', then the POST will have entries like "foo.bar1" and "foo.bar2".
+For example, if the nested parameter has the name 'foo', and has children 'bar1' and 'bar2', then the POST will have entries like "foo.bar1" and "foo.bar2".
 The nested parameter will translate this into a dictionary in the 'kwargs' structure, resulting in something like::
 
     kwargs = {

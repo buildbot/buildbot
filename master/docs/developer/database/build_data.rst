@@ -9,7 +9,7 @@ Build data connector
     Build data is potentially large transient text data attached to the build that the steps can use for their operations.
     One of the use cases is to carry large amount of data from one step to another where storing that data on the worker is not feasible.
     This effectively forms a key-value store for each build.
-    It is valid only until build finishes and all reporters finish reporting the build result.
+    It is valid only until the build finishes and all reporters are done reporting the build result.
     After that the data may be removed from the database.
 
     An instance of this class is available at ``master.db.build_data``.

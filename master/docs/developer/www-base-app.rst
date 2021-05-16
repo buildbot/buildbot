@@ -11,7 +11,7 @@ The client side of the web UI is written in JavaScript and based on the AngularJ
 This is a `Single Page Application <http://en.wikipedia.org/wiki/Single-page_application>`_.
 All Buildbot pages are loaded from the same path, at the master's base URL.
 The actual content of the page is dictated by the fragment in the URL (the portion following the ``#`` character).
-Using the fragment is a common JS technique to avoid reloading the whole page over HTTP when the user changes the URI or clicks a link.
+Using the fragment is a common JS technique to avoid reloading the whole page over HTTP when the user changes the URI or clicks on a link.
 
 AngularJS
 ~~~~~~~~~
@@ -20,20 +20,20 @@ The best place to learn about AngularJS is `its own documentation <http://docs.a
 
 AngularJS strong points are:
 
-* A very powerful `MVC system <https://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI, when data changes
+* A very powerful `MVC system <https://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI when data changes
 * A `Testing Framework and philosophy <https://docs.angularjs.org/guide/dev_guide.e2e-testing>`_
 * A `deferred system <https://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted
 * A `fast growing community and ecosystem <https://www.madewithangular.com/>`_
 
-On top of Angular we use nodeJS tools to ease development
+On top of Angular, we use nodeJS tools to ease development:
 
-* webpack build system, seamlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
+* webpack build system, seamlessly build the app, watch files for modification, rebuild and reload browser in dev mode.
   In production mode, the build system minifies html, css and js, so that the final app is only 3 files to download (+img)
 * `pug template language  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readability to angular html templates
-* `Bootstrap <https://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
+* `Bootstrap <https://getbootstrap.com/>`_ is a CSS library providing known good basis for our styles
 * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
-Additionally the following npm modules are loaded by webpack and available to plugins:
+Additionally the following npm modules are loaded by webpack and are available to plugins:
 
 * `@uirouter/angularjs <https://www.npmjs.com/package/@uirouter/angularjs>`_
 * `angular-animate <https://www.npmjs.com/package/angular-animate>`_
@@ -41,17 +41,17 @@ Additionally the following npm modules are loaded by webpack and available to pl
 * `d3 <https://www.npmjs.com/package/d3>`_
 * `jQuery <https://www.npmjs.com/package/jquery>`_
 
-For exact versions of these dependencies available, check ``www/base/package.json``.
+For the exact versions of these dependencies, check :src:`www/base/package.json`.
 
 Extensibility
 ~~~~~~~~~~~~~
 
-Buildbot UI is designed for extensibility.
-The base application should be pretty minimal, and only include very basic status pages.
-Base application cannot be disabled so any page not absolutely necessary should be put in plugins.
+The Buildbot UI is designed for extensibility.
+The base application should be pretty minimal and only include very basic status pages.
+The base application cannot be disabled, so any page that's not absolutely necessary should be put in plugins.
 You can also completely replace the default application by another application more suitable to your needs.
 
-Some Web plugins are maintained inside buildbot's git repository, but this is not required in order for a plugin to work.
+Some Web plugins are maintained inside Buildbot's git repository, but this is not required in order for a plugin to work.
 Unofficial plugins are possible and encouraged.
 
 Typical plugin source code layout is:
@@ -72,7 +72,7 @@ Typical plugin source code layout is:
     Please see webpack docs for details.
 
 ``src/...``
-    Source code for the angularjs application.
+    Source code for the AngularJS application.
 
 ``package.json``
     Declares npm dependencies and development scripts.
@@ -86,17 +86,17 @@ Plugins are packaged as python entry-points for the ``buildbot.www`` namespace.
 The python part is defined in the ``buildbot.www.plugin`` module.
 The entrypoint must contain a ``twisted.web`` Resource, that is populated in the web server in ``/<pluginname>/``.
 
-The plugin may only add a http endpoint, or it could add a full JavaScript UI.
+The plugin may only add an http endpoint, or it could add a full JavaScript UI.
 This is controlled by the ``ui`` argument of the ``Application`` endpoint object.
-If ``ui==True``, then will automatically load ``/<pluginname>/scripts.js`` and ``/<pluginname>/styles.css`` into the angular.js application.
+If ``ui==True``, then it will automatically load ``/<pluginname>/scripts.js`` and ``/<pluginname>/styles.css`` into the angular.js application.
 Additionally, an angular.js module with the name ``<pluginname>`` will be registered as a dependency of the main ``app`` module.
 The ``scripts.js`` file may register some new states to ``$stateProvider`` or add new menu items via ``glMenuProvider`` for example.
 
-The plugin writers may add more REST apis to ``/<pluginname>/api``.
+The plugin writers may add more REST APIs to ``/<pluginname>/api``.
 For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint.
 The plugins are not restricted to Twisted, and could even `load a wsgi application using flask, django, or some other framework <https://twistedmatrix.com/documents/current/web/howto/web-in-60/wsgi.html>`_.
 
-Please look into the official BuildBot www plugins for examples.
+Check out the official BuildBot www plugins for examples.
 The :src:`www/grid_view` and :src:`www/badges` are good examples of plugins with and without a JavaScript UI respectively.
 
 .. _Routing:
@@ -104,12 +104,12 @@ The :src:`www/grid_view` and :src:`www/badges` are good examples of plugins with
 Routing
 ~~~~~~~
 
-AngularJS uses router to match URL and choose which page to display.
+AngularJS uses a router to match URLs and choose which page to display.
 The router we use is ``ui.router``.
 Menu is managed by guanlecoja-ui's glMenuProvider.
-Please look at ``ui.router``, and guanlecoja-ui documentation for details.
+Please look at ``ui.router`` and guanlecoja-ui documentation for details.
 
-Typically, a route registration will look like following example.
+Typically, a route registration will look like following example:
 
 .. code-block:: javascript
 
@@ -175,14 +175,15 @@ We don't run the front-end testsuite inside the python 'trial' test suite, becau
 
 Karma needs a browser to run the unit test in.
 It supports all the major browsers.
-Given our current experience, we did not see any bugs yet that would only happen on a particular browser this is the reason that at the moment, only the "Chrome" is used for testing.
+Given our current experience, we did not see any bugs yet that would only happen on a particular browser.
+This is the reason why only Chrome is used for testing at the moment.
 
 Debug with karma
 ~~~~~~~~~~~~~~~~
 
 ``console.log`` is available via karma.
 In order to debug the unit tests, you can also use the global variable ``dump``, which dumps any object for inspection in the console.
-This can be handy to be sure that you don't let debug logs in your code to always use ``dump``
+This can be handy to be sure that you don't let debug logs in your code to always use ``dump``.
 
 Testing with real data
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -192,7 +193,7 @@ This allows to make front-end work on realistic data without bothering to reprod
 
 This is implemented as the ``master/buildbot/scripts/devproxy.py`` aiohttp server.
 
-To run it, setup and enable a virtualenv like described in :ref:`PythonDevQuickStart`.
+To run it, set up and enable a virtualenv like the one described in :ref:`PythonDevQuickStart`.
 Then execute the script as follows:
 
 .. code-block:: bash
@@ -202,4 +203,4 @@ Then execute the script as follows:
 There are many options which are documented as usual with ``--help``.
 
 Note that ``dev-proxy`` does not work with most of authentication except basic password.
-You can steal a ``document.cookie`` string from your real Buildbot and then pass to ``dev-proxy`` using the ``--auth_cookie`` option
+You can steal a ``document.cookie`` string from your real Buildbot and then pass to ``dev-proxy`` using the ``--auth_cookie`` option.

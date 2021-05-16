@@ -29,9 +29,7 @@ However, there is a simpler way to use it and it looks like this:
 ``name``
     The name of the Builder, which is used in status reports.
 
-``workername``
-
-``workernames``
+``workername`` ``workernames``
     These arguments specify the worker or workers that will be used by this Builder.
     All worker names must appear in the :bb:cfg:`workers` configuration parameter.
     Each worker can accommodate multiple builders.

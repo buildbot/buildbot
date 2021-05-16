@@ -17,7 +17,7 @@ Buildrequests connector
 
     This class handles the complex process of claiming and unclaiming build
     requests, based on a polling model: callers poll for unclaimed requests with
-    :py:meth:`getBuildRequests`, then attempt to claim the requests with
+    :py:meth:`getBuildRequests`, and then they attempt to claim the requests with
     :py:meth:`claimBuildRequests`.  The claim can fail if another master has claimed
     the request in the interim.
 
@@ -122,7 +122,7 @@ Buildrequests connector
 
     .. py:method:: completeBuildRequests(brids, results[, complete_at=XX])
 
-        :param brids: build request IDs to complete
+        :param brids: build request ids to complete
         :type brids: integer
         :param results: integer result code
         :type results: integer

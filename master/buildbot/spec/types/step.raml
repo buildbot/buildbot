@@ -20,7 +20,7 @@ description: |
             :returns: (stepid, number, name) via Deferred
 
             Create a new step and return its ID, number, and name.
-            Note that the name may be different from the requested name, if that name was already in use.
+            Note that the name may be different from the requested name if that name was already in use.
             The state strings for the new step will be set to 'pending'.
 
         .. py:method:: startStep(stepid)
@@ -59,7 +59,7 @@ properties:
         description: the unique ID of this step
         type: integer
     buildid:
-        description: id of the build containing this step
+        description: ID of the build containing this step
         type: integer
     complete:
         description: true if this step is complete
@@ -85,10 +85,10 @@ properties:
     state_string:
         description: |
             a string giving detail on the state of the build.
-            The first is usually one word or phrase; the remainder are sized for one-line display.
+            The first is usually one word or phrase; the remainder are sized for one-line display
         type: string
     urls[]:
-        description: a list of URLs associated with this step.
+        description: a list of URLs associated with this step
         properties:
             name: string
             url: string

@@ -25,7 +25,7 @@ description: |
             :param unicode repository: the repository in which this change took place
             :param unicode project: the project this change is a part of
             :param unicode src: source of the change (vcs or other)
-            :returns: the ID of the new change, via Deferred
+            :returns: The ID of the new change, via Deferred
 
             Add a new change to Buildbot.
             This method is the interface between change sources and the rest of Buildbot.
@@ -55,8 +55,7 @@ properties:
         description: codebase in this repository
         type: string
     comments:
-        description: |
-            user comments for this change (aka commit)
+        description: user comments for this change (aka commit)
         type: string
     files[]:
         description: list of source-code filenames changed
@@ -64,7 +63,7 @@ properties:
     parent_changeids[]:
         description: |
             The ID of the parents.
-            The data api allow for several parents, but the core buildbot does not yet support
+            The data api allows for several parents, but the core Buildbot does not yet support it
         type: integer
     project:
         description: user-defined project to which this change corresponds

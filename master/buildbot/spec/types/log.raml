@@ -1,5 +1,5 @@
 #%RAML 1.0 DataType
-displayName: Logs
+displayName: log
 description: |
     A log represents a stream of textual output from a step.
     The actual output is encoded as a sequence of :bb:rtype:`logchunk` resources.
@@ -80,7 +80,7 @@ properties:
         description: id of the step containing this log
         type: integer
     type:
-        description: log type, identified by a single ASCII letter; see :bb:rtype:`logchunk` for details.
+        description: log type, identified by a single ASCII letter; see :bb:rtype:`logchunk` for details
         type: identifier
 type: object
 example:

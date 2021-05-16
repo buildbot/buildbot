@@ -14,8 +14,7 @@ Buildsets connector
 
     .. index:: bsdict, bsid
 
-    Buildsets are indexed by *bsid* and their contents represented as *bsdicts*
-    (buildset dictionaries), with keys
+    Buildsets are indexed by *bsid* and their contents are represented as *bsdicts* (buildset dictionaries), with keys
 
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
@@ -40,10 +39,10 @@ Buildsets connector
         :type external_idstring: unicode string
         :param datetime submitted_at: time this buildset was created; defaults to the current time
         :param int parent_buildid: optional build id that is the parent for this buildset
-        :param unicode parent_relationship: relationship identifier for the parent, this is is configured relationship between the parent build, and the childs buildsets
+        :param unicode parent_relationship: relationship identifier for the parent. This is the configured relationship between the parent build and the child buildsets
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
-        Add a new Buildset to the database, along with BuildRequests for each builder, returning the resulting bsid via a Deferred.
+        Add a new buildset to the database, along with build requests for each builder, returning the resulting bsid via a Deferred.
         Arguments should be specified by keyword.
 
         Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to be a sourcestamp ID, or a dictionary of keyword arguments to be passed to :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
@@ -81,7 +80,7 @@ Buildsets connector
         :param complete: if true, return only complete buildsets; if false,
             return only incomplete buildsets; if ``None`` or omitted, return all
             buildsets
-        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+        :param resultSpec: result spec containing filters sorting and paging requests from data/REST API.
             If possible, the db layer can optimize the SQL query using this information.
 
         :returns: list of bsdicts, via Deferred
@@ -91,13 +90,13 @@ Buildsets connector
     .. py:method:: getRecentBuildsets(count=None, branch=None, repository=None,
                            complete=None):
 
-        :param count: maximum number of buildsets to retrieve (required).
+        :param count: maximum number of buildsets to retrieve (required)
         :type count: integer
         :param branch: optional branch name. If specified, only buildsets
-            affecting such branch will be returned.
+            affecting such branch will be returned
         :type branch: string
         :param repository: optional repository name. If specified, only
-            buildsets affecting such repository will be returned.
+            buildsets affecting such repository will be returned
         :type repository: string
         :param complete: if true, return only complete buildsets; if false,
             return only incomplete buildsets; if ``None`` or omitted, return all

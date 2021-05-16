@@ -41,7 +41,7 @@ Hyperlinks are added to the build detail web pages for each triggered build.
     If ``False`` (the default) or not given, then the buildstep succeeds immediately after triggering the schedulers.
 
 ``updateSourceStamp``
-    If ``True`` (the default), then step updates the source stamps given to the :bb:sched:`Triggerable` schedulers to include ``got_revision`` (the revision actually used in this build) as ``revision`` (the revision to use in the triggered builds).
+    If ``True`` (the default), then the step updates the source stamps given to the :bb:sched:`Triggerable` schedulers to include ``got_revision`` (the revision actually used in this build) as ``revision`` (the revision to use in the triggered builds).
     This is useful to ensure that all of the builds use exactly the same source stamps, even if other :class:`Change`\s have occurred while the build was running.
 
     If ``False`` (and neither of the other arguments are specified), then the exact same SourceStamps are used.
@@ -78,7 +78,7 @@ Dynamic Trigger
 +++++++++++++++
 
 Sometimes it is desirable to select which scheduler to trigger, and which properties to set dynamically, at the time of the build.
-For this purpose, Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, ``set_properties`` and optionally ``unimportant``.
+For this purpose, the Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, ``set_properties`` and optionally ``unimportant``.
 
 .. py:method:: getSchedulersAndProperties()
 

@@ -51,7 +51,7 @@ In this mode, authentication proceeds as follows:
 
 * The web browser connects to the proxy, requesting the Buildbot home page
 * The proxy negotiates authentication with the browser, as configured
-* Once the user is authenticated, the proxy forwards the request goes to the Buildbot web service.
+* Once the user is authenticated, the proxy forwards the request and the request goes to the Buildbot web service.
   The request includes a header, typically ``Remote-User``, containing the authenticated username.
 * Buildbot reads the header and optionally connects to another service to fetch additional user information about the user.
 * Buildbot stores all of the collected information in the server-side session.
@@ -64,8 +64,8 @@ Kerberos Example
 
 Kerberos is an authentication system which allows passwordless authentication on corporate networks.
 Users authenticate once on their desktop environment, and the OS, browser, webserver, and corporate directory cooperate in a secure manner to share the authentication to a webserver.
-This mechanism only takes care about the authentication problem, and no user information is shared other than the username.
-The kerberos authentication is supported by a Apache front-end in ``mod_kerberos``.
+This mechanism only takes care of the authentication problem, and no user information is shared other than the username.
+The kerberos authentication is supported by an Apache front-end in ``mod_kerberos``.
 
 Third-Party Authentication
 --------------------------
@@ -75,12 +75,12 @@ Once that is complete, that site redirects the user back to Buildbot, including 
 
 The most common implementation of this sort of authentication is oAuth2.
 Many big internet service companies are providing oAuth2 services to identify their users.
-Most oAuth2 services provide authentication and user information in the same api.
+Most oAuth2 services provide authentication and user information in the same API.
 
 The following process is used for third-party authentication:
 
-* The web browser connects to buildbot ui
-* A session cookie is created, but user is not yet authenticated.
+* The web browser connects to the Buildbot UI
+* A session cookie is created, but the user is not yet authenticated.
   The UI adds a widget entitled ``Login via GitHub`` (or whatever third party is configured)
 * When the user clicks on the widget, the UI fetches ``/auth/login``, which returns a bare URL on ``github.com``.
   The UI loads that URL in the browser, with an effect similar to a redirect.

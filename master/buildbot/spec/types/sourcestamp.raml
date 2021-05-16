@@ -1,11 +1,11 @@
 #%RAML 1.0 DataType
 description: |
 
-    A source stamp represents a particular version of the source code.
+    A sourcestamp represents a particular version of the source code.
     Absolute sourcestamps specify this completely, while relative sourcestamps (with revision = None) specify the latest source at the current time.
     Source stamps can also have patches; such stamps describe the underlying revision with the given patch applied.
 
-    Note that, depending on the underlying version-control system, the same revision may describe different code in different branches (e.g., SVN) or may be independent of the branch (e.g., Git).
+    Note that depending on the underlying version-control system, the same revision may describe different code in different branches (e.g., SVN) or may be independent of the branch (e.g., Git).
 
     The ``created_at`` timestamp can be used to indicate the first time a sourcestamp was seen by Buildbot.
     This provides a reasonable default ordering for sourcestamps when more reliable information is not available.

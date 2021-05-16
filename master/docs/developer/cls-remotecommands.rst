@@ -21,13 +21,13 @@ RemoteCommand
     :type args: dictionary
     :param collectStdout: if True, collect the command's stdout
     :param ignore_updates: true to ignore remote updates
-    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+    :param decodeRC: dictionary associating ``rc`` values to buildstep results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
     :param stdioLogName: name of the log to which to write the command's stdio
 
     This class handles running commands, consisting of a command name and a dictionary of arguments.
     If true, ``ignore_updates`` will suppress any updates sent from the worker.
 
-    This class handles updates for ``stdout``, ``stderr``, and ``header`` by appending them to s stdio logfile named by the ``stdioLogName`` parameter.
+    This class handles updates for ``stdout``, ``stderr``, and ``header`` by appending them to a stdio logfile named by the ``stdioLogName`` parameter.
     Steps that run multiple commands and want to separate those commands' stdio streams can use this parameter.
 
     It handles updates for ``rc`` by recording the value in its ``rc`` attribute.
@@ -62,13 +62,13 @@ RemoteCommand
 
         :returns: results constant
 
-        This method checks the ``rc`` against the decodeRC dictionary, and returns results constant
+        This method checks the ``rc`` against the decodeRC dictionary, and returns a results constant.
 
     .. py:method:: didFail()
 
         :returns: bool
 
-        This method returns True if the results() function returns FAILURE
+        This method returns True if the results() function returns FAILURE.
 
     The following methods are invoked from the worker.
     They should not be called directly.
@@ -124,10 +124,10 @@ RemoteCommand
 
     .. py:method:: useLog(log, closeWhenFinished=False, logfileName=None)
 
-        :param log: the :class:`~buildbot.process.log.Log` instance to add to.
-        :param closeWhenFinished: if true, call :meth:`~buildbot.process.log.Log.finish` when the command is finished.
+        :param log: the :class:`~buildbot.process.log.Log` instance to add to
+        :param closeWhenFinished: if true, call :meth:`~buildbot.process.log.Log.finish` when the command is finished
         :param logfileName: the name of the logfile, as given to the worker.
-                            This is ``stdio`` for standard streams.
+                            This is ``stdio`` for standard streams
 
         Route log-related updates to the given logfile.
         Note that ``stdio`` is not included by default, and must be added explicitly.
@@ -136,9 +136,9 @@ RemoteCommand
     .. py:method:: useLogDelayed(logfileName, activateCallback, closeWhenFinished=False)
 
         :param logfileName: the name of the logfile, as given to the worker.
-                            This is ``stdio`` for standard streams.
+                            This is ``stdio`` for standard streams
         :param activateCallback: callback for when the log is added; see below
-        :param closeWhenFinished: if true, call :meth:`~buildbot.process.log.Log.finish` when the command is finished.
+        :param closeWhenFinished: if true, call :meth:`~buildbot.process.log.Log.finish` when the command is finished
 
         Similar to :meth:`useLog`, but the logfile is only actually added when an update arrives for it.
         The callback, ``activateCallback``, will be called with the :class:`~buildbot.process.remotecommand.RemoteCommand` instance when the first update for the log is delivered.
@@ -178,33 +178,33 @@ RemoteCommand
 
 .. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False, collectStderr=False, interruptSignal=None, initialStdin=None, decodeRC=None, stdioLogName='stdio')
 
-    :param workdir: directory in which command should be executed, relative to the builder's basedir.
+    :param workdir: directory in which the command should be executed, relative to the builder's basedir
     :param command: shell command to run
     :type command: string or list
-    :param want_stdout: If false, then no updates will be sent for stdout.
-    :param want_stderr: If false, then no updates will be sent for stderr.
-    :param timeout: Maximum time without output before the command is killed.
-    :param maxTime: Maximum overall time from the start before the command is killed.
+    :param want_stdout: If false, then no updates will be sent for stdout
+    :param want_stderr: If false, then no updates will be sent for stderr
+    :param timeout: Maximum time without output before the command is killed
+    :param maxTime: Maximum overall time from the start before the command is killed
     :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interruptSignal`` or SIGKILL if it's not defined.
-                        If None, SIGTERM will not be fired.
-    :param env: A dictionary of environment variables to augment or replace the existing environment on the worker.
-    :param logfiles: Additional logfiles to request from the worker.
-    :param usePTY: True to use a PTY, false to not use a PTY; the default value is False.
-    :param logEnviron: If false, do not log the environment on the worker.
-    :param collectStdout: If True, collect the command's stdout.
-    :param collectStderr: If True, collect the command's stderr.
+                        If None, SIGTERM will not be fired
+    :param env: A dictionary of environment variables to augment or replace the existing environment on the worker
+    :param logfiles: Additional logfiles to request from the worker
+    :param usePTY: True to use a PTY, false to not use a PTY; the default value is False
+    :param logEnviron: If false, do not log the environment on the worker
+    :param collectStdout: If True, collect the command's stdout
+    :param collectStderr: If True, collect the command's stderr
     :param interruptSignal: The signal to send to interrupt the command, e.g. ``KILL`` or ``TERM``.
-                            If None, SIGKILL is used.
-    :param initialStdin: The input to supply the command via stdin.
-    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+                            If None, SIGKILL is used
+    :param initialStdin: The input to supply the command via stdin
+    :param decodeRC: dictionary associating ``rc`` values to buildstep results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
     :param stdioLogName: name of the log to which to write the command's stdio
 
     Most of the constructor arguments are sent directly to the worker; see :ref:`shell-command-args` for the details of the formats.
     The ``collectStdout``, ``decodeRC`` and ``stdioLogName`` parameters are as described for the parent class.
 
-    If shell command contains passwords, they can be hidden from log files by using :doc:`../manual/secretsmanagement`.
-    This is the recommended procedure for new-style build steps. For legacy build steps password were hidden from the
-    log file by passing them as tuple in command argument.
+    If a shell command contains passwords, they can be hidden from log files by using :doc:`../manual/secretsmanagement`.
+    This is the recommended procedure for new-style build steps. For legacy build steps passwords were hidden from the
+    log file by passing them as tuples in command arguments.
     Eg. ``['print', ('obfuscated', 'password', 'dummytext')]`` is logged as ``['print', 'dummytext']``.
 
     This class is used by the :bb:step:`ShellCommand` step, and by steps that run multiple customized shell commands.

@@ -7,7 +7,7 @@ Changes connector
 
 .. py:class:: ChangesConnectorComponent
 
-    This class handles changes in the buildbot database, including pulling
+    This class handles changes in the Buildbot database, including pulling
     information from the changes sub-tables.
 
     An instance of this class is available at ``master.db.changes``.
@@ -51,7 +51,7 @@ Changes connector
         :param codebase:
         :type codebase: unicode string
 
-        return the last changeID which matches the repository/project/codebase
+        :returns: the last changeID that matches the branch, repository, project, or codebase
 
     .. py:method:: addChange(author=None, committer=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
 
@@ -81,7 +81,7 @@ Changes connector
         :type revlink: unicode string
         :param properties: properties to set on this change, where values are
             tuples of (value, source).  At the moment, the source must be
-            ``'Change'``, although this may be relaxed in later versions.
+            ``'Change'``, although this may be relaxed in later versions
         :type properties: dictionary
         :param repository: the repository in which this change took place
         :type repository: unicode string
@@ -117,28 +117,26 @@ Changes connector
 
     .. py:method:: getChanges(resultSpec=None)
 
-        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+        :param resultSpec: result spec containing filters sorting and paging requests from data/REST API.
             If possible, the db layer can optimize the SQL query using this information.
         :returns: list of dictionaries via Deferred
 
         Get a list of the changes, represented as dictionaries, matching the given
         criteria. if ``resultSpec`` is not provided, changes are sorted, and paged
-        using generic data query options;
+        using generic data query options.
 
     .. py:method:: getChangesCount()
 
         :returns: list of dictionaries via Deferred
 
-        Get the number changes, that the query option would return if no
-        paging option where set
+        Get the number of changes that the query option would return if no paging option was set.
 
 
     .. py:method:: getLatestChangeid()
 
         :returns: changeid via Deferred
 
-        Get the most-recently-assigned changeid, or ``None`` if there are no
-        changes at all.
+        Get the most-recently-assigned changeid, or ``None`` if there are no changes at all.
 
 
     .. py:method:: getChangesForBuild(buildid)
@@ -153,11 +151,11 @@ Changes connector
         :param changeid: ID of the change
         :returns: list of buildDict via Deferred
 
-        Get builds related to a change
+        Get builds related to a change.
 
     .. py:method:: getChangeFromSSid(sourcestampid)
 
         :param sourcestampid: ID of the sourcestampid
         :returns: chdict via Deferred
 
-        returns the change dictionary related to the sourcestamp ID.
+        Returns the change dictionary related to the sourcestamp ID.

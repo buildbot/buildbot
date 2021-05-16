@@ -653,8 +653,8 @@ Factory Workdir Functions
 
 .. note::
 
-    While factory workdir function is still supported, it is better to just use the fact that workdir is a :index:`renderables <renderable>` attribute of every step.
-    A Renderable has access to much more contextual information, and also can return a deferred.
+    While the factory workdir function is still supported, it is better to just use the fact that workdir is a :index:`renderable <renderable>` attribute of a step.
+    A Renderable has access to much more contextual information and can also return a deferred.
     So you could say ``build_factory.workdir = util.Interpolate("%(src:repository)s`` to achieve similar goal.
 
 It is sometimes helpful to have a build's workdir determined at runtime based on the parameters of the build.
@@ -830,7 +830,7 @@ Updating Status Strings
 
 Each step can summarize its current status in a very short string.
 For example, a compile step might display the file being compiled.
-This information can be helpful users eager to see their build finish.
+This information can be helpful to users eager to see their build finish.
 
 Similarly, a build has a set of short strings collected from its steps summarizing the overall state of the build.
 Useful information here might include the number of tests run, but probably not the results of a ``make clean`` step.
@@ -987,7 +987,7 @@ The full version is in :src:`master/buildbot/steps/python_twisted.py`.
 This parser only pays attention to stdout, since that's where trial writes the progress lines.
 It has a mode flag named ``finished`` to ignore everything after the ``====`` marker, and a scary-looking regular expression to match each line while hopefully ignoring other messages that might get displayed as the test runs.
 
-Each time it identifies a test has been completed, it increments its counter and delivers the new progress value to the step with ``self.step.setProgress``.
+Each time it identifies that a test has been completed, it increments its counter and delivers the new progress value to the step with ``self.step.setProgress``.
 This helps Buildbot to determine the ETA for the step.
 
 To connect this parser into the :bb:step:`Trial` build step, ``Trial.__init__`` ends with the following clause:

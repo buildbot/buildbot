@@ -60,7 +60,7 @@ LogObservers
 
         :param unicode line: received line, without newline
 
-        Similar to :py:meth:`~LogLineObserver.outLineReceived`, but for header output..
+        Similar to :py:meth:`~LogLineObserver.outLineReceived`, but for header output.
 
     .. py:method:: finishReceived()
 
@@ -84,7 +84,7 @@ LogObservers
 
     Each ``yield`` expression evaluates to a tuple of (stream, line), where the stream is one of 'o', 'e', or 'h' for stdout, stderr, and header, respectively.
     As with any generator function, the ``yield`` expression will raise a ``GeneratorExit`` exception when the generator is complete.
-    To do something after the log is finished, just catch this exception (but then re-raise it or return) ::
+    To do something after the log is finished, just catch this exception (but then re-raise it or return). ::
 
         def logConsumer(self):
             while True:

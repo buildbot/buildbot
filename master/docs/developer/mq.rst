@@ -85,17 +85,17 @@ For a filter to match a routing key, it must have the same length, and each elem
 
         :param tuple filter: filter for routing keys of interest
         :param function check_callback: a callback which check if the event has already happened
-        :returns: a Deferred that fires when the event has been received, and contain tuple (routing_key, value) representing the event
+        :returns: a Deferred that fires when the event has been received and contains a (routing_key, value) tuple representing the event
 
-        This method is a helper which returns a defer that fire when a certain event has occurred.
+        This method is a helper which returns a deferred that fires when a certain event has occurred.
         This is useful for waiting the end of a build or disconnection of a worker.
         You shall make sure when using this method that this event will happen in the future, and take care of race conditions.
-        For that caller must provide a check_callback which will check of the event has already occurred.
+        For this reason, the caller must provide a check_callback that will check if the event has already occurred.
         The whole race-condition-free process is:
 
         * Register to event
         * Check if it has already happened
-        * If not wait for the event
+        * If not, wait for the event
         * Unregister from event
 
 .. py:class:: QueueRef
@@ -137,9 +137,9 @@ Wamp
 .. py:class:: WampMQ
 
     The :py:class:`WampMQ` class implements message-queueing using a wamp router.
-    This class translates the semantics of the buildbot mq api to the semantics of the wamp messaging system.
-    The message route is translated to a wamp topic by joining with dot and prefixing with buildbot namespace.
-    Example message that is sent via wamp is:
+    This class translates the semantics of the Buildbot MQ API to the semantics of the wamp messaging system.
+    The message route is translated to a wamp topic by joining with dot and prefixing with the Buildbot namespace.
+    Here is an example message that is sent via wamp:
 
     .. code-block:: python
 
@@ -162,11 +162,11 @@ Wamp
 
 .. py:class:: WampConnector
 
-    The :py:class:`WampConnector` class implements a buildbot service for wamp.
-    It is managed outside of the mq module as this protocol can also be reused for worker protocol.
-    The connector support queuing of requests until the wamp connection is created, but do not support disconnection and reconnection.
+    The :py:class:`WampConnector` class implements a Buildbot service for wamp.
+    It is managed outside of the mq module as this protocol can also be reused as a worker protocol.
+    The connector supports queueing of requests until the wamp connection is created but does not support disconnection and reconnection.
     Reconnection will be supported as part of a next release of AutobahnPython (https://github.com/crossbario/autobahn-python/issues/295).
-    There is a chicken and egg problem at the buildbot initialization phases, so the produce messages are actually not sent with deferred.
+    There is a chicken and egg problem at the Buildbot initialization phases, so the produce messages are actually not sent with deferred.
 
 .. _queue-schema:
 
@@ -183,7 +183,7 @@ Message Schema
 --------------
 
 This section describes the general structure messages.
-The specific routing keys and content of each message are described in the relevant sub-section of :ref:`Data_API`.
+The specific routing keys and content of each message are described in the relevant sub-sections of :ref:`Data_API`.
 
 Routing Keys
 ~~~~~~~~~~~~

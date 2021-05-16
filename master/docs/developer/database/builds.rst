@@ -52,19 +52,19 @@ Builds connector
         :param list ssBuild: the list of sourcestamps for the current build number
         :returns: None or a build dictionary
 
-        Returns the last successful build from the current build number with the same repository/repository/codebase
+        Returns the last successful build from the current build number with the same repository, branch, or codebase.
 
     .. py:method:: getBuilds(builderid=None, buildrequestid=None, complete=None, resultSpec=None)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: buildrequest to get builds for
         :param boolean complete: if not None, filters results based on completeness
-        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+        :param resultSpec: result spec containing filters sorting and paging requests from data/REST API.
             If possible, the db layer can optimize the SQL query using this information.
         :returns: list of build dictionaries as above, via Deferred
 
         Get a list of builds, in the format described above.
-        Each of the parameters limit the resulting set of builds.
+        Each of the parameters limits the resulting set of builds.
 
     .. py:method:: addBuild(builderid, buildrequestid, workerid, masterid, state_string)
 

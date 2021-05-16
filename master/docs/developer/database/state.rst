@@ -7,8 +7,8 @@ State connector
 
 .. py:class:: StateConnectorComponent
 
-    This class handles maintaining arbitrary key/value state for Buildbot
-    objects.  Each object can store arbitrary key/value pairs, where the values
+    This class handles maintaining arbitrary key-value state for Buildbot
+    objects.  Each object can store arbitrary key-value pairs, where the values
     are any JSON-encodable value.  Each pair can be set and retrieved
     atomically.
 
@@ -34,8 +34,8 @@ State connector
         :param class_name: object class name
         :returns: the objectid, via a Deferred.
 
-        Get the object ID for this combination of a name and a class.  This
-        will add a row to the 'objects' table if none exists already.
+        Get the object ID for this combination of name and class.
+        This will add a row to the 'objects' table if none exists already.
 
     .. py:method:: getState(objectid, name[, default])
 
@@ -70,8 +70,8 @@ State connector
         :param returns: Deferred
         :raises: TypeError if JSONification fails
 
-        Atomically creates the state value for ``name`` for the object with id ``objectid``,
+        Atomically creates the state value for ``name`` for the object with id ``objectid``.
         If there is an existing value, returns that instead.
         This implementation ensures the state is created only once for the whole cluster.
 
-    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environment)
+    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that is intended to run in synchronous code, (e.g master.cfg environment).

@@ -384,6 +384,7 @@ htpasswd
 http
 https
 Hyperlinks
+IConfigurator
 ie
 img
 implementers
@@ -457,6 +458,7 @@ kwargs
 latin
 ldap
 lexically
+lexicographically
 libaprutil
 libvirt
 Libvirt

@@ -665,8 +665,9 @@ class ForceScheduler(base.BaseScheduler):
 
         @param codebases: the codebases for a build
         @type codebases: list of string's or CodebaseParameter's;
-                         None will generate a default, but [] will
-                         remove all codebases
+                         None will generate a default, but
+                         CodebaseParameter(codebase='', hide=True)
+                         will remove all codebases
 
         @param properties: extra properties to configure the build
         @type properties: list of BaseParameter's

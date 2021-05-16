@@ -8,11 +8,11 @@ WorkerRegistration
 
 .. py:class:: WorkerRegistration(master, worker)
 
-    Represents single Worker registration
+    Represents single worker registration.
 
     .. py:method:: unregister()
 
-        Remove registration for `worker`
+        Remove registration for `worker`.
 
     .. py:method:: update(worker_config, global_config)
 
@@ -23,15 +23,14 @@ WorkerRegistration
 
         Update the registration in case the port or password has changed.
 
-        NOTE: You should invoke this method after calling
-        `WorkerManager.register(worker)`
+        .. note:: You should invoke this method after calling `WorkerManager.register(worker)`.
 
 WorkerManager
 -------------
 
 .. py:class:: WorkerManager(master)
 
-    Handle Worker registrations for multiple protocols
+    Handle worker registrations for multiple protocols.
 
     .. py:method:: register(worker)
 
@@ -39,8 +38,6 @@ WorkerManager
         :type worker: :class:`~buildbot.worker.Worker`
         :returns: :class:`~buildbot.worker.manager.WorkerRegistration`
 
-        Creates :class:`~buildbot.worker.manager.WorkerRegistration`
-        instance.
+        Creates :class:`~buildbot.worker.manager.WorkerRegistration` instance.
 
-        NOTE: You should invoke `.update()` on returned WorkerRegistration
-        instance
+        .. note:: You should invoke `.update()` on returned WorkerRegistration instance.
