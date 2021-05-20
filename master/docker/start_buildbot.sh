@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # startup script for purely stateless master
 
 # we download the config from an arbitrary curl accessible tar.gz file (which github can generate for us)
+
+export PATH="/buildbot_venv/bin:$PATH"
 
 B=$(pwd)
 
@@ -43,7 +45,7 @@ fi
 # copy the default buildbot.tac if not provided by the config
 if [ ! -f "$B/buildbot.tac" ]
 then
-    cp /usr/src/buildbot/docker/buildbot.tac "$B"
+    cp /usr/src/buildbot/buildbot.tac "$B"
 fi
 # Fixed buildbot master not start error in docker
 rm -f "$B/twistd.pid"

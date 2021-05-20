@@ -2,6 +2,15 @@
 set -e
 set -v
 cd `dirname $0`
+
+YARN=$(which yarnpkg || which yarn)
+if [ $?  -ne 0 ]; then
+    echo "Neither yarnpkg nor yarn is available"
+    exit 1
+fi
+
+echo "Using ${YARN} as yarn"
+
 function finish {
     # uncomment for debug in kube
     # for i in `seq 1000`
@@ -30,7 +39,7 @@ cat workdir/twistd.log &
 if [ -f /usr/bin/protractor ]; then
     PROTRACTOR=/usr/bin/protractor
 else
-    yarn install --pure-lockfile
+    ${YARN} install --pure-lockfile
     ../common/smokedist-download-compatible-chromedriver.py \
         ./node_modules/protractor/bin/webdriver-manager \
             google-chrome \
@@ -43,7 +52,7 @@ if [ -f /usr/bin/xvfb-run ] && [[ ! -n "$SMOKES_DONT_USE_XVFB" ]] ; then
     xvfb-run --server-args="-screen 0 1024x768x24" $PROTRACTOR protractor-headless.conf.js
 else
     # manual mode: install locally
-    yarn install
+    ${YARN} install
     ../common/smokedist-download-compatible-chromedriver.py \
         ./node_modules/protractor/bin/webdriver-manager \
             google-chrome \

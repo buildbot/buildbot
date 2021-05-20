@@ -1,0 +1,2 @@
+The docker container for the master now fully builds the www packages.
+Previously they were downloaded from pypi which resulted in downloading whatever version was newest at the time (:issue:`4998`).
