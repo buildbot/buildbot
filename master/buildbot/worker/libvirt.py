@@ -18,11 +18,11 @@ import os
 import socket
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util import runprocess
 from buildbot.util.queue import ConnectableThreadQueue
 from buildbot.warnings import warn_deprecated
 from buildbot.worker import AbstractLatentWorker
@@ -184,22 +184,17 @@ class LibVirtWorker(AbstractLatentWorker):
             return
 
         if self.cheap_copy:
-            clone_cmd = "qemu-img"
-            clone_args = "create -b %(base)s -f qcow2 %(image)s"
+            clone_cmd = ['qemu-img', 'create', '-b', self.base_image, '-f', 'qcow2', self.image]
         else:
-            clone_cmd = "cp"
-            clone_args = "%(base)s %(image)s"
+            clone_cmd = ['cp', self.base_image, self.image]
 
-        clone_args = clone_args % {
-            "base": self.base_image,
-            "image": self.image,
-        }
-
-        log.msg("Cloning base image: {} {}'".format(clone_cmd, clone_args))
+        log.msg("Cloning base image: {}'".format(clone_cmd))
 
         try:
-            rc = yield utils.getProcessValue(clone_cmd, clone_args.split())
-            log.msg("Cloning exit code was: {}".format(rc))
+            rc = yield runprocess.run_process(self.master.reactor, clone_cmd, collect_stdout=False,
+                                              collect_stderr=False)
+            if rc != 0:
+                raise LatentWorkerFailedToSubstantiate('Failed to clone image (rc={})'.format(rc))
         except Exception as e:
             log.err("Cloning failed: {}".format(e))
             raise

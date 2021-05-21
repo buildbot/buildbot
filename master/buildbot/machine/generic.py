@@ -17,7 +17,6 @@ import os
 import stat
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.python import log
 from zope.interface import implementer
 
@@ -26,6 +25,7 @@ from buildbot.interfaces import IMachineAction
 from buildbot.machine.latent import AbstractLatentMachine
 from buildbot.util import misc
 from buildbot.util import private_tempdir
+from buildbot.util import runprocess
 from buildbot.util.git import getSshArgsForKeys
 from buildbot.util.git import getSshKnownHostsContents
 
@@ -56,13 +56,11 @@ class GenericLatentMachine(AbstractLatentMachine):
 
 
 @defer.inlineCallbacks
-def runProcessLogFailures(bin, args, expectedCode=0):
-    stdout, stderr, code = yield utils.getProcessOutputAndValue(bin, args)
+def runProcessLogFailures(reactor, args, expectedCode=0):
+    code, stdout, stderr = yield runprocess.run_process(reactor, args)
     if code != expectedCode:
-        log.err(('Got unexpected return code when running {} {}: '
-                 'code: {}, stdout: {}, stderr: {}').format(bin, args,
-                                                            code, stdout,
-                                                            stderr))
+        log.err(('Got unexpected return code when running {}: '
+                 'code: {}, stdout: {}, stderr: {}').format(args, code, stdout, stderr))
         return False
     return True
 
@@ -76,7 +74,7 @@ class _LocalMachineActionMixin:
     @defer.inlineCallbacks
     def perform(self, manager):
         args = yield manager.renderSecrets(self._command)
-        return (yield runProcessLogFailures(args[0], args[1:]))
+        return (yield runProcessLogFailures(manager.master.reactor, args))
 
 
 class _SshActionMixin:
@@ -100,7 +98,7 @@ class _SshActionMixin:
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
-        return (yield runProcessLogFailures(self._sshBin, args))
+        return (yield runProcessLogFailures(manager.master.reactor, [self._sshBin] + args))
 
     @defer.inlineCallbacks
     def _prepareSshKeys(self, manager, temp_dir_path):

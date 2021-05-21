@@ -14,25 +14,33 @@
 # Copyright Buildbot Team Members
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest import mock
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 from buildbot.secrets.providers.passwordstore import SecretInPass
+from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import MasterRunProcessMixin
 
 
-class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
+class TestSecretInPass(MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixin,
+                       unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        with patch.object(Path, "is_file", return_value=True):
+        self.setUpTestReactor()
+        self.setup_master_run_process()
+        self.master = fakemaster.make_master(self)
+        with mock.patch.object(Path, "is_file", return_value=True):
             self.tmp_dir = self.create_temp_dir("temp")
             self.srvpass = SecretInPass("password", self.tmp_dir)
-            yield self.srvpass.startService()
+            yield self.srvpass.setServiceParent(self.master)
+            yield self.master.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -51,19 +59,19 @@ class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_config_binary_error_secret_in_pass_service(self):
         expected_error_msg = "pass does not exist in PATH"
-        with patch.object(Path, "is_file", return_value=False):
+        with mock.patch.object(Path, "is_file", return_value=False):
             with self.assertRaisesConfigError(expected_error_msg):
                 self.srvpass.checkConfig("password", "temp")
 
     def test_check_config_directory_error_secret_in_pass_service(self):
         expected_error_msg = "directory temp2 does not exist"
-        with patch.object(Path, "is_file", return_value=True):
+        with mock.patch.object(Path, "is_file", return_value=True):
             with self.assertRaisesConfigError(expected_error_msg):
                 self.srvpass.checkConfig("password", "temp2")
 
     @defer.inlineCallbacks
     def test_reconfig_secret_in_a_file_service(self):
-        with patch.object(Path, "is_file", return_value=True):
+        with mock.patch.object(Path, "is_file", return_value=True):
             otherdir = self.create_temp_dir("temp2")
             yield self.srvpass.reconfigService("password2", otherdir)
         self.assertEqual(self.srvpass.name, "SecretInPass")
@@ -73,30 +81,58 @@ class TestSecretInPass(ConfigErrorsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass(self):
-        with patch.object(utils, "getProcessOutput", return_value=b"value"):
-            value = yield self.srvpass.get("secret")
+        self.expect_commands(
+            ExpectMaster(['pass', 'secret'])
+            .stdout(b'value')
+        )
+
+        value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value")
+
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_unix(self):
-        with patch.object(utils, "getProcessOutput", return_value=b"value1\nvalue2\nvalue3"):
-            value = yield self.srvpass.get("secret")
+        self.expect_commands(
+            ExpectMaster(['pass', 'secret'])
+            .stdout(b"value1\nvalue2\nvalue3")
+        )
+
+        value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value1")
+
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_darwin(self):
-        with patch.object(utils, "getProcessOutput", return_value=b"value1\rvalue2\rvalue3"):
-            value = yield self.srvpass.get("secret")
+        self.expect_commands(
+            ExpectMaster(['pass', 'secret'])
+            .stdout(b"value1\rvalue2\rvalue3")
+        )
+
+        value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value1")
+
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_multiple_lines_windows(self):
-        with patch.object(utils, "getProcessOutput", return_value=b"value1\r\nvalue2\r\nvalue3"):
-            value = yield self.srvpass.get("secret")
+        self.expect_commands(
+            ExpectMaster(['pass', 'secret'])
+            .stdout(b"value1\r\nvalue2\r\nvalue3")
+        )
+
+        value = yield self.srvpass.get("secret")
         self.assertEqual(value, "value1")
+
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_not_found(self):
-        with patch.object(utils, "getProcessOutput", side_effect=IOError()):
-            value = yield self.srvpass.get("secret")
+        self.expect_commands(
+            ExpectMaster(['pass', 'secret'])
+            .stderr(b"Not found")
+        )
+
+        value = yield self.srvpass.get("secret")
         self.assertEqual(value, None)
