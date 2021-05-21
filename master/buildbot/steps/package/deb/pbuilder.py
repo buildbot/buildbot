@@ -80,9 +80,7 @@ class DebPbuilder(WarningCountingShellCommand):
         if mirror:
             self.mirror = mirror
         if othermirror:
-            if type(othermirror) is list:
-                othermirror = "|".join(othermirror)
-            self.othermirror = othermirror
+            self.othermirror = "|".join(othermirror)
         if extrapackages:
             self.extrapackages = extrapackages
         if keyring:

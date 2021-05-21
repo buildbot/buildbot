@@ -269,7 +269,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_othermirror(self):
-        self.setupStep(pbuilder.DebPbuilder(othermirror='http://apt:9999/debian'))
+        self.setupStep(pbuilder.DebPbuilder(othermirror=['http://apt:9999/debian']))
         self.expectCommands(
             Expect(
                 'stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
