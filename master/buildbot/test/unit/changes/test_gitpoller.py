@@ -80,12 +80,12 @@ class TestGitPoller(TestGitPollerBase):
         try:
             yield methodToTest(self.dummyRevStr)
             if emptyRaisesException:
-                self.fail("getProcessOutput should have failed on empty output")
+                self.fail("run_process should have failed on empty output")
         except Exception as e:
             if not emptyRaisesException:
                 import traceback
                 traceback.print_exc()
-                self.fail("getProcessOutput should NOT have failed on empty output: " + repr(e))
+                self.fail("run_process should NOT have failed on empty output: " + repr(e))
 
         self.assert_all_commands_ran()
 
@@ -98,7 +98,7 @@ class TestGitPoller(TestGitPollerBase):
 
         try:
             yield methodToTest(self.dummyRevStr)
-            self.fail("getProcessOutput should have failed on stderr output")
+            self.fail("run_process should have failed on stderr output")
         except Exception:
             pass
 
@@ -1297,8 +1297,6 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
         self.add_run_process_expect_env({'ENVVAR': 'TRUE'})
 
-        # patch out getProcessOutput and getProcessOutputAndValue for the
-        # benefit of the _get_changes method
         self.expect_commands(
             ExpectMaster(['git', '--version'])
             .stdout(b'git version 1.7.5\n'),
