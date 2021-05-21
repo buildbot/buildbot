@@ -20,12 +20,14 @@ from parameterized import parameterized
 import mock
 
 from twisted.internet import defer
-from twisted.internet import utils
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.test.fake import libvirt as libvirtfake
+from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.runprocess import ExpectMaster
+from buildbot.test.util.runprocess import MasterRunProcessMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 from buildbot.worker import libvirt as libvirtworker
@@ -62,8 +64,10 @@ class TestException(Exception):
     pass
 
 
-class TestLibVirtWorker(unittest.TestCase):
+class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCase):
     def setUp(self):
+        self.setUpTestReactor()
+        self.setup_master_run_process()
         self.connections = {}
         self.patch(libvirtworker, "libvirt", libvirtfake)
         self.threadpool = TestServerThreadPool(self)
@@ -79,7 +83,11 @@ class TestLibVirtWorker(unittest.TestCase):
         return conn
 
     def create_worker(self, *args, **kwargs):
-        return TestLibvirtWorker(self, *args, **kwargs)
+        worker = TestLibvirtWorker(self, *args, **kwargs)
+        worker.parent = mock.Mock()
+        worker.parent.master = mock.Mock()
+        worker.parent.master.reactor = self.reactor
+        return worker
 
     def raise_libvirt_error(self):
         # Helper method to be used from lambdas as they don't accept statements
@@ -114,35 +122,47 @@ class TestLibVirtWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_prepare_base_image_none(self):
-        self.patch(utils, "getProcessValue", mock.Mock())
-        utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
-
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image=None)
         yield bs._prepare_base_image()
 
-        self.assertEqual(utils.getProcessValue.call_count, 0)
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_prepare_base_image_cheap(self):
-        self.patch(utils, "getProcessValue", mock.Mock())
-        utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
+        self.expect_commands(
+            ExpectMaster(["qemu-img", "create", "-b", "o", "-f", "qcow2", "p"])
+        )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
         yield bs._prepare_base_image()
 
-        utils.getProcessValue.assert_called_with("qemu-img",
-                                                 ["create", "-b", "o", "-f", "qcow2", "p"])
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_prepare_base_image_full(self):
-        self.patch(utils, "getProcessValue", mock.Mock())
-        utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
+        self.expect_commands(
+            ExpectMaster(["cp", "o", "p"])
+        )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
         bs.cheap_copy = False
         yield bs._prepare_base_image()
 
-        utils.getProcessValue.assert_called_with("cp", ["o", "p"])
+        self.assert_all_commands_ran()
+
+    @defer.inlineCallbacks
+    def test_prepare_base_image_fail(self):
+        self.expect_commands(
+            ExpectMaster(["cp", "o", "p"])
+            .exit(1)
+        )
+
+        bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
+        bs.cheap_copy = False
+        with self.assertRaises(LatentWorkerFailedToSubstantiate):
+            yield bs._prepare_base_image()
+
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def _test_stop_instance(self, graceful, fast, expected_destroy,
@@ -163,6 +183,8 @@ class TestLibVirtWorker(unittest.TestCase):
         self.assertEqual(int(expected_destroy), domain.destroy.call_count)
         self.assertEqual(int(expected_shutdown), domain.shutdown.call_count)
         remove_mock.assert_called_once_with('p')
+
+        self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_stop_instance_destroy(self):
