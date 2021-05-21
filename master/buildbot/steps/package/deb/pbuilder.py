@@ -49,6 +49,7 @@ class DebPbuilder(WarningCountingShellCommand):
     basetgz = None
     _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.tgz"
     mirror = "http://cdn.debian.net/debian/"
+    othermirror = ""
     extrapackages = []
     keyring = None
     components = None
@@ -57,14 +58,15 @@ class DebPbuilder(WarningCountingShellCommand):
     pbuilder = '/usr/sbin/pbuilder'
     baseOption = '--basetgz'
 
-    renderables = ['architecture', 'distribution', 'basetgz', 'mirror', 'extrapackages', 'keyring',
-                   'components']
+    renderables = ['architecture', 'distribution', 'basetgz', 'mirror', 'othermirror',
+            'extrapackages', 'keyring', 'components']
 
     def __init__(self,
                  architecture=None,
                  distribution=None,
                  basetgz=None,
                  mirror=None,
+                 othermirror=None,
                  extrapackages=None,
                  keyring=None,
                  components=None,
@@ -77,6 +79,10 @@ class DebPbuilder(WarningCountingShellCommand):
             self.distribution = distribution
         if mirror:
             self.mirror = mirror
+        if othermirror:
+            if type(othermirror) is list:
+                othermirror = "|".join(othermirror)
+            self.othermirror = othermirror
         if extrapackages:
             self.extrapackages = extrapackages
         if keyring:
@@ -132,6 +138,8 @@ class DebPbuilder(WarningCountingShellCommand):
             command = ['sudo', self.pbuilder, '--create', self.baseOption,
                        self.basetgz, '--distribution', self.distribution,
                        '--mirror', self.mirror]
+            if self.othermirror:
+                command += ['--othermirror', self.othermirror]
             if self.architecture:
                 command += ['--architecture', self.architecture]
             if self.extrapackages:
