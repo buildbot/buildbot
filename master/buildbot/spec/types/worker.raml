@@ -24,14 +24,14 @@ properties:
         description: the name of the worker
         type: string
     paused:
-        description: the worker is paused if it is connected but doesn't accept new builds.
+        description: the worker is paused if it is connected but doesn't accept new builds
         type: bool
     graceful:
-        description: the worker is graceful if it doesn't accept new builds, and will shutdown when builds are finished.
+        description: the worker is graceful if it doesn't accept new builds, and will shutdown when builds are finished
         type: bool
     workerinfo:
         description: |
-            information about the worker.
+            information about the worker
 
             The worker information can be any JSON-able object.
             In practice, it contains the following keys, based on information provided by the worker:

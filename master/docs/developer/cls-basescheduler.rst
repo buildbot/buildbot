@@ -56,7 +56,7 @@ BaseScheduler
         :type fileIsImportant: callable
         :param change_filter: a filter to determine which changes are even considered by this scheduler, or ``None`` to consider all changes
         :type change_filter: :py:class:`buildbot.changes.filter.ChangeFilter` instance
-        :param onlyImportant: If True, only important changes, as specified by fileIsImportant, will be added to the buildset.
+        :param onlyImportant: If True, only important changes, as specified by fileIsImportant, will be added to the buildset
         :type onlyImportant: boolean
         :return: Deferred
 
@@ -88,7 +88,7 @@ BaseScheduler
         :param boolean waited_for: if true, this buildset is being waited for (and thus should continue during a clean shutdown)
         :param string reason: reason for the build set
         :param string external_idstring: external identifier for the buildset
-        :param properties: properties - in addition to those in the scheduler configuration - to include in the buildset
+        :param properties: properties to include in the buildset, in addition to those in the scheduler configuration
         :type properties: :py:class:`~buildbot.process.properties.Properties` instance
         :param list builderNames: a list of builders for the buildset, or None to use the scheduler's configured ``builderNames``
         :returns: (buildset ID, buildrequest IDs) via Deferred
@@ -105,7 +105,7 @@ BaseScheduler
         :param string reason: reason for the build set
         :param list sourcestamps: partial list of source stamps to build
         :param boolean waited_for: if true, this buildset is being waited for (and thus should continue during a clean shutdown)
-        :param dict properties: properties - in addition to those in the scheduler configuration - to include in the buildset
+        :param dict properties: properties to include in the buildset, in addition to those in the scheduler configuration
         :type properties: :py:class:`~buildbot.process.properties.Properties` instance
         :param list builderNames: a list of builders for the buildset, or None to use the scheduler's configured ``builderNames``
         :returns: (buildset ID, buildrequest IDs) via Deferred, as for :py:meth:`addBuildsetForSourceStamps`
@@ -124,7 +124,7 @@ BaseScheduler
         :param string external_idstring: external identifier for the buildset
         :param list changeids: changes from which to construct the buildset
         :param list builderNames: a list of builders for the buildset, or None to use the scheduler's configured ``builderNames``
-        :param dict properties: properties - in addition to those in the scheduler configuration - to include in the buildset
+        :param dict properties: properties to include in the buildset, in addition to those in the scheduler configuration
         :type properties: :py:class:`~buildbot.process.properties.Properties` instance
         :returns: (buildset ID, buildrequest IDs) via Deferred, as for :py:meth:`addBuildsetForSourceStamps`
 

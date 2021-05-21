@@ -3,12 +3,12 @@ Development Quick-start
 =======================
 
 Buildbot is a python based application.
-It tries very hard to follow the python best practices, and to make it easy to dive into the code.
+It tries very hard to follow the python best practices and make it easy to dive into the code.
 
-In order to develop Buildbot you need just a python environment and possibly some native packages in stripped-down setups.
+In order to develop on Buildbot you need just a python environment and possibly some native packages in stripped-down setups.
 The most up to date list is in the docker file we use to manage our CI (MetaBBotDockerFile_).
 
-If you are completely new to python, the best is to first follow the tutorials that would come when you type "python virtualenv for dummies" in your favorite search engine.
+If you are completely new to python, it's best to first follow the tutorials you get when you type "python virtualenv for dummies" in your favorite search engine.
 
 .. _MetaBBotDockerFile: https://github.com/buildbot/metabbotcfg/blob/nine/docker/metaworker/Dockerfile
 
@@ -19,8 +19,8 @@ Create a Buildbot Python Environment
 
 Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_ to run its test suite.
 Windows users also need GNU make on their machines.
-The easiest way is to install it via choco package manager ``choco install make``.
-But WSL or MSYS2 is even a better option, because of integrated bash.
+The easiest way is to install it via the choco package manager, ``choco install make``.
+But WSL or MSYS2 is an even better option because of the integrated bash.
 
 Following is a quick shell session to put you on the right track, including running the test suite.
 
@@ -35,11 +35,10 @@ Following is a quick shell session to put you on the right track, including runn
     # other parts of the system
     make virtualenv
 
-    # Activate the virtualenv.
-    # After this you should see (.venv) in your shell prompt
+    # activate the virtualenv (you should now see (.venv) in your shell prompt)
     . .venv/bin/activate
 
-    # now we run the test suite
+    # now run the test suite
     trial buildbot
 
     # using all CPU cores within the system helps to speed everything up
@@ -51,10 +50,11 @@ Following is a quick shell session to put you on the right track, including runn
     # run only one test module
     trial buildbot.test.unit.test_reporters_mail
 
-    # you can also skip the virtualenv activation using make
+    # you can also skip the virtualenv activation and
+    # run the test suite in one step with make
     make trial
 
-    # and pass options using TRIALOPTS
+    # you can pass options to make using TRIALOPTS
     make trial TRIALOPTS='-j16 buildbot'
 
     # or test with a specific Python version
@@ -79,7 +79,7 @@ Prerequisites
 
   http://nodejs.org/ is a good start for Windows and OSX.
 
-  For modern Linux distributions you can often simply install distribution-provided node version, if it's recent enough.
+  For modern Linux distributions, you can often just install the distribution-provided node version if it's recent enough.
   You can use yarn from the same source.
   The below method has been tested on Ubuntu 18.04 and should work on recent enough Debian.
 
@@ -94,25 +94,24 @@ Prerequisites
 Hacking the Buildbot JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To effectively develop Buildbot JavaScript, you'll need a running Buildmaster, configured to operate out of the source directory.
+To effectively develop Buildbot JavaScript, you'll need a running Buildmaster configured to operate out of the source directory.
 
-Follow :ref:`PythonDevQuickStart` as a prerequisite.
+As a prerequisite, follow :ref:`PythonDevQuickStart`.
+With that, you should have created and enabled a virtualenv Python environment.
 
-This should have created and enabled virtualenv Python environment.
-
-Next, install the Buildbot-WWW and Buildbot python packages using ``--editable`` mode, which means that they should execute from the source directory.
+Next, you need to install the ``buildbot`` and ``buildbot-www`` python packages in ``--editable`` mode, which means their source directories will be directly used.
 
 .. code-block:: none
 
     make frontend
 
-This will fetch a number of python dependencies from pypi, the Python package repository and also a number of node.js dependencies that are used for building the web application.
+This will fetch a number of python dependencies from pypi, the Python package repository, and also a number of node.js dependencies that are used for building the web application.
 Then the actual frontend code will be built with artifacts stored in the source directory, e.g. ``www/base/buildbot_www/static``.
 Finally, the built python packages will be installed to virtualenv environment as ``--editable`` packages.
 This means that the webserver will load resources from ``www/base/buildbot_www/static``.
 
-Now you'll need to create a master instance.
-For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
+Now you need to create a master instance.
+For more details, see the Buildbot :ref:`first-run-label` tutorial.
 
 .. code-block:: none
 
@@ -121,11 +120,10 @@ For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
     mv test-master/master.cfg.sample test-master/master.cfg
     buildbot start test-master
 
-If all goes well, the master will start up and begin running in the background.
-During ``make frontend`` the www frontend was built using production mode, so everything is minified and hard to debug.
+If all goes well, the master will start up and run in the background.
+During ``make frontend``, the www frontend was built using production mode, so everything is minified and hard to debug.
 However, the frontend was installed as an editable python package, so all changes in the artifacts (e.g. ``www/base/buildbot_www/static``) in the source directories will be observed in the browser.
-Thus we can rebuild the JavaScript resources manually using development settings, so they are not minified and easier to debug.
-
+Thus, we can manually rebuild the JavaScript resources using development settings, so they are not minified and easier to debug.
 This can be done by running the following in e.g. ``www/base`` directory:
 
 .. code-block:: none

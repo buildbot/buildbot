@@ -1,22 +1,21 @@
 #%RAML 1.0 DataType
-displayName: Build
+displayName: build
 description: |
     This resource type describes completed and in-progress builds.
     Much of the contextual data for a build is associated with the build request, and through it the buildset.
 
-    .. note:: *properties*
+    .. note::
 
-        This properties dict is only filled out if the `properties filterspec` is set.
+        The properties field of a build is only filled out if the `properties filterspec` is set.
+        That means the ``property`` filter allows one to request properties through the Builds DATA API like so:
 
-        Meaning that, `property filter` allows one to request the Builds DATA API like so:
-
-            * api/v2/builds?property=propKey1&property=propKey2 (returns Build's properties which match given keys)
-            * api/v2/builds?property=* (returns all Build's properties)
-            * api/v2/builds?propKey1&property=propKey2&limit=30 (filters combination)
+            * api/v2/builds?property=* (returns all properties)
+            * api/v2/builds?property=propKey1&property=propKey2 (returns the properties that match the given keys)
+            * api/v2/builds?property=propKey1&property=propKey2&limit=30 (filters combination)
 
         .. important::
 
-            When combined with ``field`` filter, to get properties, one should ensure **properties** ``field`` is set.
+            When combined with the ``field`` filter, for someone to get the build properties, they should ensure the **properties** field is set:
 
             * api/v2/builds?field=buildid&field=properties&property=workername&property=user
 
@@ -30,9 +29,9 @@ description: |
 
         .. py:method:: newBuild(builderid, buildrequestid, workerid)
 
-            :param integer builderid: builder performing this build
-            :param integer buildrequstid: build request being built
-            :param integer workerid: worker on which this build is performed
+            :param integer builderid: id of the builder performing this build
+            :param integer buildrequestid: id of the build request being built
+            :param integer workerid: id of the worker on which this build is performed
             :returns: (buildid, number) via Deferred
 
             Create a new build resource and return its ID.
@@ -76,7 +75,7 @@ properties:
         type: date
     complete:
         description: |
-            true if this build is complete
+            true if this build is complete.
             Note that this is a calculated field (from complete_at != None).
             Ordering by this field is not optimized by the database layer.
         type: boolean
@@ -94,7 +93,7 @@ properties:
         type: string
 type: object
 example:
-    'builderid': 10
+    builderid: 10
     buildid: 100
     buildrequestid: 13
     workerid: 20

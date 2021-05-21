@@ -55,5 +55,5 @@ Masters connector
 
         :returns: None via Deferred
 
-        This method is intended to be call by upgrade-master, and will effectively force housekeeping on all masters at next startup.
+        This method is intended to be called by upgrade-master, and will effectively force housekeeping on all masters at next startup.
         This method is not intended to be called outside of housekeeping scripts.

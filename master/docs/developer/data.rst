@@ -3,32 +3,32 @@
 Data API
 ========
 
-The data API is an interface against which various internal and external components can be written against.
-It is a lower-level interface compared to the REST API and exposes more functionality.
+The data API is an interface against which various internal and external components can be written.
+It is a lower-level interface compared to the REST API that exposes more functionality.
 It combines access to stored state and messages, ensuring consistency between them.
-The callers can receive a dump of current state plus changes to that state, without missing or duplicating messages.
+The callers can receive a dump of the current state plus changes to that state, without missing or duplicating messages.
 
 Sections
 --------
 
-The data api is divided into four sections:
+The data API is divided into four sections:
 
-* getters - fetching data from the db API, and
-* subscriptions - subscribing to messages from the mq layer;
-* control - allows state to be changed in specific ways by sending appropriate messages (e.g., stopping a build); and
+* getters - fetching data from the db API
+* subscriptions - subscribing to messages from the mq layer
+* control - allows state to be changed in specific ways by sending appropriate messages (e.g., stopping a build)
 * updates - direct updates to state appropriate messages.
 
 The getters and subscriptions are exposed everywhere.
-Access to the control section should be authenticated at higher levels, as the data layer does no authentication.
+Access to the control section must be authenticated at higher levels as the data layer does no authentication.
 The updates section is for use only by the process layer.
 
-The interfaces for all sections but the updates sections are intended to be language-agnostic.
+The interfaces for all sections, but the updates section, are intended to be language-agnostic.
 That is, they should be callable from JavaScript via HTTP, or via some other interface added to Buildbot after the fact.
 
-Getter
-++++++
+Getters
++++++++
 
-The getter section can get either a single resource, or a list of resources.
+The getters section can get either a single resource, or a list of resources.
 Getting a single resource requires a resource identifier (a tuple of strings) and a set of options to support automatic expansion of links to other resources (thus saving round-trips).
 Lists are requested with a partial resource identifier (a tuple of strings) and an optional set of filter options.
 In some cases, certain filters are implicit in the path, e.g., the list of buildsteps for a particular build.
@@ -36,18 +36,19 @@ In some cases, certain filters are implicit in the path, e.g., the list of build
 Subscriptions
 +++++++++++++
 
-Message subscriptions can be made to anything that can be listed or gotten from the getter sections, using the same resource identifiers.
-Options and explicit filters are not supported - a message contains only the most basic information about a resource, and a list subscription results in a message for every new resource of the desired type.
+Message subscriptions can be made to anything that can be listed or gotten from the getters section, using the same resource identifiers.
+Options and explicit filters are not supported here.
+A message contains only the most basic information about a resource and a list of subscription results for every new resource of the desired type.
 Implicit filters are supported.
 
 Control
 +++++++
 
-The control sections defines a set of actions that cause Buildbot to behave in a certain way, e.g., rebuilding a build or shutting down a worker.
+The control section defines a set of actions that cause Buildbot to behave in a certain way, e.g., rebuilding a build or shutting down a worker.
 Actions correspond to a particular resource, although sometimes that resource is the root resource (an empty tuple).
 
 Updates
--------
++++++++
 
 The updates section defines a free-form set of methods that Buildbot's process implementation calls to update data.
 Most update methods both modify state via the db API and send a message via the mq API.
@@ -62,20 +63,20 @@ Python Interface
 
 .. py:module:: buildbot.data.connector
 
-Within the buildmaster process, the root of the data API is available at `self.master.data`, which is a :py:class:`DataConnector` instance.
+Within the buildmaster process, the root of the data API is available at ``self.master.data``, which is a :py:class:`DataConnector` instance.
 
 .. py:class:: DataConnector
 
     This class implements the root of the data API.
-    Within the buildmaster process, the data connector is available at `self.master.data`.
-    The first three sections are implemented with the :py:meth:`get` and :py:meth:`control` methods, respectively, while the updates section is implemented using the :py:attr:`updates` attribute.
-    The ``path`` arguments to these methods should always be tuples.
+    Within the buildmaster process, the data connector is available at ``self.master.data``.
+    The first three sections are implemented through the :py:meth:`get` and :py:meth:`control` methods, while the updates section is implemented using the :py:attr:`updates` attribute.
+    The ``path`` argument to these methods should always be a tuple.
     Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
 
-    .. py:method:: get(path, filters=None, fields=None, order=None, limit=None, offset=None):
+    .. py:method:: get(path, filters=None, fields=None, order=None, limit=None, offset=None)
 
         :param tuple path: A tuple of path elements representing the API path to fetch.
-            Numbers can be passed as strings or integers.
+            Numbers can be passed as strings or integers
         :param filters: result spec filters
         :param fields: result spec fields
         :param order: result spec order
@@ -84,13 +85,31 @@ Within the buildmaster process, the root of the data API is available at `self.m
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
-        This method implements the getter section.
+        This method implements the getters section.
         Depending on the path, it will return a single resource or a list of resources.
         If a single resource is not specified, it returns ``None``.
 
-        The ``filters``, ``fields``, ``order``, ``limit``, and ``offset`` are passed to the :py:class:`~buildbot.data.resultspec.ResultSpec` constructor.
+        The ``filters``, ``fields``, ``order``, ``limit``, and ``offset`` are passed to the :py:class:`~buildbot.data.resultspec.ResultSpec`, which will then be forwarded to the endpoint.
 
         The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None.
+
+        For example, the following will query the buildrequests endpoint, filter for all non-completed buildrequests that were submitted after 1/5/2021, and return the buildrequest and buildset ids for the last 2 buildrequests in the collection:
+
+        .. code-block:: python
+
+            from datetime import datetime
+            from buildbot.data.resultspec import Filter
+            submitted_at = datetime(2021, 5, 1).timestamp()
+            buildrequests = yield self.master.data.get(
+                ("buildrequests",),
+                filters=[
+                    Filter("submitted_at", "gt", [submitted_at]),
+                    Filter("complete", "eq", [False]),
+                ],
+                fields=["buildrequestid", "buildsetid"],
+                order=("-buildrequestid",),
+                limit=2
+            )
 
     .. py:method:: getEndpoint(path)
 
@@ -100,7 +119,7 @@ Within the buildmaster process, the root of the data API is available at `self.m
         :returns: tuple of endpoint and a dictionary of keyword arguments from the path
 
         Get the endpoint responsible for the given path, along with any arguments extracted from the path.
-        This can be used by callers that need access to information from the endpoint beyond that returned from ``get``.
+        This can be used by callers that need access to information from the endpoint beyond that returned by ``get``.
 
     .. py:method:: produceEvent(rtype, msg, event)
 
@@ -110,7 +129,7 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         This method implements the production of an event, for the rtype identified by its name string.
         Usually, this is the role of the data layer to produce the events inside the update methods.
-        For the potential use cases where it would make sense to solely produce an event, and not update data, please use this API, rather than directly call mq.
+        For the potential use cases where it would make sense to solely produce an event, and not update data, please use this API, rather than directly calling mq.
         It ensures the event is sent to all the routingkeys specified by eventPathPatterns.
 
     .. py:method:: control(action, args, path)
@@ -123,7 +142,18 @@ Within the buildmaster process, the root of the data API is available at `self.m
         :returns: a resource or list via Deferred, or None
 
         This method implements the control section.
-        Depending on the path, it may return a new created resource.
+        Depending on the path, it may return a newly created resource.
+
+        For example, the following will cancel a buildrequest (and the associated build, if one has already started):
+
+        .. code-block:: python
+
+            buildrequestid = 10
+            yield self.master.data.control(
+                "cancel",
+                {"reason": "User requested cancellation"},
+                ("buildrequests", buildrequestid),
+            )
 
     .. py:method:: allEndpoints()
 
@@ -134,14 +164,14 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
     .. py:attribute:: rtypes
 
-        This object has an attribute named for each resource type, named after the singular form (e.g., `self.master.data.builder`).
+        This object has an attribute for each resource type, named after the singular form (e.g., `self.master.data.builder`).
         These attributes allow resource types to access one another for purposes of coordination.
         They are *not* intended for external access -- all external access to the data API should be via the methods above or update methods.
 
 Updates
 .......
 
-The updates section is available at `self.master.data.updates`, and contains a number of ad-hoc methods needed by the process modules.
+The updates section is available at ``self.master.data.updates``, and contains a number of ad-hoc methods needed by the process modules.
 
 .. note::
     The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
@@ -192,7 +222,7 @@ Adding Resource Types
 +++++++++++++++++++++
 
 You'll need to use both plural and singular forms of the resource type; in this example, we'll use 'pub' and 'pubs'.
-You can also follow an existing file, like :src:`master/buildbot/data/changes.py`, to see when to use which form.
+You can also examine an existing file, like :src:`master/buildbot/data/changes.py`, to see when to use which form.
 
 In ``master/buildbot/data/pubs.py``, create a subclass of :py:class:`ResourceType`::
 
@@ -243,7 +273,7 @@ In ``master/buildbot/data/pubs.py``, create a subclass of :py:class:`ResourceTyp
 
         In the example above, a call to ``produceEvent({'pubid': 10, 'name': 'Winchester'}, 'opened')`` would result in a message with routing key ``('pub', '10', 'opened')``.
 
-        Several paths can be specified in order to be consistent with rest endpoints.
+        Several paths can be specified in order to be consistent with REST endpoints.
 
     .. py:attribute:: entityType
 
@@ -320,9 +350,9 @@ See that module's description for details.
 
         :type: boolean
 
-        If true, then this endpoint returns raw resource.
+        If true, then this endpoint returns a raw resource.
 
-        Raw resources are used to get the data not encoded in JSON via the rest API.
+        Raw resources are used to get the data not encoded in JSON via the REST API.
         In the REST principles, this should be done via another endpoint, and not via a query parameter.
         The get() method from endpoint should return following data structure::
 
@@ -387,10 +417,10 @@ Adding Update Methods
 +++++++++++++++++++++
 
 Update methods are for use by the Buildbot process code, and as such are generally designed to suit the needs of that code.
-They generally encapsulate logic common to multiple users (e.g., creating buildsets), and finish by performing modifications in the database and sending a corresponding message.
+They generally encapsulate logic common to multiple users (e.g., creating buildsets), and they finish by performing modifications in the database and sending a corresponding message.
 In general, Buildbot does not depend on timing of either the database or message broker, so the order in which these operations are initiated is not important.
 
-Update methods are considered part of Buildbot's user-visible interface, and as such incompatible changes should be avoided wherever possible.
+Update methods are considered part of Buildbot's user-visible interface, and as such, incompatible changes should be avoided wherever possible.
 Instead, either add a new method (and potentially re-implement existing methods in terms of the new method) or add new, optional parameters to an existing method.
 If an incompatible change is unavoidable, it should be described clearly in the release notes.
 
@@ -430,7 +460,7 @@ The module provides a number of type classes for basic and compound types.
 Each resource type class defines its entity type in its :py:attr:`~buildbot.data.base.ResourceType.entityType` class attribute.
 Other resource types may refer to this class attribute if they embed an entity of that type.
 
-The types are used both for tests, and by the REST interface to properly decode user-supplied query parameters.
+The types are used both for tests and by the REST interface to properly decode user-supplied query parameters.
 
 Basic Types
 ...........
@@ -540,16 +570,16 @@ Entity Type
 Data Model
 ----------
 
-The data api enforces a strong and well-defined model on Buildbot's data.
+The data API enforces a strong and well-defined model on Buildbot's data.
 This model is influenced by REST, in the sense that it defines resources, representations for resources, and identifiers for resources.
-For each resource type, the API specifies
+For each resource type, the API specifies:
 
-* the attributes of the resource and their types (e.g., changes have a string specifying their project);
-* the format of links to other resources (e.g., buildsets to sourcestamp sets);
-* the paths relating to the resource type;
-* the format of routing keys for messages relating to the resource type;
-* the events that can occur on that resource (e.g., a buildrequest can be claimed); and
-* options and filters for getting resources.
+* the attributes of the resource and their types (e.g., changes have a string specifying their project)
+* the format of links to other resources (e.g., buildsets to sourcestamp sets)
+* the paths relating to the resource type
+* the format of routing keys for messages relating to the resource type
+* the events that can occur on that resource (e.g., a buildrequest can be claimed)
+* options and filters for getting resources
 
 Some resource type attributes only appear in certain formats, as noted in the documentation for the resource types.
 In general, messages do not include any optional attributes, nor links.

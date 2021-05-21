@@ -26,8 +26,8 @@ Implementing A Scheduler
 A scheduler is a subclass of :py:class:`~buildbot.schedulers.base.BaseScheduler`.
 
 The constructor's arguments form the scheduler's configuration.
-The first two arguments are ``name`` and ``builderNames``, and are positional.
-The remaining arguments are keyword arguments, and the subclass's constructor should accept ``**kwargs`` to pass on to the parent class along with the positional arguments. ::
+The first two arguments, ``name`` and ``builderNames``, are positional.
+The remaining arguments are keyword arguments, and the subclass's constructor should accept ``**kwargs`` to pass them to the parent class, along with the positional arguments. ::
 
     class MyScheduler(base.BaseScheduler):
         def __init__(self, name, builderNames, arg1=None, arg2=None, **kwargs):
@@ -52,7 +52,7 @@ Adding Buildsets
 ----------------
 
 To add a new buildset, subclasses should call one of the parent-class methods with the prefix ``addBuildsetFor``.
-These methods call :py:meth:`~buildbot.db.buildsets.BuildsetConnector.addBuildset` after applying behaviors common to all schedulers
+These methods call :py:meth:`~buildbot.db.buildsets.BuildsetConnector.addBuildset` after applying behaviors common to all schedulers.
 
 Any of these methods can be called at any time.
 
@@ -85,7 +85,7 @@ Keeping State
 -------------
 
 The :py:class:`~buildbot.schedulers.base.BaseScheduler` class provides :py:meth:`~buildbot.schedulers.base.BaseScheduler.getState` and :py:meth:`~buildbot.schedulers.base.BaseScheduler.setState` methods to get and set state values for the scheduler.
-Active scheduler instances should use these functions to store persistent scheduler state, such that if they fail or become inactive, other instances can pick up where they leave off.
+Active scheduler instances should use these functions to store persistent scheduler state, such that if they fail or become inactive, other instances can pick up where they left off.
 A scheduler can cache its state locally, only calling ``getState`` when it first becomes active.
 However, it is best to keep the state as up-to-date as possible, by calling ``setState`` any time the state changes.
 This prevents loss of state from an unexpected master failure.

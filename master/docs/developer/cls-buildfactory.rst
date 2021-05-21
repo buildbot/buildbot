@@ -34,7 +34,7 @@ In addition, each :class:`Step` produces its own results, may create logfiles, e
 However only the flags described above have any effect on the build as a whole.
 
 The pre-defined :class:`BuildStep`\s like :class:`CVS` and :class:`Compile` have reasonably appropriate flags set on them already.
-For example, without a source tree there is no point in continuing the build, so the :class:`CVS` class has the :attr:`haltOnFailure` flag set to ``True``.
+For example, without a source tree there is no point in continuing a build, so the :class:`CVS` class has the :attr:`haltOnFailure` flag set to ``True``.
 Look in :file:`buildbot/steps/*.py` to see how the other :class:`Step`\s are marked.
 
 Each :class:`Step` is created with an additional ``workdir`` argument that indicates where its actions should take place.

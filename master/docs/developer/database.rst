@@ -3,7 +3,7 @@
 Database
 ========
 
-BuildBot stores most of its state in a database.
+Buildbot stores most of its state in a database.
 This section describes the database connector classes, which allow other parts of Buildbot to access the database.
 It also describes how to modify the database schema and the connector classes themselves.
 
@@ -21,7 +21,7 @@ called from any other component.  Given a master ``master``, the root of the
 database connectors is available at ``master.db``, so, for example, the state
 connector's ``getState`` method is ``master.db.state.getState``.
 
-The connectors all use `SQLAlchemy Core
+All the connectors use `SQLAlchemy Core
 <http://www.sqlalchemy.org/docs/index.html>`_ to achieve (almost)
 database-independent operation.  Note that the SQLAlchemy ORM is not used in
 Buildbot.  Database queries are carried out in threads, and report their
@@ -59,8 +59,8 @@ database layer.
 
 .. warning::
 
-    It's difficult to change the database schema significantly after it has
-    been released, and very disruptive to users to change the database API.
+    It's difficult to change the database schema, especially after it has been released.
+    Changing the database API is disruptive to users.
     Consider very carefully the future-proofing of any changes here!
 
 The DB Connector and Components
@@ -72,7 +72,7 @@ The DB Connector and Components
 
     The root of the database connectors, ``master.db``, is a
     :class:`~buildbot.db.connector.DBConnector` instance.  Its main purpose is
-    to hold reference to each of the connector components, but it also handles
+    to hold a reference to each of the connector components, but it also handles
     timed cleanup tasks.
 
     If you are adding a new connector component, import its module and create
@@ -97,7 +97,7 @@ The DB Connector and Components
     .. py:method:: checkLength(col, value)
 
         For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table column from the model.
-        Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite)
+        Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite).
 
     .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True)
 
@@ -111,8 +111,8 @@ The DB Connector and Components
 
     .. py:method:: doBatch(batch, batch_n=500)
 
-        returns an Iterator that batches stuff in order to not push to many thing in a single request.
-        Especially sqlite has 999 limit on argument it can take in a requests.
+        returns an Iterator that batches stuff in order to not push to many things in a single request.
+        Especially sqlite has 999 limit that it can take in a request.
 
 Direct Database Access
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -122,7 +122,7 @@ Direct Database Access
 The connectors all use `SQLAlchemy Core
 <http://www.sqlalchemy.org/docs/index.html>`_ as a wrapper around database
 client drivers.  Unfortunately, SQLAlchemy is a synchronous library, so some
-extra work is required to use it in an asynchronous context like Buildbot.
+extra work is required to use it in an asynchronous context, like in Buildbot.
 This is accomplished by deferring all database operations to threads, and
 returning a Deferred.  The :class:`~buildbot.db.pool.Pool` class takes care of
 the details.
@@ -143,7 +143,7 @@ taking one argument, a :class:`Connection
 ``self.db.pool.do``, passing the ``thd`` function.  This function is called in
 a thread, and can make blocking calls to SQLAlchemy as desired.  The ``do``
 method will return a Deferred that will fire with the return value of ``thd``,
-or with a failure representing any exceptions raised by ``thd``.
+or with a failure representing any exception raised by ``thd``.
 
 The return value of ``thd`` must not be an SQLAlchemy object - in particular,
 any :class:`ResultProxy <sqlalchemy:sqlalchemy.engine.base.ResultProxy>`
@@ -167,10 +167,10 @@ object, ``conn``.
     If in where clauses you need to select rows where a value is NULL,
     you need to write (`tbl.c.value == None`). This form is forbidden by pep8
     which requires the use of `is None` instead of `== None`. As sqlalchemy is using operator
-    overloading to implement pythonic SQL statements, and `is` operator is not overloadable,
-    we need to keep the `==` operators. In order to solve this issue, buildbot
+    overloading to implement pythonic SQL statements, and the `is` operator is not overloadable,
+    we need to keep the `==` operators. In order to solve this issue, Buildbot
     uses `buildbot.db.NULL` constant, which is `None`.
-    So instead of writing `tbl.c.value == None`, please write `tbl.c.value == NULL`)
+    So instead of writing `tbl.c.value == None`, please write `tbl.c.value == NULL`).
 
 
 .. py:class:: DBThreadPool
@@ -210,13 +210,10 @@ handled through the model.
 
 .. py:class:: Model
 
-    This class contains the canonical description of the buildbot schema, It is
-    presented in the form of SQLAlchemy :class:`Table
-    <sqlalchemy:sqlalchemy.schema.Table>` instances, as class variables.  At
-    runtime, the model is available at ``master.db.model``, so for example the
-    ``buildrequests`` table can be referred to as
-    ``master.db.model.buildrequests``, and columns are available in its ``c``
-    attribute.
+    This class contains the canonical description of the Buildbot schema.
+    It is represented in the form of SQLAlchemy :class:`Table <sqlalchemy:sqlalchemy.schema.Table>` instances, as class variables.
+    At runtime, the model is available at ``master.db.model``.
+    So, for example, the ``buildrequests`` table can be referred to as ``master.db.model.buildrequests``, and columns are available in its ``c`` attribute.
 
     The source file, :src:`master/buildbot/db/model.py`, contains comments describing each table; that information is not replicated in this documentation.
 
@@ -318,7 +315,7 @@ a migrated version of an empty database.
 The schema is tracked by a version number, stored in the ``migrate_version``
 table.  This number is incremented for each change to the schema, and used to
 determine whether the database must be upgraded.  The master will refuse to run
-with an out-of-date database.
+with an outdated database.
 
 To make a change to the schema, first consider how to handle any existing data.
 When adding new columns, this may not be necessary, but table refactorings can
@@ -346,7 +343,7 @@ Postgres, add them to ``implied_indexes`` in
 
 Foreign key checking
 --------------------
-PostgreSQL and SQlite db backends are checking the foreign keys consistency.
+PostgreSQL and SQlite db backends check the foreign keys consistency.
 :bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
 
 To maintain consistency with real db, fakedb can check the foreign key consistency of your test data. For this, just enable it with::
@@ -414,7 +411,7 @@ Referential Integrity in SQLite and MySQL
 .. index:: single: MySQL; limitations
 
 Neither MySQL nor SQLite enforce referential integrity based on foreign keys.
-Postgres does enforce, however.  If possible, test your changes on Postgres
+Postgres does enforce it, however.  If possible, test your changes on Postgres
 before committing, to check that tables are added and removed in the proper
 order.
 
@@ -453,7 +450,7 @@ You can use the method :py:meth:`doBatch` in order to write batching code in a c
 Testing migrations with real databases
 --------------------------------------
 
-By default Buildbot test suite uses SQLite database for testings database
+By default Buildbot test suite uses SQLite database for testing database
 migrations.
 To use other database set ``BUILDBOT_TEST_DB_URL`` environment variable to
 value in `SQLAlchemy database URL specification
@@ -476,10 +473,10 @@ To run tests with PostgreSQL:
 
 .. code-block:: bash
 
-   # Install psycopg.
+   # Install psycopg
    pip install psycopg2
-   # Start container with PostgreSQL 9.5.
-   # It will listen on port 15432 on localhost.
+   # Start container with PostgreSQL 9.5
+   # It will listen on port 15432 on localhost
    sudo docker run --name bb-test-postgres -e POSTGRES_PASSWORD=password \
        -p 127.0.0.1:15432:5432 -d postgres:9.5
    # Start interesting tests
@@ -492,8 +489,8 @@ To run tests with MySQL:
 
    # Install mysqlclient
    pip install mysqlclient
-   # Start container with MySQL 5.5.
-   # It will listen on port 13306 on localhost.
+   # Start container with MySQL 5.5
+   # It will listen on port 13306 on localhost
    sudo docker run --name bb-test-mysql -e MYSQL_ROOT_PASSWORD=password \
        -p 127.0.0.1:13306:3306 -d mysql:5.5
    # Start interesting tests

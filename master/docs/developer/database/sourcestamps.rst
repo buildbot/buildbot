@@ -8,16 +8,18 @@ Source stamps connector
 .. py:class:: SourceStampsConnectorComponent
 
     This class manages source stamps, as stored in the database.
-    A source stamp uniquely identifies a particular version a single codebase.
+    A source stamp uniquely identifies a particular version of a single codebase.
     Source stamps are identified by their ID.
     It is safe to use sourcestamp ID equality as a proxy for source stamp equality.
     For example, all builds of a particular version of a codebase will share the same sourcestamp ID.
     This equality does not extend to patches: two sourcestamps generated with exactly the same patch will have different IDs.
 
     Relative source stamps have a ``revision`` of None, meaning "whatever the latest is when this sourcestamp is interpreted".
-    While such source stamps may correspond to a wide array of revisions over the lifetime of a buildbot install, they will only ever have one ID.
+    While such source stamps may correspond to a wide array of revisions over the lifetime of a Buildbot installation, they will only ever have one ID.
 
     An instance of this class is available at ``master.db.sourcestamps``.
+
+    Sourcestamps are represented by dictionaries with the following keys:
 
     .. index:: ssid, ssdict
 
@@ -38,10 +40,7 @@ Source stamps connector
 
     Note that the patch body is a bytestring, not a unicode string.
 
-    .. py:method:: findSourceStampId(branch=None, revision=Node,
-                        repository=None, project=None, patch_body=None,
-                        patch_level=None, patch_author=None, patch_comment=None,
-                        patch_subdir=None):
+    .. py:method:: findSourceStampId(branch=None, revision=Node, repository=None, project=None, patch_body=None, patch_level=None, patch_author=None, patch_comment=None, patch_subdir=None)
 
         :param branch:
         :type branch: unicode string or None

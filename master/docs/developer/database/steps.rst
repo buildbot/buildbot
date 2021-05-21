@@ -8,13 +8,13 @@ Steps connector
 .. py:class:: StepsConnectorComponent
 
     This class handles the steps performed within the context of a build.
-    Within a build, each step has a unique name and a unique, 0-based number.
+    Within a build, each step has a unique name and a unique 0-based number.
 
     An instance of this class is available at ``master.db.steps``.
 
     .. index:: stepdict, stepid
 
-    Builds are indexed by *stepid* and their contents represented as *stepdicts* (step dictionaries), with the following keys:
+    Builds are indexed by *stepid* and their contents are represented as *stepdicts* (step dictionaries), with the following keys:
 
     * ``id`` (the step ID, globally unique)
     * ``number`` (the step number, unique only within the build)
@@ -37,18 +37,18 @@ Steps connector
         :returns: stepdict via Deferred
 
         Get a single step.
-        The step can be specified by
+        The step can be specified by:
 
-            * ``stepid`` alone;
-            * ``buildid`` and ``number``, the step number within that build; or
-            * ``buildid`` and ``name``, the unique step name within that build.
+            * ``stepid`` alone
+            * ``buildid`` and ``number``, the step number within that build
+            * ``buildid`` and ``name``, the unique step name within that build
 
     .. py:method:: getSteps(buildid)
 
         :param integer buildid: the build from which to get the step
         :returns: list of stepdicts, sorted by number, via Deferred
 
-        Get all steps in the given build, in order by number.
+        Get all steps in the given build, ordered by number.
 
     .. py:method:: addStep(self, buildid, name, state_string)
 

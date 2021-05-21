@@ -3,7 +3,7 @@
 IProperties
 ===========
 
-.. class:: buildbot.interfaces.IProperties::
+.. class:: buildbot.interfaces.IProperties
 
    Providers of this interface allow get and set access to a build's properties.
 
@@ -15,7 +15,7 @@ IProperties
 
       Determine whether the named property exists.
 
-   .. method:: setProperty(propname, value, source)
+   .. method:: setProperty(propname, value, source, runtime=False)
 
       Set a property's value, also specifying the source for this value.
 

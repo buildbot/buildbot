@@ -28,8 +28,8 @@ Build
 
     .. py:method:: getUrl()
 
-        :returns: Url as string
+        :returns: URL as string
 
         Returns url of the build in the UI.
         Build must be started.
-        This is useful for customs steps.
+        This is useful for custom steps.

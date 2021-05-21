@@ -34,7 +34,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
     This is used to implement Buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
     If the comparison shows the objects to be equivalent, then the old object is left in place.
-    If they differ, the old object is removed from the buildmaster and the new object added.
+    If they differ, the old object is removed from the buildmaster, and the new object is added.
 
     For use in configuration objects (schedulers, changesources, etc.), include any attributes which are set in the constructor based on the user's configuration.
     Be sure to also include the superclass's list, e.g.:
@@ -91,7 +91,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :type old: set or iterable
     :param new: new set
     :type new: set or iterable
-    :returns: a tuple, (removed, added)
+    :returns: a (removed, added) tuple
 
     This function compares two sets of objects, returning elements that were added and elements that were removed.
     This is largely a convenience function for reconfiguring services.
@@ -132,7 +132,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param list: potentially nested list
     :param types: An optional iterable of the types to flatten.
         By default, if unspecified, this flattens both lists and tuples.
-    :returns: iterator over every element that isn't in types
+    :returns: iterator over every element whose type isn't in types
 
     Returns a generator that doesn't yield any lists/tuples.  For example:
 
@@ -155,7 +155,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     If ``obj`` is not None, return its string representation.
 
-.. py:function:: bytes2unicode(bytestr, encoding='utf-8', errors='strict'):
+.. py:function:: bytes2unicode(bytestr, encoding='utf-8', errors='strict')
 
     :param bytestr: bytes
     :param encoding: unicode encoding to pass to :py:func:`str.encode`, default ``utf-8``.
@@ -166,17 +166,17 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     If given a bytestring, it returns the string decoded using ``encoding``.
     If given a unicode string, it returns it directly.
 
-.. py:function:: string2boolean(str):
+.. py:function:: string2boolean(str)
 
     :param str: string
     :raises KeyError:
     :returns: boolean
 
     This function converts a string to a boolean.
-    It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
+    It is intended to be liberal in what it accepts: case-insensitive "true", "on", "yes", "1", etc.
     It raises :py:exc:`KeyError` if the value is not recognized.
 
-.. py:function:: toJson(obj):
+.. py:function:: toJson(obj)
 
     :param obj: object
     :returns: UNIX epoch timestamp
@@ -218,12 +218,12 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 .. py:function:: join_list(maybe_list)
 
     :param maybe_list: list, tuple, byte string, or unicode
-    :returns: unicode
+    :returns: unicode string
 
     If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`bytes2unicode`.
     This is useful for configuration parameters that may be strings or lists of strings.
 
-.. py:class:: Notifier():
+.. py:class:: Notifier()
 
     This is a helper for firing multiple deferreds with the same result.
 
@@ -242,11 +242,11 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     This function is intended to help various components to parse git urls.
     It helps to find the ``<owner>/<repo>`` of a git repository url coming from a change, in order to call urls.
-    ``owner`` and ``repo`` is a common scheme for identifying git repository between various git hosting services like GitHub, GitLab, BitBucket, etc.
-    Each service have their own naming for similar things, but we choose to use the GitHub naming as a de-facto standard.
+    ``owner`` and ``repo`` is a common scheme for identifying a git repository between various git hosting services, like GitHub, GitLab, BitBucket, etc.
+    Each service has their own naming for similar things, but we choose to use the GitHub naming as a de-facto standard.
     To simplify implementation, the parser is accepting invalid urls, but it should always parse valid urls correctly.
-    The unit tests in ``test_util_giturlparse.py`` is the references of what the parser is accepting.
-    Please feel free to update the parser and unit tests
+    The unit tests in ``test_util_giturlparse.py`` are the references on what the parser accepts.
+    Please feel free to update the parser and the unit tests.
 
     Example use:
 
@@ -257,7 +257,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
             repoOwner = repourl.owner
             repoName = repourl.repo
 
-.. py:class:: GitUrl():
+.. py:class:: GitUrl()
 
     .. py:attribute:: proto
 
@@ -281,7 +281,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     .. py:attribute:: repo
 
-        The owner of the repository (in case of GitLab might be a nested group, i.e contain ``/``)
+        The name of the repository (in case of GitLab might be a nested group, i.e contain ``/``)
 
 
 :py:mod:`buildbot.util.lru`
@@ -289,7 +289,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
 .. py:module:: buildbot.util.lru
 
-.. py:class:: LRUCache(miss_fn, max_size=50):
+.. py:class:: LRUCache(miss_fn, max_size=50)
 
     :param miss_fn: function to call, with key as parameter, for cache misses.
         The function should return the value associated with the key argument, or None if there is no value associated with the key.
@@ -357,7 +357,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
         Check invariants on the cache.
         This is intended for debugging purposes.
 
-.. py:class:: AsyncLRUCache(miss_fn, max_size=50):
+.. py:class:: AsyncLRUCache(miss_fn, max_size=50)
 
     :param miss_fn: This is the same as the miss_fn for class LRUCache, with the difference that this function *must* return a Deferred.
     :param max_size: maximum number of objects in the cache.
@@ -383,7 +383,7 @@ This package provides a few useful collection objects.
 .. py:class:: KeyedSets
 
     This is a collection of named sets.
-    In principal, it contains an empty set for every name, and you can add things to sets, discard things from sets, and so on.
+    In principle, it contains an empty set for every name, and you can add things to sets, discard things from sets, and so on.
 
     .. code-block:: python
 
@@ -422,7 +422,7 @@ For example
         return d
     eventually(do_what_I_say, "clean up", "your bedroom")
 
-The package defines "later" as "next time the reactor has control", so this is a good way to avoid long loops that block other activity in the reactor.
+The package defines "later" as "next time the reactor has control", so this is a good way to avoid long loops that block another activity in the reactor.
 
 .. py:function:: eventually(cb, *args, **kwargs)
 
@@ -466,7 +466,7 @@ However, when many events arrive in quick succession, it's more efficient to onl
 
 The ``debounce.method(wait)`` decorator is the tool for the job.
 
-.. py:function:: method(wait)
+.. py:function:: method(wait, get_reactor)
 
     :param wait: time to wait before invoking, in seconds
     :param get_reactor: A callable that takes the underlying instance and returns the reactor to use. Defaults to ``instance.master.reactor``.
@@ -645,7 +645,7 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
     :returns: the deferred passed to the function
 
     Cancel the given deferred after the given time has elapsed, if it has not already been fired.
-    Whent his occurs, the deferred's errback will be fired with a :py:class:`twisted.internet.defer.CancelledError` failure.
+    When this occurs, the deferred's errback will be fired with a :py:class:`twisted.internet.defer.CancelledError` failure.
 
 :py:mod:`buildbot.util.netstrings`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -762,14 +762,14 @@ In the near future, all uses of this module will be replaced with message-queuei
 :py:mod:`buildbot.util.croniter`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This module is a copy of https://github.com/taichino/croniter, and provides support for converting cron-like time specifications into actual times.
+This module is a copy of https://github.com/taichino/croniter, and provides support for converting cron-like time specifications to actual times.
 
 :py:mod:`buildbot.util.state`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.state
 
-The classes in the :py:mod:`buildbot.util.subscription` module are used for dealing with object state stored in the database.
+The classes in the :py:mod:`buildbot.util.state` module are used for dealing with object state stored in the database.
 
 .. py:class:: StateMixin
 
@@ -1076,7 +1076,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
         .. note::
 
-            For keyword arguments, a simpler method is to use the ``secrets`` class variable, which items
+            For keyword arguments, a simpler method is to use the ``secrets`` class variable, whose items
             will be automatically interpolated just before reconfiguration.
 
         .. code-block:: python
@@ -1093,12 +1093,12 @@ For example, a particular daily scheduler could be configured on multiple master
 
                 secrets = ("user", "password")
                 def reconfigService(self, user=None, password=None, ...):
-                    # nothing to do user and password will be automatically interpolated
+                    # nothing to do; user and password will be automatically interpolated
 
 
     Advanced users can derive this class to make their own services that run inside buildbot, and follow the application lifecycle of buildbot master.
 
-    Such services are singletons accessible in nearly every objects of buildbot (buildsteps, status, changesources, etc) using self.master.namedServices['<nameOfYourService'].
+    Such services are singletons accessible to nearly every object in Buildbot (buildsteps, status, changesources, etc) using self.master.namedServices['<nameOfYourService>'].
 
     As such, they can be used to factorize access to external services, available e.g using a REST api.
     Having a single service will help with caching, and rate-limiting access of those APIs.
@@ -1234,15 +1234,15 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. note::
 
-        :class:`IHTTPResponse` is a subset of `treq`_ :py:class:`Response` API described `here <https://treq.readthedocs.io/en/latest/api.html#module-treq.response>`_
+        :class:`IHTTPResponse` is a subset of `treq`_ :py:class:`Response` API described `here <https://treq.readthedocs.io/en/latest/api.html#module-treq.response>`_.
         The API it is voluntarily minimalistic and reflects what is tested and reliable to use with the three backends (including fake).
-        The api is a subset of the `treq`_ API, which is itself a superset of `twisted IResponse API`_.
+        The API is a subset of the `treq`_ API, which is itself a superset of `twisted IResponse API`_.
         `treq`_ is thus implemented as passthrough.
 
         Notably:
 
-        * There is no api to automatically decode content, as this is not implemented the same in both backends.
-        * There is no api to stream content as the two libraries have very different way for doing it, and we do not see use-case where buildbot would need to transfer large content to the master.
+        * There is no API to automatically decode content, as this is not implemented the same in both backends.
+        * There is no API to stream content as the two libraries have very different way for doing it, and we do not see use-case where buildbot would need to transfer large content to the master.
 
     .. py:method:: content()
 
@@ -1271,13 +1271,13 @@ For example, a particular daily scheduler could be configured on multiple master
 
 .. py:class:: HTTPClientService
 
-    This class implements a fake version of the :class:`buildbot.util.httpclientservice.HTTPClientService` that needs to be used for testing services which needs http client access.
+    This class implements a fake version of the :class:`buildbot.util.httpclientservice.HTTPClientService` that needs to be used for testing services which need http client access.
     It implements the same APIs as :class:`buildbot.util.httpclientservice.HTTPClientService`, plus one that should be used to register the expectations.
     It should be registered by the test case before the tested service actually requests an HTTPClientService instance, with the same parameters.
     It will then replace the original implementation automatically (no need to patch anything).
     The testing methodology is based on `AngularJS ngMock`_.
 
-    .. py:method:: getService(cls, master, case, *args, **kwargs):
+    .. py:method:: getService(cls, master, case, *args, **kwargs)
 
         :param master: the instance of a fake master service
         :param case: a :py:class:`twisted.python.unittest.TestCase` instance
@@ -1287,8 +1287,7 @@ For example, a particular daily scheduler could be configured on multiple master
         It will make sure the original :py:class:`HTTPClientService` is not called, and assert that all expected http requests have been described in the test case.
 
 
-    .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200,
-                          content=None, content_json=None):
+    .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200, content=None, content_json=None)
 
         :param method: expected HTTP method
         :param ep: expected endpoint
@@ -1303,7 +1302,7 @@ For example, a particular daily scheduler could be configured on multiple master
         The order of the requests is important.
         All the request expectation must be defined in the test.
 
-        example:
+        For example:
 
         .. code-block:: python
 
@@ -1368,7 +1367,7 @@ For example, a particular daily scheduler could be configured on multiple master
 .. py:module:: buildbot.util.ssl
 
 This module is a copy of :py:mod:`twisted.internet.ssl` except it won't crash with :py:class:`ImportError` if :py:mod:`pyopenssl` is not installed.
-If you need to use :py:mod:`twisted.internet.ssl`, please instead use :py:mod:`buildbot.util.ssl`, and call :py:func:`ssl.ensureHasSSL` in :py:meth:`checkConfig` to provide helpful message to the user, only if he enabled SSL for your plugin.
+If you need to use :py:mod:`twisted.internet.ssl`, please instead use :py:mod:`buildbot.util.ssl`, and call :py:func:`ssl.ensureHasSSL` in :py:meth:`checkConfig` to provide helpful message to the user, only if they enabled SSL for your plugin.
 
 .. py:function:: ensureHasSSL(plugin_name)
 

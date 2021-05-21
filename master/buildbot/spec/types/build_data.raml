@@ -1,5 +1,5 @@
 #%RAML 1.0 DataType
-displayName: Build data
+displayName: build_data
 description: |
     This resource represents a key-value data pair associated to a build.
     A build can have any number of key-value pairs.
@@ -21,18 +21,18 @@ description: |
 
             :param integer buildid: build id to attach data to
             :param unicode name: the name of the data
-            :param bytestr value: the value of the data as ``bytes``.
-            :parma unicode source: a string identifying the source of the data
+            :param bytestr value: the value of the data as ``bytes``
+            :param unicode source: a string identifying the source of the data
             :returns: Deferred
 
             Adds or replaces build data attached to the build.
 
 properties:
     buildid:
-        description: id of the build the build data is attached to.
+        description: id of the build the build data is attached to
         type: integer
     name:
-        description: the name of the build data.
+        description: the name of the build data
         type: string
     length:
         description: the number of bytes in the build data
@@ -40,9 +40,9 @@ properties:
     source:
         description: a string identifying the source of the data
         type: string
-
 type: object
 example:
     buildid: 31
     name: "stored_data_name"
+    length: 10
     source: "Step XYZ"

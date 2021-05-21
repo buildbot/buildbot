@@ -51,7 +51,7 @@ external tools, so the values are fixed.
     This function takes two status values, and returns the "worst" status of the two.
     This is used to aggregate step statuses into build statuses, and build statuses into buildset statuses.
 
-.. py:function:: computeResultAndTermination(obj, result, previousResult):
+.. py:function:: computeResultAndTermination(obj, result, previousResult)
 
     :param obj: an object with the attributes of :py:class:`ResultComputingConfigMixin`
     :param result: the new result

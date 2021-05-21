@@ -2,34 +2,28 @@ Master-Worker API
 =================
 
 This section describes the master-worker interface.
-It covers communication protocol of "classic" remote Worker, notice that there is other types of workers which behave a bit different, such as :ref:`Local Worker <Local-Workers>` and :ref:`Latent Workers <Latent-Workers>`.
+It covers the communication protocol of the "classic" remote Worker.
+Notice there are other types of workers which behave a bit differently, such as :ref:`Local Worker <Local-Workers>` and :ref:`Latent Worker <Latent-Workers>`.
 
 Connection
 ----------
 
-The interface is based on Twisted's Perspective Broker, which operates over TCP
-connections.
+The interface is based on Twisted's Perspective Broker, which operates over TCP connections.
 
-The worker connects to the master, using the parameters supplied to
-:command:`buildbot-worker create-worker`.  It uses a reconnecting process with an
-exponential backoff, and will automatically reconnect on disconnection.
+The worker connects to the master, using the parameters supplied to :command:`buildbot-worker create-worker`.
+It uses a reconnecting process with an exponential backoff, and will automatically reconnect on disconnection.
 
-Once connected, the worker authenticates with the Twisted Cred (newcred)
-mechanism, using the username and password supplied to
-:command:`buildbot-worker create-worker`.
-The *mind* is the worker bot instance (class :class:`buildbot_worker.pb.BotPb`).
+Once connected, the worker authenticates with the Twisted Cred (newcred) mechanism, using the username and password supplied to :command:`buildbot-worker create-worker`.
+The *mind* behind the worker is the worker bot instance (class :class:`buildbot_worker.pb.BotPb`).
 
-On the master side, the realm is implemented by
-:class:`buildbot.pbmanager.Dispatcher`, which examines the username of incoming
-avatar requests.  There are special cases for ``change`` and ``debug``, which are not discussed here.
-For all other usernames,
-the botmaster is consulted, and if a worker with that name is configured, its
-:class:`buildbot.worker.Worker` instance is returned as the perspective.
+On the master side, the realm is implemented by :class:`buildbot.pbmanager.Dispatcher`, which examines the username of incoming avatar requests.
+There are special cases for ``change`` and ``debug``, which are not discussed here.
+For all other usernames, the botmaster is consulted, and if a worker with that name is configured, its :class:`buildbot.worker.Worker` instance is returned as the perspective.
 
 Workers
 -------
 
-At this point, the master-side Worker object has a pointer to the remote,
+At this point, the master-side Worker object has a pointer to the remote
 worker-side Bot object in its ``self.worker``, and the worker-side Bot object has
 a reference to the master-side Worker object in its ``self.perspective``.
 
@@ -39,7 +33,7 @@ Bot methods
 The worker-side Bot object has the following remote methods:
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getCommands`
-    Returns a dictionary for all commands the worker recognizes: the key of the dictionary is command name and command version is the value.
+    Returns a dictionary for all commands the worker recognizes: the key of the dictionary is the command name and the command version is the value.
 
 :meth:`~buildbot_worker.pb.BotPb.remote_setBuilderList`
     Given a list of builders and their build directories, ensures that
@@ -53,20 +47,31 @@ The worker-side Bot object has the following remote methods:
     Adds a message to the worker logfile.
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getWorkerInfo`
-    Returns dictionary with the contents of the worker's :file:`info/` directory (i.e. file name is used as key and file contents as the value).
-    This dictionary also contains the keys
+    Returns a dictionary with the contents of the worker's :file:`info/` directory (i.e. file name is used as key and file contents as the value).
+    This dictionary also contains the following keys:
 
     ``environ``
+
         copy of the workers environment
+
     ``system``
+
         OS the worker is running (extracted from Python's ``os.name``)
+
     ``basedir``
-        base directory where worker is running
+
+        base directory where the worker is running
+
     ``numcpus``
+
         number of CPUs on the worker, either as configured or as detected (since ``buildbot-worker`` version 0.9.0)
+
     ``version``
+
         worker's version (same as the result of :meth:`~buildbot_worker.pb.BotPb.remote_getVersion` call)
+
     ``worker_commands``
+
         worker supported commands (same as the result of :meth:`~buildbot_worker.pb.BotPb.remote_getCommands` call)
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getVersion`
@@ -93,8 +98,7 @@ reference to each of the new worker-side :class:`~buildbot_worker.pb.WorkerForBu
 objects, described below.  Each of these is handed to the corresponding
 master-side :class:`~buildbot.process.workerforbuilder.WorkerForBuilder` object.
 
-This immediately calls the remote :meth:`setMaster` method, then the
-:meth:`print` method.
+This immediately calls the remote :meth:`setMaster` method, and then the :meth:`print` method.
 
 Pinging
 -------
@@ -153,7 +157,7 @@ The master side does not have any remotely-callable methods.
 Commands
 --------
 
-Actual work done by the worker is represented on the master side by a
+The actual work done by the worker is represented on the master side by a
 :class:`buildbot.process.remotecommand.RemoteCommand` instance.
 
 The command instance keeps a reference to the worker-side
@@ -179,7 +183,7 @@ Updates
 Updates from the worker, sent via
 :meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`, are a list of
 individual update elements.  Each update element is, in turn, a list of the
-form ``[data, 0]`` where the 0 is present for historical reasons.  The data is
+form ``[data, 0]``, where the 0 is present for historical reasons.  The data is
 a dictionary, with keys describing the contents.  The updates are handled by
 :meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`.
 
@@ -211,13 +215,13 @@ Runs a shell command on the worker.  This command takes the following arguments:
 
 ``command``
 
-    The command to run.  If this is a string, will be passed to the system
+    The command to run.  If this is a string, it will be passed to the system
     shell as a string.  Otherwise, it must be a list, which will be
     executed directly.
 
 ``workdir``
 
-    Directory in which to run the command, relative to the builder dir.
+    The directory in which to run the command, relative to the builder dir.
 
 ``env``
 
@@ -275,23 +279,28 @@ Runs a shell command on the worker.  This command takes the following arguments:
 The ``shell`` command sends the following updates:
 
 ``stdout``
+
     The data is a bytestring which represents a continuation of the stdout
     stream.  Note that the bytestring boundaries are not necessarily aligned
     with newlines.
 
 ``stderr``
+
     Similar to ``stdout``, but for the error stream.
 
 ``header``
+
     Similar to ``stdout``, but containing data for a stream of
     Buildbot-specific metadata.
 
 ``rc``
+
     The exit status of the command, where -- in keeping with UNIX tradition --
     0 indicates success and any nonzero value is considered a failure.  No
     further updates should be sent after an ``rc``.
 
 ``log``
+
     This update contains data for a logfile other than stdio.  The data
     associated with the update is a tuple of the log name and the data for that
     log.  Note that non-stdio logs do not distinguish output, error, and header
@@ -304,11 +313,11 @@ Upload a file from the worker to the master.  The arguments are
 
 ``workdir``
 
-    The base directory for the filename, relative to the builder's basedir.
+    Base directory for the filename, relative to the builder's basedir.
 
 ``workersrc``
 
-    Name of the filename to read from., relative to the workdir.
+    Name of the filename to read from, relative to the workdir.
 
 ``writer``
 
@@ -347,7 +356,7 @@ master, in the form of a tarball.  It takes the following arguments:
 ``maxsize``
 ``blocksize``
 
-    See ``uploadFile``
+    See ``uploadFile`` for these arguments.
 
 ``compress``
 
@@ -422,14 +431,14 @@ This command will remove a directory or file on the worker.  It takes the follow
 ``timeout``
 ``maxTime``
 
-    See ``shell``, above.
+    See ``shell`` above.
 
 The ``rmdir`` command produces the same updates as ``shell``.
 
 cpdir
 .....
 
-This command will copy a directory from place to place on the worker.  It takes the following
+This command will copy a directory from one place to another place on the worker.  It takes the following
 arguments:
 
 ``fromdir``
@@ -443,7 +452,7 @@ arguments:
 ``timeout``
 ``maxTime``
 
-    See ``shell``, above.
+    See ``shell`` above.
 
 The ``cpdir`` command produces the same updates as ``shell``.
 
@@ -485,7 +494,7 @@ listdir
 .......
 
 This command reads the directory and returns the list with directory contents. It
-takes a single parameter, ``dir``, specifying the directory relative to builder's basedir.
+takes a single parameter, ``dir``, specifying the directory relative to the builder's basedir.
 
 It produces two status updates:
 
@@ -501,9 +510,9 @@ rmfile
 ......
 
 This command removes the file in the worker base directory.
-It takes a single parameter, ``path``, specifying the file path relative to builder's basedir.
+It takes a single parameter, ``path``, specifying the file path relative to the builder's basedir.
 
-It produces one status updates:
+It produces one status update:
 
 ``rc``
 

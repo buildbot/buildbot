@@ -24,11 +24,11 @@ Logs connector
     Each log has a type that describes how to interpret its contents.
     See the :bb:rtype:`logchunk` resource type for details.
 
-    A log is contains a sequence of newline-separated lines of unicode.
+    A log contains a sequence of newline-separated lines of unicode.
     Log line numbering is zero-based.
 
     Each line must be less than 64k when encoded in UTF-8.
-    Longer lines will be truncated, and a warning logged.
+    Longer lines will be truncated, and a warning will be logged.
 
     Lines are stored internally in "chunks", and optionally compressed, but the implementation hides these details from callers.
 
@@ -108,7 +108,7 @@ Logs connector
         :returns: Deferred
 
         Compress the given log.
-        This method performs internal optimizations of a log's chunks to reduce the space used and make read operations more efficient.
+        This method performs internal optimizations on a log's chunks to reduce the space used and make read operations more efficient.
         It should only be called for finished logs.
         This method may take some time to complete.
 
