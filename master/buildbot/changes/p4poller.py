@@ -26,13 +26,13 @@ import dateutil.tz
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.internet import utils
 from twisted.python import log
 
 from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
+from buildbot.util import runprocess
 
 debug_logging = False
 
@@ -173,11 +173,16 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         d.addErrback(log.err, 'P4 poll failed on {}, {}'.format(self.p4port, self.p4base))
         return d
 
+    @defer.inlineCallbacks
     def _get_process_output(self, args):
         env = {e: os.environ.get(e)
                for e in self.env_vars if os.environ.get(e)}
-        d = utils.getProcessOutput(self.p4bin, args, env)
-        return d
+        res, out = yield runprocess.run_process(self.master.reactor, [self.p4bin] + args,
+                                                env=env, collect_stderr=False,
+                                                stderr_is_error=True)
+        if res != 0:
+            raise P4PollerError('Failed to run {}'.format(self.p4bin))
+        return out
 
     def _acquireTicket(self, protocol):
         command = [self.p4bin, ]
