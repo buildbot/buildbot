@@ -31,6 +31,9 @@ The step takes the following parameters
 ``mirror``
     URL of the mirror used to download the packages from.
 
+``othermirror``
+    List of additional ``deb URL ...`` lines to add to ``sources.list``.
+
 ``extrapackages``
     List if packages to install in addition to the base system.
 

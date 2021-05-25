@@ -268,6 +268,27 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
+    def test_othermirror(self):
+        self.setupStep(pbuilder.DebPbuilder(othermirror=['http://apt:9999/debian']))
+        self.expectCommands(
+            Expect(
+                'stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['sudo', '/usr/sbin/pbuilder', '--create',
+                                 '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
+                                 '--distribution', 'stable',
+                                 '--mirror', 'http://cdn.debian.net/debian/',
+                                 '--othermirror', 'http://apt:9999/debian'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['pdebuild', '--buildresult', '.',
+                                 '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
+                                 '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
+            + 0)
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
 
 class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                         unittest.TestCase):
