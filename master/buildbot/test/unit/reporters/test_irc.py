@@ -357,6 +357,47 @@ class TestIrcStatusBot(unittest.TestCase):
                          # channels don't get added until joined() is called
                          sorted([('jimmy', 'jimmy'), ('bobby', 'bobby')]))
 
+    def test_register_SASL(self):
+        b = self.makeBot('nick', 'pass',
+                         ['#ch1'],
+                         ['jimmy'], False, useSASL=True)
+        evts = []
+
+        def sendLine(line):
+            evts.append(('l', line))
+            if line == "AUTHENTICATE PLAIN":
+                evts.append(('s', "AUTHENTICATE"))
+                b.irc_AUTHENTICATE(None, None)
+        b.sendLine = sendLine
+
+        b.register("bot")
+        self.assertEqual(evts, [
+            ('l', 'CAP REQ :sasl'),
+            ('l', 'NICK bot'),
+            ('l', 'USER bot foo bar :None'),
+            ('l', 'AUTHENTICATE PLAIN'),
+            ('s', 'AUTHENTICATE'),
+            ('l', 'AUTHENTICATE bmljawBuaWNrAHBhc3M='),
+            ('l', 'CAP END')
+        ])
+
+    def test_register_legacy(self):
+        b = self.makeBot('nick', 'pass',
+                         ['#ch1'],
+                         ['jimmy'], False, useSASL=False)
+        evts = []
+
+        def sendLine(line):
+            evts.append(('l', line))
+        b.sendLine = sendLine
+
+        b.register("bot")
+        self.assertEqual(evts, [
+            ('l', 'PASS pass'),
+            ('l', 'NICK bot'),
+            ('l', 'USER bot foo bar :None')
+        ])
+
     def test_joined(self):
         b = self.makeBot()
         b.joined('#ch1')
@@ -508,6 +549,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             showBlameList=False,
             useRevisions=True,
             useSSL=False,
+            useSASL=False,
             lostDelay=10,
             failedDelay=20,
             useColors=False)
@@ -525,6 +567,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'], True,
             {}, ['tags'], {'successToFailure': 1},
             useColors=False,
+            useSASL=False,
             useRevisions=True,
             showBlameList=False)
 
