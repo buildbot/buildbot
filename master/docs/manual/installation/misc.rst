@@ -79,15 +79,127 @@ With a little modification, these scripts can be used on both Debian and RHEL-ba
 Launching worker as Windows service
 -----------------------------------
 
-You can find information about installation of Buildbot as Windows service in
-`RunningBuildbotOnWindows <http://trac.buildbot.net/wiki/RunningBuildbotOnWindows>`_.
-A recent version of Buildbot worker has simplified the configuration for a Windows service.
+.. admonition:: Security consideration
+
+  Installation process of Buildbot worker on Windows may require some steps to be executed with Windows administrator rights.
+  It is important to distinguish installation stage from service execution. It is strongly recommended run Buildbot worker
+  with lowest required access rights. It is recommended run a service under machine local non-privileged account.
+
+  If you decide run Buildbot worker under domain account it is recommended to create dedicated
+  strongly limited user account that will run Buildbot worker service.
+
+  Installation process outside of virtualenv must be done by under user with Administrator access rights.
+
+
+Installation
+````````````
+This guide assumes Buildbot worker is installed on ``c:\bbw\`` path. If you install it on different location
+please update the commands arguments.
+
+
+Prerequisite
+````````````
+Installation assumes you have installed fresh new Windows 10.
+Download cutting edge of Python 3 and install it for all users like:
 
 .. code-block:: bat
 
-    buildbot_worker_windows_service.exe --user YOURDOMAIN\theusername --password thepassword --startup auto install
+   python-3.9.5-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 TargetDir=c:\Python39
 
-The above command automatically adds user rights to run Buildbot as service.
+
+Upgrade pip, setuptools and wheel
+`````````````````````````````````
+
+.. code-block:: bat
+
+   cd c:\Python39
+   python.exe -m pip install --upgrade pip setuptools wheel
+
+Install, create and activate virtualenv
+```````````````````````````````````````
+
+.. code-block:: bat
+
+   python.exe -m pip install virtualenv==16.7.10
+   Scripts\virtualenv.exe --no-site-packages c:\bbw\sandbox
+   cd c:\bbw
+   c:\bbw\sandbox\Scripts\activate
+
+
+Install pywin32 with system wide installation
+`````````````````````````````````````````````
+
+.. code-block:: bat
+
+  python.exe -m pip install pywin32
+  python.exe .\sandbox\Scripts\pywin32_postinstall.py -install
+
+
+Install buildbot-worker and set it up
+`````````````````````````````````````
+
+.. code-block:: bat
+
+  python.exe -m pip install buildbot-worker
+  .\sandbox\scripts\buildbot-worker create-worker worker master01.mycompany.com %COMPUTERNAME% password
+
+Edit worker info about admin and host
+`````````````````````````````````````
+
+.. code-block:: bat
+
+  echo %COMPUTERNAME%> c:\bbw\worker\info\host
+  echo Admin Name ^<admin@email.com^> >c:\bbw\worker\info\admin
+
+Windows service setup
+`````````````````````
+This step assumes existence of local/domain `bbworker` user.
+In case worker should run under domain user account please replace .\bbworker with <domain>\bbworker.
+Please replace <bbworker.passwd> with given user password.
+
+.. code-block:: bat
+
+  .\sandbox\Scripts\buildbot_worker_windows_service.exe --user .\bbworker --password <bbworker.passwd> --startup auto install
+  powershell -command "& {&'New-Item' -path Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\BuildBot\Parameters}"
+  powershell -command "& {&'set-ItemProperty' -path Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\BuildBot\Parameters -Name directories -Value 'c:\bbw\worker'}"
+
+The first command automatically adds user rights to run Buildbot as service.
+
+Modify environment variables
+````````````````````````````
+This step is optional and may depend on your needs.
+At least we have found useful to have dedicated temp folder worker steps.
+It is much easier discover what temporary files your builds leaks/misbehaves.
+
+1. As Administrator run ``regedit``
+2. Open the key ``Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Buildbot``.
+3. Create a new value of type ``REG_MULTI_SZ`` called ``Environment``.
+4. Add entries like
+
+::
+
+  TMP=c:\bbw\tmp
+  TEMP=c:\bbw\tmp
+
+
+Check if Buildbot can start correctly configured as Windows service
+```````````````````````````````````````````````````````````````````
+As admin user run the command ``net start buildbot``.
+In case everything goes well, you should see following output
+
+::
+
+  The BuildBot service is starting.
+  The BuildBot service was started successfully.
+
+
+Troubleshooting
+```````````````
+If anything goes wrong check
+
+- Twisted log on ``C:\bbw\worker\twistd.log``
+- Windows system event log (``eventvwr.msc`` in command line, ``Show-EventLog`` in PowerShell).
+
 
 .. _Logfiles:
 

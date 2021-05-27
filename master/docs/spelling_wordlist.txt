@@ -61,6 +61,7 @@ Baz
 bb
 bbcollections
 bbproto
+bbworker
 bdist
 behaviour
 Bitbucket
@@ -661,7 +662,7 @@ pypugjs
 pysqlite
 pythonic
 Pythonic
-Pywin
+pywin
 qcow
 qmail
 queried
