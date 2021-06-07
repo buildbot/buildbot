@@ -2,7 +2,7 @@ alabaster==0.7.12
 appdirs==1.4.4
 asn1crypto==1.4.0
 astroid==2.4.2;
-attrs==20.3.0
+attrs==21.2.0
 autobahn==20.12.3;  python_version < "3.7"  # pyup: ignore
 autobahn==21.3.1;  python_version >= "3.7"
 Automat==20.2.0
