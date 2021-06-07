@@ -13,7 +13,7 @@ boto==2.49.0
 boto3==1.17.88
 botocore==1.20.88
 cffi==1.14.5
-click==7.1.2
+click==8.0.1
 configparser==5.0.2
 constantly==15.1.0
 cookies==2.2.1
