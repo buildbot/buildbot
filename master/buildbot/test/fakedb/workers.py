@@ -77,8 +77,8 @@ class FakeWorkersComponent(FakeDBComponent):
                 self.workers[row.id] = dict(
                     id=row.id,
                     name=row.name,
-                    paused=0,
-                    graceful=0,
+                    paused=row.paused,
+                    graceful=row.graceful,
                     info=row.info)
             elif isinstance(row, ConfiguredWorker):
                 row.id = row.buildermasterid * 10000 + row.workerid

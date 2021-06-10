@@ -235,6 +235,7 @@ class AbstractWorker(service.BuildbotService):
     def _getWorkerInfo(self):
         worker = yield self.master.data.get(
             ('workers', self.workerid))
+        self._paused = worker["paused"]
         self._applyWorkerInfo(worker['workerinfo'])
 
     def setServiceParent(self, parent):
