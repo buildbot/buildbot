@@ -1,0 +1,1 @@
+Restore worker paused state after restarting buildbot master (:issue:`6074`)
