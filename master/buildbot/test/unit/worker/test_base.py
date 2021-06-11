@@ -678,11 +678,111 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
     def test_worker_actions_pause(self):
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
-        worker.controlWorker(("worker", 1, "pause"), {'reason': "none"})
-        self.assertEqual(worker._paused, True)
+        self.assertTrue(worker.canStartBuild())
 
-        worker.controlWorker(("worker", 1, "unpause"), {'reason': "none"})
+        worker.controlWorker(("worker", 1, "pause"), {"reason": "none"})
+        self.assertEqual(worker._paused, True)
+        self.assertFalse(worker.canStartBuild())
+
+        worker.controlWorker(("worker", 1, "unpause"), {"reason": "none"})
         self.assertEqual(worker._paused, False)
+        self.assertTrue(worker.canStartBuild())
+
+    @defer.inlineCallbacks
+    def test_worker_quarantine_wait_times(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        for quarantine_wait in (10, 20, 40, 80, 160, 320, 640, 1280, 2560, 3600, 3600):
+            # put worker into quarantine
+            worker.putInQuarantine()
+            self.assertFalse(worker.canStartBuild())
+            self.assertIsNotNone(worker.quarantine_timer)
+
+            # simulate wait just before quarantine ends
+            self.master.reactor.advance(quarantine_wait - 1)
+            self.assertFalse(worker.canStartBuild())
+            self.assertIsNotNone(worker.quarantine_timer)
+
+            # simulate wait to just after quarantine ends
+            self.master.reactor.advance(1)
+            self.assertTrue(worker.canStartBuild())
+            self.assertIsNone(worker.quarantine_timer)
+
+    @defer.inlineCallbacks
+    def test_worker_quarantine_reset(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # pump up the quarantine wait time
+        for quarantine_wait in (10, 20, 40, 80):
+            worker.putInQuarantine()
+            self.assertFalse(worker.canStartBuild())
+            self.assertIsNotNone(worker.quarantine_timer)
+            self.master.reactor.advance(quarantine_wait)
+            self.assertTrue(worker.canStartBuild())
+            self.assertIsNone(worker.quarantine_timer)
+
+        # Now get a successful build
+        worker.resetQuarantine()
+
+        # the workers quarantine period should reset back to 10
+        worker.putInQuarantine()
+        self.master.reactor.advance(10)
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+    @defer.inlineCallbacks
+    def test_worker_quarantine_whilst_quarantined(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # put worker in quaratine
+        worker.putInQuarantine()
+        self.assertFalse(worker.canStartBuild())
+        self.assertIsNotNone(worker.quarantine_timer)
+
+        # simulate wait for half the time, and put in quarantine again
+        self.master.reactor.advance(5)
+        worker.putInQuarantine()
+        self.assertFalse(worker.canStartBuild())
+        self.assertIsNotNone(worker.quarantine_timer)
+
+        # simulate wait for another 5 seconds, and we should leave quarantine
+        self.master.reactor.advance(5)
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # simulate wait for yet another 5 seconds, and ensure nothing changes
+        self.master.reactor.advance(5)
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+    @defer.inlineCallbacks
+    def test_worker_quarantine_stop_timer(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # Call stopQuarantineTimer whilst not quarantined
+        worker.stopQuarantineTimer()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # Call stopQuarantineTimer whilst quarantined
+        worker.putInQuarantine()
+        self.assertFalse(worker.canStartBuild())
+        self.assertIsNotNone(worker.quarantine_timer)
+        worker.stopQuarantineTimer()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
 
 
 class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
