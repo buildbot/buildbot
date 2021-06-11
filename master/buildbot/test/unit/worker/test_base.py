@@ -689,6 +689,99 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker.canStartBuild())
 
     @defer.inlineCallbacks
+    def test_worker_quarantine_doesnt_affect_pause(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+        self.assertFalse(worker._paused)
+
+        # put worker into quaratine.
+        # Check canStartBuild() is False, and paused state is not changed
+        worker.putInQuarantine()
+        self.assertFalse(worker._paused)
+        self.assertFalse(worker.canStartBuild())
+        self.assertIsNotNone(worker.quarantine_timer)
+
+        # human manually pauses the worker
+        worker.controlWorker(("worker", 1, "pause"), {"reason": "none"})
+        self.assertTrue(worker._paused)
+        self.assertFalse(worker.canStartBuild())
+
+        # simulate wait for quaratine to end
+        # Check canStartBuild() is still False, and paused state is not changed
+        self.master.reactor.advance(10)
+        self.assertTrue(worker._paused)
+        self.assertFalse(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+    @defer.inlineCallbacks
+    def test_worker_quarantine_unpausing_exits_quarantine(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # put worker into quaratine whilst unpaused.
+        worker.putInQuarantine()
+        self.assertFalse(worker._paused)
+        self.assertFalse(worker.canStartBuild())
+
+        # pause and unpause the worker
+        worker.controlWorker(("worker", 1, "pause"), {"reason": "none"})
+        self.assertFalse(worker.canStartBuild())
+        worker.controlWorker(("worker", 1, "unpause"), {"reason": "none"})
+        self.assertTrue(worker.canStartBuild())
+
+        # put worker into quaratine whilst paused.
+        worker.controlWorker(("worker", 1, "pause"), {"reason": "none"})
+        worker.putInQuarantine()
+        self.assertTrue(worker._paused)
+        self.assertFalse(worker.canStartBuild())
+
+        # unpause worker should start the build
+        worker.controlWorker(("worker", 1, "unpause"), {"reason": "none"})
+        self.assertFalse(worker._paused)
+        self.assertTrue(worker.canStartBuild())
+
+    @defer.inlineCallbacks
+    def test_worker_quarantine_unpausing_doesnt_reset_timeout(self):
+        worker = yield self.createWorker(attached=False)
+        yield worker.startService()
+        self.assertTrue(worker.canStartBuild())
+        self.assertIsNone(worker.quarantine_timer)
+
+        # pump up the quarantine wait time
+        for quarantine_wait in (10, 20, 40, 80):
+            worker.putInQuarantine()
+            self.assertFalse(worker.canStartBuild())
+            self.assertIsNotNone(worker.quarantine_timer)
+            self.master.reactor.advance(quarantine_wait)
+            self.assertTrue(worker.canStartBuild())
+            self.assertIsNone(worker.quarantine_timer)
+
+        # put worker into quarantine (160s)
+        worker.putInQuarantine()
+        self.assertFalse(worker._paused)
+        self.assertFalse(worker.canStartBuild())
+
+        # pause and unpause the worker to exit quarantine
+        worker.controlWorker(("worker", 1, "pause"), {"reason": "none"})
+        self.assertFalse(worker.canStartBuild())
+        worker.controlWorker(("worker", 1, "unpause"), {"reason": "none"})
+        self.assertFalse(worker._paused)
+        self.assertTrue(worker.canStartBuild())
+
+        # next build fails. check timeout is 320s
+        worker.putInQuarantine()
+        self.master.reactor.advance(319)
+        self.assertFalse(worker.canStartBuild())
+        self.assertIsNotNone(worker.quarantine_timer)
+        self.master.reactor.advance(1)
+        self.assertIsNone(worker.quarantine_timer)
+        self.assertTrue(worker.canStartBuild())
+
+    @defer.inlineCallbacks
     def test_worker_quarantine_wait_times(self):
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
