@@ -451,53 +451,32 @@ def ns(s):
 def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
                   project, who, comment, builderNames, properties):
     # Determine job file version from provided arguments
-    if properties:
-        try:
-            bytes2unicode(patch_body)
-            version = 5
-        except UnicodeDecodeError:
-            version = 6
-    elif comment:
-        version = 4
-    elif who:
-        version = 3
-    else:
-        version = 2
+    try:
+        bytes2unicode(patch_body)
+        version = 5
+    except UnicodeDecodeError:
+        version = 6
+
     job = ""
     job += ns(str(version))
-    if version < 5:
-        job += ns(jobid)
-        job += ns(branch)
-        job += ns(str(baserev))
-        job += ns("{}".format(patch_level))
-        job += ns(patch_body or "")
-        job += ns(repository)
-        job += ns(project)
-        if (version >= 3):
-            job += ns(who)
-        if (version >= 4):
-            job += ns(comment)
-        for bn in builderNames:
-            job += ns(bn)
+    job_dict = {
+        'jobid': jobid,
+        'branch': branch,
+        'baserev': str(baserev),
+        'patch_level': patch_level,
+        'repository': repository,
+        'project': project,
+        'who': who,
+        'comment': comment,
+        'builderNames': builderNames,
+        'properties': properties,
+    }
+    if version > 5:
+        job_dict['patch_body_base64'] = bytes2unicode(base64.b64encode(patch_body))
     else:
-        job_dict = {
-            'jobid': jobid,
-            'branch': branch,
-            'baserev': str(baserev),
-            'patch_level': patch_level,
-            'repository': repository,
-            'project': project,
-            'who': who,
-            'comment': comment,
-            'builderNames': builderNames,
-            'properties': properties,
-        }
-        if version > 5:
-            job_dict['patch_body_base64'] = bytes2unicode(base64.b64encode(patch_body))
-        else:
-            job_dict['patch_body'] = bytes2unicode(patch_body)
+        job_dict['patch_body'] = bytes2unicode(patch_body)
 
-        job += ns(json.dumps(job_dict))
+    job += ns(json.dumps(job_dict))
     return job
 
 
