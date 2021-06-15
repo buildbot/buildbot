@@ -696,7 +696,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIsNone(worker.quarantine_timer)
         self.assertFalse(worker._paused)
 
-        # put worker into quaratine.
+        # put worker into quarantine.
         # Check canStartBuild() is False, and paused state is not changed
         worker.putInQuarantine()
         self.assertFalse(worker._paused)
@@ -708,7 +708,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker._paused)
         self.assertFalse(worker.canStartBuild())
 
-        # simulate wait for quaratine to end
+        # simulate wait for quarantine to end
         # Check canStartBuild() is still False, and paused state is not changed
         self.master.reactor.advance(10)
         self.assertTrue(worker._paused)
@@ -722,7 +722,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker.canStartBuild())
         self.assertIsNone(worker.quarantine_timer)
 
-        # put worker into quaratine whilst unpaused.
+        # put worker into quarantine whilst unpaused.
         worker.putInQuarantine()
         self.assertFalse(worker._paused)
         self.assertFalse(worker.canStartBuild())
@@ -733,7 +733,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         worker.controlWorker(("worker", 1, "unpause"), {"reason": "none"})
         self.assertTrue(worker.canStartBuild())
 
-        # put worker into quaratine whilst paused.
+        # put worker into quarantine whilst paused.
         worker.controlWorker(("worker", 1, "pause"), {"reason": "none"})
         worker.putInQuarantine()
         self.assertTrue(worker._paused)
@@ -836,7 +836,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker.canStartBuild())
         self.assertIsNone(worker.quarantine_timer)
 
-        # put worker in quaratine
+        # put worker in quarantine
         worker.putInQuarantine()
         self.assertFalse(worker.canStartBuild())
         self.assertIsNotNone(worker.quarantine_timer)
