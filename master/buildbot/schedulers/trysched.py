@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import json
 import os
 
@@ -26,6 +27,7 @@ from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.util import bytes2unicode
 from buildbot.util import netstrings
+from buildbot.util import unicode2bytes
 from buildbot.util.maildir import MaildirService
 
 
@@ -135,11 +137,13 @@ class Try_Jobdir(TryBase):
         #  "4" introduces comment
         #  "5" introduces properties and JSON serialization of values after
         #      version
+        #  "6" sends patch_body as base64-encoded string in the patch_body_base64 attribute
         #  jobid: arbitrary string, used to find the buildSet later
         #  branch: branch name, "" for default-branch
         #  baserev: revision, "" for HEAD
         #  patch_level: usually "1"
-        #  patch_body: patch to be applied for build
+        #  patch_body: patch to be applied for build (as string)
+        #  patch_body_base64: patch to be applied for build (as base64-encoded bytes)
         #  repository
         #  project
         #  who: user requesting build
@@ -171,7 +175,10 @@ class Try_Jobdir(TryBase):
 
         def extract_netstrings(p, keys):
             for i, key in enumerate(keys):
-                parsed_job[key] = bytes2unicode(p.strings[i])
+                if key == 'patch_body':
+                    parsed_job[key] = p.strings[i]
+                else:
+                    parsed_job[key] = bytes2unicode(p.strings[i])
 
         def postprocess_parsed_job():
             # apply defaults and handle type casting
@@ -192,6 +199,16 @@ class Try_Jobdir(TryBase):
             try:
                 data = bytes2unicode(p.strings[0])
                 parsed_job = json.loads(data)
+                parsed_job['patch_body'] = unicode2bytes(parsed_job['patch_body'])
+            except ValueError as e:
+                raise BadJobfile("unable to parse JSON") from e
+            postprocess_parsed_job()
+        elif ver == "6":
+            try:
+                data = bytes2unicode(p.strings[0])
+                parsed_job = json.loads(data)
+                parsed_job['patch_body'] = base64.b64decode(parsed_job['patch_body_base64'])
+                del parsed_job['patch_body_base64']
             except ValueError as e:
                 raise BadJobfile("unable to parse JSON") from e
             postprocess_parsed_job()
@@ -393,7 +410,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         branch = bytes2unicode(branch)
         revision = bytes2unicode(revision)
-        patch = patch[0], bytes2unicode(patch[1])
+        patch_level = patch[0]
+        patch_body = unicode2bytes(patch[1])
         repository = bytes2unicode(repository)
         project = bytes2unicode(project)
         who = bytes2unicode(who)
@@ -409,7 +427,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,
-            project=project, patch_level=patch[0], patch_body=patch[1],
+            project=project, patch_level=patch_level, patch_body=patch_body,
             patch_subdir='', patch_author=who or '',
             patch_comment=comment or '', codebase='',
         )           # note: no way to specify patch subdir - #1769
