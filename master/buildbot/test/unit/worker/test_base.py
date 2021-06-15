@@ -471,6 +471,34 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
+    def test_startService_paused_true(self):
+        """Test that paused state is restored on a buildbot restart"""
+        self.master.db.insertTestData([
+            fakedb.Worker(id=9292, name='bot', paused=1)
+        ])
+
+        worker = yield self.createWorker()
+
+        yield worker.startService()
+
+        self.assertTrue(worker.isPaused())
+        self.assertFalse(worker._graceful)
+
+    @defer.inlineCallbacks
+    def test_startService_graceful_true(self):
+        """Test that graceful state is NOT restored on a buildbot restart"""
+        self.master.db.insertTestData([
+            fakedb.Worker(id=9292, name='bot', graceful=1)
+        ])
+
+        worker = yield self.createWorker()
+
+        yield worker.startService()
+
+        self.assertFalse(worker.isPaused())
+        self.assertFalse(worker._graceful)
+
+    @defer.inlineCallbacks
     def test_startService_getWorkerInfo_empty(self):
         worker = yield self.createWorker()
         yield worker.startService()
