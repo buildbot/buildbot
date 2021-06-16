@@ -81,6 +81,20 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.assertEqual(step.run_vc.mock.call_args, (('other-branch', 'revision', 'patch'), {}))
 
+    def test_start_alwaysUseLatest_False_binary_patch(self):
+        args = {
+            'branch': 'other-branch',
+            'revision': 'revision',
+        }
+        step = self.setupStep(Source(), args, patch=(1, b'patch\xf8'))
+        step.branch = 'branch'
+        step.run_vc = self.setup_deferred_mock()
+
+        step.startStep(mock.Mock())
+
+        self.assertEqual(step.run_vc.mock.call_args,
+                         (('other-branch', 'revision', (1, b'patch\xf8')), {}))
+
     def test_start_alwaysUseLatest_False_no_branch(self):
         step = self.setupStep(Source())
         step.branch = 'branch'

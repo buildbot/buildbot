@@ -318,7 +318,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                                 foo_branch='a', foo_revision='c', foo_repository='d',
                                 foo_project='p',
                                 bar_branch='a2', bar_revision='c2', bar_repository='d2',
-                                bar_project='p2', bar_patch_body="xxx")
+                                bar_project='p2', bar_patch_body=b"xxx")
 
         bsid, brids = res
         expProperties = {
@@ -335,7 +335,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin,
                 sourcestamps=[
                     {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
                         'revision': 'c2', 'codebase': 'bar',
-                        'patch_body': 'xxx', 'patch_author': '', 'patch_subdir': '.',
+                        'patch_body': b'xxx', 'patch_author': '', 'patch_subdir': '.',
                         'patch_comment': '', 'patch_level': 1},
                     {'branch': 'a', 'project': 'p', 'repository': 'd',
                         'revision': 'c', 'codebase': 'foo'},

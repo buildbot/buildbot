@@ -23,7 +23,7 @@ from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 
 # a simple patch which adds a Makefile
-PATCH = """diff --git a/Makefile b/Makefile
+PATCH = b"""diff --git a/Makefile b/Makefile
 new file mode 100644
 index 0000000..8a5cf80
 --- /dev/null

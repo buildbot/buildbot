@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import json
 import os
 import random
@@ -92,7 +93,7 @@ class SourceStampExtractor:
     def readPatch(self, diff, patchlevel):
         if not diff:
             diff = None
-        self.patch = (patchlevel, bytes2unicode(diff))
+        self.patch = (patchlevel, diff)
 
     def done(self, res):
         if not self.repository:
@@ -281,7 +282,7 @@ class PerforceExtractor(SourceStampExtractor):
         if not found:
             output(b"could not parse patch file")
             sys.exit(1)
-        self.patch = (patchlevel, mpatch)
+        self.patch = (patchlevel, unicode2bytes(mpatch))
 
     def getPatch(self, res):
         d = self.dovc(["diff"])
@@ -450,39 +451,32 @@ def ns(s):
 def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
                   project, who, comment, builderNames, properties):
     # Determine job file version from provided arguments
-    if properties:
+    try:
+        bytes2unicode(patch_body)
         version = 5
-    elif comment:
-        version = 4
-    elif who:
-        version = 3
-    else:
-        version = 2
+    except UnicodeDecodeError:
+        version = 6
+
     job = ""
     job += ns(str(version))
-    if version < 5:
-        job += ns(jobid)
-        job += ns(branch)
-        job += ns(str(baserev))
-        job += ns("{}".format(patch_level))
-        job += ns(patch_body or "")
-        job += ns(repository)
-        job += ns(project)
-        if (version >= 3):
-            job += ns(who)
-        if (version >= 4):
-            job += ns(comment)
-        for bn in builderNames:
-            job += ns(bn)
+    job_dict = {
+        'jobid': jobid,
+        'branch': branch,
+        'baserev': str(baserev),
+        'patch_level': patch_level,
+        'repository': repository,
+        'project': project,
+        'who': who,
+        'comment': comment,
+        'builderNames': builderNames,
+        'properties': properties,
+    }
+    if version > 5:
+        job_dict['patch_body_base64'] = bytes2unicode(base64.b64encode(patch_body))
     else:
-        job += ns(
-            json.dumps({
-                'jobid': jobid, 'branch': branch, 'baserev': str(baserev),
-                'patch_level': patch_level, 'patch_body': patch_body,
-                'repository': repository, 'project': project, 'who': who,
-                'comment': comment, 'builderNames': builderNames,
-                'properties': properties,
-            }))
+        job_dict['patch_body'] = bytes2unicode(patch_body)
+
+    job += ns(json.dumps(job_dict))
     return job
 
 
@@ -578,7 +572,7 @@ class Try(pb.Referenceable):
             if difffile == "-":
                 diff = sys.stdin.read()
             else:
-                with open(difffile, "r") as f:
+                with open(difffile, "rb") as f:
                     diff = f.read()
             if not diff:
                 diff = None

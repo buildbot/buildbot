@@ -270,7 +270,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    yield self.addCompleteLog("patch", bytes2unicode(patch[1]))
+                    yield self.addCompleteLog("patch", bytes2unicode(patch[1], errors='ignore'))
             else:
                 log.msg("No sourcestamp found in build for codebase '{}'".format(self.codebase))
                 self.descriptionDone = "Codebase {} not in build".format(self.codebase)

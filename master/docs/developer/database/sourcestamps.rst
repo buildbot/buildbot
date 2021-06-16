@@ -53,7 +53,7 @@ Source stamps connector
         :param codebase:
         :type codebase: unicode string (required)
         :param patch_body: patch body
-        :type patch_body: unicode string or None
+        :type patch_body: bytes or unicode string or None
         :param patch_level: patch level
         :type patch_level: integer or None
         :param patch_author: patch author

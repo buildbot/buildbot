@@ -1,0 +1,1 @@
+Fix support for binary patch files in try client (:issue:`5933`)
