@@ -178,7 +178,7 @@ Those actions will put the worker in either of two states:
 - *graceful*: the worker is graceful if it doesn't accept new builds, and will shutdown when builds are finished.
 
 
-A worker might be put to ``paused`` state automatically if buildbot detects a misbehavior.
+A worker might not be able to accept a job for a period of time if buildbot detects a misbehavior.
 This is called the *quarantine timer*.
 
 Quarantine timer is an exponential back-off mechanism for workers.
@@ -187,6 +187,8 @@ When misbehavior is detected, the timer will pause the worker for 10 seconds, an
 
 The first case of misbehavior is for a latent worker to not start properly.
 The second case of misbehavior is for a build to end with an ``EXCEPTION`` status.
+
+Pausing and unpausing a worker will force it to leave quarantine immediately. The quarantine timeout will not be reset until the worker finishes a build.
 
 Worker states are stored in the database, can be queried via :ref:`REST_API`, and are visible in the UI's workers page.
 
