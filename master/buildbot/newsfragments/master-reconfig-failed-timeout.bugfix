@@ -1,1 +1,0 @@
-Fixed a regression in the ``reconfig`` script which would time out instead of printing error when configuration update was not successfully applied.

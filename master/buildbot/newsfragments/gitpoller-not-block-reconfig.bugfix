@@ -1,1 +1,0 @@
-Improved GitPoller behavior during reconfiguration to exit at earliest possible opportunity and thus reduce the delay that running GitPoller incurs for the reconfiguration.
