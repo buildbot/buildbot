@@ -10,6 +10,54 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.2.0`` ( ``2021-06-17`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed occasional ``InvalidSpotInstanceRequestID.NotFound`` errors when using spot instances on EC2.
+  This could have lead to Buildbot launching zombie instances and not shutting them down.
+- Improved ``GitPoller`` behavior during reconfiguration to exit at earliest possible opportunity and thus reduce the delay that running ``GitPoller`` incurs for the reconfiguration.
+- The docker container for the master now fully builds the www packages.
+  Previously they were downloaded from pypi which resulted in downloading whatever version was newest at the time (:issue:`4998`).
+- Implemented time out for master-side utility processes (e.g. ``git`` or ``hg``) which could break the respective version control poller potentially indefinitely upon hanging.
+- Fixed a regression in the ``reconfig`` script which would time out instead of printing error when configuration update was not successfully applied.
+- Improved buildbot restart behavior to restore the worker paused state (:issue:`6074`)
+- Fixed support for binary patch files in try client (:issue:`5933`)
+- Improved handling of unsubscription errors in WAMP which will no longer crash the unsubscribing component and instead just log an error.
+- Fixed a crash when a worker is disconnected from a running build that uses worker information for some of its properties (:issue:`5745`).
+
+Improved Documentation
+----------------------
+
+- Added documentation about installation Buildbot worker as Windows service.
+
+Features
+--------
+
+- ``DebPbuilder`` now supports the ``--othermirror`` flag for including additional repositories
+- Implemented support for setting docker container's hostname
+- The libvirt latent worker will now wait for the VM to come online instead of disabling the worker during connection establishment process.
+  The VM management connections are now pooled by URI.
+- Buildbot now sends metadata required to establish connection back to master to libvirt worker VMs.
+- ``LibVirtWorker`` will now setup libvirt metadata with details needed by the worker to connect back to master.
+- The docker container for the master has been switched to Debian.
+  Additionally, buildbot is installed into a virtualenv there to reduce chances of conflicts with Python packages installed via ``dpkg``.
+- BitbucketStatusPush now has renderable build status key, name, and description.
+- Pausing a worker is a manual operation which the quarantine timer was overwriting. Worker paused state and quarantine state are now independent. (:issue:`5611`)
+- Reduce buildbot_worker wheel package size by 40% by dropping tests from package.
+
+Deprecations and Removals
+-------------------------
+
+- The `connection` argument of the LibVirtWorker constructor has been deprecated along with the related `Connection` class.
+  Use `uri` as replacement.
+- The ``*NewStyle`` build step aliases have been removed.
+  Please use equivalent steps without the ``NewStyle`` suffix in the name.
+- Try client no longer supports protocol used by Buildbot older than v0.9.
+
+
 Buildbot ``3.1.1`` ( ``2021-04-28`` )
 =====================================
 

@@ -1,2 +1,0 @@
-The `connection` argument of the LibVirtWorker constructor has been deprecated along with the related `Connection` class.
-Use `uri` as replacement.

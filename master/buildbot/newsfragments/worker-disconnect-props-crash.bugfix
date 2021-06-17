@@ -1,1 +1,0 @@
-Fixed a crash when a worker is disconnected from a running build that uses worker information for some of its properties (:issue:`5745`).

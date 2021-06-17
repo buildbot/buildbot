@@ -1,1 +1,0 @@
-Unsubscription errors in WAMP will no longer crash the unsubscribing component and instead just an error will be logged.

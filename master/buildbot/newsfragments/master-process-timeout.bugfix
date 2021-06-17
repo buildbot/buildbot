@@ -1,1 +1,0 @@
-Implemented time out for master-side utility processes (e.g. ``git`` or ``hg``) which could break the respective version control poller potentially indefinitely upon hanging.

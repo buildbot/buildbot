@@ -1,1 +1,0 @@
-Reduce buildbot_worker wheel package size by 40% by dropping tests from package.
