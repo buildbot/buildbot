@@ -1,6 +1,6 @@
 .. _3.0_Upgrading:
 
-Upgrading to Buildbot 3.0 (not released yet)
+Upgrading to Buildbot 3.0
 ============================================
 
 Upgrading a Buildbot instance from 2.x to 3.0 may require some work to achieve.
