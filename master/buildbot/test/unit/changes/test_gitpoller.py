@@ -636,7 +636,6 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assert_all_commands_ran()
         self.assertEqual(self.poller.lastRev, {
-            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
@@ -702,7 +701,6 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assert_all_commands_ran()
         self.assertEqual(self.poller.lastRev, {
-            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
         self.assertEqual(self.master.data.updates.changesAdded, [
@@ -785,7 +783,6 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assert_all_commands_ran()
         self.assertEqual(self.poller.lastRev, {
-            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
         self.assertEqual(self.master.data.updates.changesAdded, [
@@ -866,7 +863,6 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assert_all_commands_ran()
         self.assertEqual(self.poller.lastRev, {
-            'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
             'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
         self.assertEqual(self.master.data.updates.changesAdded, [
@@ -1182,10 +1178,7 @@ class TestGitPoller(TestGitPollerBase):
         # The release branch id should remain unchanged,
         # because it was ignored.
         self.assertEqual(self.poller.lastRev, {
-            'refs/heads/master':
-            '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-            'refs/heads/release':
-            'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
 
         added = self.master.data.updates.changesAdded
@@ -1276,7 +1269,6 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assert_all_commands_ran()
         self.assertEqual(self.poller.lastRev, {
-            'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/pull/410/head': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
         })
 

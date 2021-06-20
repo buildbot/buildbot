@@ -236,7 +236,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 log.err(_why="trying to poll branch {} of {}".format(
                         branch, self.repourl))
 
-        self.lastRev.update(revs)
+        self.lastRev = revs
         yield self.setState('lastRev', self.lastRev)
 
     def _get_commit_comments(self, rev):
