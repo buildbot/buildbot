@@ -81,7 +81,7 @@ Tempita==0.5.2
 termcolor==1.1.0
 toml==0.10.2
 towncrier==21.3.0
-treq==20.9.0
+treq==21.5.0
 Twisted==21.2.0
 txaio==21.2.1
 txrequests==0.9.6
