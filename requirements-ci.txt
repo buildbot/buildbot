@@ -32,7 +32,7 @@ imagesize==1.2.0
 incremental==17.5.0
 ipaddress==1.0.23
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
-Jinja2==2.11.3
+Jinja2==3.0.1
 jmespath==0.10.0
 jsonref==0.2
 lazy-object-proxy==1.4.1  # pyup: ignore (required by astroid)
