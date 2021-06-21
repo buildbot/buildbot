@@ -69,7 +69,7 @@ PyYAML==5.4.1
 requests==2.25.1
 s3transfer==0.4.2
 scandir==1.10.0
-service-identity==18.1.0
+service-identity==21.1.0
 setuptools-trial==0.6.0
 singledispatch==3.6.1
 six==1.15.0
