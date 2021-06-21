@@ -207,7 +207,7 @@ class BuildJsCommand(distutils.cmd.Command):
                 if yarn_version != "":
                     yarn_program = program
 
-            assert yarn_version is not None, "need nodejs and yarn installed in current PATH"
+            assert yarn_program is not None, "need nodejs and yarn installed in current PATH"
 
             yarn_bin = check_output([yarn_program, "bin"]).strip()
 
