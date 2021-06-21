@@ -11,7 +11,7 @@ mock==3.0.5  # pyup: ignore
 pbr==5.6.0
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
-six==1.15.0
+six==1.16.0
 Twisted==21.2.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.0"  # pyup: ignore
 zope.interface==5.4.0
