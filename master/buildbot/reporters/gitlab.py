@@ -133,7 +133,7 @@ class GitLabStatusPush(ReporterBase):
                 log.msg(
                     'Unknown (or hidden) gitlab project'
                     '{repo}: {message}'.format(
-                        repo=project_full_name, **proj))
+                        repo=project_full_name, message=proj.get('message')))
                 return None
             self.project_ids[project_full_name] = proj['id']
 
