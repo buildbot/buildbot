@@ -1,0 +1,1 @@
+Removed ``buildbot.process.subunitlogobserver`` which has been deprecated since Buildbot v0.8.0.
