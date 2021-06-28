@@ -530,9 +530,7 @@ class Git(Source, GitStepMixin):
             return "clone"
 
         cmd = remotecommand.RemoteCommand('listdir',
-                                          {'dir': self.workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
+                                          {'dir': self.workdir})
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
