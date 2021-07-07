@@ -1,0 +1,1 @@
+Fixed worker lock handling that caused max lock count to be ignored (:issue:`6132`).
