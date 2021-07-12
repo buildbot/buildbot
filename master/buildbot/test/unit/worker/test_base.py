@@ -23,12 +23,15 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot import locks
 from buildbot.machine.base import Machine
+from buildbot.plugins import util
 from buildbot.process import properties
+from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util import interfaces
 from buildbot.test.util import logging
 from buildbot.test.util.misc import TestReactorMixin
@@ -182,6 +185,20 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.missing_timeout, ConcreteWorker.DEFAULT_MISSING_TIMEOUT)
         self.assertEqual(bs.properties.getProperty('workername'), 'bot')
         self.assertEqual(bs.access, [])
+
+    @defer.inlineCallbacks
+    def test_constructor_secrets(self):
+        fake_storage_service = FakeSecretStorage()
+
+        secret_service = SecretManager()
+        secret_service.services = [fake_storage_service]
+        yield secret_service.setServiceParent(self.master)
+
+        fake_storage_service.reconfigService(secretdict={"passkey": "1234"})
+
+        bs = yield self.createWorker('bot', util.Secret('passkey'))
+        yield bs.startService()
+        self.assertEqual(bs.password, '1234')
 
     @defer.inlineCallbacks
     def test_constructor_full(self):
