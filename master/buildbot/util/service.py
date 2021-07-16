@@ -230,6 +230,9 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
                                        **kwargs)
         return d
 
+    def canReconfigWithSibling(self, sibling):
+        return reflect.qual(self.__class__) == reflect.qual(sibling.__class__)
+
     def configureService(self):
         # reconfigServiceWithSibling with self, means first configuration
         return self.reconfigServiceWithSibling(self)
@@ -462,23 +465,23 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         # calculate new childs, by name, and removed childs
         removed_names, added_names = util.diffSets(old_set, new_set)
 
-        # find any childs for which the fully qualified class name has
-        # changed, and treat those as an add and remove
-        # While we're at it find any service that don't know how to reconfig,
-        # and, if they have changed, add them to both removed and added, so that we
+        # find any children for which the old instance is not
+        # able to do a reconfig with the new sibling
+        # and add them to both removed and added, so that we
         # run the new version
         for n in old_set & new_set:
             old = old_by_name[n]
             new = new_by_name[n]
-            # detect changed class name
-            if reflect.qual(old.__class__) != reflect.qual(new.__class__):
-                removed_names.add(n)
-                added_names.add(n)
             # compare using ComparableMixin if they don't support reconfig
-            elif not hasattr(old, 'reconfigServiceWithBuildbotConfig'):
-                if not util.ComparableMixin.isEquivalent(old, new):
+            if not hasattr(old, 'reconfigServiceWithBuildbotConfig'):
+                if not util.ComparableMixin.isEquivalent(old, new) \
+                        or reflect.qual(old.__class__) != reflect.qual(new.__class__):
                     removed_names.add(n)
                     added_names.add(n)
+            # check if we are able to reconfig service
+            elif not old.canReconfigWithSibling(new):
+                removed_names.add(n)
+                added_names.add(n)
 
         if removed_names or added_names:
             log.msg("adding {} new {}, removing {}".format(len(added_names), self.config_attr,
