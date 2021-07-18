@@ -23,6 +23,7 @@ These are the same two values that need to be provided to the worker administrat
 
 The ``workername`` must be unique, of course.
 The password exists to prevent evildoers from interfering with Buildbot by inserting their own (broken) workers into the system and thus displacing the real ones.
+Password may be a :ref:`Secret`.
 
 Workers with an unrecognized ``workername`` or a non-matching password will be rejected when they attempt to connect, and a message describing the problem will be written to the log file (see :ref:`Logfiles`).
 
