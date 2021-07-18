@@ -982,6 +982,55 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
         self.assertEqual(change["branch"], "refs/pull/50/head")
 
 
+class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
+
+    secret_name = 'secretkey'
+    secret_value = 'githubtoken'
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setUpTestReactor()
+
+        self.changeHook = \
+            _prepare_github_change_hook(self, strict=False, github_property_whitelist=["github.*"],
+                                        token=util.Secret(self.secret_name))
+
+        self.master = self.changeHook.master
+        fake_headers = {
+            'User-Agent': 'Buildbot',
+            'Authorization': 'token ' + self.secret_value,
+        }
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master, self, 'https://api.github.com', headers=fake_headers,
+            debug=False, verify=False)
+
+        fake_storage = FakeSecretStorage()
+        secret_service = SecretManager()
+        secret_service.services = [fake_storage]
+        yield secret_service.setServiceParent(self.master)
+
+        yield self.master.startService()
+
+        fake_storage.reconfigService(secretdict={self.secret_name: self.secret_value})
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def test_git_pull_request(self):
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
+
+        self.request = _prepare_request('pull_request', gitJsonPayloadPullRequest)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
+        self.assertEqual(change["branch"], "refs/pull/50/merge")
+
+
 class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase,
                                                      TestReactorMixin):
 

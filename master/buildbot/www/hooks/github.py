@@ -241,7 +241,10 @@ class GitHubEventHandler(PullRequestMixin):
             'User-Agent': 'Buildbot',
         }
         if self._token:
-            headers['Authorization'] = 'token ' + self._token
+            p = Properties()
+            p.master = self.master
+            token = yield p.render(self._token)
+            headers['Authorization'] = 'token ' + token
 
         url = '/repos/{}/commits/{}'.format(repo, sha)
         http = yield httpclientservice.HTTPClientService.getService(
@@ -265,7 +268,10 @@ class GitHubEventHandler(PullRequestMixin):
         """
         headers = {"User-Agent": "Buildbot"}
         if self._token:
-            headers["Authorization"] = "token " + self._token
+            p = Properties()
+            p.master = self.master
+            token = yield p.render(self._token)
+            headers["Authorization"] = "token " + token
 
         url = "/repos/{}/pulls/{}/files".format(repo, number)
         http = yield httpclientservice.HTTPClientService.getService(
