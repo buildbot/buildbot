@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import io
+import re
 import sys
 
 from twisted.trial import unittest
@@ -118,12 +119,9 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
         self.expectOutcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
-        self.expectLogfile('problems', '''\
-test1
-testtools.testresult.real._StringException: Traceback (most recent call last):
-ValueError: invalid literal for int() with base 10: '_error1'
-
-''')
+        self.expectLogfile('problems', re.compile(r'''test1
+testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
+.*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
         return self.runStep()
 
     def test_multiple_errors(self):
@@ -146,16 +144,12 @@ ValueError: invalid literal for int() with base 10: '_error1'
         )
 
         self.expectOutcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
-        self.expectLogfile('problems', '''\
-test1
-testtools.testresult.real._StringException: Traceback (most recent call last):
-ValueError: invalid literal for int() with base 10: '_error1'
+        self.expectLogfile('problems', re.compile(r'''test1
+testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 
 test2
-testtools.testresult.real._StringException: Traceback (most recent call last):
-ValueError: invalid literal for int() with base 10: '_error2'
-
-''')
+testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error2'
+.*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
         return self.runStep()
 
     def test_warnings(self):
@@ -178,10 +172,8 @@ ValueError: invalid literal for int() with base 10: '_error2'
         self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS
                            state_string="shell 1 test passed")
         # note that the warnings list is ignored..
-        self.expectLogfile('warnings', '''\
-error: test2 [
-Traceback (most recent call last):
-ValueError: invalid literal for int() with base 10: '_error2'
-]
-''')
+        self.expectLogfile('warnings', re.compile(r'''error: test2 \[.*
+ValueError: invalid literal for int\(\) with base 10: '_error2'
+\]
+''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
         return self.runStep()

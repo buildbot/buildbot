@@ -402,17 +402,11 @@ class BuildStepMixin:
 
         for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout
-            if got != exp:
-                log.msg("Unexpected stdout log output:\n" + got)
-                log.msg("Expected stdout log output:\n" + exp)
-                raise AssertionError("Unexpected stdout log output; see logs")
+            self._match_log(exp, got, 'stdout')
 
         for l, exp in self._exp_logfiles_stderr.items():
             got = self.step.logs[l].stderr
-            if got != exp:
-                log.msg("Unexpected stderr log output:\n" + got)
-                log.msg("Expected stderr log output:\n" + exp)
-                raise AssertionError("Unexpected stderr log output; see logs")
+            self._match_log(exp, got, 'stderr')
 
         if self.exp_exception:
             self.assertEqual(
@@ -424,6 +418,18 @@ class BuildStepMixin:
 
         # XXX TODO: hidden
         # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
+
+    def _match_log(self, exp, got, log_type):
+        if hasattr(exp, 'match'):
+            if exp.match(got) is None:
+                log.msg("Unexpected {} log output:\n{}".format(log_type, exp))
+                log.msg("Expected {} to match:\n{}".format(log_type, got))
+                raise AssertionError("Unexpected {} log output; see logs".format(log_type))
+        else:
+            if got != exp:
+                log.msg("Unexpected {} log output:\n{}".format(log_type, exp))
+                log.msg("Expected {} log output:\n{}".format(log_type, got))
+                raise AssertionError("Unexpected {} log output; see logs".format(log_type))
 
     # callbacks from the running step
 
