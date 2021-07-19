@@ -62,7 +62,7 @@ PyJWT==2.1.0
 pylint==2.6.0;
 pyOpenSSL==20.0.1
 pyparsing==2.4.7
-python-dateutil==2.8.1
+python-dateutil==2.8.2
 python-subunit==1.4.0
 pytz==2021.1
 PyYAML==5.4.1
