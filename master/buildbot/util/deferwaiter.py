@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.python import failure
 from twisted.python import log
 
 from buildbot.util import Notifier
@@ -27,6 +28,10 @@ class DeferWaiter:
         self._finish_notifier = Notifier()
 
     def _finished(self, result, d):
+        # most likely nothing is consuming the errors, so do it here
+        if isinstance(result, failure.Failure):
+            log.err(result)
+
         self._waited.pop(id(d))
         if not self._waited:
             self._finish_notifier.notify(None)
