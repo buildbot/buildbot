@@ -387,6 +387,7 @@ setup_args = {
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.reporters.utils', ['URLForBuild']),
             ('buildbot.schedulers.canceller', ['OldBuildCanceller']),
+            ('buildbot.schedulers.canceller_buildset', ['FailingBuildsetCanceller']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
                 'ChoiceStringParameter',
