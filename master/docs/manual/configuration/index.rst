@@ -33,3 +33,4 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     manhole
     multimaster
     multicodebase
+    misc/index
