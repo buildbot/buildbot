@@ -90,6 +90,8 @@ class WaiterTests(unittest.TestCase):
         with self.assertRaises(defer.CancelledError):
             yield d1
 
+        self.flushLoggedErrors(defer.CancelledError)
+
     @defer.inlineCallbacks
     def test_cancel_called(self):
         w = DeferWaiter()
@@ -107,6 +109,8 @@ class WaiterTests(unittest.TestCase):
         self.assertTrue(d1_waited.called)
         with self.assertRaises(defer.CancelledError):
             yield d1
+
+        self.flushLoggedErrors(defer.CancelledError)
 
 
 class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
