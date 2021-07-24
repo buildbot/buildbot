@@ -27,7 +27,7 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     reporters/index
     www
     wwwhooks
-    services
+    services/index
     dbconfig
     configurators
     manhole
