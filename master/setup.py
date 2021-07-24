@@ -386,6 +386,7 @@ setup_args = {
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.reporters.utils', ['URLForBuild']),
+            ('buildbot.schedulers.canceller', ['OldBuildCanceller']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
                 'ChoiceStringParameter',

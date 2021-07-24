@@ -3,7 +3,16 @@
 Custom Services
 ---------------
 
-For advanced users or plugin writers, the ``services`` key is available, and holds a list of :py:class:`buildbot.util.service.BuildbotService`.
-As this is a feature for advanced users, it is described in the developer section of the manual.
+.. toctree::
+    :hidden:
+    :maxdepth: 2
 
-This section will grow as soon as ready-to-use services are created.
+    old_build_canceller
+
+Custom services are stateful components of Buildbot that can be added to the ``services`` key of the Buildbot config dictionary.
+The following is the services that are meant to be used without advanced knowledge of Buildbot.
+
+ * :ref:`OldBuildCanceller`
+
+More complex services are described in the developer section of the Buildbot manual.
+They are meant to be used by advanced users of Buildbot.

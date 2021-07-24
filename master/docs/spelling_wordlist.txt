@@ -132,6 +132,7 @@ callee
 camelCase
 canAcquireLocks
 cancelled
+canceller
 cancelling
 candidated
 canonicalize
