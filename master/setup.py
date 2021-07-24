@@ -386,6 +386,8 @@ setup_args = {
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.reporters.utils', ['URLForBuild']),
+            ('buildbot.schedulers.canceller', ['OldBuildCanceller']),
+            ('buildbot.schedulers.canceller_buildset', ['FailingBuildsetCanceller']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
                 'ChoiceStringParameter',
@@ -407,6 +409,7 @@ setup_args = {
             ('buildbot.util.kubeclientservice', [
                 'KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader'
             ]),
+            ('buildbot.util.ssfilter', ['SourceStampFilter']),
             ('buildbot.www.avatar', ['AvatarGravatar', 'AvatarGitHub']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
