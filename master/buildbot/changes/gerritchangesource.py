@@ -210,7 +210,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         # we keep this customization point here, waiting to have a better grouping strategy support
         # in the core
         event_change = event["change"]
-        if event['type'] in ('patchset-created',):
+        if event['type'] in ('patchset-created', 'comment-added'):
             return "{}/{}".format(event_change["branch"], event_change['number'])
         return event_change["branch"]
 

@@ -236,7 +236,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         'committer': None,
         'comments': 'change subject',
         'project': 'test',
-        'branch': 'master',
+        'branch': 'master/4321',
         'revlink': 'http://example.com/c/test/+/4321',
         'codebase': None,
         'revision': '29b73c3eb1aeaa9e6c7da520a940d60810e883db',
