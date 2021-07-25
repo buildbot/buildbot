@@ -106,6 +106,14 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         s.configureService()
         return s
 
+    def assert_changes(self, expected_changes, ignore_keys):
+        self.assertEqual(len(self.master.data.updates.changesAdded), len(expected_changes))
+        for i, expected_change in enumerate(expected_changes):
+            change = self.master.data.updates.changesAdded[i]
+            for key in ignore_keys:
+                del change[key]
+            self.assertEqual(change, expected_change)
+
     # tests
 
     def test_describe(self):
@@ -168,6 +176,80 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         c = self.master.data.updates.changesAdded[0]
         for k, v in c.items():
             self.assertEqual(self.expected_change[k], v)
+
+    comment_added_event = {
+        "type": "comment-added",
+        "author": {
+            'name': 'author author',
+            'email': 'author@example.com',
+            'username': 'author'
+        },
+        "approvals": [{"type": "Code-Review", "description": "Code-Review", "value": "0"}],
+        "comment": "Patch Set 1:\n\ntest comment",
+        "patchSet": {
+            "number": 1,
+            "revision": "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
+            "parents": ["7e563631188dcadf32aad0d8647c818834921a1e"],
+            "ref": "refs/changes/21/4321/1",
+            "uploader": {
+                'name': 'uploader uploader',
+                'email': 'uploader@example.com',
+                'username': 'uploader'
+            },
+            "createdOn": 1627214047,
+            "author": {
+                'name': 'author author',
+                'email': 'author@example.com',
+                'username': 'author'
+            },
+            "kind": "REWORK",
+            "sizeInsertions": 1,
+            "sizeDeletions": 0
+        },
+        "change": {
+            "project": "test",
+            "branch": "master",
+            "id": "I21234123412341234123412341234",
+            "number": 4321,
+            "subject": "change subject",
+            "owner": {
+                'name': 'owner owner',
+                'email': 'owner@example.com',
+                'username': 'owner'
+            },
+            "url": "http://example.com/c/test/+/4321",
+            "commitMessage": "test1\n\nChange-Id: I21234123412341234123412341234\n",
+            "createdOn": 1627214047,
+            "status": "NEW"
+        },
+        "project": "test",
+        "refName": "refs/heads/master",
+        "changeKey": {"id": "I21234123412341234123412341234"},
+        "eventCreatedOn": 1627214102
+    }
+
+    expected_change_comment_added = {
+        'category': 'comment-added',
+        'files': ['unknown'],
+        'repository': 'ssh://someuser@somehost:29418/test',
+        'author': 'owner owner <owner@example.com>',
+        'committer': None,
+        'comments': 'change subject',
+        'project': 'test',
+        'branch': 'master',
+        'revlink': 'http://example.com/c/test/+/4321',
+        'codebase': None,
+        'revision': '29b73c3eb1aeaa9e6c7da520a940d60810e883db',
+        'src': None,
+        'when_timestamp': None,
+    }
+
+    @defer.inlineCallbacks
+    def test_lineReceived_comment_added(self):
+        s = self.newChangeSource('somehost', 'someuser', handled_events=["comment-added"])
+        yield s.lineReceived(json.dumps(self.comment_added_event))
+
+        self.assert_changes([self.expected_change_comment_added], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
     def test_lineReceived_ref_updated(self):
