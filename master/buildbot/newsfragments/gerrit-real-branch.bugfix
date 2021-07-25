@@ -1,0 +1,1 @@
+``GerritChangeSource`` and ``GerritEventLogPoller`` will now produce change events with ``branch`` attribute that corresponds to the actual git branch on the repository.

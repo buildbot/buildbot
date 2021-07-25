@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import copy
 import datetime
 import json
 import types
@@ -188,7 +189,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         'committer': None,
         'comments': 'change subject',
         'project': 'test',
-        'branch': 'master/4321',
+        'branch': 'refs/changes/21/4321/1',
         'revision': '29b73c3eb1aeaa9e6c7da520a940d60810e883db',
         'codebase': None,
         'revlink': 'http://example.com/c/test/+/4321',
@@ -307,7 +308,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         'committer': None,
         'comments': 'change subject',
         'project': 'test',
-        'branch': 'master/4321',
+        'branch': 'refs/changes/21/4321/1',
         'revlink': 'http://example.com/c/test/+/4321',
         'codebase': None,
         'revision': '29b73c3eb1aeaa9e6c7da520a940d60810e883db',
@@ -373,33 +374,13 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     @defer.inlineCallbacks
     def test_duplicate_events_ignored(self):
         s = self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps(dict(
-            type="patchset-created",
-            change=dict(
-                branch="br",
-                project="pr",
-                number="4321",
-                owner=dict(name="Dustin", email="dustin@mozilla.com"),
-                url="http://buildbot.net",
-                subject="fix 1234"
-            ),
-            patchSet=dict(revision="abcdef", number="12")
-        )))
+        yield s.lineReceived(json.dumps(self.patchset_created_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-        yield s.lineReceived(json.dumps(dict(
-            type="patchset-created",
-            change=dict(
-                branch="br",
-                # Note that this time "project" is a dictionary
-                project=dict(name="pr"),
-                number="4321",
-                owner=dict(name="Dustin", email="dustin@mozilla.com"),
-                url="http://buildbot.net",
-                subject="fix 1234"
-            ),
-            patchSet=dict(revision="abcdef", number="12")
-        )))
+        patchset_created_event = copy.deepcopy(self.patchset_created_event)
+        patchset_created_event['change']['project'] = {'name': 'test'}
+
+        yield s.lineReceived(json.dumps(patchset_created_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
     @defer.inlineCallbacks
@@ -407,32 +388,10 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         s = self.newChangeSource('somehost', 'someuser',
                                  handled_events=['patchset-created', 'ref-updated',
                                                  'change-merged', 'comment-added'])
-        yield s.lineReceived(json.dumps({
-            'type': "comment-added",
-            'change': {
-                'branch': "br",
-                'project': "pr",
-                'number': "4321",
-                'owner': {'name': "Dustin", 'email': "dustin@mozilla.com"},
-                'url': "http://buildbot.net",
-                'subject': "fix 1234"
-            },
-            'patchSet': {'revision': "abcdef", 'number': "12"}
-        }))
+        yield s.lineReceived(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-        yield s.lineReceived(json.dumps({
-            'type': "comment-added",
-            'change': {
-                'branch': "br",
-                'project': "pr",
-                'number': "4321",
-                'owner': {'name': "Dustin", 'email': "dustin@mozilla.com"},
-                'url': "http://buildbot.net",
-                'subject': "fix 1234"
-            },
-            'patchSet': {'revision': "abcdef", 'number': "12"}
-        }))
+        yield s.lineReceived(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 2)
 
     @defer.inlineCallbacks
@@ -678,7 +637,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                               eventCreatedOn=self.EVENT_TIMESTAMP,
                               patchSet={
                                   'revision': "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
-                                  'number': "1"}
+                                  'number': "1",
+                                  'ref': 'refs/changes/21/4321/1'}
                               ))
 
         self._http.expect(
@@ -718,11 +678,15 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                                   subject="fix 1234"
                               ),
                               eventCreatedOn=self.EVENT_TIMESTAMP + 1,
-                              patchSet=dict(revision="abcdef", number="12")))
+                              patchSet={
+                                  'revision': "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
+                                  'number': "1",
+                                  'ref': 'refs/changes/21/4321/1'}
+                              ))
 
         self._http.expect(
             method='get',
-            ep='/changes/4321/revisions/12/files/',
+            ep='/changes/4321/revisions/1/files/',
             content=self.change_revision_resp,
         )
 
