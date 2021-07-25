@@ -1,0 +1,1 @@
+The ``comment-added`` event on Gerrit now produces the same branch as other events such as ``patchset-created``.
