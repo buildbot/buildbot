@@ -244,7 +244,8 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             'event.type': 'patchset-created',
             'event.uploader.email': 'uploader@example.com',
             'event.uploader.name': 'uploader uploader',
-            'event.uploader.username': 'uploader'
+            'event.uploader.username': 'uploader',
+            'target_branch': 'master',
         }
         self.maxDiff = None
         self.assert_changes([change], ignore_keys=[])

@@ -138,14 +138,20 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
 
         return self.eventReceived(event)
 
+    def build_properties(self, event):
+        properties = self.extractProperties(event)
+        properties["event.source"] = self.__class__.__name__
+        if event['type'] in ('patchset-created', 'comment-added') and 'change' in event:
+            properties['target_branch'] = event["change"]["branch"]
+        return properties
+
     def eventReceived(self, event):
         if not (event['type'] in self.handled_events):
             if self.debug:
                 log.msg("the event type '{}' is not setup to handle".format(event['type']))
             return defer.succeed(None)
 
-        properties = self.extractProperties(event)
-        properties["event.source"] = self.__class__.__name__
+        properties = self.build_properties(event)
         func_name = "eventReceived_{}".format(event["type"].replace("-", "_"))
         func = getattr(self, func_name, None)
         if func is None:
