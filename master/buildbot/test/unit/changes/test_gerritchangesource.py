@@ -129,53 +129,124 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     # TODO: test the backoff algorithm
 
+    patchset_created_event = {
+        "uploader": {
+            'name': 'uploader uploader',
+            'email': 'uploader@example.com',
+            'username': 'uploader'
+        },
+        "patchSet": {
+            "number": 1,
+            "revision": "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
+            "parents": ["7e563631188dcadf32aad0d8647c818834921a1e"],
+            "ref": "refs/changes/21/4321/1",
+            "uploader": {
+                'name': 'uploader uploader',
+                'email': 'uploader@example.com',
+                'username': 'uploader'
+            },
+            "createdOn": 1627214047,
+            "author": {
+                'name': 'author author',
+                'email': 'author@example.com',
+                'username': 'author'
+            },
+            "kind": "REWORK",
+            "sizeInsertions": 1,
+            "sizeDeletions": 0
+        },
+        "change": {
+            "project": "test",
+            "branch": "master",
+            "id": "I21234123412341234123412341234",
+            "number": 4321,
+            "subject": "change subject",
+            "owner": {
+                'name': 'owner owner',
+                'email': 'owner@example.com',
+                'username': 'owner'
+            },
+            "url": "http://example.com/c/test/+/4321",
+            "commitMessage": "test1\n\nChange-Id: I21234123412341234123412341234\n",
+            "createdOn": 1627214047,
+            "status": "NEW"
+        },
+        "project": "test",
+        "refName": "refs/heads/master",
+        "changeKey": {"id": "I21234123412341234123412341234"},
+        "type": "patchset-created",
+        "eventCreatedOn": 1627214048
+    }
+
     # this variable is reused in test_steps_source_repo
     # to ensure correct integration between change source and repo step
-    expected_change = {'category': 'patchset-created',
-                       'files': ['unknown'],
-                       'repository': 'ssh://someuser@somehost:29418/pr',
-                       'author': 'Dustin <dustin@mozilla.com>',
-                       'committer': None,
-                       'comments': 'fix 1234',
-                       'project': 'pr',
-                       'branch': 'br/4321',
-                       'revlink': 'http://buildbot.net',
-                       'codebase': None,
-                       'revision': 'abcdef',
-                       'src': None,
-                       'when_timestamp': None,
-                       'properties': {'event.change.owner.email': 'dustin@mozilla.com',
-                                      'event.change.subject': 'fix 1234',
-                                      'event.change.project': 'pr',
-                                      'event.change.owner.name': 'Dustin',
-                                      'event.change.number': '4321',
-                                      'event.change.url': 'http://buildbot.net',
-                                      'event.change.branch': 'br',
-                                      'event.type': 'patchset-created',
-                                      'event.patchSet.revision': 'abcdef',
-                                      'event.patchSet.number': '12',
-                                      'event.source': 'GerritChangeSource'}}
+    expected_change_patchset_created = {
+        'category': 'patchset-created',
+        'files': ['unknown'],
+        'repository': 'ssh://someuser@somehost:29418/test',
+        'author': 'owner owner <owner@example.com>',
+        'committer': None,
+        'comments': 'change subject',
+        'project': 'test',
+        'branch': 'master/4321',
+        'revision': '29b73c3eb1aeaa9e6c7da520a940d60810e883db',
+        'codebase': None,
+        'revlink': 'http://example.com/c/test/+/4321',
+        'src': None,
+        'when_timestamp': None,
+    }
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps(dict(
-            type="patchset-created",
-            change=dict(
-                branch="br",
-                project="pr",
-                number="4321",
-                owner=dict(name="Dustin", email="dustin@mozilla.com"),
-                url="http://buildbot.net",
-                subject="fix 1234"
-            ),
-            patchSet=dict(revision="abcdef", number="12")
-        )))
+        yield s.lineReceived(json.dumps(self.patchset_created_event))
 
-        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-        c = self.master.data.updates.changesAdded[0]
-        for k, v in c.items():
-            self.assertEqual(self.expected_change[k], v)
+        self.assert_changes([self.expected_change_patchset_created], ignore_keys=['properties'])
+
+    @defer.inlineCallbacks
+    def test_lineReceived_patchset_created_props(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        yield s.lineReceived(json.dumps(self.patchset_created_event))
+
+        change = copy.deepcopy(self.expected_change_patchset_created)
+        change['properties'] = {
+            'event.change.branch': 'master',
+            'event.change.commitMessage': 'test1\n\nChange-Id: I21234123412341234123412341234\n',
+            'event.change.createdOn': 1627214047,
+            'event.change.id': 'I21234123412341234123412341234',
+            'event.change.number': 4321,
+            'event.change.owner.email': 'owner@example.com',
+            'event.change.owner.name': 'owner owner',
+            'event.change.owner.username': 'owner',
+            'event.change.project': 'test',
+            'event.change.status': 'NEW',
+            'event.change.subject': 'change subject',
+            'event.change.url': 'http://example.com/c/test/+/4321',
+            'event.changeKey.id': 'I21234123412341234123412341234',
+            'event.patchSet.author.email': 'author@example.com',
+            'event.patchSet.author.name': 'author author',
+            'event.patchSet.author.username': 'author',
+            'event.patchSet.createdOn': 1627214047,
+            'event.patchSet.kind': 'REWORK',
+            'event.patchSet.number': 1,
+            'event.patchSet.parents': ['7e563631188dcadf32aad0d8647c818834921a1e'],
+            'event.patchSet.ref': 'refs/changes/21/4321/1',
+            'event.patchSet.revision': '29b73c3eb1aeaa9e6c7da520a940d60810e883db',
+            'event.patchSet.sizeDeletions': 0,
+            'event.patchSet.sizeInsertions': 1,
+            'event.patchSet.uploader.email': 'uploader@example.com',
+            'event.patchSet.uploader.name': 'uploader uploader',
+            'event.patchSet.uploader.username': 'uploader',
+            'event.project': 'test',
+            'event.refName': 'refs/heads/master',
+            'event.source': 'GerritChangeSource',
+            'event.type': 'patchset-created',
+            'event.uploader.email': 'uploader@example.com',
+            'event.uploader.name': 'uploader uploader',
+            'event.uploader.username': 'uploader'
+        }
+        self.maxDiff = None
+        self.assert_changes([change], ignore_keys=[])
 
     comment_added_event = {
         "type": "comment-added",
@@ -596,20 +667,23 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                           content_json=dict(
                               type="patchset-created",
                               change=dict(
-                                  branch="br",
-                                  project="pr",
+                                  branch="master",
+                                  project="test",
                                   number="4321",
-                                  owner=dict(name="Dustin",
-                                             email="dustin@mozilla.com"),
-                                  url="http://buildbot.net",
-                                  subject="fix 1234"
+                                  owner=dict(name="owner owner",
+                                             email="owner@example.com"),
+                                  url="http://example.com/c/test/+/4321",
+                                  subject="change subject"
                               ),
                               eventCreatedOn=self.EVENT_TIMESTAMP,
-                              patchSet=dict(revision="abcdef", number="12")))
+                              patchSet={
+                                  'revision': "29b73c3eb1aeaa9e6c7da520a940d60810e883db",
+                                  'number': "1"}
+                              ))
 
         self._http.expect(
             method='get',
-            ep='/changes/4321/revisions/12/files/',
+            ep='/changes/4321/revisions/1/files/',
             content=self.change_revision_resp,
         )
 
@@ -619,11 +693,9 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
         c = self.master.data.updates.changesAdded[0]
-        expected_change = dict(TestGerritChangeSource.expected_change)
-        expected_change['properties'] = dict(expected_change['properties'])
-        expected_change['properties']['event.source'] = 'GerritEventLogPoller'
+        expected_change = dict(TestGerritChangeSource.expected_change_patchset_created)
         for k, v in c.items():
-            if k == 'files':
+            if k in ('files', 'properties'):
                 continue
             self.assertEqual(expected_change[k], v)
         self.master.db.state.assertState(
@@ -682,18 +754,22 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
 class TestGerritChangeFilter(unittest.TestCase):
 
     def test_basic(self):
+        props = {
+            'event.type': 'patchset-created',
+            'event.change.branch': 'master',
+        }
 
-        ch = Change(**TestGerritChangeSource.expected_change)
+        ch = Change(**TestGerritChangeSource.expected_change_patchset_created, properties=props)
         f = gerritchangesource.GerritChangeFilter(
-            branch=["br"], eventtype=["patchset-created"])
+            branch=["master"], eventtype=["patchset-created"])
         self.assertTrue(f.filter_change(ch))
         f = gerritchangesource.GerritChangeFilter(
-            branch="br2", eventtype=["patchset-created"])
+            branch="master2", eventtype=["patchset-created"])
         self.assertFalse(f.filter_change(ch))
         f = gerritchangesource.GerritChangeFilter(
-            branch="br", eventtype="ref-updated")
+            branch="master", eventtype="ref-updated")
         self.assertFalse(f.filter_change(ch))
         self.assertEqual(
             repr(f),
-            '<GerritChangeFilter on prop:event.change.branch == br and '
+            '<GerritChangeFilter on prop:event.change.branch == master and '
             'prop:event.type == ref-updated>')
