@@ -180,6 +180,19 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse(rows, [21], [19, 20])
 
     @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_does_not_collapse_older(self):
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [19], [])
+        yield self.do_request_collapse(rows, [20], [19])
+        yield self.do_request_collapse(rows, [21], [20])
+
+    @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_branches(self):
         rows = [
             fakedb.Builder(id=77, name='A'),

@@ -256,21 +256,25 @@ class BuildRequest:
 
     @staticmethod
     @defer.inlineCallbacks
-    def canBeCollapsed(master, br1, br2):
+    def canBeCollapsed(master, new_br, old_br):
         """
         Returns true if both buildrequest can be merged, via Deferred.
 
         This implements Buildbot's default collapse strategy.
         """
         # short-circuit: if these are for the same buildset, collapse away
-        if br1['buildsetid'] == br2['buildsetid']:
+        if new_br['buildsetid'] == old_br['buildsetid']:
             return True
 
+        # the new buildrequest must actually be newer than the old build request, otherwise we
+        # may end up with situations where two build requests submitted at the same time will
+        # cancel each other.
+        if new_br['buildrequestid'] < old_br['buildrequestid']:
+            return False
+
         # get the buidlsets for each buildrequest
-        selfBuildsets = yield master.data.get(
-            ('buildsets', str(br1['buildsetid'])))
-        otherBuildsets = yield master.data.get(
-            ('buildsets', str(br2['buildsetid'])))
+        selfBuildsets = yield master.data.get(('buildsets', str(new_br['buildsetid'])))
+        otherBuildsets = yield master.data.get(('buildsets', str(old_br['buildsetid'])))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss)
