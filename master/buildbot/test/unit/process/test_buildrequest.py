@@ -168,10 +168,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
@@ -185,10 +181,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_branches(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
@@ -202,10 +194,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_repository(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
@@ -219,10 +207,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_projects(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
@@ -237,10 +221,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     # * Neither source stamp has a patch (e.g., from a try scheduler)
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_a_patch(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
@@ -255,10 +235,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     # * Either both source stamps are associated with changes..
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_changes(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
@@ -273,10 +249,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     # * ... or neither are associated with changes but they have matching revisions.
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_non_matching_revision(self):
-
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
-            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
-
         rows = [
             fakedb.Builder(id=77, name='A'),
         ]
