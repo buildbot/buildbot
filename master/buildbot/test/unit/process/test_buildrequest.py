@@ -193,6 +193,28 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse(rows, [21], [20])
 
     @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_does_not_collapse_concurrent_claims(self):
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C')
+
+        claimed = []
+
+        @defer.inlineCallbacks
+        def collapse_fn(master, builder, brdict1, brdict2):
+            if not claimed:
+                yield self.master.data.updates.claimBuildRequests([20])
+                claimed.append(20)
+            res = yield Builder._defaultCollapseRequestFn(master, builder, brdict1, brdict2)
+            return res
+
+        self.bldr.getCollapseRequestsFn = lambda: collapse_fn
+        yield self.do_request_collapse(rows, [21], [19])
+
+    @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_branches(self):
         rows = [
             fakedb.Builder(id=77, name='A'),

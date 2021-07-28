@@ -56,7 +56,7 @@ class BuildRequestCollapser:
 
     @defer.inlineCallbacks
     def collapse(self):
-        brids = set()
+        brids_to_collapse = set()
 
         for brid in self.brids:
             # Get the BuildRequest object
@@ -80,17 +80,16 @@ class BuildRequestCollapser:
 
                 canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
-                    brids.add(unclaim_br['buildrequestid'])
+                    brids_to_collapse.add(unclaim_br['buildrequestid'])
 
-        brids = list(brids)
-        if brids:
-            # Claim the buildrequests
-            yield self.master.data.updates.claimBuildRequests(brids)
-            # complete the buildrequest with result SKIPPED.
-            yield self.master.data.updates.completeBuildRequests(brids,
-                                                                 SKIPPED)
+        collapsed_brids = []
+        for brid in brids_to_collapse:
+            claimed = yield self.master.data.updates.claimBuildRequests([brid])
+            if claimed:
+                yield self.master.data.updates.completeBuildRequests([brid], SKIPPED)
+                collapsed_brids.append(brid)
 
-        return brids
+        return collapsed_brids
 
 
 class TempSourceStamp:
