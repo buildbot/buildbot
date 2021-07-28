@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import datetime
+import json
 
 import mock
 
@@ -141,7 +142,8 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     #   changes but they have matching revisions.
 
     def makeBuildRequestRows(self, brid, bsid, changeid, ssid, codebase, branch=None,
-                             project=None, repository=None, patchid=None, revision=None):
+                             project=None, repository=None, patchid=None, revision=None,
+                             bs_properties=None):
         rows = [
             fakedb.SourceStamp(id=ssid, codebase=codebase, branch=branch,
                                project=project, repository=repository, patchid=patchid,
@@ -163,6 +165,12 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
                 fakedb.Patch(id=patchid, patch_base64='aGVsbG8sIHdvcmxk',
                  patch_author='bar', patch_comment='foo', subdir='/foo',
                  patchlevel=3))
+        if bs_properties:
+            for prop_name, prop_value in bs_properties.items():
+                rows.append(
+                    fakedb.BuildsetProperty(buildsetid=bsid, property_name=prop_name,
+                                            property_value=json.dumps(prop_value)),
+                )
 
         return rows
 
@@ -213,6 +221,29 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
         self.bldr.getCollapseRequestsFn = lambda: collapse_fn
         yield self.do_request_collapse(rows, [21], [19])
+
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_does_not_collapse_scheduler_props(self):
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C',
+                                          bs_properties={'prop': ('value', 'Scheduler')})
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C',
+                                          bs_properties={'prop': ('value', 'Other source')})
+        rows += self.makeBuildRequestRows(19, 119, None, 219, 'C',
+                                          bs_properties={'prop': ('value2', 'Scheduler')})
+        rows += self.makeBuildRequestRows(18, 118, None, 218, 'C',
+                                          bs_properties={'prop': ('value', 'Scheduler')})
+        rows += self.makeBuildRequestRows(17, 117, None, 217, 'C',
+                                          bs_properties={'prop': ('value3', 'Other source')})
+        rows += self.makeBuildRequestRows(16, 116, None, 216, 'C')
+
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        # only the same property coming from a scheduler is matched
+        yield self.do_request_collapse(rows, [21], [18])
+        # only takes into account properties coming from scheduler
+        yield self.do_request_collapse(rows, [20], [16, 17])
 
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_branches(self):

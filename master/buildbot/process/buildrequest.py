@@ -254,6 +254,11 @@ class BuildRequest:
         return buildrequest
 
     @staticmethod
+    def filter_buildset_props_for_collapsing(bs_props):
+        return {name: value for name, (value, source) in bs_props.items()
+                if name != 'scheduler' and source == 'Scheduler'}
+
+    @staticmethod
     @defer.inlineCallbacks
     def canBeCollapsed(master, new_br, old_br):
         """
@@ -271,7 +276,7 @@ class BuildRequest:
         if new_br['buildrequestid'] < old_br['buildrequestid']:
             return False
 
-        # get the buidlsets for each buildrequest
+        # get the buildsets for each buildrequest
         selfBuildsets = yield master.data.get(('buildsets', str(new_br['buildsetid'])))
         otherBuildsets = yield master.data.get(('buildsets', str(old_br['buildsetid'])))
 
@@ -315,6 +320,15 @@ class BuildRequest:
             # else check revisions
             if selfSS['revision'] != otherSS['revision']:
                 return False
+
+        # don't collapse build requests if the properties injected by the scheduler differ
+        new_bs_props = yield master.data.get(('buildsets', str(new_br['buildsetid']), 'properties'))
+        old_bs_props = yield master.data.get(('buildsets', str(old_br['buildsetid']), 'properties'))
+
+        new_bs_props = BuildRequest.filter_buildset_props_for_collapsing(new_bs_props)
+        old_bs_props = BuildRequest.filter_buildset_props_for_collapsing(old_bs_props)
+        if new_bs_props != old_bs_props:
+            return False
 
         return True
 

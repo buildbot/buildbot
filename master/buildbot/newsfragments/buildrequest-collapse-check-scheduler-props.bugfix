@@ -1,0 +1,1 @@
+Improved default build request collapsing functionality to take into account properties set by the scheduler and not collapse build requests if they differ (:issue:`4686`).
