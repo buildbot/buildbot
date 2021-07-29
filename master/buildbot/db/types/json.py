@@ -24,6 +24,7 @@ class JsonObject(TypeDecorator):
 
     """Represents an immutable json-encoded string."""
 
+    cache_ok = True
     impl = Text
 
     def process_bind_param(self, value, dialect):
