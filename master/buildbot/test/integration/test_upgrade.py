@@ -22,7 +22,7 @@ import tarfile
 
 import migrate
 import migrate.versioning.api
-from sqlalchemy.engine import reflection
+import sqlalchemy as sa
 from sqlalchemy.exc import DatabaseError
 
 from twisted.internet import defer
@@ -127,7 +127,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                 return diff
 
             # check indexes manually
-            insp = reflection.Inspector.from_engine(engine)
+            insp = sa.inspect(engine)
             # unique, name, column_names
             diff = []
             for tbl in self.db.model.metadata.sorted_tables:

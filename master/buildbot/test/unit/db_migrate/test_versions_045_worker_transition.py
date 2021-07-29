@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from sqlalchemy.engine.reflection import Inspector
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -350,7 +349,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 ])
 
             # Verify that there is no "slave"-named items in schema.
-            inspector = Inspector(conn)
+            inspector = sa.inspect(conn)
 
             def check_name(name, table_name, item_type):
                 if not name:
