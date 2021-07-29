@@ -1488,8 +1488,8 @@ class TestGitPoller(TestGitPollerBase):
 
     @defer.inlineCallbacks
     def test_startService_loadLastRev(self):
-        self.master.db.state.fakeState(
-            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+        self.master.db.state.set_fake_state(
+            self.poller,
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
         )
 
