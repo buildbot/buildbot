@@ -150,6 +150,13 @@ def get_sqlalchemy_migrate_version():
     return tuple(map(int, version.split('.')))
 
 
+def sa_url_set_attr(u, attr, value):
+    if hasattr(u, 'set'):
+        return u.set(**{attr: value})
+    setattr(u, attr, value)
+    return u
+
+
 def special_case_sqlite(u, kwargs):
     """For sqlite, percent-substitute %(basedir)s and use a full
     path to the basedir.  If using a memory database, force the
@@ -166,9 +173,12 @@ def special_case_sqlite(u, kwargs):
         # sqlalchemy 0.7 for non-memory SQLite databases.
         kwargs.setdefault('poolclass', NullPool)
 
-        u.database = u.database % dict(basedir=kwargs['basedir'])
-        if not os.path.isabs(u.database[0]):
-            u.database = os.path.join(kwargs['basedir'], u.database)
+        database = u.database
+        database = database % dict(basedir=kwargs['basedir'])
+        if not os.path.isabs(database[0]):
+            database = os.path.join(kwargs['basedir'], database)
+
+        u = sa_url_set_attr(u, 'database', database)
 
     else:
         # For in-memory database SQLAlchemy will use SingletonThreadPool
@@ -182,7 +192,9 @@ def special_case_sqlite(u, kwargs):
 
     # ignore serializing access to the db
     if 'serialize_access' in u.query:
-        u.query.pop('serialize_access')
+        query = dict(u.query)
+        query.pop('serialize_access')
+        u = sa_url_set_attr(u, 'query', query)
 
     return u, kwargs, max_conns
 
@@ -192,27 +204,32 @@ def special_case_mysql(u, kwargs):
     use its value for pool_recycle.  Also, force use_unicode and
     charset to be True and 'utf8', failing if they were set to
     anything else."""
-    kwargs['pool_recycle'] = int(u.query.pop('max_idle', 3600))
+    query = dict(u.query)
+
+    kwargs['pool_recycle'] = int(query.pop('max_idle', 3600))
 
     # default to the MyISAM storage engine
-    storage_engine = u.query.pop('storage_engine', 'MyISAM')
+    storage_engine = query.pop('storage_engine', 'MyISAM')
+
     kwargs['connect_args'] = {
         'init_command': 'SET default_storage_engine={}'.format(storage_engine)
     }
 
-    if 'use_unicode' in u.query:
-        if u.query['use_unicode'] != "True":
+    if 'use_unicode' in query:
+        if query['use_unicode'] != "True":
             raise TypeError("Buildbot requires use_unicode=True " +
                             "(and adds it automatically)")
     else:
-        u.query['use_unicode'] = "True"
+        query['use_unicode'] = "True"
 
-    if 'charset' in u.query:
-        if u.query['charset'] != "utf8":
+    if 'charset' in query:
+        if query['charset'] != "utf8":
             raise TypeError("Buildbot requires charset=utf8 " +
                             "(and adds it automatically)")
     else:
-        u.query['charset'] = 'utf8'
+        query['charset'] = 'utf8'
+
+    u = sa_url_set_attr(u, 'query', query)
 
     return u, kwargs, None
 
