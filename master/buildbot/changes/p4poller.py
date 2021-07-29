@@ -91,7 +91,7 @@ def get_simple_split(branchfile):
     return branch, file
 
 
-class P4Source(base.PollingChangeSource, util.ComparableMixin):
+class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
@@ -113,38 +113,60 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     last_change = None
     loop = None
 
-    def __init__(self, p4port=None, p4user=None, p4passwd=None, p4base="//", p4bin="p4",
-                 split_file=lambda branchfile: (None, branchfile), pollInterval=60 * 10,
-                 histmax=None, pollinterval=-2, encoding="utf8", project=None, name=None,
-                 use_tickets=False, ticket_login_interval=60 * 60 * 24, server_tz=None,
-                 pollAtLaunch=False, revlink=lambda branch, revision: (""),
-                 resolvewho=lambda who: (who), pollRandomDelayMin=0, pollRandomDelayMax=0):
+    def __init__(self, **kwargs):
+        name = kwargs.get("name", None)
+        if name is None:
+            kwargs['name'] = self.build_name(name, kwargs.get('p4port', None),
+                                             kwargs.get('p4base', '//'))
+        super().__init__(**kwargs)
+
+    def checkConfig(self, p4port=None, p4user=None, p4passwd=None, p4base="//", p4bin="p4",
+                    split_file=lambda branchfile: (None, branchfile), pollInterval=60 * 10,
+                    histmax=None, pollinterval=-2, encoding="utf8", project=None, name=None,
+                    use_tickets=False, ticket_login_interval=60 * 60 * 24, server_tz=None,
+                    pollAtLaunch=False, revlink=lambda branch, revision: (""),
+                    resolvewho=lambda who: (who), pollRandomDelayMin=0, pollRandomDelayMax=0):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        if name is None:
-            name = "P4Source:{}:{}".format(p4port, p4base)
+        name = self.build_name(name, p4port, p4base)
 
-        super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
-                         pollRandomDelayMin=pollRandomDelayMin,
-                         pollRandomDelayMax=pollRandomDelayMax)
+        if use_tickets and not p4passwd:
+            config.error("You need to provide a P4 password to use ticket authentication")
+
+        if not callable(revlink):
+            config.error("You need to provide a valid callable for revlink")
+
+        if not callable(resolvewho):
+            config.error("You need to provide a valid callable for resolvewho")
+
+        if server_tz is not None and dateutil.tz.gettz(server_tz) is None:
+            raise P4PollerError(("Failed to get timezone from server_tz string '{}'"
+                                 ).format(server_tz))
+
+        super().checkConfig(name=name, pollInterval=pollInterval,
+                            pollAtLaunch=pollAtLaunch,
+                            pollRandomDelayMin=pollRandomDelayMin,
+                            pollRandomDelayMax=pollRandomDelayMax)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, p4port=None, p4user=None, p4passwd=None, p4base="//", p4bin="p4",
+                        split_file=lambda branchfile: (None, branchfile), pollInterval=60 * 10,
+                        histmax=None, pollinterval=-2, encoding="utf8", project=None, name=None,
+                        use_tickets=False, ticket_login_interval=60 * 60 * 24, server_tz=None,
+                        pollAtLaunch=False, revlink=lambda branch, revision: (""),
+                        resolvewho=lambda who: (who), pollRandomDelayMin=0, pollRandomDelayMax=0):
+
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
+
+        name = self.build_name(name, p4port, p4base)
 
         if project is None:
             project = ''
-
-        if use_tickets and not p4passwd:
-            config.error(
-                "You need to provide a P4 password to use ticket authentication")
-
-        if not callable(revlink):
-            config.error(
-                "You need to provide a valid callable for revlink")
-
-        if not callable(resolvewho):
-            config.error(
-                "You need to provide a valid callable for resolvewho")
 
         self.p4port = p4port
         self.p4user = p4user
@@ -159,11 +181,18 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.revlink_callable = revlink
         self.resolvewho_callable = resolvewho
         self.server_tz = dateutil.tz.gettz(server_tz) if server_tz else None
-        if server_tz is not None and self.server_tz is None:
-            raise P4PollerError(("Failed to get timezone from server_tz string '{}'"
-                                 ).format(server_tz))
 
         self._ticket_login_counter = 0
+
+        yield super().reconfigService(name=name, pollInterval=pollInterval,
+                                      pollAtLaunch=pollAtLaunch,
+                                      pollRandomDelayMin=pollRandomDelayMin,
+                                      pollRandomDelayMax=pollRandomDelayMax)
+
+    def build_name(self, name, p4port, p4base):
+        if name is not None:
+            return name
+        return "P4Source:{}:{}".format(p4port, p4base)
 
     def describe(self):
         return "p4source {} {}".format(self.p4port, self.p4base)
