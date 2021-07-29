@@ -135,6 +135,23 @@ class DBThreadPool:
             self.do = timed_do_fn(self.do)
             self.do_with_engine = timed_do_fn(self.do_with_engine)
 
+        self.forbidded_callable_return_type = self.get_sqlalchemy_result_type()
+
+    def get_sqlalchemy_result_type(self):
+        try:
+            from sqlalchemy.engine import ResultProxy  # sqlalchemy 1.x - 1.3
+            return ResultProxy
+        except ImportError:
+            pass
+
+        try:
+            from sqlalchemy.engine import Result  # sqlalchemy 1.4 and newer
+            return Result
+        except ImportError:
+            pass
+
+        raise ImportError("Could not import SQLAlchemy result type")
+
     def _start(self):
         self._start_evt = None
         if not self.running:
@@ -188,7 +205,7 @@ class DBThreadPool:
             try:
                 try:
                     rv = callable(arg, *args, **kwargs)
-                    assert not isinstance(rv, sa.engine.ResultProxy), \
+                    assert not isinstance(rv, self.forbidded_callable_return_type), \
                         "do not return ResultProxy objects!"
                 except sa.exc.OperationalError as e:
                     if not self.engine.should_retry(e):
