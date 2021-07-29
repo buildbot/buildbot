@@ -31,7 +31,7 @@ from buildbot.util import epoch2datetime
 from buildbot.util.pullrequest import PullRequestMixin
 
 
-class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
+class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullRequestMixin):
 
     compare_attrs = ("owner", "slug", "branch",
                      "pollInterval", "useTimestamps",
@@ -40,22 +40,28 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
     db_class_name = 'BitbucketPullrequestPoller'
     property_basename = "bitbucket"
 
-    def __init__(self, owner, slug,
-                 branch=None,
-                 pollInterval=10 * 60,
-                 useTimestamps=True,
-                 category=None,
-                 project='',
-                 pullrequest_filter=True,
-                 pollAtLaunch=False,
-                 auth=None,
-                 bitbucket_property_whitelist=None,
-                 ):
+    def __init__(self, owner, slug, **kwargs):
+        kwargs['name'] = self.build_name(owner, slug)
+
+        self.initLock = defer.DeferredLock()
+
+        super().__init__(owner, slug, **kwargs)
+
+    def checkConfig(self, owner, slug,
+                    branch=None, pollInterval=10 * 60, useTimestamps=True,
+                    category=None, project='', pullrequest_filter=True,
+                    pollAtLaunch=False, auth=None, bitbucket_property_whitelist=None):
+        super().checkConfig(name=self.build_name(owner, slug),
+                            pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, owner, slug,
+                        branch=None, pollInterval=10 * 60, useTimestamps=True,
+                        category=None, project='', pullrequest_filter=True,
+                        pollAtLaunch=False, auth=None, bitbucket_property_whitelist=None):
         self.owner = owner
         self.slug = slug
         self.branch = branch
-        super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval,
-                         pollAtLaunch=pollAtLaunch)
         if bitbucket_property_whitelist is None:
             bitbucket_property_whitelist = []
 
@@ -70,7 +76,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
         self.category = category if callable(
             category) else bytes2unicode(category)
         self.project = bytes2unicode(project)
-        self.initLock = defer.DeferredLock()
         self.external_property_whitelist = bitbucket_property_whitelist
 
         if auth is not None:
@@ -78,6 +83,12 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
             self.headers = {b"Authorization": b"Basic " + encoded_credentials}
         else:
             self.headers = None
+
+        yield super().reconfigService(self.build_name(owner, slug),
+                                      pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+
+    def build_name(self, owner, slug):
+        return '/'.join([owner, slug])
 
     def describe(self):
         return "BitbucketPullrequestPoller watching the "\
