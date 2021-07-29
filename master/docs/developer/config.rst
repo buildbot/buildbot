@@ -378,6 +378,15 @@ implemented as Twisted services and mix in the
 :py:class:`ReconfigurableServiceMixin` class, overriding the
 :py:meth:`~ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig` method.
 
+The services implementing ``ReconfigurableServiceMixin`` operate on whole master configuration.
+
+In some cases they are effectively singletons that handle configuration identified by a specific configuration key.
+Such singletons often manage non-singleton services as children and pass bits of its own configuration when reconfiguring these children.
+``BuildbotServiceManager`` is one internal implementation of ``ReconfigurableServiceMixin`` which accepts a list of child service configurations as its configuration and then intelligently reconfigures child services on changes.
+
+Non-singleton ``ReconfigurableServiceMixin`` services are harder to write as they must manually pick its configuration from whole master configuration.
+The parent service also needs explicit support for this kind of setup to work correctly.
+
 .. py:class:: ReconfigurableServiceMixin
 
     .. py:method:: reconfigServiceWithBuildbotConfig(new_config)
