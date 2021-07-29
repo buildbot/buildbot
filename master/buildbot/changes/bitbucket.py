@@ -84,11 +84,10 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
             "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch)
 
     @deferredLocked('initLock')
+    @defer.inlineCallbacks
     def poll(self):
-        d = self._getChanges()
-        d.addCallback(self._processChanges)
-        d.addErrback(self._processChangesFailure)
-        return d
+        page = yield self._getChanges()
+        yield self._processChanges(page)
 
     def _getChanges(self):
         self.lastPoll = time.time()
@@ -173,13 +172,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
                                     },
                         src='bitbucket',
                     )
-
-    def _processChangesFailure(self, f):
-        log.msg('BitbucketPullrequestPoller: json api poll failed')
-        log.err(f)
-        # eat the failure to continue along the deferred chain - we still want
-        # to catch up
-        return None
 
     def _getCurrentRev(self, pr_id):
         # Return a deferred datetime object for the given pull request number
