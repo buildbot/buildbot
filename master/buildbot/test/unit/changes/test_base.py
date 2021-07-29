@@ -22,6 +22,8 @@ from buildbot.changes import base
 from buildbot.config import ConfigErrors
 from buildbot.test.util import changesource
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestChangeSource(changesource.ChangeSourceMixin,
@@ -89,7 +91,10 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         self.setUpTestReactor()
         yield self.setUpChangeSource()
 
-        yield self.attachChangeSource(self.Subclass(name="DummyCS"))
+        with assertProducesWarnings(DeprecatedApiWarning,
+                                    message_pattern="use ReconfigurablePollingChangeSource"):
+            cs = self.Subclass(name="DummyCS")
+        yield self.attachChangeSource(cs)
 
     def tearDown(self):
         return self.tearDownChangeSource()
