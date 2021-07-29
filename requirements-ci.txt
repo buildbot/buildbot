@@ -74,7 +74,7 @@ setuptools-trial==0.6.0
 singledispatch==3.6.2
 six==1.16.0
 snowballstemmer==2.1.0
-SQLAlchemy==1.3.23  # pyup: ignore (master requires 1.3.x)
+SQLAlchemy==1.4.22
 sqlalchemy-migrate==0.13.0
 sqlparse==0.4.1
 Tempita==0.5.2
