@@ -98,7 +98,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     @poll_method
     def doPoll(self):
         d = defer.maybeDeferred(self.poll)
-        d.addErrback(log.err, 'while polling for changes')
+        d.addErrback(log.err, '{}: while polling for changes'.format(self))
         return d
 
     def force(self):
