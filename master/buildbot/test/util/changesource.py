@@ -72,6 +72,7 @@ class ChangeSourceMixin:
         # also, now that changesources are ClusteredServices, setting up
         # the clock here helps in the unit tests that check that behavior
         self.changesource.clock = task.Clock()
+        return cs
 
     def startChangeSource(self):
         "start the change source as a service"
