@@ -100,9 +100,13 @@ class FakeStateComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeState(self, name, class_name, **kwargs):
-        id = self.objects[(name, class_name)] = self._newId()
-        self.objects[(name, class_name)] = id
+    def set_fake_state(self, object, **kwargs):
+        state_key = (object.name, object.__class__.__name__)
+        if state_key in self.objects:
+            id = self.objects[state_key]
+        else:
+            id = self.objects[state_key] = self._newId()
+
         self.states[id] = dict((k, json.dumps(v))
                                for k, v in kwargs.items())
         return id

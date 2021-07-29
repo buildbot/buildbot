@@ -56,28 +56,18 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     def describe(self):
         return "{} watching maildir '{}'".format(self.__class__.__name__, self.basedir)
 
+    @defer.inlineCallbacks
     def messageReceived(self, filename):
-        d = defer.succeed(None)
+        with self.moveToCurDir(filename) as f:
+            chtuple = self.parse_file(f, self.prefix)
 
-        @d.addCallback
-        def parse_file(_):
-            with self.moveToCurDir(filename) as f:
-                parsedFile = self.parse_file(f, self.prefix)
-            return parsedFile
-
-        @d.addCallback
-        def add_change(chtuple):
-            src, chdict = None, None
-            if chtuple:
-                src, chdict = chtuple
-            if chdict:
-                return self.master.data.updates.addChange(src=str(src),
-                                                          **chdict)
-            else:
-                log.msg("no change found in maildir file '{}'".format(filename))
-            return None
-
-        return d
+        src, chdict = None, None
+        if chtuple:
+            src, chdict = chtuple
+        if chdict:
+            yield self.master.data.updates.addChange(src=str(src), **chdict)
+        else:
+            log.msg("no change found in maildir file '{}'".format(filename))
 
     def parse_file(self, fd, prefix=None):
         m = message_from_file(fd)

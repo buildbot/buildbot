@@ -66,7 +66,7 @@ def split_file_projects_branches(path):
     return f
 
 
-class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
+class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
     """
     Poll a Subversion repository for changes and submit them to the change
@@ -81,11 +81,17 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     last_change = None
     loop = None
 
-    def __init__(self, repourl, split_file=None, svnuser=None, svnpasswd=None,
-                 pollInterval=10 * 60, histmax=100, svnbin="svn", revlinktmpl="",
-                 category=None, project="", cachepath=None, pollinterval=-2,
-                 extra_args=None, name=None, pollAtLaunch=False, pollRandomDelayMin=0,
-                 pollRandomDelayMax=0):
+    def __init__(self, repourl, **kwargs):
+        name = kwargs.get('name', None)
+        if name is None:
+            kwargs['name'] = repourl
+        super().__init__(repourl, **kwargs)
+
+    def checkConfig(self, repourl, split_file=None, svnuser=None, svnpasswd=None,
+                    pollInterval=10 * 60, histmax=100, svnbin="svn", revlinktmpl="",
+                    category=None, project="", cachepath=None, pollinterval=-2,
+                    extra_args=None, name=None, pollAtLaunch=False, pollRandomDelayMin=0,
+                    pollRandomDelayMax=0):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -94,10 +100,23 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = repourl
 
-        super().__init__(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
-                         svnuser=svnuser, svnpasswd=svnpasswd,
-                         pollRandomDelayMin=pollRandomDelayMin,
-                         pollRandomDelayMax=pollRandomDelayMax)
+        super().checkConfig(name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
+                            pollRandomDelayMin=pollRandomDelayMin,
+                            pollRandomDelayMax=pollRandomDelayMax)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, repourl, split_file=None, svnuser=None, svnpasswd=None,
+                        pollInterval=10 * 60, histmax=100, svnbin="svn", revlinktmpl="",
+                        category=None, project="", cachepath=None, pollinterval=-2,
+                        extra_args=None, name=None, pollAtLaunch=False, pollRandomDelayMin=0,
+                        pollRandomDelayMax=0):
+
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
+
+        if name is None:
+            name = repourl
 
         if repourl.endswith("/"):
             repourl = repourl[:-1]  # strip the trailing slash
@@ -134,6 +153,11 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 log.msg(("SVNPoller: SVNPoller({}) cache file corrupt or unwriteable; " +
                          "skipping and not using").format(self.repourl))
                 log.err()
+
+        yield super().reconfigService(name=name, pollInterval=pollInterval,
+                                      pollAtLaunch=pollAtLaunch,
+                                      pollRandomDelayMin=pollRandomDelayMin,
+                                      pollRandomDelayMax=pollRandomDelayMax)
 
     def describe(self):
         return "SVNPoller: watching {}".format(self.repourl)

@@ -70,7 +70,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
     def test_messageReceived_svn(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
-        self.attachChangeSource(mds)
+        yield self.attachChangeSource(mds)
 
         # monkey-patch in a parse method
         def parse(message, prefix):
@@ -102,7 +102,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
     def test_messageReceived_bzr(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
-        self.attachChangeSource(mds)
+        yield self.attachChangeSource(mds)
 
         # monkey-patch in a parse method
         def parse(message, prefix):
