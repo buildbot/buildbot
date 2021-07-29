@@ -100,10 +100,11 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
     def tearDown(self):
         return self.tearDownChangeSource()
 
+    @defer.inlineCallbacks
     def newChangeSource(self, host, user, *args, **kwargs):
         s = gerritchangesource.GerritChangeSource(
             host, user, *args, **kwargs)
-        self.attachChangeSource(s)
+        yield self.attachChangeSource(s)
         s.configureService()
         return s
 
@@ -117,15 +118,17 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     # tests
 
+    @defer.inlineCallbacks
     def test_describe(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
 
+    @defer.inlineCallbacks
     def test_name(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
 
-        s = self.newChangeSource('somehost', 'someuser', name="MyName")
+        s = yield self.newChangeSource('somehost', 'someuser', name="MyName")
         self.assertEqual("MyName", s.name)
 
     # TODO: test the backoff algorithm
@@ -199,14 +202,14 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         yield s.lineReceived(json.dumps(self.patchset_created_event))
 
         self.assert_changes([self.expected_change_patchset_created], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created_props(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         yield s.lineReceived(json.dumps(self.patchset_created_event))
 
         change = copy.deepcopy(self.expected_change_patchset_created)
@@ -319,14 +322,14 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_lineReceived_comment_added(self):
-        s = self.newChangeSource('somehost', 'someuser', handled_events=["comment-added"])
+        s = yield self.newChangeSource('somehost', 'someuser', handled_events=["comment-added"])
         yield s.lineReceived(json.dumps(self.comment_added_event))
 
         self.assert_changes([self.expected_change_comment_added], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
     def test_lineReceived_ref_updated(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         yield s.lineReceived(json.dumps({
             'type': 'ref-updated',
             'submitter': {
@@ -374,7 +377,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_duplicate_events_ignored(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         yield s.lineReceived(json.dumps(self.patchset_created_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -386,9 +389,9 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_duplicate_non_source_events_not_ignored(self):
-        s = self.newChangeSource('somehost', 'someuser',
-                                 handled_events=['patchset-created', 'ref-updated',
-                                                 'change-merged', 'comment-added'])
+        s = yield self.newChangeSource('somehost', 'someuser',
+                                       handled_events=['patchset-created', 'ref-updated',
+                                                       'change-merged', 'comment-added'])
         yield s.lineReceived(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -397,7 +400,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_malformed_events_ignored(self):
-        s = self.newChangeSource('somehost', 'someuser')
+        s = yield self.newChangeSource('somehost', 'someuser')
         # "change" not in event
         yield s.lineReceived(json.dumps(dict(
             type="patchset-created",
@@ -434,8 +437,8 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_handled_events_filter_true(self):
-        s = self.newChangeSource(
-            'somehost', 'some_choosy_user', handled_events=["change-merged"])
+        s = yield self.newChangeSource('somehost', 'some_choosy_user',
+                                       handled_events=["change-merged"])
         yield s.lineReceived(json.dumps(self.change_merged_event))
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
@@ -445,15 +448,14 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_handled_events_filter_false(self):
-        s = self.newChangeSource('somehost', 'some_choosy_user')
+        s = yield self.newChangeSource('somehost', 'some_choosy_user')
         yield s.lineReceived(json.dumps(self.change_merged_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def test_custom_handler(self):
-        s = self.newChangeSource(
-            'somehost', 'some_choosy_user',
-            handled_events=["change-merged"])
+        s = yield self.newChangeSource('somehost', 'some_choosy_user',
+                                       handled_events=["change-merged"])
 
         def custom_handler(self, properties, event):
             event['change']['project'] = "world"
@@ -466,9 +468,9 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(c['project'], "world")
 
+    @defer.inlineCallbacks
     def test_startStreamProcess_bytes_output(self):
-        s = self.newChangeSource(
-            'somehost', 'some_choosy_user', debug=True)
+        s = yield self.newChangeSource('somehost', 'some_choosy_user', debug=True)
 
         exp_argv = ['ssh', '-o', 'BatchMode=yes', 'some_choosy_user@somehost', '-p', '29418']
         exp_argv += ['gerrit', 'stream-events']
@@ -518,7 +520,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
 
     @defer.inlineCallbacks
     def test_getFiles(self):
-        s = self.newChangeSource('host', 'user', gerritport=2222)
+        s = yield self.newChangeSource('host', 'user', gerritport=2222)
         exp_argv = [
             'ssh', '-o', 'BatchMode=yes', 'user@host', '-p', '2222',
             'gerrit', 'query', '1000', '--format', 'JSON', '--files', '--patch-sets'
@@ -547,8 +549,8 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             .stdout(self.query_files_success)
         )
 
-        s = self.newChangeSource('host', 'user', get_files=True,
-                                 handled_events=["change-merged"])
+        s = yield self.newChangeSource('host', 'user', get_files=True,
+                                       handled_events=["change-merged"])
 
         yield s.lineReceived(json.dumps(self.change_merged_event))
         c = self.master.data.updates.changesAdded[0]

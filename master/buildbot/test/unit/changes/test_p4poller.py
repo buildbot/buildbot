@@ -134,10 +134,9 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
         when = datetime.datetime.strptime(timestring, datefmt)
         return when
 
-    # tests
-
+    @defer.inlineCallbacks
     def test_describe(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
@@ -159,7 +158,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
     @defer.inlineCallbacks
     def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
@@ -256,7 +255,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_failed_changes(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
@@ -273,7 +272,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_failed_describe(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
@@ -297,7 +296,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_unicode_error(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
@@ -320,7 +319,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_poll_unicode_error2(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
@@ -336,7 +335,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_acquire_ticket_auth(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user='buildbot_user', p4passwd='pass',
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
@@ -364,7 +363,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
 
     @defer.inlineCallbacks
     def test_acquire_ticket_auth_fail(self):
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None, p4passwd='pass',
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1),
@@ -393,7 +392,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
     @defer.inlineCallbacks
     def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=get_simple_split))
@@ -457,7 +456,7 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
     @defer.inlineCallbacks
     def test_server_tz(self):
         """Verify that the server_tz parameter is handled correctly"""
-        self.attachChangeSource(
+        yield self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
                      p4base='//depot/myproject/',
                      split_file=get_simple_split,

@@ -210,8 +210,8 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'git ')
         )
 
-        yield self.assertFailure(self.poller._checkGitFeatures(),
-                                 EnvironmentError)
+        with self.assertRaises(EnvironmentError):
+            yield self.poller._checkGitFeatures()
 
         self.assert_all_commands_ran()
 

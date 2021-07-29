@@ -47,7 +47,7 @@ class TestChangeSource(changesource.ChangeSourceMixin,
         cs.deactivate = mock.Mock(return_value=defer.succeed(None))
 
         # set the changesourceid, and claim the changesource on another master
-        self.attachChangeSource(cs)
+        yield self.attachChangeSource(cs)
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         yield cs.startService()
@@ -89,7 +89,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin,
         self.setUpTestReactor()
         yield self.setUpChangeSource()
 
-        self.attachChangeSource(self.Subclass(name="DummyCS"))
+        yield self.attachChangeSource(self.Subclass(name="DummyCS"))
 
     def tearDown(self):
         return self.tearDownChangeSource()
@@ -196,7 +196,7 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin,
 
         yield self.setUpChangeSource()
 
-        self.attachChangeSource(self.Subclass(name="DummyCS"))
+        yield self.attachChangeSource(self.Subclass(name="DummyCS"))
 
     def tearDown(self):
         return self.tearDownChangeSource()
