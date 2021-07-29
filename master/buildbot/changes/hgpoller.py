@@ -106,11 +106,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                                                             self.workdir, status))
 
     @deferredLocked('initLock')
+    @defer.inlineCallbacks
     def poll(self):
-        d = self._getChanges()
-        d.addCallback(self._processChanges)
-        d.addErrback(self._processChangesFailure)
-        return d
+        yield self._getChanges()
+        yield self._processChanges()
 
     def _absWorkdir(self):
         workdir = self.workdir
@@ -247,7 +246,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         return stdout.strip().decode(self.encoding)
 
     @defer.inlineCallbacks
-    def _processChanges(self, unused_output):
+    def _processChanges(self):
         """Send info about pulled changes to the master and record current.
 
         HgPoller does the recording by moving the working dir to the head
@@ -325,13 +324,6 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
             yield self._setCurrentRev(new_rev, branch)
-
-    def _processChangesFailure(self, f):
-        log.msg('hgpoller: repo poll failed')
-        log.err(f)
-        # eat the failure to continue along the deferred chain - we still want
-        # to catch up
-        return None
 
     def _stopOnFailure(self, f):
         "utility method to stop the service when a failure occurs"
