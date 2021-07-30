@@ -36,7 +36,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 name=name,
                 name_hash=self.hashColumns(name),
                 active=0,  # initially inactive
-                last_active=self.master.reactor.seconds()
+                last_active=int(self.master.reactor.seconds())
             ))
 
     # returns a Deferred that returns a value
@@ -66,7 +66,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update(whereclause=whereclause)
             q = q.values(active=1 if active else 0)
             if active:
-                q = q.values(last_active=self.master.reactor.seconds())
+                q = q.values(last_active=int(self.master.reactor.seconds()))
             conn.execute(q)
 
             # return True if there was a change in state
