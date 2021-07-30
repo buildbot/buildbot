@@ -1034,6 +1034,12 @@ For example, a particular daily scheduler could be configured on multiple master
 
         This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
+    .. py:method:: canReconfigWithSibling(self, sibling)
+        This method is used to check if we are able to call
+        :py:func:`reconfigServiceWithSibling` with the given sibling.
+        If it returns `False`, we stop the old service and start a new one,
+        instead of attempting a reconfig.
+
     .. py:method:: checkConfig(self, *args, **kwargs)
 
         Please override this method to check the parameters of your config.
