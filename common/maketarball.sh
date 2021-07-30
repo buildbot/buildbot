@@ -4,7 +4,7 @@ pkg=$1
 (
     cd ${pkg}
     rm -rf MANIFEST dist
-    if [ ${pkg} == "master" ]; then
+    if [ ${pkg} == "master" ] || [ ${pkg} == "worker" ]; then
         python setup.py sdist
         # wheels must be build separately in order to properly omit tests
         python setup.py bdist_wheel
