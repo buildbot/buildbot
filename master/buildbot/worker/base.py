@@ -278,7 +278,7 @@ class AbstractWorker(service.BuildbotService):
         # without disconnecting the worker, yet there's no reason to do that.
 
         assert self.name == name
-        self.password = password
+        self.password = yield self.renderSecrets(password)
 
         # adopt new instance's configuration parameters
         self.max_builds = max_builds

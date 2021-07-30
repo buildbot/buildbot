@@ -438,10 +438,9 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_wrongRepoLink(self):
-        yield self.assertFailure(
-            self.newChangeSource(
-                'defunkt', 'defunkt', token='1234', repository_type='defunkt'),
-            ConfigErrors)
+        with self.assertRaises(ConfigErrors):
+            yield self.newChangeSource('defunkt', 'defunkt', token='1234',
+                                       repository_type='defunkt')
 
     @defer.inlineCallbacks
     def test_magicLink(self):

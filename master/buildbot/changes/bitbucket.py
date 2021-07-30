@@ -31,7 +31,7 @@ from buildbot.util import epoch2datetime
 from buildbot.util.pullrequest import PullRequestMixin
 
 
-class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
+class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullRequestMixin):
 
     compare_attrs = ("owner", "slug", "branch",
                      "pollInterval", "useTimestamps",
@@ -40,22 +40,28 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
     db_class_name = 'BitbucketPullrequestPoller'
     property_basename = "bitbucket"
 
-    def __init__(self, owner, slug,
-                 branch=None,
-                 pollInterval=10 * 60,
-                 useTimestamps=True,
-                 category=None,
-                 project='',
-                 pullrequest_filter=True,
-                 pollAtLaunch=False,
-                 auth=None,
-                 bitbucket_property_whitelist=None,
-                 ):
+    def __init__(self, owner, slug, **kwargs):
+        kwargs['name'] = self.build_name(owner, slug)
+
+        self.initLock = defer.DeferredLock()
+
+        super().__init__(owner, slug, **kwargs)
+
+    def checkConfig(self, owner, slug,
+                    branch=None, pollInterval=10 * 60, useTimestamps=True,
+                    category=None, project='', pullrequest_filter=True,
+                    pollAtLaunch=False, auth=None, bitbucket_property_whitelist=None):
+        super().checkConfig(name=self.build_name(owner, slug),
+                            pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+
+    @defer.inlineCallbacks
+    def reconfigService(self, owner, slug,
+                        branch=None, pollInterval=10 * 60, useTimestamps=True,
+                        category=None, project='', pullrequest_filter=True,
+                        pollAtLaunch=False, auth=None, bitbucket_property_whitelist=None):
         self.owner = owner
         self.slug = slug
         self.branch = branch
-        super().__init__(name='/'.join([owner, slug]), pollInterval=pollInterval,
-                         pollAtLaunch=pollAtLaunch)
         if bitbucket_property_whitelist is None:
             bitbucket_property_whitelist = []
 
@@ -70,7 +76,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
         self.category = category if callable(
             category) else bytes2unicode(category)
         self.project = bytes2unicode(project)
-        self.initLock = defer.DeferredLock()
         self.external_property_whitelist = bitbucket_property_whitelist
 
         if auth is not None:
@@ -79,16 +84,21 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
         else:
             self.headers = None
 
+        yield super().reconfigService(self.build_name(owner, slug),
+                                      pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+
+    def build_name(self, owner, slug):
+        return '/'.join([owner, slug])
+
     def describe(self):
         return "BitbucketPullrequestPoller watching the "\
             "Bitbucket repository {}/{}, branch: {}".format(self.owner, self.slug, self.branch)
 
     @deferredLocked('initLock')
+    @defer.inlineCallbacks
     def poll(self):
-        d = self._getChanges()
-        d.addCallback(self._processChanges)
-        d.addErrback(self._processChangesFailure)
-        return d
+        page = yield self._getChanges()
+        yield self._processChanges(page)
 
     def _getChanges(self):
         self.lastPoll = time.time()
@@ -173,13 +183,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource, PullRequestMixin):
                                     },
                         src='bitbucket',
                     )
-
-    def _processChangesFailure(self, f):
-        log.msg('BitbucketPullrequestPoller: json api poll failed')
-        log.err(f)
-        # eat the failure to continue along the deferred chain - we still want
-        # to catch up
-        return None
 
     def _getCurrentRev(self, pr_id):
         # Return a deferred datetime object for the given pull request number

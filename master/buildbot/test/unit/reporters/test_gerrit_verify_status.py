@@ -28,7 +28,6 @@ from buildbot.reporters.gerrit_verify_status import GerritVerifyStatusPush
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.test.unit.changes.test_gerritchangesource import TestGerritChangeSource
 from buildbot.test.util import logging
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import TestReactorMixin
@@ -369,9 +368,21 @@ class TestGerritVerifyStatusPush(TestReactorMixin, ReporterTestMixin, ConfigErro
         yield self.createGerritStatus()
 
         # from chdict:
-        chdict = TestGerritChangeSource.expected_change
-        props = Properties.fromDict({
-            k: (v, 'change') for k, v in chdict['properties'].items()})
+        change_props = {
+            'event.change.owner.email': 'dustin@mozilla.com',
+            'event.change.subject': 'fix 1234',
+            'event.change.project': 'pr',
+            'event.change.owner.name': 'Dustin',
+            'event.change.number': '4321',
+            'event.change.url': 'http://buildbot.net',
+            'event.change.branch': 'br',
+            'event.type': 'patchset-created',
+            'event.patchSet.revision': 'abcdef',
+            'event.patchSet.number': '12',
+            'event.source': 'GerritChangeSource'
+        }
+
+        props = Properties.fromDict({k: (v, 'change') for k, v in change_props.items()})
         changes = self.sp.getGerritChanges(props)
         self.assertEqual(changes, [
             {'change_id': '4321', 'revision_id': '12'}

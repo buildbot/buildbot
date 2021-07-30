@@ -63,6 +63,9 @@ class Model(base.DBConnectorComponent):
     #
     # * sqlalchemy does not handle sa.Boolean very well on MySQL or Postgres;
     #   use sa.SmallInteger instead
+    #
+    # * BuildRequest.canBeCollapsed() depends on buildrequest.id being auto-incremented which is
+    #   sqlalchemy default.
 
     # Tables related to build requests
     # --------------------------------

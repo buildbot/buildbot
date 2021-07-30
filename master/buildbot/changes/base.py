@@ -22,6 +22,7 @@ from buildbot import config
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
+from buildbot.warnings import warn_deprecated
 
 
 @implementer(IChangeSource)
@@ -98,7 +99,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     @poll_method
     def doPoll(self):
         d = defer.maybeDeferred(self.poll)
-        d.addErrback(log.err, 'while polling for changes')
+        d.addErrback(log.err, '{}: while polling for changes'.format(self))
         return d
 
     def force(self):
@@ -122,6 +123,10 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
                     pollRandomDelayMin=0, pollRandomDelayMax=0, **kwargs):
         super().checkConfig(name=name, pollInterval=60 * 10, pollAtLaunch=False,
                             pollRandomDelayMin=0, pollRandomDelayMax=0)
+
+        warn_deprecated('3.3.0', 'PollingChangeSource has been deprecated: ' +
+                        'please use ReconfigurablePollingChangeSource')
+
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.pollRandomDelayMin = pollRandomDelayMin

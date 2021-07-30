@@ -41,6 +41,7 @@ class TestHgPollerBase(MasterRunProcessMixin,
     def setUp(self):
         self.setUpTestReactor()
         self.setup_master_run_process()
+        yield self.setUpChangeSource()
 
         # To test that environment variables get propagated to subprocesses
         # (See #2116)
@@ -63,7 +64,12 @@ class TestHgPollerBase(MasterRunProcessMixin,
         yield self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
-        yield self.master.db.setup()
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+        yield self.tearDownChangeSource()
 
     @defer.inlineCallbacks
     def check_current_rev(self, wished, branch='default'):
