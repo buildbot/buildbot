@@ -56,6 +56,7 @@ env:
 
   # Test different versions of SQLAlchemy
   - TWISTED=17.9.0 SQLALCHEMY=1.2.0 TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=1.3.0 TESTS=trial
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
