@@ -41,6 +41,7 @@ class FakeBuild(properties.PropertiesMixin):
             spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
         self.workerforbuilder.worker.info = properties.Properties()
+        self.workerforbuilder.worker.workername = 'workername'
         self.builder.config = config.BuilderConfig(
             name='bldr',
             workernames=['a'],

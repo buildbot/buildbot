@@ -76,6 +76,28 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         def run(self):
             return SKIPPED
 
+    class LockBuildStep(buildstep.BuildStep):
+
+        def __init__(self, testcase=None, lock_accesses=None, **kwargs):
+            super().__init__(**kwargs)
+            self.testcase = testcase
+            self.lock_accesses = lock_accesses
+
+        @defer.inlineCallbacks
+        def run(self):
+            botmaster = self.build.builder.botmaster
+            real_master_lock = yield botmaster.getLockFromLockAccess(self.lock_accesses[0],
+                                                                     self.build.config_version)
+            real_worker_lock = yield botmaster.getLockFromLockAccess(self.lock_accesses[1],
+                                                                     self.build.config_version)
+
+            self.testcase.assertFalse(real_master_lock.isAvailable(self.testcase,
+                                                                   self.lock_accesses[0]))
+            self.testcase.assertIn('workername', real_worker_lock.locks)
+            self.testcase.assertFalse(real_worker_lock.locks['workername'].isAvailable(
+                self.testcase, self.lock_accesses[1]))
+            return SUCCESS
+
     def setUp(self):
         self.setUpTestReactor()
         return self.setUpBuildStep()
@@ -161,23 +183,34 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def test_renderableLocks(self):
-        lock1 = locks.MasterLock("masterlock")
-        lock2 = locks.WorkerLock("workerlock")
+        master_lock = locks.MasterLock("masterlock")
+        worker_lock = locks.WorkerLock("workerlock")
 
-        renderedLocks = [False]
+        lock_accesses = []
 
         @renderer
         def rendered_locks(props):
-            renderedLocks[0] = True
-            access1 = locks.LockAccess(lock1, 'counting')
-            access2 = locks.LockAccess(lock2, 'exclusive')
-            return [access1, access2]
+            master_access = locks.LockAccess(master_lock, 'counting')
+            worker_access = locks.LockAccess(worker_lock, 'exclusive')
+            lock_accesses.append(master_access)
+            lock_accesses.append(worker_access)
+            return [master_access, worker_access]
 
-        self.setupStep(self.FakeBuildStep(locks=rendered_locks))
+        self.setupStep(self.LockBuildStep(testcase=self, lock_accesses=lock_accesses,
+                                          locks=rendered_locks))
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
-        self.assertTrue(renderedLocks[0])
+        self.assertEqual(len(lock_accesses), 2)
+
+        botmaster = self.step.build.builder.botmaster
+        real_master_lock = yield botmaster.getLockFromLockAccess(lock_accesses[0],
+                                                                 self.build.config_version)
+        real_worker_lock = yield botmaster.getLockFromLockAccess(lock_accesses[1],
+                                                                 self.build.config_version)
+        self.assertTrue(real_master_lock.isAvailable(self, lock_accesses[0]))
+        self.assertIn('workername', real_worker_lock.locks)
+        self.assertTrue(real_worker_lock.locks['workername'].isAvailable(self, lock_accesses[1]))
 
     def test_compare(self):
         lbs1 = buildstep.BuildStep(name="me")
@@ -196,13 +229,24 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     @defer.inlineCallbacks
     def test_regularLocks(self):
-        lock1 = locks.MasterLock("masterlock")
-        lock2 = locks.WorkerLock("workerlock")
+        master_lock = locks.MasterLock("masterlock")
+        worker_lock = locks.WorkerLock("workerlock")
+        lock_accesses = [locks.LockAccess(master_lock, 'counting'),
+                         locks.LockAccess(worker_lock, 'exclusive')]
 
-        self.setupStep(self.FakeBuildStep(
-            locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
+        self.setupStep(self.LockBuildStep(testcase=self, lock_accesses=lock_accesses,
+                                          locks=lock_accesses))
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
+
+        botmaster = self.step.build.builder.botmaster
+        real_master_lock = yield botmaster.getLockFromLockAccess(lock_accesses[0],
+                                                                 self.build.config_version)
+        real_worker_lock = yield botmaster.getLockFromLockAccess(lock_accesses[1],
+                                                                 self.build.config_version)
+        self.assertTrue(real_master_lock.isAvailable(self, lock_accesses[0]))
+        self.assertIn('workername', real_worker_lock.locks)
+        self.assertTrue(real_worker_lock.locks['workername'].isAvailable(self, lock_accesses[1]))
 
     @defer.inlineCallbacks
     def test_cancelWhileLocksAvailable(self):

@@ -434,7 +434,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # then narrow WorkerLocks down to the worker that this build is being
         # run on
-        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker),
+        self.locks = [(l.getLockForWorker(self.build.workerforbuilder.worker.workername),
                        la)
                       for l, la in self.locks]
 
