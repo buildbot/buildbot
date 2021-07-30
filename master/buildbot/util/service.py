@@ -472,14 +472,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         for n in old_set & new_set:
             old = old_by_name[n]
             new = new_by_name[n]
-            # compare using ComparableMixin if they don't support reconfig
-            if not hasattr(old, 'reconfigServiceWithBuildbotConfig'):
-                if not util.ComparableMixin.isEquivalent(old, new) \
-                        or reflect.qual(old.__class__) != reflect.qual(new.__class__):
-                    removed_names.add(n)
-                    added_names.add(n)
             # check if we are able to reconfig service
-            elif not old.canReconfigWithSibling(new):
+            if not old.canReconfigWithSibling(new):
                 removed_names.add(n)
                 added_names.add(n)
 
