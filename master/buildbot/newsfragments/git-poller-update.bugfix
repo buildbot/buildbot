@@ -1,1 +1,0 @@
-Git poller: replace ``lastRev`` state for instead of updating. This avoids the state to grow and eventually exceed the database field size. (:issue:`6100`)

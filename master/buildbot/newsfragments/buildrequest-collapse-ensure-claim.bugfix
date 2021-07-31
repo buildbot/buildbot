@@ -1,1 +1,0 @@
-Fixed a race condition that would result in attempts to complete unclaimed buildrequests (:issue:`3762`).

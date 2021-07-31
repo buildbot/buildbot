@@ -10,6 +10,37 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.3.0`` ( ``2021-07-31`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed support of SQLAlchemy v1.4 (:issue:`5992`).
+- Improved default build request collapsing functionality to take into account properties set by the scheduler and not collapse build requests if they differ (:issue:`4686`).
+- Fixed a race condition that would result in attempts to complete unclaimed buildrequests (:issue:`3762`).
+- Fixed a race condition in default buildrequest collapse function which resulted in two concurrently submitted build requests potentially being able to cancel each other (:issue:`4642`).
+- The ``comment-added`` event on Gerrit now produces the same branch as other events such as ``patchset-created``.
+- ``GerritChangeSource`` and ``GerritEventLogPoller`` will now produce change events with ``branch`` attribute that corresponds to the actual git branch on the repository.
+- Fixed handling of ``GitPoller`` state to not grow without bounds and eventually exceed the database field size. (:issue:`6100`)
+- Old browser warning banner is no longer shown for browsers that could not be identified (:issue:`5237`).
+- Fixed worker lock handling that caused max lock count to be ignored (:issue:`6132`).
+
+Features
+--------
+
+- Buildbot can now be configured (via ``FailingBuildsetCanceller``) to cancel unfinished builds when a build in a buildset fails.
+- ``GitHubEventHandler`` can now configure authentication token via Secrets management for GitHub instances that do not allow anonymous access
+- Buildbot can now be configured (via ``OldBuildCanceller``) to cancel unfinished builds when branches on which they are running receive new commits.
+- Buildbot secret management can now be used to configure worker passwords.
+- Services can now be forced to reload their code via new ``canReconfigWithSibling`` API.
+
+Deprecations and Removals
+-------------------------
+
+- ``changes.base.PollingChangeSource`` has been fully deprecated as internal uses of it were migrated to replacement APIs.
+
+
 Buildbot ``3.2.0`` ( ``2021-06-17`` )
 =====================================
 
