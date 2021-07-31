@@ -1,1 +1,0 @@
-Fixed support of SQLAlchemy v1.4 (:issue:`5992`).
