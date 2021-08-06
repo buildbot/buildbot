@@ -125,8 +125,8 @@ This step is optional and may depend on your needs.
    virtualenv.exe c:\bbw\sandbox
    c:\bbw\sandbox\Scripts\activate
 
-Install pywin32 with system wide installation
-`````````````````````````````````````````````
+Install pywin32
+```````````````
 
 .. code-block:: bat
 
@@ -144,6 +144,16 @@ Otherwise, like this:
 
   python.exe c:\python39\Scripts\pywin32_postinstall.py -install
 
+Install pyOpenSSL [optional]
+````````````````````````````
+
+This is only necessary if you are going to use ``--use-tls`` when
+creating the buildbot worker.
+
+.. code-block:: bat
+
+  python.exe -m pip install pyOpenSSL
+
 Install buildbot-worker and set it up
 `````````````````````````````````````
 
@@ -151,6 +161,9 @@ Install buildbot-worker and set it up
 
   python.exe -m pip install buildbot-worker
   buildbot-worker create-worker worker master01.mycompany.com %COMPUTERNAME% password
+
+You may want to add options to the ``buildbot-worker`` command, such
+as ``--use-tls``.
 
 Edit worker info about admin and host
 `````````````````````````````````````
