@@ -168,14 +168,14 @@ Please replace <bbworker.passwd> with given user password.
 
 .. code-block:: bat
 
-  .\sandbox\Scripts\buildbot_worker_windows_service.exe --user .\bbworker --password <bbworker.passwd> --startup auto install
+  buildbot_worker_windows_service.exe --user .\bbworker --password <bbworker.passwd> --startup auto install
   powershell -command "& {&'New-Item' -path Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\BuildBot\Parameters}"
   powershell -command "& {&'set-ItemProperty' -path Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\BuildBot\Parameters -Name directories -Value 'c:\bbw\worker'}"
 
 The first command automatically adds user rights to run Buildbot as service.
 
-Modify environment variables
-````````````````````````````
+Modify environment variables [optional]
+```````````````````````````````````````
 This step is optional and may depend on your needs.
 At least we have found useful to have dedicated temp folder worker steps.
 It is much easier discover what temporary files your builds leaks/misbehaves.
