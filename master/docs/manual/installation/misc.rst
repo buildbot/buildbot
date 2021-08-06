@@ -115,8 +115,9 @@ Upgrade pip, setuptools and wheel
    cd c:\Python39
    python.exe -m pip install --upgrade pip setuptools wheel
 
-Install, create and activate virtualenv
-```````````````````````````````````````
+Install, create and activate virtualenv [optional]
+``````````````````````````````````````````````````
+This step is optional and may depend on your needs.
 
 .. code-block:: bat
 
@@ -124,15 +125,24 @@ Install, create and activate virtualenv
    virtualenv.exe c:\bbw\sandbox
    c:\bbw\sandbox\Scripts\activate
 
-
 Install pywin32 with system wide installation
 `````````````````````````````````````````````
 
 .. code-block:: bat
 
   python.exe -m pip install pywin32
+
+If you are in an activated virtualenv, finish up like this:
+
+.. code-block:: bat
+
   python.exe .\sandbox\Scripts\pywin32_postinstall.py -install
 
+Otherwise, like this:
+
+.. code-block:: bat
+
+  python.exe c:\python39\Scripts\pywin32_postinstall.py -install
 
 Install buildbot-worker and set it up
 `````````````````````````````````````
