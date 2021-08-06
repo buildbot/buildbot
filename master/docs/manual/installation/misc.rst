@@ -120,8 +120,8 @@ Install, create and activate virtualenv
 
 .. code-block:: bat
 
-   python.exe -m pip install virtualenv==16.7.10
-   Scripts\virtualenv.exe --no-site-packages c:\bbw\sandbox
+   python.exe -m pip install virtualenv>=1.7
+   Scripts\virtualenv.exe c:\bbw\sandbox
    cd c:\bbw
    c:\bbw\sandbox\Scripts\activate
 
