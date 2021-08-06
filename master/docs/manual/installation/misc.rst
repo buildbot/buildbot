@@ -121,8 +121,7 @@ Install, create and activate virtualenv
 .. code-block:: bat
 
    python.exe -m pip install virtualenv>=1.7
-   Scripts\virtualenv.exe c:\bbw\sandbox
-   cd c:\bbw
+   virtualenv.exe c:\bbw\sandbox
    c:\bbw\sandbox\Scripts\activate
 
 
@@ -141,7 +140,7 @@ Install buildbot-worker and set it up
 .. code-block:: bat
 
   python.exe -m pip install buildbot-worker
-  .\sandbox\scripts\buildbot-worker create-worker worker master01.mycompany.com %COMPUTERNAME% password
+  buildbot-worker create-worker worker master01.mycompany.com %COMPUTERNAME% password
 
 Edit worker info about admin and host
 `````````````````````````````````````
