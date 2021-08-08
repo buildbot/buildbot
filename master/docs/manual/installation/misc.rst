@@ -132,18 +132,6 @@ Install pywin32
 
   python.exe -m pip install pywin32
 
-If you are in an activated virtualenv, finish up like this:
-
-.. code-block:: bat
-
-  python.exe .\sandbox\Scripts\pywin32_postinstall.py -install
-
-Otherwise, like this:
-
-.. code-block:: bat
-
-  python.exe c:\python39\Scripts\pywin32_postinstall.py -install
-
 Install pyOpenSSL [optional]
 ````````````````````````````
 
