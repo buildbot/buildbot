@@ -121,7 +121,7 @@ This step is optional and may depend on your needs.
 
 .. code-block:: bat
 
-   python.exe -m pip install virtualenv>=1.7
+   python.exe -m pip install "virtualenv>=1.7"
    virtualenv.exe c:\bbw\sandbox
    c:\bbw\sandbox\Scripts\activate
 
