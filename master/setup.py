@@ -500,6 +500,10 @@ setup_args['install_requires'] = [
     'pyyaml'
 ]
 
+# buildbot_windows_service needs pywin32
+if sys.platform == "win32":
+    setup_args['install_requires'].append('pywin32')
+
 # Unit test dependencies.
 test_deps = [
     # http client libraries

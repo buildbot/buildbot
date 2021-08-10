@@ -153,6 +153,10 @@ if setuptools is not None:
         'future',
     ]
 
+    # buildbot_worker_windows_service needs pywin32
+    if sys.platform == "win32":
+        setup_args['install_requires'].append('pywin32')
+
     # Unit test hard dependencies.
     test_deps = [
         'mock',
