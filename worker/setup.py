@@ -133,8 +133,6 @@ setup_args = {
     'entry_points': {
         'console_scripts': [
             'buildbot-worker=buildbot_worker.scripts.runner:run',
-            # this will also be shipped on non windows :-(
-            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',  # noqa pylint: disable=line-too-long
         ]}
 }
 
@@ -143,6 +141,9 @@ setup_args = {
 # see http://buildbot.net/trac/ticket/907
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
+    setup_args['entry_points']['console_scripts'].append(
+        'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',  # noqa pylint: disable=line-too-long
+    )
 
 twisted_ver = ">= 17.9.0"
 
@@ -151,6 +152,10 @@ if setuptools is not None:
         'twisted ' + twisted_ver,
         'future',
     ]
+
+    # buildbot_worker_windows_service needs pywin32
+    if sys.platform == "win32":
+        setup_args['install_requires'].append('pywin32')
 
     # Unit test hard dependencies.
     test_deps = [

@@ -442,8 +442,6 @@ setup_args = {
     ]), {
         'console_scripts': [
             'buildbot=buildbot.scripts.runner:run',
-            # this will also be shipped on non windows :-(
-            'buildbot_windows_service=buildbot.scripts.windows_service:HandleCommandLine',
         ]}
     )
 }
@@ -453,6 +451,9 @@ setup_args = {
 # see http://buildbot.net/trac/ticket/907
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
+    setup_args['entry_points']['console_scripts'].append(
+        'buildbot_windows_service=buildbot.scripts.windows_service:HandleCommandLine'
+    )
 
 py_36 = sys.version_info[0] > 3 or (
     sys.version_info[0] == 3 and sys.version_info[1] >= 6)
@@ -498,6 +499,10 @@ setup_args['install_requires'] = [
     'PyJWT',
     'pyyaml'
 ]
+
+# buildbot_windows_service needs pywin32
+if sys.platform == "win32":
+    setup_args['install_requires'].append('pywin32')
 
 # Unit test dependencies.
 test_deps = [

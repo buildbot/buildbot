@@ -17,10 +17,8 @@ install:
   - "python -V -V"
   - "python -m pip install -U pip"
   - "python -m pip install -r requirements-ci.txt"
-  # Twisted requires pywin32 on Windows in order to spawn processes.
-  # for some reason it needs to be installed last or there will be dll loading issues
-  - "python -m pip install \"pywin32\""
   - "python -m pip list"
+  # Check that pywin32 is properly installed
   - "python -c \"import win32api\""
 
 build: false
