@@ -27,7 +27,7 @@ class ResourceType:
     name = None
     plural = None
     endpoints = []
-    keyFields = []
+    keyField = None
     eventPathPatterns = ""
     entityType = None
     subresources = []
@@ -124,10 +124,10 @@ class Endpoint:
                     "Collection endpoint should implement get_kwargs_from_graphql")
             return {}
         ret = {}
-        for k in self.rtype.keyFields:
-            v = args.pop(k)
-            if v is not None:
-                ret[k] = v
+        k = self.rtype.keyField
+        v = args.pop(k)
+        if v is not None:
+            ret[k] = v
         return ret
 
     def __repr__(self):

@@ -114,7 +114,7 @@ class Buildset(base.ResourceType):
     name = "buildset"
     plural = "buildsets"
     endpoints = [BuildsetEndpoint, BuildsetsEndpoint]
-    keyFields = ['bsid']
+    keyField = 'bsid'
     eventPathPatterns = """
         /buildsets/:bsid
     """

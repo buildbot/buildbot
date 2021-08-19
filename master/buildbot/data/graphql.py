@@ -122,12 +122,14 @@ class GraphQLConnector(service.AsyncService):
                 f"  {rtype.plural}{format_query_fields(query_fields)}: [{typename}]!\n"
             )
 
-            # build the queriable parameters, via keyFields
+            # build the queriable parameter, via keyField
             keyfields = []
-            for field in sorted(rtype.keyFields):
-                field_type = rtype.entityType.fields[field]
-                field_type_graphql = field_type.toGraphQLTypeName()
-                keyfields.append(f"{field}: {field_type_graphql}")
+            field = rtype.keyField
+            if field not in rtype.entityType.fields:
+                raise RuntimeError(f"bad keyField {field} not in entityType {rtype.entityType}")
+            field_type = rtype.entityType.fields[field]
+            field_type_graphql = field_type.toGraphQLTypeName()
+            keyfields.append(f"{field}: {field_type_graphql}")
 
             queries_schema += (
                 f"  {rtype.name}{format_query_fields(keyfields)}: {typename}\n"

@@ -101,6 +101,7 @@ class Change(base.ResourceType):
     eventPathPatterns = """
         /changes/:changeid
     """
+    keyField = "changeid"
 
     class EntityType(types.Entity):
         changeid = types.Integer()

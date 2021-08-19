@@ -127,7 +127,7 @@ class LogChunk(base.ResourceType):
     name = "logchunk"
     plural = "logchunks"
     endpoints = [LogChunkEndpoint, RawLogChunkEndpoint]
-    keyFields = ['stepid', 'logid']
+    keyField = "logid"
 
     class EntityType(types.Entity):
         logid = types.Integer()

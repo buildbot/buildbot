@@ -97,7 +97,7 @@ class ForceScheduler(base.ResourceType):
     name = "forcescheduler"
     plural = "forceschedulers"
     endpoints = [ForceSchedulerEndpoint, ForceSchedulersEndpoint]
-    keyFields = []
+    keyField = "name"
 
     class EntityType(types.Entity):
         name = types.Identifier(50)

@@ -189,7 +189,7 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
-    keyFields = ['builderid', 'buildid', 'workerid']
+    keyField = "buildid"
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid
