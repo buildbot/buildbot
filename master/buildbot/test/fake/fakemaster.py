@@ -22,8 +22,10 @@ from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot import config
+from buildbot.data.graphql import GraphQLConnector
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
+from buildbot.test.fake import endpoint
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
@@ -128,7 +130,7 @@ class FakeMaster(service.MasterService):
 
 
 def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
-                wantRealReactor=False, url=None, **kwargs):
+                wantRealReactor=False, wantGraphql=False, url=None, **kwargs):
     if wantRealReactor:
         _reactor = reactor
     else:
@@ -151,4 +153,13 @@ def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
         master.db.setServiceParent(master)
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
+    if wantGraphql:
+        master.graphql = GraphQLConnector()
+        master.graphql.setServiceParent(master)
+        master.graphql.data = master.data.realConnector
+        master.data._scanModule(endpoint)
+        try:
+            master.graphql.reconfigServiceWithBuildbotConfig({'www': {'graphql': {'debug': True}}})
+        except ImportError:
+            pass
     return master

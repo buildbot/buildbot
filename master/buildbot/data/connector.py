@@ -15,7 +15,6 @@
 
 import functools
 import inspect
-import textwrap
 
 from twisted.internet import defer
 from twisted.python import reflect
@@ -23,7 +22,6 @@ from twisted.python import reflect
 from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import resultspec
-from buildbot.data.types import Entity
 from buildbot.util import bytes2unicode
 from buildbot.util import pathmatch
 from buildbot.util import service
@@ -81,7 +79,7 @@ class DataConnector(service.AsyncService):
                 rtype = obj(self.master)
                 setattr(self.rtypes, rtype.name, rtype)
                 setattr(self.plural_rtypes, rtype.plural, rtype)
-
+                self.graphql_rtypes[rtype.entityType.toGraphQLTypeName()] = rtype
                 # put its update methods into our 'updates' attribute
                 for name in dir(rtype):
                     o = getattr(rtype, name)
@@ -107,6 +105,7 @@ class DataConnector(service.AsyncService):
 
     def _setup(self):
         self.updates = Updates()
+        self.graphql_rtypes = {}
         self.rtypes = RTypes()
         self.plural_rtypes = RTypes()
         for moduleName in self.submodules:
@@ -121,7 +120,19 @@ class DataConnector(service.AsyncService):
                 "Invalid path: " + "/".join([str(p) for p in path])) from e
 
     def getResourceType(self, name):
-        return getattr(self.rtypes, name)
+        return getattr(self.rtypes, name, None)
+
+    def getEndPointForResourceName(self, name):
+        rtype = getattr(self.rtypes, name, None)
+        rtype_plural = getattr(self.plural_rtypes, name, None)
+        if rtype is not None:
+            return rtype.getDefaultEndpoint()
+        elif rtype_plural is not None:
+            return rtype_plural.getCollectionEndpoint()
+        return None
+
+    def getResourceTypeForGraphQlType(self, type):
+        return self.graphql_rtypes.get(type.name)
 
     def get(self, path, filters=None, fields=None, order=None,
             limit=None, offset=None):
@@ -158,83 +169,6 @@ class DataConnector(service.AsyncService):
                               type=str(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))
         return paths
-
-    @functools.lru_cache(1)
-    def get_graphql_schema(self):
-        """Return the graphQL Schema of the buildbot data model
-        """
-        types = {}
-        schema = textwrap.dedent("""
-        # custom scalar types for buildbot data model
-        scalar Date   # stored as utc unix timestamp
-        scalar Binary # arbitrary data stored as base85
-        scalar JSON  # arbitrary json stored as string, mainly used for properties values
-        """)
-
-        # type dependencies must be added recursively
-        def add_dependent_types(ent):
-            typename = ent.toGraphQLTypeName()
-            if typename not in types and isinstance(ent, Entity):
-                types[typename] = ent
-            for dtyp in ent.graphQLDependentTypes():
-                add_dependent_types(dtyp)
-
-        # root query contain the list of item available directly
-        # mapped against the rootLinks
-        schema += "type Query {\n"
-
-        def format_query_fields(query_fields):
-            query_fields = ",\n   ".join(query_fields)
-            if query_fields:
-                query_fields = f"({query_fields})"
-            return query_fields
-
-        operators = set(resultspec.Filter.singular_operators)
-        operators.update(resultspec.Filter.plural_operators)
-        for rootlink in sorted(v['name'] for v in self.rootLinks):
-            ep = self.matcher[(rootlink,)][0]
-            typ = ep.rtype.entityType
-            typename = typ.toGraphQLTypeName()
-            add_dependent_types(typ)
-            query_fields = []
-            # build the queriable parameters, via query_fields
-            for field in sorted(ep.rtype.entityType.fields.keys()):
-                field_type = ep.rtype.entityType.fields[field]
-                field_type_gql = field_type.getGraphQLInputType()
-                if field_type_gql is None:
-                    continue
-                query_fields.append(f"{field}: {field_type_gql}")
-                for op in sorted(operators):
-                    query_fields.append(f"{field}__{op}: {field_type_gql}")
-
-            query_fields.extend([
-                "order: String",
-                "limit: Int",
-                "offset: Int"]
-            )
-            schema += f"  {ep.rtype.plural}{format_query_fields(query_fields)}: [{typename}]!\n"
-
-            # build the queriable parameters, via keyFields
-            keyfields = []
-            for field in sorted(ep.rtype.keyFields):
-                field_type = ep.rtype.entityType.fields[field]
-                field_type_gql = field_type.toGraphQLTypeName()
-                keyfields.append(f"{field}: {field_type_gql}")
-
-            schema += f"  {ep.rtype.name}{format_query_fields(keyfields)}: {typename}\n"
-
-        schema += "}\n"
-
-        for name, typ in types.items():
-            type_spec = typ.toGraphQL()
-            schema += f"type {name} {{\n"
-            for field in type_spec.get('fields', []):
-                field_type = field['type']
-                if not isinstance(field_type, str):
-                    field_type = field_type['type']
-                schema += f"  {field['name']}: {field_type}\n"
-            schema += "}\n"
-        return schema
 
     def resultspec_from_jsonapi(self, req_args, entityType, is_collection):
 

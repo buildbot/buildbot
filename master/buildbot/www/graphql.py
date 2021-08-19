@@ -33,19 +33,11 @@ class V3RootResource(resource.Resource):
 
     def reconfigResource(self, new_config):
         # @todo v2 has cross origin support, which might need to be factorized
-        self.gql_config = new_config.www.get("graphql")
+        graphql_config = new_config.www.get("graphql")
         self.debug = True
         self.graphql = None
-        if self.gql_config is not None:
-            try:
-                import graphql
-            except ImportError:  # pragma: no cover
-                raise ImportError(
-                    "graphql is enabled but 'graphql-core' is not installed"
-                )
-            self.graphql = graphql
-            self.debug = self.gql_config.get("debug")
-            self.schema = graphql.build_schema(self.master.data.get_graphql_schema())
+        if graphql_config is not None:
+            self.graphql = True
 
     def render(self, request):
         def writeError(msg, errcode=400):
@@ -64,12 +56,6 @@ class V3RootResource(resource.Resource):
             request.finish()
 
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
-
-    def renderQuery(self, query):
-        query = self.graphql.parse(query)
-        errors = self.graphql.validate(self.schema, query)
-        if errors:
-            raise Error(400, [e.formatted for e in errors])
 
     @defer.inlineCallbacks
     def asyncRender(self, request):
@@ -99,8 +85,13 @@ class V3RootResource(resource.Resource):
         else:
             raise Error(400, b"invalid HTTP method")
 
-        res = yield self.renderQuery(query)
-        return res
+        res = yield self.master.graphql.query(query)
+        errors = None
+        if res.errors:
+            errors = [e.formatted for e in res.errors]
+        request.setHeader(b"content-type", b"application/json; charset=utf-8")
+        data = json.dumps({"data": res.data, "errors": errors}).encode()
+        request.write(data)
 
 
 RestRootResource.addApiVersion(3, V3RootResource)

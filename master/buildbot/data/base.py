@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import copy
+import functools
 import re
 from collections import UserList
 
@@ -29,6 +30,7 @@ class ResourceType:
     keyFields = []
     eventPathPatterns = ""
     entityType = None
+    subresources = []
 
     def __init__(self, master):
         self.master = master
@@ -47,6 +49,7 @@ class ResourceType:
             pathPatterns[i] = pp
         self.eventPaths = pathPatterns
 
+    @functools.lru_cache(1)
     def getEndpoints(self):
         endpoints = self.endpoints[:]
         for i, ep in enumerate(endpoints):
@@ -54,6 +57,20 @@ class ResourceType:
                 raise TypeError("Not an Endpoint subclass")
             endpoints[i] = ep(self, self.master)
         return endpoints
+
+    @functools.lru_cache(1)
+    def getDefaultEndpoint(self):
+        for ep in self.getEndpoints():
+            if not ep.isCollection:
+                return ep
+        return None
+
+    @functools.lru_cache(1)
+    def getCollectionEndpoint(self):
+        for ep in self.getEndpoints():
+            if ep.isCollection:
+                return ep
+        return None
 
     @staticmethod
     def sanitizeMessage(msg):
@@ -67,6 +84,17 @@ class ResourceType:
                 path = path.format(**msg)
                 routingKey = tuple(path.split("/")) + (event,)
                 self.master.mq.produce(routingKey, msg)
+
+
+class SubResource:
+    def __init__(self, rtype):
+        self.rtype = rtype
+        self.endpoints = {}
+        for endpoint in rtype.endpoints:
+            if endpoint.isCollection:
+                self.endpoints[rtype.plural] = endpoint
+            else:
+                self.endpoints[rtype.name] = endpoint
 
 
 class Endpoint:
@@ -88,6 +116,19 @@ class Endpoint:
         if action_method is None:
             raise exceptions.InvalidControlException("action: {} is not supported".format(action))
         return action_method(args, kwargs)
+
+    def get_kwargs_from_graphql(self, parent, resolve_info, args):
+        if self.isCollection:
+            if parent is not None:
+                raise NotImplementedError(
+                    "Collection endpoint should implement get_kwargs_from_graphql")
+            return {}
+        ret = {}
+        for k in self.rtype.keyFields:
+            v = args.pop(k)
+            if v is not None:
+                ret[k] = v
+        return ret
 
     def __repr__(self):
         return "endpoint for " + ",".join(self.pathPatterns.split())

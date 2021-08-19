@@ -27,7 +27,7 @@ def deferred_await(self):
     # if a deferred is awaited from a asyncio loop context, we must return
     # the future wrapper, but if it is awaited from normal twisted loop
     # we must return self.
-    if isinstance(asyncio.get_event_loop(), TwistedLoop):
+    if isinstance(asyncio.get_event_loop(), AsyncIOLoopWithTwisted):
         return self.asFuture(asyncio.get_event_loop())
     return self
 
@@ -39,6 +39,10 @@ def as_deferred(f):
     return asyncio.get_event_loop().as_deferred(f)
 
 
+def as_future(d):
+    return d.asFuture(asyncio.get_event_loop())
+
+
 if sys.version_info[:2] >= (3, 7):
     def make_handle(callback, args, loop, context):
         return events.Handle(callback, args, loop, context)
@@ -48,7 +52,7 @@ else:
         return events.Handle(callback, args, loop)
 
 
-class TwistedLoop(base_events.BaseEventLoop):
+class AsyncIOLoopWithTwisted(base_events.BaseEventLoop):
     """
     Minimal asyncio loop for Buildbot asyncio only dependencies
     as of now, only graphql is needing asyncio loop

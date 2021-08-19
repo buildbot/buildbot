@@ -38,6 +38,6 @@ def gengraphql(config):
         f = open(config['out'], "w")
     else:
         f = sys.stdout
-    schema = data.get_graphql_schema()
+    schema = data.graphql_get_schema()
     f.write(schema)
     return 0
