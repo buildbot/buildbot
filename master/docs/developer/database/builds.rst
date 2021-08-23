@@ -98,12 +98,14 @@ Builds connector
 
             This update is done unconditionally, even if the build is already finished.
 
-    .. py:method:: getBuildProperties(buildid)
+    .. py:method:: getBuildProperties(buildid, resultSpec=None)
 
         :param buildid: build ID
+        :param resultSpec: resultSpec
         :returns: dictionary mapping property name to ``value, source``, via Deferred
 
         Return the properties for a build, in the same format they were given to :py:meth:`addBuild`.
+        Optional filtering via resultSpec is available and optimized in the db layer.
 
         Note that this method does not distinguish a non-existent build from a build with no properties, and returns ``{}`` in either case.
 

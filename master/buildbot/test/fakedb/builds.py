@@ -155,10 +155,16 @@ class FakeBuildsComponent(FakeDBComponent):
             b['results'] = results
         return defer.succeed(None)
 
-    def getBuildProperties(self, bid):
+    def getBuildProperties(self, bid, resultSpec=None):
         if bid in self.builds:
-            return defer.succeed(self.builds[bid]['properties'])
-        return defer.succeed({})
+            ret = [{"name": k, "source": v[1], "value": v[0]}
+                for k, v in self.builds[bid]['properties'].items()]
+
+        if resultSpec is not None:
+            ret = self.applyResultSpec(ret, resultSpec)
+
+        ret = {v['name']: (v['value'], v['source']) for v in ret}
+        return defer.succeed(ret)
 
     def setBuildProperty(self, bid, name, value, source):
         assert bid in self.builds
