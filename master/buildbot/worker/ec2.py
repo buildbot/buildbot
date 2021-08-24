@@ -448,6 +448,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         log.msg('%s %s requesting spot instance with price %0.4f' %
                 (self.__class__.__name__, self.workername, bid_price))
 
+        image = self.get_image()
         reservations = self.ec2.meta.client.request_spot_instances(
             SpotPrice=str(bid_price),
             LaunchSpecification=self._remove_none_opts(
@@ -473,7 +474,6 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise LatentWorkerFailedToSubstantiate()
         instance_id = request['InstanceId']
         self.instance = self.ec2.Instance(instance_id)
-        image = self.get_image()
         instance_id, start_time = self._wait_for_instance()
         return instance_id, image.id, start_time
 
