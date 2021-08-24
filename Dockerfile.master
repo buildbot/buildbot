@@ -53,7 +53,8 @@ RUN virtualenv --python=python3 /buildbot_venv && \
     env CRYPTOGRAPHY_DONT_BUILD_RUST=1 /buildbot_venv/bin/pip3 install /usr/src/buildbot/dist/*.whl
 
 RUN mkdir -p /wheels && \
-    /buildbot_venv/bin/pip3 list --format freeze | grep -v '^buildbot' | grep -v '^pkg-resources' > /wheels/wheels.txt && \
+    /buildbot_venv/bin/pip3 list --format freeze | grep -v '^buildbot' | grep -v '^pkg_resources' > /wheels/wheels.txt && \
+    cat /wheels/wheels.txt && \
     cd /wheels && \
     /buildbot_venv/bin/pip3 wheel -r wheels.txt && \
     rm /wheels/wheels.txt && \

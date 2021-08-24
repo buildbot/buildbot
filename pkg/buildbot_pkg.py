@@ -205,9 +205,13 @@ class BuildJsCommand(distutils.cmd.Command):
 
             yarn_program = None
             for program in ["yarnpkg", "yarn"]:
-                yarn_version = check_output([program, "--version"], shell=shell)
-                if yarn_version != "":
-                    yarn_program = program
+                try:
+                    yarn_version = check_output([program, "--version"], shell=shell)
+                    if yarn_version != "":
+                        yarn_program = program
+                        break
+                except subprocess.CalledProcessError:
+                    pass
 
             assert yarn_program is not None, "need nodejs and yarn installed in current PATH"
 
