@@ -349,7 +349,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(c, {
             'files': ['unknown'],
-            'comments': 'Gerrit: patchset(s) merged.',
+            'comments': 'Gerrit: commit(s) pushed.',
             'author': 'tester <tester@example.com>',
             'committer': None,
             'revision': '56785678',

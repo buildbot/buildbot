@@ -253,7 +253,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             repository="{}/{}".format(self.gitBaseURL, ref["project"]),
             branch=ref["refName"],
             revision=ref["newRev"],
-            comments="Gerrit: patchset(s) merged.",
+            comments="Gerrit: commit(s) pushed.",
             files=["unknown"],
             category=event["type"],
             properties=properties))
