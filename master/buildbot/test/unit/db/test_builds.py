@@ -115,7 +115,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuildProperties(self):
         @self.assertArgSpecMatches(self.db.builds.getBuildProperties)
-        def getBuildProperties(self, bid):
+        def getBuildProperties(self, bid, resultSpec=None):
             pass
 
     def test_signature_setBuildProperty(self):
@@ -305,6 +305,29 @@ class Tests(interfaces.InterfaceTests):
         for buildid in (50, 51, 52):
             props = yield self.db.builds.getBuildProperties(buildid)
             self.assertEqual(0, len(props))
+
+    @defer.inlineCallbacks
+    def test_testgetBuildProperties_resultSpecFilter(self):
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('name', 'eq', ["prop", "prop2"])])
+        rs.fieldMapping = {'name': 'build_properties.name'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
+        yield self.db.builds.setBuildProperty(50, 'prop2', 43, 'test')
+        yield self.db.builds.setBuildProperty(50, 'prop3', 44, 'test')
+        props = yield self.db.builds.getBuildProperties(50, resultSpec=rs)
+        self.assertEqual(props, {
+            'prop': (42, 'test'),
+            'prop2': (43, 'test')
+        })
+
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('name', 'eq', ["prop"])])
+        rs.fieldMapping = {'name': 'build_properties.name'}
+        props = yield self.db.builds.getBuildProperties(50, resultSpec=rs)
+        self.assertEqual(props, {
+            'prop': (42, 'test'),
+        })
 
     @defer.inlineCallbacks
     def testsetandgetProperties(self):

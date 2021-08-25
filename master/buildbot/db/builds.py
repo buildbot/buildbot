@@ -205,14 +205,18 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def getBuildProperties(self, bid):
+    def getBuildProperties(self, bid, resultSpec=None):
         def thd(conn):
             bp_tbl = self.db.model.build_properties
             q = sa.select(
                 [bp_tbl.c.name, bp_tbl.c.value, bp_tbl.c.source],
                 whereclause=(bp_tbl.c.buildid == bid))
             props = []
-            for row in conn.execute(q):
+            if resultSpec is not None:
+                data = resultSpec.thd_execute(conn, q, lambda x: x)
+            else:
+                data = conn.execute(q)
+            for row in data:
                 prop = (json.loads(row.value), row.source)
                 props.append((row.name, prop))
             return dict(props)
