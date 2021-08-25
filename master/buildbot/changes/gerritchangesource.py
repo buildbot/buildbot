@@ -247,6 +247,14 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         if "submitter" in event:
             author = _gerrit_user_to_author(event["submitter"], author)
 
+        # Ignore ref-updated events if patchset-created events are expected for this push.
+        # ref-updated events may arrive before patchset-created events and cause problems, as
+        # builds would be using properties from ref-updated event and not from patchset-created.
+        # As a result it may appear that the change was not related to a Gerrit change and cause
+        # reporters to not submit reviews for example.
+        if 'patchset-created' in self.handled_events and ref['refName'].startswith('refs/changes/'):
+            return None
+
         return self.addChange(event['type'], dict(
             author=author,
             project=ref["project"],
