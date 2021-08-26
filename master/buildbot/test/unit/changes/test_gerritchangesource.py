@@ -349,7 +349,7 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(c, {
             'files': ['unknown'],
-            'comments': 'Gerrit: patchset(s) merged.',
+            'comments': 'Gerrit: commit(s) pushed.',
             'author': 'tester <tester@example.com>',
             'committer': None,
             'revision': '56785678',
@@ -374,6 +374,26 @@ class TestGerritChangeSource(MasterRunProcessMixin, changesource.ChangeSourceMix
             'project': 'test',
             'src': None
         })
+
+    @defer.inlineCallbacks
+    def test_lineReceived_ref_updated_for_change(self):
+        s = yield self.newChangeSource('somehost', 'someuser')
+        yield s.lineReceived(json.dumps({
+            'type': 'ref-updated',
+            'submitter': {
+                'name': 'tester',
+                'email': 'tester@example.com',
+                'username': 'tester'
+            },
+            'refUpdate': {
+                'oldRev': '00000000',
+                'newRev': '56785678',
+                'refName': 'refs/changes/12/432112/1',
+                'project': 'test'
+            },
+            'eventCreatedOn': 1614528683
+        }))
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def test_duplicate_events_ignored(self):

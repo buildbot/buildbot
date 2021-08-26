@@ -1,0 +1,1 @@
+Fixed a bug that caused Gerrit review comments sometimes not to be reported.
