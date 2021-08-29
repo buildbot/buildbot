@@ -191,6 +191,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.secrets.manager.SecretManager',
             'buildbot.secrets.providers.base.SecretProviderBase',
             'buildbot.secrets.secret.SecretDetails',
+            'buildbot.secrets.providers.vault_hvac.VaultAuthenticator',
         }
         self.verify_plugins_registered('secrets', 'buildbot.secrets', None, known_not_exported)
 

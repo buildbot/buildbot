@@ -23,6 +23,8 @@ from buildbot.process.properties import Interpolate
 from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
 from buildbot.steps.shell import ShellCommand
 from buildbot.test.util.integration import RunMasterBase
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
@@ -63,7 +65,8 @@ class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
     def do_secret_test(self, secret_specifier, expected_obfuscation, expected_value):
-        yield self.setupConfig(masterConfig(secret_specifier=secret_specifier))
+        with assertProducesWarning(DeprecatedApiWarning):
+            yield self.setupConfig(masterConfig(secret_specifier=secret_specifier))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 

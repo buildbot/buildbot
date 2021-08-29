@@ -51,6 +51,7 @@ apimaster
 app
 appdata
 applicative
+approle
 apps
 araujo
 arg
@@ -85,6 +86,7 @@ attrs
 attributeerror
 aug
 auth
+authenticator
 authz
 autocommit
 autoconf
@@ -1486,6 +1488,7 @@ trialargs
 trialmode
 triemstra
 triggerable
+ttl
 tue
 tues
 tuesday

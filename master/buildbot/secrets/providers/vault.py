@@ -16,12 +16,12 @@
 vault based providers
 """
 
-
 from twisted.internet import defer
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import httpclientservice
+from buildbot.warnings import warn_deprecated
 
 
 class HashiCorpVaultSecretProvider(SecretProviderBase):
@@ -33,6 +33,8 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
 
     def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None,
                     apiVersion=1):
+        warn_deprecated("3.4.0", "Use of HashiCorpVaultSecretProvider is deprecated and will be "
+                        "removed in future releases. Use HashiCorpVaultKvSecretProvider instead")
         if not isinstance(vaultServer, str):
             config.error("vaultServer must be a string while it is {}".format(type(vaultServer)))
         if not isinstance(vaultToken, str):
