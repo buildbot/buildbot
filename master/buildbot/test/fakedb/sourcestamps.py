@@ -25,36 +25,27 @@ from buildbot.util import epoch2datetime
 class Patch(Row):
     table = "patches"
 
-    defaults = dict(
-        id=None,
-        patchlevel=0,
-        patch_base64='aGVsbG8sIHdvcmxk',  # 'hello, world',
-        patch_author=None,
-        patch_comment=None,
-        subdir=None,
-    )
-
     id_column = 'id'
+
+    def __init__(self, id=None, patchlevel=0,
+                 patch_base64='aGVsbG8sIHdvcmxk',  # 'hello, world',
+                 patch_author=None, patch_comment=None, subdir=None):
+        super().__init__(id=id, patchlevel=patchlevel, patch_base64=patch_base64,
+                         patch_author=patch_author, patch_comment=patch_comment, subdir=subdir)
 
 
 class SourceStamp(Row):
     table = "sourcestamps"
 
-    defaults = dict(
-        id=None,
-        branch='master',
-        revision='abcd',
-        patchid=None,
-        repository='repo',
-        codebase='',
-        project='proj',
-        created_at=89834834,
-        ss_hash=None,
-    )
-
     id_column = 'id'
     hashedColumns = [('ss_hash', ('branch', 'revision', 'repository',
                                   'project', 'codebase', 'patchid',))]
+
+    def __init__(self, id=None, branch='master', revision='abcd', patchid=None, repository='repo',
+                 codebase='', project='proj', created_at=89834834, ss_hash=None):
+        super().__init__(id=id, branch=branch, revision=revision, patchid=patchid,
+                         repository=repository, codebase=codebase, project=project,
+                         created_at=created_at, ss_hash=ss_hash)
 
 
 class FakeSourceStampsComponent(FakeDBComponent):

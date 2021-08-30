@@ -24,16 +24,12 @@ from buildbot.util import epoch2datetime
 class Master(Row):
     table = "masters"
 
-    defaults = dict(
-        id=None,
-        name='some:master',
-        name_hash=None,
-        active=1,
-        last_active=9998999,
-    )
-
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
+
+    def __init__(self, id=None, name='some:master', name_hash=None, active=1, last_active=9998999):
+        super().__init__(id=id, name=name, name_hash=name_hash, active=active,
+                         last_active=last_active)
 
 
 class FakeMastersComponent(FakeDBComponent):

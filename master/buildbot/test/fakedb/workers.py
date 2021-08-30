@@ -26,42 +26,31 @@ from buildbot.test.util import validation
 class Worker(Row):
     table = "workers"
 
-    defaults = dict(
-        id=None,
-        name='some:worker',
-        info={"a": "b"},
-        paused=0,
-        graceful=0,
-    )
-
     id_column = 'id'
     required_columns = ('name', )
+
+    def __init__(self, id=None, name='some:worker', info={"a": "b"}, paused=0, graceful=0):
+        super().__init__(id=id, name=name, info=info, paused=paused, graceful=graceful)
 
 
 class ConnectedWorker(Row):
     table = "connected_workers"
 
-    defaults = dict(
-        id=None,
-        masterid=None,
-        workerid=None,
-    )
-
     id_column = 'id'
     required_columns = ('masterid', 'workerid')
+
+    def __init__(self, id=None, masterid=None, workerid=None):
+        super().__init__(id=id, masterid=masterid, workerid=workerid)
 
 
 class ConfiguredWorker(Row):
     table = "configured_workers"
 
-    defaults = dict(
-        id=None,
-        buildermasterid=None,
-        workerid=None,
-    )
-
     id_column = 'id'
     required_columns = ('buildermasterid', 'workerid')
+
+    def __init__(self, id=None, buildermasterid=None, workerid=None):
+        super().__init__(id=id, buildermasterid=buildermasterid, workerid=workerid)
 
 
 class FakeWorkersComponent(FakeDBComponent):

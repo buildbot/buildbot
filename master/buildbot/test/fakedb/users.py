@@ -23,27 +23,21 @@ from buildbot.test.fakedb.row import Row
 class User(Row):
     table = "users"
 
-    defaults = dict(
-        uid=None,
-        identifier='soap',
-        bb_username=None,
-        bb_password=None,
-    )
-
     id_column = 'uid'
+
+    def __init__(self, uid=None, identifier='soap', bb_username=None, bb_password=None):
+        super().__init__(uid=uid, identifier=identifier, bb_username=bb_username,
+                         bb_password=bb_password)
 
 
 class UserInfo(Row):
     table = "users_info"
 
-    defaults = dict(
-        uid=None,
-        attr_type='git',
-        attr_data='Tyler Durden <tyler@mayhem.net>',
-    )
-
     foreignKeys = ('uid',)
     required_columns = ('uid', )
+
+    def __init__(self, uid=None, attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'):
+        super().__init__(uid=uid, attr_type=attr_type, attr_data=attr_data)
 
 
 class FakeUsersComponent(FakeDBComponent):

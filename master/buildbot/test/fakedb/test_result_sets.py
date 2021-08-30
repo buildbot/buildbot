@@ -23,22 +23,16 @@ from buildbot.test.fakedb.row import Row
 class TestResultSet(Row):
     table = 'test_result_sets'
 
-    defaults = {
-        'id': None,
-        'builderid': None,
-        'buildid': None,
-        'stepid': None,
-        'description': None,
-        'category': None,
-        'value_unit': None,
-        'tests_passed': None,
-        'tests_failed': None,
-        'complete': None,
-    }
-
     id_column = 'id'
     foreignKeys = ('builderid', 'buildid', 'stepid')
     required_columns = ('builderid', 'buildid', 'stepid', 'category', 'value_unit', 'complete')
+
+    def __init__(self, id=None, builderid=None, buildid=None, stepid=None, description=None,
+                 category=None, value_unit=None, tests_passed=None, tests_failed=None,
+                 complete=None):
+        super().__init__(id=id, builderid=builderid, buildid=buildid, stepid=stepid,
+                         description=description, category=category, value_unit=value_unit,
+                         tests_passed=tests_passed, tests_failed=tests_failed, complete=complete)
 
 
 class FakeTestResultSetsComponent(FakeDBComponent):

@@ -24,15 +24,11 @@ from buildbot.test.fakedb.row import Row
 class Scheduler(Row):
     table = "schedulers"
 
-    defaults = dict(
-        id=None,
-        name='schname',
-        name_hash=None,
-        enabled=1,
-    )
-
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
+
+    def __init__(self, id=None, name='schname', name_hash=None, enabled=1):
+        super().__init__(id=id, name=name, name_hash=name_hash, enabled=enabled)
 
 
 class SchedulerMaster(Row):
@@ -46,6 +42,9 @@ class SchedulerMaster(Row):
     foreignKeys = ('schedulerid', 'masterid')
     required_columns = ('schedulerid', 'masterid')
 
+    def __init__(self, schedulerid=None, masterid=None):
+        super().__init__(schedulerid=schedulerid, masterid=masterid)
+
 
 class SchedulerChange(Row):
     table = "scheduler_changes"
@@ -58,6 +57,9 @@ class SchedulerChange(Row):
 
     foreignKeys = ('schedulerid', 'changeid')
     required_columns = ('schedulerid', 'changeid')
+
+    def __init__(self, schedulerid=None, changeid=None, important=1):
+        super().__init__(schedulerid=schedulerid, changeid=changeid, important=important)
 
 
 class FakeSchedulersComponent(FakeDBComponent):

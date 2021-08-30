@@ -23,42 +23,32 @@ from buildbot.test.fakedb.row import Row
 class Builder(Row):
     table = "builders"
 
-    defaults = dict(
-        id=None,
-        name='some:builder',
-        name_hash=None,
-        description=None,
-    )
-
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
+
+    def __init__(self, id=None, name='some:builder', name_hash=None, description=None):
+        super().__init__(id=id, name=name, name_hash=name_hash, description=description)
 
 
 class BuilderMaster(Row):
     table = "builder_masters"
 
-    defaults = dict(
-        id=None,
-        builderid=None,
-        masterid=None
-    )
-
     id_column = 'id'
     required_columns = ('builderid', 'masterid')
+
+    def __init__(self, id=None, builderid=None, masterid=None):
+        super().__init__(id=id, builderid=builderid, masterid=masterid)
 
 
 class BuildersTags(Row):
     table = "builders_tags"
 
-    defaults = dict(
-        id=None,
-        builderid=None,
-        tagid=None,
-    )
-
     foreignKeys = ('builderid', 'tagid')
     required_columns = ('builderid', 'tagid', )
     id_column = 'id'
+
+    def __init__(self, id=None, builderid=None, tagid=None):
+        super().__init__(id=id, builderid=builderid, tagid=tagid)
 
 
 class FakeBuildersComponent(FakeDBComponent):
