@@ -24,26 +24,21 @@ from buildbot.test.fakedb.row import Row
 class ChangeSource(Row):
     table = "changesources"
 
-    defaults = dict(
-        id=None,
-        name='csname',
-        name_hash=None,
-    )
-
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
+
+    def __init__(self, id=None, name='csname', name_hash=None):
+        super().__init__(id=id, name=name, name_hash=name_hash)
 
 
 class ChangeSourceMaster(Row):
     table = "changesource_masters"
 
-    defaults = dict(
-        changesourceid=None,
-        masterid=None,
-    )
-
     foreignKeys = ('changesourceid', 'masterid')
     required_columns = ('changesourceid', 'masterid')
+
+    def __init__(self, changesourceid=None, masterid=None):
+        super().__init__(changesourceid=changesourceid, masterid=masterid)
 
 
 class FakeChangeSourcesComponent(FakeDBComponent):

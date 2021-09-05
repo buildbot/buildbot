@@ -25,35 +25,28 @@ from buildbot.util import datetime2epoch
 class BuildRequest(Row):
     table = "buildrequests"
 
-    defaults = dict(
-        id=None,
-        buildsetid=None,
-        builderid=None,
-        buildername=None,
-        priority=0,
-        complete=0,
-        results=-1,
-        submitted_at=12345678,
-        complete_at=None,
-        waited_for=0,
-    )
     foreignKeys = ('buildsetid',)
 
     id_column = 'id'
     required_columns = ('buildsetid',)
 
+    def __init__(self, id=None, buildsetid=None, builderid=None, buildername=None,
+                 priority=0, complete=0, results=-1,
+                 submitted_at=12345678, complete_at=None, waited_for=0):
+        super().__init__(id=id, buildsetid=buildsetid, builderid=builderid, buildername=buildername,
+                         priority=priority, complete=complete, results=results,
+                         submitted_at=submitted_at, complete_at=complete_at, waited_for=waited_for)
+
 
 class BuildRequestClaim(Row):
     table = "buildrequest_claims"
 
-    defaults = dict(
-        brid=None,
-        masterid=None,
-        claimed_at=None
-    )
     foreignKeys = ('brid', 'masterid')
 
     required_columns = ('brid', 'masterid', 'claimed_at')
+
+    def __init__(self, brid=None, masterid=None, claimed_at=None):
+        super().__init__(brid=brid, masterid=masterid, claimed_at=claimed_at)
 
 
 class FakeBuildRequestsComponent(FakeDBComponent):
