@@ -20,7 +20,7 @@ cookies==2.2.1
 cryptography==3.4.8
 decorator==5.0.9
 dicttoxml==1.7.4
-docker==5.0.0
+docker==5.0.2
 docutils==0.17.1
 flake8==3.9.2
 funcparserlib==0.3.6
