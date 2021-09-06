@@ -92,7 +92,7 @@ wrapt==1.12.1
 xmltodict==0.12.0
 zope.interface==5.4.0
 coverage==5.5
-codecov==2.1.11
+codecov==2.1.12
 -e master
 -e worker
 -e pkg
