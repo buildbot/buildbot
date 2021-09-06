@@ -24,32 +24,25 @@ from buildbot.test.util import validation
 class Log(Row):
     table = "logs"
 
-    defaults = dict(
-        id=None,
-        name='log29',
-        slug='log29',
-        stepid=None,
-        complete=0,
-        num_lines=0,
-        type='s')
-
     id_column = 'id'
     required_columns = ('stepid', )
+
+    def __init__(self, id=None, name='log29', slug='log29', stepid=None, complete=0, num_lines=0,
+                 type='s'):
+        super().__init__(id=id, name=name, slug=slug, stepid=stepid, complete=complete,
+                         num_lines=num_lines, type=type)
 
 
 class LogChunk(Row):
     table = "logchunks"
 
-    defaults = dict(
-        logid=None,
-        first_line=0,
-        last_line=0,
-        content='',
-        compressed=0)
-
     required_columns = ('logid', )
     # 'content' column is sa.LargeBinary, it's bytestring.
     binary_columns = ('content',)
+
+    def __init__(self, logid=None, first_line=0, last_line=0, content='', compressed=0):
+        super().__init__(logid=logid, first_line=first_line, last_line=last_line, content=content,
+                         compressed=compressed)
 
 
 class FakeLogsComponent(FakeDBComponent):

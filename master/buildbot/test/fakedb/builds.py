@@ -25,34 +25,26 @@ from buildbot.util import epoch2datetime
 class Build(Row):
     table = "builds"
 
-    defaults = dict(
-        id=None,
-        number=29,
-        buildrequestid=None,
-        builderid=None,
-        workerid=-1,
-        masterid=None,
-        started_at=1304262222,
-        complete_at=None,
-        state_string="test",
-        results=None)
-
     id_column = 'id'
     foreignKeys = ('buildrequestid', 'masterid', 'workerid', 'builderid')
     required_columns = ('buildrequestid', 'masterid', 'workerid')
 
+    def __init__(self, id=None, number=29, buildrequestid=None, builderid=None,
+                 workerid=-1, masterid=None,
+                 started_at=1304262222, complete_at=None, state_string="test", results=None):
+        super().__init__(id=id, number=number, buildrequestid=buildrequestid, builderid=builderid,
+                         workerid=workerid, masterid=masterid, started_at=started_at,
+                         complete_at=complete_at, state_string=state_string, results=results)
+
 
 class BuildProperty(Row):
     table = "build_properties"
-    defaults = dict(
-        buildid=None,
-        name='prop',
-        value=42,
-        source='fakedb'
-    )
 
     foreignKeys = ('buildid',)
     required_columns = ('buildid',)
+
+    def __init__(self, buildid=None, name='prop', value=42, source='fakedb'):
+        super().__init__(buildid=buildid, name=name, value=value, source=source)
 
 
 class FakeBuildsComponent(FakeDBComponent):

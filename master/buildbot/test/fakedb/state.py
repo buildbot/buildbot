@@ -25,25 +25,19 @@ from buildbot.util import bytes2unicode
 class Object(Row):
     table = "objects"
 
-    defaults = dict(
-        id=None,
-        name='nam',
-        class_name='cls',
-    )
-
     id_column = 'id'
+
+    def __init__(self, id=None, name='nam', class_name='cls'):
+        super().__init__(id=id, name=name, class_name=class_name)
 
 
 class ObjectState(Row):
     table = "object_state"
 
-    defaults = dict(
-        objectid=None,
-        name='nam',
-        value_json='{}',
-    )
-
     required_columns = ('objectid', )
+
+    def __init__(self, objectid=None, name='nam', value_json='{}'):
+        super().__init__(objectid=objectid, name=name, value_json=value_json)
 
 
 class FakeStateComponent(FakeDBComponent):

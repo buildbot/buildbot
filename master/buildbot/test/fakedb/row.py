@@ -26,9 +26,6 @@ class Row:
     Parent class for row classes, which are used to specify test data for
     database-related tests.
 
-    @cvar defaults: the column names and their default values
-    @type defaults: dictionary
-
     @cvar table: the table name
 
     @cvar id_column: specify a column that should be assigned an
@@ -58,8 +55,10 @@ class Row:
     _next_id = None
 
     def __init__(self, **kwargs):
-        self.values = self.defaults.copy()
-        self.values.update(kwargs)
+        if self.__init__.__func__ is Row.__init__:
+            raise Exception('Row.__init__ must be overridden to supply default values for columns')
+
+        self.values = kwargs.copy()
         if self.id_column:
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
@@ -69,8 +68,6 @@ class Row:
             setattr(self, col, [])
         for col in self.dicts:
             setattr(self, col, {})
-        for col in kwargs:
-            assert col in self.defaults, "{} is not a valid column".format(col)
         # cast to unicode
         for k, v in self.values.items():
             if isinstance(v, str):
