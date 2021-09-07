@@ -556,7 +556,6 @@ setup_args['extras_require'] = {
         'docutils>=0.16.0',
         'sphinx>=3.2.0',
         'sphinx-rtd-theme>=0.5',
-        'sphinxcontrib-blockdiag',
         'sphinxcontrib-spelling',
         'sphinxcontrib-websupport',
         'pyenchant',
