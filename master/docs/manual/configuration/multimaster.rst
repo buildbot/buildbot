@@ -9,47 +9,8 @@ Multimaster
     There are still some companies using it in production.
     Don't hesitate to use the mailing lists to share your experience.
 
-.. blockdiag::
-
-    blockdiag multimaster {
-       Worker1 -> LoadBalancer -> Master1 -> database
-       Worker2 -> LoadBalancer
-       Worker2 [shape = "dots"];
-       WorkerN -> LoadBalancer -> Master2 -> database
-       User1 -> LoadBalancerUI -> MasterUI1 -> database
-       User2 -> LoadBalancerUI -> MasterUI2 -> database
-       Master1 -> crossbar.io
-       Master2 -> crossbar.io
-       MasterUI1 -> crossbar.io
-       MasterUI2 -> crossbar.io
-       database [shape = "flowchart.database", stacked];
-       LoadBalancerUI [shape = ellipse];
-       LoadBalancer [shape = ellipse];
-       crossbar.io [shape = mail];
-       User1 [shape = actor];
-       User2 [shape = actor];
-       default_shape = roundedbox;
-       default_node_color = "#33b5e5";
-       default_group_color = "#428bca";
-       default_linecolor = "#0099CC";
-       default_textcolor = "#e1f5fe";
-       group {
-          shape = line;
-          Worker1; Worker2; WorkerN
-       }
-       group {
-          shape = line;
-          Master1; Master2; MasterUI1; MasterUI2
-       }
-       group {
-          shape = line;
-          database; crossbar.io;
-       }
-       group {
-          shape = line;
-          User1; User2;
-       }
-    }
+.. image:: ../../_images/multimaster.*
+   :alt: Multi Master
 
 Buildbot supports interconnection of several masters.
 This has to be done through a multi-master enabled message queue backend.
