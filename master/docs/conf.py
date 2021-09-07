@@ -33,14 +33,6 @@ except ImportError:
 
 # -- General configuration -----------------------------------------------
 try:
-    import sphinxcontrib.blockdiag
-    assert sphinxcontrib.blockdiag
-except ImportError as e:
-    raise RuntimeError("sphinxcontrib.blockdiag is not installed. "
-                       "Please install documentation dependencies with "
-                       "`pip install buildbot[docs]`") from e
-
-try:
     pkg_resources.require('docutils>=0.8')
 except pkg_resources.ResolutionError as e:
     raise RuntimeError("docutils is not installed or has incompatible version. "
@@ -57,7 +49,6 @@ extensions = [
     'sphinx.ext.extlinks',
     'bbdocs.ext',
     'bbdocs.api_index',
-    'sphinxcontrib.blockdiag',
     'sphinxcontrib.jinja',
     'sphinx_rtd_theme',
 ]
@@ -95,10 +86,6 @@ else:
 
 # The full version, including alpha/beta/rc tags.
 release = version
-
-# blocksiag/seqdiag
-blockdiag_html_image_format = 'svg'
-blocdiag_transparency = True
 
 # add a loud note about python 2
 rst_prolog = textwrap.dedent("""\

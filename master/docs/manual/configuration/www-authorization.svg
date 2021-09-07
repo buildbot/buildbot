@@ -1,0 +1,44 @@
+<svg height="120" viewBox="0 0 1216 120" width="1216" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs id="defs_block">
+    <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
+      <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2"></feGaussianBlur>
+    </filter>
+  </defs>
+  <title>Buildbot User Authorization</title>
+  <desc></desc>
+  <polygon fill="rgb(0,0,0)" points="133,60 133,63 143,63 143,66 133,66 133,69 141,78 137,78 131,72 125,78 121,78 129,69 129,66 119,66 119,63 129,63 129,60" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1"></polygon>
+  <ellipse cx="131" cy="57" fill="rgb(0,0,0)" rx="4.0" ry="4.0" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1"></ellipse>
+  <polygon fill="rgb(0,0,0)" points="325,60 325,63 335,63 335,66 325,66 325,69 333,78 329,78 323,72 317,78 313,78 321,69 321,66 311,66 311,63 321,63 321,60" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1"></polygon>
+  <ellipse cx="323" cy="57" fill="rgb(0,0,0)" rx="4.0" ry="4.0" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1"></ellipse>
+  <polygon fill="rgb(0,0,0)" points="515,38 587,66 515,94 443,66 515,38" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1"></polygon>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="643" y="46"></rect>
+  <polygon fill="rgb(0,0,0)" points="899,38 971,66 899,94 827,66 899,38" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1"></polygon>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="1027" y="46"></rect>
+  <polygon fill="rgb(255,255,255)" points="130,54 130,57 140,57 140,60 130,60 130,63 138,72 134,72 128,66 122,72 118,72 126,63 126,60 116,60 116,57 126,57 126,54" stroke="rgb(0,0,0)"></polygon>
+  <ellipse cx="128" cy="51" fill="rgb(255,255,255)" rx="4.0" ry="4.0" stroke="rgb(0,0,0)"></ellipse>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="24" x="128.0" y="85">User</text>
+  <polygon fill="rgb(255,255,255)" points="322,54 322,57 332,57 332,60 322,60 322,63 330,72 326,72 320,66 314,72 310,72 318,63 318,60 308,60 308,57 318,57 318,54" stroke="rgb(0,0,0)"></polygon>
+  <ellipse cx="320" cy="51" fill="rgb(255,255,255)" rx="4.0" ry="4.0" stroke="rgb(0,0,0)"></ellipse>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="102" x="320.0" y="85">AuthenticatedUser</text>
+  <polygon fill="rgb(255,255,255)" points="512,32 584,60 512,88 440,60 512,32" stroke="rgb(0,0,0)"></polygon>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="66" x="512.0" y="66">RoleMatcher</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="640" y="40"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="24" x="704.0" y="66">Role</text>
+  <polygon fill="rgb(255,255,255)" points="896,32 968,60 896,88 824,60 896,32" stroke="rgb(0,0,0)"></polygon>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="72" x="896.0" y="59">EndpointMatc</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="18" x="896.0" y="72">her</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="1024" y="40"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="102" x="1088.0" y="66">REST API Endpoint</text>
+  <path d="M 140 60 L 300 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="307,60 300,56 300,64 307,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 332 60 L 432 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="439,60 432,56 432,64 439,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 584 60 L 632 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="639,60 632,56 632,64 639,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 776 60 L 824 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="769,60 776,56 776,64 769,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 976 60 L 1024 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="969,60 976,56 976,64 969,60" stroke="rgb(0,0,0)"></polygon>
+  <rect fill="white" height="15" stroke="rgb(0,0,0)" width="40" x="204" y="38"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="24" x="224.0" y="51">Auth</text>
+</svg>
