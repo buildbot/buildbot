@@ -882,17 +882,8 @@ Authorization framework is tightly coupled to the REST API.
 Authorization framework only works for HTTP, not for other means of interaction like IRC or try scheduler.
 It allows or denies access to the REST APIs according to rules.
 
-.. blockdiag::
-
-    blockdiag {
-      User -> AuthenticatedUser [label = Auth];
-      AuthenticatedUser -> "RoleMatcher" -> Role <- "EndpointMatcher" <- "REST API Endpoint"
-
-      User  [shape = actor];
-      AuthenticatedUser  [shape = actor];
-      RoleMatcher [shape = diamond];
-      EndpointMatcher [shape = diamond];
-    }
+.. image:: ../../_images/auth_rules.*
+   :alt: Auth diagram
 
 - Roles is a label that you give to a user.
 
