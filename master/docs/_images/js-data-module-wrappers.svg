@@ -1,0 +1,39 @@
+<svg height="200" viewBox="0 0 832 200" width="832" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs id="defs_block">
+    <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
+      <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2"></feGaussianBlur>
+    </filter>
+  </defs>
+  <title>Buildbot Javascript Data Module Wrappers</title>
+  <desc></desc>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="67" y="46"></rect>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="259" y="46"></rect>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="46"></rect>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="451" y="126"></rect>
+  <rect fill="rgb(0,0,0)" height="40" stroke="rgb(0,0,0)" style="filter:url(#filter_blur);opacity:0.7;fill-opacity:1" width="128" x="643" y="46"></rect>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="64" y="40"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="84" x="128.0" y="66">data.getBuilds</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="256" y="40"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="320.0" y="66">Collection</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="40"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="36" x="512.0" y="66">Builds</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="448" y="120"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="30" x="512.0" y="146">Steps</text>
+  <rect fill="rgb(255,255,255)" height="40" stroke="rgb(0,0,0)" width="128" x="640" y="40"></rect>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="11" font-style="normal" font-weight="normal" text-anchor="middle" textLength="60" x="704.0" y="66">b.getSteps</text>
+  <path d="M 192 60 L 248 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="255,60 248,56 248,64 255,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 384 60 L 440 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="447,60 440,56 440,64 447,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 384 60 L 416 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <path d="M 416 60 L 416 140" fill="none" stroke="rgb(0,0,0)"></path>
+  <path d="M 416 140 L 440 140" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="447,140 440,136 440,144 447,140" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 576 60 L 632 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="639,60 632,56 632,64 639,60" stroke="rgb(0,0,0)"></polygon>
+  <path d="M 768 60 L 784 60" fill="none" stroke="rgb(0,0,0)"></path>
+  <path d="M 784 60 L 784 25" fill="none" stroke="rgb(0,0,0)"></path>
+  <path d="M 320 25 L 784 25" fill="none" stroke="rgb(0,0,0)"></path>
+  <path d="M 320 25 L 320 32" fill="none" stroke="rgb(0,0,0)"></path>
+  <polygon fill="rgb(0,0,0)" points="320,39 316,32 324,32 320,39" stroke="rgb(0,0,0)"></polygon>
+</svg>
