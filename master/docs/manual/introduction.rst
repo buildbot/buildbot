@@ -39,7 +39,7 @@ The usual flow of information is as follows:
 
  - buildmaster sends success or failure reports to external services to e.g. inform the developers.
 
-.. image:: _images/overview.*
+.. image:: ../_images/overview.*
    :alt: Overview Diagram
 
 .. Worker-Connections:
@@ -54,7 +54,7 @@ After the connection is established, the connection is bidirectional: commands f
 The buildmaster does not provide the workers with the source code itself, only with commands necessary to perform the source code checkout.
 As a result, the workers need to be able to reach the source code repositories that they are supposed to build.
 
-.. image:: _images/workers.*
+.. image:: ../_images/workers.*
    :alt: Worker Connections
 
 .. _Buildmaster-Architecture:
@@ -64,7 +64,7 @@ Buildmaster Architecture
 
 The following is rough overview of the data flow within the buildmaster.
 
-.. image:: _images/master.*
+.. image:: ../_images/master.*
    :alt: Buildmaster Architecture
 
 The following provides a short overview of the core components of Buildbot master.

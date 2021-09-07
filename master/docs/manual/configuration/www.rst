@@ -353,7 +353,7 @@ The badgeio template
 A badges template was developed to standardize upon a consistent "look and feel" across the usage of
 multiple CI/CD solutions, e.g.: use of Buildbot, Codecov.io, and Travis-CI. An example is shown below.
 
-.. image:: ../_images/badges-badgeio.png
+.. image:: ../../_images/badges-badgeio.png
 
 To ensure the correct "look and feel", the following Buildbot configuration is needed:
 

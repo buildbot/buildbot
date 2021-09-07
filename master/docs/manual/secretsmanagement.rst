@@ -152,7 +152,7 @@ Vault stores secrets in form of key-value pairs.
 
 - Simple keys
 
-.. image:: _images/vault_simple_key.png
+.. image:: ../_images/vault_simple_key.png
 
 The key value with key name ``keyname`` can be read like:
 
@@ -162,7 +162,7 @@ The key value with key name ``keyname`` can be read like:
 
 - Multipart keys
 
-.. image:: _images/vault_multipart_key.png
+.. image:: ../_images/vault_multipart_key.png
 
 Each part of a multipart value can be read like
 
