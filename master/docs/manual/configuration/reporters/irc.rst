@@ -59,11 +59,11 @@ The following parameters are accepted by this class:
 
     .. code-block:: python
 
-        authz=(
+        authz={
           'version': True,
           '': ['alice', 'bob'],
           ('force', 'stop'): ['alice'],
-        )
+        }
 
     Anybody will be able to run the ``version`` command, *alice* and *bob* will be allowed to run any safe command and *alice* will also have the right to force and stop builds.
 

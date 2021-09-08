@@ -78,11 +78,11 @@ The following parameters are accepted by this class:
 
     .. code-block:: python
 
-        authz=(
+        authz={
           'getid': True,
           '': [123456, 789012],
           ('force', 'stop'): [123456],
-        )
+        }
 
     Anybody will be able to run the ``getid`` command, users with IDs 123456 and 789012 will be allowed to run any safe command and the user with ID 123456 will also have the right to force and stop builds.
 
