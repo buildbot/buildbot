@@ -8,7 +8,6 @@ autobahn==21.3.1;  python_version >= "3.7"
 Automat==20.2.0
 Babel==2.9.1
 backports.functools-lru-cache==1.6.4
-blockdiag==2.0.1
 boto==2.49.0
 boto3==1.18.1
 botocore==1.21.1
@@ -23,7 +22,6 @@ dicttoxml==1.7.4
 docker==5.0.0
 docutils==0.17.1
 flake8==3.9.2
-funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.18.2
 graphql-core==3.1.5

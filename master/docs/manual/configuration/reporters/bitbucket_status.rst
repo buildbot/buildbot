@@ -64,6 +64,6 @@ For example, the following reporter
 
 produces the build statuses below when a build stars and ends, respectively.
 
-.. image:: ../../_images/bitbucket-status-push.png
+.. image:: ../../../_images/bitbucket-status-push.png
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
