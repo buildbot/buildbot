@@ -30,7 +30,7 @@ from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.db import connector
-from buildbot.db.model import EightUpgradeError
+from buildbot.db.model import UpgradeFromBefore0p9Error
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import querylog
@@ -258,7 +258,7 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
     source_tarball = "v087p1.tgz"
 
     def gotError(self, e):
-        self.flushLoggedErrors(EightUpgradeError)
+        self.flushLoggedErrors(UpgradeFromBefore0p9Error)
 
     def verify_thd(self, conn):
         "partially verify the contents of the db - run in a thread"

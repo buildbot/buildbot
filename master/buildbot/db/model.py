@@ -34,7 +34,7 @@ except ImportError:
     ControlledSchema = None
 
 
-class EightUpgradeError(Exception):
+class UpgradeFromBefore0p9Error(Exception):
 
     def __init__(self):
         message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x
@@ -1087,7 +1087,7 @@ class Model(base.DBConnectorComponent):
                     "select version from migrate_version limit 1")
                 old_version = r.scalar()
                 if old_version < 40:
-                    raise EightUpgradeError()
+                    raise UpgradeFromBefore0p9Error()
                 try:
                     upgrade(engine)
                 except sa.exc.NoSuchTableError as e:  # pragma: no cover
@@ -1103,7 +1103,7 @@ class Model(base.DBConnectorComponent):
             # at that version, drop the version table, and let migrate take
             # care of the rest.
             elif table_exists(engine, 'version'):
-                raise EightUpgradeError()
+                raise UpgradeFromBefore0p9Error()
 
             # otherwise, this db is new, so we don't bother using the migration engine
             # and just create the tables, and put the version directly to
