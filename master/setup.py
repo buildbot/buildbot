@@ -164,6 +164,7 @@ setup_args = {
         "buildbot.clients",
         "buildbot.data",
         "buildbot.db",
+        "buildbot.db.migrations.versions",
         "buildbot.db.migrate.versions",
         "buildbot.db.types",
         "buildbot.machine",
@@ -203,6 +204,10 @@ setup_args = {
     ]),
     'data_files': [
         include("buildbot/reporters/templates", "*.txt"),
+        ("buildbot/db/migrations", [
+            "buildbot/db/migrations/alembic.ini",
+        ]),
+        include("buildbot/db/migrations/versions", "*.py"),
         ("buildbot/db/migrate", [
             "buildbot/db/migrate/migrate.cfg",
         ]),
@@ -492,7 +497,7 @@ setup_args['install_requires'] = [
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
     'sqlalchemy >= 1.3.0, < 1.5',
-    'sqlalchemy-migrate>=0.13',
+    'alembic >= 1.6.0',
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,

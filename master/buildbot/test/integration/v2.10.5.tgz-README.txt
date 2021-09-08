@@ -1,0 +1,77 @@
+-- Basic v2.10.5 tarball --
+
+This tarball is the result of a couple of runs of a single master on a clean install.
+
+====================================================================================================
+Master configuration:
+====================================================================================================
+
+#!/usr/bin/env python3
+
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['workers'] = [
+    worker.LocalWorker("worker1"),
+]
+
+c['protocols'] = {'pb': {'port': 9567}}
+
+c['change_source'] = []
+c['change_source'].append(changes.GitPoller('git://github.com/buildbot/hello-world.git',
+                                            workdir='gitpoller-workdir', branch='master',
+                                            pollInterval=300))
+
+c['schedulers'] = []
+c['schedulers'].append(schedulers.ForceScheduler(name="force", builderNames=["runtests"]))
+
+
+factory = util.BuildFactory()
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/hello-world.git', mode='incremental'))
+factory.addStep(steps.MasterShellCommand(command=["sleep", "1"]))
+
+c['builders'] = []
+c['builders'].append(util.BuilderConfig(name="runtests", workernames=["worker1"],
+                                        factory=factory))
+
+c['services'] = []
+
+c['title'] = "Hello World CI"
+c['titleURL'] = "https://buildbot.github.io/hello-world/"
+
+c['buildbotURL'] = "http://localhost:8010/"
+
+c['www'] = { 'port': 8010 }
+c['db'] = { 'db_url' : "sqlite:///state.sqlite", }
+
+====================================================================================================
+The master was created using the following steps
+====================================================================================================
+
+mkdir app
+sudo docker run -it -v $(pwd)/app:/app -p 127.0.0.1:8010:8010 --name bb ubuntu:latest /bin/bash
+
+# in the container
+apt update && apt install python3 python3-pip python3-virtualenv git
+
+cd /app
+python3 -m virtualenv venv
+. venv/bin/activate
+pip install buildbot==2.10.5 buildbot-worker==2.10.5 buildbot-www==2.10.5
+mkdir master
+buildbot create-master master
+buildbot start master
+
+# run a couple builds
+
+buildbot stop master
+
+# state.sqlite is ready
+
+exit # exit the container
+
+mkdir 2.10.5
+mv app/master/state.sqlite 2.10.5
+sudo chmod -R 666 2.10.5
+tar -czf 2.10.5.tgz 2.10.5

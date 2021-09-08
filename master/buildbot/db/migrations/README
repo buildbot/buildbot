@@ -1,0 +1,9 @@
+This is a database migration repository.
+
+More information at
+https://alembic.sqlalchemy.org/en/latest/
+
+In order to run the alembic tool the current directory must be this directory.
+
+To create new migration revision run `alembic revision --rev-id REV_ID --message MESSAGE`
+where REV_ID is the the last revision incremented by one.

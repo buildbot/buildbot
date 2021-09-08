@@ -1,0 +1,1 @@
+Database migrations are now handled using Alembic (1.6.0 or newer is required).

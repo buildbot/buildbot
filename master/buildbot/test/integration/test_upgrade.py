@@ -20,9 +20,9 @@ import shutil
 import sqlite3
 import tarfile
 
-import migrate
-import migrate.versioning.api
 import sqlalchemy as sa
+from alembic.autogenerate import compare_metadata
+from alembic.migration import MigrationContext
 from sqlalchemy.exc import DatabaseError
 
 from twisted.internet import defer
@@ -31,6 +31,7 @@ from twisted.trial import unittest
 
 from buildbot.db import connector
 from buildbot.db.model import UpgradeFromBefore0p9Error
+from buildbot.db.model import UpgradeFromBefore3p0Error
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import querylog
@@ -117,12 +118,14 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
 
     def assertModelMatches(self):
         def comp(engine):
-            # use compare_model_to_db, which gets everything but foreign
-            # keys and indexes
-            diff = migrate.versioning.api.compare_model_to_db(
-                engine,
-                self.db.model.repo_path,
-                self.db.model.metadata)
+            # use compare_model_to_db, which gets everything but indexes
+            with engine.connect() as conn:
+                diff = compare_metadata(MigrationContext.configure(conn), self.db.model.metadata)
+
+            if engine.dialect.name == 'mysql':
+                # MySQL/MyISAM does not support foreign keys, which is expected.
+                diff = [d for d in diff if d[0] != 'add_fk']
+
             if diff:
                 return diff
 
@@ -226,9 +229,9 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
         return d
 
 
-class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
+class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
 
-    source_tarball = "v090b4.tgz"
+    source_tarball = "v2.10.5.tgz"
 
     def test_upgrade(self):
         return self.do_test_upgrade()
@@ -237,7 +240,7 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
         pass
 
     @defer.inlineCallbacks
-    def test_gotError(self):
+    def test_got_invalid_sqlite_file(self):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
         self.db.model.upgrade = upgrade
@@ -245,12 +248,31 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
             yield self.do_test_upgrade()
 
     @defer.inlineCallbacks
-    def test_gotError2(self):
+    def test_got_invalid_sqlite_file2(self):
         def upgrade():
             return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
         self.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
             yield self.do_test_upgrade()
+
+
+class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v090b4.tgz"
+
+    def gotError(self, e):
+        self.flushLoggedErrors(UpgradeFromBefore3p0Error)
+
+    def test_upgrade(self):
+        return self.do_test_upgrade()
+
+    def verify_thd(self, conn):
+        r = conn.execute("select version from migrate_version limit 1")
+        version = r.scalar()
+        self.assertEqual(version, 44)
+
+    def assertModelMatches(self):
+        pass
 
 
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
@@ -261,7 +283,6 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
         self.flushLoggedErrors(UpgradeFromBefore0p9Error)
 
     def verify_thd(self, conn):
-        "partially verify the contents of the db - run in a thread"
         r = conn.execute("select version from migrate_version limit 1")
         version = r.scalar()
         self.assertEqual(version, 22)

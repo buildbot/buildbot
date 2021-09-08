@@ -308,31 +308,26 @@ Modifying the Database Schema
 -----------------------------
 
 Changes to the schema are accomplished through migration scripts, supported by
-`SQLAlchemy-Migrate <https://github.com/openstack/sqlalchemy-migrate>`_.  In fact,
-even new databases are created with the migration scripts -- a new database is
-a migrated version of an empty database.
+`Alembic <https://alembic.sqlalchemy.org/en/latest/>`_.
 
-The schema is tracked by a version number, stored in the ``migrate_version``
-table.  This number is incremented for each change to the schema, and used to
-determine whether the database must be upgraded.  The master will refuse to run
-with an outdated database.
+The schema is tracked by a revision number, stored in the ``alembic_version`` table.
+It can be anything, but by convention Buildbot uses revision numbers that are numbers incremented by one for each revision.
+The master will refuse to run with an outdated database.
 
 To make a change to the schema, first consider how to handle any existing data.
 When adding new columns, this may not be necessary, but table refactorings can
 be complex and require caution so as not to lose information.
 
-Create a new script in :src:`master/buildbot/db/migrate/versions`, following the numbering scheme already present.
-The script should have an ``update`` method, which takes an engine as a parameter, and upgrades the database, both changing the schema and performing any required data migrations.
-The engine passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to handle adding, altering, and dropping columns.
-See the SQLAlchemy-Migrate documentation for details.
+Refer to the documentation of Alembic for details of how database migration scripts should be written.
 
-Next, modify :src:`master/buildbot/db/model.py` to represent the updated schema.
+The database schema itself is stored in :src:`master/buildbot/db/model.py` which should be updated to represent the new schema.
 Buildbot's automated tests perform a rudimentary comparison of an upgraded database with the model, but it is important to check the details - key length, nullability, and so on can sometimes be missed by the checks.
 If the schema and the upgrade scripts get out of sync, bizarre behavior can result.
 
-Also, adjust the fake database table definitions in :src:`master/buildbot/test/fakedb` according to your changes.
+Changes to database schema should be reflected in corresponding fake database table definitions in :src:`master/buildbot/test/fakedb`
 
-Your upgrade script should have unit tests.  The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
+The upgrade scripts should have unit tests.
+The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
 Unit test scripts should be named e.g., :file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
 
 The :src:`master/buildbot/test/integration/test_upgrade.py <master/buildbot/test/integration/test_upgrade.py>` also tests

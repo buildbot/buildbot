@@ -30,6 +30,7 @@ include buildbot/reporters/templates/*.txt
 include buildbot/spec/api.raml
 include buildbot/spec/types/*.raml
 
+include buildbot/db/migrations/README include buildbot/db/migrations/alembic.ini
 include buildbot/db/migrate/README buildbot/db/migrate/migrate.cfg
 
 include contrib/* contrib/windows/* contrib/os-x/* contrib/css/* contrib/libvirt/*
