@@ -16,6 +16,7 @@
 
 import locale
 import os
+import pprint
 import shutil
 import sqlite3
 import tarfile
@@ -116,6 +117,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     def tearDown(self):
         return self.tearDownUpgradeTest()
 
+    @defer.inlineCallbacks
     def assertModelMatches(self):
         def comp(engine):
             # use compare_model_to_db, which gets everything but indexes
@@ -171,49 +173,47 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                 return "\n".join(diff)
             return None
 
-        d = self.db.pool.do_with_engine(comp)
-
-        # older sqlites cause failures in reflection, which manifest as a
-        # TypeError.  Reflection is only used for tests, so we can just skip
-        # this test on such platforms.  We still get the advantage of trying
-        # the upgrade, at any rate.
-        @d.addErrback
-        def catch_TypeError(f):
-            f.trap(TypeError)
+        try:
+            diff = yield self.db.pool.do_with_engine(comp)
+        except TypeError:
+            # older sqlites cause failures in reflection, which manifest as a
+            # TypeError.  Reflection is only used for tests, so we can just skip
+            # this test on such platforms.  We still get the advantage of trying
+            # the upgrade, at any rate.
             raise unittest.SkipTest("model comparison skipped: bugs in schema "
                                     "reflection on this sqlite version")
 
-        @d.addCallback
-        def check(diff):
-            if diff:
-                self.fail("\n" + str(diff))
-        return d
+        if diff:
+            self.fail("\n" + pprint.pformat(diff))
 
     def gotError(self, e):
-        e.trap(sqlite3.DatabaseError, DatabaseError)
-        if "file is encrypted or is not a database" in str(e):
-            self.flushLoggedErrors(sqlite3.DatabaseError)
-            self.flushLoggedErrors(DatabaseError)
-            raise unittest.SkipTest("sqlite dump not readable on this machine {}".format(str(e)))
-        return e
+        if isinstance(e, (sqlite3.DatabaseError, DatabaseError)):
+            if "file is encrypted or is not a database" in str(e):
+                self.flushLoggedErrors(sqlite3.DatabaseError)
+                self.flushLoggedErrors(DatabaseError)
+                raise unittest.SkipTest(f"sqlite dump not readable on this machine {str(e)}")
 
+    @defer.inlineCallbacks
     def do_test_upgrade(self, pre_callbacks=None):
         if pre_callbacks is None:
             pre_callbacks = []
-        d = defer.succeed(None)
+
         for cb in pre_callbacks:
-            d.addCallback(cb)
-        d.addCallback(lambda _: self.db.model.upgrade())
-        d.addErrback(self.gotError)
-        d.addCallback(lambda _: self.db.pool.do(self.verify_thd))
-        d.addCallback(lambda _: self.assertModelMatches())
-        return d
+            yield cb
+        try:
+            yield self.db.model.upgrade()
+        except Exception as e:
+            self.gotError(e)
+
+        yield self.db.pool.do(self.verify_thd)
+        yield self.assertModelMatches()
 
 
 class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
 
     use_real_db = True
 
+    @defer.inlineCallbacks
     def test_emptydb_modelmatches(self):
         os_encoding = locale.getpreferredencoding()
         try:
@@ -224,9 +224,8 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
             raise unittest.SkipTest("Cannot encode weird unicode "
                 "on this platform with {}".format(os_encoding)) from e
 
-        d = self.db.model.upgrade()
-        d.addCallback(lambda r: self.assertModelMatches())
-        return d
+        yield self.db.model.upgrade()
+        yield self.assertModelMatches()
 
 
 class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
