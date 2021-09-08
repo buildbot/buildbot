@@ -165,7 +165,6 @@ setup_args = {
         "buildbot.data",
         "buildbot.db",
         "buildbot.db.migrations.versions",
-        "buildbot.db.migrate.versions",
         "buildbot.db.types",
         "buildbot.machine",
         "buildbot.monkeypatches",
@@ -208,10 +207,6 @@ setup_args = {
             "buildbot/db/migrations/alembic.ini",
         ]),
         include("buildbot/db/migrations/versions", "*.py"),
-        ("buildbot/db/migrate", [
-            "buildbot/db/migrate/migrate.cfg",
-        ]),
-        include("buildbot/db/migrate/versions", "*.py"),
         ("buildbot/scripts", [
             "buildbot/scripts/sample.cfg",
             "buildbot/scripts/buildbot_tac.tmpl",
