@@ -78,6 +78,7 @@ class SourceStamp(base.ResourceType):
     plural = "sourcestamps"
     endpoints = [SourceStampEndpoint, SourceStampsEndpoint]
     keyField = 'ssid'
+    subresources = ["Change"]
 
     class EntityType(types.Entity):
         ssid = types.Integer()

@@ -158,8 +158,9 @@ def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
         master.graphql.setServiceParent(master)
         master.graphql.data = master.data.realConnector
         master.data._scanModule(endpoint)
+        master.config.www = {'graphql': {"debug": True}}
         try:
-            master.graphql.reconfigServiceWithBuildbotConfig({'www': {'graphql': {'debug': True}}})
+            master.graphql.reconfigServiceWithBuildbotConfig(master.config)
         except ImportError:
             pass
     return master

@@ -410,6 +410,7 @@ dirs
 dirwatcher
 disownserviceparent
 distutils
+distros
 dn
 dnotify
 doclobber
@@ -1140,6 +1141,7 @@ refactor
 refcount
 refetch
 regex
+regen
 regexes
 regexp
 regexps
@@ -1226,6 +1228,7 @@ rstrip
 rtd
 rtype
 rtypes
+ruamel
 runcommand
 runinteraction
 runprocess
@@ -1665,6 +1668,7 @@ xhtml
 xml
 xxab
 xxx
+yaml
 yieldmetricsvalue
 za
 zadka

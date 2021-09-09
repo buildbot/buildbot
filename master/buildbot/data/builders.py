@@ -68,6 +68,11 @@ class BuildersEndpoint(base.Endpoint):
                      tags=bd['tags'])
                for bd in bdicts]
 
+    def get_kwargs_from_graphql(self, parent, resolve_info, args):
+        if parent is not None:
+            return {'masterid': parent['masterid']}
+        return {}
+
 
 class Builder(base.ResourceType):
 
@@ -78,6 +83,7 @@ class Builder(base.ResourceType):
     eventPathPatterns = """
         /builders/:builderid
     """
+    subresources = ["Build", "Forcescheduler", "Scheduler", "Buildrequest"]
 
     class EntityType(types.Entity):
         builderid = types.Integer()

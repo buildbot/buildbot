@@ -43,11 +43,12 @@ class GraphQLConnector(service.AsyncService):
     with as_future()
     """
     data = None
+    asyncio_loop = None
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.data is None:
             self.data = self.master.data
-        config = new_config.get('www', {}).get('graphql')
+        config = new_config.www.get('graphql')
         self.enabled = False
         if config is None:
             return
@@ -57,13 +58,27 @@ class GraphQLConnector(service.AsyncService):
 
         self.enabled = True
         self.config = config
-        if not isinstance(asyncio.get_event_loop(), AsyncIOLoopWithTwisted):
-            asyncio_loop = AsyncIOLoopWithTwisted(self.master.reactor)
-            asyncio.set_event_loop(asyncio_loop)
-            asyncio_loop.start()
+        loop = None
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            pass
+        if not isinstance(loop, AsyncIOLoopWithTwisted):
+            self.asyncio_loop = AsyncIOLoopWithTwisted(self.master.reactor)
+            asyncio.set_event_loop(self.asyncio_loop)
+            self.asyncio_loop.start()
 
         self.debug = self.config.get("debug")
         self.schema = graphql.build_schema(self.get_schema())
+
+    def stopService(self):
+        if self.asyncio_loop:
+            self.asyncio_loop.stop()
+            self.asyncio_loop.close()
+            asyncio.set_event_loop(None)
+            self.asyncio_loop = None
+
+        return super().stopService()
 
     @functools.lru_cache(1)
     def get_schema(self):
@@ -81,7 +96,9 @@ class GraphQLConnector(service.AsyncService):
         # type dependencies must be added recursively
         def add_dependent_types(ent):
             typename = ent.toGraphQLTypeName()
-            if typename not in types and isinstance(ent, Entity):
+            if typename in types:
+                return
+            if isinstance(ent, Entity):
                 types[typename] = ent
             for dtyp in ent.graphQLDependentTypes():
                 add_dependent_types(dtyp)
@@ -89,7 +106,8 @@ class GraphQLConnector(service.AsyncService):
             rtype = self.data.getResourceType(ent.name)
             if rtype is not None:
                 for subresource in rtype.subresources:
-                    add_dependent_types(subresource.rtype.entityType)
+                    rtype = self.data.getResourceTypeForGraphQlType(subresource)
+                    add_dependent_types(rtype.entityType)
 
         # root query contain the list of item available directly
         # mapped against the rootLinks
@@ -118,8 +136,13 @@ class GraphQLConnector(service.AsyncService):
                     query_fields.append(f"{field}__{op}: {field_type_graphql}")
 
             query_fields.extend(["order: String", "limit: Int", "offset: Int"])
+            ep = self.data.getEndPointForResourceName(rtype.plural)
+            if ep is None or not ep.isPseudoCollection:
+                plural_typespec = f"[{typename}]"
+            else:
+                plural_typespec = typename
             queries_schema += (
-                f"  {rtype.plural}{format_query_fields(query_fields)}: [{typename}]!\n"
+                f"  {rtype.plural}{format_query_fields(query_fields)}: {plural_typespec}!\n"
             )
 
             # build the queriable parameter, via keyField
@@ -157,7 +180,8 @@ class GraphQLConnector(service.AsyncService):
             rtype = self.data.getResourceType(typ.name)
             if rtype is not None:
                 for subresource in rtype.subresources:
-                    schema += format_subresource(subresource.rtype)
+                    rtype = self.data.getResourceTypeForGraphQlType(subresource)
+                    schema += format_subresource(rtype)
             schema += "}\n"
         return schema
 
@@ -183,7 +207,7 @@ class GraphQLConnector(service.AsyncService):
             rspec = None
             kwargs = ep.get_kwargs_from_graphql(parent, resolve_info, args)
 
-            if ep.isCollection:
+            if ep.isCollection or ep.isPseudoCollection:
                 args = {k: [v] for k, v in args.items()}
                 rspec = self.data.resultspec_from_jsonapi(args, ep.rtype.entityType, True)
 

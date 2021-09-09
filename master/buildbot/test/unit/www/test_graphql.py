@@ -20,7 +20,7 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.test.fake import endpoint
+from buildbot.data import connector
 from buildbot.test.util import www
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
@@ -37,6 +37,7 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         skip = "graphql is required for V3RootResource tests"
 
     def setUp(self):
+        self.patch(connector.DataConnector, 'submodules', [])
         self.setUpTestReactor(use_asyncio=True)
         self.master = self.make_master(url="http://server/path/", wantGraphql=True)
         self.master.config.www["graphql"] = {"debug": True}
@@ -237,7 +238,6 @@ class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
     def setUp(self):
         self.setUpTestReactor()
         self.master = self.make_master(url="http://server/path/")
-        self.master.data._scanModule(endpoint)
         self.rsrc = graphql.V3RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 

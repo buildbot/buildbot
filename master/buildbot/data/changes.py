@@ -121,6 +121,7 @@ class Change(base.ResourceType):
         codebase = types.String()
         sourcestamp = sourcestamps.SourceStamp.entityType
     entityType = EntityType(name)
+    subresources = ["Build"]
 
     @base.updateMethod
     @defer.inlineCallbacks

@@ -63,4 +63,5 @@ def masterConfig():
         BuilderConfig(name="testy",
                       workernames=["local1"],
                       factory=f)]
+    c['www'] = {'graphql': True}
     return c

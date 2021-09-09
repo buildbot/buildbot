@@ -132,7 +132,9 @@ class DataConnector(service.AsyncService):
         return None
 
     def getResourceTypeForGraphQlType(self, type):
-        return self.graphql_rtypes.get(type.name)
+        if type not in self.graphql_rtypes:
+            raise RuntimeError(f"Can't get rtype for {type}: {self.graphql_rtypes.keys()}")
+        return self.graphql_rtypes.get(type)
 
     def get(self, path, filters=None, fields=None, order=None,
             limit=None, offset=None):

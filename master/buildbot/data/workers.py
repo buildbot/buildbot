@@ -121,6 +121,7 @@ class Worker(base.ResourceType):
     eventPathPatterns = """
         /workers/:workerid
     """
+    subresources = ["Build"]
 
     class EntityType(types.Entity):
         workerid = types.Integer()

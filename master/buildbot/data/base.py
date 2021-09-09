@@ -68,7 +68,7 @@ class ResourceType:
     @functools.lru_cache(1)
     def getCollectionEndpoint(self):
         for ep in self.getEndpoints():
-            if ep.isCollection:
+            if ep.isCollection or ep.isPseudoCollection:
                 return ep
         return None
 
@@ -101,7 +101,9 @@ class Endpoint:
     pathPatterns = ""
     rootLinkName = None
     isCollection = False
+    isPseudoCollection = False
     isRaw = False
+    parentMapping = {}
 
     def __init__(self, rtype, master):
         self.rtype = rtype
@@ -117,11 +119,28 @@ class Endpoint:
             raise exceptions.InvalidControlException("action: {} is not supported".format(action))
         return action_method(args, kwargs)
 
-    def get_kwargs_from_graphql(self, parent, resolve_info, args):
-        if self.isCollection:
-            if parent is not None:
+    def get_kwargs_from_graphql_parent(self, parent, parent_type):
+        if parent_type not in self.parentMapping:
+            rtype = self.master.data.getResourceTypeForGraphQlType(parent_type)
+            if rtype.keyField in parent:
+                parentid = rtype.keyField
+            else:
                 raise NotImplementedError(
-                    "Collection endpoint should implement get_kwargs_from_graphql")
+                    "Collection endpoint should implement "
+                    "get_kwargs_from_graphql or parentMapping"
+                )
+        else:
+            parentid = self.parentMapping[parent_type]
+        ret = {}
+        ret[parentid] = parent[parentid]
+        return ret
+
+    def get_kwargs_from_graphql(self, parent, resolve_info, args):
+        if self.isCollection or self.isPseudoCollection:
+            if parent is not None:
+                return self.get_kwargs_from_graphql_parent(
+                    parent, resolve_info.parent_type.name
+                )
             return {}
         ret = {}
         k = self.rtype.keyField
