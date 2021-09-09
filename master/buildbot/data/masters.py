@@ -87,6 +87,7 @@ class Master(base.ResourceType):
     eventPathPatterns = """
         /masters/:masterid
     """
+    keyField = "masterid"
 
     class EntityType(types.Entity):
         masterid = types.Integer()

@@ -101,7 +101,7 @@ class Step(base.ResourceType):
     name = "step"
     plural = "steps"
     endpoints = [StepEndpoint, StepsEndpoint]
-    keyFields = ['builderid', 'stepid']
+    keyField = 'stepid'
     eventPathPatterns = """
         /builds/:buildid/steps/:stepid
         /steps/:stepid

@@ -118,7 +118,7 @@ class Step(base.ResourceType):
     name = "step"
     plural = "steps"
     endpoints = [StepsEndpoint, StepEndpoint]
-    keyFields = ["stepid"]
+    keyField = "stepid"
 
     class EntityType(types.Entity):
         stepid = types.Integer()
@@ -131,7 +131,7 @@ class Test(base.ResourceType):
     name = "test"
     plural = "tests"
     endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint, RawTestsEndpoint]
-    keyFields = ["testid"]
+    keyField = "testid"
     subresources = [base.SubResource(Step)]
 
     class EntityType(types.Entity):

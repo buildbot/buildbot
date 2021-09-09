@@ -101,7 +101,7 @@ class TestResultSet(base.ResourceType):
     name = "test_result_set"
     plural = "test_result_sets"
     endpoints = [TestResultSetsEndpoint, TestResultSetEndpoint]
-    keyFields = ['test_result_setid']
+    keyField = 'test_result_setid'
     eventPathPatterns = """
         /test_result_sets/:test_result_setid
     """

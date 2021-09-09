@@ -50,7 +50,7 @@ class Properties(base.ResourceType):
     name = "property"
     plural = "properties"
     endpoints = [BuildsetPropertiesEndpoint, BuildPropertiesEndpoint]
-    keyFields = []
+    keyField = "name"
 
     entityType = types.SourcedProperties()
 
