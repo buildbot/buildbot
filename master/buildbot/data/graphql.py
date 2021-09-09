@@ -45,6 +45,10 @@ class GraphQLConnector(service.AsyncService):
     data = None
     asyncio_loop = None
 
+    # asyncio will create an event loop if none exists yet in get_event_loop(). We need to set it
+    # back via set_event_loop() if we want it to be properly closed.
+    _saved_event_loop = None
+
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.data is None:
             self.data = self.master.data
@@ -60,10 +64,13 @@ class GraphQLConnector(service.AsyncService):
         self.config = config
         loop = None
         try:
-            loop = asyncio.get_event_loop()
+            if self._saved_event_loop is None:
+                loop = asyncio.get_event_loop()
         except RuntimeError:
             pass
-        if not isinstance(loop, AsyncIOLoopWithTwisted):
+
+        if self._saved_event_loop is None and not isinstance(loop, AsyncIOLoopWithTwisted):
+            self._saved_event_loop = loop
             self.asyncio_loop = AsyncIOLoopWithTwisted(self.master.reactor)
             asyncio.set_event_loop(self.asyncio_loop)
             self.asyncio_loop.start()
@@ -75,7 +82,8 @@ class GraphQLConnector(service.AsyncService):
         if self.asyncio_loop:
             self.asyncio_loop.stop()
             self.asyncio_loop.close()
-            asyncio.set_event_loop(None)
+            if self._saved_event_loop is not None:
+                asyncio.set_event_loop(self._saved_event_loop)
             self.asyncio_loop = None
 
         return super().stopService()
