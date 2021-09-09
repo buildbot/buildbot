@@ -186,23 +186,23 @@ class DataConnector(service.AsyncService):
         filters, properties = [], []
         for arg in req_args:
             argStr = bytes2unicode(arg)
-            if arg == b'order':
+            if argStr == 'order':
                 order = tuple([bytes2unicode(o) for o in req_args[arg]])
                 checkFields(order, True)
-            elif arg == b'field':
+            elif argStr == 'field':
                 fields = req_args[arg]
                 checkFields(fields, False)
-            elif arg == b'limit':
+            elif argStr == 'limit':
                 try:
                     limit = int(req_args[arg][0])
                 except Exception as e:
                     raise exceptions.InvalidQueryParameter('invalid limit') from e
-            elif arg == b'offset':
+            elif argStr == 'offset':
                 try:
                     offset = int(req_args[arg][0])
                 except Exception as e:
                     raise exceptions.InvalidQueryParameter('invalid offset') from e
-            elif arg == b'property':
+            elif argStr == 'property':
                 try:
                     props = []
                     for v in req_args[arg]:
