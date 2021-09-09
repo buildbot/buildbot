@@ -102,7 +102,7 @@ class BuildData(base.ResourceType):
     name = "build_data"
     plural = "build_data"
     endpoints = [BuildDatasNoValueEndpoint, BuildDataNoValueEndpoint, BuildDataEndpoint]
-    keyFields = []
+    keyField = "name"
 
     class EntityType(types.Entity):
         buildid = types.Integer()

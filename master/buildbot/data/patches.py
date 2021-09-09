@@ -25,7 +25,7 @@ class Patch(base.ResourceType):
     name = "patch"
     plural = "patches"
     endpoints = []
-    keyFields = ['patchid']
+    keyField = 'patchid'
 
     class EntityType(types.Entity):
         patchid = types.Integer()

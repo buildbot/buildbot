@@ -93,11 +93,6 @@ class StepsEndpoint(base.Endpoint):
     isCollection = True
     pathPatterns = "/tests/n:testid/steps"
 
-    def get_kwargs_from_graphql(self, parent, resolve_info, args):
-        if parent is not None:
-            return {'testid': parent['testid']}
-        return {}
-
     def get(self, resultSpec, kwargs):
         data = [step for step in stepData.values() if step['testid'] == kwargs['testid']]
         # results are sorted by ID for test stability
@@ -118,7 +113,7 @@ class Step(base.ResourceType):
     name = "step"
     plural = "steps"
     endpoints = [StepsEndpoint, StepEndpoint]
-    keyFields = ["stepid"]
+    keyField = "stepid"
 
     class EntityType(types.Entity):
         stepid = types.Integer()
@@ -131,8 +126,8 @@ class Test(base.ResourceType):
     name = "test"
     plural = "tests"
     endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint, RawTestsEndpoint]
-    keyFields = ["testid"]
-    subresources = [base.SubResource(Step)]
+    keyField = "testid"
+    subresources = ["Step"]
 
     class EntityType(types.Entity):
         testid = types.Integer()

@@ -46,7 +46,9 @@ class LogChunkEndpoint(LogChunkEndpointBase):
     # Note that this is a singular endpoint, even though it overrides the
     # offset/limit query params in ResultSpec
     isCollection = False
+    isPseudoCollection = True
     pathPatterns = """
+        /logchunks
         /logs/n:logid/contents
         /steps/n:stepid/logs/i:log_slug/contents
         /builds/n:buildid/steps/i:step_name/logs/i:log_slug/contents
@@ -54,6 +56,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/contents
         /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/contents
     """
+    rootLinkName = "logchunks"
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -82,6 +85,13 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         return {'logid': logid,
                 'firstline': firstline,
                 'content': logLines}
+
+    def get_kwargs_from_graphql(self, parent, resolve_info, args):
+        if parent is not None:
+            return self.get_kwargs_from_graphql_parent(
+                parent, resolve_info.parent_type.name
+            )
+        return {"logid": args["logid"]}
 
 
 class RawLogChunkEndpoint(LogChunkEndpointBase):
@@ -124,13 +134,14 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
 class LogChunk(base.ResourceType):
 
-    name = "logchunk"
-    plural = "logchunks"
+    name = "log_chunk"
+    plural = "log_chunks"
     endpoints = [LogChunkEndpoint, RawLogChunkEndpoint]
-    keyFields = ['stepid', 'logid']
+    keyField = "logid"
 
     class EntityType(types.Entity):
         logid = types.Integer()
         firstline = types.Integer()
         content = types.String()
+
     entityType = EntityType(name)

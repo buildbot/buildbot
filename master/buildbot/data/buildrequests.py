@@ -180,12 +180,14 @@ class BuildRequest(base.ResourceType):
     name = "buildrequest"
     plural = "buildrequests"
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
-    keyFields = ['buildsetid', 'builderid', 'buildrequestid']
+    keyField = 'buildrequestid'
     eventPathPatterns = """
         /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
         /buildrequests/:buildrequestid
         /builders/:builderid/buildrequests/:buildrequestid
     """
+
+    subresources = ["Build"]
 
     class EntityType(types.Entity):
         buildrequestid = types.Integer()

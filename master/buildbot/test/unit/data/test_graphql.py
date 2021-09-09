@@ -50,7 +50,8 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
         yield self.graphql.setServiceParent(self.master)
 
     def configure_graphql(self):
-        self.graphql.reconfigServiceWithBuildbotConfig({'www': {'graphql': {'debug': True}}})
+        self.master.config.www = {'graphql': {}}
+        self.graphql.reconfigServiceWithBuildbotConfig(self.master.config)
 
     def test_signature_query(self):
         @self.assertArgSpecMatches(self.graphql.query)
@@ -125,3 +126,25 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
         # graphql parses the schema and raise an error if it is incorrect
         # or incoherent (e.g. missing type definition)
         schema = graphql.build_schema(schema)
+
+
+class TestGraphQlConnectorService(TestReactorMixin, unittest.TestCase):
+
+    def setUp(self):
+        if not graphql:
+            raise unittest.SkipTest('Test requires graphql-core module installed')
+        self.setUpTestReactor(use_asyncio=False)
+
+    @defer.inlineCallbacks
+    def test_start_stop(self):
+        self.master = fakemaster.make_master(self)
+        self.master.data = self.data = connector.DataConnector()
+        yield self.data.setServiceParent(self.master)
+        self.graphql = GraphQLConnector()
+        yield self.graphql.setServiceParent(self.master)
+        yield self.master.startService()
+        self.master.config.www = {'graphql': {}}
+        self.graphql.reconfigServiceWithBuildbotConfig(self.master.config)
+        self.assertIsNotNone(self.graphql.asyncio_loop)
+        yield self.master.stopService()
+        self.assertIsNone(self.graphql.asyncio_loop)

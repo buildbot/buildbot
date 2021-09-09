@@ -368,7 +368,8 @@ class RunMasterBase(unittest.TestCase):
                     if onlyStdout and line[0] != 'o':
                         continue
                     expectedLog = self._match_patterns_consume(line, expectedLog, is_regex=regex)
-
+        if expectedLog:
+            print(f"{expectedLog} not found in logs")
         return len(expectedLog) == 0
 
     def printLog(self, log, out):

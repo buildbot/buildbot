@@ -189,12 +189,13 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
-    keyFields = ['builderid', 'buildid', 'workerid']
+    keyField = "buildid"
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid
         /workers/:workerid/builds/:buildid
     """
+    subresources = ["Step"]
 
     class EntityType(types.Entity):
         buildid = types.Integer()

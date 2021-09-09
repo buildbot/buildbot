@@ -95,11 +95,12 @@ class Log(base.ResourceType):
     name = "log"
     plural = "logs"
     endpoints = [LogEndpoint, LogsEndpoint]
-    keyFields = ['stepid', 'logid']
+    keyField = "logid"
     eventPathPatterns = """
         /logs/:logid
         /steps/:stepid/logs/:slug
     """
+    subresources = ["LogChunk"]
 
     class EntityType(types.Entity):
         logid = types.Integer()
@@ -109,6 +110,7 @@ class Log(base.ResourceType):
         complete = types.Boolean()
         num_lines = types.Integer()
         type = types.Identifier(1)
+
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
