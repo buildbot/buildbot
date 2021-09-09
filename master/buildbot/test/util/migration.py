@@ -16,9 +16,8 @@
 
 import os
 
-import migrate
-import migrate.versioning.api
 import sqlalchemy as sa
+from alembic.runtime.migration import MigrationContext
 
 from twisted.internet import defer
 from twisted.python import log
@@ -58,35 +57,36 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
         return self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
-    def do_test_migration(self, base_version, target_version,
+    def do_test_migration(self, base_revision, target_revision,
                           setup_thd_cb, verify_thd_cb):
 
         def setup_thd(conn):
             metadata = sa.MetaData()
             table = sautils.Table(
-                'migrate_version', metadata,
-                sa.Column('repository_id', sa.String(250), primary_key=True),
-                sa.Column('repository_path', sa.Text),
-                sa.Column('version', sa.Integer),
+                'alembic_version', metadata,
+                sa.Column("version_num", sa.String(32), nullable=False),
             )
             table.create(bind=conn)
-            conn.execute(table.insert(),
-                         repository_id='Buildbot',
-                         repository_path=self.db.model.repo_path,
-                         version=base_version)
+            conn.execute(table.insert(), version_num=base_revision)
             setup_thd_cb(conn)
         yield self.db.pool.do(setup_thd)
 
+        alembic_scripts = self.alembic_get_scripts()
+
         def upgrade_thd(engine):
             with querylog.log_queries():
-                schema = migrate.versioning.schema.ControlledSchema(
-                    engine, self.db.model.repo_path)
-                changeset = schema.changeset(target_version)
                 with sautils.withoutSqliteForeignKeys(engine):
-                    for version, change in changeset:
-                        log.msg('upgrading to schema version %d' %
-                                (version + 1))
-                        schema.runchange(version, change, 1)
+                    with engine.connect() as conn:
+
+                        def upgrade(rev, context):
+                            log.msg(f'Upgrading from {rev} to {target_revision}')
+                            return alembic_scripts._upgrade_revs(target_revision, rev)
+
+                        context = MigrationContext.configure(conn, opts={'fn': upgrade})
+
+                        with context.begin_transaction():
+                            context.run_migrations()
+
         yield self.db.pool.do_with_engine(upgrade_thd)
 
         def check_table_charsets_thd(engine):

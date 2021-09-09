@@ -14,10 +14,9 @@
 # Copyright Buildbot Team Members
 
 
-import migrate
-import migrate.versioning.repository
+import alembic
+import alembic.config
 import sqlalchemy as sa
-from migrate import exceptions  # pylint: disable=ungrouped-imports
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,19 +27,24 @@ from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
 
-try:
-    from migrate.versioning.schema import ControlledSchema  # pylint: disable=ungrouped-imports
-except ImportError:
-    ControlledSchema = None
 
-
-class EightUpgradeError(Exception):
+class UpgradeFromBefore0p9Error(Exception):
 
     def __init__(self):
-        message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x
+        message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x or newer.
         This is not supported. Please start from a clean database
-        http://docs.buildbot.net/latest/manual/installation/nine-upgrade.html"""
+        http://docs.buildbot.net/latest/manual/upgrading/0.9-upgrade.html"""
         # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+
+class UpgradeFromBefore3p0Error(Exception):
+
+    def __init__(self):
+        message = """You are trying to upgrade to Buildbot 3.0 or newer from Buildbot 2.x or older.
+        This is only supported via an intermediate upgrade to newest Buildbot 2.10.x that is
+        available. Please first upgrade to 2.10.x and then try to upgrade to this version.
+        http://docs.buildbot.net/latest/manual/upgrading/3.0-upgrade.html"""
         super().__init__(message)
 
 
@@ -988,35 +992,51 @@ class Model(base.DBConnectorComponent):
     # Migration support
     # -----------------
 
-    # this is a bit more complicated than might be expected because the first
-    # seven database versions were once implemented using a homespun migration
-    # system, and we need to support upgrading masters from that system.  The
-    # old system used a 'version' table, where SQLAlchemy-Migrate uses
-    # 'migrate_version'
+    # Buildbot has historically used 3 database migration systems:
+    #  - homegrown system that used "version" table to track versions
+    #  - SQLAlchemy-migrate that used "migrate_version" table to track versions
+    #  - alembic that uses "alembic_version" table to track versions (current)
+    # We need to detect each case and tell the user how to upgrade.
 
-    repo_path = util.sibpath(__file__, "migrate")
+    config_path = util.sibpath(__file__, "migrations/alembic.ini")
+
+    def table_exists(self, conn, table):
+        try:
+            r = conn.execute(f"select * from {table} limit 1")
+            r.close()
+            return True
+        except Exception:
+            return False
+
+    def migrate_get_version(self, conn):
+        r = conn.execute("select version from migrate_version limit 1")
+        version = r.scalar()
+        r.close()
+        return version
+
+    def alembic_get_scripts(self):
+        alembic_config = alembic.config.Config(self.config_path)
+        return alembic.script.ScriptDirectory.from_config(alembic_config)
+
+    def alembic_stamp(self, conn, alembic_scripts, revision):
+        context = alembic.runtime.migration.MigrationContext.configure(conn)
+        context.stamp(alembic_scripts, revision)
 
     @defer.inlineCallbacks
     def is_current(self):
-        if ControlledSchema is None:
-            # this should have been caught earlier by enginestrategy.py with a
-            # nicer error message
-            raise ImportError("SQLAlchemy/SQLAlchemy-Migrate version conflict")
-
-        def thd(engine):
-            # we don't even have to look at the old version table - if there's
-            # no migrate_version, then we're not up to date.
-            repo = migrate.versioning.repository.Repository(self.repo_path)
-            repo_version = repo.latest
-            try:
-                # migrate.api doesn't let us hand in an engine
-                schema = ControlledSchema(engine, self.repo_path)
-                db_version = schema.version
-            except exceptions.DatabaseNotControlledError:
+        def thd(conn):
+            if not self.table_exists(conn, 'alembic_version'):
                 return False
 
-            return db_version == repo_version
-        ret = yield self.db.pool.do_with_engine(thd)
+            alembic_scripts = self.alembic_get_scripts()
+            current_script_rev_head = alembic_scripts.get_current_head()
+
+            context = alembic.runtime.migration.MigrationContext.configure(conn)
+            current_rev = context.get_current_revision()
+
+            return current_rev == current_script_rev_head
+
+        ret = yield self.db.pool.do(thd)
         return ret
 
     # returns a Deferred that returns None
@@ -1029,94 +1049,49 @@ class Model(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def upgrade(self):
 
-        # here, things are a little tricky.  If we have a 'version' table, then
-        # we need to version_control the database with the proper version
-        # number, drop 'version', and then upgrade.  If we have no 'version'
-        # table and no 'migrate_version' table, then we need to version_control
-        # the database.  Otherwise, we just need to upgrade it.
-
-        def table_exists(engine, tbl):
-            try:
-                r = engine.execute("select * from {} limit 1".format(tbl))
-                r.close()
-                return True
-            except Exception:
-                return False
-
-        # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=100
-        # means  we cannot use the migrate.versioning.api module.  So these
-        # methods perform similar wrapping functions to what is done by the API
-        # functions, but without disposing of the engine.
-        def upgrade(engine):
-            schema = ControlledSchema(engine, self.repo_path)
-            changeset = schema.changeset(None)
-            with sautils.withoutSqliteForeignKeys(engine):
-                for version, change in changeset:
-                    log.msg('migrating schema version {} -> {}'.format(version, version + 1))
-                    schema.runchange(version, change, 1)
-
-        def check_sqlalchemy_migrate_version():
-            # sqlalchemy-migrate started including a version number in 0.7; we
-            # support back to 0.6.1, but not 0.6.  We'll use some discovered
-            # differences between 0.6.1 and 0.6 to get that resolution.
-            version = getattr(migrate, '__version__', 'old')
-            if version == 'old':
-                try:
-                    from migrate.versioning import schemadiff
-                    if hasattr(schemadiff, 'ColDiff'):
-                        version = "0.6.1"
-                    else:
-                        version = "0.6"
-                except Exception:
-                    version = "0.0"
-            version_tup = tuple(map(int, version.split('-', 1)[0].split('.')))
-            log.msg("using SQLAlchemy-Migrate version {}".format(version))
-            if version_tup < (0, 6, 1):
-                raise RuntimeError(("You are using SQLAlchemy-Migrate {}. "
-                                    "The minimum version is 0.6.1.").format(version))
-
-        def version_control(engine, version=None):
-            ControlledSchema.create(engine, self.repo_path, version)
-
         # the upgrade process must run in a db thread
-        def thd(engine):
-            # if the migrate_version table exists, we can just let migrate
-            # take care of this process.
-            if table_exists(engine, 'migrate_version'):
-                r = engine.execute(
-                    "select version from migrate_version limit 1")
-                old_version = r.scalar()
-                if old_version < 40:
-                    raise EightUpgradeError()
-                try:
-                    upgrade(engine)
-                except sa.exc.NoSuchTableError as e:  # pragma: no cover
-                    if 'migration_tmp' in str(e):
-                        log.err('A serious error has been encountered during the upgrade. The '
-                                'previous upgrade has been likely interrupted. The database has '
-                                'been damaged and automatic recovery is impossible.')
-                        log.err('If you believe this is an error, please submit a bug to the '
-                                'Buildbot project.')
-                    raise
+        def thd(conn):
+            alembic_scripts = self.alembic_get_scripts()
+            current_script_rev_head = alembic_scripts.get_current_head()
 
-            # if the version table exists, then we can version_control things
-            # at that version, drop the version table, and let migrate take
-            # care of the rest.
-            elif table_exists(engine, 'version'):
-                raise EightUpgradeError()
+            if self.table_exists(conn, 'version'):
+                raise UpgradeFromBefore0p9Error()
 
-            # otherwise, this db is new, so we don't bother using the migration engine
-            # and just create the tables, and put the version directly to
-            # latest
-            else:
-                # do some tests before getting started
-                test_unicode(engine)
+            if self.table_exists(conn, 'migrate_version'):
+                version = self.migrate_get_version(conn)
 
+                if version < 40:
+                    raise UpgradeFromBefore0p9Error()
+
+                last_sqlalchemy_migrate_version = 58
+                if version != last_sqlalchemy_migrate_version:
+                    raise UpgradeFromBefore3p0Error()
+
+                self.alembic_stamp(conn, alembic_scripts, alembic_scripts.get_base())
+                conn.execute('drop table migrate_version')
+
+            if not self.table_exists(conn, 'alembic_version'):
                 log.msg("Initializing empty database")
-                Model.metadata.create_all(engine)
-                repo = migrate.versioning.repository.Repository(self.repo_path)
 
-                version_control(engine, repo.latest)
+                # Do some tests first
+                test_unicode(conn)
 
-        check_sqlalchemy_migrate_version()
-        yield self.db.pool.do_with_engine(thd)
+                Model.metadata.create_all(conn)
+                self.alembic_stamp(conn, alembic_scripts, current_script_rev_head)
+                return
+
+            context = alembic.runtime.migration.MigrationContext.configure(conn)
+            current_rev = context.get_current_revision()
+
+            if current_rev == current_script_rev_head:
+                log.msg('Upgrading database: the current database schema is already the newest')
+                return
+
+            log.msg('Upgrading database')
+            with sautils.withoutSqliteForeignKeys(conn):
+                with context.begin_transaction():
+                    context.run_migrations()
+
+            log.msg('Upgrading database: done')
+
+        yield self.db.pool.do(thd)

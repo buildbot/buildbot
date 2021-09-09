@@ -25,9 +25,7 @@ special cases that Buildbot needs.  Those include:
 
 
 import os
-import re
 
-import migrate
 import sqlalchemy as sa
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
@@ -134,22 +132,6 @@ class MySQLStrategy(Strategy):
                     super().should_retry(ex)])
 
 
-def get_sqlalchemy_migrate_version():
-    # sqlalchemy-migrate started including a version number in 0.7
-    # Borrowed from model.py
-    version = getattr(migrate, '__version__', 'old')
-    if version == 'old':
-        try:
-            from migrate.versioning import schemadiff
-            if hasattr(schemadiff, 'ColDiff'):
-                version = "0.6.1"
-            else:
-                version = "0.6"
-        except Exception:
-            version = "0.0"
-    return tuple(map(int, version.split('.')))
-
-
 def sa_url_set_attr(u, attr, value):
     if hasattr(u, 'set'):
         return u.set(**{attr: value})
@@ -234,24 +216,6 @@ def special_case_mysql(u, kwargs):
     return u, kwargs, None
 
 
-def check_sqlalchemy_version():
-    version = getattr(sa, '__version__', '0')
-    try:
-        version_digits = re.sub('[^0-9.]', '', version)
-        version_tup = tuple(map(int, version_digits.split('.')))
-    except TypeError:
-        return  # unparseable -- oh well
-
-    if version_tup < (0, 6):
-        raise RuntimeError("SQLAlchemy version {} is too old".format(version))
-    if version_tup > (0, 7, 10):
-        mvt = get_sqlalchemy_migrate_version()
-        if mvt < (0, 8, 0):
-            raise RuntimeError(("SQLAlchemy version {} is not supported by "
-                                "SQLAlchemy-Migrate version {}.{}.{}").format(version, mvt[0],
-                                                                              mvt[1], mvt[2]))
-
-
 def get_drivers_strategy(drivername):
     if drivername.startswith('sqlite'):
         return SqlLiteStrategy()
@@ -263,7 +227,6 @@ def get_drivers_strategy(drivername):
 def create_engine(name_or_url, **kwargs):
     if 'basedir' not in kwargs:
         raise TypeError('no basedir supplied to create_engine')
-    check_sqlalchemy_version()
 
     max_conns = None
 

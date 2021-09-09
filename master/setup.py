@@ -164,7 +164,7 @@ setup_args = {
         "buildbot.clients",
         "buildbot.data",
         "buildbot.db",
-        "buildbot.db.migrate.versions",
+        "buildbot.db.migrations.versions",
         "buildbot.db.types",
         "buildbot.machine",
         "buildbot.monkeypatches",
@@ -203,10 +203,10 @@ setup_args = {
     ]),
     'data_files': [
         include("buildbot/reporters/templates", "*.txt"),
-        ("buildbot/db/migrate", [
-            "buildbot/db/migrate/migrate.cfg",
+        ("buildbot/db/migrations", [
+            "buildbot/db/migrations/alembic.ini",
         ]),
-        include("buildbot/db/migrate/versions", "*.py"),
+        include("buildbot/db/migrations/versions", "*.py"),
         ("buildbot/scripts", [
             "buildbot/scripts/sample.cfg",
             "buildbot/scripts/buildbot_tac.tmpl",
@@ -491,8 +491,8 @@ setup_args['install_requires'] = [
     'Jinja2 >= 2.1',
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
-    'sqlalchemy >= 1.2.0, < 1.5',
-    'sqlalchemy-migrate>=0.13',
+    'sqlalchemy >= 1.3.0, < 1.5',
+    'alembic >= 1.6.0',
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
