@@ -370,41 +370,35 @@ class BuildRequestDistributor(service.AsyncMultiService):
         timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
         timer.start()
         # perform an asynchronous schwarzian transform, transforming None
-        # into sys.maxint so that it sorts to the end
+        # into a really big date, so that any
+        # date set to 'None' will appear at the
+        # end of the list during comparisons.
+        max_time = datetime.max
+        # Need to set the timezone on the date, in order
+        # to perform comparisons with other dates which
+        # have the time zone set.
+        max_time = max_time.replace(tzinfo=tzutc())
 
-        def xform(bldr):
-            d = defer.maybeDeferred(bldr.getOldestRequestTime)
-            d.addCallback(lambda time:
-                          (((time is None) and None or time), bldr))
-            return d
-        xformed = yield defer.gatherResults(
-            [xform(bldr) for bldr in builders])
+        @defer.inlineCallbacks
+        def transform(bldr):
+            time = yield bldr.getOldestRequestTime()
+            if time is None:
+                time = max_time
+            defer.returnValue((time, bldr))
+
+        transformed = yield defer.gatherResults(
+            [transform(bldr) for bldr in builders])
 
         # sort the transformed list synchronously, comparing None to the end of
         # the list
-        def xformedKey(a):
-            """
-            Key function can be used to sort a list
-            where each list element is a tuple:
-                (datetime.datetime, Builder)
-
-            @return: a tuple of (date, builder name)
-            """
+        def transformedKey(a):
             (date, builder) = a
-            if date is None:
-                # Choose a really big date, so that any
-                # date set to 'None' will appear at the
-                # end of the list during comparisons.
-                date = datetime.max
-                # Need to set the timezone on the date, in order
-                # to perform comparisons with other dates which
-                # have the time zone set.
-                date = date.replace(tzinfo=tzutc())
             return (date, builder.name)
-        xformed.sort(key=xformedKey)
+
+        transformed.sort(key=transformedKey)
 
         # and reverse the transform
-        rv = [xf[1] for xf in xformed]
+        rv = [xf[1] for xf in transformed]
         timer.stop()
         return rv
 
