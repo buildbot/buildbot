@@ -67,6 +67,13 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
     def checkConfig(self, vault_server=None, authenticator=None, secrets_mount=None,
                     api_version=2, path_delimiter='|', path_escape='\\'):
+        try:
+            import hvac
+            [hvac]
+        except ImportError:  # pragma: no cover
+            config.error(f"{self.__class__.__name__} needs the hvac package installed " +
+                         "(pip install hvac)")
+
         if not isinstance(vault_server, str):
             config.error("vault_server must be a string while it is {}".format(type(vault_server)))
         if not isinstance(path_delimiter, str) or len(path_delimiter) > 1:
@@ -83,12 +90,12 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
                         api_version=2, path_delimiter='|', path_escape='\\'):
         try:
             import hvac
-        except ImportError:
-            config.error("SecretInVaultKv needs the hvac package installed (pip install hvac)")
+        except ImportError:  # pragma: no cover
+            config.error(f"{self.__class__.__name__} needs the hvac package installed " +
+                         "(pip install hvac)")
 
         if secrets_mount is None:
             secrets_mount = "secret"
-
         self.secrets_mount = secrets_mount
         self.path_delimiter = path_delimiter
         self.path_escape = path_escape
