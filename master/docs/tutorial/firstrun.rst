@@ -32,7 +32,7 @@ The worker daemons connect to the master daemon and execute builds whenever mast
 
 In this tutorial we will run a single master and a single worker on the same machine.
 
-A more throughout explanation can be found in the :ref:`manual section <Introduction>` of the Buildbot documentation.
+A more thorough explanation can be found in the :ref:`manual section <Introduction>` of the Buildbot documentation.
 
 .. _Docker: https://docker.com
 
