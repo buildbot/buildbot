@@ -15,6 +15,8 @@
 
 from unittest.mock import patch
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -22,6 +24,7 @@ from buildbot.secrets.providers.vault_hvac import HashiCorpVaultKvSecretProvider
 from buildbot.secrets.providers.vault_hvac import VaultAuthenticatorApprole
 from buildbot.secrets.providers.vault_hvac import VaultAuthenticatorToken
 from buildbot.test.util import interfaces
+from buildbot.test.util.config import ConfigErrorsMixin
 
 try:
     import hvac
@@ -125,7 +128,7 @@ class TestSecretInVaultAuthenticatorApprole(unittest.TestCase, TestSecretInVault
         self.assertEqual(client.auth.approle.secret_id, "testSecret")
 
 
-class TestSecretInHashiCorpVaultKvSecretProvider(unittest.TestCase):
+class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
         if hvac is None:
@@ -139,9 +142,35 @@ class TestSecretInHashiCorpVaultKvSecretProvider(unittest.TestCase):
         self.provider.client.secrets.kv.default_kv_version = param['api_version']
         self.provider.client.token = "mockToken"
 
+    @parameterized.expand([
+        ('vault_server_not_string', {'vault_server': {}}, 'vault_server must be a string'),
+        ('path_delimiter_not_char', {'vault_server': 'abc', 'path_delimiter': {}},
+         'path_delimiter must be a single character'),
+        ('path_delimiter_too_long', {'vault_server': 'abc', 'path_delimiter': 'ab'},
+         'path_delimiter must be a single character'),
+        ('path_escape_not_char', {'vault_server': 'abc', 'path_escape': {}},
+         'path_escape must be a single character'),
+        ('path_escape_too_long', {'vault_server': 'abc', 'path_escape': 'ab'},
+         'path_escape must be a single character'),
+        ('api_version_unsupported', {'vault_server': 'abc', 'api_version': 3},
+         'api_version 3 is not supported'),
+    ])
+    def test_check_config(self, name, params, error):
+        with self.assertRaisesConfigError(error):
+            HashiCorpVaultKvSecretProvider(authenticator=VaultAuthenticatorToken("mockToken"),
+                                           **params)
+
+    def test_check_config_authenticator(self):
+        with self.assertRaisesConfigError('authenticator must be instance of VaultAuthenticator'):
+            HashiCorpVaultKvSecretProvider(vault_server='abc')
+
     def test_escaped_split(self):
         parts = self.provider.escaped_split("a/b\\|c/d|e/f\\|g/h")
         self.assertEqual(parts, ["a/b|c/d", "e/f|g/h"])
+
+    def test_escaped_split_ends_with_escape(self):
+        parts = self.provider.escaped_split("a|b\\")
+        self.assertEqual(parts, ["a", "b"])
 
     def test_thd_hvac_wrap_read_v1(self):
         self.provider.api_version = 1

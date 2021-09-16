@@ -101,7 +101,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         self.path_escape = path_escape
         self.authenticator = authenticator
         self.api_version = api_version
-        if vault_server.endswith('/'):
+        if vault_server.endswith('/'):  # pragma: no cover
             vault_server = vault_server[:-1]
         self.client = hvac.Client(vault_server)
         self.client.secrets.kv.default_kv_version = api_version
