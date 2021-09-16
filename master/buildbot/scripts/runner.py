@@ -141,7 +141,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     To use a remote MySQL database instead, use something like:
 
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
-    The --db string is stored verbatim in the buildbot.tac file, and
+    The --db string is stored verbatim in the master.cfg.sample file, and
     evaluated at 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
     """)
