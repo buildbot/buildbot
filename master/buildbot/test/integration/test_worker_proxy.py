@@ -84,20 +84,24 @@ async def handle_client(local_reader, local_writer):
         local_writer.close()
 
 
-def run_proxy():
+def run_proxy(queue):
     write_to_log("run_proxy\n")
 
     try:
         loop = asyncio.get_event_loop()
-        coro = asyncio.start_server(handle_client, "127.0.0.1", 10080)
+        coro = asyncio.start_server(handle_client, host="127.0.0.1")
         server = loop.run_until_complete(coro)
+
+        host, port = server.sockets[0].getsockname()
+
+        queue.put(port)
 
         def signal_handler(sig, trace):
             raise KeyboardInterrupt
 
         signal.signal(signal.SIGTERM, signal_handler)
 
-        write_to_log("Serving on {}\n".format(server.sockets[0].getsockname()))
+        write_to_log(f"Serving on {host}:{port}\n")
         try:
             write_to_log("Running forever\n")
             loop.run_forever()
@@ -111,6 +115,9 @@ def run_proxy():
     except BaseException as e:
         write_to_log(f"Exception Raised: {str(e)}\n", with_traceback=True)
 
+    finally:
+        queue.put(get_log_path())
+
 
 class RunMasterBehindProxy(RunMasterBase):
     # we need slightly longer timeout for proxy related tests
@@ -119,7 +126,8 @@ class RunMasterBehindProxy(RunMasterBase):
 
     def setUp(self):
         write_to_log("setUp\n")
-        self.proxy_process = multiprocessing.Process(target=run_proxy)
+        self.queue = multiprocessing.Queue()
+        self.proxy_process = multiprocessing.Process(target=run_proxy, args=(self.queue,))
         self.proxy_process.start()
         self.target_port = self.queue.get()
         write_to_log(f"got target_port {self.target_port}\n")
@@ -133,11 +141,14 @@ class RunMasterBehindProxy(RunMasterBase):
             with open(get_log_path()) as file:
                 print(file.read())
             print("---- ------ ----")
+            with open(self.queue.get()) as file:
+                print(file.read())
+            print("---- ------ ----")
             os.unlink(get_log_path())
 
     @defer.inlineCallbacks
     def setupConfig(self, config_dict, startWorker=True):
-        proxy_connection_string = "tcp:127.0.0.1:10080"
+        proxy_connection_string = f"tcp:127.0.0.1:{self.target_port}"
         yield RunMasterBase.setupConfig(self, config_dict, startWorker,
                                         proxy_connection_string=proxy_connection_string)
 
