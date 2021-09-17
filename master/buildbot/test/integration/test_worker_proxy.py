@@ -23,13 +23,13 @@ from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
 
-from .interop.test_commandmixin import CommandMixinMasterPB
-from .interop.test_compositestepmixin import CompositeStepMixinMasterPb
-from .interop.test_integration_secrets import SecretsConfigPB
-from .interop.test_interruptcommand import InterruptCommandPb
-from .interop.test_setpropertyfromcommand import SetPropertyFromCommandPB
-from .interop.test_transfer import TransferStepsMasterPb
-from .interop.test_worker_reconnect import WorkerReconnect
+from .interop import test_commandmixin
+from .interop import test_compositestepmixin
+from .interop import test_integration_secrets
+from .interop import test_interruptcommand
+from .interop import test_setpropertyfromcommand
+from .interop import test_transfer
+from .interop import test_worker_reconnect
 
 # This integration test puts HTTP proxy in between the master and worker.
 
@@ -155,29 +155,31 @@ class RunMasterBehindProxy(RunMasterBase):
 
 # Use interoperability test cases to test the HTTP proxy tunneling.
 
-class ProxyCommandMixinMasterPB(RunMasterBehindProxy, CommandMixinMasterPB):
+class ProxyCommandMixinMasterPB(RunMasterBehindProxy, test_commandmixin.CommandMixinMasterPB):
     pass
 
 
-class ProxyCompositeStepMixinMasterPb(RunMasterBehindProxy, CompositeStepMixinMasterPb):
+class ProxyCompositeStepMixinMasterPb(RunMasterBehindProxy,
+                                      test_compositestepmixin.CompositeStepMixinMasterPb):
     pass
 
 
-class ProxyInterruptCommandPb(RunMasterBehindProxy, InterruptCommandPb):
+class ProxyInterruptCommandPb(RunMasterBehindProxy, test_interruptcommand.InterruptCommandPb):
     pass
 
 
-class ProxySecretsConfigPB(RunMasterBehindProxy, SecretsConfigPB):
+class ProxySecretsConfigPB(RunMasterBehindProxy, test_integration_secrets.SecretsConfigPB):
     pass
 
 
-class ProxySetPropertyFromCommandPB(RunMasterBehindProxy, SetPropertyFromCommandPB):
+class ProxySetPropertyFromCommandPB(RunMasterBehindProxy,
+                                    test_setpropertyfromcommand.SetPropertyFromCommandPB):
     pass
 
 
-class ProxyTransferStepsMasterPb(RunMasterBehindProxy, TransferStepsMasterPb):
+class ProxyTransferStepsMasterPb(RunMasterBehindProxy, test_transfer.TransferStepsMasterPb):
     pass
 
 
-class ProxyWorkerReconnect(RunMasterBehindProxy, WorkerReconnect):
+class ProxyWorkerReconnect(RunMasterBehindProxy, test_worker_reconnect.WorkerReconnect):
     pass
