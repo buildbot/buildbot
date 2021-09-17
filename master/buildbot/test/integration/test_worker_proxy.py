@@ -88,7 +88,14 @@ def run_proxy(queue):
     write_to_log("run_proxy\n")
 
     try:
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # We can get RuntimeError due to current thread being not main thread on Python 3.8.
+            # It's not clear why that happens, so work around it.
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         coro = asyncio.start_server(handle_client, host="127.0.0.1")
         server = loop.run_until_complete(coro)
 
