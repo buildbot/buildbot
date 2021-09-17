@@ -178,6 +178,11 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
     If set, unexpected directories in worker base directory will be removed.
     Otherwise, a warning will be displayed in :file:`twistd.log` so that you can manually remove them.
 
+.. option:: --proxy-connection-string
+
+    Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
+    If set, the worker connection will be tunneled through a HTTP proxy specified by the option value.
+
 .. _Other-Worker-Configuration:
 
 Other Worker Configuration
