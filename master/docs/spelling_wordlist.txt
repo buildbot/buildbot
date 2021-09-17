@@ -20,6 +20,7 @@ apiVersion
 app
 apparmor
 appart
+approle
 apps
 ar
 aren
@@ -35,6 +36,8 @@ Atlassian
 attrs
 auth
 Auth
+authenticator
+authenticators
 authorisation
 authUri
 authz
@@ -717,6 +720,7 @@ rmdir
 rmfile
 rmtree
 Robocopy
+roleId
 rootlink
 routingkeys
 rpmlint
@@ -737,6 +741,7 @@ schemas
 scp
 sdist
 searchable
+secretId
 secretsmount
 sed
 selectable

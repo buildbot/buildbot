@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import warnings
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -28,6 +30,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def setUp(self, version):
+        warnings.simplefilter('ignore')
         self.setUpTestReactor()
         self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
                                                       vaultToken="someToken",

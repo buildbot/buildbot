@@ -115,10 +115,68 @@ Arguments:
 ``strip``
   (optional) if ``True`` (the default), trailing newlines are removed from the file contents.
 
+.. _HashiCorpVaultKvSecretProvider:
+
+HashiCorpVaultKvSecretProvider
+``````````````````````````````
+
+.. code-block:: python
+
+    c['secretsProviders'] = [
+        secrets.HashiCorpVaultKvSecretProvider(
+            authenticator=secrets.VaultAuthenticatorApprole(roleId="<role-guid>",
+                                                            secretId="<secret-guid>"),
+            vault_server="http://localhost:8200",
+            secrets_mount="kv")
+    ]
+
+HashiCorpVaultKvSecretProvider allows to use HashiCorp Vault KV secret engine as secret provider.
+Other secret engines are not supported by this particular provider.
+For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
+
+In order to use this secret provider, optional dependency ``hvac`` needs to be installed (``pip install hvac``).
+
+It supports different authentication methods with ability to re-authenticate when authentication token expires (not possible using ``HvacAuthenticatorToken``).
+
+Parameters accepted by ``HashiCorpVaultKvSecretProvider``:
+
+ - ``authenticator``: required parameter, specifies Vault authentication method.
+   Possible authenticators are:
+
+    - ``VaultAuthenticatorToken(token)``: simplest authentication by directly providing the authentication token.
+      This method cannot benefit from re-authentication mechanism and when token expires, secret provider will just stop working.
+
+    - ``VaultAuthenticatorApprole(roleId, secretId)``: approle authentication using roleId and secretId.
+      This is common method for automation tools fetching secrets from vault.
+
+ - ``vault_server``: required parameter, specifies URL of vault server.
+
+ - ``secrets_mount``: specifies mount point of KV secret engine in vault, default value is "secret".
+
+ - ``api_version``: version of vault KV secret engine.
+   Supported versions are 1 and 2, default value is 2.
+
+ - ``path_delimiter``: character used to separate path and key name in secret identifiers.
+   Default value is "|".
+
+ - ``path_escape``: escape character used in secret identifiers to allow escaping of ``path_delimiter`` character in path or key values.
+   Default value is "\".
+
+The secret identifiers that need to be passed to, e.g. :ref:`Interpolate`, have format: ``"path/to/secret:key"``.
+In case path or key name does contain colon character, it is possible to escape it using "\" or specify different separator character using ``path_delimiter`` parameter when initializing secret provider.
+
+Example use:
+
+.. code-block:: python
+
+    passwd = util.Secret('path/to/secret:password')
+
 .. _HashiCorpVaultSecretProvider:
 
 HashiCorpVaultSecretProvider
 ````````````````````````````
+
+.. note:: Use of ``HashiCorpVaultSecretProvider`` is deprecated in favor of newer :ref:`HashiCorpVaultKvSecretProvider` and will be removed in future releases.
 
 .. code-block:: python
 
@@ -139,7 +197,6 @@ Vault policies, and subsequent tokens assigned to them, provide for a more restr
 
 In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
-For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
 The secret identifiers that need to be passed to, e.g. :ref:`Interpolate`, accept one of the following
 formats:
@@ -181,7 +238,7 @@ SecretInPass
 .. code-block:: python
 
     c['secretsProviders'] = [secrets.SecretInPass(
-                            gpgPassphrase="passphrase", 
+                            gpgPassphrase="passphrase",
                             dirname="/path/to/password/store"
     )]
 

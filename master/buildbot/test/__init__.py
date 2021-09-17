@@ -108,6 +108,9 @@ warnings.filterwarnings('ignore', r".*Use 'list\(elem\)' or iteration over elem 
 if sys.version_info[0] >= 3 and "pg8000" in os.getenv("BUILDBOT_TEST_DB_URL", ""):
     warnings.filterwarnings('ignore', ".*unclosed .*socket", ResourceWarning)
 
+# ignore ResourceWarnings when connecting to a HashiCorp vault via hvac in integration tests
+warnings.filterwarnings('ignore', r".*unclosed .*socket.*raddr=.*, 8200[^\d]", ResourceWarning)
+
 # Python 3.5-3.8 shows this warning
 warnings.filterwarnings('ignore', ".*the imp module is deprecated in favour of importlib*")
 
