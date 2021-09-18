@@ -130,7 +130,9 @@ class CreateWorkerOptions(MakerBase):
          "(None for unlimited)"],
         ["allow-shutdown", "a", None,
          "Allows the worker to initiate a graceful shutdown. One of "
-         "'signal' or 'file'"]
+         "'signal' or 'file'"],
+        ["proxy-connection-string", None, None,
+         "Address of HTTP proxy to tunnel through"]
     ]
 
     longdesc = textwrap.dedent("""

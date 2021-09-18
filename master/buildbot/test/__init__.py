@@ -114,6 +114,9 @@ warnings.filterwarnings('ignore', r".*unclosed .*socket.*raddr=.*, 8200[^\d]", R
 # Python 3.5-3.8 shows this warning
 warnings.filterwarnings('ignore', ".*the imp module is deprecated in favour of importlib*")
 
+# Python 3.3-3.7 show this warning and in invoked from autobahn
+warnings.filterwarnings('ignore', ".*time.clock has been deprecated in Python 3.3.*")
+
 # sqlalchemy-migrate uses deprecated api from sqlalchemy https://review.openstack.org/#/c/648072/
 warnings.filterwarnings('ignore', ".*Engine.contextual_connect.*", DeprecationWarning)
 

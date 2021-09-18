@@ -60,12 +60,14 @@ allow_shutdown = %(allow-shutdown)s
 maxretries = %(maxretries)s
 use_tls = %(use-tls)s
 delete_leftover_dirs = %(delete-leftover-dirs)s
+proxy_connection_string = %(proxy-connection-string)s
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
            keepalive, umask=umask, maxdelay=maxdelay,
            numcpus=numcpus, allow_shutdown=allow_shutdown,
            maxRetries=maxretries, useTls=use_tls,
-           delete_leftover_dirs=delete_leftover_dirs)
+           delete_leftover_dirs=delete_leftover_dirs,
+           proxy_connection_string=proxy_connection_string)
 s.setServiceParent(application)
 """]
 
