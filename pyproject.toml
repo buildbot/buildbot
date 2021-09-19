@@ -1,6 +1,7 @@
 [tool.towncrier]
     package = "buildbot"
     package_dir = "master"
+    directory = "newsfragments"
     filename = "master/docs/relnotes/index.rst"
     template = "master/docs/relnotes.rst.jinja"
     title_format = "{name} ``{version}`` ( ``{project_date}`` )"

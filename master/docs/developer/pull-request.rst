@@ -29,7 +29,7 @@ Guidelines
   If you have trouble with tests that fail without any of your changes applied, get in touch with the developers for help.
 
 * Pull requests that add features or change existing behavior should include a brief description in the release notes.
-  See the master/buildbot/newsfragments directory and read the `README.txt <https://github.com/buildbot/buildbot/blob/master/master/buildbot/newsfragments/README.txt>`_ file therein.
+  See the `newsfragments` directory and read the `README.txt <https://github.com/buildbot/buildbot/blob/master/newsfragments/README.txt>`_ file therein.
 
 * Git commit messages form the "ChangeLog" for Buildbot, and as such should be as descriptive as possible.
 
