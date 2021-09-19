@@ -35,7 +35,7 @@ This will have much faster turnaround compared to if the error is noticed after 
 If any errors are found, just amend the commit created by `make release_notes`.
 
 Certain file names are not properly supported by the `towncrier` tool and it ignores them.
-Check `master/buildbot/newsfragments` directory for any forgotten release notes
+Check `newsfragments` directory for any forgotten release notes
 
 Step 3: Merge the release notes PR
 ----------------------------------
