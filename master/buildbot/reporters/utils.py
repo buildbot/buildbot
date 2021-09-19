@@ -129,6 +129,11 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 
+    if want_logs_content:
+        want_logs = True
+    if want_logs:
+        wantSteps = True
+
     if wantSteps:
         buildsteps = yield defer.gatherResults(
             [master.data.get(("builds", build['buildid'], 'steps'))
