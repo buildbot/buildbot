@@ -127,8 +127,8 @@ class BBRefTargetDirective(Directive):
         try:
             todocname, targetname = targets[target]
         except KeyError:
-            env.warn(fromdocname, "Missing BB reference: bb:{}:{}".format(cls.ref_type, target),
-                     node.line)
+            logger.warning((f"{fromdocname}:{node.line}: "
+                            f"Missing BB reference: bb:{cls.ref_type}:{target}"))
             return None
 
         return make_refnode(builder, fromdocname,
