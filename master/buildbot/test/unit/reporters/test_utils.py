@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
 import textwrap
+
+from dateutil.tz import tzutc
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -151,6 +154,238 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
         self.assertEqual(build1['steps'][0]['logs'][0]['url'],
                          'http://localhost:8080/#builders/80/builds/2/steps/29/logs/stdio')
+
+    @defer.inlineCallbacks
+    def test_get_details_for_buildset_all(self):
+        self.setupDb()
+        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
+                                                wantSteps=True, wantPreviousBuild=True,
+                                                want_logs=True, want_logs_content=True)
+
+        self.assertEqual(res, {
+            'builds': [{
+                'builder': {
+                    'builderid': 80,
+                    'description': None,
+                    'masterids': [],
+                    'name': 'Builder1',
+                    'tags': []
+                },
+                'builderid': 80,
+                'buildid': 20,
+                'buildrequestid': 11,
+                'buildset': {
+                    'bsid': 98,
+                    'complete': False,
+                    'complete_at': None,
+                    'external_idstring': 'extid',
+                    'parent_buildid': None,
+                    'parent_relationship': None,
+                    'reason': 'testReason1',
+                    'results': 0,
+                    'sourcestamps': [{
+                        'branch': 'master',
+                        'codebase': '',
+                        'created_at': datetime.datetime(1972, 11, 5, 18, 7, 14, tzinfo=tzutc()),
+                        'patch': None,
+                        'project': 'proj',
+                        'repository': 'repo',
+                        'revision': 'abcd',
+                        'ssid': 234
+                    }],
+                    'submitted_at': 12345678
+                },
+                'complete': False,
+                'complete_at': None,
+                'masterid': 92,
+                'number': 2,
+                'prev_build': {
+                    'builderid': 80,
+                    'buildid': 18,
+                    'buildrequestid': 9,
+                    'complete': False,
+                    'complete_at': None,
+                    'masterid': 92,
+                    'number': 0,
+                    'properties': {},
+                    'results': 2,
+                    'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                    'state_string': 'test',
+                    'workerid': 13
+                },
+                'properties': {
+                    'owner': ('him', 'fakedb'),
+                    'reason': ('because', 'fakedb'),
+                    'workername': ('wrk', 'fakedb')
+                },
+                'results': 0,
+                'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                'state_string': 'test',
+                'steps': [{
+                    'buildid': 20,
+                    'complete': False,
+                    'complete_at': None,
+                    'hidden': False,
+                    'logs': [{
+                        'complete': False,
+                        'content': {
+                            'content': 'line zero\nline 1\n',
+                            'firstline': 0,
+                            'logid': 80
+                        },
+                        'logid': 80,
+                        'name': 'stdio',
+                        'num_lines': 2,
+                        'slug': 'stdio',
+                        'stepid': 120,
+                        'type': 's',
+                        'url': 'http://localhost:8080/#builders/80/builds/2/steps/29/logs/stdio'
+                    }],
+                    'name': 'step1',
+                    'number': 29,
+                    'results': None,
+                    'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                    'state_string': '',
+                    'stepid': 120,
+                    'urls': []
+                }, {
+                    'buildid': 20,
+                    'complete': False,
+                    'complete_at': None,
+                    'hidden': False,
+                    'logs': [],
+                    'name': 'step2',
+                    'number': 29,
+                    'results': None,
+                    'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                    'state_string': '',
+                    'stepid': 220,
+                    'urls': []
+                }],
+                'url': 'http://localhost:8080/#builders/80/builds/2',
+                'workerid': 13
+            }, {
+                'builder': {
+                    'builderid': 80,
+                    'description': None,
+                    'masterids': [],
+                    'name': 'Builder1',
+                    'tags': []
+                },
+                'builderid': 80,
+                'buildid': 21,
+                'buildrequestid': 12,
+                'buildset': {
+                    'bsid': 98,
+                    'complete': False,
+                    'complete_at': None,
+                    'external_idstring': 'extid',
+                    'parent_buildid': None,
+                    'parent_relationship': None,
+                    'reason': 'testReason1',
+                    'results': 0,
+                    'sourcestamps': [{
+                        'branch': 'master',
+                        'codebase': '',
+                        'created_at': datetime.datetime(1972, 11, 5, 18, 7, 14, tzinfo=tzutc()),
+                        'patch': None,
+                        'project': 'proj',
+                        'repository': 'repo',
+                        'revision': 'abcd',
+                        'ssid': 234
+                    }],
+                    'submitted_at': 12345678
+                },
+                'complete': False,
+                'complete_at': None,
+                'masterid': 92,
+                'number': 3,
+                'prev_build': {
+                    'builderid': 80,
+                'buildid': 20,
+                    'buildrequestid': 11,
+                    'complete': False,
+                    'complete_at': None,
+                    'masterid': 92,
+                    'number': 2,
+                    'properties': {},
+                    'results': 0,
+                    'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                    'state_string': 'test',
+                    'workerid': 13
+                },
+                'properties': {
+                    'owner': ('him', 'fakedb'),
+                    'reason': ('because', 'fakedb'),
+                    'workername': ('wrk', 'fakedb')
+                },
+                'results': 0,
+                'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                'state_string': 'test',
+                'steps': [{
+                    'buildid': 21,
+                    'complete': False,
+                    'complete_at': None,
+                    'hidden': False,
+                    'logs': [{
+                        'complete': False,
+                        'content': {'content': 'line zero\nline 1\n',
+                        'firstline': 0,
+                        'logid': 81},
+                        'logid': 81,
+                        'name': 'stdio',
+                        'num_lines': 2,
+                        'slug': 'stdio',
+                        'stepid': 121,
+                        'type': 's',
+                        'url': 'http://localhost:8080/#builders/80/builds/3/steps/29/logs/stdio'
+                    }],
+                    'name': 'step1',
+                    'number': 29,
+                    'results': None,
+                    'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                    'state_string': '',
+                    'stepid': 121,
+                    'urls': []
+                }, {
+                    'buildid': 21,
+                    'complete': False,
+                    'complete_at': None,
+                    'hidden': False,
+                    'logs': [],
+                    'name': 'step2',
+                    'number': 29,
+                    'results': None,
+                    'started_at': datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=tzutc()),
+                    'state_string': '',
+                    'stepid': 221,
+                    'urls': []
+                }],
+                'url': 'http://localhost:8080/#builders/80/builds/3',
+                'workerid': 13
+            }],
+            'buildset': {
+                'bsid': 98,
+                'complete': False,
+                'complete_at': None,
+                'external_idstring': 'extid',
+                'parent_buildid': None,
+                'parent_relationship': None,
+                'reason': 'testReason1',
+                'results': 0,
+                'sourcestamps': [{
+                    'branch': 'master',
+                    'codebase': '',
+                    'created_at': datetime.datetime(1972, 11, 5, 18, 7, 14, tzinfo=tzutc()),
+                    'patch': None,
+                    'project': 'proj',
+                    'repository': 'repo',
+                    'revision': 'abcd',
+                    'ssid': 234
+                }],
+                'submitted_at': 12345678
+            }
+        })
 
     @defer.inlineCallbacks
     def test_getResponsibleUsers(self):
