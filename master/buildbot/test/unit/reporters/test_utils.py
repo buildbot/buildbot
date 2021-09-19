@@ -124,7 +124,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         build = yield self.master.data.get(("builds", 21))
         yield utils.getDetailsForBuild(self.master, build, wantProperties=False,
                                        wantSteps=False, wantPreviousBuild=False,
-                                       wantLogs=False)
+                                       want_logs=False)
 
         self.assertEqual(build['parentbuild'], None)
         self.assertEqual(build['parentbuilder'], None)
@@ -135,7 +135,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         build = yield self.master.data.get(("builds", 22))
         yield utils.getDetailsForBuild(self.master, build, wantProperties=False,
                                        wantSteps=False, wantPreviousBuild=False,
-                                       wantLogs=False)
+                                       want_logs=False)
 
         self.assertEqual(build['parentbuild']['buildid'], 21)
         self.assertEqual(build['parentbuilder']['name'], "Builder1")
@@ -145,7 +145,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.setupDb()
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
                                                 wantSteps=True, wantPreviousBuild=True,
-                                                wantLogs=True)
+                                                want_logs=True, want_logs_content=True)
 
         build1 = res['builds'][0]
         self.assertEqual(

@@ -333,9 +333,9 @@ class GerritStatusPush(service.BuildbotService):
         if not self.summaryCB:
             return
         bsid = msg['bsid']
-        res = yield utils.getDetailsForBuildset(
-            self.master, bsid, wantProperties=True,
-            wantSteps=self.wantSteps, wantLogs=self.wantLogs)
+        res = yield utils.getDetailsForBuildset(self.master, bsid, wantProperties=True,
+                                                wantSteps=self.wantSteps, want_logs=self.wantLogs,
+                                                want_logs_content=self.wantLogs)
         builds = res['builds']
         buildset = res['buildset']
         self.sendBuildSetSummary(buildset, builds)

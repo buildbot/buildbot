@@ -49,7 +49,8 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
                                                 wantProperties=self.formatter.wantProperties,
                                                 wantSteps=self.formatter.wantSteps,
                                                 wantPreviousBuild=self._want_previous_build(),
-                                                wantLogs=self.formatter.wantLogs)
+                                                want_logs=self.formatter.wantLogs,
+                                                want_logs_content=self.formatter.wantLogs)
 
         builds = res['builds']
         buildset = res['buildset']
