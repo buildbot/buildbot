@@ -112,6 +112,7 @@ The context that is given to the template consists of the following data:
         This attribute is populated only if ``wantSteps`` is set to ``True``.
 
         Additionally, if ``want_logs`` is set to ``True`` then the step dictionaries will contain ``logs`` attribute with a list of :bb:rtype:`log` dictionaries from the data API that describe the logs of the step.
+        The log dictionaries will additionally contain ``url`` key with URL to the log in the web UI as the value.
 
         Additionally, if ``want_logs_content`` is set to ``True`` then the log dictionaries will contain ``contents`` key with full contents of the log.
 

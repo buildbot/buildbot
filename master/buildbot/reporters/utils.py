@@ -134,17 +134,20 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     if want_logs:
         wantSteps = True
 
-    if wantSteps:
+    if wantSteps:  # pylint: disable=too-many-nested-blocks
         buildsteps = yield defer.gatherResults(
             [master.data.get(("builds", build['buildid'], 'steps'))
              for build in builds])
         if want_logs:
-            for s in flatten(buildsteps, types=(list, UserList)):
-                logs = yield master.data.get(("steps", s['stepid'], 'logs'))
-                s['logs'] = list(logs)
-                if want_logs_content:
+            for build, build_steps in zip(builds, buildsteps):
+                for s in build_steps:
+                    logs = yield master.data.get(("steps", s['stepid'], 'logs'))
+                    s['logs'] = list(logs)
                     for l in s['logs']:
-                        l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+                        l['url'] = get_url_for_log(master, build['builderid'], build['number'],
+                                                   s['number'], l['slug'])
+                        if want_logs_content:
+                            l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
         buildsteps = list(range(len(builds)))
@@ -229,6 +232,12 @@ def getURLForBuild(master, builderid, build_number):
 def getURLForBuildrequest(master, buildrequestid):
     prefix = master.config.buildbotURL
     return "{}#buildrequests/{}".format(prefix, buildrequestid)
+
+
+def get_url_for_log(master, builderid, build_number, step_number, log_slug):
+    prefix = master.config.buildbotURL
+    return f"{prefix}#builders/{builderid}/builds/{build_number}/" + \
+        f"steps/{step_number}/logs/{log_slug}"
 
 
 @renderer

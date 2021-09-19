@@ -148,8 +148,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                                 want_logs=True, want_logs_content=True)
 
         build1 = res['builds'][0]
-        self.assertEqual(
-            build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
+        self.assertEqual(build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
+        self.assertEqual(build1['steps'][0]['logs'][0]['url'],
+                         'http://localhost:8080/#builders/80/builds/2/steps/29/logs/stdio')
 
     @defer.inlineCallbacks
     def test_getResponsibleUsers(self):
