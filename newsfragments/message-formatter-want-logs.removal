@@ -1,0 +1,2 @@
+The ``wantLogs`` argument of message formatters has been deprecated.
+Please replace any uses with both ``want_logs`` and ``want_logs_content`` set to the same value.

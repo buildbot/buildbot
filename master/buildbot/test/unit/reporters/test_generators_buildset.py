@@ -62,7 +62,8 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
 
         g.formatter = Mock(spec=g.formatter)
         g.formatter.format_message_for_build.return_value = message
-        g.formatter.wantLogs = False
+        g.formatter.want_logs = False
+        g.formatter.want_logs_content = False
         g.formatter.wantSteps = False
 
         return (g, build, buildset)

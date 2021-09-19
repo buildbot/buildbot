@@ -44,8 +44,16 @@ The constructor of the class takes the following arguments:
     Use it only when necessary as this increases the overhead in terms of CPU and memory on the master.
 
 ``wantLogs``
-    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the full logs of each steps from the build.
+    Deprecated, use ``want_logs`` and ``want_logs_content`` set to the same value.
+
+``want_logs``
+    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the log metadata of each steps from the build.
     This requires ``wantSteps`` to be True.
+    Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
+
+``want_logs_content``
+    This parameter (defaults to False) will extend the content of the logs with the log contents of each steps from the build.
+    This requires ``want_logs`` to be True.
     Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
 
 Context

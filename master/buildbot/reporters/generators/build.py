@@ -58,8 +58,8 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
                                        wantProperties=self.formatter.wantProperties,
                                        wantSteps=self.formatter.wantSteps,
                                        wantPreviousBuild=want_previous_build,
-                                       want_logs=self.formatter.wantLogs,
-                                       want_logs_content=self.formatter.wantLogs)
+                                       want_logs=self.formatter.want_logs,
+                                       want_logs_content=self.formatter.want_logs_content)
 
         if not self.is_message_needed_by_props(build):
             return None
@@ -104,8 +104,8 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         yield utils.getDetailsForBuild(master, build,
                                        wantProperties=formatter.wantProperties,
                                        wantSteps=formatter.wantSteps,
-                                       want_logs=formatter.wantLogs,
-                                       want_logs_content=formatter.wantLogs)
+                                       want_logs=formatter.want_logs,
+                                       want_logs_content=formatter.want_logs_content)
 
         if not self.is_message_needed_by_props(build):
             return None

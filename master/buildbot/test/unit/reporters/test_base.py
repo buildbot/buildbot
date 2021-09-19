@@ -67,7 +67,8 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         }
         formatter.wantProperties = False
         formatter.wantSteps = False
-        formatter.wantLogs = False
+        formatter.want_logs = False
+        formatter.want_logs_content = False
         generator = BuildStatusGenerator(message_formatter=formatter, **kwargs)
 
         mn = yield self.setupNotifier(generators=[generator])
