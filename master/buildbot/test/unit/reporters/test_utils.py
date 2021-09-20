@@ -103,8 +103,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     @defer.inlineCallbacks
     def test_getDetailsForBuildset(self):
         self.setupDb()
-        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
-                                                wantSteps=True, wantPreviousBuild=True)
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True,
+                                                want_steps=True, want_previous_build=True)
         self.assertEqual(len(res['builds']), 2)
         build1 = res['builds'][0]
         build2 = res['builds'][1]
@@ -125,8 +125,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_getDetailsForBuild(self):
         self.setupDb()
         build = yield self.master.data.get(("builds", 21))
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=False,
-                                       wantSteps=False, wantPreviousBuild=False,
+        yield utils.getDetailsForBuild(self.master, build, want_properties=False,
+                                       want_steps=False, want_previous_build=False,
                                        want_logs=False)
 
         self.assertEqual(build['parentbuild'], None)
@@ -136,8 +136,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_getDetailsForBuildWithParent(self):
         self.setupDb()
         build = yield self.master.data.get(("builds", 22))
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=False,
-                                       wantSteps=False, wantPreviousBuild=False,
+        yield utils.getDetailsForBuild(self.master, build, want_properties=False,
+                                       want_steps=False, want_previous_build=False,
                                        want_logs=False)
 
         self.assertEqual(build['parentbuild']['buildid'], 21)
@@ -146,8 +146,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     @defer.inlineCallbacks
     def test_getDetailsForBuildsetWithLogs(self):
         self.setupDb()
-        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
-                                                wantSteps=True, wantPreviousBuild=True,
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True,
+                                                want_steps=True, want_previous_build=True,
                                                 want_logs=True, want_logs_content=True)
 
         build1 = res['builds'][0]
@@ -158,8 +158,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     @defer.inlineCallbacks
     def test_get_details_for_buildset_all(self):
         self.setupDb()
-        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
-                                                wantSteps=True, wantPreviousBuild=True,
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True,
+                                                want_steps=True, want_previous_build=True,
                                                 want_logs=True, want_logs_content=True)
 
         self.assertEqual(res, {

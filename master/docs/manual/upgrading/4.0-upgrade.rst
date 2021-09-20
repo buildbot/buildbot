@@ -24,3 +24,5 @@ Message formatters
 
 The ``wantLogs`` argument to message formatters has been removed.
 The equivalent is setting both ``want_logs`` and ``want_logs_content`` to the previous value of ``wantLogs``.
+
+The ``wantSteps`` and ``wantProperties`` arguments have been renamed to ``want_steps`` and ``want_properties`` respectively.

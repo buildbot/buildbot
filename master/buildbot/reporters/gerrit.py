@@ -322,8 +322,8 @@ class GerritStatusPush(service.BuildbotService):
         yield utils.getDetailsForBuilds(self.master,
                                         buildset,
                                         [build],
-                                        wantProperties=True,
-                                        wantSteps=self.wantSteps)
+                                        want_properties=True,
+                                        want_steps=self.wantSteps)
 
     def isBuildReported(self, build):
         return self.builders is None or build['builder']['name'] in self.builders
@@ -333,8 +333,8 @@ class GerritStatusPush(service.BuildbotService):
         if not self.summaryCB:
             return
         bsid = msg['bsid']
-        res = yield utils.getDetailsForBuildset(self.master, bsid, wantProperties=True,
-                                                wantSteps=self.wantSteps, want_logs=self.wantLogs,
+        res = yield utils.getDetailsForBuildset(self.master, bsid, want_properties=True,
+                                                want_steps=self.wantSteps, want_logs=self.wantLogs,
                                                 want_logs_content=self.wantLogs)
         builds = res['builds']
         buildset = res['buildset']

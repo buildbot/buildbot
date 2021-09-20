@@ -1,2 +1,4 @@
 The ``wantLogs`` argument of message formatters has been deprecated.
 Please replace any uses with both ``want_logs`` and ``want_logs_content`` set to the same value.
+
+The ``wantProperties`` and ``wantSteps`` arguments of message formatters have been renamed to ``want_properties`` and ``want_steps`` respectively.

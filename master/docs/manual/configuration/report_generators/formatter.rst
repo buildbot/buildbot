@@ -36,12 +36,18 @@ The constructor of the class takes the following arguments:
 
         default implementation will add ``self.ctx`` into the current template context
 
-``wantProperties``
+``want_properties``
     This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
 
-``wantSteps``
+``wantProperties``
+    Deprecated, use ``want_properties`` set to the same value.
+
+``want_steps``
     This parameter (defaults to False) will extend the content of the given ``build`` object with information about the steps of the build.
     Use it only when necessary as this increases the overhead in terms of CPU and memory on the master.
+
+``wantSteps``
+    Deprecated, use ``want_steps`` set to the same value.
 
 ``wantLogs``
     Deprecated, use ``want_logs`` and ``want_logs_content`` set to the same value.
@@ -81,7 +87,7 @@ The context that is given to the template consists of the following data:
 
 ``build``
     The :bb:rtype:`build` dictionary from data API.
-    The ``properties`` attribute is populated only if ``wantProperties`` is set to ``True``.
+    The ``properties`` attribute is populated only if ``want_properties`` is set to ``True``.
     It has the following extra properties:
 
     ``builder``

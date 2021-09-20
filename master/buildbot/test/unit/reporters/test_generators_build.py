@@ -43,7 +43,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     @defer.inlineCallbacks
@@ -239,7 +239,7 @@ class TestBuildStartEndGenerator(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     @parameterized.expand([

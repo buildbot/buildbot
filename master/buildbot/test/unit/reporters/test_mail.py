@@ -64,7 +64,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         build = yield self.insert_build_finished(SUCCESS)
 
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
 
         msgdict = create_msgdict(funnyChars)
         mn = yield self.setupMailNotifier('from@example.org')
@@ -138,7 +138,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_createEmail_extraHeaders_two_builds(self):
         build = yield self.insert_build_finished(SUCCESS)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
 
         builds = [build, copy.deepcopy(build)]
         builds[1]['builder']['name'] = 'builder2'
@@ -190,8 +190,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             "type": "text",
             "subject": "subject"
         }
-        formatter.wantProperties = False
-        formatter.wantSteps = False
+        formatter.want_properties = False
+        formatter.want_steps = False
         formatter.want_logs = False
         formatter.want_logs_content = False
 
@@ -330,8 +330,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin,
             "type": "text",
             "subject": "subject"
         }
-        formatter.wantProperties = False
-        formatter.wantSteps = False
+        formatter.want_properties = False
+        formatter.want_steps = False
         formatter.want_logs = False
         formatter.want_logs_content = False
 

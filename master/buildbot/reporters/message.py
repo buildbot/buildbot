@@ -150,18 +150,30 @@ class MessageFormatterBase(util.ComparableMixin):
 
     template_type = 'plain'
 
-    def __init__(self, ctx=None, wantProperties=True, wantSteps=False, wantLogs=None,
+    def __init__(self, ctx=None, want_properties=True, wantProperties=None,
+                 want_steps=False, wantSteps=None, wantLogs=None,
                  want_logs=False, want_logs_content=False):
         if ctx is None:
             ctx = {}
         self.context = ctx
-        self.wantProperties = wantProperties
-        self.wantSteps = wantSteps
+        if wantProperties is not None:
+            warn_deprecated('3.4.0', f'{self.__class__.__name__}: wantProperties has been '
+                                     'deprecated, use want_properties')
+            self.want_properties = wantProperties
+        else:
+            self.want_properties = want_properties
+        if wantSteps is not None:
+            warn_deprecated('3.4.0', f'{self.__class__.__name__}: wantSteps has been deprecated, ' +
+                                     'use want_steps')
+            self.want_steps = wantSteps
+        else:
+            self.want_steps = want_steps
         if wantLogs is not None:
             warn_deprecated('3.4.0', f'{self.__class__.__name__}: wantLogs has been deprecated, ' +
                                      'use want_logs and want_logs_content')
         else:
             wantLogs = False
+
         self.want_logs = want_logs or wantLogs
         self.want_logs_content = want_logs_content or wantLogs
 
