@@ -47,6 +47,11 @@ The Git step takes the following arguments:
    By default, any clone will use the name "origin" as the remote repository (eg, "origin/master").
    This renderable option allows that to be configured to an alternate name.
 
+``filters`` (optional, type: ``list``)
+   For each string in the passed in list, adds a ``--filter <filter>`` argument to :command:`git clone`.
+   This allows for adding filters like ``--filter "tree:0"`` to speed up the clone step.
+   This requires git version 2.27 or higher.
+
 ``progress`` (optional)
    Passes the (``--progress``) flag to (:command:`git fetch`).
    This solves issues of long fetches being killed due to lack of output, but requires Git 1.7.2 or later.
