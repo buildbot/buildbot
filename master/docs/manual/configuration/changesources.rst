@@ -962,6 +962,11 @@ It accepts the following arguments:
    `sshPrivateKey` must be specified in order to use this option.
    `sshHostKey` must not be specified in order to use this option.
 
+``io_timeout`` (optional)
+   How long to wait before terminating the git subprocess for inactivity.
+   Default value is 300 seconds, set it to higher if you are having trouble
+   starting a Buildbot master with a huge git repository.
+
 A configuration for the Git poller might look like this:
 
 .. code-block:: python

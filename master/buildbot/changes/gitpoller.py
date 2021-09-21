@@ -45,7 +45,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     compare_attrs = ("repourl", "branches", "workdir", "pollInterval", "gitbin", "usetimestamps",
                      "category", "project", "pollAtLaunch", "buildPushesWithNoCommits",
                      "sshPrivateKey", "sshHostKey", "sshKnownHosts", "pollRandomDelayMin",
-                     "pollRandomDelayMax")
+                     "pollRandomDelayMax", "io_timeout")
 
     secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
 
@@ -60,7 +60,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     project=None, pollinterval=-2, fetch_refspec=None, encoding="utf-8",
                     name=None, pollAtLaunch=False, buildPushesWithNoCommits=False,
                     only_tags=False, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
-                    pollRandomDelayMin=0, pollRandomDelayMax=0):
+                    pollRandomDelayMin=0, pollRandomDelayMax=0, io_timeout=300):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -94,7 +94,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                         project=None, pollinterval=-2, fetch_refspec=None, encoding="utf-8",
                         name=None, pollAtLaunch=False, buildPushesWithNoCommits=False,
                         only_tags=False, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
-                        pollRandomDelayMin=0, pollRandomDelayMax=0):
+                        pollRandomDelayMin=0, pollRandomDelayMax=0, io_timeout=300):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -129,6 +129,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
         self.sshKnownHosts = sshKnownHosts
+        self.io_timeout = io_timeout
         self.setupGit(logname='GitPoller')
 
         if self.workdir is None:
@@ -474,7 +475,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         full_args += [command] + args
 
         res = yield runprocess.run_process(self.master.reactor, [self.gitbin] + full_args, path,
-                                           env=full_env)
+                                           env=full_env, io_timeout=self.io_timeout)
         (code, stdout, stderr) = res
         stdout = bytes2unicode(stdout, self.encoding)
         stderr = bytes2unicode(stderr, self.encoding)

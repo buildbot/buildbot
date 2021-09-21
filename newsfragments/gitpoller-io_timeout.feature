@@ -1,0 +1,1 @@
+Allow setting io_timeout on GitPoller subprocesses
