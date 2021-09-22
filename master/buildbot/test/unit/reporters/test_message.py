@@ -34,6 +34,8 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.misc import BuildDictLookAlike
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestMessageFormatting(unittest.TestCase):
@@ -161,8 +163,8 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_one_test(self, formatter, lastresults, results, mode="all"):
         self.setupDb(lastresults, results)
-        res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True,
-                                                wantPreviousBuild=True)
+        res = yield utils.getDetailsForBuildset(self.master, 99, want_properties=True,
+                                                want_previous_build=True)
         build = res['builds'][0]
         res = yield formatter.format_message_for_build(self.master, build, mode=mode,
                                                        users=["him@bar", "me@foo"])
@@ -170,6 +172,23 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
 
 
 class TestMessageFormatter(MessageFormatterTestBase):
+
+    def test_want_properties_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning, "wantProperties has been deprecated"):
+            formatter = message.MessageFormatter(wantProperties=True)
+        self.assertEqual(formatter.want_properties, True)
+
+    def test_want_steps_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning, "wantSteps has been deprecated"):
+            formatter = message.MessageFormatter(wantSteps=True)
+        self.assertEqual(formatter.want_steps, True)
+
+    def test_want_logs_deprecated(self):
+        with assertProducesWarning(DeprecatedApiWarning, "wantLogs has been deprecated"):
+            formatter = message.MessageFormatter(wantLogs=True)
+        self.assertEqual(formatter.want_logs, True)
+        self.assertEqual(formatter.want_logs_content, True)
+
     @defer.inlineCallbacks
     def test_message_success(self):
         formatter = message.MessageFormatter()

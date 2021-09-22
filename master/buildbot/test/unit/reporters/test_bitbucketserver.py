@@ -479,9 +479,10 @@ class TestBitbucketServerPRCommentPush(TestReactorMixin, unittest.TestCase,
             "type": "text",
             "subject": "subject"
         }
-        formatter.wantProperties = True
-        formatter.wantSteps = False
-        formatter.wantLogs = False
+        formatter.want_properties = True
+        formatter.want_steps = False
+        formatter.want_logs = False
+        formatter.want_logs_content = False
 
         generator = generator_class(message_formatter=formatter)
 

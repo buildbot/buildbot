@@ -164,7 +164,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, finalResult):
         self.insertTestData(buildResults, finalResult)
-        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True)
+        res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         builds = res['builds']
         buildset = res['buildset']
 

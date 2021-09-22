@@ -41,7 +41,7 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
     @defer.inlineCallbacks
     def insert_build_finished_get_props(self, results, **kwargs):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, wantProperties=True)
+        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     @defer.inlineCallbacks
@@ -62,8 +62,9 @@ class TestBuildSetGenerator(ConfigErrorsMixin, TestReactorMixin, ReporterTestMix
 
         g.formatter = Mock(spec=g.formatter)
         g.formatter.format_message_for_build.return_value = message
-        g.formatter.wantLogs = False
-        g.formatter.wantSteps = False
+        g.formatter.want_logs = False
+        g.formatter.want_logs_content = False
+        g.formatter.want_steps = False
 
         return (g, build, buildset)
 

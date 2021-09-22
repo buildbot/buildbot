@@ -46,10 +46,11 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
     def generate(self, master, reporter, key, message):
         bsid = message['bsid']
         res = yield utils.getDetailsForBuildset(master, bsid,
-                                                wantProperties=self.formatter.wantProperties,
-                                                wantSteps=self.formatter.wantSteps,
-                                                wantPreviousBuild=self._want_previous_build(),
-                                                wantLogs=self.formatter.wantLogs)
+                                                want_properties=self.formatter.want_properties,
+                                                want_steps=self.formatter.want_steps,
+                                                want_previous_build=self._want_previous_build(),
+                                                want_logs=self.formatter.want_logs,
+                                                want_logs_content=self.formatter.want_logs_content)
 
         builds = res['builds']
         buildset = res['buildset']
