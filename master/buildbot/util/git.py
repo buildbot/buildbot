@@ -74,27 +74,30 @@ class GitMixin:
         self.supportsSubmoduleCheckout = False
         self.supportsSshPrivateKeyAsEnvOption = False
         self.supportsSshPrivateKeyAsConfigOption = False
+        self.supportsFilters = False
 
     def parseGitFeatures(self, version_stdout):
         match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
         if not match:
             return
 
-        version = match.group(1)
+        version = parse_version(match.group(1))
 
         self.gitInstalled = True
-        if parse_version(version) >= parse_version("1.6.5"):
+        if version >= parse_version("1.6.5"):
             self.supportsBranch = True
-        if parse_version(version) >= parse_version("1.7.2"):
+        if version >= parse_version("1.7.2"):
             self.supportsProgress = True
-        if parse_version(version) >= parse_version("1.7.6"):
+        if version >= parse_version("1.7.6"):
             self.supportsSubmoduleForce = True
-        if parse_version(version) >= parse_version("1.7.8"):
+        if version >= parse_version("1.7.8"):
             self.supportsSubmoduleCheckout = True
-        if parse_version(version) >= parse_version("2.3.0"):
+        if version >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
-        if parse_version(version) >= parse_version("2.10.0"):
+        if version >= parse_version("2.10.0"):
             self.supportsSshPrivateKeyAsConfigOption = True
+        if version >= parse_version("2.27.0"):
+            self.supportsFilters = True
 
     def adjustCommandParamsForSshPrivateKey(self, command, env,
                                             keyPath, sshWrapperPath=None,

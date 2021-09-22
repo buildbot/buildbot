@@ -73,9 +73,9 @@ class Git(Source, GitStepMixin):
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, remoteSubmodules=False, shallow=False,
-                 progress=True, retryFetch=False, clobberOnFailure=False, getDescription=False,
-                 config=None, origin=None, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
-                 **kwargs):
+                 filters=None, progress=True, retryFetch=False, clobberOnFailure=False,
+                 getDescription=False, config=None, origin=None, sshPrivateKey=None,
+                 sshHostKey=None, sshKnownHosts=None, **kwargs):
 
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
@@ -88,6 +88,7 @@ class Git(Source, GitStepMixin):
         self.submodules = submodules
         self.remoteSubmodules = remoteSubmodules
         self.shallow = shallow
+        self.filters = filters
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.prog = progress
@@ -380,6 +381,12 @@ class Git(Source, GitStepMixin):
             command += ['--reference', self.reference]
         if self.origin:
             command += ['--origin', self.origin]
+        if self.filters:
+            if self.supportsFilters:
+                for filter in self.filters:
+                    command += ['--filter', filter]
+            else:
+                log.msg("Git versions < 2.27.0 don't support filters on clone")
         command += [self.repourl, '.']
 
         if self.prog:
