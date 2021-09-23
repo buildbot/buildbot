@@ -162,7 +162,14 @@ class LogFileWatcher(object):
             if self.follow:
                 self.f.seek(s[2], 0)
             self.started = True
+
+        # Mac OS X and Linux differ in behaviour when reading from a file that has previously
+        # reached EOF. On Linux, any new data that has been appended to the file will be returned.
+        # On Mac OS X, the empty string will always be returned. Seeking to the current position
+        # in the file resets the EOF flag on Mac OS X and will allow future reads to work as
+        # intended.
         self.f.seek(self.f.tell(), 0)
+
         while True:
             data = self.f.read(10000)
             if not data:
