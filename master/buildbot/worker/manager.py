@@ -66,8 +66,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     def __init__(self, master):
         super().__init__()
 
-        self.pb = bbpb.Listener()
-        self.pb.setServiceParent(master)
+        self.pb = bbpb.Listener(master)
 
         # WorkerRegistration instances keyed by worker name
         self.registrations = {}

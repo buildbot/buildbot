@@ -32,21 +32,18 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         self.setUpTestReactor()
         self.master = fakemaster.make_master(self)
 
-    @defer.inlineCallbacks
     def makeListener(self):
-        listener = pb.Listener()
-        yield listener.setServiceParent(self.master)
+        listener = pb.Listener(self.master)
         return listener
 
-    @defer.inlineCallbacks
     def test_constructor(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
     @defer.inlineCallbacks
     def test_updateRegistration_simple(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
                          [('tcp:1234', 'example', 'pass')])
@@ -55,7 +52,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_pass_changed(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(
@@ -65,7 +62,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_port_changed(self):
-        listener = yield self.makeListener()
+        listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(
@@ -74,15 +71,15 @@ class TestListener(TestReactorMixin, unittest.TestCase):
             self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     @defer.inlineCallbacks
-    def test_getPerspective(self):
-        listener = yield self.makeListener()
+    def test_create_connection(self):
+        listener = pb.Listener(self.master)
         worker = mock.Mock()
         worker.workername = 'test'
         mind = mock.Mock()
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.workers.register(worker)
-        conn = yield listener._getPerspective(mind, worker.workername)
+        conn = yield listener._create_connection(mind, worker.workername)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
         self.assertIsInstance(conn, pb.Connection)
