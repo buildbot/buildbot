@@ -699,7 +699,6 @@ class RunProcess(object):
         """
         Send all the content in our buffers.
         """
-        msg = {}
         msg_size = 0
         lastlog = None
         logdata = []
@@ -718,12 +717,10 @@ class RunProcess(object):
             if lastlog is None:
                 lastlog = logname
             elif logname != lastlog:
-                self._sendMessage(msg)
-                msg = {}
+                self._sendMessage({lastlog: logdata})
                 msg_size = 0
-            lastlog = logname
-
-            logdata = msg.setdefault(logname, [])
+                lastlog = logname
+                logdata = []
 
             # Chunkify the log data to make sure we're not sending more than
             # CHUNK_LIMIT at a time
@@ -736,13 +733,12 @@ class RunProcess(object):
                     # We've gone beyond the chunk limit, so send out our
                     # message.  At worst this results in a message slightly
                     # larger than (2*CHUNK_LIMIT)-1
-                    self._sendMessage(msg)
-                    msg = {}
-                    logdata = msg.setdefault(logname, [])
+                    self._sendMessage({logname: logdata})
+                    logdata = []
                     msg_size = 0
         self.buflen = 0
         if logdata:
-            self._sendMessage(msg)
+            self._sendMessage({logname: logdata})
         if self.sendBuffersTimer:
             if self.sendBuffersTimer.active():
                 self.sendBuffersTimer.cancel()
