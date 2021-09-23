@@ -66,8 +66,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -96,8 +95,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -126,8 +124,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -165,8 +162,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -220,8 +216,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -278,8 +273,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -348,8 +342,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         mode=0o700))
             + Expect.behavior(downloadString(read.append))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -424,8 +417,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         workdir='wkdir',
                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -494,8 +486,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         workdir='wkdir',
                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -573,8 +564,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         mode=0o700))
             + Expect.behavior(downloadString(read.append))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -653,8 +643,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o700))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -726,8 +715,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         workdir=workdir,
                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': workdir, 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': workdir})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir=workdir,
@@ -770,8 +758,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -825,8 +812,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -884,8 +870,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -950,8 +935,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o700))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -995,8 +979,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1043,8 +1026,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'],
                         logEnviron=True)
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1110,8 +1092,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'clean', '-f', '-f', '-d', '-x'],
                         logEnviron=True)
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1172,8 +1153,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1224,8 +1204,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1266,8 +1245,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['file1', 'file2'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
@@ -1302,8 +1280,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1338,8 +1315,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1368,8 +1344,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1398,8 +1373,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1429,8 +1403,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1459,8 +1432,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1512,8 +1484,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1778,8 +1749,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1815,8 +1785,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1852,8 +1821,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1894,8 +1862,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1951,8 +1918,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                         workdir='wkdir',
                                         mode=0o400))
             + 0,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1994,8 +1960,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2033,8 +1998,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2075,8 +2039,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2111,8 +2074,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2150,8 +2112,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2202,8 +2163,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2256,8 +2216,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2412,8 +2371,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2457,8 +2415,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2505,8 +2462,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2551,8 +2507,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2601,8 +2556,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200)),
-            Expect('listdir', {'dir': 'source', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'source'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='source',
@@ -2659,8 +2613,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
                                  timeout=1200)),
-            Expect('listdir', {'dir': 'source', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'source'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='source',
@@ -2708,8 +2661,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2894,8 +2846,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2930,8 +2881,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -2982,8 +2932,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', [])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3024,8 +2973,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3064,8 +3012,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3108,8 +3055,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=False))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': False,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3151,8 +3097,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -3188,8 +3133,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3240,8 +3184,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -3572,8 +3515,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',

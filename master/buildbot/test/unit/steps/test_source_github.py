@@ -39,8 +39,7 @@ class TestGitHub(test_source_git.TestGit):
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -84,8 +83,7 @@ class TestGitHub(test_source_git.TestGit):
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
-                               'timeout': 1200})
+            Expect('listdir', {'dir': 'wkdir'})
             + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
