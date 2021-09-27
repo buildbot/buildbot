@@ -86,11 +86,12 @@ class WorkerFileUploadCommand(TransferCommand):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
-        accessed_modified = None
+        access_time = None
+        modified_time = None
         try:
             if self.keepstamp:
-                accessed_modified = (os.path.getatime(self.path),
-                                     os.path.getmtime(self.path))
+                access_time = os.path.getatime(self.path)
+                modified_time = os.path.getmtime(self.path)
 
             self.fp = open(self.path, 'rb')
             if self.debug:
@@ -115,7 +116,7 @@ class WorkerFileUploadCommand(TransferCommand):
             yield self.writer.callRemote("close")
 
             if self.keepstamp:
-                yield self.writer.callRemote("utime", accessed_modified)
+                yield self.writer.callRemote("utime", (access_time, modified_time))
 
         def _close_err(f):
             self.rc = 1
