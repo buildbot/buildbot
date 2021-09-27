@@ -24,3 +24,20 @@ html.writer-html5 .rst-content dl.field-list dd {
     padding-right: 1.618em;
     padding-left: 1.618em;
 }
+
+/* The vertical margin seems excessive on descriptions of parameters when there are many
+   parameter sets. The structure of the page becomes visually unclear.
+*/
+.rst-content dl dd,
+.rst-content dl dt,
+.rst-content dl ol,
+.rst-content dl p,
+.rst-content dl table,
+.rst-content dl ul {
+    margin-bottom: 4px;
+}
+
+/* The default is one line per paragraph spacing which seems excessive. */
+p {
+    margin-bottom: 8px;
+}
