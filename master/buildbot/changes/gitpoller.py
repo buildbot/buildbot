@@ -247,7 +247,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         ]
 
         try:
-            yield self._dovccmd('fetch', [self.repourl] + refspecs,
+            yield self._dovccmd('fetch', ['--progress', self.repourl] + refspecs,
                                 path=self.workdir)
         except GitError as e:
             log.msg(e.args[0])

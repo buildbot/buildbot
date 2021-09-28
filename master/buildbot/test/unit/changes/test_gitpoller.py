@@ -228,7 +228,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -287,7 +287,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'git version 1.7.5\n'),
             ExpectMaster(['git', 'init', '--bare', self.POLLER_WORKDIR]),
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL]),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
             .exit(1),
@@ -307,7 +307,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse', 'refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
@@ -331,7 +331,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -404,7 +404,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'no interesting output'),
@@ -446,7 +446,7 @@ class TestGitPoller(TestGitPollerBase):
                     b'refs/heads/release\n'
                     b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
@@ -482,7 +482,7 @@ class TestGitPoller(TestGitPollerBase):
                     b'refs/heads/release\n'
                     b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
@@ -613,7 +613,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/release\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
 
@@ -654,7 +654,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/release\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
 
@@ -734,7 +734,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/release\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
 
@@ -816,7 +816,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/release\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
 
@@ -896,7 +896,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -981,7 +981,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'no interesting output'),
@@ -1020,7 +1020,7 @@ class TestGitPoller(TestGitPollerBase):
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
             ])),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
                           '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release'])
             .workdir(self.POLLER_WORKDIR),
@@ -1124,7 +1124,7 @@ class TestGitPoller(TestGitPollerBase):
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
             ])),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -1217,7 +1217,7 @@ class TestGitPoller(TestGitPollerBase):
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\t'
                 b'refs/pull/410/head',
             ])),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+refs/pull/410/head:refs/buildbot/' + self.REPOURL_QUOTED +
                           '/refs/pull/410/head'])
             .workdir(self.POLLER_WORKDIR),
@@ -1301,7 +1301,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'no interesting output'),
@@ -1402,7 +1402,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -1540,7 +1540,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                           'ls-remote', '--refs', self.REPOURL]),
             ExpectMaster(['git',
                           '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
-                          'fetch', self.REPOURL,
+                          'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -1583,7 +1583,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             ExpectMaster(['git', 'ls-remote', '--refs', self.REPOURL])
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
-            ExpectMaster(['git', 'fetch', self.REPOURL,
+            ExpectMaster(['git', 'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
             .env({'GIT_SSH_COMMAND': 'ssh -o "BatchMode=yes" -i "{0}"'.format(key_path)}),
@@ -1631,7 +1631,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                           'ls-remote', '--refs', self.REPOURL]),
             ExpectMaster(['git',
                           '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(key_path),
-                          'fetch', self.REPOURL,
+                          'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR)
             .exit(1),
@@ -1677,7 +1677,7 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
             ExpectMaster(['git',
                           '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
                           '-o "UserKnownHostsFile={1}"'.format(key_path, known_hosts_path),
-                          'fetch', self.REPOURL,
+                          'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
@@ -1742,7 +1742,7 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
             ExpectMaster(['git',
                           '-c', 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}" '
                           '-o "UserKnownHostsFile={1}"'.format(key_path, known_hosts_path),
-                          'fetch', self.REPOURL,
+                          'fetch', '--progress', self.REPOURL,
                           '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master'])
             .workdir(self.POLLER_WORKDIR),
             ExpectMaster(['git', 'rev-parse',
