@@ -20,6 +20,15 @@ from twisted.internet import defer
 
 from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
+from buildbot_worker.pb import WorkerForBuilderPbLike
+
+
+class WorkerForBuilderNull(WorkerForBuilderPbLike):
+    pass
+
+
+class BotNull(BotBase):
+    WorkerForBuilder = WorkerForBuilderNull
 
 
 class LocalWorker(WorkerBase):
@@ -28,7 +37,7 @@ class LocalWorker(WorkerBase):
                  unicode_encoding=None,
                  delete_leftover_dirs=False):
 
-        super().__init__(name, basedir, BotBase, umask=umask,
+        super().__init__(name, basedir, BotNull, umask=umask,
                          unicode_encoding=unicode_encoding,
                          delete_leftover_dirs=delete_leftover_dirs)
 

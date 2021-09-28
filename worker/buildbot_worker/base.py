@@ -147,11 +147,13 @@ class WorkerForBuilderBase(service.Service):
             factory = registry.getFactory(command)
         except KeyError:
             raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
+
+        self.protocol_args_setup(command, args)
         self.command = factory(self, stepId, args)
 
         log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.command_ref = command_ref
-        self.command_ref.notifyOnDisconnect(self.lostRemoteStep)
+        self.protocol_notify_on_disconnect()
         d = self.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.commandComplete)
@@ -198,7 +200,7 @@ class WorkerForBuilderBase(service.Service):
         if self.command_ref:
             update = [data, 0]
             updates = [update]
-            d = self.command_ref.callRemote("update", updates)
+            d = self.protocol_update(updates)
             d.addCallback(self.ackUpdate)
             d.addErrback(self._ackFailed, "WorkerForBuilder.sendUpdate")
 
@@ -229,8 +231,7 @@ class WorkerForBuilderBase(service.Service):
             log.msg(" but we weren't running, quitting silently")
             return
         if self.command_ref:
-            self.command_ref.dontNotifyOnDisconnect(self.lostRemoteStep)
-            d = self.command_ref.callRemote("complete", failure)
+            d = self.protocol_complete(failure)
             d.addCallback(self.ackComplete)
             d.addErrback(self._ackFailed, "sendComplete")
             self.command_ref = None
