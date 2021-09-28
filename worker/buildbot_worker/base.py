@@ -388,16 +388,15 @@ class BotBase(service.MultiService):
 
 
 class WorkerBase(service.MultiService):
-    Bot = BotBase
 
-    def __init__(self, name, basedir,
+    def __init__(self, name, basedir, bot_class,
                  umask=None,
                  unicode_encoding=None,
                  delete_leftover_dirs=False):
 
         service.MultiService.__init__(self)
         self.name = name
-        bot = self.Bot(basedir, unicode_encoding=unicode_encoding,
+        bot = bot_class(basedir, unicode_encoding=unicode_encoding,
                        delete_leftover_dirs=delete_leftover_dirs)
         bot.setServiceParent(self)
         self.bot = bot

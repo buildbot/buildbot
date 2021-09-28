@@ -175,8 +175,6 @@ class Worker(WorkerBase, service.MultiService):
 
     maxdelay is deprecated in favor of using twisted's backoffPolicy.
     """
-    Bot = BotPb
-
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=None, numcpus=None, unicode_encoding=None, useTls=None,
@@ -189,9 +187,10 @@ class Worker(WorkerBase, service.MultiService):
                     "If you want to supply a connection string, "
                     "then set host and port to None")
 
+        bot_class = BotPb
         service.MultiService.__init__(self)
         WorkerBase.__init__(
-            self, name, basedir, umask=umask, unicode_encoding=unicode_encoding,
+            self, name, basedir, bot_class, umask=umask, unicode_encoding=unicode_encoding,
             delete_leftover_dirs=delete_leftover_dirs)
         if keepalive == 0:
             keepalive = None
