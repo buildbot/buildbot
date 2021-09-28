@@ -167,7 +167,7 @@ class BotFactory(AutoLoginPBFactory):
             yield self._shutdown_notifier.wait()
 
 
-class Worker(WorkerBase, service.MultiService):
+class Worker(WorkerBase):
     """The service class to be instantiated from buildbot.tac
 
     to just pass a connection string, set buildmaster_host and
@@ -188,7 +188,6 @@ class Worker(WorkerBase, service.MultiService):
                     "then set host and port to None")
 
         bot_class = BotPb
-        service.MultiService.__init__(self)
         WorkerBase.__init__(
             self, name, basedir, bot_class, umask=umask, unicode_encoding=unicode_encoding,
             delete_leftover_dirs=delete_leftover_dirs)
@@ -264,7 +263,7 @@ class Worker(WorkerBase, service.MultiService):
         if self.shutdown_loop:
             self.shutdown_loop.stop()
             self.shutdown_loop = None
-        yield service.MultiService.stopService(self)
+        yield WorkerBase.stopService(self)
         yield self.bf.waitForCompleteShutdown()
 
     def _handleSIGHUP(self, *args):
