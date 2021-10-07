@@ -144,21 +144,30 @@ class BuildChooserBase:
 
 
 class BasicBuildChooser(BuildChooserBase):
-    # BasicBuildChooser generates build pairs via the configuration points:
-    #   * config.nextWorker  (or random.choice if not set)
-    #   * config.nextBuild  (or "top" if not set)
-    #
-    # For N workers, this will call nextWorker at most N times. If nextWorker
-    # returns a worker that cannot satisfy the build chosen by nextBuild,
-    # it will search for a worker that can satisfy the build. If one is found,
-    # the workers that cannot be used are "recycled" back into a list
-    # to be tried, in order, for the next chosen build.
-    #
-    # We check whether Builder.canStartBuild returns True for a particular
-    # worker. It evaluates any Build properties that are known before build
-    # and checks whether the worker may satisfy them. For example, the worker
-    # must have the locks available.
+    """
+    BasicBuildChooser generates build pairs via the builder's configuration points:
 
+    - config.nextWorker (or random.choice if not set)
+    - config.nextBuild (or "top" if not set)
+
+    When the distributor calls popNextBuild, we retrieve all unclaimed build requests.
+    nextBuild is used to select the first one to attempt to place on a worker. If
+    nextBuild returns None, we immediately return an empty pair and the distribution
+    cycle ends.
+
+    If a build request was chosen, we will then pass it to nextWorker. If nextWorker
+    returns None, we cannot place this request. We discard it from consideration and loop
+    around to the next request as selected by nextBuild.
+
+    If a worker can be chosen, the final step is to call Builder.canStartBuild. If this
+    returns False, we discard the chosen worker and loop back to try to find another. If
+    it returns True, we remove this build request from the collection of unclaimed
+    requests and return the (worker, request) pair. The distribution cycle can continue
+    on to calling popNextBuild again.
+
+    If either nextBuild or nextWorker return requests/workers that do not actually belong
+    to our builder, we treat it as if they had returned None.
+    """
     def __init__(self, bldr, master):
         super().__init__(bldr, master)
         self.workerpool = self.bldr.getAvailableWorkers()
