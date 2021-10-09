@@ -148,7 +148,10 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
 
             fakedb.SourceStamp(id=1, branch='master', revision='1234abcd'),
             fakedb.Change(changeid=1, branch='master', revision='1234abcd', sourcestampid=1),
-
+            fakedb.ChangeProperty(changeid=1, property_name="owner",
+                                  property_value='["me@example.com", "change"]'),
+            fakedb.ChangeProperty(changeid=1, property_name="other_prop",
+                                  property_value='["value", "change"]'),
             fakedb.BuildsetSourceStamp(id=1, buildsetid=1, sourcestampid=1),
             fakedb.BuildsetSourceStamp(id=2, buildsetid=2, sourcestampid=1),
             fakedb.BuildsetSourceStamp(id=3, buildsetid=3, sourcestampid=1),
