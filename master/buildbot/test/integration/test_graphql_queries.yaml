@@ -1,4 +1,6 @@
-- query: |
+# to test a single testcase, add "focus: true" inside it, e.g:
+- # focus: true
+  query: |
     {masters{name, builders(name:"runtests1"){name, builds(limit:1){number}}}}
   expected:
     masters:
