@@ -131,7 +131,7 @@ class Endpoint:
                 )
         else:
             parentid = self.parentMapping[parent_type]
-        ret = {}
+        ret = {'graphql': True}
         ret[parentid] = parent[parentid]
         return ret
 
@@ -141,8 +141,8 @@ class Endpoint:
                 return self.get_kwargs_from_graphql_parent(
                     parent, resolve_info.parent_type.name
                 )
-            return {}
-        ret = {}
+            return {'graphql': True}
+        ret = {'graphql': True}
         k = self.rtype.keyField
         v = args.pop(k)
         if v is not None:

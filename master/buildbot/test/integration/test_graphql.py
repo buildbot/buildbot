@@ -235,7 +235,6 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             focussed_data = data
         for test in focussed_data:
             query = test['query']
-
             result = yield self.master.graphql.query(
                 query
             )

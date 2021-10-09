@@ -76,9 +76,11 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
            testid__eq: Int,
            testid__ge: Int,
            testid__gt: Int,
+           testid__in: [Int],
            testid__le: Int,
            testid__lt: Int,
            testid__ne: Int,
+           testid__notin: [Int],
            order: String,
            limit: Int,
            offset: Int): [Test]!
@@ -90,9 +92,11 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
            testid__eq: Int,
            testid__ge: Int,
            testid__gt: Int,
+           testid__in: [Int],
            testid__le: Int,
            testid__lt: Int,
            testid__ne: Int,
+           testid__notin: [Int],
            order: String,
            limit: Int,
            offset: Int): [Test]!

@@ -37,6 +37,8 @@ class FieldBase:
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
         'contains': lambda d, v: v[0] in d,
+        'in': lambda d, v: d in v,
+        'notin': lambda d, v: d not in v,
     }
 
     singular_operators_sql = {
@@ -46,20 +48,26 @@ class FieldBase:
         'le': lambda d, v: d <= v[0],
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
-        'contains': lambda d, v: d.contains(v[0])
+        'contains': lambda d, v: d.contains(v[0]),
         # only support string values, because currently there are no queries against lists in SQL
+        'in': lambda d, v: d.in_(v),
+        'notin': lambda d, v: d.notin_(v),
     }
 
     plural_operators = {
         'eq': lambda d, v: d in v,
         'ne': lambda d, v: d not in v,
         'contains': lambda d, v: len(set(v).intersection(set(d))) > 0,
+        'in': lambda d, v: d in v,
+        'notin': lambda d, v: d not in v,
     }
 
     plural_operators_sql = {
         'eq': lambda d, v: d.in_(v),
         'ne': lambda d, v: d.notin_(v),
         'contains': lambda d, vs: sa.or_(*[d.contains(v) for v in vs]),
+        'in': lambda d, v: d.in_(v),
+        'notin': lambda d, v: d.notin_(v),
         # sqlalchemy v0.8's or_ cannot take generator arguments, so this has to be manually expanded
         # only support string values, because currently there are no queries against lists in SQL
     }

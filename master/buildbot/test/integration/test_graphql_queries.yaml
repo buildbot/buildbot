@@ -152,3 +152,9 @@
       buildrequests:
       - buildrequestid: 3
         builderid: 2
+- query: |
+    {builds(buildid:1){properties(name__in: ["reason", "owner"]){name, value, source }}}
+- query: |
+    {buildsets(bsid:1){properties(name__in: ["reason", "owner"]){name, value }}}
+- query: |
+    {changes(changeid:1){properties(name__in: ["owner"]){name, value }}}
