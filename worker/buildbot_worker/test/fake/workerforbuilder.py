@@ -41,3 +41,31 @@ class FakeWorkerForBuilder(object):
 
     def show(self):
         return pprint.pformat(self.updates)
+
+    # Returns a Deferred
+    def protocol_update_upload_file_close(self, writer):
+        return writer.callRemote("close")
+
+    # Returns a Deferred
+    def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
+        return writer.callRemote("utime", (access_time, modified_time))
+
+    # Returns a Deferred
+    def protocol_update_upload_file_write(self, writer, data):
+        return writer.callRemote('write', data)
+
+    # Returns a Deferred
+    def protocol_update_upload_directory(self, writer):
+        return writer.callRemote("unpack")
+
+    # Returns a Deferred
+    def protocol_update_upload_directory_write(self, writer, data):
+        return writer.callRemote('write', data)
+
+    # Returns a Deferred
+    def protocol_update_read_file_close(self, reader):
+        return reader.callRemote('close')
+
+    # Returns a Deferred
+    def protocol_update_read_file(self, reader, length):
+        return reader.callRemote('read', length)

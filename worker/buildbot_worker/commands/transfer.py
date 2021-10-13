@@ -65,6 +65,7 @@ class WorkerFileUploadCommand(TransferCommand):
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
     debug = False
+
     requiredArgs = ['workdir', 'workersrc', 'writer', 'blocksize']
 
     def setup(self, args):
@@ -86,11 +87,12 @@ class WorkerFileUploadCommand(TransferCommand):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
-        accessed_modified = None
+        access_time = None
+        modified_time = None
         try:
             if self.keepstamp:
-                accessed_modified = (os.path.getatime(self.path),
-                                     os.path.getmtime(self.path))
+                access_time = os.path.getatime(self.path)
+                modified_time = os.path.getmtime(self.path)
 
             self.fp = open(self.path, 'rb')
             if self.debug:
@@ -112,10 +114,11 @@ class WorkerFileUploadCommand(TransferCommand):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            yield self.writer.callRemote("close")
+            yield self.builder.protocol_update_upload_file_close(self.writer)
 
             if self.keepstamp:
-                yield self.writer.callRemote("utime", accessed_modified)
+                yield self.builder.protocol_update_upload_file_utime(self.writer, access_time,
+                                                                     modified_time)
 
         def _close_err(f):
             self.rc = 1
@@ -123,7 +126,7 @@ class WorkerFileUploadCommand(TransferCommand):
                 self.fp.close()
             self.fp = None
             # call remote's close(), but keep the existing failure
-            d1 = self.writer.callRemote("close")
+            d1 = self.builder.protocol_update_upload_file_close(self.writer)
 
             def eb(f2):
                 log.msg("ignoring error from remote close():")
@@ -181,9 +184,12 @@ class WorkerFileUploadCommand(TransferCommand):
         if self.remaining is not None:
             self.remaining = self.remaining - len(data)
             assert self.remaining >= 0
-        d = self.writer.callRemote('write', data)
+        d = self.do_protocol_write(data)
         d.addCallback(lambda res: False)
         return d
+
+    def do_protocol_write(self, data):
+        return self.builder.protocol_update_upload_file_write(self.writer, data)
 
 
 class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
@@ -236,7 +242,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         self._reactor.callLater(0, self._loop, d)
 
         def unpack(res):
-            d1 = self.writer.callRemote("unpack")
+            d1 = self.builder.protocol_update_upload_directory(self.writer)
 
             def unpack_err(f):
                 self.rc = 1
@@ -253,6 +259,9 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         self.fp = None
         os.remove(self.tarname)
         return TransferCommand.finished(self, res)
+
+    def do_protocol_write(self, data):
+        return self.builder.protocol_update_upload_directory_write(self.writer, data)
 
 
 class WorkerFileDownloadCommand(TransferCommand):
@@ -323,7 +332,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         def _close(res):
             # close the file, but pass through any errors from _loop
-            d1 = self.reader.callRemote('close')
+            d1 = self.builder.protocol_update_read_file_close(self.reader)
             d1.addErrback(log.err, 'while trying to close reader')
             d1.addCallback(lambda ignored: res)
             return d1
@@ -364,7 +373,7 @@ class WorkerFileDownloadCommand(TransferCommand):
                 self.rc = 1
             return True
         else:
-            d = self.reader.callRemote('read', length)
+            d = self.builder.protocol_update_read_file(self.reader, length)
             d.addCallback(self._writeData)
             return d
 

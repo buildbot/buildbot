@@ -19,7 +19,6 @@ from __future__ import print_function
 import os.path
 import signal
 
-from twisted.application import service
 from twisted.application.internet import ClientService
 from twisted.application.internet import backoffPolicy
 from twisted.cred import credentials
@@ -43,7 +42,52 @@ class UnknownCommand(pb.Error):
     pass
 
 
-class WorkerForBuilderPb(WorkerForBuilderBase, pb.Referenceable):
+class WorkerForBuilderPbLike(WorkerForBuilderBase):
+    def protocol_args_setup(self, command, args):
+        pass
+
+    # Returns a Deferred
+    def protocol_update(self, updates):
+        return self.command_ref.callRemote("update", updates)
+
+    def protocol_notify_on_disconnect(self):
+        self.command_ref.notifyOnDisconnect(self.lostRemoteStep)
+
+    # Returns a Deferred
+    def protocol_complete(self, failure):
+        self.command_ref.dontNotifyOnDisconnect(self.lostRemoteStep)
+        return self.command_ref.callRemote("complete", failure)
+
+    # Returns a Deferred
+    def protocol_update_upload_file_close(self, writer):
+        return writer.callRemote("close")
+
+    # Returns a Deferred
+    def protocol_update_upload_file_utime(self, writer, access_time, modified_time):
+        return writer.callRemote("utime", (access_time, modified_time))
+
+    # Returns a Deferred
+    def protocol_update_upload_file_write(self, writer, data):
+        return writer.callRemote('write', data)
+
+    # Returns a Deferred
+    def protocol_update_upload_directory(self, writer):
+        return writer.callRemote("unpack")
+
+    # Returns a Deferred
+    def protocol_update_upload_directory_write(self, writer, data):
+        return writer.callRemote('write', data)
+
+    # Returns a Deferred
+    def protocol_update_read_file_close(self, reader):
+        return reader.callRemote('close')
+
+    # Returns a Deferred
+    def protocol_update_read_file(self, reader, length):
+        return reader.callRemote('read', length)
+
+
+class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
     pass
 
 
@@ -167,7 +211,7 @@ class BotFactory(AutoLoginPBFactory):
             yield self._shutdown_notifier.wait()
 
 
-class Worker(WorkerBase, service.MultiService):
+class Worker(WorkerBase):
     """The service class to be instantiated from buildbot.tac
 
     to just pass a connection string, set buildmaster_host and
@@ -175,8 +219,6 @@ class Worker(WorkerBase, service.MultiService):
 
     maxdelay is deprecated in favor of using twisted's backoffPolicy.
     """
-    Bot = BotPb
-
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=None, numcpus=None, unicode_encoding=None, useTls=None,
@@ -189,9 +231,9 @@ class Worker(WorkerBase, service.MultiService):
                     "If you want to supply a connection string, "
                     "then set host and port to None")
 
-        service.MultiService.__init__(self)
+        bot_class = BotPb
         WorkerBase.__init__(
-            self, name, basedir, umask=umask, unicode_encoding=unicode_encoding,
+            self, name, basedir, bot_class, umask=umask, unicode_encoding=unicode_encoding,
             delete_leftover_dirs=delete_leftover_dirs)
         if keepalive == 0:
             keepalive = None
@@ -265,7 +307,7 @@ class Worker(WorkerBase, service.MultiService):
         if self.shutdown_loop:
             self.shutdown_loop.stop()
             self.shutdown_loop = None
-        yield service.MultiService.stopService(self)
+        yield WorkerBase.stopService(self)
         yield self.bf.waitForCompleteShutdown()
 
     def _handleSIGHUP(self, *args):

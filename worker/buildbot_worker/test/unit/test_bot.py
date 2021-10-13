@@ -219,6 +219,10 @@ class FakeStep(object):
         self.finished_d.callback(None)
 
 
+class FakeBot(base.BotBase):
+    WorkerForBuilder = pb.WorkerForBuilderPbLike
+
+
 class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
@@ -228,7 +232,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.bot = base.BotBase(self.basedir, False)
+        self.bot = FakeBot(self.basedir, False)
         self.bot.startService()
 
         # get a WorkerForBuilder object from the bot and wrap it as a fake
