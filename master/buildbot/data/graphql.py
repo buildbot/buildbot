@@ -32,6 +32,12 @@ except ImportError:  # pragma: no cover
     graphql = None
 
 
+def _enforce_list(v):
+    if isinstance(v, list):
+        return v
+    return [v]
+
+
 class GraphQLConnector(service.AsyncService):
     """Mixin class to separate the GraphQL traits for the data connector
 
@@ -134,14 +140,22 @@ class GraphQLConnector(service.AsyncService):
             add_dependent_types(typ)
             query_fields = []
             # build the queriable parameters, via query_fields
-            for field in sorted(rtype.entityType.fields.keys()):
-                field_type = rtype.entityType.fields[field]
+            for field, field_type in sorted(rtype.entityType.fields.items()):
+                # in graphql, we handle properties as queriable sub resources
+                # instead of hardcoded attributes like in rest api
+                if field == 'properties':
+                    continue
                 field_type_graphql = field_type.getGraphQLInputType()
                 if field_type_graphql is None:
                     continue
                 query_fields.append(f"{field}: {field_type_graphql}")
                 for op in sorted(operators):
-                    query_fields.append(f"{field}__{op}: {field_type_graphql}")
+                    if op in ["in", "notin"]:
+                        if field_type_graphql in ["String", "Int"]:
+                            query_fields.append(
+                                f"{field}__{op}: [{field_type_graphql}]")
+                    else:
+                        query_fields.append(f"{field}__{op}: {field_type_graphql}")
 
             query_fields.extend(["order: String", "limit: Int", "offset: Int"])
             ep = self.data.getEndPointForResourceName(rtype.plural)
@@ -210,13 +224,19 @@ class GraphQLConnector(service.AsyncService):
         async def field_resolver(parent, resolve_info, **args):
             field = resolve_info.field_name
             if parent is not None and field in parent:
-                return default_field_resolver(parent, resolve_info, **args)
+                res = default_field_resolver(parent, resolve_info, **args)
+                if isinstance(res, list) and args:
+                    ep = self.data.getEndPointForResourceName(field)
+                    args = {k: _enforce_list(v) for k, v in args.items()}
+                    rspec = self.data.resultspec_from_jsonapi(args, ep.rtype.entityType, True)
+                    res = rspec.apply(res)
+                return res
             ep = self.data.getEndPointForResourceName(field)
             rspec = None
             kwargs = ep.get_kwargs_from_graphql(parent, resolve_info, args)
 
             if ep.isCollection or ep.isPseudoCollection:
-                args = {k: [v] for k, v in args.items()}
+                args = {k: _enforce_list(v) for k, v in args.items()}
                 rspec = self.data.resultspec_from_jsonapi(args, ep.rtype.entityType, True)
 
             return await self._aio_ep_get(ep, kwargs, rspec)

@@ -418,6 +418,9 @@ class Entity(Type):
                     fields=[dict(name=k,
                                  type=v.toGraphQL())
                             for k, v in self.fields.items()
+                            # in graphql, we handle properties as queriable sub resources
+                            # instead of hardcoded attributes like in rest api
+                            if k != "properties"
                             ])
 
     def toGraphQLTypeName(self):

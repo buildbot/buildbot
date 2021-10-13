@@ -1,4 +1,6 @@
-- query: |
+# to test a single testcase, add "focus: true" inside it, e.g:
+- # focus: true
+  query: |
     {masters{name, builders(name:"runtests1"){name, builds(limit:1){number}}}}
   expected:
     masters:
@@ -150,3 +152,28 @@
       buildrequests:
       - buildrequestid: 3
         builderid: 2
+- query: |
+    {builds(buildid:3){properties(name__in: ["reason", "owner"]){name, value, source }}}
+  expected:
+    builds:
+    - properties:
+      - name: reason
+        value: '"\"force build\""'
+        source: Force Build Form
+      - name: owner
+        value: '"\"some@example.com\""'
+        source: Force Build Form
+- query: |
+    {buildsets(bsid:3){properties(name__in: ["reason", "owner"]){name, value }}}
+  expected:
+    buildsets:
+    - properties:
+      - name: owner
+        value: '"some@example.com"'
+- query: |
+    {changes(changeid:1){properties(name__in: ["owner"]){name, value }}}
+  expected:
+    changes:
+    - properties:
+      - name: owner
+        value: '"me@example.com"'

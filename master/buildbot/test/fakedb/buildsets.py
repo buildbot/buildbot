@@ -162,13 +162,15 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for bs in self.buildsets.values():
             if complete is not None:
                 if complete and bs['complete']:
-                    rv.append(self._row2dict(bs))
+                    rv.append(bs)
                 elif not complete and not bs['complete']:
-                    rv.append(self._row2dict(bs))
+                    rv.append(bs)
             else:
-                rv.append(self._row2dict(bs))
+                rv.append(bs)
         if resultSpec is not None:
             rv = self.applyResultSpec(rv, resultSpec)
+
+        rv = [self._row2dict(bs) for bs in rv]
         return defer.succeed(rv)
 
     @defer.inlineCallbacks

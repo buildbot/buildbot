@@ -148,7 +148,10 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
 
             fakedb.SourceStamp(id=1, branch='master', revision='1234abcd'),
             fakedb.Change(changeid=1, branch='master', revision='1234abcd', sourcestampid=1),
-
+            fakedb.ChangeProperty(changeid=1, property_name="owner",
+                                  property_value='["me@example.com", "change"]'),
+            fakedb.ChangeProperty(changeid=1, property_name="other_prop",
+                                  property_value='["value", "change"]'),
             fakedb.BuildsetSourceStamp(id=1, buildsetid=1, sourcestampid=1),
             fakedb.BuildsetSourceStamp(id=2, buildsetid=2, sourcestampid=1),
             fakedb.BuildsetSourceStamp(id=3, buildsetid=3, sourcestampid=1),
@@ -230,25 +233,25 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         fn = os.path.join(os.path.dirname(__file__), "test_graphql_queries.yaml")
         with open(fn) as f:
             data = self.load_yaml(f)
-        for test in data:
+        focussed_data = [test for test in data if test.get('focus')]
+        if not focussed_data:
+            focussed_data = data
+        for test in focussed_data:
             query = test['query']
-
             result = yield self.master.graphql.query(
                 query
             )
             self.assertIsNone(result.errors)
-            if 'xpected' in test:
-                del test['xpected']
             if 'expected' not in test or regen:
                 need_save = True
                 test['expected'] = result.data
             else:
                 # remove ruamel metadata before compare (it is needed for round-trip regen,
                 # but confuses the comparison)
-                data = json.loads(json.dumps(result.data, default=toJson))
+                result_data = json.loads(json.dumps(result.data, default=toJson))
                 expected = json.loads(json.dumps(test['expected'], default=toJson))
                 self.assertEqual(
-                    data, expected, f"for {query}")
+                    result_data, expected, f"for {query}")
         if need_save:
             with open(fn, 'w') as f:
                 self.save_yaml(data, f)
