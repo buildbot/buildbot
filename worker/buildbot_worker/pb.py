@@ -275,6 +275,12 @@ class Worker(WorkerBase):
             log.msg("Using HTTP tunnel to connect through proxy")
             proxy_endpoint = clientFromString(reactor, proxy_connection_string)
             endpoint = HTTPTunnelEndpoint(buildmaster_host, port, proxy_endpoint)
+            if useTls:
+                from twisted.internet.endpoints import wrapClientTLS
+                from twisted.internet.ssl import optionsForClientTLS
+
+                contextFactory = optionsForClientTLS(hostname=buildmaster_host)
+                endpoint = wrapClientTLS(contextFactory, endpoint)
         else:
             if connection_string is None:
                 connection_string = get_connection_string(buildmaster_host, port)
