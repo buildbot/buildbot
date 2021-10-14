@@ -313,7 +313,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         results = stdout.decode(self.encoding)
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
-        defer.returnValue(revNodeList)
+        return revNodeList
 
     @defer.inlineCallbacks
     def _processBranchChanges(self, new_rev, branch):

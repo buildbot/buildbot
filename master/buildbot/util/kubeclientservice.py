@@ -92,13 +92,13 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
             basicAuth = yield self.renderSecrets(self.basicAuth)
             authstring = "{user}:{password}".format(**basicAuth).encode('utf-8')
             encoded = base64.b64encode(authstring)
-            return defer.returnValue("Basic {0}".format(encoded))
+            return "Basic {0}".format(encoded)
 
         if self.bearerToken is not None:
             bearerToken = yield self.renderSecrets(self.bearerToken)
-            return defer.returnValue("Bearer {0}".format(bearerToken))
+            return "Bearer {0}".format(bearerToken)
 
-        return defer.returnValue(None)
+        return None
 
     def getConfig(self):
         return self.config
@@ -232,7 +232,7 @@ class KubeClientService(HTTPClientService):
             if arg in config:
                 req_kwargs[arg] = config[arg]
 
-        return defer.returnValue((url, req_kwargs))
+        return (url, req_kwargs)
 
     @defer.inlineCallbacks
     def createPod(self, namespace, spec):
@@ -241,7 +241,7 @@ class KubeClientService(HTTPClientService):
         res_json = yield res.json()
         if res.code not in (200, 201, 202):
             raise KubeError(res_json)
-        defer.returnValue(res_json)
+        return res_json
 
     @defer.inlineCallbacks
     def deletePod(self, namespace, name, graceperiod=0):
@@ -251,7 +251,7 @@ class KubeClientService(HTTPClientService):
         res_json = yield res.json()
         if res.code != 200:
             raise KubeError(res_json)
-        defer.returnValue(res_json)
+        return res_json
 
     @defer.inlineCallbacks
     def waitForPodDeletion(self, namespace, name, timeout):
@@ -270,7 +270,7 @@ class KubeClientService(HTTPClientService):
             if res.code != 200:
                 raise KubeError(res_json)
             yield asyncSleep(1)
-        defer.returnValue(res_json)
+        return res_json
 
     @property
     def namespace(self):

@@ -110,7 +110,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin,
             yield self._kube.createPod(self.namespace, pod_spec)
         except kubeclientservice.KubeError as e:
             raise LatentWorkerFailedToSubstantiate(str(e)) from e
-        defer.returnValue(True)
+        return True
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False, reportFailure=True):

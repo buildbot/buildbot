@@ -227,7 +227,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin,
         res = yield threads.deferToThread(self._thd_start_instance, image,
                                           dockerfile, volumes, custom_context,
                                           encoding, buildargs, hostname)
-        defer.returnValue(res)
+        return res
 
     def _image_exists(self, client, name):
         # Make sure the image exists
