@@ -153,10 +153,10 @@
       - buildrequestid: 3
         builderid: 2
 - query: |
-    {builds(buildid:3){properties(name__in: ["reason", "owner"]){name, value, source }}}
+    {builds(buildid:3){_properties(name__in: ["reason", "owner"]){name, value, source }}}
   expected:
     builds:
-    - properties:
+    - _properties:
       - name: reason
         value: '"\"force build\""'
         source: Force Build Form
@@ -164,16 +164,9 @@
         value: '"\"some@example.com\""'
         source: Force Build Form
 - query: |
-    {buildsets(bsid:3){properties(name__in: ["reason", "owner"]){name, value }}}
+    {buildsets(bsid:3){_properties(name__in: ["reason", "owner"]){name, value }}}
   expected:
     buildsets:
-    - properties:
+    - _properties:
       - name: owner
         value: '"some@example.com"'
-- query: |
-    {changes(changeid:1){properties(name__in: ["owner"]){name, value }}}
-  expected:
-    changes:
-    - properties:
-      - name: owner
-        value: '"me@example.com"'

@@ -94,8 +94,8 @@ class PropertiesListEndpoint(base.Endpoint):
 
 class Property(base.ResourceType):
 
-    name = "property"
-    plural = "properties"
+    name = "_property"
+    plural = "_properties"
     endpoints = [PropertiesListEndpoint]
     keyField = "name"
 
@@ -104,8 +104,8 @@ class Property(base.ResourceType):
 
 class Properties(base.ResourceType):
 
-    name = "_property"
-    plural = "_properties"
+    name = "property"
+    plural = "properties"
     endpoints = [BuildsetPropertiesEndpoint, BuildPropertiesEndpoint]
     keyField = "name"
 
