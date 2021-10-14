@@ -1,0 +1,1 @@
+MsBuild steps accept a new "defines" parameter. It is a list of pre-processor defines to be used by the compiler.

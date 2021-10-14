@@ -438,14 +438,22 @@ class VC141(VC14):
 VS2017 = VC141
 
 
+def _msbuild_format_defines_parameter(defines):
+    if defines is None or len(defines) == 0:
+        return ""
+    return ' /p:DefineConstants="{}"'.format(";".join(defines))
+
+
 class MsBuild4(VisualStudio):
     platform = None
+    defines = None
     vcenv_bat = r"${VS110COMNTOOLS}..\..\VC\vcvarsall.bat"
     renderables = ['platform']
     description = 'building'
 
-    def __init__(self, platform, **kwargs):
+    def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
+        self.defines = defines
         super().__init__(**kwargs)
 
     def setupEnvironment(self):
@@ -483,6 +491,8 @@ class MsBuild4(VisualStudio):
         elif self.mode == "rebuild":
             command += ' /t:Rebuild'
 
+        command += _msbuild_format_defines_parameter(self.defines)
+
         self.command = command
 
         res = yield super().run()
@@ -502,11 +512,13 @@ class MsBuild14(MsBuild4):
 
 class MsBuild141(VisualStudio):
     platform = None
+    defines = None
     vcenv_bat = r"\VC\Auxiliary\Build\vcvarsall.bat"
     renderables = ['platform']
 
-    def __init__(self, platform, **kwargs):
+    def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
+        self.defines = defines
         super().__init__(**kwargs)
 
     def setupEnvironment(self):
@@ -545,6 +557,8 @@ class MsBuild141(VisualStudio):
             command += ' /t:Clean'
         elif self.mode == "rebuild":
             command += ' /t:Rebuild'
+
+        command += _msbuild_format_defines_parameter(self.defines)
 
         self.command = command
 
