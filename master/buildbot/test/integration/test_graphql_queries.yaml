@@ -86,7 +86,7 @@
         build(buildid:1){
             step(stepid:1){
                 log(logid:1){
-                    log_chunks(offset:1, limit:2){
+                    logchunks(offset:1, limit:2){
                         content
                     }
                 }
@@ -97,16 +97,16 @@
     build:
       step:
         log:
-          log_chunks:
+          logchunks:
             content: "o line2\no line3\n"
 - query: |
     {
-        log_chunks(logid: 1, offset:1, limit:2){
+        logchunks(logid: 1, offset:1, limit:2){
             content
         }
     }
   expected:
-    log_chunks:
+    logchunks:
       content: "o line2\no line3\n"
 - query: |
     {
