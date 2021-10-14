@@ -213,7 +213,7 @@ class Build(base.ResourceType):
         results = types.NoneOk(types.Integer())
         state_string = types.String()
         properties = types.NoneOk(types.SourcedProperties())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Build')
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):

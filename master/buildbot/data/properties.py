@@ -99,7 +99,7 @@ class Property(base.ResourceType):
     endpoints = [PropertiesListEndpoint]
     keyField = "name"
 
-    entityType = types.PropertyEntityType(name)
+    entityType = types.PropertyEntityType(name, 'Property')
 
 
 class Properties(base.ResourceType):

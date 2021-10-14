@@ -144,4 +144,4 @@ class LogChunk(base.ResourceType):
         firstline = types.Integer()
         content = types.String()
 
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'LogChunk')

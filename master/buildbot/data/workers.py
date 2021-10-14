@@ -126,12 +126,12 @@ class Worker(base.ResourceType):
     class EntityType(types.Entity):
         workerid = types.Integer()
         name = types.String()
-        connected_to = types.List(of=MasterIdEntityType("master_id"))
-        configured_on = types.List(of=MasterBuilderEntityType("master_builder"))
+        connected_to = types.List(of=MasterIdEntityType("master_id", 'MasterId'))
+        configured_on = types.List(of=MasterBuilderEntityType("master_builder", 'MasterBuilder'))
         workerinfo = types.JsonObject()
         paused = types.Boolean()
         graceful = types.Boolean()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Worker')
 
     @base.updateMethod
     # returns a Deferred that returns None

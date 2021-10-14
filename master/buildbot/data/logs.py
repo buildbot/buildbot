@@ -111,7 +111,7 @@ class Log(base.ResourceType):
         num_lines = types.Integer()
         type = types.Identifier(1)
 
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Log')
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):

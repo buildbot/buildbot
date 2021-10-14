@@ -239,7 +239,7 @@ In ``master/buildbot/data/pubs.py``, create a subclass of :py:class:`ResourceTyp
             num_taps = types.Integer()
             closes_at = types.Integer()
 
-        entityType = EntityType(name)
+        entityType = EntityType(name, 'Pub')
 
 .. py:class:: ResourceType
 
@@ -557,9 +557,10 @@ Entity Type
                 tags = types.List(of=types.String())
                 props = types.SourcedProperties()
 
-    Then instantiate the class with the resource type name::
+    Then instantiate the class with the resource type name.
+    The second argument is used for GraphQl endpoints::
 
-        entityType = EntityType(name)
+        entityType = EntityType(name, 'MyStuff')
 
     To embed another entity type, reference its entityType class attribute::
 

@@ -119,7 +119,7 @@ class Step(base.ResourceType):
         stepid = types.Integer()
         testid = types.Integer()
         info = types.String()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Step')
 
 
 class Test(base.ResourceType):
@@ -134,7 +134,7 @@ class Test(base.ResourceType):
         info = types.String()
         success = types.Boolean()
         tags = types.List(of=types.String())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Test')
 
 
 graphql_schema = """

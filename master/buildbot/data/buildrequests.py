@@ -203,7 +203,7 @@ class BuildRequest(base.ResourceType):
         complete_at = types.NoneOk(types.DateTime())
         waited_for = types.Boolean()
         properties = types.NoneOk(types.SourcedProperties())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Buildrequest')
 
     @defer.inlineCallbacks
     def generateEvent(self, brids, event):
