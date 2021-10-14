@@ -890,6 +890,21 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    def test_clean_project(self):
+        self.setupStep(vstudio.MsBuild141(
+            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="compile 0 projects 0 files")
+        return self.runStep()
+
     def test_build_project_with_defines(self):
         self.setupStep(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj',

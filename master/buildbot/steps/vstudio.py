@@ -83,7 +83,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     installdir = None
     default_installdir = None
 
-    # One of build, or rebuild
+    # One of build, clean or rebuild
     mode = "rebuild"
 
     projectfile = None
@@ -444,6 +444,27 @@ def _msbuild_format_defines_parameter(defines):
     return ' /p:DefineConstants="{}"'.format(";".join(defines))
 
 
+def _msbuild_format_target_parameter(mode, project):
+    modestring = None
+    if mode == "clean":
+        modestring = 'Clean'
+    elif mode == "build":
+        modestring = 'Build'
+    elif mode == "rebuild":
+        modestring = 'Rebuild'
+
+    parameter = ""
+    if project is not None:
+        if modestring == "Rebuild" or modestring is None:
+            parameter = ' /t:"%s"' % (project)
+        else:
+            parameter = ' /t:"%s:%s"' % (project, modestring)
+    elif modestring is not None:
+        parameter = ' /t:%s' % (modestring)
+
+    return parameter
+
+
 class MsBuild4(VisualStudio):
     platform = None
     defines = None
@@ -482,15 +503,7 @@ class MsBuild4(VisualStudio):
         command = (('"%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" /p:Platform="{}" '
                     '/maxcpucount').format(self.projectfile, self.config, self.platform))
 
-        if self.project is not None:
-            command += ' /t:"{}"'.format(self.project)
-        elif self.mode == "build":
-            command += ' /t:Build'
-        elif self.mode == "clean":
-            command += ' /t:Clean'
-        elif self.mode == "rebuild":
-            command += ' /t:Rebuild'
-
+        command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
 
         self.command = command
@@ -549,15 +562,7 @@ class MsBuild141(VisualStudio):
                     '/p:Platform="{}" /maxcpucount').format(self.projectfile, self.config,
                                                             self.platform))
 
-        if self.project is not None:
-            command += ' /t:"{}"'.format(self.project)
-        elif self.mode == "build":
-            command += ' /t:Build'
-        elif self.mode == "clean":
-            command += ' /t:Clean'
-        elif self.mode == "rebuild":
-            command += ' /t:Rebuild'
-
+        command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
 
         self.command = command
