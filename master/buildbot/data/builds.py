@@ -178,7 +178,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             else:
                 # Avoid to request DB for Build's properties if not specified
                 if filters:  # pragma: no cover
-                    props = yield self.master.db.builds.getBuildProperties(b["buildid"])
+                    props = yield self.master.db.builds.getBuildProperties(data["buildid"])
                     filtered_properties = self._generate_filtered_properties(props, filters)
                     if filtered_properties:
                         data["properties"] = filtered_properties
