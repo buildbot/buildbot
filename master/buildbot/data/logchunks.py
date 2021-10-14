@@ -134,8 +134,8 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
 class LogChunk(base.ResourceType):
 
-    name = "log_chunk"
-    plural = "log_chunks"
+    name = "logchunk"
+    plural = "logchunks"
     endpoints = [LogChunkEndpoint, RawLogChunkEndpoint]
     keyField = "logid"
 
