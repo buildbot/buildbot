@@ -35,7 +35,7 @@ class Db2DataMixin:
 
         """
         # by default none properties are returned
-        if props and filters:  # pragma: no cover
+        if props and filters:
             return (props
                     if '*' in filters
                     else dict(((k, v) for k, v in props.items() if k in filters)))
@@ -97,7 +97,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             filters = resultSpec.popProperties() if hasattr(
                 resultSpec, 'popProperties') else []
             # Avoid to request DB for Build's properties if not specified
-            if filters:  # pragma: no cover
+            if filters:
                 try:
                     props = yield self.master.db.builds.getBuildProperties(data['buildid'])
                 except (KeyError, TypeError):
@@ -177,8 +177,8 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                 del data['properties']
             else:
                 # Avoid to request DB for Build's properties if not specified
-                if filters:  # pragma: no cover
-                    props = yield self.master.db.builds.getBuildProperties(b["buildid"])
+                if filters:
+                    props = yield self.master.db.builds.getBuildProperties(data["buildid"])
                     filtered_properties = self._generate_filtered_properties(props, filters)
                     if filtered_properties:
                         data["properties"] = filtered_properties

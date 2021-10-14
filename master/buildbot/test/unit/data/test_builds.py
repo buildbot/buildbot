@@ -48,6 +48,8 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          buildrequestid=82, number=4),
             fakedb.Build(id=15, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=5),
+            fakedb.BuildProperty(buildid=13, name='reason', value='"force build"',
+                                 source="Force Build Form"),
         ])
 
     def tearDown(self):
@@ -94,10 +96,10 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = resultspec.OptimisedResultSpec(
-            filters=[resultspec.Filter('property', 'eq', [False])])
-        build = yield self.callGet(('builders', 77, 'builds', 5), resultSpec=resultSpec)
+            properties=[resultspec.Property(b'property', 'eq', 'reason')])
+        build = yield self.callGet(('builders', 77, 'builds', 3), resultSpec=resultSpec)
         self.validateData(build)
-        self.assertIn('properties', build)
+        self.assertIn('reason', build['properties'])
 
     @defer.inlineCallbacks
     def test_action_stop(self):
@@ -147,6 +149,8 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          buildrequestid=83, number=5, complete_at=1),
             fakedb.Build(id=16, builderid=79, masterid=88, workerid=12,
                          buildrequestid=84, number=6, complete_at=1),
+            fakedb.BuildProperty(buildid=13, name='reason', value='"force build"',
+                                 source="Force Build Form"),
         ])
 
     def tearDown(self):
@@ -228,11 +232,10 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = resultspec.OptimisedResultSpec(
-            filters=[resultspec.Filter('property', 'eq', [False])])
+            properties=[resultspec.Property(b'property', 'eq', 'reason')])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
-        for b in builds:
-            self.validateData(b)
-            self.assertIn('properties', b)
+        [self.validateData(build) for build in builds]
+        self.assertTrue(any([('reason' in b['properties']) for b in builds]))
 
     @defer.inlineCallbacks
     def test_get_filter_eq(self):
