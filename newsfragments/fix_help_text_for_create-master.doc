@@ -1,1 +1,0 @@
-Fix help text for `buildbot create-master` so it states that --db option is passed verbatim to master.cfg.sample instead of buildbot.tac

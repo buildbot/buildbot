@@ -1,1 +1,0 @@
-Fix GitPoller fetch commands timing out on huge repositories

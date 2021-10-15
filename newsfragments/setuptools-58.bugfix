@@ -1,1 +1,0 @@
-Fixed issues that prevented Buildbot from being used in Setuptools 58 and newer due to dependencies failing to build.

@@ -1,2 +1,0 @@
-MsBuild steps now handle correctly rebuilding or cleaning a specific project.
-Previously it could only be done on the entire solution.

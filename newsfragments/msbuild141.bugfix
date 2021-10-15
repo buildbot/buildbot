@@ -1,1 +1,0 @@
-Fix a bug in the MsBuild141 step : an extra double-quote made the worker command fail to parse.

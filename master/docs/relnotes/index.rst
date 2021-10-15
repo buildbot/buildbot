@@ -10,6 +10,50 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.4.0`` ( ``2021-10-15`` )
+=====================================
+
+Bug fixes
+---------
+
+- Database migrations are now handled using Alembic (1.6.0 or newer is required) (:issue:`5872`).
+- AMI for latent worker is now set before making spot request to enable dynamically setting AMIs for instantiating workers.
+- Fixed ``GitPoller`` fetch commands timing out on huge repositories
+- Fixed a bug that caused Gerrit review comments sometimes not to be reported.
+- Fixed a critical bug in the ``MsBuild141`` step (regression since Buildbot v2.8.0) (:issue:`6262`).
+- Implemented renderable support in secrets list of ``RemoveWorkerFileSecret``.
+- Fixed issues that prevented Buildbot from being used in Setuptools 58 and newer due to dependencies failing to build (:issue:`6222`).
+
+Improved Documentation
+----------------------
+
+- Fixed help text for ``buildbot create-master`` so it states that ``--db`` option is passed verbatim to ``master.cfg.sample`` instead of ``buildbot.tac``.
+- Added documentation of properties available in the formatting context that is presented to message formatters.
+
+Features
+--------
+
+- MsBuild steps now handle correctly rebuilding or cleaning a specific project.
+  Previously it could only be done on the entire solution.
+- Implemented support for controlling ``filter`` option of ``git clone``.
+- Optimized build property filtering in the database instead of in Python code.
+- Implemented support of ``SASL PLAIN`` authentication to ``IRC`` reporter.
+- The ``want_logs`` (previously ``wantLogs``) argument to message formatters will now imply ``wantSteps`` if selected.
+- Added information about log URLs to message formatter context.
+- Implemented a way to ask for only logs metadata (excluding content) in message formatters via ``want_logs`` and ``want_logs_content`` arguments.
+- Implemented support for specifying pre-processor defines sent to the compiler in the ``MsBuild`` steps.
+- Introduced ``HvacKvSecretProvider`` to allow working around flaws in ``HashiCorpVaultSecretProvider`` (:issue:`5903`).
+- Implemented support for proxying worker connection through a HTTP proxy.
+
+Deprecations and Removals
+-------------------------
+
+- The ``wantLogs`` argument of message formatters has been deprecated.
+  Please replace any uses with both ``want_logs`` and ``want_logs_content`` set to the same value.
+- The ``wantProperties`` and ``wantSteps`` arguments of message formatters have been renamed to ``want_properties`` and ``want_steps`` respectively.
+- Buildbot now requires SQLAlchemy 1.3.0 or newer.
+
+
 Buildbot ``3.3.0`` ( ``2021-07-31`` )
 =====================================
 
