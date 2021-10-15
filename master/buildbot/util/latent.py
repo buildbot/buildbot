@@ -38,7 +38,7 @@ class CompatibleLatentWorkerMixin:
     def renderWorkerPropsOnStart(self, build):
         props = yield self.renderWorkerProps(build)
         self._actual_build_props = copy.deepcopy(props)
-        defer.returnValue(props)
+        return props
 
     def resetWorkerPropsOnStop(self):
         self._actual_build_props = None
@@ -46,8 +46,8 @@ class CompatibleLatentWorkerMixin:
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build):
         if self._actual_build_props is None:
-            defer.returnValue(True)
+            return True
 
         requested_props = yield self.renderWorkerProps(build)
 
-        defer.returnValue(requested_props == self._actual_build_props)
+        return requested_props == self._actual_build_props

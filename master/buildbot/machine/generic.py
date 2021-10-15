@@ -118,7 +118,7 @@ class _SshActionMixin:
             known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
             misc.writeLocalFile(known_hosts_path, ssh_host_key_data)
 
-        defer.returnValue((key_path, known_hosts_path))
+        return (key_path, known_hosts_path)
 
     @defer.inlineCallbacks
     def perform(self, manager):
@@ -132,7 +132,7 @@ class _SshActionMixin:
                 ret = yield self._performImpl(manager, key_path, hosts_path)
         else:
             ret = yield self._performImpl(manager, None, None)
-        defer.returnValue(ret)
+        return ret
 
 
 @implementer(IMachineAction)

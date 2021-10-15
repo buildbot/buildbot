@@ -79,7 +79,7 @@ class Api:
     def getPng(self, request, builder):
         svg = yield self.getSvg(request, builder)
         request.setHeader('content-type', 'image/png')
-        defer.returnValue(cairosvg.svg2png(svg))
+        return cairosvg.svg2png(svg)
 
     @app.route("/<string:builder>.svg", methods=['GET'])
     @defer.inlineCallbacks
@@ -105,7 +105,7 @@ class Api:
 
         svgdata = self.makesvg(results_txt, results_txt, left_text=config['left_text'],
                                config=config)
-        defer.returnValue(svgdata)
+        return svgdata
 
     def textwidth(self, text, config):
         """Calculates the width of the specified text.
