@@ -107,7 +107,7 @@ class NoneOk(Type):
     def toGraphQL(self):
         # remove trailing !
         if isinstance(self.nestedType, Entity):
-            return capitalize(self.nestedType.name)
+            return self.nestedType.graphql_name
         return self.nestedType.toGraphQL()[:-1]
 
     def graphQLDependentTypes(self):
@@ -329,7 +329,7 @@ class SourcedProperties(Type):
         return "[Property]!"
 
     def graphQLDependentTypes(self):
-        return [PropertyEntityType("property")]
+        return [PropertyEntityType("property", 'Property')]
 
     def getGraphQLInputType(self):
         return None
@@ -365,10 +365,11 @@ class Entity(Type):
     #  * self.master.data.rtypes.buildsets.entityType
 
     name = None  # set in constructor
+    graphql_name = None  # set in constructor
     fields = {}
     fieldNames = set([])
 
-    def __init__(self, name):
+    def __init__(self, name, graphql_name):
         fields = {}
         for k, v in self.__class__.__dict__.items():
             if isinstance(v, Type):
@@ -376,6 +377,7 @@ class Entity(Type):
         self.fields = fields
         self.fieldNames = set(fields)
         self.name = name
+        self.graphql_name = graphql_name
 
     def validate(self, name, object):
         # this uses isinstance, allowing dict subclasses as used by the DB API
@@ -414,7 +416,7 @@ class Entity(Type):
                     for k, v in self.fields.items()}}
 
     def toGraphQL(self):
-        return dict(type=capitalize(self.name),
+        return dict(type=self.graphql_name,
                     fields=[dict(name=k,
                                  type=v.toGraphQL())
                             for k, v in self.fields.items()
@@ -424,7 +426,7 @@ class Entity(Type):
                             ])
 
     def toGraphQLTypeName(self):
-        return capitalize(self.name)
+        return self.graphql_name
 
     def graphQLDependentTypes(self):
         return self.fields.values()

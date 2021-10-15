@@ -119,9 +119,9 @@ class Step(base.ResourceType):
         results = types.NoneOk(types.Integer())
         state_string = types.String()
         urls = types.List(
-            of=UrlEntityType("Url"))
+            of=UrlEntityType("Url", "Url"))
         hidden = types.Boolean()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Step')
 
     @defer.inlineCallbacks
     def generateEvent(self, stepid, event):

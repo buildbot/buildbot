@@ -91,7 +91,7 @@ class Builder(base.ResourceType):
         masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
         tags = types.List(of=types.String())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Builder')
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):

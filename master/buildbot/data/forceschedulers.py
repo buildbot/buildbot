@@ -106,4 +106,4 @@ class ForceScheduler(base.ResourceType):
         builder_names = types.List(of=types.Identifier(50))
         enabled = types.Boolean()
         all_fields = types.List(of=types.JsonObject())
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'Forcescheduler')

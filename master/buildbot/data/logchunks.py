@@ -134,8 +134,8 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
 class LogChunk(base.ResourceType):
 
-    name = "log_chunk"
-    plural = "log_chunks"
+    name = "logchunk"
+    plural = "logchunks"
     endpoints = [LogChunkEndpoint, RawLogChunkEndpoint]
     keyField = "logid"
 
@@ -144,4 +144,4 @@ class LogChunk(base.ResourceType):
         firstline = types.Integer()
         content = types.String()
 
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'LogChunk')

@@ -86,7 +86,7 @@
         build(buildid:1){
             step(stepid:1){
                 log(logid:1){
-                    log_chunks(offset:1, limit:2){
+                    logchunks(offset:1, limit:2){
                         content
                     }
                 }
@@ -97,16 +97,16 @@
     build:
       step:
         log:
-          log_chunks:
+          logchunks:
             content: "o line2\no line3\n"
 - query: |
     {
-        log_chunks(logid: 1, offset:1, limit:2){
+        logchunks(logid: 1, offset:1, limit:2){
             content
         }
     }
   expected:
-    log_chunks:
+    logchunks:
       content: "o line2\no line3\n"
 - query: |
     {
@@ -153,10 +153,10 @@
       - buildrequestid: 3
         builderid: 2
 - query: |
-    {builds(buildid:3){properties(name__in: ["reason", "owner"]){name, value, source }}}
+    {builds(buildid:3){_properties(name__in: ["reason", "owner"]){name, value, source }}}
   expected:
     builds:
-    - properties:
+    - _properties:
       - name: reason
         value: '"\"force build\""'
         source: Force Build Form
@@ -164,16 +164,9 @@
         value: '"\"some@example.com\""'
         source: Force Build Form
 - query: |
-    {buildsets(bsid:3){properties(name__in: ["reason", "owner"]){name, value }}}
+    {buildsets(bsid:3){_properties(name__in: ["reason", "owner"]){name, value }}}
   expected:
     buildsets:
-    - properties:
+    - _properties:
       - name: owner
         value: '"some@example.com"'
-- query: |
-    {changes(changeid:1){properties(name__in: ["owner"]){name, value }}}
-  expected:
-    changes:
-    - properties:
-      - name: owner
-        value: '"me@example.com"'

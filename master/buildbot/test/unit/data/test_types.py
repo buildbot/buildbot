@@ -190,7 +190,7 @@ class Entity(TypeMixin, unittest.TestCase):
         field2 = types.NoneOk(types.String())
 
     def makeInstance(self):
-        return self.MyEntity('myentity')
+        return self.MyEntity('myentity', 'MyEntity')
 
     good = [
         {'field1': 1, 'field2': 'f2'},

@@ -117,7 +117,7 @@ class TestResultSet(base.ResourceType):
         tests_passed = types.NoneOk(types.Integer())
         tests_failed = types.NoneOk(types.Integer())
         complete = types.Boolean()
-    entityType = EntityType(name)
+    entityType = EntityType(name, 'TestResultSet')
 
     @defer.inlineCallbacks
     def generateEvent(self, test_result_setid, event):
