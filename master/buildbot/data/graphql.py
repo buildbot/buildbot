@@ -88,8 +88,9 @@ class GraphQLConnector(service.AsyncService):
         if self.asyncio_loop:
             self.asyncio_loop.stop()
             self.asyncio_loop.close()
-            if self._saved_event_loop is not None:
-                asyncio.set_event_loop(self._saved_event_loop)
+            # We want to restore the original event loop value even if was None because otherwise
+            # we would be leaving our closed AsyncIOLoopWithTwisted instance as the event loop
+            asyncio.set_event_loop(self._saved_event_loop)
             self.asyncio_loop = None
 
         return super().stopService()
