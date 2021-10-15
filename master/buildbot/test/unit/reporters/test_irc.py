@@ -205,35 +205,35 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def test_groupDescribe(self):
         b = self.makeBot()
-        b.describe = lambda d, m: evts.append(('n', d, m))
+        b.describe = lambda d, m: events.append(('n', d, m))
 
-        evts = []
+        events = []
         b.groupDescribe('#chan', 'hi')
-        self.assertEqual(evts, [('n', '#chan', 'hi')])
+        self.assertEqual(events, [('n', '#chan', 'hi')])
 
     def test_groupChat(self):
         b = self.makeBot()
-        b.msg = lambda d, m: evts.append(('n', d, m))
+        b.msg = lambda d, m: events.append(('n', d, m))
 
-        evts = []
+        events = []
         b.groupSend('#chan', 'hi')
-        self.assertEqual(evts, [('n', '#chan', 'hi')])
+        self.assertEqual(events, [('n', '#chan', 'hi')])
 
     def test_groupChat_notice(self):
         b = self.makeBot('nick', 'pass', ['#ch'], [], True)
-        b.notice = lambda d, m: evts.append(('n', d, m))
+        b.notice = lambda d, m: events.append(('n', d, m))
 
-        evts = []
+        events = []
         b.groupSend('#chan', 'hi')
-        self.assertEqual(evts, [('n', '#chan', 'hi')])
+        self.assertEqual(events, [('n', '#chan', 'hi')])
 
     def test_msg(self):
         b = self.makeBot()
-        b.msg = lambda d, m: evts.append(('m', d, m))
+        b.msg = lambda d, m: events.append(('m', d, m))
 
-        evts = []
+        events = []
         b.msg('nick', 'hi')
-        self.assertEqual(evts, [('m', 'nick', 'hi')])
+        self.assertEqual(events, [('m', 'nick', 'hi')])
 
     def test_getContact(self):
         b = self.makeBot()
@@ -335,20 +335,20 @@ class TestIrcStatusBot(unittest.TestCase):
         b = self.makeBot('nick', 'pass',
                          ['#ch1', dict(channel='#ch2', password='sekrits')],
                          ['jimmy', 'bobby'], False)
-        evts = []
+        events = []
 
         def msg(d, m):
-            evts.append(('m', d, m))
+            events.append(('m', d, m))
         b.msg = msg
 
         def join(channel, key):
-            evts.append(('k', channel, key))
+            events.append(('k', channel, key))
         b.join = join
         b.contactClass = FakeContact
 
         b.signedOn()
 
-        self.assertEqual(sorted(evts), [
+        self.assertEqual(sorted(events), [
             ('k', '#ch1', None),
             ('k', '#ch2', 'sekrits'),
             ('m', 'Nickserv', 'IDENTIFY pass'),
@@ -356,6 +356,47 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(sorted(b.contacts.keys()),
                          # channels don't get added until joined() is called
                          sorted([('jimmy', 'jimmy'), ('bobby', 'bobby')]))
+
+    def test_register_SASL(self):
+        b = self.makeBot('nick', 'pass',
+                         ['#ch1'],
+                         ['jimmy'], False, useSASL=True)
+        events = []
+
+        def sendLine(line):
+            events.append(('l', line))
+            if line == "AUTHENTICATE PLAIN":
+                events.append(('s', "AUTHENTICATE"))
+                b.irc_AUTHENTICATE(None, None)
+        b.sendLine = sendLine
+
+        b.register("bot")
+        self.assertEqual(events, [
+            ('l', 'CAP REQ :sasl'),
+            ('l', 'NICK bot'),
+            ('l', 'USER bot foo bar :None'),
+            ('l', 'AUTHENTICATE PLAIN'),
+            ('s', 'AUTHENTICATE'),
+            ('l', 'AUTHENTICATE bmljawBuaWNrAHBhc3M='),
+            ('l', 'CAP END')
+        ])
+
+    def test_register_legacy(self):
+        b = self.makeBot('nick', 'pass',
+                         ['#ch1'],
+                         ['jimmy'], False, useSASL=False)
+        events = []
+
+        def sendLine(line):
+            events.append(('l', line))
+        b.sendLine = sendLine
+
+        b.register("bot")
+        self.assertEqual(events, [
+            ('l', 'PASS pass'),
+            ('l', 'NICK bot'),
+            ('l', 'USER bot foo bar :None')
+        ])
 
     def test_joined(self):
         b = self.makeBot()
@@ -508,6 +549,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             showBlameList=False,
             useRevisions=True,
             useSSL=False,
+            useSASL=False,
             lostDelay=10,
             failedDelay=20,
             useColors=False)
@@ -525,6 +567,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'], True,
             {}, ['tags'], {'successToFailure': 1},
             useColors=False,
+            useSASL=False,
             useRevisions=True,
             showBlameList=False)
 

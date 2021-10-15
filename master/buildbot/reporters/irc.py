@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
+
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -204,7 +206,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
     channelClass = IRCChannel
 
     def __init__(self, nickname, password, join_channels, pm_to_nicks,
-                 noticeOnChannel, *args, useColors=False, **kwargs):
+                 noticeOnChannel, *args, useColors=False, useSASL=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.nickname = nickname
         self.join_channels = join_channels
@@ -213,9 +215,35 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         self.hasQuit = 0
         self.noticeOnChannel = noticeOnChannel
         self.useColors = useColors
+        self.useSASL = useSASL
         self._keepAliveCall = task.LoopingCall(
             lambda: self.ping(self.nickname))
         self._channel_names = {}
+
+    def register(self, nickname, hostname="foo", servername="bar"):
+        if not self.useSASL:
+            super().register(nickname, hostname, servername)
+            return
+
+        if self.password is not None:
+            self.sendLine("CAP REQ :sasl")
+        self.setNick(nickname)
+        if self.username is None:
+            self.username = nickname
+        self.sendLine(
+            "USER {} {} {} :{}".format(
+                self.username, hostname, servername, self.realname
+            )
+        )
+        if self.password is not None:
+            self.sendLine("AUTHENTICATE PLAIN")
+
+    def irc_AUTHENTICATE(self, prefix, params):
+        nick = self.nickname.encode()
+        passwd = self.password.encode()
+        code = base64.b64encode(nick + b'\0' + nick + b'\0' + passwd)
+        self.sendLine("AUTHENTICATE " + code.decode())
+        self.sendLine("CAP END")
 
     def connectionMade(self):
         super().connectionMade()
@@ -389,6 +417,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     def __init__(self, nickname, password, join_channels, pm_to_nicks, authz, tags, notify_events,
                  noticeOnChannel=False,
                  useRevisions=False, showBlameList=False,
+                 useSASL=False,
                  parent=None,
                  lostDelay=None, failedDelay=None, useColors=True):
         super().__init__(lostDelay=lostDelay, failedDelay=failedDelay)
@@ -404,6 +433,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
+        self.useSASL = useSASL
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -424,6 +454,7 @@ class IrcStatusFactory(ThrottledClientFactory):
                           self.noticeOnChannel, self.authz,
                           self.tags, self.notify_events,
                           useColors=self.useColors,
+                          useSASL=self.useSASL,
                           useRevisions=self.useRevisions,
                           showBlameList=self.showBlameList)
         p.setServiceParent(self.parent)
@@ -453,6 +484,7 @@ class IRC(service.BuildbotService):
     f = None
     compare_attrs = ("host", "port", "nick", "password", "authz",
                      "channels", "pm_to_nicks", "useSSL",
+                     "useSASL",
                      "useRevisions", "tags", "useColors",
                      "allowForce", "allowShutdown",
                      "lostDelay", "failedDelay")
@@ -460,8 +492,8 @@ class IRC(service.BuildbotService):
 
     def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
                     allowForce=None, tags=None, password=None, notify_events=None,
-                    showBlameList=True, useRevisions=False,
-                    useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
+                    showBlameList=True, useRevisions=False, useSSL=False,
+                    useSASL=False, lostDelay=None, failedDelay=None, useColors=True,
                     allowShutdown=None, noticeOnChannel=False, authz=None, **kwargs
                     ):
         deprecated_params = list(kwargs)
@@ -498,8 +530,8 @@ class IRC(service.BuildbotService):
 
     def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
                         allowForce=None, tags=None, password=None, notify_events=None,
-                        showBlameList=True, useRevisions=False,
-                        useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
+                        showBlameList=True, useRevisions=False, useSSL=False,
+                        useSASL=False, lostDelay=None, failedDelay=None, useColors=True,
                         allowShutdown=None, noticeOnChannel=False, authz=None, **kwargs
                         ):
 
@@ -541,6 +573,7 @@ class IRC(service.BuildbotService):
                                   self.notify_events, parent=self,
                                   noticeOnChannel=noticeOnChannel,
                                   useRevisions=useRevisions,
+                                  useSASL=useSASL,
                                   showBlameList=showBlameList,
                                   lostDelay=lostDelay,
                                   failedDelay=failedDelay,
