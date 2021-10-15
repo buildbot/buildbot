@@ -30,9 +30,8 @@ results back to the main thread via Twisted Deferreds.
 Schema
 ------
 
-The database schema is maintained with `SQLAlchemy-Migrate
-<https://github.com/openstack/sqlalchemy-migrate>`_.  This package handles the
-details of upgrading users between different schema versions.
+Changes to the schema are accomplished through migration scripts, supported by
+`Alembic <https://alembic.sqlalchemy.org/en/latest/>`_.
 
 The schema itself is considered an implementation detail, and may change
 significantly from version to version.  Users should rely on the API (below),
@@ -354,7 +353,6 @@ Note that tests that only use fakedb do not really need foreign key consistency,
     Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help a lot for testing foreign keys constraint in a developer friendly environment.
     For compat reason, they decided to disable foreign key checks by default.
     Since 0.9.0b8, buildbot now enforces by default the foreign key checking, and is now dependent on sqlite3 >3.6.19, which was released in 2009.
-    One consequence of default disablement is that sqlalchemy-migrate backend for sqlite is not well prepared for foreign key checks, and we have to disable them in the migration scripts.
 
 
 Database Compatibility Notes

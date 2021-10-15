@@ -72,10 +72,6 @@ warnings.filterwarnings('ignore', "1300 Invalid utf8 character string")
 # twisted.compat.execfile is using 'U' https://twistedmatrix.com/trac/ticket/9023
 warnings.filterwarnings('ignore', "'U' mode is deprecated", DeprecationWarning)
 
-# sqlalchemy.migrate is calling inspect.getargspec()
-# https://bugs.launchpad.net/sqlalchemy-migrate/+bug/1662472
-warnings.filterwarnings('ignore', r"inspect.getargspec\(\) is deprecated")
-
 # twisted.python.filepath and trial are using bytes file paths when
 # the "native" file path (Unicode) should be used on Windows.
 warnings.filterwarnings('ignore',
@@ -116,14 +112,6 @@ warnings.filterwarnings('ignore', ".*the imp module is deprecated in favour of i
 
 # Python 3.3-3.7 show this warning and in invoked from autobahn
 warnings.filterwarnings('ignore', ".*time.clock has been deprecated in Python 3.3.*")
-
-# sqlalchemy-migrate uses deprecated api from sqlalchemy https://review.openstack.org/#/c/648072/
-warnings.filterwarnings('ignore', ".*Engine.contextual_connect.*", DeprecationWarning)
-
-warnings.filterwarnings('ignore', r'.*The Table.exists\(\) method is deprecated.*',
-                        DeprecationWarning)
-warnings.filterwarnings('ignore', '.*is already present in table.*',
-                        DeprecationWarning)
 
 # ignore an attrs API warning for APIs used in dependencies
 warnings.filterwarnings('ignore', ".*The usage of `cmp` is deprecated and will be removed "
