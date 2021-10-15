@@ -1,12 +1,10 @@
 Release Notes
 ~~~~~~~~~~~~~
 ..
-    Don't write to this file anymore!!
+    Buildbot uses towncrier to manage its release notes.
+    towncrier helps to avoid the need for rebase when several people work at the same time on the release notes files.
 
-    Buildbot now uses towncrier to manage its release notes.
-    towncrier helps to avoid the need for rebase when several people work at the same time on the releasenote files.
-
-    Each PR should come with a file in the master/buildbot/newsfragment directory
+    Each PR should come with a file in the newsfragment directory
 
 .. towncrier release notes start
 
