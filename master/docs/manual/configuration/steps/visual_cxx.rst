@@ -104,6 +104,10 @@ The available constructor arguments are
 ``platform``
     This is a mandatory argument for ``MsBuild4`` and ``MsBuild12`` specifying the target platform such as 'Win32', 'x64' or 'Vista Debug'.
     The last one is an example of driver targets that appear once Windows Driver Kit 8 is installed.
+    
+``defines``
+    That one is only available with the MsBuild family of classes.
+    It allows to define pre-processor constants used by the compiler.
 
 Here is an example on how to drive compilation with Visual Studio 2013:
 

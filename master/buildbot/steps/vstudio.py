@@ -83,7 +83,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     installdir = None
     default_installdir = None
 
-    # One of build, or rebuild
+    # One of build, clean or rebuild
     mode = "rebuild"
 
     projectfile = None
@@ -438,14 +438,43 @@ class VC141(VC14):
 VS2017 = VC141
 
 
+def _msbuild_format_defines_parameter(defines):
+    if defines is None or len(defines) == 0:
+        return ""
+    return ' /p:DefineConstants="{}"'.format(";".join(defines))
+
+
+def _msbuild_format_target_parameter(mode, project):
+    modestring = None
+    if mode == "clean":
+        modestring = 'Clean'
+    elif mode == "build":
+        modestring = 'Build'
+    elif mode == "rebuild":
+        modestring = 'Rebuild'
+
+    parameter = ""
+    if project is not None:
+        if modestring == "Rebuild" or modestring is None:
+            parameter = ' /t:"%s"' % (project)
+        else:
+            parameter = ' /t:"%s:%s"' % (project, modestring)
+    elif modestring is not None:
+        parameter = ' /t:%s' % (modestring)
+
+    return parameter
+
+
 class MsBuild4(VisualStudio):
     platform = None
+    defines = None
     vcenv_bat = r"${VS110COMNTOOLS}..\..\VC\vcvarsall.bat"
     renderables = ['platform']
     description = 'building'
 
-    def __init__(self, platform, **kwargs):
+    def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
+        self.defines = defines
         super().__init__(**kwargs)
 
     def setupEnvironment(self):
@@ -474,14 +503,8 @@ class MsBuild4(VisualStudio):
         command = (('"%VCENV_BAT%" x86 && msbuild "{}" /p:Configuration="{}" /p:Platform="{}" '
                     '/maxcpucount').format(self.projectfile, self.config, self.platform))
 
-        if self.project is not None:
-            command += ' /t:"{}"'.format(self.project)
-        elif self.mode == "build":
-            command += ' /t:Build'
-        elif self.mode == "clean":
-            command += ' /t:Clean'
-        elif self.mode == "rebuild":
-            command += ' /t:Rebuild'
+        command += _msbuild_format_target_parameter(self.mode, self.project)
+        command += _msbuild_format_defines_parameter(self.defines)
 
         self.command = command
 
@@ -502,11 +525,13 @@ class MsBuild14(MsBuild4):
 
 class MsBuild141(VisualStudio):
     platform = None
+    defines = None
     vcenv_bat = r"\VC\Auxiliary\Build\vcvarsall.bat"
     renderables = ['platform']
 
-    def __init__(self, platform, **kwargs):
+    def __init__(self, platform, defines=None, **kwargs):
         self.platform = platform
+        self.defines = defines
         super().__init__(**kwargs)
 
     def setupEnvironment(self):
@@ -537,14 +562,8 @@ class MsBuild141(VisualStudio):
                     '/p:Platform="{}" /maxcpucount').format(self.projectfile, self.config,
                                                             self.platform))
 
-        if self.project is not None:
-            command += ' /t:"{}"'.format(self.project)
-        elif self.mode == "build":
-            command += ' /t:Build'
-        elif self.mode == "clean":
-            command += ' /t:Clean'
-        elif self.mode == "rebuild":
-            command += ' /t:Rebuild'
+        command += _msbuild_format_target_parameter(self.mode, self.project)
+        command += _msbuild_format_defines_parameter(self.defines)
 
         self.command = command
 

@@ -814,7 +814,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
-    def test_build_project(self):
+    def test_rebuild_project(self):
         self.setupStep(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
@@ -828,7 +828,50 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string="built pj for cfg|Win32")
         return self.runStep()
 
-    def test_build_solution(self):
+    def test_build_project(self):
+        self.setupStep(vstudio.MsBuild(
+            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="built pj for cfg|Win32")
+        return self.runStep()
+
+    def test_clean_project(self):
+        self.setupStep(vstudio.MsBuild(
+            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="built pj for cfg|Win32")
+        return self.runStep()
+
+    def test_rebuild_project_with_defines(self):
+        self.setupStep(vstudio.MsBuild(
+            projectfile='pf', config='cfg', platform='Win32', project='pj',
+            defines=['Define1', 'Define2=42']))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="built pj for cfg|Win32")
+        return self.runStep()
+
+    def test_rebuild_solution(self):
         self.setupStep(
             vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
 
@@ -860,7 +903,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
-    def test_build_project(self):
+    def test_rebuild_project(self):
         self.setupStep(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
@@ -875,7 +918,53 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
-    def test_build_solution(self):
+    def test_build_project(self):
+        self.setupStep(vstudio.MsBuild141(
+            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="compile 0 projects 0 files")
+        return self.runStep()
+
+    def test_clean_project(self):
+        self.setupStep(vstudio.MsBuild141(
+            projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="compile 0 projects 0 files")
+        return self.runStep()
+
+    def test_rebuild_project_with_defines(self):
+        self.setupStep(vstudio.MsBuild141(
+            projectfile='pf', config='cfg', platform='Win32', project='pj',
+            defines=['Define1', 'Define2=42']))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
+                        env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                             'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;${PATH};'})  # noqa pylint: disable=line-too-long
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="compile 0 projects 0 files")
+        return self.runStep()
+
+    def test_rebuild_solution(self):
         self.setupStep(
             vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
 
