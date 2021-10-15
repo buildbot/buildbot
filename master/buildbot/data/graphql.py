@@ -16,6 +16,7 @@
 
 import asyncio
 import functools
+import sys
 import textwrap
 
 from buildbot.asyncio import AsyncIOLoopWithTwisted
@@ -71,8 +72,27 @@ class GraphQLConnector(service.AsyncService):
         loop = None
         try:
             if self._saved_event_loop is None:
-                loop = asyncio.get_event_loop()
+                # Ideally we would like to use asyncio.get_event_loop() here. However, its API
+                # makes it hard to use: the behavior depends on the current asyncio policy and
+                # the default policy will create a new loop for the main thread if a loop was not
+                # set before. Unfortunately we can't know whether a new loop was created,
+                # and as a result we can't cleanup it in stopService(). Specifically, we can't
+                # call the close() function, which results in occasional ResourceWarnings because
+                # there is no one who would close the created loop.
+                #
+                # Using asyncio.get_running_loop() would potentially break if non-default asyncio
+                # policy was used. The default policy is fine because separate threads have
+                # separate event loops. Fortunately Buildbot does not change the default asyncio
+                # policy, so this concern does not matter in practice.
+                #
+                # Note that asyncio.get_event_loop() is deprecated in favor of get_running_loop()
+                if sys.version_info[:2] >= (3, 7):
+                    loop = asyncio.get_running_loop()
+                else:
+                    loop = asyncio.get_event_loop()
         except RuntimeError:
+            # get_running_loop throws if there's no current loop.
+            # get_event_loop throws is there's no current loop and we're not on main thread.
             pass
 
         if self._saved_event_loop is None and not isinstance(loop, AsyncIOLoopWithTwisted):
