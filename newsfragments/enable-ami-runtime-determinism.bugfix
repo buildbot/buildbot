@@ -1,1 +1,0 @@
-Set AMI for latent worker before making spot request to enable dynamically setting AMIs for instantiating workers
