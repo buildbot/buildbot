@@ -68,7 +68,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('hello ')
         _log.addContent('cruel ')
         _log.addContent('world\nthis is a second line')  # unfinished
-        _log.finish()
+        yield _log.finish()
 
         self.assertEqual(self.master.data.updates.logs[_log.logid], {
             'content': ['hello\n', 'hello cruel world\n',
@@ -83,7 +83,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log = yield self.makeLog('t', logEncoding='latin-1')
         # 0xa2 is latin-1 encoding for CENT SIGN
         _log.addContent('$ and \xa2\n')
-        _log.finish()
+        yield _log.finish()
 
         self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],
                          ['$ and \N{CENT SIGN}\n'])
@@ -92,7 +92,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
     def test_updates_unicode_input(self):
         _log = yield self.makeLog('t', logEncoding='something-invalid')
         _log.addContent('\N{SNOWMAN}\n')
-        _log.finish()
+        yield _log.finish()
 
         self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],
                          ['\N{SNOWMAN}\n'])
@@ -171,7 +171,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addStderr('oh noes!\n')
         _log.addStdout('cruel world\n')
         _log.addStderr('bad things!')  # unfinished
-        _log.finish()
+        yield _log.finish()
 
         self.assertEqual(self.master.data.updates.logs[_log.logid], {
             'content': ['ohello\n', 'eoh noes!\n', 'ohello cruel world\n',
