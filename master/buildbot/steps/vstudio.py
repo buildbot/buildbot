@@ -208,9 +208,9 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     @defer.inlineCallbacks
     def finish_logs(self):
         log = yield self.getLog("warnings")
-        log.finish()
+        yield log.finish()
         log = yield self.getLog("errors")
-        log.finish()
+        yield log.finish()
 
 
 class VC6(VisualStudio):
