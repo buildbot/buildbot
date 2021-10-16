@@ -1,0 +1,1 @@
+Fixed occasional exceptions when using Visual Studio steps (:issue:`5698`).
