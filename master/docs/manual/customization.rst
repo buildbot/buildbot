@@ -191,6 +191,10 @@ the following approach might be helpful:
 
 .. code-block:: python
 
+    from buildbot.util.async_sort import async_sort
+    from twisted.internet import defer
+
+    @defer.inlineCallbacks
     def prioritizeBuilders(buildmaster, builders):
         """Prioritize builders. First, prioritize inactive builders.
         Second, consider the last time a job was completed (no job is infinite past).
@@ -200,8 +204,13 @@ the following approach might be helpful:
         def isBuilding(b):
             return bool(b.building) or bool(b.old_building)
 
-        builders.sort(key = lambda b: (isBuilding(b), b.getNewestCompleteTime(),
-                                       b.getOldestRequestTime()))
+        @defer.inlineCallbacks
+        def key(b):
+            newest_complete_time = yield b.getNewestCompleteTime()
+            oldest_request_time = yield b.getOldestRequestTime()
+            return (isBuilding(b), newest_complete_time, oldest_request_time)
+
+        async_sort(builders, key)
         return builders
 
     c['prioritizeBuilders'] = prioritizeBuilders

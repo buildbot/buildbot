@@ -15,10 +15,9 @@
 
 
 import copy
+import math
 import random
 from datetime import datetime
-
-from dateutil.tz import tzutc
 
 from twisted.internet import defer
 from twisted.python import log
@@ -30,6 +29,7 @@ from buildbot.process.buildrequest import BuildRequest
 from buildbot.util import deferwaiter
 from buildbot.util import epoch2datetime
 from buildbot.util import service
+from buildbot.util.async_sort import async_sort
 
 
 class BuildChooserBase:
@@ -369,44 +369,23 @@ class BuildRequestDistributor(service.AsyncMultiService):
     def _defaultSorter(self, master, builders):
         timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
         timer.start()
-        # perform an asynchronous schwarzian transform, transforming None
-        # into sys.maxint so that it sorts to the end
 
-        def xform(bldr):
-            d = defer.maybeDeferred(bldr.getOldestRequestTime)
-            d.addCallback(lambda time:
-                          (((time is None) and None or time), bldr))
-            return d
-        xformed = yield defer.gatherResults(
-            [xform(bldr) for bldr in builders])
+        @defer.inlineCallbacks
+        def key(bldr):
+            # Sort by time of oldest build request
+            time = yield bldr.getOldestRequestTime()
+            if time is None:
+                # for builders that do not have pending buildrequest, we just use large number
+                time = math.inf
+            else:
+                if isinstance(time, datetime):
+                    time = time.timestamp()
+            return (time, bldr.name)
 
-        # sort the transformed list synchronously, comparing None to the end of
-        # the list
-        def xformedKey(a):
-            """
-            Key function can be used to sort a list
-            where each list element is a tuple:
-                (datetime.datetime, Builder)
+        yield async_sort(builders, key)
 
-            @return: a tuple of (date, builder name)
-            """
-            (date, builder) = a
-            if date is None:
-                # Choose a really big date, so that any
-                # date set to 'None' will appear at the
-                # end of the list during comparisons.
-                date = datetime.max
-                # Need to set the timezone on the date, in order
-                # to perform comparisons with other dates which
-                # have the time zone set.
-                date = date.replace(tzinfo=tzutc())
-            return (date, builder.name)
-        xformed.sort(key=xformedKey)
-
-        # and reverse the transform
-        rv = [xf[1] for xf in xformed]
         timer.stop()
-        return rv
+        return builders
 
     @defer.inlineCallbacks
     def _sortBuilders(self, buildernames):
