@@ -53,7 +53,7 @@ pyaml==21.10.1
 ruamel.yaml==0.17.16
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycodestyle==2.7.0
+pycodestyle==2.8.0
 pycparser==2.20
 pyenchant==3.2.1
 pyflakes==2.3.1
