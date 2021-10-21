@@ -30,6 +30,7 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadFile
 from buildbot.test.util import steps
@@ -224,7 +225,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_success(self):
         self.setupStep(worker.RemoveDirectory(dir="d"))
         self.expectCommands(
-            Expect('rmdir', {'dir': 'd'})
+            ExpectRmdir(dir='d')
             .add(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -234,7 +235,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_failure(self):
         self.setupStep(worker.RemoveDirectory(dir="d"))
         self.expectCommands(
-            Expect('rmdir', {'dir': 'd'})
+            ExpectRmdir(dir='d')
             .add(1)
         )
         self.expectOutcome(result=FAILURE,
@@ -245,7 +246,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(worker.RemoveDirectory(dir=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
-            Expect('rmdir', {'dir': 'XXX'})
+            ExpectRmdir(dir='XXX')
             .add(0)
         )
         self.expectOutcome(result=SUCCESS,
@@ -375,7 +376,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_rmdir(self):
         self.setupStep(CompositeUser(lambda x: x.runRmdir("d")))
         self.expectCommands(
-            Expect('rmdir', {'dir': 'd', 'logEnviron': False})
+            ExpectRmdir(dir='d', logEnviron=False)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)

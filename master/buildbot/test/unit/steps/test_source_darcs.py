@@ -24,6 +24,7 @@ from buildbot.steps.source import darcs
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
@@ -68,8 +69,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
@@ -95,9 +95,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectStat(file='source/_darcs', logEnviron=True)
             .add(0),
@@ -127,9 +125,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectStat(file='source/_darcs', logEnviron=True)
             .add(0),
@@ -184,9 +180,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectStat(file='source/_darcs', logEnviron=True)
             .add(0),
@@ -239,8 +233,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -262,22 +255,19 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', 'http://localhost/darcs'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', 'http://localhost/darcs'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
@@ -304,8 +294,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -338,8 +327,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),

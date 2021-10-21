@@ -31,6 +31,7 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.unit.steps.test_transfer import downloadString
@@ -220,8 +221,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -270,8 +270,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -329,8 +328,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -394,8 +392,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -453,8 +450,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -518,8 +514,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -584,8 +579,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -646,8 +640,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -733,8 +726,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -784,8 +776,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -839,8 +830,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -934,8 +924,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'apply', '--index', '-p', '1'],
                         initialStdin='patch')
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -993,8 +982,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'apply', '--index', '-p', '1'],
                         initialStdin='patch')
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1104,9 +1092,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['file1', 'file2']))
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--branch', 'test-branch',
@@ -1369,7 +1355,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1401,9 +1387,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1432,9 +1416,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1458,9 +1440,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1490,9 +1470,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1635,9 +1613,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1732,8 +1708,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1793,9 +1768,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d', '-x'])
             .add(1),  # clean fails -> clobber
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2040,9 +2013,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--depth', '1',
@@ -2071,9 +2042,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--depth', '100',
@@ -2102,9 +2071,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2229,9 +2196,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2271,9 +2236,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2303,9 +2266,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200)),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200),
             Expect('listdir', {'dir': 'source'})
             .add(Expect.update('files', ['.git']))
             .add(0),
@@ -2353,9 +2314,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest=ssh_key_path, workdir='source', mode=0o400)
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200)),
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200),
             Expect('listdir', {'dir': 'source'})
             .add(Expect.update('files', ['.git']))
             .add(0),
@@ -2375,8 +2334,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         command=['git', 'rev-parse', 'HEAD'])
             .add(ExpectShell.log('stdio', stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d'))
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -2461,9 +2419,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2496,9 +2452,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2529,9 +2483,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2608,18 +2560,14 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2656,9 +2604,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -2932,9 +2878,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -3385,8 +3329,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '-c', ssh_command_config,
                                  'push', url, 'testbranch'])
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -3418,8 +3361,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'push', url, 'testbranch'],
                         env={'GIT_SSH_COMMAND': ssh_command})
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -3455,8 +3397,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'push', url, 'testbranch'],
                         env={'GIT_SSH': ssh_wrapper_path})
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -3496,8 +3437,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '-c', ssh_command_config,
                                  'push', url, 'testbranch'])
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -3537,8 +3477,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'push', url, 'testbranch'],
                         env={'GIT_SSH_COMMAND': ssh_command})
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -3579,8 +3518,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', 'push', url, 'testbranch'],
                         env={'GIT_SSH': ssh_wrapper_path})
             .add(0),
-            Expect('rmdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectRmdir(dir=ssh_workdir, logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)

@@ -464,3 +464,20 @@ class ExpectMkdir(Expect):
 
     def __repr__(self):
         return "ExpectMkdir({})".format(repr(self.args['dir']))
+
+
+class ExpectRmdir(Expect):
+
+    def __init__(self, dir=None, logEnviron=None, timeout=None, path=None):
+        args = {'dir': dir}
+        if logEnviron is not None:
+            args['logEnviron'] = logEnviron
+        if timeout is not None:
+            args['timeout'] = timeout
+        if path is not None:
+            args['path'] = path
+
+        super().__init__('rmdir', args)
+
+    def __repr__(self):
+        return "ExpectRmdir({})".format(repr(self.args['dir']))

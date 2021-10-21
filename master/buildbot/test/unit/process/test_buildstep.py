@@ -41,6 +41,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectMkdir
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import config
@@ -939,7 +940,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_runRmdir(self):
         self.step.testMethod = lambda: self.step.runRmdir('/some/path')
         self.expectCommands(
-            Expect('rmdir', {'dir': '/some/path', 'logEnviron': False})
+            ExpectRmdir(dir='/some/path', logEnviron=False)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)

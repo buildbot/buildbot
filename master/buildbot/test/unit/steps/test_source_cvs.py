@@ -26,6 +26,7 @@ from buildbot.steps.source import cvs
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadFile
@@ -230,8 +231,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -287,8 +287,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -463,9 +462,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -490,9 +487,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -500,9 +495,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -510,9 +503,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -536,9 +527,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='source/CVS',
@@ -578,18 +567,14 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='source/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(Expect.behavior(uploadString('the-end-of-the-universe')))
             .add(0),
-            Expect('rmdir', dict(dir='source',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='source', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -668,9 +653,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(Expect.behavior(
                 uploadString('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD')))
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -880,9 +863,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -910,9 +891,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -920,9 +899,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -950,9 +927,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(Expect.behavior(uploadString('the-end-of-the-universe')))
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -986,9 +961,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(Expect.behavior(uploadString('the-end-of-the-universe')))
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -1105,9 +1078,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=step.timeout))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .add(0),
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',

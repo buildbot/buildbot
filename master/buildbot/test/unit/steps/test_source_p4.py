@@ -24,7 +24,7 @@ from twisted.trial import unittest
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.p4 import P4
-from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -518,7 +518,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                         + ['sync', '#none'])
             .add(0),
 
-            Expect('rmdir', {'dir': workdir, 'logEnviron': True})
+            ExpectRmdir(dir=workdir, logEnviron=True)
             .add(0),
 
             ExpectShell(workdir=workdir,

@@ -27,6 +27,7 @@ from buildbot.steps.download_secret_to_worker import RemoveWorkerFileSecret
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
@@ -89,20 +90,14 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
                                                 "somethingmore")]),
                        worker_version={'*': '3.0'})
 
-        args1 = {
-                    'path': os.path.join(self.temp_path, "pathA"),
-                    'dir': os.path.abspath(os.path.join(self.temp_path, "pathA")),
-                    'logEnviron': False
-                    }
-        args2 = {
-                    'path': os.path.join(self.temp_path, "pathB"),
-                    'dir': os.path.abspath(os.path.join(self.temp_path, "pathB")),
-                    'logEnviron': False
-                    }
         self.expectCommands(
-            Expect('rmdir', args1)
+            ExpectRmdir(path=os.path.join(self.temp_path, "pathA"),
+                        dir=os.path.abspath(os.path.join(self.temp_path, "pathA")),
+                        logEnviron=False)
             .add(0),
-            Expect('rmdir', args2)
+            ExpectRmdir(path=os.path.join(self.temp_path, "pathB"),
+                        dir=os.path.abspath(os.path.join(self.temp_path, "pathB")),
+                        logEnviron=False)
             .add(0),
             )
 

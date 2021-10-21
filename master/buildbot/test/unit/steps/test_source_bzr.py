@@ -28,6 +28,7 @@ from buildbot.steps.source import bzr
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
@@ -246,8 +247,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
@@ -289,8 +289,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
@@ -366,8 +365,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -392,22 +390,19 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -433,8 +428,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -460,8 +454,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -488,8 +481,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -515,8 +507,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='build',
-                                 logEnviron=True))
+            ExpectRmdir(dir='build', logEnviron=True)
             .add(0),
             ExpectStat(file='source/.bzr', logEnviron=True)
             .add(0),
@@ -626,8 +617,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',

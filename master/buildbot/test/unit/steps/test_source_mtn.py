@@ -25,6 +25,7 @@ from buildbot.steps.source import mtn
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import config
@@ -76,8 +77,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -122,8 +122,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -141,8 +140,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -184,8 +182,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -203,8 +200,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -245,8 +241,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -264,8 +259,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['patch', '-p1', '--remove-empty-files',
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(1)
         )
         self.expectOutcome(result=FAILURE, state_string="update (failure)")
@@ -299,8 +293,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -340,7 +333,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -379,7 +372,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -415,7 +408,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -450,7 +443,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -527,7 +520,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -566,7 +559,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .add(1),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'checkout', 'wkdir',
@@ -695,8 +688,8 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'ignored'])
             .add(ExpectShell.log('stdio', stdout='file3\nfile4'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],
+                        logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--revision', 'h:master',
@@ -772,9 +765,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectStat(file='source/_MTN', logEnviron=True)
             .add(0),
@@ -815,9 +806,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                                  'mtn://localhost/monotone?master',
                                  '--db', 'db.mtn', '--ticker=dot'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True,
-                                 timeout=1200))
+            ExpectRmdir(dir='wkdir', logEnviron=True, timeout=1200)
             .add(0),
             ExpectStat(file='source/_MTN', logEnviron=True)
             .add(0),
@@ -884,8 +873,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'ls', 'unknown'])
             .add(ExpectShell.log('stdio', stdout='file1\nfile2'))
             .add(0),
-            Expect('rmdir', dict(dir=['wkdir/file1', 'wkdir/file2'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], logEnviron=True)
             .add(0),
             ExpectStat(file='wkdir/_MTN', logEnviron=True)
             .add(0),
@@ -993,7 +981,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout='too new, cannot use'))
             .add(0),
-            Expect('rmdir', dict(dir='db.mtn', logEnviron=True))
+            ExpectRmdir(dir='db.mtn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])
@@ -1036,7 +1024,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'db', 'info', '--db', 'db.mtn'])
             .add(ExpectShell.log('stdio', stdout='database has no tables'))
             .add(0),
-            Expect('rmdir', dict(dir='db.mtn', logEnviron=True))
+            ExpectRmdir(dir='db.mtn', logEnviron=True)
             .add(0),
             ExpectShell(workdir='.',
                         command=['mtn', 'db', 'init', '--db', 'db.mtn'])

@@ -22,6 +22,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectMkdir
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
@@ -101,8 +102,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectCommands(
             ExpectStat(file='wkdir/.repo', logEnviron=self.logEnviron)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=self.logEnviron))
+            ExpectRmdir(dir='wkdir', logEnviron=self.logEnviron)
             .add(0),
             ExpectMkdir(dir='wkdir', logEnviron=self.logEnviron)
             .add(0)
@@ -252,8 +252,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(1),
             self.ExpectShell(command=['rm', '-f', '/tarball.tgz'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir/.repo',
-                                 logEnviron=False))
+            ExpectRmdir(dir='wkdir/.repo', logEnviron=False)
             .add(1))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
@@ -320,9 +319,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             self.ExpectShell(
                 command=['rm', '-f', '/tarball.tar'])
             .add(0),
-            Expect(
-                'rmdir', dict(dir='wkdir/.repo',
-                              logEnviron=False))
+            ExpectRmdir(dir='wkdir/.repo', logEnviron=False)
             .add(0))
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])

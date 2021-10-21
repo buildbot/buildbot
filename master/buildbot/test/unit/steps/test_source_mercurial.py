@@ -23,9 +23,9 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import mercurial
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRmdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
@@ -241,8 +241,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                             'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -300,8 +299,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                             'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/.buildbot-diff', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -403,8 +401,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -512,15 +509,13 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -591,8 +586,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
             .add(1),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -632,8 +626,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'pull',
                                  'http://hg.mozilla.org/stable'])
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -751,8 +744,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'locate', 'set:added()'])
             .add(ExpectShell.log('stdio', stdout='foo\nbar/baz\n'))
             .add(1),
-            Expect('rmdir', dict(dir=['wkdir/foo', 'wkdir/bar/baz'],
-                                 logEnviron=True))
+            ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
@@ -793,11 +785,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'locate', 'set:added()'])
             .add(ExpectShell.log('stdio', stdout='foo\nbar/baz\n'))
             .add(1),
-            Expect('rmdir', dict(dir='wkdir/foo',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/foo', logEnviron=True)
             .add(0),
-            Expect('rmdir', dict(dir='wkdir/bar/baz',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir/bar/baz', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
@@ -875,8 +865,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                         command=['hg', '--verbose', 'identify', '--branch'])
             .add(ExpectShell.log('stdio', stdout='default'))
             .add(0),
-            Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+            ExpectRmdir(dir='wkdir', logEnviron=True)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
