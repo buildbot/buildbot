@@ -653,7 +653,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
-        self.changeWorkerSystem('win32')
+        self.change_worker_system('win32')
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -689,7 +689,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
-        self.changeWorkerSystem('win32')
+        self.change_worker_system('win32')
 
         ssh_workdir = '\\wrk\\.bldr.wkdir.buildbot'
         ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
@@ -739,7 +739,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
-        self.changeWorkerSystem('win32')
+        self.change_worker_system('win32')
 
         ssh_workdir = '\\wrk\\.bldr.wkdir.buildbot'
         ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
@@ -789,7 +789,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
-        self.changeWorkerSystem('win32')
+        self.change_worker_system('win32')
 
         ssh_workdir = '\\wrk\\.bldr.wkdir.buildbot'
         ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'

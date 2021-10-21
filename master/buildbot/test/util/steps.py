@@ -492,7 +492,7 @@ class BuildStepMixin:
                 self._expected_remote_commands_popped += 1
         return command
 
-    def changeWorkerSystem(self, system):
+    def change_worker_system(self, system):
         self.worker.worker_system = system
         if system in ['nt', 'win32']:
             self.build.path_module = namedModule('ntpath')
