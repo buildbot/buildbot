@@ -63,7 +63,7 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
         if expected_res != SUCCESS:
             state_string += ' ({})'.format(Results[expected_res])
         self.expectOutcome(result=expected_res, state_string=state_string)
-        return self.runStep()
+        return self.run_step()
 
     def test_copy(self):
         return self._run_simple_test(r'D:\source', r'E:\dest')

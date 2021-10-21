@@ -84,7 +84,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         # TODO: need to factor command-summary stuff into a utility method and
         # use it here
         self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
-        return self.runStep()
+        return self.run_step()
 
     def createDynamicRun(self, commands):
         DynamicRun.dynamicCommands = commands
@@ -94,20 +94,20 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(self.createDynamicRun(None))
         self.expectOutcome(result=EXCEPTION,
                            state_string="finished (exception)")
-        return self.runStep()
+        return self.run_step()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
         self.setup_step(self.createDynamicRun(["one command"]))
         self.expectOutcome(result=EXCEPTION,
                            state_string='finished (exception)')
-        return self.runStep()
+        return self.run_step()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
         self.setup_step(
             self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expectOutcome(result=EXCEPTION,
                            state_string='finished (exception)')
-        return self.runStep()
+        return self.run_step()
 
     def testMultipleCommandsAreRun(self):
         arg1 = shellsequence.ShellArg(command='make p1')
@@ -118,7 +118,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(0),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
-        return self.runStep()
+        return self.run_step()
 
     def testSkipWorks(self):
         arg1 = shellsequence.ShellArg(command='make p1')
@@ -130,7 +130,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(0),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
-        return self.runStep()
+        return self.run_step()
 
     def testWarningWins(self):
         arg1 = shellsequence.ShellArg(command='make p1',
@@ -143,7 +143,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(1),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
         self.expectOutcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
-        return self.runStep()
+        return self.run_step()
 
     def testSequenceStopsOnHaltOnFailure(self):
         arg1 = shellsequence.ShellArg(command='make p1', haltOnFailure=True)
@@ -154,7 +154,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(1))
         self.expectOutcome(result=FAILURE, state_string="'make p1' (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def testShellArgsAreRenderedAnewAtEachBuild(self):
         """Unit test to ensure that ShellArg instances are properly re-rendered.
@@ -171,7 +171,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
-        self.runStep()
+        self.run_step()
 
         # Second "build"
         self.setup_step(step)
@@ -180,4 +180,4 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 
-        return self.runStep()
+        return self.run_step()

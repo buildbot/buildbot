@@ -87,7 +87,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS, state_string="uploading srcfile")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testWorker2_16(self):
@@ -104,7 +104,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS, state_string="uploading srcfile")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -127,7 +127,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             state_string="uploading {}".format(os.path.basename(__file__))
             )
 
-        yield self.runStep()
+        yield self.run_step()
 
         desttimestamp = (os.path.getatime(self.destfile),
                          os.path.getmtime(self.destfile))
@@ -156,7 +156,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             result=SUCCESS,
             state_string="Test File Uploaded")
 
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -178,7 +178,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             state_string="uploading {}".format(os.path.basename(__file__))
             )
 
-        yield self.runStep()
+        yield self.run_step()
 
         self.step.addURL.assert_called_once_with(
             os.path.basename(self.destfile), "http://server/file")
@@ -203,7 +203,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             state_string="uploading {}".format(os.path.basename(__file__))
             )
 
-        yield self.runStep()
+        yield self.run_step()
 
         self.step.addURL.assert_called_once_with(
             "testfile", "http://server/file")
@@ -221,7 +221,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectOutcome(
             result=FAILURE,
             state_string="uploading srcfile (failure)")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -239,7 +239,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=EXCEPTION, state_string="uploading srcfile (exception)")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(len(writers), 1)
         self.assertEqual(writers[0].cancel.called, True)
@@ -263,7 +263,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectOutcome(result=CANCELLED,
                            state_string="uploading srcfile (cancelled)")
         self.expectLogfile('interrupt', 'interrupt reason')
-        yield self.runStep()
+        yield self.run_step()
 
     def test_init_workersrc_keyword(self):
         step = transfer.FileUpload(
@@ -313,7 +313,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS,
                            state_string="uploading srcdir")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testWorker2_16(self):
@@ -331,7 +331,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS,
                            state_string="uploading srcdir")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -351,7 +351,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS,
                            state_string="uploading srcdir")
 
-        yield self.runStep()
+        yield self.run_step()
 
         self.step.addURL.assert_called_once_with("destdir", "http://server/dir")
 
@@ -372,7 +372,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS,
                            state_string="uploading srcdir")
 
-        yield self.runStep()
+        yield self.run_step()
 
         self.step.addURL.assert_called_once_with("url text", "http://server/dir")
 
@@ -389,7 +389,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=FAILURE,
                            state_string="uploading srcdir (failure)")
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def testException(self):
@@ -408,7 +408,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(
             result=EXCEPTION,
             state_string="uploading srcdir (exception)")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(len(writers), 1)
         self.assertEqual(writers[0].cancel.called, True)
@@ -458,7 +458,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectCommands()
 
         self.expectOutcome(result=SKIPPED, state_string="finished (skipped)")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testFile(self):
@@ -476,7 +476,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testDirectory(self):
@@ -494,7 +494,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -509,7 +509,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectLogfile('stderr',
                            "File wkdir/srcdir not available at worker")
 
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_special_path(self):
@@ -523,7 +523,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
         self.expectLogfile('stderr', 'srcdir is neither a regular file, nor a directory')
 
-        yield self.runStep()
+        yield self.run_step()
 
     def testMultiple(self):
         self.setup_step(
@@ -549,7 +549,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 2 files")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testMultipleString(self):
@@ -566,7 +566,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(0))
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 1 file")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testGlob(self):
@@ -588,7 +588,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 1 file")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testFailedGlob(self):
@@ -602,7 +602,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(
             result=SKIPPED, state_string="uploading 0 files (skipped)")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testFileWorker2_16(self):
@@ -622,7 +622,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testDirectoryWorker2_16(self):
@@ -642,7 +642,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     def testMultipleWorker2_16(self):
@@ -671,7 +671,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 2 files")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -694,7 +694,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS,
                            state_string="uploading 1 file")
 
-        yield self.runStep()
+        yield self.run_step()
 
         self.step.addURL.assert_called_once_with("destdir", "http://server/dir")
 
@@ -718,7 +718,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS,
                            state_string="uploading 1 file")
 
-        yield self.runStep()
+        yield self.run_step()
 
         self.step.addURL.assert_called_once_with("url text", "http://server/dir")
 
@@ -737,7 +737,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=FAILURE, state_string="uploading 2 files (failure)")
-        d = self.runStep()
+        d = self.run_step()
         return d
 
     @defer.inlineCallbacks
@@ -758,7 +758,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=EXCEPTION, state_string="uploading 2 files (exception)")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(len(writers), 1)
         self.assertEqual(writers[0].cancel.called, True)
@@ -797,7 +797,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 2 files")
 
-        yield self.runStep()
+        yield self.run_step()
 
         def checkCalls(res):
             self.assertEqual(step.uploadDone.call_count, 2)
@@ -880,7 +880,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
             result=SUCCESS,
             state_string="downloading to {0}".format(
                 os.path.basename(self.destfile)))
-        yield self.runStep()
+        yield self.run_step()
 
         with open(master_file, "rb") as f:
             contents = f.read()
@@ -910,7 +910,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
             result=SUCCESS,
             state_string="downloading to {0}".format(
                 os.path.basename(self.destfile)))
-        yield self.runStep()
+        yield self.run_step()
 
         def checkCalls(res):
             with open(master_file, "rb") as f:
@@ -931,7 +931,7 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
                                os.path.basename(self.destfile)))
         self.expectLogfile('stderr',
                            "File 'not existing file' not available at master")
-        yield self.runStep()
+        yield self.run_step()
 
 
 class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
@@ -971,7 +971,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to hello.txt")
-        yield self.runStep()
+        yield self.run_step()
 
         def checkCalls(res):
             self.assertEqual(b''.join(read), b"Hello World")
@@ -997,7 +997,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to hello.txt")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(b''.join(read), b"Hello World")
 
@@ -1012,7 +1012,7 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=FAILURE, state_string="downloading to hello.txt (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_init_workerdest_keyword(self):
         step = transfer.StringDownload('srcfile', workerdest='dstfile')
@@ -1061,7 +1061,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to hello.json")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
 
@@ -1077,7 +1077,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectOutcome(
             result=FAILURE, state_string="downloading to hello.json (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_init_workerdest_keyword(self):
         step = transfer.JSONStringDownload('srcfile', workerdest='dstfile')
@@ -1119,7 +1119,7 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to props.json")
-        yield self.runStep()
+        yield self.run_step()
         # we decode as key order is dependent of python version
         self.assertEqual(json.loads((b''.join(read)).decode()), {
                          "properties": {"key1": "value1"}, "sourcestamps": []})

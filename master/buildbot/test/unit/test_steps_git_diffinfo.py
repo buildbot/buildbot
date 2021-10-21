@@ -46,7 +46,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(128))
         self.expect_log_file_stderr('stdio-merge-base', 'fatal: Not a valid object name')
         self.expectOutcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_diff_failure(self):
         self.setup_step(gitdiffinfo.GitDiffInfo())
@@ -62,7 +62,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectLogfile('stdio-merge-base', '1234123412341234')
         self.expect_log_file_stderr('stdio-diff', 'fatal: ambiguous argument')
         self.expectOutcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_empty_diff(self):
         self.setup_step(gitdiffinfo.GitDiffInfo())
@@ -79,7 +79,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_log_file_stderr('stdio-diff', '')
         self.expectOutcome(result=results.SUCCESS, state_string="GitDiffInfo")
         self.expect_build_data('diffinfo-master', b'[]', 'GitDiffInfo')
-        return self.runStep()
+        return self.run_step()
 
     def test_complex_diff(self):
         self.setup_step(gitdiffinfo.GitDiffInfo())
@@ -138,4 +138,4 @@ index 0000000..632e269
             b'"is_binary": false, "is_rename": false, ' +
             b'"hunks": [{"ss": 0, "sl": 0, "ts": 1, "tl": 3}]}]')
         self.expect_build_data('diffinfo-master', diff_info, 'GitDiffInfo')
-        return self.runStep()
+        return self.run_step()

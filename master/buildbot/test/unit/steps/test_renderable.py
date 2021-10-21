@@ -44,4 +44,4 @@ class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
         self.setup_step(step)
         self.expectProperty('name', 'bar')
         self.expectOutcome(0)
-        return self.runStep()
+        return self.run_step()

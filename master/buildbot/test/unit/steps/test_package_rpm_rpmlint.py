@@ -39,7 +39,7 @@ class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0))
         self.expectOutcome(
             result=SUCCESS, state_string='Finished checking RPM/SPEC issues')
-        return self.runStep()
+        return self.run_step()
 
     def test_fileloc_success(self):
         self.setup_step(rpmlint.RpmLint(fileloc='RESULT'))
@@ -48,7 +48,7 @@ class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['rpmlint', '-i', 'RESULT'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_config_success(self):
         self.setup_step(rpmlint.RpmLint(config='foo.cfg'))
@@ -57,4 +57,4 @@ class TestRpmLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                         command=['rpmlint', '-i', '-f', 'foo.cfg', '.'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()

@@ -56,7 +56,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='built')
-        return self.runStep()
+        return self.run_step()
 
     def test_update(self):
         self.setup_step(pbuilder.DebPbuilder())
@@ -74,7 +74,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_buildonly_and_property(self):
         self.setup_step(pbuilder.DebPbuilder())
@@ -92,7 +92,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.expectProperty('deb-changes',
                             'somefilename.changes',
                             'DebPbuilder')
-        return self.runStep()
+        return self.run_step()
 
     def test_architecture(self):
         self.setup_step(pbuilder.DebPbuilder(architecture='amd64'))
@@ -113,7 +113,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_architecture_renderable(self):
         self.setup_step(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))
@@ -134,7 +134,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_distribution(self):
         self.setup_step(pbuilder.DebPbuilder(distribution='woody'))
@@ -153,7 +153,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/woody-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_basetgz(self):
         self.setup_step(pbuilder.DebPbuilder(basetgz='/buildbot/stable-local.tgz'))
@@ -172,7 +172,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/buildbot/stable-local.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mirror(self):
         self.setup_step(pbuilder.DebPbuilder(mirror='http://apt:9999/debian'))
@@ -191,7 +191,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_extrapackages(self):
         self.setup_step(pbuilder.DebPbuilder(extrapackages=['buildbot']))
@@ -212,7 +212,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--extrapackages', 'buildbot'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_keyring(self):
         self.setup_step(pbuilder.DebPbuilder(keyring='/builbot/buildbot.gpg'))
@@ -232,7 +232,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_components(self):
         self.setup_step(pbuilder.DebPbuilder(components='main universe'))
@@ -252,7 +252,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_othermirror(self):
         self.setup_step(pbuilder.DebPbuilder(othermirror=['http://apt:9999/debian']))
@@ -272,7 +272,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
 
 class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
@@ -302,7 +302,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_update(self):
         self.setup_step(pbuilder.DebCowbuilder())
@@ -320,7 +320,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_buildonly(self):
         self.setup_step(pbuilder.DebCowbuilder())
@@ -334,7 +334,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_update_reg(self):
         self.setup_step(pbuilder.DebCowbuilder(
@@ -348,7 +348,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             .exit(1))
         self.expectOutcome(result=FAILURE, state_string='built (failure)')
-        return self.runStep()
+        return self.run_step()
 
     def test_buildonly_reg(self):
         self.setup_step(pbuilder.DebCowbuilder(
@@ -363,7 +363,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             .exit(1))
         self.expectOutcome(result=FAILURE, state_string='built (failure)')
-        return self.runStep()
+        return self.run_step()
 
 
 class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
@@ -398,7 +398,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz'])
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='built')
-        return self.runStep()
+        return self.run_step()
 
 
 class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
@@ -433,4 +433,4 @@ class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
                                  '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/'])
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='built')
-        return self.runStep()
+        return self.run_step()

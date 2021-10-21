@@ -103,7 +103,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_win32path(self):
         self.setup_step(
@@ -145,7 +145,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_timeout(self):
         self.setup_step(
@@ -194,7 +194,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch(self):
         self.setup_step(
@@ -251,7 +251,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
         self.setup_step(
@@ -309,7 +309,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_fail(self):
         self.setup_step(
@@ -358,7 +358,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE, state_string="update (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_repo(self):
         self.setup_step(
@@ -389,7 +389,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber(self):
         self.setup_step(
@@ -418,7 +418,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh(self):
         self.setup_step(
@@ -459,7 +459,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_no_existing_repo(self):
         self.setup_step(
@@ -490,7 +490,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_retry(self):
         self.setup_step(
@@ -534,7 +534,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_repo_dirname(self):
         self.setup_step(
@@ -567,7 +567,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retry(self):
         self.setup_step(
@@ -606,7 +606,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch_change_dirname(self):
         self.setup_step(
@@ -644,7 +644,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_repo_inrepo(self):
         self.setup_step(
@@ -681,7 +681,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_existing_repo(self):
         self.setup_step(
@@ -718,7 +718,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_existing_repo_added_files(self):
         self.setup_step(
@@ -758,7 +758,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_existing_repo_added_files_old_rmdir(self):
         self.setup_step(
@@ -801,7 +801,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_given_revision(self):
         self.setup_step(
@@ -841,7 +841,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch_change(self):
         self.setup_step(
@@ -883,7 +883,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch_change_no_clobberOnBranchChange(self):
         self.setup_step(
@@ -923,7 +923,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_env(self):
         self.setup_step(
@@ -967,7 +967,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_logEnviron(self):
         self.setup_step(
@@ -1017,7 +1017,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_command_fails(self):
         self.setup_step(
@@ -1029,7 +1029,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_worker_connection_lost(self):
         self.setup_step(
@@ -1041,4 +1041,4 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
             .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()

@@ -55,7 +55,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                   'state.log': 'state.log'})
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
-        return self.runStep()
+        return self.run_step()
 
     def test_resultdir_success(self):
         self.setup_step(mock.Mock(root='TESTROOT', resultdir='RESULT'))
@@ -73,7 +73,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                   'state.log': 'RESULT/state.log'})
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_resultdir_renderable(self):
         resultdir_text = "RESULT"
@@ -93,7 +93,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                   'state.log': 'RESULT/state.log'})
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
@@ -125,7 +125,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
                                   'state.log': 'state.log'},)
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='mock buildsrpm')
-        return self.runStep()
+        return self.run_step()
 
 
 class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
@@ -156,4 +156,4 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
                                   'state.log': 'state.log'},)
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='mock rebuild srpm')
-        return self.runStep()
+        return self.run_step()

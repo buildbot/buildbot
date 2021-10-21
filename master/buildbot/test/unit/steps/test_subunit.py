@@ -71,7 +71,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="shell no tests run")
-        return self.runStep()
+        return self.run_step()
 
     def test_empty_error(self):
         self.setup_step(subunit.SubunitShellCommand(command='test',
@@ -83,7 +83,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE,
                            state_string="shell no tests run (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_success(self):
         stream = io.BytesIO()
@@ -100,7 +100,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
         self.expectOutcome(result=SUCCESS, state_string="shell 1 test passed")
-        return self.runStep()
+        return self.run_step()
 
     def test_error(self):
         stream = io.BytesIO()
@@ -121,7 +121,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectLogfile('problems', re.compile(r'''test1
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error1'
 .*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()
 
     def test_multiple_errors(self):
         stream = io.BytesIO()
@@ -149,7 +149,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 test2
 testtools.testresult.real._StringException:.*ValueError: invalid literal for int\(\) with base 10: '_error2'
 .*''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()
 
     def test_warnings(self):
         stream = io.BytesIO()
@@ -175,4 +175,4 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 ValueError: invalid literal for int\(\) with base 10: '_error2'
 \]
 ''', re.MULTILINE | re.DOTALL))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()

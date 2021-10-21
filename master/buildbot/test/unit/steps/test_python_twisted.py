@@ -115,7 +115,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_env_supplement(self):
         self.setup_step(
@@ -132,7 +132,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_env_nodupe(self):
         self.setup_step(
@@ -149,7 +149,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='no tests run')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_singular(self):
         self.setup_step(
@@ -164,7 +164,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_plural(self):
         self.setup_step(
@@ -179,7 +179,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_failure(self):
         self.setup_step(
@@ -202,7 +202,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobs ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobsProperties ... [FAILURE]
                 '''))  # noqa pylint: disable=line-too-long
-        return self.runStep()
+        return self.run_step()
 
     def test_renderable_properties(self):
         self.setup_step(python_twisted.Trial(workdir='build',
@@ -218,7 +218,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_build_changed_files(self):
         self.setup_step(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
@@ -233,7 +233,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_test_path_env_python_path(self):
         self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
@@ -249,7 +249,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_custom_reactor(self):
         self.setup_step(python_twisted.Trial(workdir='build', reactor='customreactor',
@@ -264,7 +264,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed (custom)')
-        return self.runStep()
+        return self.run_step()
 
     def test_custom_python(self):
         self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
@@ -278,7 +278,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_randomly(self):
         self.setup_step(python_twisted.Trial(workdir='build',
@@ -294,7 +294,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_jobs(self):
         """
@@ -323,7 +323,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_jobsProperties(self):
         """
@@ -351,7 +351,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='1 test passed')
-        return self.runStep()
+        return self.run_step()
 
 
 class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -375,7 +375,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectLogfile('files', 'foo.xhtml\n')
         self.expectOutcome(result=SUCCESS, state_string='0 hlints')
-        return self.runStep()
+        return self.run_step()
 
     def test_custom_python(self):
         self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'),
@@ -388,7 +388,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectLogfile('files', 'foo.xhtml\n')
         self.expectOutcome(result=SUCCESS, state_string='0 hlints')
-        return self.runStep()
+        return self.run_step()
 
     def test_command_failure(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
@@ -400,12 +400,12 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectLogfile('files', 'foo.xhtml\n')
         self.expectOutcome(result=FAILURE, state_string='hlint (failure)')
-        return self.runStep()
+        return self.run_step()
 
     def test_no_build_files(self):
         self.setup_step(python_twisted.HLint(workdir='build'))
         self.expectOutcome(result=SKIPPED, state_string='hlint (skipped)')
-        return self.runStep()
+        return self.run_step()
 
     def test_run_warnings(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
@@ -419,7 +419,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectLogfile('warnings', 'colon: meaning warning')
         self.expectOutcome(result=WARNINGS, state_string='1 hlint (warnings)')
-        return self.runStep()
+        return self.run_step()
 
 
 class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -439,4 +439,4 @@ class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string='remove .pycs')
-        return self.runStep()
+        return self.run_step()

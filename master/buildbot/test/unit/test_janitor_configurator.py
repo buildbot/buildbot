@@ -85,7 +85,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
         self.master.db.logs.deleteOldLogChunks = mock.Mock(return_value=3)
         self.expectOutcome(result=SUCCESS,
                            state_string="deleted 3 logchunks")
-        yield self.runStep()
+        yield self.run_step()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp)
 
@@ -94,6 +94,6 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
         self.setup_step(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
         self.master.db.build_data.deleteOldBuildData = mock.Mock(return_value=4)
         self.expectOutcome(result=SUCCESS, state_string="deleted 4 build data key-value pairs")
-        yield self.runStep()
+        yield self.run_step()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.build_data.deleteOldBuildData.assert_called_with(expected_timestamp)

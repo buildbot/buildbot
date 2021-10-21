@@ -100,7 +100,7 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK".format(url))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
-        return self.runStep()
+        return self.run_step()
 
     def test_connection_error(self):
         def throwing_request(*args, **kwargs):
@@ -110,7 +110,7 @@ class TestHTTPStep(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             url = self.getURL("path")
             self.setup_step(http.GET(url))
             self.expectOutcome(result=FAILURE, state_string="Requested (failure)")
-            return self.runStep()
+            return self.run_step()
 
     def test_redirect(self):
         url = self.getURL("redirect")
@@ -139,7 +139,7 @@ OK'''.format(self.get_connection_string())
         self.expectLogfile('log', expected_log)
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
-        return self.runStep()
+        return self.run_step()
 
     def test_404(self):
         url = self.getURL("404")
@@ -147,13 +147,13 @@ OK'''.format(self.get_connection_string())
         self.expectLogfile('log', "URL: {}\n ------ Content ------\n404".format(url))
         self.expectLogfile('content', "404")
         self.expectOutcome(result=FAILURE, state_string="Status code: 404 (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_method_not_allowed(self):
         url = self.getURL("path")
         self.setup_step(http.PUT(url))
         self.expectOutcome(result=FAILURE, state_string="Status code: 501 (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_post(self):
         url = self.getURL("path")
@@ -161,7 +161,7 @@ OK'''.format(self.get_connection_string())
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nOK:".format(url))
         self.expectLogfile('content', "OK:")
-        return self.runStep()
+        return self.run_step()
 
     def test_post_data(self):
         url = self.getURL("path")
@@ -170,7 +170,7 @@ OK'''.format(self.get_connection_string())
         self.expectLogfile('log',
                            "URL: {}\nStatus: 200\n ------ Content ------\nOK:mydata".format(url))
         self.expectLogfile('content', "OK:mydata")
-        return self.runStep()
+        return self.run_step()
 
     def test_post_data_dict(self):
         url = self.getURL("path")
@@ -183,14 +183,14 @@ Status: 200
  ------ Content ------
 OK:key1=value1'''.format(url))
         self.expectLogfile('content', "OK:key1=value1")
-        return self.runStep()
+        return self.run_step()
 
     def test_header(self):
         url = self.getURL("header")
         self.setup_step(http.GET(url, headers={"X-Test": "True"}))
         self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_hidden_header(self):
@@ -200,7 +200,7 @@ OK:key1=value1'''.format(url))
                                 hide_response_headers=["Content-Length"]))
         self.expectLogfile('log', "URL: {}\nStatus: 200\n ------ Content ------\nTrue".format(url))
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
-        yield self.runStep()
+        yield self.run_step()
         self.assertIn("X-Test: <HIDDEN>", self.step.logs['log'].header)
         self.assertIn("Content-Length: <HIDDEN>", self.step.logs['log'].header)
 
@@ -214,4 +214,4 @@ OK:key1=value1'''.format(url))
              ).format(url))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
-        return self.runStep()
+        return self.run_step()

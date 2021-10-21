@@ -151,7 +151,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectException(WorkerSetupError)
-        return self.runStep()
+        return self.run_step()
 
     def test_corrupt_xml(self):
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
@@ -180,7 +180,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_revision_noninteger(self):
@@ -212,7 +212,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'a10', 'SVN')
-        yield self.runStep()
+        yield self.run_step()
 
         revision = self.step.getProperty('got_revision')
         with self.assertRaises(ValueError):
@@ -249,7 +249,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental(self):
         self.setup_step(
@@ -284,7 +284,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_timeout(self):
         self.setup_step(
@@ -324,7 +324,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_repourl_renderable(self):
         self.setup_step(
@@ -356,7 +356,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_repourl_canonical(self):
         self.setup_step(
@@ -387,7 +387,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_repourl_not_updatable(self):
         self.setup_step(
@@ -414,7 +414,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retry(self):
         self.setup_step(
@@ -447,7 +447,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self):
         self.setup_step(
@@ -481,7 +481,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_given_revision(self):
         self.setup_step(
@@ -515,7 +515,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_win32path(self):
         self.setup_step(
@@ -550,7 +550,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_preferLastChangedRev(self):
         """Give the last-changed rev if 'preferLastChangedRev' is set"""
@@ -587,7 +587,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '90', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_preferLastChangedRev_butMissing(self):
         """If 'preferLastChangedRev' is set, but missing, fall back
@@ -627,7 +627,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber(self):
         self.setup_step(
@@ -653,7 +653,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_given_revision(self):
         self.setup_step(
@@ -682,7 +682,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh(self):
         self.setup_step(
@@ -722,7 +722,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_retry(self):
         self.setup_step(
@@ -762,7 +762,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_given_revision(self):
         self.setup_step(
@@ -804,7 +804,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_keep_on_purge(self):
         self.setup_step(
@@ -847,7 +847,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean(self):
         self.setup_step(
@@ -885,7 +885,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_given_revision(self):
         self.setup_step(
@@ -925,7 +925,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_not_updatable(self):
         self.setup_step(
@@ -952,7 +952,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_not_updatable_given_revision(self):
         self.setup_step(
@@ -982,7 +982,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_old_rmdir(self):
         self.setup_step(
@@ -1027,7 +1027,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_new_rmdir(self):
         self.setup_step(
@@ -1071,7 +1071,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy(self):
         self.setup_step(
@@ -1108,7 +1108,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', {'app': '100'}, 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy_given_revision(self):
         self.setup_step(
@@ -1146,7 +1146,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_export(self):
         self.setup_step(
@@ -1183,7 +1183,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_export_patch(self):
         self.setup_step(
@@ -1245,7 +1245,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_export_patch_worker_2_16(self):
         self.setup_step(
@@ -1308,7 +1308,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_export_timeout(self):
         self.setup_step(
@@ -1351,7 +1351,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_export_given_revision(self):
         self.setup_step(
@@ -1391,7 +1391,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_export_auth(self):
         self.setup_step(
@@ -1436,7 +1436,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_with_env(self):
         self.setup_step(
@@ -1476,7 +1476,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_logEnviron(self):
         self.setup_step(
@@ -1516,7 +1516,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
-        return self.runStep()
+        return self.run_step()
 
     def test_command_fails(self):
         self.setup_step(
@@ -1546,7 +1546,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_bogus_svnversion(self):
         self.setup_step(
@@ -1582,7 +1582,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_rmdir_fails_clobber(self):
         self.setup_step(
@@ -1598,7 +1598,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_rmdir_fails_copy(self):
         self.setup_step(
@@ -1614,7 +1614,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_cpdir_fails_copy(self):
         self.setup_step(
@@ -1645,7 +1645,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_rmdir_fails_purge(self):
         self.setup_step(
@@ -1679,7 +1679,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_worker_connection_lost(self):
         self.setup_step(
@@ -1692,7 +1692,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()
 
     def test_empty_password(self):
         self.setup_step(
@@ -1726,7 +1726,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_omit_password(self):
         self.setup_step(
@@ -1760,7 +1760,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
 
 class TestGetUnversionedFiles(unittest.TestCase):

@@ -124,7 +124,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_and_login_worker_2_16(self):
         self.setup_step(
@@ -171,7 +171,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch(self):
         self.setup_step(
@@ -225,7 +225,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
         self.setup_step(
@@ -280,7 +280,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_timeout(self):
         self.setup_step(
@@ -321,7 +321,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_branch(self):
         self.setup_step(
@@ -359,7 +359,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_branch_sourcestamp(self):
         self.setup_step(
@@ -397,7 +397,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh(self):
         self.setup_step(
@@ -434,7 +434,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -458,7 +458,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_retry(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -499,7 +499,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -537,7 +537,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy_wrong_repo(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -570,7 +570,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental(self):
         self.setup_step(
@@ -604,7 +604,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_sticky_date(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -643,7 +643,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_password_windows(self):
         self.setup_step(
@@ -678,7 +678,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch(self):
         self.setup_step(
@@ -713,7 +713,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_special_case(self):
         self.setup_step(
@@ -751,7 +751,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch_sourcestamp(self):
         self.setup_step(
@@ -786,7 +786,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_not_loggedin(self):
         self.setup_step(
@@ -820,7 +820,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_repo(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -847,7 +847,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retry(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -883,7 +883,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_wrong_repo(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -911,7 +911,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_wrong_module(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -944,7 +944,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_repo(self):
         self.setup_step(
@@ -969,7 +969,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_wrong_repo(self):
         self.setup_step(
@@ -995,7 +995,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_no_method(self):
         self.setup_step(
@@ -1032,7 +1032,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_with_options(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1059,7 +1059,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_with_env_logEnviron(self):
         self.setup_step(
@@ -1098,7 +1098,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
 
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
-        return self.runStep()
+        return self.run_step()
 
     def test_command_fails(self):
         self.setup_step(
@@ -1111,7 +1111,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_cvsdiscard_fails(self):
         self.setup_step(
@@ -1145,7 +1145,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_worker_connection_lost(self):
         self.setup_step(
@@ -1158,4 +1158,4 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         )
 
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()

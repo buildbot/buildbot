@@ -162,7 +162,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
-        return self.runStep()
+        return self.run_step()
 
     def _incremental(self, client_stdin='', extra_args=None, workdir='wkdir', timeout=20 * 60):
         if extra_args is None:
@@ -196,7 +196,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_p4base(self):
         self.setup_step(P4(p4port='localhost:12000', mode='incremental',
@@ -533,7 +533,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_p4base(self):
         self.setup_step(
@@ -980,7 +980,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()
 
     def test_ticket_auth(self):
         self.setup_step(P4(p4port='localhost:12000',
@@ -1037,4 +1037,4 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()

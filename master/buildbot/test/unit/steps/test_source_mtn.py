@@ -90,7 +90,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch(self):
         self.setup_step(
@@ -149,7 +149,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
         self.setup_step(
@@ -209,7 +209,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_fail(self):
         self.setup_step(
@@ -263,7 +263,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE, state_string="update (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_db(self):
         self.setup_step(
@@ -306,7 +306,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_checkout(self):
         self.setup_step(
@@ -346,7 +346,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_from_scratch(self):
         self.setup_step(
@@ -385,7 +385,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber(self):
         self.setup_step(
@@ -421,7 +421,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_no_existing_db(self):
         self.setup_step(
@@ -456,7 +456,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_db(self):
         self.setup_step(
@@ -493,7 +493,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_checkout(self):
         self.setup_step(
@@ -533,7 +533,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_from_scratch(self):
         self.setup_step(
@@ -572,7 +572,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental(self):
         self.setup_step(
@@ -610,7 +610,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retry(self):
         self.setup_step(
@@ -653,7 +653,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh(self):
         self.setup_step(
@@ -702,7 +702,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_given_revision(self):
         self.setup_step(
@@ -742,7 +742,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'abcdef019a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy(self):
         self.setup_step(
@@ -782,7 +782,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_no_method(self):
         self.setup_step(
@@ -822,7 +822,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_incorrect_method(self):
         with self.assertRaisesConfigError(
@@ -886,7 +886,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_worker_connection_lost(self):
         self.setup_step(
@@ -900,7 +900,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()
 
     def test_database_migration(self):
         self.setup_step(
@@ -941,7 +941,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_database_invalid(self):
         self.setup_step(
@@ -961,7 +961,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_database_too_new(self):
         self.setup_step(
@@ -1004,7 +1004,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()
 
     def test_database_empty(self):
         self.setup_step(
@@ -1047,4 +1047,4 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', self.REVID, 'Monotone')
-        return self.runStep()
+        return self.run_step()

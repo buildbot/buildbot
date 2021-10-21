@@ -82,7 +82,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_filters_2_27(self):
         self.setup_step(
@@ -108,7 +108,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean(self):
         self.setup_step(
@@ -143,7 +143,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_progress_False(self):
         self.setup_step(
@@ -178,7 +178,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_ssh_key_2_10(self):
         self.setup_step(
@@ -228,7 +228,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_ssh_key_2_3(self):
         self.setup_step(
@@ -277,7 +277,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_mode_full_clean_ssh_key_1_7(self):
@@ -335,7 +335,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        yield self.runStep()
+        yield self.run_step()
 
         expected = '#!/bin/sh\nssh -o "BatchMode=yes" -i "{0}" "$@"\n'.format(ssh_key_path)
         self.assertEqual(b''.join(read), unicode2bytes(expected))
@@ -399,7 +399,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_ssh_host_key_2_3(self):
         self.setup_step(
@@ -457,7 +457,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_mode_full_clean_ssh_host_key_1_7(self):
@@ -521,7 +521,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        yield self.runStep()
+        yield self.run_step()
 
         expected = (
             '#!/bin/sh\n'
@@ -586,7 +586,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_ssh_host_key_2_10_abs_workdir(self):
         self.setup_step(
@@ -647,7 +647,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_win32path(self):
         self.setup_step(
@@ -683,7 +683,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_win32path_ssh_key_2_10(self):
         self.setup_step(
@@ -733,7 +733,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_win32path_ssh_key_2_3(self):
         self.setup_step(
@@ -783,7 +783,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_win32path_ssh_key_1_7(self):
         self.setup_step(
@@ -837,7 +837,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_timeout(self):
         self.setup_step(
@@ -878,7 +878,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch(self):
         self.setup_step(
@@ -935,7 +935,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
         self.setup_step(
@@ -993,7 +993,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_patch_fail(self):
         self.setup_step(
@@ -1039,7 +1039,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         )
         self.expectOutcome(result=FAILURE)
         self.expectNoProperty('got_revision')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_branch(self):
         self.setup_step(
@@ -1077,7 +1077,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_non_empty_builddir(self):
         self.setup_step(
@@ -1107,7 +1107,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_parsefail(self):
         self.setup_step(
@@ -1139,7 +1139,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         )
         self.expectOutcome(result=FAILURE)
         self.expectNoProperty('got_revision')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_repo(self):
         self.setup_step(
@@ -1165,7 +1165,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_repo_with_reference(self):
         self.setup_step(
@@ -1191,7 +1191,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_repo_branch(self):
         self.setup_step(
@@ -1218,7 +1218,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_no_existing_repo_with_origin(self):
         self.setup_step(
@@ -1244,7 +1244,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_submodule(self):
         self.setup_step(
@@ -1292,7 +1292,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clean_submodule_remotes(self):
         self.setup_step(
@@ -1341,7 +1341,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_submodule_remotes(self):
         self.setup_step(
@@ -1373,7 +1373,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber(self):
         self.setup_step(
@@ -1402,7 +1402,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clone_fails(self):
         self.setup_step(
@@ -1426,7 +1426,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         )
         self.expectOutcome(result=FAILURE, state_string="update (failure)")
         self.expectNoProperty('got_revision')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_branch(self):
         self.setup_step(
@@ -1456,7 +1456,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_no_branch_support(self):
         self.setup_step(
@@ -1496,7 +1496,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_oldworker(self):
         self.setup_step(
@@ -1528,7 +1528,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental(self):
         self.setup_step(
@@ -1560,7 +1560,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_version_format(self):
         self.setup_step(
@@ -1592,7 +1592,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retry(self):
         self.setup_step(
@@ -1628,7 +1628,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch(self):
         self.setup_step(
@@ -1663,7 +1663,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_branch_ssh_key_2_10(self):
         self.setup_step(
@@ -1714,7 +1714,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh(self):
         self.setup_step(
@@ -1749,7 +1749,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_clean_fails(self):
         self.setup_step(
@@ -1783,7 +1783,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_given_revision(self):
         self.setup_step(
@@ -1815,7 +1815,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_given_revision_not_exists(self):
         self.setup_step(
@@ -1852,7 +1852,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_submodule(self):
         self.setup_step(
@@ -1900,7 +1900,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d',
                             self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_submodule_git_newer_1_7_6(self):
         self.setup_step(
@@ -1948,7 +1948,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_submodule_v1_7_8(self):
         """This tests the same as test_mode_full_fresh_submodule, but the
@@ -1999,7 +1999,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_shallow(self):
         self.setup_step(
@@ -2028,7 +2028,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_shallow_depth(self):
         self.setup_step(
@@ -2057,7 +2057,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_no_shallow(self):
         self.setup_step(
@@ -2086,7 +2086,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retryFetch(self):
         self.setup_step(
@@ -2127,7 +2127,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_retryFetch_branch(self):
         self.setup_step(
@@ -2171,7 +2171,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_clobberOnFailure(self):
         self.setup_step(
@@ -2211,7 +2211,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_clobberOnFailure_branch(self):
         self.setup_step(
@@ -2252,7 +2252,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy(self):
         self.setup_step(
@@ -2288,7 +2288,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy_ssh_key_2_10(self):
         self.setup_step(
@@ -2338,7 +2338,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy_shallow(self):
         with self.assertRaisesConfigError(
@@ -2373,7 +2373,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_repo_oldworker(self):
         self.setup_step(
@@ -2402,7 +2402,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_given_revision(self):
         self.setup_step(
@@ -2435,7 +2435,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_revparse_failure(self):
         self.setup_step(
@@ -2467,7 +2467,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         )
         self.expectOutcome(result=FAILURE)
         self.expectNoProperty('got_revision')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_submodule(self):
         self.setup_step(
@@ -2499,7 +2499,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_repourl(self):
         with self.assertRaisesConfigError("must provide repourl"):
@@ -2537,7 +2537,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_retry(self):
         self.setup_step(
@@ -2580,7 +2580,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_fresh_clobberOnFailure(self):
         self.setup_step(
@@ -2617,7 +2617,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_no_method(self):
         self.setup_step(
@@ -2652,7 +2652,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_with_env(self):
         self.setup_step(
@@ -2692,7 +2692,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_logEnviron(self):
         self.setup_step(
@@ -2732,7 +2732,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_wkdir_doesnt_exist(self):
         self.setup_step(
@@ -2760,7 +2760,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription(self):
         # clone of: test_mode_incremental
@@ -2804,7 +2804,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         self.expectProperty('commit-description', 'Tag-1234', self.sourceName)
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_failed(self):
         # clone of: test_mode_incremental
@@ -2851,7 +2851,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         self.expectNoProperty('commit-description')
-        return self.runStep()
+        return self.run_step()
 
     def setup_getDescription_test(self, setup_args, output_args,
                                   expect_head=True, codebase=None):
@@ -2917,7 +2917,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             setup_args={},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_empty_dict_with_codebase(self):
         self.setup_getDescription_test(
@@ -2925,70 +2925,70 @@ class TestGit(sourcesteps.SourceStepMixin,
             output_args=[],
             codebase='baz'
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_match(self):
         self.setup_getDescription_test(
             setup_args={'match': 'stuff-*'},
             output_args=['--match', 'stuff-*']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_match_false(self):
         self.setup_getDescription_test(
             setup_args={'match': None},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_tags(self):
         self.setup_getDescription_test(
             setup_args={'tags': True},
             output_args=['--tags']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_tags_false(self):
         self.setup_getDescription_test(
             setup_args={'tags': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_all(self):
         self.setup_getDescription_test(
             setup_args={'all': True},
             output_args=['--all']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_all_false(self):
         self.setup_getDescription_test(
             setup_args={'all': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_abbrev(self):
         self.setup_getDescription_test(
             setup_args={'abbrev': 7},
             output_args=['--abbrev=7']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_abbrev_zero(self):
         self.setup_getDescription_test(
             setup_args={'abbrev': 0},
             output_args=['--abbrev=0']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_abbrev_false(self):
         self.setup_getDescription_test(
             setup_args={'abbrev': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_dirty(self):
         self.setup_getDescription_test(
@@ -2996,7 +2996,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             output_args=['--dirty'],
             expect_head=False
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_dirty_empty_str(self):
         self.setup_getDescription_test(
@@ -3004,7 +3004,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             output_args=['--dirty'],
             expect_head=False
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_dirty_str(self):
         self.setup_getDescription_test(
@@ -3012,7 +3012,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             output_args=['--dirty=foo'],
             expect_head=False
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_dirty_false(self):
         self.setup_getDescription_test(
@@ -3020,7 +3020,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             output_args=[],
             expect_head=True
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_dirty_none(self):
         self.setup_getDescription_test(
@@ -3028,70 +3028,70 @@ class TestGit(sourcesteps.SourceStepMixin,
             output_args=[],
             expect_head=True
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_contains(self):
         self.setup_getDescription_test(
             setup_args={'contains': True},
             output_args=['--contains']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_contains_false(self):
         self.setup_getDescription_test(
             setup_args={'contains': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_candidates(self):
         self.setup_getDescription_test(
             setup_args={'candidates': 7},
             output_args=['--candidates=7']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_candidates_zero(self):
         self.setup_getDescription_test(
             setup_args={'candidates': 0},
             output_args=['--candidates=0']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_candidates_false(self):
         self.setup_getDescription_test(
             setup_args={'candidates': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_exact_match(self):
         self.setup_getDescription_test(
             setup_args={'exact-match': True},
             output_args=['--exact-match']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_exact_match_false(self):
         self.setup_getDescription_test(
             setup_args={'exact-match': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_debug(self):
         self.setup_getDescription_test(
             setup_args={'debug': True},
             output_args=['--debug']
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_debug_false(self):
         self.setup_getDescription_test(
             setup_args={'debug': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_long(self):
         self.setup_getDescription_test(
@@ -3104,7 +3104,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             setup_args={'long': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_always(self):
         self.setup_getDescription_test(
@@ -3117,7 +3117,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             setup_args={'always': False},
             output_args=[]
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_getDescription_lotsa_stuff(self):
         self.setup_getDescription_test(
@@ -3129,7 +3129,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                          '--abbrev=6'],
             codebase='baz'
         )
-        return self.runStep()
+        return self.run_step()
 
     def test_config_option(self):
         name = 'url.http://github.com.insteadOf'
@@ -3166,7 +3166,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_worker_connection_lost(self):
         self.setup_step(
@@ -3179,7 +3179,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def _test_WorkerSetupError(self, _dovccmd, step, msg):
@@ -3261,7 +3261,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_force(self):
         url = 'ssh://github.com/test/test.git'
@@ -3279,7 +3279,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_fail(self):
         url = 'ssh://github.com/test/test.git'
@@ -3298,7 +3298,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_ssh_key_2_10(self):
         url = 'ssh://github.com/test/test.git'
@@ -3331,7 +3331,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_ssh_key_2_3(self):
         url = 'ssh://github.com/test/test.git'
@@ -3363,7 +3363,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_ssh_key_1_7(self):
         url = 'ssh://github.com/test/test.git'
@@ -3399,7 +3399,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_ssh_host_key_2_10(self):
         url = 'ssh://github.com/test/test.git'
@@ -3439,7 +3439,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_ssh_host_key_2_3(self):
         url = 'ssh://github.com/test/test.git'
@@ -3479,7 +3479,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_push_ssh_host_key_1_7(self):
         url = 'ssh://github.com/test/test.git'
@@ -3520,7 +3520,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_raise_no_git(self):
         @defer.inlineCallbacks
@@ -3533,7 +3533,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
         self.setup_step(step)
         self.expectOutcome(result=EXCEPTION)
-        self.runStep()
+        self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
 
     def test_config_fail_no_branch(self):
@@ -3567,7 +3567,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_tag_simple(self):
         self.setup_step(
@@ -3583,7 +3583,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_tag_force(self):
         self.setup_step(
@@ -3599,7 +3599,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_tag_fail_already_exist(self):
         self.setup_step(
@@ -3616,7 +3616,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_config_annotated_no_messages(self):
         with self.assertRaises(bbconfig.ConfigErrors):
@@ -3648,7 +3648,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
         self.setup_step(step)
         self.expectOutcome(result=EXCEPTION)
-        self.runStep()
+        self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
 
 
@@ -3684,7 +3684,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_commit(self):
         self.setup_step(
@@ -3706,7 +3706,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_commit_empty_disallow(self):
         self.setup_step(
@@ -3729,7 +3729,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_commit_empty_allow(self):
         self.setup_step(
@@ -3752,7 +3752,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_commit_empty_ignore_withcommit(self):
         self.setup_step(
@@ -3779,7 +3779,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_commit_empty_ignore_withoutcommit(self):
         self.setup_step(
@@ -3803,7 +3803,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_commit_empty_ignore_witherror(self):
         self.setup_step(
@@ -3826,7 +3826,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_detached_head(self):
         self.setup_step(
@@ -3842,7 +3842,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_config_no_files_arg(self):
         with self.assertRaisesConfigError(
@@ -3874,5 +3874,5 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
         self.setup_step(step)
         self.expectOutcome(result=EXCEPTION)
-        self.runStep()
+        self.run_step()
         self.flushLoggedErrors(WorkerSetupError)

@@ -39,7 +39,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(command=command, workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_definitions_type(self):
         with self.assertRaises(ConfigErrors):
@@ -54,7 +54,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(command=[CMake.DEFAULT_CMAKE], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_cmake(self):
         cmake_bin = 'something/else/cmake'
@@ -63,7 +63,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(command=[cmake_bin], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_cmake_interpolation(self):
         prop = 'CMAKE'
@@ -75,7 +75,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(command=[value], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_definitions(self):
         definition = {
@@ -92,7 +92,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(
                 command=command, workdir='wkdir', env={'a': 'b'}).exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_definitions_interpolation(self):
         b_value = 'real_b'

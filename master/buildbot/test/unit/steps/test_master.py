@@ -81,7 +81,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         else:
             self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS, state_string="Ran")
-        return self.runStep()
+        return self.run_step()
 
     def test_real_cmd_interrupted(self):
         cmd = [sys.executable, '-c', 'while True: pass']
@@ -95,7 +95,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         else:
             self.expectOutcome(result=EXCEPTION,
                                state_string="killed (9) (exception)")
-        d = self.runStep()
+        d = self.run_step()
         self.step.interrupt("KILL")
         return d
 
@@ -105,7 +105,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             master.MasterShellCommand(command=cmd))
         self.expectLogfile('stdio', "")
         self.expectOutcome(result=FAILURE, state_string="failed (1) (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_constr_args(self):
         self.setup_step(
@@ -126,7 +126,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
                 ('rc', 0),
             ])
         self.expectOutcome(result=SUCCESS, state_string='y')
-        return self.runStep()
+        return self.run_step()
 
     def test_env_subst(self):
         cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
@@ -139,7 +139,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS)
 
-        d = self.runStep()
+        d = self.run_step()
 
         @d.addBoth
         def _restore_env(res):
@@ -159,7 +159,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
             self.expectLogfile('stdio', "hello:world\n")
         self.expectOutcome(result=SUCCESS)
 
-        d = self.runStep()
+        d = self.run_step()
 
         @d.addBoth
         def _restore_env(res):
@@ -180,7 +180,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         else:
             self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_constr_args_descriptionSuffix(self):
         self.setup_step(master.MasterShellCommand(description='x', descriptionDone='y',
@@ -201,7 +201,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
                 ('rc', 0),
             ])
         self.expectOutcome(result=SUCCESS, state_string='y z')
-        return self.runStep()
+        return self.run_step()
 
 
 class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
@@ -224,7 +224,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS, state_string="Set")
         self.expectProperty(
             'testProperty', 'sch=force, worker=testWorker', source='SetProperty')
-        return self.runStep()
+        return self.run_step()
 
 
 class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
@@ -247,7 +247,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS, state_string='Logged')
         self.expectLogfile(
             'Output', pprint.pformat('sch=force, worker=testWorker'))
-        return self.runStep()
+        return self.run_step()
 
 
 class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
@@ -267,7 +267,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
             master.SetProperties(name="my-step", **kwargs))
         self.expectProperty('a', 'b', 'my-step')
         self.expectOutcome(result=SUCCESS, state_string='Properties Set')
-        return self.runStep()
+        return self.run_step()
 
     def test_basic(self):
         return self.doOneTest(properties={'a': 'b'})
@@ -298,14 +298,14 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
             Property("test_prop") == "foo"))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_eq_fail(self):
         self.setup_step(master.Assert(
             Property("test_prop") == "bar"))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
     def test_renderable_pass(self):
         @renderer
@@ -314,7 +314,7 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(master.Assert(test_renderer))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_renderable_fail(self):
         @renderer
@@ -323,4 +323,4 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(master.Assert(test_renderer))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()

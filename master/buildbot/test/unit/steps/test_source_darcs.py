@@ -83,7 +83,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_copy(self):
         self.setup_step(
@@ -112,7 +112,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_no_method(self):
         self.setup_step(
@@ -141,7 +141,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental(self):
         self.setup_step(
@@ -166,7 +166,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_patched(self):
         self.setup_step(
@@ -200,7 +200,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_patch(self):
         self.setup_step(
@@ -240,7 +240,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_retry(self):
         self.setup_step(
@@ -278,7 +278,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_revision(self):
         self.setup_step(
@@ -310,7 +310,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_full_clobber_revision_worker_2_16(self):
         self.setup_step(
@@ -343,7 +343,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_incremental_no_existing_repo(self):
         self.setup_step(
@@ -369,7 +369,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
-        return self.runStep()
+        return self.run_step()
 
     def test_worker_connection_lost(self):
         self.setup_step(
@@ -381,4 +381,4 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             .error(error.ConnectionLost())
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
-        return self.runStep()
+        return self.run_step()

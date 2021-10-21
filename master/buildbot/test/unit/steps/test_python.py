@@ -142,7 +142,7 @@ class BuildEPYDoc(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE,
                            state_string='epydoc warn=1 err=3 (failure)')
-        return self.runStep()
+        return self.run_step()
 
 
 class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -168,7 +168,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         if store_results:
             self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
             self.expectTestResults([])
-        return self.runStep()
+        return self.run_step()
 
     @parameterized.expand([
         ('no_results', True),
@@ -188,7 +188,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         if store_results:
             self.expectTestResultSets([('Pylint warnings', 'code_issue', 'message')])
             # note that no results are submitted for tests where we don't know the location
-        return self.runStep()
+        return self.run_step()
 
     def test_header_output(self):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -197,7 +197,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .log('stdio', header='W: 11: Bad indentation. Found 6 spaces, expected 4\n')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='pylint')
-        return self.runStep()
+        return self.run_step()
 
     def test_failure(self):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -210,7 +210,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pylint fatal=1 warning=1 (failure)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-fatal', 1)
-        return self.runStep()
+        return self.run_step()
 
     def test_failure_zero_returncode(self):
         # Make sure that errors result in a failed step when pylint's
@@ -225,7 +225,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pylint error=1 warning=1 (failure)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-error', 1)
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_text(self):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -239,7 +239,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_text_0_24(self):
         # pylint >= 0.24.0 prints out column offsets when using text format
@@ -254,7 +254,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_text_1_3_1(self):
         # at least pylint 1.3.1 prints out space padded column offsets when
@@ -270,7 +270,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
     @parameterized.expand([
         ('no_results', True),
@@ -303,7 +303,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                 (1000, 'test.py:1:0: C0114: Missing module docstring (missing-module-docstring)',
                  None, 'test.py', 1, None),
             ])
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_text_2_0_0_invalid_line(self):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -320,7 +320,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 0)
         self.expectProperty('pylint-convention', 0)
         self.expectProperty('pylint-total', 0)
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_text_ids(self):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -334,7 +334,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_text_ids_0_24(self):
         # pylint >= 0.24.0 prints out column offsets when using text format
@@ -349,7 +349,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
     @parameterized.expand([
         ('no_results', True),
@@ -373,7 +373,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                 (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),
                 (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),
             ])
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_parseable(self):
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -387,7 +387,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
     def test_regex_parseable_1_3_1(self):
         """ In pylint 1.3.1, output parseable is deprecated, but looks like
@@ -408,7 +408,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
-        return self.runStep()
+        return self.run_step()
 
 
 class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -426,7 +426,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='pyflakes')
-        return self.runStep()
+        return self.run_step()
 
     def test_content_in_header(self):
         self.setup_step(python.PyFlakes())
@@ -436,7 +436,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .log('stdio', header="foo.py:1: 'bar' imported but unused\n")
             .exit(0))
         self.expectOutcome(result=0, state_string='pyflakes')
-        return self.runStep()
+        return self.run_step()
 
     def test_unused(self):
         self.setup_step(python.PyFlakes())
@@ -448,7 +448,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pyflakes unused=1 (warnings)')
         self.expectProperty('pyflakes-unused', 1)
         self.expectProperty('pyflakes-total', 1)
-        return self.runStep()
+        return self.run_step()
 
     def test_undefined(self):
         self.setup_step(python.PyFlakes())
@@ -460,7 +460,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pyflakes undefined=1 (failure)')
         self.expectProperty('pyflakes-undefined', 1)
         self.expectProperty('pyflakes-total', 1)
-        return self.runStep()
+        return self.run_step()
 
     def test_redefs(self):
         self.setup_step(python.PyFlakes())
@@ -472,7 +472,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pyflakes redefs=1 (warnings)')
         self.expectProperty('pyflakes-redefs', 1)
         self.expectProperty('pyflakes-total', 1)
-        return self.runStep()
+        return self.run_step()
 
     def test_importstar(self):
         self.setup_step(python.PyFlakes())
@@ -484,7 +484,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pyflakes import*=1 (warnings)')
         self.expectProperty('pyflakes-import*', 1)
         self.expectProperty('pyflakes-total', 1)
-        return self.runStep()
+        return self.run_step()
 
     def test_misc(self):
         self.setup_step(python.PyFlakes())
@@ -496,7 +496,7 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                            state_string='pyflakes misc=1 (warnings)')
         self.expectProperty('pyflakes-misc', 1)
         self.expectProperty('pyflakes-total', 1)
-        return self.runStep()
+        return self.run_step()
 
 
 class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -525,7 +525,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="sphinx 0 warnings")
-        return self.runStep()
+        return self.run_step()
 
     def test_failure(self):
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
@@ -537,7 +537,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE,
                            state_string="sphinx 0 warnings (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_strict_warnings(self):
         self.setup_step(python.Sphinx(sphinx_builddir="_build", strict_warnings=True))
@@ -549,7 +549,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE,
                            state_string="sphinx 1 warnings (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_nochange(self):
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
@@ -561,7 +561,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="sphinx 0 warnings")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_warnings(self):
@@ -575,7 +575,7 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectOutcome(result=WARNINGS,
                            state_string="sphinx 2 warnings (warnings)")
         self.expectLogfile("warnings", warnings)
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(self.step.statistics, {'warnings': 2})
 
@@ -599,4 +599,4 @@ class TestSphinx(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="sphinx 0 warnings")
-        return self.runStep()
+        return self.run_step()

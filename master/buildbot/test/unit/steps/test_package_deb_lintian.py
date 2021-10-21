@@ -44,7 +44,7 @@ class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
                         command=['lintian', '-v', 'foo_0.23_i386.changes'])
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="Lintian")
-        return self.runStep()
+        return self.run_step()
 
     def test_success_suppressTags(self):
         self.setup_step(lintian.DebLintian('foo_0.23_i386.changes',
@@ -55,4 +55,4 @@ class TestDebLintian(steps.BuildStepMixin, TestReactorMixin,
                                  '--suppress-tags', 'bad-distribution-in-changes-file'])
             .exit(0))
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()

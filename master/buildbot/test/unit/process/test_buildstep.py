@@ -202,7 +202,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(self.LockBuildStep(testcase=self, lock_accesses=lock_accesses,
                                           locks=rendered_locks))
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(len(lock_accesses), 2)
 
@@ -240,7 +240,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(self.LockBuildStep(testcase=self, lock_accesses=lock_accesses,
                                           locks=lock_accesses))
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
         botmaster = self.step.build.builder.botmaster
         real_master_lock = yield botmaster.getLockFromLockAccess(lock_accesses[0],
@@ -353,7 +353,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.action = double_interrupt
 
         self.expectOutcome(result=CANCELLED)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_runCommand(self):
@@ -392,14 +392,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         step.action = interrupt_and_run_command
 
         self.expectOutcome(result=CANCELLED)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_start_returns_SKIPPED(self):
         self.setup_step(self.SkippingBuildStep())
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.runStep()
+        yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
 
@@ -408,7 +408,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(self.FakeBuildStep(doStepIf=False))
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.runStep()
+        yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
 
@@ -420,7 +420,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(self.FakeBuildStep(doStepIf=dostepif))
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.runStep()
+        yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
 
@@ -429,7 +429,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(self.FakeBuildStep(doStepIf=lambda step: False))
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.runStep()
+        yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
 
@@ -439,17 +439,17 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
             doStepIf=lambda step: defer.succeed(False)))
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.runStep()
+        yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
 
     def test_hideStepIf_False(self):
         self._setupWaterfallTest(False, False)
-        return self.runStep()
+        return self.run_step()
 
     def test_hideStepIf_True(self):
         self._setupWaterfallTest(True, True)
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_hideStepIf_Callable_False(self):
@@ -463,7 +463,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         self._setupWaterfallTest(shouldHide, False)
 
-        yield self.runStep()
+        yield self.run_step()
         self.assertTrue(called[0])
 
     @defer.inlineCallbacks
@@ -478,7 +478,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         self._setupWaterfallTest(shouldHide, True)
 
-        yield self.runStep()
+        yield self.run_step()
         self.assertTrue(called[0])
 
     @defer.inlineCallbacks
@@ -488,7 +488,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self._setupWaterfallTest(
             lambda x, y: 0 / 0, False, expectedResult=EXCEPTION)
         self.step.addLogWithFailure = mock.Mock()
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(ZeroDivisionError)), 1)
 
     @defer.inlineCallbacks
@@ -511,7 +511,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.expectHidden(True)
 
         try:
-            yield self.runStep()
+            yield self.run_step()
         except Exception as e:
             log.err(e)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -533,7 +533,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
                 return SUCCESS
         self.setup_step(TestGetLogStep())
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_step_renders_flunkOnFailure(self):
@@ -541,7 +541,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
             TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
         self.properties.setProperty('fOF', 'yes', 'test')
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
 
     def test_hasStatistic(self):
@@ -944,7 +944,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertTrue(self.step.method_return_value)
 
     @defer.inlineCallbacks
@@ -955,7 +955,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertTrue(self.step.method_return_value)
 
     @defer.inlineCallbacks
@@ -966,7 +966,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_runMkdir_fails_no_abandon(self):
@@ -977,7 +977,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertFalse(self.step.method_return_value)
 
     @defer.inlineCallbacks
@@ -988,7 +988,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertTrue(self.step.method_return_value)
 
     @defer.inlineCallbacks
@@ -999,7 +999,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertFalse(self.step.method_return_value)
 
     @defer.inlineCallbacks
@@ -1011,7 +1011,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertFalse(self.step.method_return_value)
         self.assertEqual(self.step.getLog('stdio').header,
                          'NOTE: never mind\n')
@@ -1028,7 +1028,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_glob_empty(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
@@ -1038,7 +1038,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        return self.runStep()
+        return self.run_step()
 
     def test_glob_fail(self):
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
@@ -1047,7 +1047,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
             .exit(1)
         )
         self.expectOutcome(result=FAILURE)
-        return self.runStep()
+        return self.run_step()
 
 
 class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
@@ -1112,7 +1112,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_no_default_workdir(self):
@@ -1122,7 +1122,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir(self):
@@ -1133,7 +1133,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir_callable(self):
@@ -1144,14 +1144,14 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir_callable_error(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), wantDefaultWorkdir=False)
         self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
         self.expectException(buildstep.CallableAttributeError)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_build_workdir_renderable(self):
@@ -1163,7 +1163,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_step_workdir(self):
@@ -1174,7 +1174,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_step_renderable_workdir(self):
@@ -1189,7 +1189,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_step_workdir_overridden(self):
@@ -1201,7 +1201,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_extra_logfile(self):
@@ -1215,7 +1215,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.getLog('logname').stdout,
                          'logline\nlogline2\n')
 
@@ -1228,7 +1228,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.getLog('stdio').stdout, 'some log\n')
 
     @defer.inlineCallbacks
@@ -1240,7 +1240,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.getLog('stdio').stdout, '')
 
     @defer.inlineCallbacks
@@ -1254,7 +1254,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.getLog('logname').stdout,
                          'logline\nlogline2\n')
 
@@ -1268,7 +1268,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         with self.assertRaises(KeyError):
             self.step.getLog('logname')
 
@@ -1282,7 +1282,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
 
     @defer.inlineCallbacks
     def test_old_worker_args(self):
@@ -1295,7 +1295,7 @@ class TestShellMixin(steps.BuildStepMixin,
             # note missing parameters
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.getLog('stdio').header,
                          'NOTE: worker does not allow master to override usePTY\n'
                          'NOTE: worker does not allow master to specify interruptSignal\n')
@@ -1311,7 +1311,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.getLog('stdio').header, '')
 
     @defer.inlineCallbacks
@@ -1322,7 +1322,7 @@ class TestShellMixin(steps.BuildStepMixin,
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="'foo BAR'")
-        yield self.runStep()
+        yield self.run_step()
 
     def test_getResultSummary(self):
         self.setup_step(SimpleShellCommand(command=['a', ['b', 'c']]))

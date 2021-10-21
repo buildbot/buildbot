@@ -64,7 +64,7 @@ class TestGitHub(test_source_git.TestGit):
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'GitHub')
-        return self.runStep()
+        return self.run_step()
 
     def test_with_head_branch(self):
         self.setup_step(
@@ -104,4 +104,4 @@ class TestGitHub(test_source_git.TestGit):
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'GitHub')
-        return self.runStep()
+        return self.run_step()

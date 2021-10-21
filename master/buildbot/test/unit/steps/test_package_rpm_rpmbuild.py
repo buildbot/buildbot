@@ -51,7 +51,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('lalala')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+        return self.run_step()
 
     def test_autoRelease(self):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
@@ -64,7 +64,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('Your code has been rated at 10/10')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+        return self.run_step()
 
     def test_define(self):
         defines = [("a", "1"), ("b", "2")]
@@ -80,7 +80,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('Your code has been rated at 10/10')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+        return self.run_step()
 
     def test_define_none(self):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
@@ -93,7 +93,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('Your code has been rated at 10/10')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_renderable_dist(self):
@@ -109,4 +109,4 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('lalala')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
-        yield self.runStep()
+        yield self.run_step()

@@ -42,7 +42,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('Checking file1.c...')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
-        return self.runStep()
+        return self.run_step()
 
     def test_command_failure(self):
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
@@ -52,7 +52,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('Checking file1.c...')
             .exit(1))
         self.expectOutcome(result=FAILURE, state_string="cppcheck (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_warnings(self):
         self.setup_step(
@@ -68,7 +68,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0))
         self.expectOutcome(result=WARNINGS,
                            state_string="cppcheck warning=1 information=1 (warnings)")
-        return self.runStep()
+        return self.run_step()
 
     def test_errors(self):
         self.setup_step(cppcheck.Cppcheck(extra_args=['--my-param=5']))
@@ -82,7 +82,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0))
         self.expectOutcome(result=FAILURE,
                            state_string="cppcheck error=2 style=1 (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_renderables(self):
         P = WithProperties
@@ -94,4 +94,4 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             .stdout('Checking file1.c...')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
-        return self.runStep()
+        return self.run_step()

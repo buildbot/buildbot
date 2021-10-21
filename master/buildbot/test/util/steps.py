@@ -352,7 +352,7 @@ class BuildStepMixin:
                 log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
 
     @defer.inlineCallbacks
-    def runStep(self):
+    def run_step(self):
         """
         Run the step set up with L{setup_step}, and check the results.
 

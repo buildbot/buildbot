@@ -227,7 +227,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_installdir(self):
@@ -240,7 +240,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(self.step.installdir, r'C:\I')
 
     def test_evaluate_result_failure(self):
@@ -252,7 +252,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE,
                            state_string="compile 0 projects 0 files (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_evaluate_result_errors(self):
         self.setup_step(VCx())
@@ -264,7 +264,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE,
                            state_string="compile 0 projects 0 files 1 errors (failure)")
-        return self.runStep()
+        return self.run_step()
 
     def test_evaluate_result_warnings(self):
         self.setup_step(VCx())
@@ -276,7 +276,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=WARNINGS,
                            state_string="compile 0 projects 0 files 1 warnings (warnings)")
-        return self.runStep()
+        return self.run_step()
 
     def test_env_setup(self):
         self.setup_step(VCx(
@@ -294,7 +294,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_env_setup_existing(self):
         self.setup_step(VCx(
@@ -312,7 +312,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_rendering(self):
@@ -330,7 +330,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(
                 [self.step.projectfile, self.step.config, self.step.project],
@@ -387,7 +387,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_clean(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
@@ -402,7 +402,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_noproj_build(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
@@ -417,7 +417,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_env_prepend(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
@@ -435,7 +435,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -491,7 +491,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_clean(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
@@ -506,7 +506,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_noproj_build(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
@@ -520,7 +520,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_env_prepend(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
@@ -537,7 +537,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class VC8ExpectedEnvMixin:
@@ -604,7 +604,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_args_x64(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
@@ -620,7 +620,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_clean(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
@@ -635,7 +635,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     @defer.inlineCallbacks
     def test_rendering(self):
@@ -652,7 +652,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        yield self.runStep()
+        yield self.run_step()
 
         self.assertEqual(self.step.arch, 'x64')
 
@@ -682,7 +682,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_clean(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
@@ -698,7 +698,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_mode_build_env(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
@@ -714,7 +714,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
@@ -740,7 +740,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
@@ -766,7 +766,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
@@ -792,7 +792,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -810,7 +810,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             projectfile='pf', config='cfg', platform=None, project='pj'))
 
         self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
@@ -825,7 +825,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
-        return self.runStep()
+        return self.run_step()
 
     def test_build_project(self):
         self.setup_step(vstudio.MsBuild(
@@ -839,7 +839,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
-        return self.runStep()
+        return self.run_step()
 
     def test_clean_project(self):
         self.setup_step(vstudio.MsBuild(
@@ -853,7 +853,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
-        return self.runStep()
+        return self.run_step()
 
     def test_rebuild_project_with_defines(self):
         self.setup_step(vstudio.MsBuild(
@@ -868,7 +868,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built pj for cfg|Win32")
-        return self.runStep()
+        return self.run_step()
 
     def test_rebuild_solution(self):
         self.setup_step(
@@ -882,7 +882,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="built solution for cfg|x64")
-        return self.runStep()
+        return self.run_step()
 
 
 class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -900,7 +900,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                             projectfile='pf', config='cfg', platform=None, project='pj'))
 
         self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
-        yield self.runStep()
+        yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
@@ -916,7 +916,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_build_project(self):
         self.setup_step(vstudio.MsBuild141(
@@ -931,7 +931,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_clean_project(self):
         self.setup_step(vstudio.MsBuild141(
@@ -946,7 +946,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_rebuild_project_with_defines(self):
         self.setup_step(vstudio.MsBuild141(
@@ -962,7 +962,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
     def test_rebuild_solution(self):
         self.setup_step(
@@ -977,7 +977,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        return self.runStep()
+        return self.run_step()
 
 
 class Aliases(unittest.TestCase):
