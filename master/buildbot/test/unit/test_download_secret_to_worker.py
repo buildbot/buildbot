@@ -25,6 +25,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.download_secret_to_worker import DownloadSecretsToWorker
 from buildbot.steps.download_secret_to_worker import RemoveWorkerFileSecret
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
@@ -49,26 +50,16 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
         self.setupStep(
             DownloadSecretsToWorker([(os.path.join(self.temp_path, "pathA"), "something"),
                                      (os.path.join(self.temp_path, "pathB"), "something more")]))
-        args1 = {
-                    'maxsize': None,
-                    'mode': stat.S_IRUSR | stat.S_IWUSR,
-                    'reader': ExpectRemoteRef(remotetransfer.StringFileReader),
-                    'blocksize': 32 * 1024,
-                    'workerdest': os.path.join(self.temp_path, "pathA"),
-                    'workdir': "wkdir"
-                    }
-        args2 = {
-                    'maxsize': None,
-                    'mode': stat.S_IRUSR | stat.S_IWUSR,
-                    'reader': ExpectRemoteRef(remotetransfer.StringFileReader),
-                    'blocksize': 32 * 1024,
-                    'workerdest': os.path.join(self.temp_path, "pathB"),
-                    'workdir': "wkdir"
-                    }
         self.expectCommands(
-            Expect('downloadFile', args1)
+            ExpectDownloadFile(maxsize=None, mode=stat.S_IRUSR | stat.S_IWUSR,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               blocksize=32 * 1024,
+                               workerdest=os.path.join(self.temp_path, "pathA"), workdir="wkdir")
             .add(0),
-            Expect('downloadFile', args2)
+            ExpectDownloadFile(maxsize=None, mode=stat.S_IRUSR | stat.S_IWUSR,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               blocksize=32 * 1024,
+                               workerdest=os.path.join(self.temp_path, "pathB"), workdir="wkdir")
             .add(0),
             )
 

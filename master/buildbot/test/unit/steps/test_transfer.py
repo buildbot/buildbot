@@ -35,6 +35,7 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadDirectory
@@ -903,10 +904,9 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
         read = []
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                workerdest=self.destfile, workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.FileReader)))
+            ExpectDownloadFile(workerdest=self.destfile, workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader))
             .add(Expect.behavior(downloadString(read.append)))
             .add(0))
 
@@ -934,10 +934,9 @@ class TestFileDownload(steps.BuildStepMixin, TestReactorMixin,
         read = []
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                slavedest=self.destfile, workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.FileReader)))
+            ExpectDownloadFile(slavedest=self.destfile, workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader))
             .add(Expect.behavior(downloadString(read.append)))
             .add(0))
 
@@ -998,10 +997,9 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
         read = []
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                workerdest="hello.txt", workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
+            ExpectDownloadFile(workerdest="hello.txt", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .add(Expect.behavior(downloadString(read.append)))
             .add(0))
 
@@ -1025,10 +1023,9 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
         read = []
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                slavedest="hello.txt", workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
+            ExpectDownloadFile(slavedest="hello.txt", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .add(Expect.behavior(downloadString(read.append)))
             .add(0))
 
@@ -1042,10 +1039,9 @@ class TestStringDownload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(transfer.StringDownload("Hello World", "hello.txt"))
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                workerdest="hello.txt", workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
+            ExpectDownloadFile(workerdest="hello.txt", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .add(1))
 
         self.expectOutcome(
@@ -1091,11 +1087,9 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
         read = []
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                workerdest="hello.json", workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            )
+            ExpectDownloadFile(workerdest="hello.json", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .add(Expect.behavior(downloadString(read.append)))
             .add(0))
 
@@ -1110,10 +1104,9 @@ class TestJSONStringDownload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.expectCommands(
-            Expect('downloadFile', dict(
-                workerdest="hello.json", workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
+            ExpectDownloadFile(workerdest="hello.json", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .add(1))
 
         self.expectOutcome(
@@ -1152,11 +1145,9 @@ class TestJSONPropertiesDownload(steps.BuildStepMixin, TestReactorMixin, unittes
         self.step.build.setProperty('key1', 'value1', 'test')
         read = []
         self.expectCommands(
-            Expect('downloadFile', dict(
-                workerdest="props.json", workdir='wkdir',
-                blocksize=16384, maxsize=None, mode=None,
-                reader=ExpectRemoteRef(remotetransfer.StringFileReader))
-            )
+            ExpectDownloadFile(workerdest="props.json", workdir='wkdir',
+                               blocksize=16384, maxsize=None, mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             .add(Expect.behavior(downloadString(read.append)))
             .add(0))
 

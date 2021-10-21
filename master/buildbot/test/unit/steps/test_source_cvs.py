@@ -24,6 +24,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import cvs
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
@@ -217,17 +218,13 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
@@ -278,17 +275,13 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',

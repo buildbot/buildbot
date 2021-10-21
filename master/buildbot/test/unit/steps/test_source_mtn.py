@@ -23,6 +23,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import mtn
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
@@ -128,19 +129,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-diff',
-                                        workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-patched',
-                                        workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
@@ -196,19 +191,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff',
-                                        workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched',
-                                        workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
@@ -263,19 +252,13 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                         command=['mtn', 'update', '--revision', 'h:master',
                                  '--branch', 'master'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-diff',
-                                        workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-patched',
-                                        workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',

@@ -28,6 +28,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import git
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
@@ -196,12 +197,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -250,12 +248,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -308,19 +303,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
-                                        workdir='wkdir',
-                                        mode=0o700))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
             .add(Expect.behavior(downloadString(read.append)))
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
@@ -381,19 +370,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -447,19 +430,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -514,26 +491,17 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
-                                        workdir='wkdir',
-                                        mode=0o700))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
             .add(Expect.behavior(downloadString(read.append)))
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
@@ -591,26 +559,17 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
-                                        workdir='wkdir',
-                                        mode=0o700))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -667,19 +626,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir=workdir,
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir=workdir, mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir=workdir,
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir=workdir, mode=0o400)
             .add(0),
             Expect('listdir', {'dir': workdir})
             .add(Expect.update('files', ['.git']))
@@ -765,12 +718,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -820,12 +770,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -875,19 +822,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_wrapper_path,
-                                        workdir='wkdir',
-                                        mode=0o700))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -988,17 +929,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'update-index', '--refresh'])
@@ -1051,17 +988,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               slavedest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'update-index', '--refresh'])
@@ -1109,17 +1042,13 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectShell(workdir='wkdir',
                         command=['git', 'checkout', '-f', 'FETCH_HEAD'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'update-index', '--refresh'])
@@ -1791,12 +1720,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='wkdir',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             Expect('listdir', {'dir': 'wkdir'})
             .add(Expect.update('files', ['.git']))
@@ -2435,12 +2361,9 @@ class TestGit(sourcesteps.SourceStepMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.StringFileReader),
-                                        workerdest=ssh_key_path,
-                                        workdir='source',
-                                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='source', mode=0o400)
             .add(0),
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -3467,13 +3390,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', '-c', ssh_command_config,
@@ -3505,13 +3424,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch'],
@@ -3543,21 +3458,13 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_wrapper_path,
-                        workdir='wkdir',
-                        mode=0o700))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch'],
@@ -3593,20 +3500,13 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', '-c', ssh_command_config,
@@ -3642,20 +3542,13 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch'],
@@ -3688,28 +3581,17 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             Expect('mkdir', dict(dir=ssh_workdir,
                                  logEnviron=True))
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_key_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_key_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                        workerdest=ssh_known_hosts_path,
-                        workdir='wkdir',
-                        mode=0o400))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_known_hosts_path, workdir='wkdir', mode=0o400)
             .add(0),
-            Expect('downloadFile',
-                   dict(blocksize=32768, maxsize=None,
-                        reader=ExpectRemoteRef(
-                            remotetransfer.StringFileReader),
-                        workerdest=ssh_wrapper_path,
-                        workdir='wkdir',
-                        mode=0o700))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                               workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'push', url, 'testbranch'],

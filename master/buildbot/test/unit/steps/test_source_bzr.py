@@ -26,6 +26,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import bzr
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
@@ -233,17 +234,13 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.FileReader),
-                                        workerdest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader),
+                               workerdest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.FileReader),
-                                        workerdest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader),
+                               workerdest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
@@ -280,17 +277,13 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.FileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader),
+                               slavedest='.buildbot-diff', workdir='wkdir', mode=None)
             .add(0),
-            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
-                                        reader=ExpectRemoteRef(
-                                            remotetransfer.FileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
+            ExpectDownloadFile(blocksize=32768, maxsize=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader),
+                               slavedest='.buildbot-patched', workdir='wkdir', mode=None)
             .add(0),
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',

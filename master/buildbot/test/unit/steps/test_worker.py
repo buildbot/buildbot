@@ -27,6 +27,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadFile
@@ -482,16 +483,11 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             res = yield x.downloadFileContentToWorker("/path/dest1", "file text")
             self.assertEqual(res, None)
 
-        exp_args = {'maxsize': None,
-                    'workdir': 'wkdir',
-                    'mode': None,
-                    'reader': ExpectRemoteRef(remotetransfer.FileReader),
-                    'blocksize': 32768,
-                    'workerdest': '/path/dest1'}
-
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('downloadFile', exp_args)
+            ExpectDownloadFile(maxsize=None, workdir='wkdir', mode=None,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader),
+                               blocksize=32768, workerdest='/path/dest1')
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -502,16 +498,11 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             res = yield x.downloadFileContentToWorker("/path/dest1", "file text", mode=stat.S_IRUSR)
             self.assertEqual(res, None)
 
-        exp_args = {'maxsize': None,
-                    'workdir': 'wkdir',
-                    'mode': stat.S_IRUSR,
-                    'reader': ExpectRemoteRef(remotetransfer.FileReader),
-                    'blocksize': 32768,
-                    'workerdest': '/path/dest1'}
-
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('downloadFile', exp_args)
+            ExpectDownloadFile(maxsize=None, workdir='wkdir', mode=stat.S_IRUSR,
+                               reader=ExpectRemoteRef(remotetransfer.FileReader),
+                               blocksize=32768, workerdest='/path/dest1')
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
