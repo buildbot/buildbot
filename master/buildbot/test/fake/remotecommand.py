@@ -15,6 +15,8 @@
 
 import functools
 
+from mock import Mock
+
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -219,13 +221,20 @@ class Expect:
         self.behaviors.append(('callable', callable))
         return self
 
-    def upload_string(self, string, timestamp=None):
+    def upload_string(self, string, timestamp=None, out_writers=None, error=None):
         def behavior(command):
             writer = command.args['writer']
+            if out_writers is not None:
+                out_writers.append(writer)
+
             writer.remote_write(string)
             writer.remote_close()
             if timestamp:
                 writer.remote_utime(timestamp)
+
+            if error is not None:
+                writer.cancel = Mock(wraps=writer.cancel)
+                raise error
 
         self.behavior(behavior)
         return self

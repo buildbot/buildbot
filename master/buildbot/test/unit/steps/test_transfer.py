@@ -45,16 +45,6 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util import unicode2bytes
 
 
-def uploadString(string, timestamp=None):
-    def behavior(command):
-        writer = command.args['writer']
-        writer.remote_write(string + "\n")
-        writer.remote_close()
-        if timestamp:
-            writer.remote_utime(timestamp)
-    return behavior
-
-
 def downloadString(memoizer, timestamp=None):
     def behavior(command):
         reader = command.args['reader']
@@ -268,19 +258,21 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(
             transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
-        behavior = UploadError(uploadString("Hello world!"))
+        writers = []
 
         self.expectCommands(
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(behavior))
+            .upload_string("Hello world!\n", out_writers=writers, error=RuntimeError('uh oh')))
 
         self.expectOutcome(
             result=EXCEPTION, state_string="uploading srcfile (exception)")
         yield self.runStep()
 
-        self.assertEqual(behavior.writer.cancel.called, True)
+        self.assertEqual(len(writers), 1)
+        self.assertEqual(writers[0].cancel.called, True)
+
         self.assertEqual(
             len(self.flushLoggedErrors(RuntimeError)), 1)
 
@@ -779,7 +771,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
-        behavior = UploadError(uploadString("Hello world!"))
+        writers = []
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
@@ -788,13 +780,15 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(behavior))
+            .upload_string("Hello world!\n", out_writers=writers, error=RuntimeError('uh oh')))
 
         self.expectOutcome(
             result=EXCEPTION, state_string="uploading 2 files (exception)")
         yield self.runStep()
 
-        self.assertEqual(behavior.writer.cancel.called, True)
+        self.assertEqual(len(writers), 1)
+        self.assertEqual(writers[0].cancel.called, True)
+
         self.assertEqual(
             len(self.flushLoggedErrors(RuntimeError)), 1)
 
