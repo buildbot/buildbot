@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import functools
+import tarfile
+from io import BytesIO
 
 from mock import Mock
 
@@ -23,6 +25,7 @@ from twisted.python import failure
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.util import unicode2bytes
 
 
 class FakeRemoteCommand:
@@ -236,6 +239,19 @@ class Expect:
                 writer.cancel = Mock(wraps=writer.cancel)
                 raise error
 
+        self.behavior(behavior)
+        return self
+
+    def upload_tar_file(self, filename, **members):
+        def behavior(command):
+            f = BytesIO()
+            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
+            for name, content in members.items():
+                content = unicode2bytes(content)
+                archive.addfile(tarfile.TarInfo(name), BytesIO(content))
+            writer = command.args['writer']
+            writer.remote_write(f.getvalue())
+            writer.remote_unpack()
         self.behavior(behavior)
         return self
 
