@@ -23,7 +23,6 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import pbuilder
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import steps
@@ -63,7 +62,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(pbuilder.DebPbuilder())
         self.expectCommands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0]))
+            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['sudo', '/usr/sbin/pbuilder', '--update',
@@ -81,8 +80,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(pbuilder.DebPbuilder())
         self.expectCommands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
-            .add(Expect.update(
-                'stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0]))
+            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['pdebuild', '--buildresult', '.',
@@ -310,7 +308,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, 0, 0]))
+            .update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
@@ -328,7 +326,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0]))
+            .update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['pdebuild', '--buildresult', '.',
@@ -343,7 +341,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
             basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
         self.expectCommands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0]))
+            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
@@ -357,8 +355,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
             basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
         self.expectCommands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow')
-            .add(Expect.update(
-                'stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0]))
+            .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['pdebuild', '--buildresult', '.',

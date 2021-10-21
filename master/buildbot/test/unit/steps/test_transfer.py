@@ -502,7 +502,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -520,7 +520,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcdir", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
+            .update('stat', [stat.S_IFDIR, 99, 99])
             .exit(0),
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
@@ -552,7 +552,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file='srcdir', workdir='wkdir')
-            .add(Expect.update('stat', [0, 99, 99]))
+            .update('stat', [0, 99, 99])
             .exit(0))
 
         self.expectOutcome(result=FAILURE, state_string="uploading 1 file (failure)")
@@ -566,7 +566,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -574,7 +574,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .add(Expect.behavior(uploadString("Hello world!")))
             .exit(0),
             ExpectStat(file="srcdir", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
+            .update('stat', [stat.S_IFDIR, 99, 99])
             .exit(0),
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
@@ -592,7 +592,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             transfer.MultipleFileUpload(workersrcs="srcfile", masterdest=self.destdir))
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -610,10 +610,10 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
             ExpectGlob(path=os.path.join('wkdir', 'src*'), logEnviron=False)
-            .add(Expect.update('files', ["srcfile"]))
+            .update('files', ["srcfile"])
             .exit(0),
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -632,7 +632,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
             ExpectGlob(path=os.path.join('wkdir', 'src*'), logEnviron=False)
-            .add(Expect.update('files', []))
+            .update('files', [])
             .exit(1)
         )
         self.expectOutcome(
@@ -648,7 +648,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(slavesrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -668,7 +668,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcdir", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
+            .update('stat', [stat.S_IFDIR, 99, 99])
             .exit(0),
             ExpectUploadDirectory(slavesrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
@@ -688,7 +688,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(slavesrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -696,7 +696,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .add(Expect.behavior(uploadString("Hello world!")))
             .exit(0),
             ExpectStat(file="srcdir", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
+            .update('stat', [stat.S_IFDIR, 99, 99])
             .exit(0),
             ExpectUploadDirectory(slavesrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
@@ -718,7 +718,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file='srcfile', workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc='srcfile', workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -742,7 +742,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file='srcfile', workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc='srcfile', workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -763,7 +763,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -784,7 +784,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -811,7 +811,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
 
         self.expectCommands(
             ExpectStat(file="srcfile", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0),
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
@@ -819,7 +819,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             .add(Expect.behavior(uploadString("Hello world!")))
             .exit(0),
             ExpectStat(file="srcdir", workdir='wkdir')
-            .add(Expect.update('stat', [stat.S_IFDIR, 99, 99]))
+            .update('stat', [stat.S_IFDIR, 99, 99])
             .exit(0),
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,

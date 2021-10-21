@@ -17,7 +17,6 @@ from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import gerrit
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectListdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
@@ -52,7 +51,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .add(Expect.update('files', ['.git']))
+            .update('files', ['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -94,7 +93,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .add(Expect.update('files', ['.git']))
+            .update('files', ['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -136,7 +135,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .add(Expect.update('files', ['.git']))
+            .update('files', ['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -178,7 +177,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .exit(1),
             ExpectListdir(dir='wkdir')
-            .add(Expect.update('files', ['.git']))
+            .update('files', ['.git'])
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])

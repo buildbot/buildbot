@@ -39,7 +39,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectGlob
 from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRmdir
@@ -1025,7 +1024,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = testFunc
         self.expectCommands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .add(Expect.update('files', ["one.pyc", "two.pyc"]))
+            .update('files', ["one.pyc", "two.pyc"])
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1035,7 +1034,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expectCommands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .add(Expect.update('files', []))
+            .update('files', [])
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

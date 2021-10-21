@@ -107,7 +107,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
             ExpectStat(file='x')
-            .add(Expect.update('stat', [stat.S_IFREG, 99, 99]))
+            .update('stat', [stat.S_IFREG, 99, 99])
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="File found.")
@@ -117,7 +117,7 @@ class TestFileExists(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
             ExpectStat(file='x')
-            .add(Expect.update('stat', [0, 99, 99]))
+            .update('stat', [0, 99, 99])
             .exit(0)
         )
         self.expectOutcome(result=FAILURE,
@@ -403,7 +403,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
             ExpectGlob(path='*.pyc', logEnviron=False)
-            .add(Expect.update('files', ["one.pyc", "two.pyc"]))
+            .update('files', ["one.pyc", "two.pyc"])
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

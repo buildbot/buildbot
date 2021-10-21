@@ -233,15 +233,15 @@ class Expect:
         self.behaviors.append(('log', name, streams))
         return self
 
-    @classmethod
-    def update(self, name, value):
-        return ('update', name, value)
-
     def add(self, other):
         if isinstance(other, failure.Failure):
             self.behaviors.append(('err', other))
         else:
             self.behaviors.append(other)
+        return self
+
+    def update(self, name, value):
+        self.behaviors.append(('update', name, value))
         return self
 
     def stdout(self, output):
