@@ -49,7 +49,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -77,7 +77,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
         self.build.path_module = namedModule('ntpath')
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -103,7 +103,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh', timeout=1))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['bzr', '--version'])
@@ -135,7 +135,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'),
             args=dict(revision='3730'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -162,7 +162,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -189,7 +189,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -221,7 +221,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'), patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -263,7 +263,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'), patch=(1, 'patch'),
             worker_version={'*': '2.16'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -305,7 +305,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'),
             args=dict(revision='2345'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -332,7 +332,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -359,7 +359,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -384,7 +384,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber', retry=(0, 2)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -422,7 +422,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber'),
             args=dict(revision='3730'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -448,7 +448,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(baseURL='http://bzr.squid-cache.org/bzr/squid3',
                     defaultBranch='trunk', mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -475,7 +475,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(baseURL='http://bzr.squid-cache.org/bzr/squid3',
                     defaultBranch='trunk', mode='full', method='clobber'),
             args=dict(branch='branches/SQUID_3_0'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -501,7 +501,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='copy'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -529,7 +529,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -554,7 +554,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'),
             args=dict(revision='9384'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -578,7 +578,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -603,7 +603,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental', retry=(0, 1)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -634,7 +634,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -658,7 +658,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .exit(0),
@@ -679,7 +679,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             .error(error.ConnectionLost())

@@ -53,7 +53,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -98,7 +98,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                          mode='full', method='clean', branch='master'),
             patch=(1, 'patch'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -158,7 +158,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             patch=(1, 'patch'),
             worker_version={'*': '2.16'})
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -217,7 +217,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                          mode='full', method='clean', branch='master'),
             patch=(1, 'patch'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -270,7 +270,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -313,7 +313,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -353,7 +353,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -392,7 +392,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clobber', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -428,7 +428,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clobber', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -463,7 +463,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -500,7 +500,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -540,7 +540,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -579,7 +579,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -617,7 +617,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master', retry=(0, 1)))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -660,7 +660,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='fresh', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -710,7 +710,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                          mode='incremental', branch='master'),
             dict(revision='abcdef01',))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -749,7 +749,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='copy', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -789,7 +789,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -849,7 +849,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -893,7 +893,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -907,7 +907,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -948,7 +948,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -968,7 +968,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)
@@ -1011,7 +1011,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             .stdout(self.MTN_VER)

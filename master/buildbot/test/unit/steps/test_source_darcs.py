@@ -63,7 +63,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -89,7 +89,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='copy'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -118,7 +118,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -147,7 +147,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -172,7 +172,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -207,7 +207,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'),
             patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -246,7 +246,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber', retry=(0, 2)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -285,7 +285,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'),
             dict(revision='abcdef01'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -318,7 +318,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
                         mode='full', method='clobber'),
             dict(revision='abcdef01'),
             worker_version={'*': '2.16'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -349,7 +349,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .exit(0),
@@ -375,7 +375,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
             .error(error.ConnectionLost())

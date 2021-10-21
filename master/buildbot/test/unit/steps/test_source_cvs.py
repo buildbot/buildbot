@@ -86,7 +86,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean',
                     login="a password"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -133,7 +133,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                     login="a password"),
             worker_version={'*': '2.16'})
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -178,7 +178,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean'),
             patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -233,7 +233,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                     cvsmodule="mozilla/browser/", mode='full', method='clean'),
             patch=(1, 'patch'),
             worker_version={'*': '2.16'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -287,7 +287,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean',
                     timeout=1))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['cvs', '--version'])
@@ -328,7 +328,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean',
                     branch='branch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -366,7 +366,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean'),
             args={'branch': 'my_branch'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -403,7 +403,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -440,7 +440,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='full', method='clobber')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -465,7 +465,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                        cvsmodule="mozilla/browser/", mode='full', method='clobber',
                        retry=(0, 2))
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -505,7 +505,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='full', method='copy')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -543,7 +543,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='full', method='copy')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -576,7 +576,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -610,7 +610,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='incremental')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -649,7 +649,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:dustin:secrets@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -685,7 +685,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
                     branch='my_branch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -721,7 +721,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                     cvsmodule="mozilla/browser/", mode='incremental',
                     branch='HEAD'),
             args=dict(revision='2012-08-16 16:05:16 +0000'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -758,7 +758,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental'),
             args={'branch': 'my_branch'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -792,7 +792,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -826,7 +826,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='incremental')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -854,7 +854,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                        cvsmodule="mozilla/browser/", mode='incremental',
                        retry=(0, 1))
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -889,7 +889,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='incremental')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -917,7 +917,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='incremental')
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -950,7 +950,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -975,7 +975,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -1001,7 +1001,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -1039,7 +1039,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                        cvsmodule="mozilla/browser/", mode='incremental',
                        global_options=['-q'], extra_options=['-l'])
         self.setup_step(step)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -1066,7 +1066,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
                     env={'abc': '123'}, logEnviron=False))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'],
                         env={'abc': '123'},
@@ -1104,7 +1104,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(128)
@@ -1117,7 +1117,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .exit(0),
@@ -1151,7 +1151,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
         self.setup_step(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             .error(error.ConnectionLost())

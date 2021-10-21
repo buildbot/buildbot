@@ -62,7 +62,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', filters=['tree:0']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.26.0')
@@ -88,7 +88,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', filters=['tree:0']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.27.0')
@@ -114,7 +114,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -149,7 +149,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', progress=False))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -190,7 +190,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_command_config = \
             'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -239,7 +239,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
         ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.3.0')
@@ -292,7 +292,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         # A place to store what gets read
         read = []
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.0')
@@ -357,7 +357,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -415,7 +415,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.3.0')
@@ -474,7 +474,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         # A place to store what gets read
         read = []
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.0')
@@ -540,7 +540,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
         ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.0')
@@ -605,7 +605,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir=workdir,
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -654,7 +654,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.change_worker_system('win32')
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -695,7 +695,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
         ssh_command_config = 'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -745,7 +745,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
         ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.3.0')
@@ -795,7 +795,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_key_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-key'
         ssh_wrapper_path = '\\wrk\\.bldr.wkdir.buildbot\\ssh-wrapper.sh'
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.0')
@@ -844,7 +844,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            timeout=1,
                            mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['git', '--version'])
@@ -885,7 +885,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -943,7 +943,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean'),
             patch=(1, 'patch'),
             worker_version={'*': '2.16'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1000,7 +1000,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1045,7 +1045,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', branch='test-branch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1083,7 +1083,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', branch='test-branch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1113,7 +1113,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1145,7 +1145,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1171,7 +1171,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', reference='path/to/reference/repo'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1197,7 +1197,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', branch='test-branch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1224,7 +1224,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', origin='foo', progress=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1250,7 +1250,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', submodules=True, progress=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1299,7 +1299,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', submodules=True, progress=True,
                            remoteSubmodules=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1348,7 +1348,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', submodules=True, progress=True,
                            remoteSubmodules=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1380,7 +1380,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1409,7 +1409,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1433,7 +1433,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True, branch='test-branch'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1463,7 +1463,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', branch='test-branch'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.5.5')
@@ -1503,7 +1503,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', progress=True))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1534,7 +1534,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', progress=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1566,7 +1566,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5.1')
@@ -1598,7 +1598,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', retry=(0, 1)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1634,7 +1634,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', branch='test-branch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1676,7 +1676,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_command_config = \
             'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -1720,7 +1720,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1755,7 +1755,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1791,7 +1791,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental'), dict(
                 revision='abcdef01',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1823,7 +1823,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='incremental'), dict(
                 revision='abcdef01',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1858,7 +1858,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', submodules=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -1906,7 +1906,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', submodules=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.6')
@@ -1956,7 +1956,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', submodules=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.8')
@@ -2006,7 +2006,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', shallow=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2035,7 +2035,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', shallow="100"))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2064,7 +2064,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2093,7 +2093,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', retryFetch=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2134,7 +2134,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', retryFetch=True, branch='test-branch'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2178,7 +2178,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', clobberOnFailure=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2218,7 +2218,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', clobberOnFailure=True, branch='test-branch'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2259,7 +2259,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='copy'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2300,7 +2300,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ssh_command_config = \
             'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -2350,7 +2350,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2380,7 +2380,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', interruptSignal='TERM',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2410,7 +2410,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clobber', progress=True), dict(
                 revision='abcdef01',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2443,7 +2443,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clobber', progress=True), dict(
                 revision='abcdef01',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2474,7 +2474,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', submodules=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2511,7 +2511,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='fresh', progress=True), dict(
                 revision='abcdef01',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2543,7 +2543,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', retry=(0, 2)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2587,7 +2587,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', clobberOnFailure=True))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2623,7 +2623,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2658,7 +2658,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', env={'abc': '123'}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'],
                         env={'abc': '123'})
@@ -2698,7 +2698,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', logEnviron=False))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'],
                         logEnviron=False)
@@ -2738,7 +2738,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2770,7 +2770,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental',
                            getDescription=True))
-        self.expectCommands(
+        self.expect_commands(
             # copied from test_mode_incremental:
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -2817,7 +2817,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental',
                            getDescription=True))
-        self.expectCommands(
+        self.expect_commands(
             # copied from test_mode_incremental:
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -2868,7 +2868,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            getDescription=setup_args,
                            **kwargs))
 
-        self.expectCommands(
+        self.expect_commands(
             # copied from test_mode_full_clobber:
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -3139,7 +3139,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                            mode='full', method='clean',
                            config={name: value}))
         prefix = ['git', '-c', '{}={}'.format(name, value)]
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=prefix + ['--version'])
             .stdout('git version 1.7.5')
@@ -3172,7 +3172,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3251,7 +3251,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3269,7 +3269,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', force=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3287,7 +3287,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', force=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3312,7 +3312,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_command_config = \
             'core.sshCommand=ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -3344,7 +3344,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
         ssh_command = 'ssh -o "BatchMode=yes" -i "{0}"'.format(ssh_key_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.3.0')
@@ -3376,7 +3376,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_key_path = '/wrk/.bldr.wkdir.buildbot/ssh-key'
         ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.0')
@@ -3416,7 +3416,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.10.0')
@@ -3456,7 +3456,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
                                                  ssh_known_hosts_path)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 2.3.0')
@@ -3493,7 +3493,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         ssh_wrapper_path = '/wrk/.bldr.wkdir.buildbot/ssh-wrapper.sh'
         ssh_known_hosts_path = '/wrk/.bldr.wkdir.buildbot/ssh-known-hosts'
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.0')
@@ -3557,7 +3557,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         self.setup_step(
             self.stepClass(workdir='wkdir', tagName='myTag', annotated=True, messages=messages))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3573,7 +3573,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir',
                            tagName='myTag'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3589,7 +3589,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir',
                            tagName='myTag', force=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3605,7 +3605,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir',
                            tagName='myTag'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3670,7 +3670,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_add_fail(self):
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3689,7 +3689,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_commit(self):
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3712,7 +3712,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='disallow'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3735,7 +3735,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='create-empty-commit'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3758,7 +3758,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='ignore'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3785,7 +3785,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='ignore'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3809,7 +3809,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='ignore'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -3831,7 +3831,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_detached_head(self):
         self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')

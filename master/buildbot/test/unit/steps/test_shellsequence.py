@@ -80,7 +80,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST').exit(0))
+        self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST').exit(0))
         # TODO: need to factor command-summary stuff into a utility method and
         # use it here
         self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
@@ -115,7 +115,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(0),
+        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(0),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
@@ -127,7 +127,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2, arg3],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(0),
+        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(0),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
@@ -140,7 +140,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(1),
+        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(1),
                             ExpectShell(workdir='build', command='deploy p1').exit(0))
         self.expectOutcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
         return self.run_step()
@@ -152,7 +152,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(1))
+        self.expect_commands(ExpectShell(workdir='build', command='make p1').exit(1))
         self.expectOutcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.run_step()
 
@@ -168,7 +168,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         # First "build"
         self.setup_step(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
+        self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-1'")
         self.run_step()
@@ -176,7 +176,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         # Second "build"
         self.setup_step(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
-        self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
+        self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
         self.expectOutcome(result=SUCCESS,
                            state_string="'make BUILDBOT-TEST-2'")
 

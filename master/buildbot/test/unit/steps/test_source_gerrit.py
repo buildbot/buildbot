@@ -43,7 +43,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.sourcestamp.project = 'buildbot'
         self.build.setProperty("event.patchSet.ref", "gerrit_branch")
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -85,7 +85,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.sourcestamp.project = 'buildbot'
         self.build.setProperty("gerrit_change", "1234/567")
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -127,7 +127,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.sourcestamp.project = 'buildbot'
         self.build.setProperty("gerrit_change", "1234/567")
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -169,7 +169,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.sourcestamp.project = 'not_buildbot'
         self.build.setProperty("gerrit_change", "1234/567")
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')

@@ -64,7 +64,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_empty(self):
         self.setup_step(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="test")
             .exit(0)
@@ -76,7 +76,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_empty_error(self):
         self.setup_step(subunit.SubunitShellCommand(command='test',
                                                    failureOnNoTests=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command="test")
             .exit(0)
@@ -93,7 +93,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         client.stopTest(test)
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
             .exit(0)
@@ -111,7 +111,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         client.stopTest(test)
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
             .exit(0)
@@ -136,7 +136,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         client.stopTest(test2)
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
             .exit(0)
@@ -162,7 +162,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         client.stopTest(test2)
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
             .exit(0)

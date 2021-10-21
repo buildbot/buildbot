@@ -106,7 +106,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  tests='testname',
                                  testpath=None,
                                  env={'PYTHONPATH': 'somepath'}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
@@ -123,7 +123,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  tests='testname',
                                  testpath='path1',
                                  env={'PYTHONPATH': ['path2', 'path3']}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
@@ -140,7 +140,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                  tests='testname',
                                  testpath='path2',
                                  env={'PYTHONPATH': ['path1', 'path2']}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
@@ -156,7 +156,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
@@ -171,7 +171,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
@@ -186,7 +186,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
@@ -210,7 +210,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                             testpath=None))
         self.properties.setProperty('test_list', ['testname'], 'Test')
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
@@ -224,7 +224,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
                        buildFiles=['my/test/file.py', 'my/test/file2.py'])
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--testmodule=my/test/file.py',
                                  '--testmodule=my/test/file2.py'],
@@ -240,7 +240,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                             testpath='custom/test/path',
                                             env={'PYTHONPATH': '/existing/pypath'}))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'},
@@ -255,7 +255,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python_twisted.Trial(workdir='build', reactor='customreactor',
                                             tests='testname', testpath=None))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--reactor=customreactor',
                                  'testname'],
@@ -270,7 +270,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
                                             python='/bin/mypython', testpath=None))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'trial', '--reporter=bwverbose', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
@@ -286,7 +286,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                             tests='testname',
                                             testpath=None))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--random=0', 'testname'],
                         logfiles={'test.log': '_trial_temp/test.log'})
@@ -307,7 +307,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                             testpath=None,
                                             jobs=2))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
                                  'testname'],
@@ -335,7 +335,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
                                             testpath=None))
         self.properties.setProperty('jobs_count', '2', 'Test')
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
                                  'testname'],
@@ -366,7 +366,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_run_ok(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
@@ -380,7 +380,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_custom_python(self):
         self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['/bin/mypython', 'bin/lore', '-p', '--output', 'lint',
                                  'foo.xhtml'])
@@ -393,7 +393,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_command_failure(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
             .exit(1)
@@ -410,7 +410,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_run_warnings(self):
         self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='build',
                         command=[
                             'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'])
@@ -433,7 +433,7 @@ class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_run_ok(self):
         self.setup_step(python_twisted.RemovePYCs())
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['find', '.', '-name', '\'*.pyc\'', '-exec', 'rm', '{}', ';'])
             .exit(0)

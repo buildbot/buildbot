@@ -285,7 +285,7 @@ class BuildStepMixin:
 
         return step
 
-    def expectCommands(self, *exp):
+    def expect_commands(self, *exp):
         """
         Add to the expected remote commands, along with their results.  Each
         argument should be an instance of L{Expect}.

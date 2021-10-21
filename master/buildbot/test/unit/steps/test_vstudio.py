@@ -220,7 +220,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_simple(self):
         self.setup_step(VCx())
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .exit(0)
@@ -233,7 +233,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_installdir(self):
         self.setup_step(VCx(installdir=r'C:\I'))
         self.step.exp_installdir = r'C:\I'
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .exit(0)
@@ -245,7 +245,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_evaluate_result_failure(self):
         self.setup_step(VCx())
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .exit(1)
@@ -256,7 +256,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_evaluate_result_errors(self):
         self.setup_step(VCx())
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .stdout('error ABC123: foo\r\n')
@@ -268,7 +268,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_evaluate_result_warnings(self):
         self.setup_step(VCx())
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .stdout('foo: warning ABC123: foo\r\n')
@@ -283,7 +283,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             INCLUDE=[r'c:\INC1', r'c:\INC2'],
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'],
                         env=dict(
@@ -301,7 +301,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             INCLUDE=[r'c:\INC1', r'c:\INC2'],
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'],
                         env=dict(
@@ -323,7 +323,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.properties.setProperty('a', 'aa', 'Test')
         self.properties.setProperty('b', 'bb', 'Test')
         self.properties.setProperty('c', 'cc', 'Test')
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
             .exit(0)
@@ -377,7 +377,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_args(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['msdev', 'pf', '/MAKE',
                                  'pj - cfg', '/REBUILD'],
@@ -392,7 +392,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_clean(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['msdev', 'pf', '/MAKE',
                                  'pj - cfg', '/CLEAN'],
@@ -407,7 +407,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_noproj_build(self):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    mode='build'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['msdev', 'pf', '/MAKE',
                                  'ALL - cfg', '/BUILD'],
@@ -423,7 +423,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj', PATH=['p'], INCLUDE=['i'],
                                    LIB=['l']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['msdev', 'pf', '/MAKE',
                                  'pj - cfg', '/REBUILD',
@@ -481,7 +481,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_args(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild', 'cfg',
                                  '/Project', 'pj'],
@@ -496,7 +496,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_clean(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Clean', 'cfg',
                                  '/Project', 'pj'],
@@ -511,7 +511,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_noproj_build(self):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    mode='build'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Build', 'cfg'],
                         env=self.getExpectedEnv(
@@ -526,7 +526,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj', PATH=['p'], INCLUDE=['i'],
                                    LIB=['l']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild', 'cfg',
                                  '/UseEnv', '/Project', 'pj'],
@@ -594,7 +594,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
     def test_args(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', arch='arch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
@@ -609,7 +609,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
     def test_args_x64(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', arch='x64'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
@@ -625,7 +625,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
     def test_clean(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Clean',
                                  'cfg', '/Project', 'pj'],
@@ -642,7 +642,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    arch=Property('a')))
         self.properties.setProperty('a', 'x64', 'Test')
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild', 'cfg'],
                         env=self.getExpectedEnv(
@@ -671,7 +671,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
     def test_args(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['vcexpress', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
@@ -687,7 +687,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
     def test_clean(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj', mode='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['vcexpress', 'pf', '/Clean',
                                  'cfg', '/Project', 'pj'],
@@ -703,7 +703,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
     def test_mode_build_env(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj', mode='build', INCLUDE=['i']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['vcexpress', 'pf', '/Build',
                                  'cfg', '/UseEnv', '/Project', 'pj'],
@@ -730,7 +730,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
     def test_installdir(self):
         self.setup_step(vstudio.VC9(projectfile='pf', config='cfg',
                                    project='pj'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
@@ -756,7 +756,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
     def test_installdir(self):
         self.setup_step(vstudio.VC10(projectfile='pf', config='cfg',
                                     project='pj'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
@@ -782,7 +782,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
     def test_installdir(self):
         self.setup_step(vstudio.VC11(projectfile='pf', config='cfg',
                                     project='pj'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
@@ -817,7 +817,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
@@ -831,7 +831,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
@@ -845,7 +845,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
@@ -860,7 +860,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             projectfile='pf', config='cfg', platform='Win32', project='pj',
             defines=['Define1', 'Define2=42']))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
@@ -874,7 +874,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='"%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'${VS110COMNTOOLS}..\..\VC\vcvarsall.bat'})
@@ -907,7 +907,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
@@ -922,7 +922,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Build"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
@@ -937,7 +937,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj:Clean"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
@@ -953,7 +953,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             projectfile='pf', config='cfg', platform='Win32', project='pj',
             defines=['Define1', 'Define2=42']))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:DefineConstants="Define1;Define2=42"',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
@@ -968,7 +968,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command='FOR /F "tokens=*" %%I in (\'vswhere.exe -property  installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="x64" /maxcpucount /t:Rebuild',  # noqa pylint: disable=line-too-long
                         env={'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',

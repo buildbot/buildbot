@@ -36,7 +36,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_success(self):
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
             .stdout('Checking file1.c...')
@@ -46,7 +46,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_command_failure(self):
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
             .stdout('Checking file1.c...')
@@ -57,7 +57,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_warnings(self):
         self.setup_step(
             cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', 'file1.c', '--enable=warning,performance'])
             .stdout('Checking file1.c...\n'
@@ -72,7 +72,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_errors(self):
         self.setup_step(cppcheck.Cppcheck(extra_args=['--my-param=5']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--my-param=5'])
             .stdout('Checking file1.c...\n'
@@ -88,7 +88,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         P = WithProperties
         self.setup_step(cppcheck.Cppcheck(
             binary=P('a'), source=[P('.'), P('f.c')], extra_args=[P('--p'), P('--p')]))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=[
                         'a', '.', 'f.c', '--p', '--p'])
             .stdout('Checking file1.c...')

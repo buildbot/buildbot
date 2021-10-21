@@ -137,7 +137,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
                         command=['p4', '-V'])  # expected remote command
             .exit(0),  # expected exit status
@@ -168,7 +168,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         if extra_args is None:
             extra_args = []
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
             .exit(0),  # expected exit status
@@ -498,7 +498,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         else:
             expected_pass = 'pass'
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
             .exit(0),  # expected exit status
@@ -974,7 +974,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
                        dict(revision='100',))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['p4', '-V'])
             .error(error.ConnectionLost())
@@ -1009,7 +1009,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin,
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command=['p4', '-V'])
             .exit(0),
 

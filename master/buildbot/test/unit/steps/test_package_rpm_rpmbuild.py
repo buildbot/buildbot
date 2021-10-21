@@ -42,7 +42,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_success(self):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", dist=".el5"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
@@ -55,7 +55,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_autoRelease(self):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir `pwd`" '
                         '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
@@ -70,7 +70,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         defines = [("a", "1"), ("b", "2")]
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec",
                                          define=OrderedDict(defines)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define '
@@ -84,7 +84,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_define_none(self):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define '
@@ -100,7 +100,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec",
                                          dist=Interpolate('%(prop:renderable_dist)s')))
         self.properties.setProperty('renderable_dist', '.el7', 'test')
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '

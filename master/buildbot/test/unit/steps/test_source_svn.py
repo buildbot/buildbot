@@ -145,7 +145,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_svn_not_installed(self):
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(1)
@@ -155,7 +155,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_corrupt_xml(self):
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -186,7 +186,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def test_revision_noninteger(self):
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setup_step(svnTestStep)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -224,7 +224,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setup_step(svnTestStep)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -256,7 +256,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -292,7 +292,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental', username='user',
                     timeout=1,
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', '--version'])
@@ -330,7 +330,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk'),
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -362,7 +362,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/trunk/test app',
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -393,7 +393,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental',))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -420,7 +420,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental', retry=(0, 1)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -453,7 +453,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -489,7 +489,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -523,7 +523,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
         self.build.path_module = namedModule("ntpath")
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -559,7 +559,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental', username='user',
                     preferLastChangedRev=True,
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -599,7 +599,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental', username='user',
                     preferLastChangedRev=True,
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -633,7 +633,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -661,7 +661,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='clobber'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -688,7 +688,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='fresh', depth='infinite'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -728,7 +728,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='fresh', retry=(0, 2)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -770,7 +770,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='fresh', depth='infinite'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -812,7 +812,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full',
                     keep_on_purge=['svn_external_path/unversioned_file1']))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -853,7 +853,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -893,7 +893,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='clean'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -931,7 +931,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -960,7 +960,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='clean'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -989,7 +989,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
         self.patch_workerVersionIsOlderThan(True)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1035,7 +1035,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='clean'))
 
         self.patch_workerVersionIsOlderThan(False)
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1078,7 +1078,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy',
                     codebase='app'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1116,7 +1116,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='copy'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1152,7 +1152,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1190,7 +1190,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export'),
             patch=(1, 'patch'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1253,7 +1253,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='export'),
             patch=(1, 'patch'),
             worker_version={'*': '2.16'})
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1315,7 +1315,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     timeout=1,
                     mode='full', method='export'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['svn', '--version'])
@@ -1359,7 +1359,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full', method='export'), dict(
                 revision='100',
             ))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1398,7 +1398,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='export', username='svn_username',
                     password='svn_password'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1444,7 +1444,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random'],
                     env={'abc': '123'}))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'],
                         env={'abc': '123'})
@@ -1484,7 +1484,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random'],
                     logEnviron=False))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'],
                         logEnviron=False)
@@ -1523,7 +1523,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1553,7 +1553,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1588,7 +1588,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clobber'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1604,7 +1604,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1620,7 +1620,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='copy'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1653,7 +1653,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     mode='full',
                     keep_on_purge=['svn_external_path/unversioned_file1']))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1686,7 +1686,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='pass', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .error(error.ConnectionLost())
@@ -1699,7 +1699,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     password='', extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),
@@ -1733,7 +1733,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',
                     extra_args=['--random']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             .exit(0),

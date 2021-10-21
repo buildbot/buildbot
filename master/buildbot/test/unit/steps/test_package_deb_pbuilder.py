@@ -41,7 +41,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_new(self):
         self.setup_step(pbuilder.DebPbuilder())
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -60,7 +60,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_update(self):
         self.setup_step(pbuilder.DebPbuilder())
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             .exit(0),
@@ -78,7 +78,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_buildonly_and_property(self):
         self.setup_step(pbuilder.DebPbuilder())
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             .exit(0),
@@ -96,7 +96,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_architecture(self):
         self.setup_step(pbuilder.DebPbuilder(architecture='amd64'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-amd64-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -117,7 +117,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_architecture_renderable(self):
         self.setup_step(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-amd64-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -138,7 +138,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_distribution(self):
         self.setup_step(pbuilder.DebPbuilder(distribution='woody'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/woody-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -157,7 +157,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_basetgz(self):
         self.setup_step(pbuilder.DebPbuilder(basetgz='/buildbot/stable-local.tgz'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/buildbot/stable-local.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -176,7 +176,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_mirror(self):
         self.setup_step(pbuilder.DebPbuilder(mirror='http://apt:9999/debian'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -195,7 +195,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_extrapackages(self):
         self.setup_step(pbuilder.DebPbuilder(extrapackages=['buildbot']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -216,7 +216,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_keyring(self):
         self.setup_step(pbuilder.DebPbuilder(keyring='/builbot/buildbot.gpg'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -236,7 +236,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_components(self):
         self.setup_step(pbuilder.DebPbuilder(components='main universe'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -256,7 +256,7 @@ class TestDebPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_othermirror(self):
         self.setup_step(pbuilder.DebPbuilder(othermirror=['http://apt:9999/debian']))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -287,7 +287,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_new(self):
         self.setup_step(pbuilder.DebCowbuilder())
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -306,7 +306,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_update(self):
         self.setup_step(pbuilder.DebCowbuilder())
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
             .update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             .exit(0),
@@ -324,7 +324,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_buildonly(self):
         self.setup_step(pbuilder.DebCowbuilder())
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
             .update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             .exit(0),
@@ -339,7 +339,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
     def test_update_reg(self):
         self.setup_step(pbuilder.DebCowbuilder(
             basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow')
             .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             .exit(0),
@@ -353,7 +353,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, TestReactorMixin,
     def test_buildonly_reg(self):
         self.setup_step(pbuilder.DebCowbuilder(
             basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow')
             .update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             .exit(0),
@@ -382,7 +382,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_new(self):
         self.setup_step(pbuilder.UbuPbuilder(distribution='oneiric'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/oneiric-local-buildbot.tgz')
             .exit(1),
             ExpectShell(workdir='wkdir',
@@ -417,7 +417,7 @@ class TestUbuCowbuilder(steps.BuildStepMixin, TestReactorMixin,
 
     def test_new(self):
         self.setup_step(pbuilder.UbuCowbuilder(distribution='oneiric'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/oneiric-local-buildbot.cow/')
             .exit(1),
             ExpectShell(workdir='wkdir',

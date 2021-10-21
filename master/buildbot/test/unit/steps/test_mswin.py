@@ -52,7 +52,7 @@ class TestRobocopySimple(steps.BuildStepMixin, TestReactorMixin,
         if expected_args:
             command += expected_args
         command += ['/TEE', '/NP']
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(
                 workdir='wkdir',
                 command=command,

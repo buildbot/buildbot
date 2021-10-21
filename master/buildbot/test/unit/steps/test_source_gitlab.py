@@ -58,7 +58,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
                            mode='full', method='clean'),
             dict(branch='master', revision='12345678'))
 
-        self.expectCommands(
+        self.expect_commands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             .stdout('git version 1.7.5')

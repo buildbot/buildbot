@@ -44,7 +44,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_success(self):
         self.setup_step(mock.Mock(root='TESTROOT'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
                         logEnviron=False)
             .exit(0),
@@ -59,7 +59,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_resultdir_success(self):
         self.setup_step(mock.Mock(root='TESTROOT', resultdir='RESULT'))
-        self.expectCommands(
+        self.expect_commands(
             ExpectRmdir(dir=['build/RESULT/build.log',
                              'build/RESULT/root.log',
                              'build/RESULT/state.log'],
@@ -79,7 +79,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         resultdir_text = "RESULT"
         self.setup_step(mock.Mock(root='TESTROOT', resultdir=Interpolate(
             '%(kw:resultdir)s', resultdir=resultdir_text)))
-        self.expectCommands(
+        self.expect_commands(
             ExpectRmdir(dir=['build/RESULT/build.log',
                              'build/RESULT/root.log',
                              'build/RESULT/state.log'],
@@ -112,7 +112,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
 
     def test_success(self):
         self.setup_step(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
                         logEnviron=False)
             .exit(0),
@@ -144,7 +144,7 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
 
     def test_success(self):
         self.setup_step(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
-        self.expectCommands(
+        self.expect_commands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
                         logEnviron=False)
             .exit(0),
