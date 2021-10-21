@@ -121,7 +121,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(
@@ -138,7 +138,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectUploadFile(slavesrc="srcfile", workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(
@@ -158,7 +158,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectUploadFile(workersrc=__file__, workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=True,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString('test', timestamp=timestamp))
+            .upload_string('test\n', timestamp=timestamp)
             .exit(0))
 
         self.expectOutcome(
@@ -188,7 +188,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectUploadFile(workersrc=__file__, workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(
@@ -209,7 +209,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectUploadFile(workersrc=__file__, workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(
@@ -234,7 +234,7 @@ class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             ExpectUploadFile(workersrc=__file__, workdir='wkdir',
                              blocksize=262144, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(
@@ -506,7 +506,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
@@ -570,7 +570,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0),
             ExpectStat(file="srcdir", workdir='wkdir')
             .update('stat', [stat.S_IFDIR, 99, 99])
@@ -596,7 +596,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 1 file")
@@ -617,7 +617,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0)
         )
         self.expectOutcome(
@@ -652,7 +652,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(slavesrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
@@ -692,7 +692,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(slavesrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0),
             ExpectStat(file="srcdir", workdir='wkdir')
             .update('stat', [stat.S_IFDIR, 99, 99])
@@ -722,7 +722,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc='srcfile', workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(result=SUCCESS,
@@ -746,7 +746,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc='srcfile', workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0))
 
         self.expectOutcome(result=SUCCESS,
@@ -815,7 +815,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="srcfile", workdir='wkdir',
                              blocksize=16384, maxsize=None, keepstamp=False,
                              writer=ExpectRemoteRef(remotetransfer.FileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!\n")
             .exit(0),
             ExpectStat(file="srcdir", workdir='wkdir')
             .update('stat', [stat.S_IFDIR, 99, 99])

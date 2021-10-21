@@ -457,7 +457,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(workersrc="file.txt", workdir='wkdir',
                              blocksize=32 * 1024, maxsize=None,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -476,7 +476,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadFile(slavesrc="file.txt", workdir='wkdir',
                              blocksize=32 * 1024, maxsize=None,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .behavior(uploadString("Hello world!"))
+            .upload_string("Hello world!")
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

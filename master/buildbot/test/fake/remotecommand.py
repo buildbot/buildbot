@@ -219,6 +219,17 @@ class Expect:
         self.behaviors.append(('callable', callable))
         return self
 
+    def upload_string(self, string, timestamp=None):
+        def behavior(command):
+            writer = command.args['writer']
+            writer.remote_write(string)
+            writer.remote_close()
+            if timestamp:
+                writer.remote_utime(timestamp)
+
+        self.behavior(behavior)
+        return self
+
     def log(self, name, **streams):
         if name == 'stdio' and 'stdout' in streams:
             raise NotImplementedError()
