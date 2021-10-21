@@ -28,7 +28,6 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shell
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectUploadFile
@@ -681,8 +680,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
                 ExpectUploadFile(blocksize=32768, maxsize=None,
                                  workersrc='supps', workdir='wkdir',
                                  writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-                .add(Expect.behavior(upload_behavior)),
-
+                .behavior(upload_behavior),
                 # and then run the command
                 ExpectShell(workdir='wkdir',
                             command=["make"])

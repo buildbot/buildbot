@@ -215,15 +215,9 @@ class Expect:
         self.interrupted = interrupted
         self.behaviors = []
 
-    @classmethod
-    def behavior(cls, callable):
-        """
-        Add an arbitrary behavior that is expected of this command.
-        C{callable} will be invoked with the real command as an argument, and
-        can do what it wishes.  It will be invoked with maybeDeferred, in case
-        the operation is asynchronous.
-        """
-        return ('callable', callable)
+    def behavior(self, callable):
+        self.behaviors.append(('callable', callable))
+        return self
 
     def log(self, name, **streams):
         if name == 'stdio' and 'stdout' in streams:

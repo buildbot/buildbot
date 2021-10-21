@@ -23,7 +23,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import cvs
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
@@ -111,18 +110,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -159,18 +157,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -201,18 +198,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -257,18 +253,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              slavesrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -310,18 +305,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -351,18 +345,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -390,18 +383,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -428,18 +420,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])
@@ -533,18 +524,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='source/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='source/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='source/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='source',
                         command=['cvs', '-z3', 'update', '-dP'])
@@ -572,7 +562,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='source/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('the-end-of-the-universe')))
+            .behavior(uploadString('the-end-of-the-universe'))
             .exit(0),
             ExpectRmdir(dir='source', logEnviron=True, timeout=step.timeout)
             .exit(0),
@@ -603,18 +593,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
@@ -638,19 +627,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'))
             .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .exit(0),
@@ -681,18 +668,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
             # on Windows, this file does not contain the password, per
             # http://trac.buildbot.net/ticket/2355
-            .add(Expect.behavior(
-                uploadString(':pserver:dustin@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:dustin@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
@@ -716,18 +702,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP', '-r', 'my_branch'])
@@ -753,18 +738,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP',
@@ -791,18 +775,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP', '-r', 'my_branch'])
@@ -826,18 +809,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
@@ -924,7 +906,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('the-end-of-the-universe')))
+            .behavior(uploadString('the-end-of-the-universe'))
             .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .exit(0),
@@ -952,13 +934,12 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('the-end-of-the-universe')))
+            .behavior(uploadString('the-end-of-the-universe'))
             .exit(0),
             ExpectRmdir(dir='wkdir', logEnviron=True, timeout=step.timeout)
             .exit(0),
@@ -1011,7 +992,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('the-end-of-the-universe')))
+            .behavior(uploadString('the-end-of-the-universe'))
             .exit(0),
             ExpectShell(workdir='',
                         command=['cvs',
@@ -1037,18 +1018,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])
@@ -1105,18 +1085,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'],
@@ -1155,18 +1134,17 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin,
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Root', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(
-                uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot')))
+            .behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Repository', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('mozilla/browser/')))
+            .behavior(uploadString('mozilla/browser/'))
             .exit(0),
             ExpectUploadFile(blocksize=32768, maxsize=None,
                              workersrc='Entries', workdir='wkdir/CVS',
                              writer=ExpectRemoteRef(remotetransfer.StringFileWriter))
-            .add(Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD')))
+            .behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             .exit(0),
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])

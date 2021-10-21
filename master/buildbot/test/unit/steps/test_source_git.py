@@ -27,7 +27,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import git
-from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectCpdir
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
 from buildbot.test.fake.remotecommand import ExpectListdir
@@ -309,7 +308,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
-            .add(Expect.behavior(downloadString(read.append)))
+            .behavior(downloadString(read.append))
             .exit(0),
             ExpectListdir(dir='wkdir')
             .update('files', ['.git'])
@@ -495,7 +494,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                workerdest=ssh_wrapper_path, workdir='wkdir', mode=0o700)
-            .add(Expect.behavior(downloadString(read.append)))
+            .behavior(downloadString(read.append))
             .exit(0),
             ExpectListdir(dir='wkdir')
             .update('files', ['.git'])
