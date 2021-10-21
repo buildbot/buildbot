@@ -17,9 +17,7 @@ import json
 import os
 import shutil
 import stat
-import tarfile
 import tempfile
-from io import BytesIO
 
 from mock import Mock
 
@@ -42,7 +40,6 @@ from buildbot.test.fake.remotecommand import ExpectUploadDirectory
 from buildbot.test.fake.remotecommand import ExpectUploadFile
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.util import unicode2bytes
 
 
 def downloadString(memoizer, timestamp=None):
@@ -56,32 +53,6 @@ def downloadString(memoizer, timestamp=None):
             reader.remote_utime(timestamp)
         return read
     return behavior
-
-
-def uploadTarFile(filename, **members):
-    def behavior(command):
-        f = BytesIO()
-        archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
-        for name, content in members.items():
-            content = unicode2bytes(content)
-            archive.addfile(tarfile.TarInfo(name), BytesIO(content))
-        writer = command.args['writer']
-        writer.remote_write(f.getvalue())
-        writer.remote_unpack()
-    return behavior
-
-
-class UploadError:
-
-    def __init__(self, behavior):
-        self.behavior = behavior
-        self.writer = None
-
-    def __call__(self, command):
-        self.writer = command.args['writer']
-        self.writer.cancel = Mock(wraps=self.writer.cancel)
-        self.behavior(command)
-        raise RuntimeError('uh oh')
 
 
 class TestFileUpload(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -337,7 +308,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(result=SUCCESS,
@@ -355,7 +326,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(slavesrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(result=SUCCESS,
@@ -374,7 +345,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(workersrc='srcdir', workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(result=SUCCESS,
@@ -395,7 +366,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(workersrc='srcdir', workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(result=SUCCESS,
@@ -425,20 +396,23 @@ class TestDirectoryUpload(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(
             transfer.DirectoryUpload(workersrc='srcdir', masterdest=self.destdir))
 
-        behavior = UploadError(uploadTarFile('fake.tar', test="Hello world!"))
+        writers = []
 
         self.expectCommands(
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .behavior(behavior))
+            .upload_tar_file('fake.tar', {"test": "Hello world!"}, error=RuntimeError('uh oh'),
+                             out_writers=writers))
 
         self.expectOutcome(
             result=EXCEPTION,
             state_string="uploading srcdir (exception)")
         yield self.runStep()
 
-        self.assertEqual(behavior.writer.cancel.called, True)
+        self.assertEqual(len(writers), 1)
+        self.assertEqual(writers[0].cancel.called, True)
+
         self.assertEqual(
             len(self.flushLoggedErrors(RuntimeError)), 1)
 
@@ -516,7 +490,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
@@ -570,7 +544,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(
@@ -664,7 +638,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(slavesrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
@@ -692,7 +666,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(slavesrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(
@@ -817,7 +791,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, TestReactorMixin,
             ExpectUploadDirectory(workersrc="srcdir", workdir='wkdir',
                                   blocksize=16384, compress=None, maxsize=None,
                                   writer=ExpectRemoteRef(remotetransfer.DirectoryWriter))
-            .upload_tar_file('fake.tar', test="Hello world!")
+            .upload_tar_file('fake.tar', {"test": "Hello world!"})
             .exit(0))
 
         self.expectOutcome(

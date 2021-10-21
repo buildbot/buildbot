@@ -242,16 +242,25 @@ class Expect:
         self.behavior(behavior)
         return self
 
-    def upload_tar_file(self, filename, **members):
+    def upload_tar_file(self, filename, members, error=None, out_writers=None):
         def behavior(command):
             f = BytesIO()
             archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
             for name, content in members.items():
                 content = unicode2bytes(content)
                 archive.addfile(tarfile.TarInfo(name), BytesIO(content))
+
             writer = command.args['writer']
+            if out_writers is not None:
+                out_writers.append(writer)
+
             writer.remote_write(f.getvalue())
             writer.remote_unpack()
+
+            if error is not None:
+                writer.cancel = Mock(wraps=writer.cancel)
+                raise error
+
         self.behavior(behavior)
         return self
 
