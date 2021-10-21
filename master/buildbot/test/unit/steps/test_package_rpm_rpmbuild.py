@@ -15,6 +15,8 @@
 
 from collections import OrderedDict
 
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -54,6 +56,7 @@ class RpmBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
+    @mock.patch('builtins.open', mock.mock_open())
     def test_autoRelease(self):
         self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
         self.expectCommands(
