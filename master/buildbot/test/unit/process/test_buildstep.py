@@ -1008,7 +1008,7 @@ class TestCommandMixin(steps.BuildStepMixin, TestReactorMixin,
         self.step.testMethod = lambda: self.step.pathExists('/some/path')
         self.expectCommands(
             ExpectStat(file='/some/path', logEnviron=False)
-            .add(Expect.log('stdio', header='NOTE: never mind\n'))
+            .log('stdio', header='NOTE: never mind\n')
             .exit(1)
         )
         self.expectOutcome(result=SUCCESS)
@@ -1211,7 +1211,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'})
-            .add(Expect.log('logname', stdout='logline\nlogline2\n'))
+            .log('logname', stdout='logline\nlogline2\n')
             .stdout("some log\n")
             .exit(0)
         )
@@ -1251,7 +1251,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'],
                         logfiles={'logname': 'logpath.log'})
-            .add(Expect.log('logname', stdout='logline\nlogline2\n'))
+            .log('logname', stdout='logline\nlogline2\n')
             .exit(0)
         )
         self.expectOutcome(result=SUCCESS)

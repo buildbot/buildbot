@@ -225,11 +225,13 @@ class Expect:
         """
         return ('callable', callable)
 
-    @classmethod
     def log(self, name, **streams):
         if name == 'stdio' and 'stdout' in streams:
             raise NotImplementedError()
-        return ('log', name, streams)
+        if name == 'stdio' and 'sterr' in streams:
+            raise NotImplementedError()
+        self.behaviors.append(('log', name, streams))
+        return self
 
     @classmethod
     def update(self, name, value):

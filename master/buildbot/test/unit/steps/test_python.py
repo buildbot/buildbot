@@ -194,9 +194,7 @@ class PyLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint'], store_results=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'])
-            .add(ExpectShell.log(
-                'stdio',
-                header='W: 11: Bad indentation. Found 6 spaces, expected 4\n'))
+            .log('stdio', header='W: 11: Bad indentation. Found 6 spaces, expected 4\n')
             .exit(0))
         self.expectOutcome(result=SUCCESS, state_string='pylint')
         return self.runStep()
@@ -434,10 +432,8 @@ class PyFlakes(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
-            .add(ExpectShell.log(
-                'stdio',
-                # don't match pyflakes-like output in the header
-                header="foo.py:1: 'bar' imported but unused\n"))
+            # don't match pyflakes-like output in the header
+            .log('stdio', header="foo.py:1: 'bar' imported but unused\n")
             .exit(0))
         self.expectOutcome(result=0, state_string='pyflakes')
         return self.runStep()
