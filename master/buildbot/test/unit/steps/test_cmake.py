@@ -50,7 +50,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
             CMake(options='hello')
 
     def test_plain(self):
-        self.setupStep(CMake())
+        self.setup_step(CMake())
         self.expectCommands(
             ExpectShell(command=[CMake.DEFAULT_CMAKE], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
@@ -59,7 +59,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_cmake(self):
         cmake_bin = 'something/else/cmake'
 
-        self.setupStep(CMake(cmake=cmake_bin))
+        self.setup_step(CMake(cmake=cmake_bin))
         self.expectCommands(
             ExpectShell(command=[cmake_bin], workdir='wkdir').exit(0))
         self.expectOutcome(result=SUCCESS)
@@ -69,7 +69,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         prop = 'CMAKE'
         value = 'Real_CMAKE'
 
-        self.setupStep(CMake(cmake=Property(prop)))
+        self.setup_step(CMake(cmake=Property(prop)))
         self.properties.setProperty(prop, value, source='test')
 
         self.expectCommands(
@@ -81,13 +81,13 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         definition = {
             'a': 'b'
         }
-        self.setupStep(CMake(definitions=definition))
+        self.setup_step(CMake(definitions=definition))
         self.expect_and_run_command('-D%s=%s' % list(definition.items())[0])
 
     def test_environment(self):
         command = [CMake.DEFAULT_CMAKE]
         environment = {'a': 'b'}
-        self.setupStep(CMake(env=environment))
+        self.setup_step(CMake(env=environment))
         self.expectCommands(
             ExpectShell(
                 command=command, workdir='wkdir', env={'a': 'b'}).exit(0))
@@ -101,7 +101,7 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
             'a': Property('b')
         }
 
-        self.setupStep(CMake(definitions=definitions))
+        self.setup_step(CMake(definitions=definitions))
         self.properties.setProperty('b', b_value, source='test')
         self.expect_and_run_command('-D%s=%s' % ('a', b_value))
 
@@ -109,20 +109,20 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
         b_value = 'real_b'
 
         definitions = Property('b')
-        self.setupStep(CMake(definitions=definitions))
+        self.setup_step(CMake(definitions=definitions))
         self.properties.setProperty('b', {'a': b_value}, source='test')
         self.expect_and_run_command('-D%s=%s' % ('a', b_value))
 
     def test_generator(self):
         generator = 'Ninja'
 
-        self.setupStep(CMake(generator=generator))
+        self.setup_step(CMake(generator=generator))
         self.expect_and_run_command('-G', generator)
 
     def test_generator_interpolation(self):
         value = 'Our_GENERATOR'
 
-        self.setupStep(CMake(generator=Property('GENERATOR')))
+        self.setup_step(CMake(generator=Property('GENERATOR')))
         self.properties.setProperty('GENERATOR', value, source='test')
 
         self.expect_and_run_command('-G', value)
@@ -130,27 +130,27 @@ class TestCMake(BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_options(self):
         options = ('A', 'B')
 
-        self.setupStep(CMake(options=options))
+        self.setup_step(CMake(options=options))
         self.expect_and_run_command(*options)
 
     def test_options_interpolation(self):
         prop = 'option'
         value = 'value'
 
-        self.setupStep(CMake(options=(Property(prop),)))
+        self.setup_step(CMake(options=(Property(prop),)))
         self.properties.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)
 
     def test_path(self):
         path = 'some/path'
 
-        self.setupStep(CMake(path=path))
+        self.setup_step(CMake(path=path))
         self.expect_and_run_command(path)
 
     def test_path_interpolation(self):
         prop = 'path'
         value = 'some/path'
 
-        self.setupStep(CMake(path=Property(prop)))
+        self.setup_step(CMake(path=Property(prop)))
         self.properties.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)

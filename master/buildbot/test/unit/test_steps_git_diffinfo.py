@@ -39,7 +39,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_merge_base_failure(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
+        self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stderr='fatal: Not a valid object name')
@@ -49,7 +49,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_diff_failure(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
+        self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stdout='1234123412341234')
@@ -65,7 +65,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_empty_diff(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
+        self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stdout='1234123412341234')
@@ -82,7 +82,7 @@ class TestDiffInfo(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_complex_diff(self):
-        self.setupStep(gitdiffinfo.GitDiffInfo())
+        self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
             .log('stdio-merge-base', stdout='1234123412341234')

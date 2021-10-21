@@ -48,7 +48,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def testBasic(self):
-        self.setupStep(
+        self.setup_step(
             DownloadSecretsToWorker([(os.path.join(self.temp_path, "pathA"), "something"),
                                      (os.path.join(self.temp_path, "pathB"), "something more")]))
         self.expectCommands(
@@ -85,9 +85,10 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def testBasic(self):
-        self.setupStep(RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA"), "something"),
-                                               (os.path.join(self.temp_path, "pathB"),
-                                                "somethingmore")]),
+        self.setup_step(RemoveWorkerFileSecret(
+                            [(os.path.join(self.temp_path, "pathA"), "something"),
+                            (os.path.join(self.temp_path, "pathB"),
+                            "somethingmore")]),
                        worker_version={'*': '3.0'})
 
         self.expectCommands(
@@ -123,7 +124,7 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def testBasic(self):
-        self.setupStep(
+        self.setup_step(
             RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA"), "something"),
                                     (os.path.join(self.temp_path, "pathB"), "somethingmore")]))
         self.expectCommands(

@@ -101,7 +101,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_run_env(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None,
@@ -118,7 +118,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_env_supplement(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath='path1',
@@ -135,7 +135,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_env_nodupe(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath='path2',
@@ -152,7 +152,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_singular(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
@@ -167,7 +167,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_plural(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
@@ -182,7 +182,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_failure(self):
-        self.setupStep(
+        self.setup_step(
             python_twisted.Trial(workdir='build',
                                  tests='testname',
                                  testpath=None))
@@ -205,7 +205,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_renderable_properties(self):
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             tests=Property('test_list'),
                                             testpath=None))
         self.properties.setProperty('test_list', ['testname'], 'Test')
@@ -221,7 +221,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_build_changed_files(self):
-        self.setupStep(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
+        self.setup_step(python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
                        buildFiles=['my/test/file.py', 'my/test/file2.py'])
 
         self.expectCommands(
@@ -236,7 +236,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_test_path_env_python_path(self):
-        self.setupStep(python_twisted.Trial(workdir='build', tests='testname',
+        self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
                                             testpath='custom/test/path',
                                             env={'PYTHONPATH': '/existing/pypath'}))
 
@@ -252,7 +252,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_custom_reactor(self):
-        self.setupStep(python_twisted.Trial(workdir='build', reactor='customreactor',
+        self.setup_step(python_twisted.Trial(workdir='build', reactor='customreactor',
                                             tests='testname', testpath=None))
 
         self.expectCommands(
@@ -267,7 +267,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_custom_python(self):
-        self.setupStep(python_twisted.Trial(workdir='build', tests='testname',
+        self.setup_step(python_twisted.Trial(workdir='build', tests='testname',
                                             python='/bin/mypython', testpath=None))
 
         self.expectCommands(
@@ -281,7 +281,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_randomly(self):
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             randomly=True,
                                             tests='testname',
                                             testpath=None))
@@ -302,7 +302,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         included since Twisted 12.3.0), and make corresponding changes to
         logfiles.
         """
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             tests='testname',
                                             testpath=None,
                                             jobs=2))
@@ -329,7 +329,7 @@ class Trial(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         """
         C{jobs} should accept Properties
         """
-        self.setupStep(python_twisted.Trial(workdir='build',
+        self.setup_step(python_twisted.Trial(workdir='build',
                                             tests='testname',
                                             jobs=Property('jobs_count'),
                                             testpath=None))
@@ -364,7 +364,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_run_ok(self):
-        self.setupStep(python_twisted.HLint(workdir='build'),
+        self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -378,7 +378,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_custom_python(self):
-        self.setupStep(python_twisted.HLint(workdir='build', python='/bin/mypython'),
+        self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'),
                        buildFiles=['foo.xhtml'])
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -391,7 +391,7 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_command_failure(self):
-        self.setupStep(python_twisted.HLint(workdir='build'),
+        self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -403,12 +403,12 @@ class HLint(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_no_build_files(self):
-        self.setupStep(python_twisted.HLint(workdir='build'))
+        self.setup_step(python_twisted.HLint(workdir='build'))
         self.expectOutcome(result=SKIPPED, state_string='hlint (skipped)')
         return self.runStep()
 
     def test_run_warnings(self):
-        self.setupStep(python_twisted.HLint(workdir='build'),
+        self.setup_step(python_twisted.HLint(workdir='build'),
                        buildFiles=['foo.xhtml'])
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -432,7 +432,7 @@ class RemovePYCs(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_run_ok(self):
-        self.setupStep(python_twisted.RemovePYCs())
+        self.setup_step(python_twisted.RemovePYCs())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['find', '.', '-name', '\'*.pyc\'', '-exec', 'rm', '{}', ';'])

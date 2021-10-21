@@ -75,7 +75,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_real_cmd(self):
         cmd = [sys.executable, '-c', 'print("hello")']
-        self.setupStep(master.MasterShellCommand(command=cmd))
+        self.setup_step(master.MasterShellCommand(command=cmd))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello\r\n")
         else:
@@ -85,7 +85,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_real_cmd_interrupted(self):
         cmd = [sys.executable, '-c', 'while True: pass']
-        self.setupStep(master.MasterShellCommand(command=cmd))
+        self.setup_step(master.MasterShellCommand(command=cmd))
         self.expectLogfile('stdio', "")
         if runtime.platformType == 'win32':
             # windows doesn't have signals, so we don't get 'killed',
@@ -101,14 +101,14 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
 
     def test_real_cmd_fails(self):
         cmd = [sys.executable, '-c', 'import sys; sys.exit(1)']
-        self.setupStep(
+        self.setup_step(
             master.MasterShellCommand(command=cmd))
         self.expectLogfile('stdio', "")
         self.expectOutcome(result=FAILURE, state_string="failed (1) (failure)")
         return self.runStep()
 
     def test_constr_args(self):
-        self.setupStep(
+        self.setup_step(
             master.MasterShellCommand(description='x', descriptionDone='y',
                                       env={'a': 'b'}, workdir='build', usePTY=True,
                                       command='true'))
@@ -131,7 +131,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
     def test_env_subst(self):
         cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
-        self.setupStep(
+        self.setup_step(
             master.MasterShellCommand(command=cmd, env={'HELLO': '${WORLD}'}))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello\r\n")
@@ -151,7 +151,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
-        self.setupStep(master.MasterShellCommand(command=cmd,
+        self.setup_step(master.MasterShellCommand(command=cmd,
                                                  env={'HELLO': ['${WORLD}', '${LIST}']}))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello;world\r\n")
@@ -172,7 +172,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         cmd = [sys.executable, '-c', WithProperties(
             'import os; print("%s"); print(os.environ[\"BUILD\"])',
             'project')]
-        self.setupStep(master.MasterShellCommand(command=cmd,
+        self.setup_step(master.MasterShellCommand(command=cmd,
                                                  env={'BUILD': WithProperties('%s', "project")}))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
         if runtime.platformType == 'win32':
@@ -183,7 +183,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_constr_args_descriptionSuffix(self):
-        self.setupStep(master.MasterShellCommand(description='x', descriptionDone='y',
+        self.setup_step(master.MasterShellCommand(description='x', descriptionDone='y',
                                                  descriptionSuffix='z',
                                                  env={'a': 'b'}, workdir='build', usePTY=True,
                                                  command='true'))
@@ -215,7 +215,7 @@ class TestSetProperty(steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_simple(self):
-        self.setupStep(master.SetProperty(property="testProperty", value=Interpolate(
+        self.setup_step(master.SetProperty(property="testProperty", value=Interpolate(
             "sch=%(prop:scheduler)s, worker=%(prop:workername)s")))
         self.properties.setProperty(
             'scheduler', 'force', source='SetProperty', runtime=True)
@@ -238,7 +238,7 @@ class TestLogRenderable(steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_simple(self):
-        self.setupStep(master.LogRenderable(
+        self.setup_step(master.LogRenderable(
             content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')))
         self.properties.setProperty(
             'scheduler', 'force', source='TestSetProperty', runtime=True)
@@ -263,7 +263,7 @@ class TestsSetProperties(steps.BuildStepMixin, TestReactorMixin,
     def doOneTest(self, **kwargs):
         # all three tests should create a 'a' property with 'b' value, all with different
         # more or less dynamic methods
-        self.setupStep(
+        self.setup_step(
             master.SetProperties(name="my-step", **kwargs))
         self.expectProperty('a', 'b', 'my-step')
         self.expectOutcome(result=SUCCESS, state_string='Properties Set')
@@ -294,14 +294,14 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_eq_pass(self):
-        self.setupStep(master.Assert(
+        self.setup_step(master.Assert(
             Property("test_prop") == "foo"))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_eq_fail(self):
-        self.setupStep(master.Assert(
+        self.setup_step(master.Assert(
             Property("test_prop") == "bar"))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=FAILURE)
@@ -311,7 +311,7 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         @renderer
         def test_renderer(props):
             return props.getProperty("test_prop") == "foo"
-        self.setupStep(master.Assert(test_renderer))
+        self.setup_step(master.Assert(test_renderer))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
@@ -320,7 +320,7 @@ class TestAssert(steps.BuildStepMixin, TestReactorMixin,
         @renderer
         def test_renderer(props):
             return props.getProperty("test_prop") == "bar"
-        self.setupStep(master.Assert(test_renderer))
+        self.setup_step(master.Assert(test_renderer))
         self.properties.setProperty("test_prop", "foo", "bar")
         self.expectOutcome(result=FAILURE)
         return self.runStep()

@@ -41,7 +41,7 @@ class TestBuildStepNameIsRenderable(steps.BuildStepMixin, unittest.TestCase,
 
     def test_name_is_renderable(self):
         step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))
-        self.setupStep(step)
+        self.setup_step(step)
         self.expectProperty('name', 'bar')
         self.expectOutcome(0)
         return self.runStep()

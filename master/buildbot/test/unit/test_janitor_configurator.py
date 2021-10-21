@@ -80,7 +80,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_basic(self):
-        self.setupStep(
+        self.setup_step(
             LogChunksJanitor(logHorizon=timedelta(weeks=1)))
         self.master.db.logs.deleteOldLogChunks = mock.Mock(return_value=3)
         self.expectOutcome(result=SUCCESS,
@@ -91,7 +91,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_build_data(self):
-        self.setupStep(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
+        self.setup_step(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
         self.master.db.build_data.deleteOldBuildData = mock.Mock(return_value=4)
         self.expectOutcome(result=SUCCESS, state_string="deleted 4 build data key-value pairs")
         yield self.runStep()

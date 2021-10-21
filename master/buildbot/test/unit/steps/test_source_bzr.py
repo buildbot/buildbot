@@ -46,7 +46,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.tearDownSourceStep()
 
     def test_mode_full(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
         self.expectCommands(
@@ -73,7 +73,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_win32path(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
         self.build.path_module = namedModule('ntpath')
@@ -100,7 +100,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_timeout(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh', timeout=1))
         self.expectCommands(
@@ -131,7 +131,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_revision(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'),
             args=dict(revision='3730'))
@@ -159,7 +159,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'))
         self.expectCommands(
@@ -186,7 +186,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_patched(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'))
         self.expectCommands(
@@ -218,7 +218,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'), patch=(1, 'patch'))
         self.expectCommands(
@@ -259,7 +259,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_worker_2_16(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'), patch=(1, 'patch'),
             worker_version={'*': '2.16'})
@@ -301,7 +301,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_revision(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clean'),
             args=dict(revision='2345'))
@@ -329,7 +329,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_fresh(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
         self.expectCommands(
@@ -356,7 +356,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber'))
         self.expectCommands(
@@ -381,7 +381,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_retry(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber', retry=(0, 2)))
         self.expectCommands(
@@ -418,7 +418,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_revision(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='clobber'),
             args=dict(revision='3730'))
@@ -445,7 +445,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_baseurl(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(baseURL='http://bzr.squid-cache.org/bzr/squid3',
                     defaultBranch='trunk', mode='full', method='clobber'))
         self.expectCommands(
@@ -471,7 +471,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_baseurl_nodefault(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(baseURL='http://bzr.squid-cache.org/bzr/squid3',
                     defaultBranch='trunk', mode='full', method='clobber'),
             args=dict(branch='branches/SQUID_3_0'))
@@ -498,7 +498,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_copy(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='copy'))
         self.expectCommands(
@@ -526,7 +526,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
         self.expectCommands(
@@ -550,7 +550,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_revision(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'),
             args=dict(revision='9384'))
@@ -575,7 +575,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
         self.expectCommands(
@@ -600,7 +600,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_retry(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental', retry=(0, 1)))
         self.expectCommands(
@@ -631,7 +631,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_bad_revparse(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
         self.expectCommands(
@@ -655,7 +655,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_bad_checkout(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='incremental'))
         self.expectCommands(
@@ -676,7 +676,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_worker_connection_lost(self):
-        self.setupStep(
+        self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))
         self.expectCommands(

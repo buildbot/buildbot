@@ -219,7 +219,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(vs.config, 'release')
 
     def test_simple(self):
-        self.setupStep(VCx())
+        self.setup_step(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
@@ -231,7 +231,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_installdir(self):
-        self.setupStep(VCx(installdir=r'C:\I'))
+        self.setup_step(VCx(installdir=r'C:\I'))
         self.step.exp_installdir = r'C:\I'
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -244,7 +244,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.step.installdir, r'C:\I')
 
     def test_evaluate_result_failure(self):
-        self.setupStep(VCx())
+        self.setup_step(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
@@ -255,7 +255,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_evaluate_result_errors(self):
-        self.setupStep(VCx())
+        self.setup_step(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
@@ -267,7 +267,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_evaluate_result_warnings(self):
-        self.setupStep(VCx())
+        self.setup_step(VCx())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['command', 'here'])
@@ -279,7 +279,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_env_setup(self):
-        self.setupStep(VCx(
+        self.setup_step(VCx(
             INCLUDE=[r'c:\INC1', r'c:\INC2'],
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
@@ -297,7 +297,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_env_setup_existing(self):
-        self.setupStep(VCx(
+        self.setup_step(VCx(
             INCLUDE=[r'c:\INC1', r'c:\INC2'],
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
@@ -316,7 +316,7 @@ class VisualStudio(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_rendering(self):
-        self.setupStep(VCx(
+        self.setup_step(VCx(
             projectfile=Property('a'),
             config=Property('b'),
             project=Property('c')))
@@ -375,7 +375,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
     def test_args(self):
-        self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -390,7 +390,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_clean(self):
-        self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -405,7 +405,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_noproj_build(self):
-        self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    mode='build'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -420,7 +420,7 @@ class TestVC6(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_env_prepend(self):
-        self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj', PATH=['p'], INCLUDE=['i'],
                                    LIB=['l']))
         self.expectCommands(
@@ -479,7 +479,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
     def test_args(self):
-        self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -494,7 +494,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_clean(self):
-        self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -509,7 +509,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_noproj_build(self):
-        self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    mode='build'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -523,7 +523,7 @@ class TestVC7(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_env_prepend(self):
-        self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj', PATH=['p'], INCLUDE=['i'],
                                    LIB=['l']))
         self.expectCommands(
@@ -592,7 +592,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_args(self):
-        self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', arch='arch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -607,7 +607,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_args_x64(self):
-        self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', arch='x64'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -623,7 +623,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_clean(self):
-        self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -639,7 +639,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_rendering(self):
-        self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg',
                                    arch=Property('a')))
         self.properties.setProperty('a', 'x64', 'Test')
         self.expectCommands(
@@ -669,7 +669,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def test_args(self):
-        self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -685,7 +685,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         return self.runStep()
 
     def test_clean(self):
-        self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj', mode='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -701,7 +701,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         return self.runStep()
 
     def test_mode_build_env(self):
-        self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj', mode='build', INCLUDE=['i']))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -728,7 +728,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_installdir(self):
-        self.setupStep(vstudio.VC9(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC9(projectfile='pf', config='cfg',
                                    project='pj'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -754,7 +754,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_installdir(self):
-        self.setupStep(vstudio.VC10(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC10(projectfile='pf', config='cfg',
                                     project='pj'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -780,7 +780,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, TestReactorMixin,
         return self.tearDownBuildStep()
 
     def test_installdir(self):
-        self.setupStep(vstudio.VC11(projectfile='pf', config='cfg',
+        self.setup_step(vstudio.VC11(projectfile='pf', config='cfg',
                                     project='pj'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -806,14 +806,15 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_no_platform(self):
-        self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj'))
+        self.setup_step(vstudio.MsBuild(
+                            projectfile='pf', config='cfg', platform=None, project='pj'))
 
         self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
-        self.setupStep(vstudio.MsBuild(
+        self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
         self.expectCommands(
@@ -827,7 +828,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_build_project(self):
-        self.setupStep(vstudio.MsBuild(
+        self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
 
         self.expectCommands(
@@ -841,7 +842,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_clean_project(self):
-        self.setupStep(vstudio.MsBuild(
+        self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
 
         self.expectCommands(
@@ -855,7 +856,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_rebuild_project_with_defines(self):
-        self.setupStep(vstudio.MsBuild(
+        self.setup_step(vstudio.MsBuild(
             projectfile='pf', config='cfg', platform='Win32', project='pj',
             defines=['Define1', 'Define2=42']))
 
@@ -870,7 +871,7 @@ class TestMsBuild(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_rebuild_solution(self):
-        self.setupStep(
+        self.setup_step(
             vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
 
         self.expectCommands(
@@ -895,14 +896,15 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_no_platform(self):
-        self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj'))
+        self.setup_step(vstudio.MsBuild(
+                            projectfile='pf', config='cfg', platform=None, project='pj'))
 
         self.expectOutcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
-        self.setupStep(vstudio.MsBuild141(
+        self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
         self.expectCommands(
@@ -917,7 +919,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_build_project(self):
-        self.setupStep(vstudio.MsBuild141(
+        self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'))
 
         self.expectCommands(
@@ -932,7 +934,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_clean_project(self):
-        self.setupStep(vstudio.MsBuild141(
+        self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'))
 
         self.expectCommands(
@@ -947,7 +949,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_rebuild_project_with_defines(self):
-        self.setupStep(vstudio.MsBuild141(
+        self.setup_step(vstudio.MsBuild141(
             projectfile='pf', config='cfg', platform='Win32', project='pj',
             defines=['Define1', 'Define2=42']))
 
@@ -963,7 +965,7 @@ class TestMsBuild141(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_rebuild_solution(self):
-        self.setupStep(
+        self.setup_step(
             vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
 
         self.expectCommands(

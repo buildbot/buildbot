@@ -35,8 +35,8 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
 
-    def setupStep(self, step, args, **kwargs):
-        step = super().setupStep(step, args, **kwargs)
+    def setup_step(self, step, args, **kwargs):
+        step = super().setup_step(step, args, **kwargs)
         step.build.properties.setProperty("source_branch", "ms-viewport", "gitlab source branch")
         step.build.properties.setProperty("source_git_ssh_url",
             "git@gitlab.example.com:build/awesome_project.git",
@@ -53,7 +53,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.tearDownSourceStep()
 
     def test_with_merge_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='git@gitlab.example.com:mmusterman/awesome_project.git',
                            mode='full', method='clean'),
             dict(branch='master', revision='12345678'))

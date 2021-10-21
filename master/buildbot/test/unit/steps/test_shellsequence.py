@@ -76,7 +76,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
 
     def testShellArgsAreRendered(self):
         arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'))
-        self.setupStep(
+        self.setup_step(
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
@@ -91,19 +91,19 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         return DynamicRun()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
-        self.setupStep(self.createDynamicRun(None))
+        self.setup_step(self.createDynamicRun(None))
         self.expectOutcome(result=EXCEPTION,
                            state_string="finished (exception)")
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
-        self.setupStep(self.createDynamicRun(["one command"]))
+        self.setup_step(self.createDynamicRun(["one command"]))
         self.expectOutcome(result=EXCEPTION,
                            state_string='finished (exception)')
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
-        self.setupStep(
+        self.setup_step(
             self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expectOutcome(result=EXCEPTION,
                            state_string='finished (exception)')
@@ -112,7 +112,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
     def testMultipleCommandsAreRun(self):
         arg1 = shellsequence.ShellArg(command='make p1')
         arg2 = shellsequence.ShellArg(command='deploy p1')
-        self.setupStep(
+        self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(0),
@@ -124,7 +124,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         arg1 = shellsequence.ShellArg(command='make p1')
         arg2 = shellsequence.ShellArg(command='')
         arg3 = shellsequence.ShellArg(command='deploy p1')
-        self.setupStep(
+        self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2, arg3],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(0),
@@ -137,7 +137,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                                       warnOnFailure=True,
                                       flunkOnFailure=False)
         arg2 = shellsequence.ShellArg(command='deploy p1')
-        self.setupStep(
+        self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(1),
@@ -149,7 +149,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         arg1 = shellsequence.ShellArg(command='make p1', haltOnFailure=True)
         arg2 = shellsequence.ShellArg(command='deploy p1')
 
-        self.setupStep(
+        self.setup_step(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1').exit(1))
@@ -166,7 +166,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         step = shellsequence.ShellSequence(commands=[arg], workdir='build')
 
         # First "build"
-        self.setupStep(step)
+        self.setup_step(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
         self.expectOutcome(result=SUCCESS,
@@ -174,7 +174,7 @@ class TestOneShellCommand(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.runStep()
 
         # Second "build"
-        self.setupStep(step)
+        self.setup_step(step)
         self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
         self.expectOutcome(result=SUCCESS,

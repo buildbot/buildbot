@@ -59,7 +59,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.tearDownSourceStep()
 
     def test_mode_full_filters_2_26(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', filters=['tree:0']))
         self.expectCommands(
@@ -85,7 +85,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_filters_2_27(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', filters=['tree:0']))
         self.expectCommands(
@@ -111,7 +111,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.expectCommands(
@@ -146,7 +146,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_progress_False(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', progress=False))
         self.expectCommands(
@@ -181,7 +181,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_ssh_key_2_10(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
@@ -231,7 +231,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_ssh_key_2_3(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
@@ -281,7 +281,7 @@ class TestGit(sourcesteps.SourceStepMixin,
 
     @defer.inlineCallbacks
     def test_mode_full_clean_ssh_key_1_7(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
@@ -345,7 +345,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         ('known_hosts', dict(sshKnownHosts='known_hosts')),
     ])
     def test_mode_full_clean_ssh_host_key_2_10(self, name, class_params):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey', **class_params))
 
@@ -402,7 +402,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_ssh_host_key_2_3(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
@@ -461,7 +461,7 @@ class TestGit(sourcesteps.SourceStepMixin,
 
     @defer.inlineCallbacks
     def test_mode_full_clean_ssh_host_key_1_7(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
@@ -530,7 +530,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         self.assertEqual(b''.join(read), unicode2bytes(expected))
 
     def test_mode_full_clean_ssh_host_key_1_7_progress(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey', progress=True))
@@ -589,7 +589,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_ssh_host_key_2_10_abs_workdir(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'),
@@ -650,7 +650,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_win32path(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.changeWorkerSystem('win32')
@@ -686,7 +686,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_win32path_ssh_key_2_10(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
@@ -736,7 +736,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_win32path_ssh_key_2_3(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
@@ -786,7 +786,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_win32path_ssh_key_1_7(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
@@ -840,7 +840,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_timeout(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            timeout=1,
                            mode='full', method='clean'))
@@ -881,7 +881,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             patch=(1, 'patch'))
@@ -938,7 +938,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_worker_2_16(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             patch=(1, 'patch'),
@@ -996,7 +996,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_fail(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             patch=(1, 'patch'))
@@ -1042,7 +1042,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', branch='test-branch'))
         self.expectCommands(
@@ -1080,7 +1080,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_non_empty_builddir(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', branch='test-branch'))
         self.expectCommands(
@@ -1110,7 +1110,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_parsefail(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.expectCommands(
@@ -1142,7 +1142,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.expectCommands(
@@ -1168,7 +1168,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo_with_reference(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', reference='path/to/reference/repo'))
         self.expectCommands(
@@ -1194,7 +1194,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', branch='test-branch'))
         self.expectCommands(
@@ -1221,7 +1221,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo_with_origin(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', origin='foo', progress=True))
         self.expectCommands(
@@ -1247,7 +1247,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_submodule(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', submodules=True, progress=True))
         self.expectCommands(
@@ -1295,7 +1295,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clean_submodule_remotes(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', submodules=True, progress=True,
                            remoteSubmodules=True))
@@ -1344,7 +1344,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_submodule_remotes(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', submodules=True, progress=True,
                            remoteSubmodules=True))
@@ -1376,7 +1376,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True))
 
@@ -1405,7 +1405,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clone_fails(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True))
 
@@ -1429,7 +1429,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True, branch='test-branch'))
 
@@ -1459,7 +1459,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_no_branch_support(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', branch='test-branch'))
 
@@ -1499,7 +1499,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_oldworker(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', progress=True))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
@@ -1531,7 +1531,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', progress=True))
         self.expectCommands(
@@ -1563,7 +1563,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_version_format(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'))
         self.expectCommands(
@@ -1595,7 +1595,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_retry(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', retry=(0, 1)))
         self.expectCommands(
@@ -1631,7 +1631,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', branch='test-branch'))
         self.expectCommands(
@@ -1666,7 +1666,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_branch_ssh_key_2_10(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', branch='test-branch',
                            sshPrivateKey='ssh-key', progress=True))
@@ -1717,7 +1717,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_fresh(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh'))
         self.expectCommands(
@@ -1752,7 +1752,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_fresh_clean_fails(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh'))
         self.expectCommands(
@@ -1786,7 +1786,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'), dict(
                 revision='abcdef01',
@@ -1818,7 +1818,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_given_revision_not_exists(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'), dict(
                 revision='abcdef01',
@@ -1855,7 +1855,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_fresh_submodule(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', submodules=True))
         self.expectCommands(
@@ -1903,7 +1903,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_fresh_submodule_git_newer_1_7_6(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', submodules=True))
         self.expectCommands(
@@ -1953,7 +1953,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_mode_full_fresh_submodule_v1_7_8(self):
         """This tests the same as test_mode_full_fresh_submodule, but the
         "submodule update" command should be different for Git v1.7.8+."""
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', submodules=True))
         self.expectCommands(
@@ -2002,7 +2002,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_shallow(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', shallow=True))
 
@@ -2031,7 +2031,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_shallow_depth(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', shallow="100"))
 
@@ -2060,7 +2060,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_no_shallow(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber'))
 
@@ -2089,7 +2089,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_retryFetch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', retryFetch=True))
 
@@ -2130,7 +2130,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_retryFetch_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', retryFetch=True, branch='test-branch'))
 
@@ -2174,7 +2174,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_clobberOnFailure(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', clobberOnFailure=True))
 
@@ -2214,7 +2214,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_clobberOnFailure_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental', clobberOnFailure=True, branch='test-branch'))
 
@@ -2255,7 +2255,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_copy(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='copy'))
 
@@ -2291,7 +2291,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_copy_ssh_key_2_10(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='copy', sshPrivateKey='sshkey'))
 
@@ -2347,7 +2347,7 @@ class TestGit(sourcesteps.SourceStepMixin,
                         mode='full', method='copy', shallow=True)
 
     def test_mode_incremental_no_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'))
         self.expectCommands(
@@ -2376,7 +2376,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo_oldworker(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental'))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
@@ -2405,7 +2405,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True), dict(
                 revision='abcdef01',
@@ -2438,7 +2438,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_revparse_failure(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True), dict(
                 revision='abcdef01',
@@ -2470,7 +2470,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_clobber_submodule(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', submodules=True))
 
@@ -2506,7 +2506,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             self.stepClass(mode="full")
 
     def test_mode_full_fresh_revision(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', progress=True), dict(
                 revision='abcdef01',
@@ -2540,7 +2540,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_fresh_retry(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', retry=(0, 2)))
         self.expectCommands(
@@ -2583,7 +2583,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_fresh_clobberOnFailure(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='fresh', clobberOnFailure=True))
 
@@ -2620,7 +2620,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_no_method(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full'))
         self.expectCommands(
@@ -2655,7 +2655,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_with_env(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', env={'abc': '123'}))
         self.expectCommands(
@@ -2695,7 +2695,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_mode_full_logEnviron(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', logEnviron=False))
         self.expectCommands(
@@ -2735,7 +2735,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_wkdir_doesnt_exist(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full'))
         self.expectCommands(
@@ -2766,7 +2766,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         # clone of: test_mode_incremental
         # only difference is to set the getDescription property
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental',
                            getDescription=True))
@@ -2813,7 +2813,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         # this tests when 'git describe' fails; for example, there are no
         # tags in the repository
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='incremental',
                            getDescription=True))
@@ -2862,7 +2862,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         if codebase is not None:
             kwargs.update(codebase=codebase)
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clobber', progress=True,
                            getDescription=setup_args,
@@ -3134,7 +3134,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def test_config_option(self):
         name = 'url.http://github.com.insteadOf'
         value = 'blahblah'
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='{}/buildbot/buildbot.git'.format(value),
                            mode='full', method='clean',
                            config={name: value}))
@@ -3169,7 +3169,7 @@ class TestGit(sourcesteps.SourceStepMixin,
         return self.runStep()
 
     def test_worker_connection_lost(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.expectCommands(
@@ -3185,7 +3185,7 @@ class TestGit(sourcesteps.SourceStepMixin,
     def _test_WorkerSetupError(self, _dovccmd, step, msg):
 
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
-        gitStep = self.setupStep(step)
+        gitStep = self.setup_step(step)
 
         with self.assertRaisesRegex(WorkerSetupError, msg):
             yield gitStep.run_vc("branch", "revision", "patch")
@@ -3248,7 +3248,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_push_simple(self):
         url = 'ssh://github.com/test/test.git'
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch'))
         self.expectCommands(
@@ -3266,7 +3266,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_push_force(self):
         url = 'ssh://github.com/test/test.git'
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', force=True))
         self.expectCommands(
@@ -3284,7 +3284,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_push_fail(self):
         url = 'ssh://github.com/test/test.git'
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', force=True))
         self.expectCommands(
@@ -3303,7 +3303,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_push_ssh_key_2_10(self):
         url = 'ssh://github.com/test/test.git'
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
@@ -3336,7 +3336,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_push_ssh_key_2_3(self):
         url = 'ssh://github.com/test/test.git'
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
@@ -3368,7 +3368,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_push_ssh_key_1_7(self):
         url = 'ssh://github.com/test/test.git'
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
@@ -3403,7 +3403,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def test_push_ssh_host_key_2_10(self):
         url = 'ssh://github.com/test/test.git'
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
@@ -3443,7 +3443,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def test_push_ssh_host_key_2_3(self):
         url = 'ssh://github.com/test/test.git'
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
@@ -3483,7 +3483,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def test_push_ssh_host_key_1_7(self):
         url = 'ssh://github.com/test/test.git'
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
@@ -3531,7 +3531,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
         url = 'ssh://github.com/test/test.git'
         step = self.stepClass(workdir='wkdir', repourl=url, branch='testbranch')
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
-        self.setupStep(step)
+        self.setup_step(step)
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
         self.flushLoggedErrors(WorkerSetupError)
@@ -3555,7 +3555,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def test_tag_annotated(self):
         messages = ['msg1', 'msg2']
 
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', tagName='myTag', annotated=True, messages=messages))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3570,7 +3570,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_tag_simple(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir',
                            tagName='myTag'))
         self.expectCommands(
@@ -3586,7 +3586,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_tag_force(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir',
                            tagName='myTag', force=True))
         self.expectCommands(
@@ -3602,7 +3602,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_tag_fail_already_exist(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir',
                            tagName='myTag'))
         self.expectCommands(
@@ -3620,22 +3620,22 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
     def test_config_annotated_no_messages(self):
         with self.assertRaises(bbconfig.ConfigErrors):
-            self.setupStep(
+            self.setup_step(
                 self.stepClass(workdir='wkdir', tagName='myTag', annotated=True))
 
     def test_config_no_tag_name(self):
         with self.assertRaises(bbconfig.ConfigErrors):
-            self.setupStep(
+            self.setup_step(
                 self.stepClass(workdir='wkdir'))
 
     def test_config_not_annotated_but_meessages(self):
         with self.assertRaises(bbconfig.ConfigErrors):
-            self.setupStep(
+            self.setup_step(
                 self.stepClass(workdir='wkdir', tagName='myTag', messages=['msg']))
 
     def test_config_annotated_message_not_list(self):
         with self.assertRaises(bbconfig.ConfigErrors):
-            self.setupStep(
+            self.setup_step(
                 self.stepClass(workdir='wkdir', tagName='myTag', annotated=True, messages="msg"))
 
     def test_raise_no_git(self):
@@ -3646,7 +3646,7 @@ class TestGitTag(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         step = self.stepClass(workdir='wdir', tagName='myTag')
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
-        self.setupStep(step)
+        self.setup_step(step)
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
         self.flushLoggedErrors(WorkerSetupError)
@@ -3668,7 +3668,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.tearDownBuildStep()
 
     def test_add_fail(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3687,7 +3687,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_commit(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3709,7 +3709,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_commit_empty_disallow(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='disallow'))
         self.expectCommands(
@@ -3732,7 +3732,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_commit_empty_allow(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='create-empty-commit'))
         self.expectCommands(
@@ -3755,7 +3755,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_commit_empty_ignore_withcommit(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='ignore'))
         self.expectCommands(
@@ -3782,7 +3782,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_commit_empty_ignore_withoutcommit(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='ignore'))
         self.expectCommands(
@@ -3806,7 +3806,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_commit_empty_ignore_witherror(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list,
                            emptyCommits='ignore'))
         self.expectCommands(
@@ -3829,7 +3829,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_detached_head(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3872,7 +3872,7 @@ class TestGitCommit(steps.BuildStepMixin, config.ConfigErrorsMixin,
 
         step = self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list)
         self.patch(self.stepClass, "checkFeatureSupport", _checkFeatureSupport)
-        self.setupStep(step)
+        self.setup_step(step)
         self.expectOutcome(result=EXCEPTION)
         self.runStep()
         self.flushLoggedErrors(WorkerSetupError)

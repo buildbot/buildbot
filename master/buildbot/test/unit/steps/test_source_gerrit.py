@@ -36,7 +36,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.tearDownSourceStep()
 
     def test_mode_full_clean(self):
-        self.setupStep(
+        self.setup_step(
             gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
                           mode='full', method='clean'))
         self.build.setProperty("event.change.project", "buildbot")
@@ -78,7 +78,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_force_build(self):
-        self.setupStep(
+        self.setup_step(
             gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
                           mode='full', method='clean'))
         self.build.setProperty("event.change.project", "buildbot")
@@ -120,7 +120,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_force_same_project(self):
-        self.setupStep(
+        self.setup_step(
             gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
                           mode='full', method='clean', codebase='buildbot'))
         self.build.setProperty("event.change.project", "buildbot")
@@ -162,7 +162,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_different_project(self):
-        self.setupStep(
+        self.setup_step(
             gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
                           mode='full', method='clean', codebase='buildbot'))
         self.build.setProperty("event.change.project", "buildbot")

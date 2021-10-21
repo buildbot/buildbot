@@ -96,7 +96,7 @@ class BuildStepMixin:
 
      - surround a step with the mock objects that it needs to execute
 
-    The following instance variables are available after C{setupStep}:
+    The following instance variables are available after C{setup_step}:
 
     @ivar step: the step under test
     @ivar build: the fake build containing the step
@@ -149,7 +149,7 @@ class BuildStepMixin:
     def tearDownBuildStep(self):
         pass
 
-    def setupStep(self, step, worker_version=None, worker_env=None,
+    def setup_step(self, step, worker_version=None, worker_env=None,
                   buildFiles=None, wantDefaultWorkdir=True):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
@@ -354,7 +354,7 @@ class BuildStepMixin:
     @defer.inlineCallbacks
     def runStep(self):
         """
-        Run the step set up with L{setupStep}, and check the results.
+        Run the step set up with L{setup_step}, and check the results.
 
         @returns: Deferred
         """

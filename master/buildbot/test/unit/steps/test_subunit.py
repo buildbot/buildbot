@@ -63,7 +63,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_empty(self):
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="test")
@@ -74,7 +74,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_empty_error(self):
-        self.setupStep(subunit.SubunitShellCommand(command='test',
+        self.setup_step(subunit.SubunitShellCommand(command='test',
                                                    failureOnNoTests=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -92,7 +92,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         client.startTest(test)
         client.stopTest(test)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
@@ -110,7 +110,7 @@ class TestSubUnit(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         client.addError(test, create_error('error1'))
         client.stopTest(test)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
@@ -135,7 +135,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         client.addError(test2, create_error('error2'))
         client.stopTest(test2)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())
@@ -161,7 +161,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         client.addError(test2, create_error('error2'))
         client.stopTest(test2)
 
-        self.setupStep(subunit.SubunitShellCommand(command='test'))
+        self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command="test")
             .stdout(stream.getvalue())

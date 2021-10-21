@@ -26,7 +26,7 @@ class TestGitHub(test_source_git.TestGit):
     stepClass = github.GitHub
 
     def test_with_merge_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             dict(branch='refs/pull/1234/merge', revision='12345678'))
@@ -67,7 +67,7 @@ class TestGitHub(test_source_git.TestGit):
         return self.runStep()
 
     def test_with_head_branch(self):
-        self.setupStep(
+        self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'),
             dict(branch='refs/pull/1234/head', revision='12345678'))

@@ -49,7 +49,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.tearDownSourceStep()
 
     def test_mode_full_clean(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
@@ -93,7 +93,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'),
             patch=(1, 'patch'))
@@ -152,7 +152,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_worker_2_16(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'),
             patch=(1, 'patch'),
@@ -212,7 +212,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_fail(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'),
             patch=(1, 'patch'))
@@ -266,7 +266,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_db(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
@@ -309,7 +309,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_checkout(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
@@ -349,7 +349,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clean_from_scratch(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
@@ -388,7 +388,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clobber(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clobber', branch='master'))
 
@@ -424,7 +424,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_clobber_no_existing_db(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clobber', branch='master'))
 
@@ -459,7 +459,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_db(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -496,7 +496,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_checkout(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -536,7 +536,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_incremental_from_scratch(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -575,7 +575,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_incremental(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -613,7 +613,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_incremental_retry(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master', retry=(0, 1)))
 
@@ -656,7 +656,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_fresh(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='fresh', branch='master'))
 
@@ -705,7 +705,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'),
             dict(revision='abcdef01',))
@@ -745,7 +745,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_copy(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='copy', branch='master'))
 
@@ -785,7 +785,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_mode_full_no_method(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', branch='master'))
 
@@ -845,7 +845,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             mtn.Monotone(repourl='mtn://localhost/monotone', mode="full",)
 
     def test_mode_incremental_patched(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -889,7 +889,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_worker_connection_lost(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))
 
@@ -903,7 +903,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_database_migration(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -944,7 +944,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_database_invalid(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -964,7 +964,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_database_too_new(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 
@@ -1007,7 +1007,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         return self.runStep()
 
     def test_database_empty(self):
-        self.setupStep(
+        self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='incremental', branch='master'))
 

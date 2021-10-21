@@ -39,11 +39,11 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             mock.Mock()
 
     def test_class_attrs(self):
-        step = self.setupStep(mock.Mock(root='TESTROOT'))
+        step = self.setup_step(mock.Mock(root='TESTROOT'))
         self.assertEqual(step.command, ['mock', '--root', 'TESTROOT'])
 
     def test_success(self):
-        self.setupStep(mock.Mock(root='TESTROOT'))
+        self.setup_step(mock.Mock(root='TESTROOT'))
         self.expectCommands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
                         logEnviron=False)
@@ -58,7 +58,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_resultdir_success(self):
-        self.setupStep(mock.Mock(root='TESTROOT', resultdir='RESULT'))
+        self.setup_step(mock.Mock(root='TESTROOT', resultdir='RESULT'))
         self.expectCommands(
             ExpectRmdir(dir=['build/RESULT/build.log',
                              'build/RESULT/root.log',
@@ -77,7 +77,7 @@ class TestMock(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_resultdir_renderable(self):
         resultdir_text = "RESULT"
-        self.setupStep(mock.Mock(root='TESTROOT', resultdir=Interpolate(
+        self.setup_step(mock.Mock(root='TESTROOT', resultdir=Interpolate(
             '%(kw:resultdir)s', resultdir=resultdir_text)))
         self.expectCommands(
             ExpectRmdir(dir=['build/RESULT/build.log',
@@ -111,7 +111,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, TestReactorMixin,
             mock.MockBuildSRPM(root='TESTROOT')
 
     def test_success(self):
-        self.setupStep(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
+        self.setup_step(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
         self.expectCommands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
                         logEnviron=False)
@@ -143,7 +143,7 @@ class TestMockRebuild(steps.BuildStepMixin, TestReactorMixin,
             mock.MockRebuild(root='TESTROOT')
 
     def test_success(self):
-        self.setupStep(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
+        self.setup_step(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
         self.expectCommands(
             ExpectRmdir(dir=['build/build.log', 'build/root.log', 'build/state.log'],
                         logEnviron=False)

@@ -65,7 +65,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
                                 branchType='invalid')
 
     def test_mode_full_clean(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'))
         self.expectCommands(
@@ -106,7 +106,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_win32path(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'))
         self.build.path_module = namedModule('ntpath')
@@ -148,7 +148,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_timeout(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 timeout=1,
                                 mode='full', method='clean', branchType='inrepo'))
@@ -197,7 +197,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'),
             patch=(1, 'patch'))
@@ -254,7 +254,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_worker_2_16(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'),
             patch=(1, 'patch'),
@@ -312,7 +312,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_patch_fail(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'),
             patch=(1, 'patch'))
@@ -361,7 +361,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'))
         self.expectCommands(
@@ -392,7 +392,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clobber', branchType='inrepo'))
         self.expectCommands(
@@ -421,7 +421,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_fresh(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='fresh', branchType='inrepo'))
         self.expectCommands(
@@ -462,7 +462,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_fresh_no_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='fresh', branchType='inrepo'))
         self.expectCommands(
@@ -493,7 +493,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_fresh_retry(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='fresh', branchType='inrepo',
                                 retry=(0, 2)))
@@ -537,7 +537,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo_dirname(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='dirname'),
         )
@@ -570,7 +570,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_retry(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='dirname', retry=(0, 1)),
         )
@@ -609,7 +609,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_branch_change_dirname(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org/',
                                 mode='incremental', branchType='dirname', defaultBranch='devel'),
             dict(branch='stable')
@@ -647,7 +647,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo_inrepo(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'))
         self.expectCommands(
@@ -684,7 +684,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'))
         self.expectCommands(
@@ -721,7 +721,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_existing_repo_added_files(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'))
         self.expectCommands(
@@ -761,7 +761,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_existing_repo_added_files_old_rmdir(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'))
         self.patch_workerVersionIsOlderThan(True)
@@ -804,7 +804,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'), dict(
                 revision='abcdef01',
@@ -844,7 +844,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_branch_change(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'), dict(
                 branch='stable',
@@ -886,7 +886,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_branch_change_no_clobberOnBranchChange(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo',
                                 clobberOnBranchChange=False), dict(
@@ -926,7 +926,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_env(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo',
                                 env={'abc': '123'}))
@@ -970,7 +970,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clean_logEnviron(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean',
                                 branchType='inrepo',
@@ -1020,7 +1020,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_command_fails(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='fresh', branchType='inrepo'))
         self.expectCommands(
@@ -1032,7 +1032,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_worker_connection_lost(self):
-        self.setupStep(
+        self.setup_step(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'))
         self.expectCommands(

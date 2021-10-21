@@ -106,11 +106,11 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     @defer.inlineCallbacks
-    def setupStep(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):
+    def setup_step(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):
         sourcestamps = sourcestampsInBuild or []
         got_revisions = gotRevisionsInBuild or {}
 
-        yield super().setupStep(step, *args, **kwargs)
+        yield super().setup_step(step, *args, **kwargs)
 
         # This step reaches deeply into a number of parts of Buildbot.  That
         # should be fixed!
@@ -301,14 +301,14 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
         self.expectOutcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
         yield self.runStep()
 
     @defer.inlineCallbacks
     def test_simple_failure(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a']))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.result = FAILURE
         # not waitForFinish, so trigger step succeeds even though the build
         # didn't fail
@@ -318,7 +318,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple_exception(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a']))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
         self.expectOutcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
@@ -328,7 +328,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_bogus_scheduler(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'x']))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'x']))
         # bogus scheduler is an exception, not a failure (don't blame the patch)
         self.expectOutcome(result=EXCEPTION)
         self.expectTriggeredWith(a=None)  # a is not triggered!
@@ -337,13 +337,13 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateSourceStamp(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=True),
-                             sourcestampsInBuild=[FakeSourceStamp(codebase='',
-                                                                  repository='x',
-                                                                  revision=11111)
-                                                  ],
-                             gotRevisionsInBuild={'': 23456},
-                             )
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=True),
+                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
+                                                                   repository='x',
+                                                                   revision=11111)
+                                                   ],
+                              gotRevisionsInBuild={'': 23456},
+                              )
         self.expectOutcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(
             a=(False, [{'codebase': '', 'repository': 'x', 'revision': 23456}], {}))
@@ -351,7 +351,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateSourceStamp_no_got_revision(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=True),
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=True),
                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
                                                                   repository='x',
                                                                   revision=11111)
@@ -366,13 +366,13 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_not_updateSourceStamp(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=False),
-                             sourcestampsInBuild=[FakeSourceStamp(codebase='',
-                                                                  repository='x',
-                                                                  revision=11111)
-                                                  ],
-                             gotRevisionsInBuild={'': 23456},
-                             )
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=False),
+                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
+                                                                   repository='x',
+                                                                   revision=11111)
+                                                   ],
+                              gotRevisionsInBuild={'': 23456},
+                              )
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(
             a=(False,
@@ -382,7 +382,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateSourceStamp_multiple_repositories(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=True),
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], updateSourceStamp=True),
                              sourcestampsInBuild=[
                                  FakeSourceStamp(codebase='cb1',
                                                  revision='12345'),
@@ -401,14 +401,14 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateSourceStamp_prop_false(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'],
                                              updateSourceStamp=properties.Property('usess')),
-                             sourcestampsInBuild=[FakeSourceStamp(codebase='',
-                                                                  repository='x',
-                                                                  revision=11111)
-                                                  ],
-                             gotRevisionsInBuild={'': 23456},
-                             )
+                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
+                                                                   repository='x',
+                                                                   revision=11111)
+                                                   ],
+                              gotRevisionsInBuild={'': 23456},
+                              )
         self.properties.setProperty('usess', False, 'me')
         self.expectOutcome(result=SUCCESS)
         # didn't use got_revision
@@ -420,14 +420,14 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateSourceStamp_prop_true(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'],
                                              updateSourceStamp=properties.Property('usess')),
-                             sourcestampsInBuild=[FakeSourceStamp(codebase='',
-                                                                  repository='x',
-                                                                  revision=11111)
-                                                  ],
-                             gotRevisionsInBuild={'': 23456},
-                             )
+                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
+                                                                   repository='x',
+                                                                   revision=11111)
+                                                   ],
+                              gotRevisionsInBuild={'': 23456},
+                              )
         self.properties.setProperty('usess', True, 'me')
         self.expectOutcome(result=SUCCESS)
         # didn't use got_revision
@@ -439,7 +439,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_alwaysUseLatest(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'], alwaysUseLatest=True),
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'], alwaysUseLatest=True),
                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
                                                                   repository='x',
                                                                   revision=11111)
@@ -451,7 +451,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_alwaysUseLatest_prop_false(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'],
                                              alwaysUseLatest=properties.Property('aul')),
                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
                                                                   repository='x',
@@ -466,7 +466,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_alwaysUseLatest_prop_true(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'],
                                              alwaysUseLatest=properties.Property('aul')),
                              sourcestampsInBuild=[FakeSourceStamp(codebase='',
                                                                   repository='x',
@@ -481,7 +481,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_sourceStamp(self):
         ss = dict(revision=9876, branch='dev')
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'], sourceStamp=ss))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'], sourceStamp=ss))
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(b=(False, [ss], {}))
         yield self.runStep()
@@ -492,7 +492,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             codebase='cb1', repository='r1', revision=9876, branch='dev')
         ss2 = dict(
             codebase='cb2', repository='r2', revision=5432, branch='dev')
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'],
                                              sourceStamps=[ss1, ss2]))
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(b=(False, [ss1, ss2], {}))
@@ -508,7 +508,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             codebase='cb3', repository='r3', revision=1234, branch='dev')
         ss4 = FakeSourceStamp(
             codebase='cb4', repository='r4', revision=2345, branch='dev')
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'],
                                              sourceStamps=[ss1, ss2]),
                              sourcestampsInBuild=[ss3, ss4])
         self.expectOutcome(result=SUCCESS)
@@ -518,7 +518,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_sourceStamp_prop(self):
         ss = dict(revision=properties.Property('rev'), branch='dev')
-        yield self.setupStep(trigger.Trigger(schedulerNames=['b'], sourceStamp=ss))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['b'], sourceStamp=ss))
         self.properties.setProperty('rev', 602, 'me')
         expected_ss = dict(revision=602, branch='dev')
         self.expectOutcome(result=SUCCESS)
@@ -527,7 +527,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_waitForFinish(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
         self.expectOutcome(result=SUCCESS, state_string='triggered a, b')
         self.expectTriggeredWith(
             a=(True, [], {}),
@@ -537,7 +537,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_waitForFinish_failure(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=True))
         self.scheduler_a.result = FAILURE
         self.expectOutcome(result=FAILURE)
         self.expectTriggeredWith(a=(True, [], {}))
@@ -546,7 +546,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_waitForFinish_split_failure(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
         self.scheduler_a.result = FAILURE
         self.scheduler_b.result = SUCCESS
         self.expectOutcome(result=FAILURE, state_string='triggered a, b')
@@ -558,7 +558,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_waitForFinish_exception(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
         self.step.addCompleteLog = Mock()
         self.scheduler_b.exception = True
         self.expectOutcome(result=EXCEPTION,
@@ -572,7 +572,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_virtual_builder(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['c'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['c'], waitForFinish=True))
         self.expectOutcome(result=SUCCESS, state_string='triggered c')
         self.expectTriggeredWith(
             c=(True, [], {}))
@@ -581,7 +581,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_properties(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'],
                                        set_properties=dict(x=1, y=2)))
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(a=(False, [],
@@ -590,7 +590,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_set_properties_prop(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'],
                                              set_properties=dict(x=properties.Property('X'), y=2)))
         self.properties.setProperty('X', 'xxx', 'here')
         self.expectOutcome(result=SUCCESS)
@@ -600,7 +600,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_copy_properties(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'],
                                              copy_properties=['a', 'b']))
         self.properties.setProperty('a', 'A', 'AA')
         self.properties.setProperty('b', 'B', 'BB')
@@ -613,7 +613,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_waitForFinish_interrupt(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=True))
 
         self.expectOutcome(result=CANCELLED, state_string='interrupted')
         self.expectTriggeredWith(a=(True, [], {}))
@@ -627,7 +627,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_waitForFinish_interrupt_no_connection(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a'], waitForFinish=True))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=True))
 
         self.expectOutcome(result=CANCELLED, state_string='interrupted')
         self.expectTriggeredWith(a=(True, [], {}))
@@ -648,7 +648,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
             def getSchedulersAndProperties(self):
                 return [("a", {}, False), ("b", {}, True)]
 
-        yield self.setupStep(DynamicTrigger(schedulerNames=['a', 'b']))
+        yield self.setup_step(DynamicTrigger(schedulerNames=['a', 'b']))
         self.scheduler_a.result = SUCCESS
         self.scheduler_b.result = FAILURE
         self.expectOutcome(result=SUCCESS, state_string='triggered a, b')
@@ -657,7 +657,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_unimportantSchedulerNames(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'],
                                              unimportantSchedulerNames=['b']))
         self.scheduler_a.result = SUCCESS
         self.scheduler_b.result = FAILURE
@@ -667,7 +667,7 @@ class TestTrigger(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_unimportantSchedulerNames_with_more_brids_for_bsid(self):
-        yield self.setupStep(trigger.Trigger(schedulerNames=['a', 'c'],
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'c'],
                                              unimportantSchedulerNames=['c']))
         self.scheduler_a.result = SUCCESS
         self.scheduler_c.result = FAILURE

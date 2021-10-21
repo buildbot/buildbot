@@ -41,12 +41,12 @@ class SourceStepMixin(steps.BuildStepMixin):
 
     # utilities
 
-    def setupStep(self, step, args=None, patch=None, **kwargs):
+    def setup_step(self, step, args=None, patch=None, **kwargs):
         """
-        Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setupStep}
+        Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setup_step}
         and then does setup specific to a Source step.
         """
-        step = super().setupStep(step, **kwargs)
+        step = super().setup_step(step, **kwargs)
 
         if args is None:
             args = {}

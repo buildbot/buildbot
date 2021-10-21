@@ -60,7 +60,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
             darcs.Darcs(mode='full', method='fresh')
 
     def test_mode_full_clobber(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'))
         self.expectCommands(
@@ -86,7 +86,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_copy(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='copy'))
         self.expectCommands(
@@ -115,7 +115,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_no_method(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full'))
         self.expectCommands(
@@ -144,7 +144,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'))
         self.expectCommands(
@@ -169,7 +169,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_patched(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'))
         self.expectCommands(
@@ -203,7 +203,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_patch(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'),
             patch=(1, 'patch'))
@@ -243,7 +243,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_retry(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber', retry=(0, 2)))
         self.expectCommands(
@@ -281,7 +281,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_revision(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'),
             dict(revision='abcdef01'))
@@ -313,7 +313,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_full_clobber_revision_worker_2_16(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'),
             dict(revision='abcdef01'),
@@ -346,7 +346,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='incremental'))
         self.expectCommands(
@@ -372,7 +372,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_worker_connection_lost(self):
-        self.setupStep(
+        self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'))
         self.expectCommands(

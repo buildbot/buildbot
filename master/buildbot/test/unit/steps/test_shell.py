@@ -49,7 +49,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def test_doStepIf_False(self):
-        self.setupStep(shell.ShellCommand(command="echo hello", doStepIf=False))
+        self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
         self.expectOutcome(result=SKIPPED,
                            state_string="'echo hello' (skipped)")
         return self.runStep()
@@ -62,7 +62,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
                                wrongArg1=1, wrongArg2='two')
 
     def test_run_simple(self):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello"))
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
             .exit(0)
@@ -71,7 +71,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_list(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=['trial', '-b', '-B', 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -83,7 +83,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_nested_description(self):
-        self.setupStep(shell.ShellCommand(
+        self.setup_step(shell.ShellCommand(
             workdir='build',
             command=properties.FlattenList(['trial', ['-b', '-B'], 'buildbot.test']),
             descriptionDone=properties.FlattenList(['test', ['done']]),
@@ -98,7 +98,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_nested_command(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=['trial', ['-b', '-B'], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -110,7 +110,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_nested_deeply_command(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -122,7 +122,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_nested_empty_command(self):
-        self.setupStep(shell.ShellCommand(workdir='build',
+        self.setup_step(shell.ShellCommand(workdir='build',
                                           command=['trial', [], '-b', [], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -134,7 +134,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_env(self):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello"),
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"),
                        worker_env=dict(DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
@@ -145,7 +145,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_env_override(self):
-        self.setupStep(shell.ShellCommand(workdir='build', env={'ABC': '123'},
+        self.setup_step(shell.ShellCommand(workdir='build', env={'ABC': '123'},
                                           command="echo hello"),
                        worker_env=dict(ABC='XXX', DEF='HERE'))
         self.expectCommands(
@@ -157,7 +157,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_usePTY(self):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                         usePTY=False)
@@ -167,7 +167,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_usePTY_old_worker(self):
-        self.setupStep(
+        self.setup_step(
             shell.ShellCommand(workdir='build', command="echo hello", usePTY=True),
             worker_version=dict(shell='1.1'))
         self.expectCommands(
@@ -178,7 +178,7 @@ class TestShellCommandExecution(steps.BuildStepMixin,
         return self.runStep()
 
     def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text=" (warnings)"):
-        self.setupStep(shell.ShellCommand(workdir='build', command="echo hello",
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello",
                                           decodeRC={1: WARNINGS}))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
@@ -211,7 +211,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_run_success(self):
-        self.setupStep(shell.TreeSize())
+        self.setup_step(shell.TreeSize())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
@@ -224,7 +224,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_misparsed(self):
-        self.setupStep(shell.TreeSize())
+        self.setup_step(shell.TreeSize())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
@@ -236,7 +236,7 @@ class TreeSize(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_failed(self):
-        self.setupStep(shell.TreeSize())
+        self.setup_step(shell.TreeSize())
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
@@ -263,7 +263,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None)
 
     def test_run_property(self):
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(property="res", command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -278,7 +278,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_renderable_workdir(self):
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(property="res", command="cmd",
                                          workdir=properties.Interpolate('wkdir')))
         self.expectCommands(
@@ -294,7 +294,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_run_property_no_strip(self):
-        self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd", strip=False))
+        self.setup_step(shell.SetPropertyFromCommand(property="res", command="cmd", strip=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
@@ -308,7 +308,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         return self.runStep()
 
     def test_run_failure(self):
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(property="res", command="blarg"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -326,7 +326,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
             self.assertEqual(
                 (rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
             return dict(a=1, b=2)
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -348,7 +348,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return dict(a=1, b=2)
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -365,7 +365,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return dict()
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -381,7 +381,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, TestReactorMixin,
     def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
-        self.setupStep(
+        self.setup_step(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -422,7 +422,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_new_version_success(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
@@ -439,7 +439,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_new_version_warnings(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd",
+        self.setup_step(shell.PerlModuleTest(command="cmd",
                                             warningPattern='^OHNOES'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -462,7 +462,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_new_version_failed(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
@@ -490,7 +490,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_old_version_success(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
@@ -505,7 +505,7 @@ class PerlModuleTest(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_old_version_failed(self):
-        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command="cmd")
@@ -553,7 +553,7 @@ class Configure(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(step.command, ['./configure'])
 
     def test_run(self):
-        self.setupStep(shell.Configure())
+        self.setup_step(shell.Configure())
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -577,7 +577,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def test_no_warnings(self):
-        self.setupStep(shell.WarningCountingShellCommand(workdir='w', command=['make']))
+        self.setup_step(shell.WarningCountingShellCommand(workdir='w', command=['make']))
         self.expectCommands(
             ExpectShell(workdir='w',
                         command=["make"])
@@ -589,7 +589,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.runStep()
 
     def test_default_pattern(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make']))
+        self.setup_step(shell.WarningCountingShellCommand(command=['make']))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
@@ -604,7 +604,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.runStep()
 
     def test_custom_pattern(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'],
+        self.setup_step(shell.WarningCountingShellCommand(command=['make'],
                                                          warningPattern=r"scary:.*"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -618,7 +618,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.runStep()
 
     def test_maxWarnCount(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'], maxWarnCount=9))
+        self.setup_step(shell.WarningCountingShellCommand(command=['make'], maxWarnCount=9))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
@@ -630,7 +630,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.runStep()
 
     def test_fail_with_warnings(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make']))
+        self.setup_step(shell.WarningCountingShellCommand(command=['make']))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"])
@@ -643,7 +643,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
         return self.runStep()
 
     def test_warn_with_decoderc(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'],
+        self.setup_step(shell.WarningCountingShellCommand(command=['make'],
                                                          decodeRC={3: WARNINGS}))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -659,7 +659,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin,
     def do_test_suppressions(self, step, supps_file='', stdout='',
                              exp_warning_count=0, exp_warning_log='',
                              exp_exception=False, props=None):
-        self.setupStep(step)
+        self.setup_step(step)
 
         if props is not None:
             for key in props:
@@ -921,7 +921,7 @@ class Compile(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_class_args(self):
         # since this step is just a pre-configured WarningCountingShellCommand,
         # there' not much to test!
-        step = self.setupStep(shell.Compile())
+        step = self.setup_step(shell.Compile())
         self.assertEqual(step.name, "compile")
         self.assertTrue(step.haltOnFailure)
         self.assertTrue(step.flunkOnFailure)
@@ -942,7 +942,7 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         self.tearDownBuildStep()
 
     def test_setTestResults(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.setTestResults(total=10, failed=3, passed=5, warnings=3)
         self.assertEqual(step.statistics, {
             'tests-total': 10,
@@ -960,13 +960,13 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
         })
 
     def test_describe_not_done(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.results = SUCCESS
         step.rendered = True
         self.assertEqual(step.getResultSummary(), {'step': 'test'})
 
     def test_describe_done(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.rendered = True
         step.results = SUCCESS
         step.statistics['tests-total'] = 93
@@ -977,7 +977,7 @@ class Test(steps.BuildStepMixin, configmixin.ConfigErrorsMixin,
                          {'step': '93 tests 20 passed 30 warnings 10 failed'})
 
     def test_describe_done_no_total(self):
-        step = self.setupStep(shell.Test())
+        step = self.setup_step(shell.Test())
         step.rendered = True
         step.results = SUCCESS
         step.statistics['tests-total'] = 0

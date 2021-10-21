@@ -35,7 +35,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_success(self):
-        self.setupStep(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
+        self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
@@ -45,7 +45,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_command_failure(self):
-        self.setupStep(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
+        self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'])
@@ -55,7 +55,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_warnings(self):
-        self.setupStep(
+        self.setup_step(
             cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
@@ -71,7 +71,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.runStep()
 
     def test_errors(self):
-        self.setupStep(cppcheck.Cppcheck(extra_args=['--my-param=5']))
+        self.setup_step(cppcheck.Cppcheck(extra_args=['--my-param=5']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--my-param=5'])
@@ -86,7 +86,7 @@ class Cppcheck(steps.BuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_renderables(self):
         P = WithProperties
-        self.setupStep(cppcheck.Cppcheck(
+        self.setup_step(cppcheck.Cppcheck(
             binary=P('a'), source=[P('.'), P('f.c')], extra_args=[P('--p'), P('--p')]))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
