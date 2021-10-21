@@ -29,6 +29,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source import git
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
+from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
@@ -194,8 +195,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -245,8 +245,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -300,8 +299,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -367,8 +365,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -427,8 +424,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -488,8 +484,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -556,8 +551,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -623,8 +617,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='/myworkdir/workdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -715,8 +708,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir\\.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -767,8 +759,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir\\.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -819,8 +810,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir\\.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -1717,8 +1707,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -2358,8 +2347,7 @@ class TestGit(sourcesteps.SourceStepMixin,
             .add(0),
             ExpectStat(file='wkdir/.buildbot-patched', logEnviron=True)
             .add(1),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -3387,8 +3375,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -3421,8 +3408,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.3.0'))
             .add(0),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -3455,8 +3441,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.0'))
             .add(0),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -3497,8 +3482,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.10.0'))
             .add(0),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -3539,8 +3523,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 2.3.0'))
             .add(0),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),
@@ -3578,8 +3561,7 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                         command=['git', '--version'])
             .add(ExpectShell.log('stdio', stdout='git version 1.7.0'))
             .add(0),
-            Expect('mkdir', dict(dir=ssh_workdir,
-                                 logEnviron=True))
+            ExpectMkdir(dir=ssh_workdir, logEnviron=True)
             .add(0),
             ExpectDownloadFile(blocksize=32768, maxsize=None,
                                reader=ExpectRemoteRef(remotetransfer.StringFileReader),

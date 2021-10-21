@@ -28,6 +28,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectDownloadFile
+from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.fake.remotecommand import ExpectUploadFile
@@ -265,7 +266,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_success(self):
         self.setupStep(worker.MakeDirectory(dir="d"))
         self.expectCommands(
-            Expect('mkdir', {'dir': 'd'})
+            ExpectMkdir(dir='d')
             .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="Created")
@@ -274,7 +275,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
     def test_failure(self):
         self.setupStep(worker.MakeDirectory(dir="d"))
         self.expectCommands(
-            Expect('mkdir', {'dir': 'd'})
+            ExpectMkdir(dir='d')
             .add(1)
         )
         self.expectOutcome(result=FAILURE, state_string="Create failed. (failure)")
@@ -284,7 +285,7 @@ class TestMakeDirectory(steps.BuildStepMixin, TestReactorMixin,
         self.setupStep(worker.MakeDirectory(dir=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
-            Expect('mkdir', {'dir': 'XXX'})
+            ExpectMkdir(dir='XXX')
             .add(0)
         )
         self.expectOutcome(result=SUCCESS, state_string="Created")
@@ -365,7 +366,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_mkdir(self):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))
         self.expectCommands(
-            Expect('mkdir', {'dir': 'd', 'logEnviron': False})
+            ExpectMkdir(dir='d', logEnviron=False)
             .add(0)
         )
         self.expectOutcome(result=SUCCESS)
@@ -383,7 +384,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
     def test_mkdir_fail(self):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))
         self.expectCommands(
-            Expect('mkdir', {'dir': 'd', 'logEnviron': False})
+            ExpectMkdir(dir='d', logEnviron=False)
             .add(1)
         )
         self.expectOutcome(result=FAILURE)
@@ -420,7 +421,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             yield x.runMkdir("d")
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('mkdir', {'dir': 'd', 'logEnviron': False})
+            ExpectMkdir(dir='d', logEnviron=False)
             .add(1)
         )
         self.expectOutcome(result=FAILURE)
@@ -433,9 +434,9 @@ class TestCompositeStepMixin(steps.BuildStepMixin, TestReactorMixin,
             yield x.runMkdir("d", abandonOnFailure=False)
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('mkdir', {'dir': 'd', 'logEnviron': False})
+            ExpectMkdir(dir='d', logEnviron=False)
             .add(1),
-            Expect('mkdir', {'dir': 'd', 'logEnviron': False})
+            ExpectMkdir(dir='d', logEnviron=False)
             .add(1)
         )
         self.expectOutcome(result=SUCCESS)

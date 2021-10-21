@@ -451,3 +451,16 @@ class ExpectDownloadFile(Expect):
     def __repr__(self):
         return "ExpectUploadDirectory({}, {})".format(repr(self.args['workdir']),
                                                       repr(self.args['workerdest']))
+
+
+class ExpectMkdir(Expect):
+
+    def __init__(self, dir=None, logEnviron=None):
+        args = {'dir': dir}
+        if logEnviron is not None:
+            args['logEnviron'] = logEnviron
+
+        super().__init__('mkdir', args)
+
+    def __repr__(self):
+        return "ExpectMkdir({})".format(repr(self.args['dir']))

@@ -21,6 +21,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectMkdir
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake.remotecommand import ExpectStat
 from buildbot.test.util import sourcesteps
@@ -103,8 +104,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=self.logEnviron))
             .add(0),
-            Expect('mkdir', dict(dir='wkdir',
-                                 logEnviron=self.logEnviron))
+            ExpectMkdir(dir='wkdir', logEnviron=self.logEnviron)
             .add(0)
         )
 
