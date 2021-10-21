@@ -113,7 +113,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
     def _setupWaterfallTest(self, hideStepIf, expect, expectedResult=SUCCESS):
         self.setup_step(TestBuildStep.FakeBuildStep(hideStepIf=hideStepIf))
         self.expect_outcome(result=expectedResult)
-        self.expectHidden(expect)
+        self.expect_hidden(expect)
 
     # tests
 
@@ -508,7 +508,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin,
                                           doStepIf=createException))
         self.expect_outcome(result=EXCEPTION,
                            state_string='finished (exception)')
-        self.expectHidden(True)
+        self.expect_hidden(True)
 
         try:
             yield self.run_step()
