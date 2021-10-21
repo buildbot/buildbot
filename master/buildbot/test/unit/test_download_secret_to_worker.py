@@ -24,10 +24,10 @@ from buildbot.process import remotetransfer
 from buildbot.process.results import SUCCESS
 from buildbot.steps.download_secret_to_worker import DownloadSecretsToWorker
 from buildbot.steps.download_secret_to_worker import RemoveWorkerFileSecret
-from buildbot.test.fake.remotecommand import ExpectDownloadFile
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectRmdir
-from buildbot.test.fake.remotecommand import ExpectRmfile
+from buildbot.test.expect import ExpectDownloadFile
+from buildbot.test.expect import ExpectRemoteRef
+from buildbot.test.expect import ExpectRmdir
+from buildbot.test.expect import ExpectRmfile
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin

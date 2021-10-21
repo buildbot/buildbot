@@ -17,9 +17,9 @@ from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import gitlab
-from buildbot.test.fake.remotecommand import ExpectListdir
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import ExpectStat
+from buildbot.test.expect import ExpectListdir
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectStat
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin

@@ -22,7 +22,7 @@ from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import rpmbuild
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 

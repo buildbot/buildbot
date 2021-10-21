@@ -26,16 +26,16 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
-from buildbot.test.fake.remotecommand import Expect
-from buildbot.test.fake.remotecommand import ExpectCpdir
-from buildbot.test.fake.remotecommand import ExpectDownloadFile
-from buildbot.test.fake.remotecommand import ExpectGlob
-from buildbot.test.fake.remotecommand import ExpectMkdir
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectRmdir
-from buildbot.test.fake.remotecommand import ExpectRmfile
-from buildbot.test.fake.remotecommand import ExpectStat
-from buildbot.test.fake.remotecommand import ExpectUploadFile
+from buildbot.test.expect import Expect
+from buildbot.test.expect import ExpectCpdir
+from buildbot.test.expect import ExpectDownloadFile
+from buildbot.test.expect import ExpectGlob
+from buildbot.test.expect import ExpectMkdir
+from buildbot.test.expect import ExpectRemoteRef
+from buildbot.test.expect import ExpectRmdir
+from buildbot.test.expect import ExpectRmfile
+from buildbot.test.expect import ExpectStat
+from buildbot.test.expect import ExpectUploadFile
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 

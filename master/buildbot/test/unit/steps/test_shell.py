@@ -28,9 +28,9 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shell
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import ExpectUploadFile
+from buildbot.test.expect import ExpectRemoteRef
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectUploadFile
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin

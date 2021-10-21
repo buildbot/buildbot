@@ -21,12 +21,12 @@ from buildbot.process import remotetransfer
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import darcs
-from buildbot.test.fake.remotecommand import ExpectCpdir
-from buildbot.test.fake.remotecommand import ExpectDownloadFile
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectRmdir
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import ExpectStat
+from buildbot.test.expect import ExpectCpdir
+from buildbot.test.expect import ExpectDownloadFile
+from buildbot.test.expect import ExpectRemoteRef
+from buildbot.test.expect import ExpectRmdir
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectStat
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin
 

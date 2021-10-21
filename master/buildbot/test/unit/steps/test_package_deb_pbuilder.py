@@ -23,8 +23,8 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import pbuilder
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import ExpectStat
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectStat
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 

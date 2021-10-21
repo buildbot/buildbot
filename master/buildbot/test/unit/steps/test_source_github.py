@@ -15,9 +15,9 @@
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
-from buildbot.test.fake.remotecommand import ExpectListdir
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import ExpectStat
+from buildbot.test.expect import ExpectListdir
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectStat
 from buildbot.test.unit.steps import test_source_git
 
 

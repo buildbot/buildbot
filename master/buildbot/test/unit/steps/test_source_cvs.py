@@ -23,13 +23,13 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import cvs
-from buildbot.test.fake.remotecommand import ExpectCpdir
-from buildbot.test.fake.remotecommand import ExpectDownloadFile
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
-from buildbot.test.fake.remotecommand import ExpectRmdir
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import ExpectStat
-from buildbot.test.fake.remotecommand import ExpectUploadFile
+from buildbot.test.expect import ExpectCpdir
+from buildbot.test.expect import ExpectDownloadFile
+from buildbot.test.expect import ExpectRemoteRef
+from buildbot.test.expect import ExpectRmdir
+from buildbot.test.expect import ExpectShell
+from buildbot.test.expect import ExpectStat
+from buildbot.test.expect import ExpectUploadFile
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.misc import TestReactorMixin
 

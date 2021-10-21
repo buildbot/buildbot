@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import lintian
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.expect import ExpectShell
 from buildbot.test.util import steps
 from buildbot.test.util.misc import TestReactorMixin
 
